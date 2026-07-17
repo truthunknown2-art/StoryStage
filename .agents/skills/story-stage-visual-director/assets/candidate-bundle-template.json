@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "1.0",
+  "exchangeMode": "manual-chatgpt-images",
+  "exchangeJobId": "job-replace-me",
+  "generationJobContentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "production": {"id": "production-replace-me", "revision": 1},
+  "showPack": {"id": "replace-me", "version": "1.0.0", "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"},
+  "providerMetadata": {
+    "provider": "chatgpt-images",
+    "generatedAt": "2026-07-17T00:00:00.000Z",
+    "conversationReference": null
+  },
+  "assets": [
+    {
+      "candidateId": "candidate-replace-me",
+      "briefId": "brief-requirement-replace-me",
+      "fileRole": "candidate.png",
+      "relativeFile": "candidates/brief-requirement-replace-me/candidate-replace-me.png",
+      "contentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "mediaType": "image/png",
+      "width": 1024,
+      "height": 1024,
+      "rights": {
+        "sourceType": "generated",
+        "provider": "chatgpt-images",
+        "usageNotes": "Original generated candidate; verify provider terms and production approval."
+      }
+    }
+  ]
+}

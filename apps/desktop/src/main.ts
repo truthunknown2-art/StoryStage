@@ -1,20 +1,31 @@
 import {randomUUID} from "node:crypto";
-import {access, realpath} from "node:fs/promises";
-import {resolve, sep} from "node:path";
+import {access, lstat, mkdir, readFile, realpath, writeFile} from "node:fs/promises";
+import {join, resolve, sep} from "node:path";
 import {pathToFileURL} from "node:url";
-import {app, BrowserWindow, ipcMain, shell, utilityProcess} from "electron";
+import {app, BrowserWindow, dialog, ipcMain, shell, utilityProcess, type OpenDialogOptions} from "electron";
+import {CandidateStagingError, stageCandidateBundle} from "@storystage/asset-pipeline";
 import {
   IPC_CHANNELS,
   canTransitionRenderJob,
   desktopCapabilitiesSchema,
+  exportGenerationJobRequestSchema,
+  exportGenerationJobResultSchema,
   openRenderedFileResultSchema,
   renderJobEventSchema,
   renderWorkerCommandSchema,
   renderWorkerMessageSchema,
   startRenderRequestSchema,
   startRenderResponseSchema,
+  stageCandidateBundleRequestSchema,
+  stageCandidateBundleResultSchema,
   type RenderJobEvent,
 } from "@storystage/contracts";
+import {
+  candidateBundleSchema,
+  finalizeGenerationJob,
+  generationJobDraftSchema,
+  type GenerationJob,
+} from "@storystage/story-engine";
 
 type JobRecord = {
   event: RenderJobEvent;
@@ -24,6 +35,7 @@ type JobRecord = {
 let mainWindow: BrowserWindow | null = null;
 let activeJobId: string | null = null;
 const jobRegistry = new Map<string, JobRecord>();
+const generationExchangeRegistry = new Map<string, {job: GenerationJob; jobFile: string}>();
 const workspaceRoot = app.isPackaged ? app.getAppPath() : resolve(__dirname, "../../..");
 const terminalStatuses = new Set<RenderJobEvent["status"]>(["completed", "failed"]);
 
@@ -188,7 +200,102 @@ async function createWindow() {
   else await mainWindow.loadURL(process.env.STORYSTAGE_DEV_URL ?? "http://127.0.0.1:5173");
 }
 
-ipcMain.handle(IPC_CHANNELS.capabilities, () => desktopCapabilitiesSchema.parse({localRendering: true, openRenderedFile: true}));
+ipcMain.handle(IPC_CHANNELS.capabilities, () => desktopCapabilitiesSchema.parse({localRendering: true, openRenderedFile: true, manualImageExchange: true}));
+
+ipcMain.handle(IPC_CHANNELS.exportGenerationJob, async (_event, rawRequest: unknown) => {
+  try {
+    const request = exportGenerationJobRequestSchema.parse(rawRequest);
+    const draft = generationJobDraftSchema.parse(JSON.parse(request.serializedJob));
+    const jobId = `job-${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+    const generationJob = finalizeGenerationJob(draft, {exchangeJobId: jobId, createdAt: new Date().toISOString()});
+    const jobFolder = join(
+      app.getPath("userData"),
+      ".storystage-local",
+      "jobs",
+      "outbox",
+      generationJob.production.id,
+      `r${generationJob.production.revision}`,
+      jobId,
+    );
+    await mkdir(jobFolder, {recursive: true});
+    const jobFile = join(jobFolder, "generation-job.json");
+    await writeFile(jobFile, `${JSON.stringify(generationJob, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
+    generationExchangeRegistry.set(jobId, {job: generationJob, jobFile});
+    shell.showItemInFolder(jobFile);
+    return exportGenerationJobResultSchema.parse({ok: true, jobId, briefCount: generationJob.briefs.length});
+  } catch (error) {
+    return exportGenerationJobResultSchema.parse({
+      ok: false,
+      error: {code: "INVALID_GENERATION_JOB", message: error instanceof Error ? error.message : "The generation job could not be exported."},
+    });
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.stageCandidateBundle, async (_event, rawRequest: unknown) => {
+  try {
+    const request = stageCandidateBundleRequestSchema.parse(rawRequest);
+    const exchange = generationExchangeRegistry.get(request.exchangeJobId);
+    if (!exchange) throw new Error("This exchange job is unknown or belongs to a previous StoryStage session. Export a fresh immutable job before importing results.");
+    const selectionOptions: OpenDialogOptions = {title: "Select the generated candidate bundle folder", properties: ["openDirectory"]};
+    const selection = mainWindow
+      ? await dialog.showOpenDialog(mainWindow, selectionOptions)
+      : await dialog.showOpenDialog(selectionOptions);
+    if (selection.canceled || !selection.filePaths[0]) return stageCandidateBundleResultSchema.parse({status: "cancelled"});
+
+    const sourceRoot = selection.filePaths[0];
+    const manifestPath = join(sourceRoot, "candidate-bundle.json");
+    const manifestInfo = await lstat(manifestPath);
+    if (manifestInfo.isSymbolicLink() || !manifestInfo.isFile() || manifestInfo.size > 2_000_000) {
+      throw new CandidateStagingError("invalid-bundle", "candidate-bundle.json must be a regular file smaller than 2 MB.");
+    }
+    const bundle = candidateBundleSchema.parse(JSON.parse(await readFile(manifestPath, "utf8")));
+    if (bundle.exchangeJobId !== exchange.job.exchangeJobId || bundle.generationJobContentHash !== exchange.job.contentHash) {
+      throw new Error("The candidate bundle was created for a different or stale generation job.");
+    }
+    if (bundle.production.id !== exchange.job.production.id || bundle.production.revision !== exchange.job.production.revision) {
+      throw new Error("The candidate bundle production identity does not match the exported job.");
+    }
+    if (bundle.showPack.id !== exchange.job.showPack.id || bundle.showPack.version !== exchange.job.showPack.version || bundle.showPack.contentHash !== exchange.job.showPack.contentHash) {
+      throw new Error("The candidate bundle Show Pack identity is stale or mismatched.");
+    }
+    const briefById = new Map(exchange.job.briefs.map((brief) => [brief.id, brief]));
+    for (const asset of bundle.assets) {
+      const brief = briefById.get(asset.briefId);
+      if (!brief) throw new Error(`Candidate ${asset.candidateId} names an unknown generation brief.`);
+      if (!brief.expectedFiles.includes(asset.fileRole)) throw new Error(`Candidate ${asset.candidateId} has unexpected role ${asset.fileRole}.`);
+    }
+    const missingRoleCount = exchange.job.briefs.reduce((count, brief) => {
+      const returnedRoles = new Set(bundle.assets.filter((asset) => asset.briefId === brief.id).map((asset) => asset.fileRole));
+      return count + brief.expectedFiles.filter((role) => !returnedRoles.has(role)).length;
+    }, 0);
+    const importId = `import-${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+    const stagingRoot = join(
+      app.getPath("userData"),
+      ".storystage-local",
+      "jobs",
+      "inbox",
+      exchange.job.production.id,
+      `r${exchange.job.production.revision}`,
+      importId,
+    );
+    const prepared = await stageCandidateBundle({bundle, sourceRoot, stagingRoot});
+    return stageCandidateBundleResultSchema.parse({
+      status: "prepared",
+      importId,
+      preparedCount: prepared.length,
+      needsManualMaskCount: prepared.filter((candidate) => candidate.preparationState === "needs-manual-mask").length,
+      missingRoleCount,
+    });
+  } catch (error) {
+    return stageCandidateBundleResultSchema.parse({
+      status: "failed",
+      error: {
+        code: error instanceof CandidateStagingError ? error.code.toUpperCase().replaceAll("-", "_") : "CANDIDATE_IMPORT_FAILED",
+        message: error instanceof Error ? error.message : "The candidate bundle could not be staged.",
+      },
+    });
+  }
+});
 
 ipcMain.handle(IPC_CHANNELS.renderStart, (_event, payload: unknown) => {
   const request = startRenderRequestSchema.parse(payload);

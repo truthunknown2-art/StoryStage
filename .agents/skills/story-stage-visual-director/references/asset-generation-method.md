@@ -4,12 +4,14 @@
 
 Use a provider-neutral manual exchange first:
 
-1. Export a style-bible-bound generation brief.
+1. Review and export an immutable, style-bible-bound generation job.
 2. Generate candidates with ChatGPT Images outside the final renderer.
-3. Import candidate files and provider metadata.
+3. Return candidate files and provider metadata tied to the exact exchange-job hash; never invent hashes.
 4. Prepare matte, alpha, crop, padding, registration, and hashes locally.
 5. Validate the rig, pose set, prop, or layered background.
 6. Require human approval and create an immutable asset version.
+
+Reject stale production revisions, Show Packs, style bibles, identity locks, reference hashes, unknown brief IDs, unexpected file roles, and byte-hash mismatches. Import and preparation are not approval.
 
 ## Character order
 

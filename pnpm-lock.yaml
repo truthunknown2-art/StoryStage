@@ -31,16 +31,22 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
+        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
       wait-on:
         specifier: 9.0.3
         version: 9.0.3
 
   apps/desktop:
     dependencies:
+      '@storystage/asset-pipeline':
+        specifier: workspace:*
+        version: link:../../packages/asset-pipeline
       '@storystage/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@storystage/story-engine':
+        specifier: workspace:*
+        version: link:../../packages/story-engine
       electron:
         specifier: 43.1.1
         version: 43.1.1
@@ -93,22 +99,16 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
+        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
 
   apps/studio:
     dependencies:
-      '@remotion/player':
-        specifier: 4.0.490
-        version: 4.0.490(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@storystage/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@storystage/fixtures':
+      '@storystage/story-engine':
         specifier: workspace:*
-        version: link:../../packages/fixtures
-      '@storystage/remotion-runtime':
-        specifier: workspace:*
-        version: link:../../packages/remotion-runtime
+        version: link:../../packages/story-engine
       lucide-react:
         specifier: 1.24.0
         version: 1.24.0(react@19.2.3)
@@ -118,9 +118,6 @@ importers:
       react-dom:
         specifier: 19.2.3
         version: 19.2.3(react@19.2.3)
-      remotion:
-        specifier: 4.0.490
-        version: 4.0.490(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     devDependencies:
       '@testing-library/jest-dom':
         specifier: 6.9.1
@@ -142,13 +139,29 @@ importers:
         version: 6.0.3(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
       jsdom:
         specifier: 29.1.1
-        version: 29.1.1
+        version: 29.1.1(@noble/hashes@2.2.0)
       typescript:
         specifier: 5.9.3
         version: 5.9.3
       vite:
         specifier: 8.1.5
         version: 8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0)
+
+  packages/asset-pipeline:
+    dependencies:
+      '@storystage/story-engine':
+        specifier: workspace:*
+        version: link:../story-engine
+    devDependencies:
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
 
   packages/contracts:
     dependencies:
@@ -161,20 +174,20 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
+        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
 
   packages/fixtures:
     dependencies:
-      '@storystage/contracts':
-        specifier: workspace:*
-        version: link:../contracts
+      zod:
+        specifier: 4.3.6
+        version: 4.3.6
     devDependencies:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
+        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
 
   packages/remotion-runtime:
     dependencies:
@@ -206,6 +219,9 @@ importers:
 
   packages/story-engine:
     dependencies:
+      '@noble/hashes':
+        specifier: ^2.2.0
+        version: 2.2.0
       zod:
         specifier: 4.3.6
         version: 4.3.6
@@ -215,7 +231,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 4.1.10
-        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
+        version: 4.1.10(@types/node@24.10.1)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
 
 packages:
 
@@ -772,6 +788,10 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
+
+  '@noble/hashes@2.2.0':
+    resolution: {integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==}
+    engines: {node: '>= 20.19.0'}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -3320,7 +3340,9 @@ snapshots:
       '@eslint/core': 0.13.0
       levn: 0.4.1
 
-  '@exodus/bytes@1.15.1': {}
+  '@exodus/bytes@1.15.1(@noble/hashes@2.2.0)':
+    optionalDependencies:
+      '@noble/hashes': 2.2.0
 
   '@hapi/address@5.1.1':
     dependencies:
@@ -3423,6 +3445,8 @@ snapshots:
       '@emnapi/runtime': 1.11.1
       '@tybys/wasm-util': 0.10.3
     optional: true
+
+  '@noble/hashes@2.2.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -4291,10 +4315,10 @@ snapshots:
 
   csstype@3.2.3: {}
 
-  data-urls@7.0.0:
+  data-urls@7.0.0(@noble/hashes@2.2.0):
     dependencies:
       whatwg-mimetype: 5.0.0
-      whatwg-url: 16.0.1
+      whatwg-url: 16.0.1(@noble/hashes@2.2.0)
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -4657,9 +4681,9 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  html-encoding-sniffer@6.0.0:
+  html-encoding-sniffer@6.0.0(@noble/hashes@2.2.0):
     dependencies:
-      '@exodus/bytes': 1.15.1
+      '@exodus/bytes': 1.15.1(@noble/hashes@2.2.0)
     transitivePeerDependencies:
       - '@noble/hashes'
 
@@ -4741,17 +4765,17 @@ snapshots:
     dependencies:
       argparse: 2.0.1
 
-  jsdom@29.1.1:
+  jsdom@29.1.1(@noble/hashes@2.2.0):
     dependencies:
       '@asamuzakjp/css-color': 5.1.11
       '@asamuzakjp/dom-selector': 7.1.1
       '@bramus/specificity': 2.4.2
       '@csstools/css-syntax-patches-for-csstree': 1.1.6(css-tree@3.2.1)
-      '@exodus/bytes': 1.15.1
+      '@exodus/bytes': 1.15.1(@noble/hashes@2.2.0)
       css-tree: 3.2.1
-      data-urls: 7.0.0
+      data-urls: 7.0.0(@noble/hashes@2.2.0)
       decimal.js: 10.6.0
-      html-encoding-sniffer: 6.0.0
+      html-encoding-sniffer: 6.0.0(@noble/hashes@2.2.0)
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.5.2
       parse5: 8.0.1
@@ -4762,7 +4786,7 @@ snapshots:
       w3c-xmlserializer: 5.0.0
       webidl-conversions: 8.0.1
       whatwg-mimetype: 5.0.0
-      whatwg-url: 16.0.1
+      whatwg-url: 16.0.1(@noble/hashes@2.2.0)
       xml-name-validator: 5.0.0
     transitivePeerDependencies:
       - '@noble/hashes'
@@ -5423,7 +5447,7 @@ snapshots:
       terser: 5.49.0
       tsx: 4.21.0
 
-  vitest@4.1.10(@types/node@24.10.1)(jsdom@29.1.1)(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0)):
+  vitest@4.1.10(@types/node@24.10.1)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0)):
     dependencies:
       '@vitest/expect': 4.1.10
       '@vitest/mocker': 4.1.10(vite@8.1.5(@types/node@24.10.1)(esbuild@0.28.1)(terser@5.49.0)(tsx@4.21.0))
@@ -5447,7 +5471,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.10.1
-      jsdom: 29.1.1
+      jsdom: 29.1.1(@noble/hashes@2.2.0)
     transitivePeerDependencies:
       - msw
 
@@ -5519,9 +5543,9 @@ snapshots:
 
   whatwg-mimetype@5.0.0: {}
 
-  whatwg-url@16.0.1:
+  whatwg-url@16.0.1(@noble/hashes@2.2.0):
     dependencies:
-      '@exodus/bytes': 1.15.1
+      '@exodus/bytes': 1.15.1(@noble/hashes@2.2.0)
       tr46: 6.0.0
       webidl-conversions: 8.0.1
     transitivePeerDependencies:

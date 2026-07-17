@@ -10,14 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@remotion/player": "4.0.490",
     "@storystage/contracts": "workspace:*",
-    "@storystage/fixtures": "workspace:*",
-    "@storystage/remotion-runtime": "workspace:*",
+    "@storystage/story-engine": "workspace:*",
     "lucide-react": "1.24.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "remotion": "4.0.490"
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "6.9.1",

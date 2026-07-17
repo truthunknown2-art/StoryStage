@@ -20,6 +20,13 @@ SS-001 infrastructure remains valid. Its visual sample is not evidence of produc
 8. Review and override: framing, camera action, gesture, background, and candidate changes recompile preview and final render.
 9. Outputs: original kids and history MP4s with different cadence, mix, performance, text, inserts, camera, and audio cue plans.
 
+## Gate status
+
+- Gate 1: complete.
+- Gates 2-3: functional UI, sole story-engine ownership, measured two-profile grammar, entity ledger, visual bindings, computed hashes, and semantic overrides are locally verified; not yet accepted by Pro.
+- Gate 4: shared runtime/skill schemas, pre-export disclosure, immutable opaque job IDs, private user-data outbox, stale/mismatch rejection, magic-byte/hash/dimension/path validation, and main-owned staging are locally verified. Loose image role mapping, isolated preparation, detailed validation review, and final approval remain open.
+- Gates 5-9: pending.
+
 ## Binding comparison thresholds
 
 - Average shot duration differs by at least 20%.

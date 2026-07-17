@@ -4,12 +4,12 @@ Profiles are quantitative directing policies shared by one or more Show Packs. A
 
 ## Required dimensions
 
-- cadence envelope and maximum static duration
-- shot-size and visual-treatment weights totaling 1
-- camera-move weights and scale limits
-- transition weights and forbidden pairings
-- text density and maximum words per card
-- gesture, reaction, pose-swap, and hold frequencies
+- `cadence`: target cuts per minute plus minimum, maximum, and maximum-static frames
+- `treatmentWeights` and `framingWeights`, each totaling 1
+- `cameraPolicy.moves`, with weighted semantic camera actions totaling 1
+- `transitionPolicy`, with weights totaling 1
+- `textPolicy`: mode, maximum words, and target events per minute
+- `performancePolicy`: gesture, reaction, and pose-change rates
 - asset-routing priority by factual and creative use
 - SFX and music rhythm
 - continuity and repetition rules
@@ -25,3 +25,5 @@ For the SS-002 canonical script:
 - text, transition, camera, and asset-routing policies differ
 
 Preserve deterministic fallbacks. An AI planner may propose a plan later, but the same schemas and validators must accept or reject it.
+
+`packages/story-engine/src/model.ts` is the schema source of truth. `measureDirectedPlan()` in `packages/story-engine/src/metrics.ts` is the only metric implementation used by runtime diagnostics, automated tests, and this skill's comparison utility.

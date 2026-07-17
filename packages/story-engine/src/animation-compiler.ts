@@ -1,72 +1,66 @@
-import {
-  frameAccurateRenderPlanSchema,
-  type FrameAccurateRenderPlan,
-  type ResolvedProductionPlan,
-} from "./model";
+import {hashCanonical} from "./canonical-hash";
+import {measureDirectedPlan} from "./metrics";
+import {frameAccurateRenderPlanSchema, type ActionDetail, type FrameAccurateRenderPlan, type ResolvedProductionPlan} from "./model";
+
+const cameraActionDetail = (type: NonNullable<ResolvedProductionPlan["overrides"][number]["cameraAction"]>, framing: FrameAccurateRenderPlan["shots"][number]["framing"]): ActionDetail => {
+  if (type === "cameraPush") return {type, fromScale: 1, toScale: 1.1, easingId: "ease-standard"};
+  if (type === "pan") return {type, fromX: -0.05, toX: 0.05, easingId: "ease-standard"};
+  if (type === "reframe") return {type, framing, easingId: "ease-standard"};
+  if (type === "foregroundWipe") return {type, layer: "environment"};
+  return {type: "hardCut"};
+};
 
 export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRenderPlan {
   const {creativePlan, showPack} = plan;
   const overrideByShot = new Map(plan.overrides.map((override) => [override.shotId, override]));
-  const entityIdByName = new Map(
-    [...plan.characters, ...plan.locations, ...plan.props].map((entity) => [entity.entityName.toLowerCase(), entity.entityId]),
-  );
-  const locationAssetByName = new Map(plan.locations.map((location) => [location.entityName.toLowerCase(), location.assetId]));
-  const characterAssetByEntityId = new Map(plan.characters.map((character) => [character.entityId, character.assetId]));
-  const assetIds = new Set(showPack.assets.map((asset) => asset.id));
+  const entityIdByName = new Map([...plan.characters, ...plan.locations, ...plan.props].map((entity) => [entity.entityName.toLowerCase(), entity.entityId]));
+  const assets = [...showPack.assets, ...plan.approvedAssets];
+  const assetIds = new Set(assets.map((asset) => asset.id));
+  const visualByRequirementId = new Map(plan.resolvedVisuals.map((visual) => [visual.requirementId, visual]));
+  const placeholder = showPack.assets.find((asset) => asset.kind === "placeholder")!;
 
   let cursor = 0;
   const shots = creativePlan.shots.map((shot) => {
     const override = overrideByShot.get(shot.id);
-    if (override?.locationAssetId && !assetIds.has(override.locationAssetId)) {
-      throw new Error(`Override for ${shot.id} references an unknown local asset.`);
-    }
-    if (override?.gesture && !showPack.allowedGestures.includes(override.gesture)) {
-      throw new Error(`Gesture ${override.gesture} is not allowed by ${showPack.id}.`);
-    }
+    if (override?.locationAssetId && !assetIds.has(override.locationAssetId)) throw new Error(`Override for ${shot.id} references an unknown local asset.`);
+    if (override?.gesture && !showPack.allowedGestures.includes(override.gesture)) throw new Error(`Gesture ${override.gesture} is not allowed by ${showPack.id}.`);
 
     const startFrame = cursor;
     cursor += shot.durationInFrames;
-    const focusEntityId = shot.focusCharacterName ? entityIdByName.get(shot.focusCharacterName.toLowerCase()) ?? null : null;
-    const focusCharacterId = focusEntityId && characterAssetByEntityId.has(focusEntityId) ? focusEntityId : null;
-    let gestureApplied = false;
-
+    const focusCharacterId = shot.focusCharacterName ? entityIdByName.get(shot.focusCharacterName.toLowerCase()) ?? null : null;
     const actions = shot.actions.map((action) => {
       const localStart = Math.min(action.startOffsetFrames, Math.max(0, shot.durationInFrames - 1));
-      const available = Math.max(1, shot.durationInFrames - localStart);
-      const duration = Math.max(1, Math.min(action.durationInFrames, available));
-      const applyGesture = Boolean(override?.gesture && !gestureApplied && action.actorName);
-      if (applyGesture) gestureApplied = true;
-      return {
-        id: action.id,
-        type: applyGesture ? "gesture" as const : action.type,
-        actorId: action.actorName ? entityIdByName.get(action.actorName.toLowerCase()) ?? null : null,
-        targetId: action.targetName ? entityIdByName.get(action.targetName.toLowerCase()) ?? null : null,
-        label: applyGesture ? `Gesture: ${override!.gesture}` : action.label,
-        startFrame: startFrame + localStart,
-        endFrame: startFrame + localStart + duration,
-      };
+      const duration = Math.max(1, Math.min(action.durationInFrames, shot.durationInFrames - localStart));
+      return {id: action.id, actorId: action.actorName ? entityIdByName.get(action.actorName.toLowerCase()) ?? null : null, targetId: action.targetName ? entityIdByName.get(action.targetName.toLowerCase()) ?? null : null, label: action.label, startFrame: startFrame + localStart, endFrame: startFrame + localStart + duration, detail: action.detail};
     });
 
-    return {
-      id: shot.id,
-      sceneId: shot.sceneId,
-      number: shot.number,
-      title: shot.title,
-      framing: override?.framing ?? shot.framing,
-      treatment: override?.treatment ?? shot.treatment,
-      transition: shot.transition,
-      locationAssetId: override?.locationAssetId ?? locationAssetByName.get(shot.locationName.toLowerCase()) ?? showPack.assets.find((asset) => asset.kind === "placeholder")!.id,
-      focusCharacterId,
-      startFrame,
-      durationInFrames: shot.durationInFrames,
-      actions,
-      caption: shot.caption,
-    };
+    if (override?.gesture) {
+      const existingIndex = actions.findIndex((action) => action.detail.type === "gesture");
+      const existing = existingIndex >= 0 ? actions[existingIndex]! : null;
+      const gestureAction = {id: `${shot.id}-override-gesture`, actorId: existing?.actorId ?? focusCharacterId, targetId: existing?.targetId ?? null, label: `Gesture override: ${override.gesture}`, startFrame: existing?.startFrame ?? startFrame, endFrame: existing?.endFrame ?? startFrame + shot.durationInFrames, detail: {type: "gesture" as const, gestureId: override.gesture, intensity: override.gestureIntensity ?? 0.75}};
+      if (existingIndex >= 0) actions.splice(existingIndex, 1, gestureAction);
+      else actions.push(gestureAction);
+    }
+
+    const framing = override?.framing ?? shot.framing;
+    if (override?.cameraAction) {
+      const existingIndex = actions.findIndex((action) => ["hardCut", "cameraPush", "pan", "reframe", "foregroundWipe"].includes(action.detail.type));
+      const cameraAction = {id: `${shot.id}-override-camera`, actorId: null, targetId: focusCharacterId, label: `Camera override: ${override.cameraAction}`, startFrame, endFrame: startFrame + shot.durationInFrames, detail: cameraActionDetail(override.cameraAction, framing)};
+      if (existingIndex >= 0) actions.splice(existingIndex, 1, cameraAction);
+      else actions.push(cameraAction);
+    }
+
+    const visualBindings = shot.visualRequirementIds.map((id) => visualByRequirementId.get(id)).filter((visual): visual is NonNullable<typeof visual> => Boolean(visual));
+    const background = visualBindings.find((visual) => creativePlan.visualRequirements.find((requirement) => requirement.id === visual.requirementId)?.role === "background");
+    return {id: shot.id, sceneId: shot.sceneId, number: shot.number, title: shot.title, framing, treatment: override?.treatment ?? shot.treatment, transition: shot.transition, locationAssetId: override?.locationAssetId ?? background?.assetId ?? placeholder.id, focusCharacterId, visualBindings, startFrame, durationInFrames: shot.durationInFrames, actions, caption: shot.caption};
   });
 
-  return frameAccurateRenderPlanSchema.parse({
-    schemaVersion: "1.1",
-    id: creativePlan.id.replace(/^creative-/, "render-"),
+  const payload = {
+    schemaVersion: "1.2" as const,
+    id: `render-${creativePlan.productionId}-r${creativePlan.planRevision}`,
+    productionId: creativePlan.productionId,
+    planRevision: creativePlan.planRevision,
+    compilerVersion: creativePlan.compilerVersion,
     title: creativePlan.title,
     fps: creativePlan.fps,
     width: creativePlan.width,
@@ -74,17 +68,21 @@ export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRen
     durationInFrames: cursor,
     projectType: creativePlan.projectType,
     productionPolicy: creativePlan.productionPolicy,
-    directingProfile: {
-      id: showPack.profile.id,
-      version: showPack.profile.version,
-      visualMode: showPack.profile.visualMode,
-    },
+    assetRoutingPolicy: creativePlan.assetRoutingPolicy,
+    directingProfile: {id: showPack.profile.id, version: showPack.profile.version, visualMode: showPack.profile.visualMode},
     showPack: {id: showPack.id, version: showPack.version, contentHash: showPack.contentHash},
-    assets: showPack.assets,
+    assets,
     characters: plan.characters,
     locations: plan.locations,
     props: plan.props,
     shots,
+    metrics: measureDirectedPlan(creativePlan),
     unresolvedWarnings: plan.warnings,
-  });
+  };
+  return frameAccurateRenderPlanSchema.parse({...payload, contentHash: hashCanonical(payload)});
+}
+
+export function verifyRenderPlanHash(plan: FrameAccurateRenderPlan): boolean {
+  const {contentHash, ...payload} = plan;
+  return hashCanonical(payload) === contentHash;
 }

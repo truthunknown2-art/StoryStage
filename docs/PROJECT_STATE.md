@@ -1,13 +1,20 @@
 # Project state
 
-## Current
+## Accepted baseline
 
-SS-001 walking skeleton is **accepted and closed**. ChatGPT Pro approved the corrected implementation and evidence on 2026-07-16 with no remaining corrective work. The browser studio, secure Electron host, isolated render-worker app, deterministic 12-second fixture, real MP4 output, render progress, file reveal, and retryable failure UI are present.
+SS-001 is accepted workstation infrastructure: browser studio, secure Electron host, isolated render worker, deterministic regression fixture, real MP4 output, progress, file reveal, and retryable failure state. Its geometric/CSS sample is not a product-quality visual target.
 
-## Intentionally absent
+## In progress
 
-Persistent projects, editable episode plans, queue persistence, cancellation, generated assets or voices, cloud services, After Effects, Blender, signed packaging, authentication, payments, and final branding.
+`SS-002: Two-Profile Script-to-Animatic + Generated Asset Seam` is active.
 
-## Next
+- Gate 1 reference cut measurements: complete.
+- Gates 2-3 production draft, real New Production UI, profile-driven planning, shared metrics, and semantic overrides: locally verified; awaiting Pro acceptance against the pushed milestone.
+- Gate 4 provider-neutral manual ChatGPT Images exchange: immutable main-owned export, exact disclosure review, stale-bundle checks, and byte-verified constrained staging are locally verified. Loose-file role mapping, isolated preparation worker, visual validation report, and approval UI remain pending.
+- Gates 5-9 original assets, preparation, rigging, exact-frame Remotion integration, review flow, and profile-distinct MP4s: pending.
 
-Draft only—do not implement without a new ticket: **SS-002: Animation kernel + EpisodePlan v1**. Define versioned semantic actions and a rig manifest, compile EpisodePlan data into deterministic animation instructions, and render those instructions through the existing shot/runtime boundary before adding persistence or queue orchestration.
+The project must not be called an MVP after SS-002. A narrow MVP requires one polished 2-3 minute episode in one approved Show Pack with recurring approved generated assets, real voice timing, basic lip sync, captions, SFX/music, appropriate factual or generated visuals, editable locks, provenance, and reproducible 1080p output.
+
+## Deliberately absent
+
+No API-billed image generation, ChatGPT credential storage, browser-login automation, final channel branding, stock-provider commitment, purchased licenses, final voices, automatic Blender routing, long-form persistence, cloud rendering, accounts, billing, teams, or collaboration.

@@ -1,6 +1,8 @@
-import {episodePlanSchema, productionSchema} from "@storystage/contracts";
+import {legacyEpisodePlanSchema, legacyProductionSchema} from "./legacy-episode";
 
-export const productions = productionSchema.array().parse([
+export * from "./legacy-episode";
+
+export const productions = legacyProductionSchema.array().parse([
   {
     id: "weird-history-dancing-plague",
     title: "Frankly Weird History",
@@ -42,7 +44,7 @@ export const productions = productionSchema.array().parse([
   },
 ]);
 
-export const sampleEpisodePlan = episodePlanSchema.parse({
+export const sampleEpisodePlan = legacyEpisodePlanSchema.parse({
   schemaVersion: "1.0",
   id: "episode-dancing-plague-sample",
   productionId: productions[0]!.id,

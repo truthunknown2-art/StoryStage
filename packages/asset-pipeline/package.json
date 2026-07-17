@@ -1,5 +1,5 @@
 {
-  "name": "@storystage/fixtures",
+  "name": "@storystage/asset-pipeline",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "zod": "4.3.6"
+    "@storystage/story-engine": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "24.10.1",
     "typescript": "5.9.3",
     "vitest": "4.1.10"
   }

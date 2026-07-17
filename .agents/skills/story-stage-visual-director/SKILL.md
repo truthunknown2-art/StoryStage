@@ -41,7 +41,8 @@ Load only the references required by the current task.
 ## Utilities and templates
 
 - Run `scripts/analyze-cut-sheet.ts <cut-sheet.json>` to calculate cadence and classification summaries.
-- Run `scripts/compare-profile-output.ts <kids-metrics.json> <history-metrics.json>` to check SS-002 comparison thresholds.
-- Run `scripts/validate-profile.ts <show-pack.json>` to validate a serialized Show Pack with the runtime schema.
+- Run `scripts/compare-profile-output.ts <kids-creative-plan.json|builtin:show-pack-id> <history-creative-plan.json|builtin:show-pack-id>` to check SS-002 comparison thresholds through the shared runtime metrics.
+- Run `scripts/validate-profile.ts <show-pack.json|builtin:show-pack-id>` to validate and hash-check a serialized Show Pack.
 - Copy `assets/generation-brief-template.json` when starting a provider-neutral generation exchange.
+- Copy `assets/candidate-bundle-template.json` only as a structural guide; replace every job identity and compute file hashes from the returned bytes.
 - Copy `assets/cut-analysis-template.csv` when classifying sampled frames or shot boundaries.

@@ -1,19 +1,22 @@
 import {describe, expect, it} from "vitest";
 import {
   canTransitionRenderJob,
-  episodePlanSchema,
+  exportGenerationJobRequestSchema,
   renderJobEventSchema,
   renderWorkerMessageSchema,
   startRenderRequestSchema,
+  stageCandidateBundleRequestSchema,
 } from "./schemas";
 
 describe("StoryStage contracts", () => {
-  it("rejects a malformed episode plan", () => {
-    expect(episodePlanSchema.safeParse({schemaVersion: "1.0.0", scenes: []}).success).toBe(false);
-  });
-
   it("rejects renderer-provided filesystem paths", () => {
     expect(startRenderRequestSchema.safeParse({outputPath: "C:/arbitrary/output.mp4"}).success).toBe(false);
+  });
+
+  it("keeps image exchange requests path-free and bounded", () => {
+    expect(exportGenerationJobRequestSchema.safeParse({serializedJob: "{}", outputPath: "C:/elsewhere"}).success).toBe(false);
+    expect(stageCandidateBundleRequestSchema.safeParse({exchangeJobId: "job-one", sourcePath: "C:/elsewhere"}).success).toBe(false);
+    expect(exportGenerationJobRequestSchema.safeParse({serializedJob: "x".repeat(2_000_001)}).success).toBe(false);
   });
 
   it("validates render-worker messages at the process boundary", () => {

@@ -1,5 +1,4 @@
-import {calculateEpisodeDurationInFrames} from "@storystage/contracts";
-import {sampleEpisodePlan} from "@storystage/fixtures";
+import {calculateLegacyEpisodeDurationInFrames, sampleEpisodePlan} from "@storystage/fixtures";
 import {Composition} from "remotion";
 import {StoryStageComposition} from "./StoryStageComposition";
 import {STORY_STAGE_COMPOSITION_ID} from "./manifest";
@@ -11,7 +10,7 @@ export const StoryStageRoot: React.FC = () => {
     <Composition
       id={STORY_STAGE_COMPOSITION_ID}
       component={StoryStageComposition}
-      durationInFrames={calculateEpisodeDurationInFrames(sampleEpisodePlan)}
+      durationInFrames={calculateLegacyEpisodeDurationInFrames(sampleEpisodePlan)}
       fps={sampleEpisodePlan.fps}
       width={sampleEpisodePlan.width}
       height={sampleEpisodePlan.height}

@@ -1,460 +1,481 @@
-import {Player} from "@remotion/player";
 import {
-  type Production,
-  type DesktopCapabilities,
-  type RenderJobState,
-  type Scene,
-  type Shot,
-  type TimelineEvent,
-  type TimelineKind,
-} from "@storystage/contracts";
-import {productions, sampleEpisodePlan} from "@storystage/fixtures";
-import {StoryStageComposition} from "@storystage/remotion-runtime";
+  buildAnimaticSync,
+  candidateBundleSchema,
+  createProductionDraft,
+  generationJobDraftSchema,
+  getShowPack,
+  productionPolicies,
+  sampleWorkshopScript,
+  showPacks,
+  type AnimaticBuild,
+  type AssetRoutingPolicy,
+  type GenerationJobDraft,
+  type ProductionPreset,
+  type ProductionDraft,
+  type ProjectType,
+  type ShotOverride,
+} from "@storystage/story-engine";
 import {
   Aperture,
   ArrowLeft,
-  AudioLines,
-  Box,
+  ArrowRight,
+  Boxes,
   Check,
-  ChevronDown,
+  ChevronRight,
   CircleAlert,
   Clapperboard,
-  Clock3,
-  Cloud,
   Download,
   FileText,
-  FolderOpen,
-  Grid2X2,
-  Image,
-  LayoutDashboard,
+  Film,
+  Gauge,
+  ImagePlus,
+  Layers3,
   Library,
-  LockKeyhole,
-  MonitorPlay,
-  MoreHorizontal,
-  MousePointer2,
-  Play,
+  ListChecks,
+  PackageCheck,
+  PlayCircle,
   Plus,
-  Redo2,
-  Save,
-  Search,
-  Settings2,
-  SlidersHorizontal,
+  ScanSearch,
+  ShieldCheck,
   Sparkles,
-  TestTube2,
-  Undo2,
-  Volume2,
+  Upload,
   WandSparkles,
-  type LucideIcon,
 } from "lucide-react";
 import {useEffect, useMemo, useState} from "react";
-import {createHostAdapter} from "./host";
+import {createHostAdapter, type HostAdapter} from "./host";
+import type {DesktopCapabilities} from "@storystage/contracts";
 
-type Screen = "productions" | "episode";
+type Screen = "home" | "new-production" | "workspace";
+type WorkspaceTab = "direction" | "assets";
 
-const idleRender: RenderJobState = {
-  status: "idle",
-  progress: null,
-  message: "Ready to render",
+type ProductionSession = ProductionDraft & {
+  overrides: ShotOverride[];
 };
 
-const timelineLabels: Record<TimelineKind, string> = {
-  camera: "Camera",
-  "character-a": "Iris",
-  "character-b": "Otto",
-  dialogue: "Dialogue",
-  sfx: "SFX",
-  music: "Music",
-};
-
-const navItems: Array<{icon: LucideIcon; label: string}> = [
-  {icon: FileText, label: "Script"},
-  {icon: Grid2X2, label: "Board"},
-  {icon: Aperture, label: "Stage"},
-  {icon: AudioLines, label: "Sound"},
-  {icon: Box, label: "Assets"},
-  {icon: Download, label: "Deliver"},
+const projectOptions: Array<{
+  type: ProjectType;
+  title: string;
+  eyebrow: string;
+  description: string;
+  color: string;
+  cadence: string;
+  grammar: string;
+}> = [
+  {
+    type: "kids",
+    title: "Kids Adventure",
+    eyebrow: "Movement + story",
+    description: "Readable characters, layered worlds, participatory action, clear reactions, and lyric-aware movement loops.",
+    color: "#ffd84a",
+    cadence: "2.7-4.3s typical shots",
+    grammar: "Performance first",
+  },
+  {
+    type: "explainer",
+    title: "Frankly Weird History",
+    eyebrow: "Fast editorial explainer",
+    description: "Narration-led hard cuts across presenter, evidence, type, diagrams, archival media, and labeled reconstruction.",
+    color: "#ff6047",
+    cadence: "1.9-3.0s typical shots",
+    grammar: "Editorial reset first",
+  },
 ];
 
-const stageTone: Record<Production["stage"], string> = {
-  development: "neutral",
-  "board-review": "proposal",
-  "animatic-approved": "approved",
-  "voice-recording": "voice",
-  "final-render": "approved",
+const treatments = ["environment", "character-performance", "reaction", "insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"] as const;
+const framings = ["wide", "medium", "close-up", "insert"] as const;
+const cameraActions = ["hardCut", "cameraPush", "pan", "reframe", "foregroundWipe"] as const;
+
+const defaultRouting = (type: ProjectType): AssetRoutingPolicy => ({
+  reuseApprovedFirst: true,
+  generateMissing: true,
+  licensedSources: type === "explainer" ? "factual-first" : "disabled",
+  allowGeneratedHistoricalReconstruction: type === "explainer",
+  proposed3D: "never",
+});
+
+const draftFromSession = ({overrides, ...draft}: ProductionSession): ProductionDraft => {
+  void overrides;
+  return draft;
 };
 
-function formatTime(frame: number) {
-  const totalSeconds = frame / sampleEpisodePlan.fps;
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = Math.floor(totalSeconds % 60);
-  const frames = frame % sampleEpisodePlan.fps;
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}:${String(frames).padStart(2, "0")}`;
-}
+const profileCadence = (pack: ReturnType<typeof getShowPack>) => `${(pack.profile.cadence.minShotFrames / 30).toFixed(1)}-${(pack.profile.cadence.maxShotFrames / 30).toFixed(1)}s`;
 
-function ProductionArtwork({production}: {production: Production}) {
+const formatDuration = (frames: number, fps: number) => {
+  const seconds = Math.round(frames / fps);
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+};
+
+function Brand() {
   return (
-    <div className="production-art" style={{"--art-a": production.palette[0], "--art-b": production.palette[1], "--art-c": production.palette[2]} as React.CSSProperties}>
-      <div className="art-sun" />
-      <div className="art-building art-building-a" />
-      <div className="art-building art-building-b" />
-      <div className="art-character art-character-a"><span /></div>
-      <div className="art-character art-character-b"><span /></div>
-      <div className="art-grain" />
-      <span className="show-pack-tag">{production.showPack}</span>
+    <div className="brand-lockup">
+      <span className="brand-glyph"><span /></span>
+      <div><strong>StoryStage</strong><small>Directable production</small></div>
     </div>
   );
 }
 
-function AppMark({compact = false}: {compact?: boolean}) {
+function HomeScreen({onNew}: {onNew: () => void}) {
   return (
-    <div className={`app-mark ${compact ? "is-compact" : ""}`} aria-label="StoryStage">
-      <span className="mark-frame"><span className="mark-stage" /></span>
-      {!compact ? <span>StoryStage</span> : null}
-    </div>
-  );
-}
-
-function ProductionsScreen({onOpen}: {onOpen: (production: Production) => void}) {
-  return (
-    <div className="productions-shell">
-      <aside className="productions-sidebar">
-        <AppMark />
-        <nav className="home-nav" aria-label="Home">
-          <button className="home-nav-item is-active"><LayoutDashboard size={17} />Productions</button>
-          <button className="home-nav-item"><Library size={17} />Show Packs</button>
-          <button className="home-nav-item"><Box size={17} />Asset library</button>
+    <div className="home-shell">
+      <aside className="home-sidebar">
+        <Brand />
+        <nav aria-label="Workspace navigation">
+          <button className="is-active"><Film size={17} />Productions</button>
+          <button disabled><Library size={17} />Show Packs <span>Soon</span></button>
+          <button disabled><Boxes size={17} />Asset library <span>Soon</span></button>
         </nav>
-        <div className="sidebar-rule" />
-        <p className="sidebar-label">Workspace</p>
-        <button className="home-nav-item"><MonitorPlay size={17} />Render queue<span className="nav-count">1</span></button>
-        <button className="home-nav-item"><Settings2 size={17} />Preferences</button>
-        <div className="sidebar-spacer" />
-        <div className="local-studio-card">
-          <span className="status-light" />
-          <div><strong>Local studio</strong><small>Renderer available</small></div>
-          <MoreHorizontal size={16} />
-        </div>
-        <div className="profile-row">
-          <span className="avatar">PB</span>
-          <div><strong>Preston</strong><small>Director</small></div>
-          <ChevronDown size={15} />
+        <div className="sidebar-note">
+          <ShieldCheck size={18} />
+          <div><strong>Offline renderer</strong><small>Approved assets only</small></div>
         </div>
       </aside>
-
-      <main className="productions-main">
-        <header className="productions-header">
-          <div>
-            <p className="eyebrow">Production desk</p>
-            <h1>Good evening, Preston.</h1>
-            <p>Pick up where the story left off.</p>
-          </div>
-          <div className="header-actions">
-            <button className="icon-button" aria-label="Search"><Search size={18} /></button>
-            <button className="primary-button"><Plus size={17} />New production</button>
-          </div>
+      <main className="home-main">
+        <header className="home-header">
+          <div><p className="eyebrow">Production desk</p><h1>Make the directing decisions<br />before the frames.</h1></div>
+          <button className="primary-action" onClick={onNew}><Plus size={18} />New production</button>
         </header>
-
-        <section className="section-block" aria-labelledby="recent-heading">
-          <div className="section-heading-row">
-            <div><p className="section-kicker">On your desk</p><h2 id="recent-heading">Recent productions</h2></div>
-            <button className="text-button">View all <span>→</span></button>
+        <section className="home-intro">
+          <div className="intro-copy">
+            <span className="status-chip"><Sparkles size={13} />SS-002 in progress</span>
+            <h2>Two production grammars.<br />One deterministic pipeline.</h2>
+            <p>Start with a script and a real production policy. StoryStage extracts the cast and locations, directs profile-specific shots, identifies missing art, and freezes approved decisions for render.</p>
+            <button className="secondary-action" onClick={onNew}>Create from script <ArrowRight size={16} /></button>
           </div>
-          <div className="production-grid">
-            {productions.map((production, index) => (
-              <article className={`production-card ${index === 0 ? "is-featured" : ""}`} key={production.id}>
-                <ProductionArtwork production={production} />
-                <div className="production-card-body">
-                  <div className="card-meta-row">
-                    <span className={`stage-badge ${stageTone[production.stage]}`}><span />{production.stageLabel}</span>
-                    <button className="bare-icon-button" aria-label={`More options for ${production.episodeTitle}`}><MoreHorizontal size={18} /></button>
-                  </div>
-                  <p className="show-name">{production.title}</p>
-                  <h3>{production.episodeTitle}</h3>
-                  <p className="logline">{production.logline}</p>
-                  <div className="card-footer">
-                    <span><Clock3 size={14} />{production.durationLabel}</span>
-                    <span>{production.updatedLabel}</span>
-                  </div>
-                  <button className="card-open-button" onClick={() => onOpen(production)} aria-label={`Open ${production.episodeTitle}`}>
-                    Open production <span>↗</span>
-                  </button>
-                </div>
+          <div className="grammar-stack" aria-label="Available production types">
+            {projectOptions.map((option) => (
+              <article className="grammar-card" key={option.type} style={{"--grammar-color": option.color} as React.CSSProperties}>
+                <div><span>{option.eyebrow}</span><h3>{option.title}</h3><p>{option.description}</p></div>
+                <footer><strong>{option.cadence}</strong><span>{option.grammar}</span></footer>
               </article>
             ))}
           </div>
         </section>
-
-        <section className="render-queue-card" aria-labelledby="queue-heading">
-          <div className="queue-icon"><Clapperboard size={22} /></div>
-          <div className="queue-copy"><p className="section-kicker">Render queue</p><h2 id="queue-heading">Scene 12 · final quality</h2><p>Frankly Weird History · The Dancing Plague</p></div>
-          <div className="queue-progress"><div className="queue-progress-label"><span>Rendering frames</span><strong>68%</strong></div><div className="progress-track"><span style={{width: "68%"}} /></div></div>
-          <button className="secondary-button"><MonitorPlay size={16} />View queue</button>
+        <section className="baseline-card">
+          <div className="baseline-icon"><Clapperboard size={22} /></div>
+          <div><p className="eyebrow">Infrastructure baseline</p><h3>SS-001 Walking Skeleton</h3><p>The secure desktop shell and deterministic renderer remain preserved as engineering infrastructure—not as the visual quality target.</p></div>
+          <span className="accepted-badge"><Check size={14} />Accepted</span>
         </section>
       </main>
     </div>
   );
 }
 
-function SceneThumbnail({scene}: {scene: Scene}) {
-  return (
-    <div className="scene-thumbnail" style={{"--scene-color": scene.color} as React.CSSProperties}>
-      <span className="scene-sun" />
-      <span className="scene-set scene-set-a" />
-      <span className="scene-set scene-set-b" />
-      <span className="scene-person scene-person-a" />
-      <span className="scene-person scene-person-b" />
-      <span className="scene-grain" />
-    </div>
-  );
+function PolicySummary({preset}: {preset: ProductionPreset}) {
+  const policy = productionPolicies[preset];
+  const values = [
+    ["Maximum new assets", String(policy.maxNewAssets)],
+    ["Image candidates", String(policy.imageCandidatesPerRequest)],
+    ["Image quality", policy.imageQuality],
+    ["Background layers", String(policy.backgroundLayerTarget)],
+    ["Pose pack", policy.posePack],
+    ["Shot density", `${policy.cadenceMultiplier}x`],
+    ["Preview", `${policy.outputHeight}p`],
+  ];
+  return <dl className="policy-summary">{values.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>;
 }
 
-function SceneStrip({selectedId, selectedShotId, onSelect, onSelectShot}: {selectedId: string; selectedShotId: string; onSelect: (scene: Scene) => void; onSelectShot: (shot: Shot) => void}) {
-  return (
-    <section className="scene-strip" aria-label="Scenes">
-      <div className="scene-strip-title"><span>Scenes</span><strong>{sampleEpisodePlan.scenes.length}</strong></div>
-      <div className="scene-cards">
-        {sampleEpisodePlan.scenes.map((scene) => (
-          <button className={`scene-card ${selectedId === scene.id ? "is-selected" : ""}`} key={scene.id} onClick={() => onSelect(scene)}>
-            <SceneThumbnail scene={scene} />
-            <span className="scene-number">{String(scene.number).padStart(2, "0")}</span>
-            <span className="scene-copy"><strong>{scene.title}</strong><small>{formatTime(scene.startFrame)} · {Math.round(scene.durationInFrames / sampleEpisodePlan.fps)}s</small></span>
-          </button>
-        ))}
-        <button className="add-scene-button" aria-label="Add scene"><Plus size={17} /><span>Add scene</span></button>
-      </div>
-      <div className="shot-pills" aria-label="Shots">
-        {sampleEpisodePlan.shots.filter((shot) => shot.sceneId === selectedId).map((shot) => (
-          <button className={selectedShotId === shot.id ? "is-selected" : ""} key={shot.id} onClick={() => onSelectShot(shot)}>
-            {shot.number} · {shot.title}
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-}
+function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: (session: ProductionSession) => void}) {
+  const [type, setType] = useState<ProjectType>("explainer");
+  const [title, setTitle] = useState("The Punctual Box");
+  const [script, setScript] = useState(sampleWorkshopScript);
+  const [preset, setPreset] = useState<ProductionPreset>("studio");
+  const [routing, setRouting] = useState<AssetRoutingPolicy>(() => defaultRouting("explainer"));
+  const [error, setError] = useState<string | null>(null);
+  const pack = showPacks.find((candidate) => candidate.projectType === type)!;
 
-function TimelineClip({event, selected, onSelect}: {event: TimelineEvent; selected: boolean; onSelect: (event: TimelineEvent) => void}) {
-  const left = (event.startFrame / sampleEpisodePlan.durationInFrames) * 100;
-  const width = (event.durationInFrames / sampleEpisodePlan.durationInFrames) * 100;
-  return (
-    <button
-      className={`timeline-clip ${selected ? "is-selected" : ""}`}
-      onClick={() => onSelect(event)}
-      style={{left: `${left}%`, width: `${width}%`, "--clip-color": event.color} as React.CSSProperties}
-      title={`${event.label}: ${event.detail}`}
-    >
-      {event.locked ? <LockKeyhole size={10} /> : null}<span>{event.label}</span>
-    </button>
-  );
-}
-
-function SemanticTimeline({selectedEvent, onSelect}: {selectedEvent: string | null; onSelect: (event: TimelineEvent) => void}) {
-  const kinds = Object.keys(timelineLabels) as TimelineKind[];
-  return (
-    <section className="timeline-panel" aria-label="Semantic timeline">
-      <div className="timeline-toolbar">
-        <div className="transport">
-          <button aria-label="Previous frame"><span>‹</span></button>
-          <button className="transport-play" aria-label="Play timeline"><Play size={13} fill="currentColor" /></button>
-          <button aria-label="Next frame"><span>›</span></button>
-          <time>00:06:18</time>
-          <span className="duration">/ 00:12:00</span>
-        </div>
-        <div className="timeline-actions"><button><MousePointer2 size={14} /></button><button><SlidersHorizontal size={14} /></button><button><span>−</span></button><span className="zoom-track"><i /></span><button><span>+</span></button></div>
-      </div>
-      <div className="time-ruler"><span className="track-label-space" />{[0, 2, 4, 6, 8, 10, 12].map((time) => <span key={time}>{time}s</span>)}</div>
-      <div className="timeline-content">
-        <div className="playhead" style={{left: "calc(154px + 52.5%)"}}><span /></div>
-        {kinds.map((kind) => (
-          <div className="timeline-track" key={kind}>
-            <div className="track-label"><span className={`track-glyph ${kind}`} />{timelineLabels[kind]}</div>
-            <div className="track-lane">
-              {sampleEpisodePlan.timeline.filter((event) => event.kind === kind).map((event) => (
-                <TimelineClip event={event} key={event.id} onSelect={onSelect} selected={selectedEvent === event.id} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function Inspector({shot, event}: {shot: Shot; event?: TimelineEvent}) {
-  const objectTitle = event?.label ?? shot.title;
-  const objectDetail = event?.detail ?? shot.description;
-  return (
-    <aside className="inspector-panel">
-      <div className="inspector-heading">
-        <div><p className="eyebrow">Director</p><h2>{shot.number}</h2></div>
-        <button className="bare-icon-button" aria-label="Inspector options"><MoreHorizontal size={18} /></button>
-      </div>
-      <div className="selected-object-card">
-        <span className="object-icon"><WandSparkles size={17} /></span>
-        <div><small>{event ? timelineLabels[event.kind] : "Selected shot"}</small><strong>{objectTitle}</strong><p>{objectDetail}</p></div>
-        <span className="proposal-dot">AI</span>
-      </div>
-      <div className="inspector-section">
-        <div className="inspector-section-title"><span>Shot direction</span><ChevronDown size={14} /></div>
-        <label>Framing<button>{shot.framing}<ChevronDown size={13} /></button></label>
-        <label>Purpose<textarea value={shot.purpose} readOnly /></label>
-        <div className="field-grid"><label>Lead-in<div className="number-field">8 <span>fr</span></div></label><label>Hold<div className="number-field">12 <span>fr</span></div></label></div>
-      </div>
-      <div className="inspector-section">
-        <div className="inspector-section-title"><span>Performance</span><ChevronDown size={14} /></div>
-        <label>Intensity<div className="range-row"><input type="range" min="0" max="100" defaultValue="42" /><output>42%</output></div></label>
-        <label>Look target<button>Camera<ChevronDown size={13} /></button></label>
-        <label>Trigger<div className="text-field">word “apparently”</div></label>
-      </div>
-      <div className="inspector-section sound-cue-section">
-        <div className="inspector-section-title"><span>Sound cue</span><ChevronDown size={14} /></div>
-        <div className="cue-row"><Volume2 size={16} /><div><strong>paper.flip</strong><small>Variation 3 of 8 · −11 dB</small></div><button><Play size={12} fill="currentColor" /></button></div>
-      </div>
-      <div className="inspector-footer">
-        <button className="reject-button">Reject</button>
-        <button className="approve-button"><Check size={15} />Approve</button>
-      </div>
-    </aside>
-  );
-}
-
-function RenderStatus({render, onReveal, onRetry}: {render: RenderJobState; onReveal: () => void; onRetry: () => void}) {
-  if (render.status === "idle") return null;
-  const progress = render.status === "completed" ? 1 : render.progress ?? 0;
-  return (
-    <div className={`render-status ${render.status}`} role="status">
-      <div className="render-status-icon">
-        {render.status === "completed" ? <Check size={16} /> : render.status === "failed" ? <CircleAlert size={16} /> : <Clapperboard size={16} />}
-      </div>
-      <div><strong>{render.message}</strong><div className="mini-progress"><span style={{width: `${Math.round(progress * 100)}%`}} /></div></div>
-      <span>{render.status === "completed" ? "100%" : render.progress === null ? "—" : `${Math.round(progress * 100)}%`}</span>
-      {render.status === "completed" ? <button onClick={onReveal}><FolderOpen size={14} />Show file</button> : null}
-      {render.status === "failed" ? <button onClick={onRetry}>Retry</button> : null}
-    </div>
-  );
-}
-
-function EpisodeWorkspace({onBack}: {onBack: () => void}) {
-  const [selectedScene, setSelectedScene] = useState(sampleEpisodePlan.scenes[1]!.id);
-  const [selectedShot, setSelectedShot] = useState(sampleEpisodePlan.shots[2]!.id);
-  const [selectedEvent, setSelectedEvent] = useState<string | null>("cam-2");
-  const [render, setRender] = useState<RenderJobState>(idleRender);
-  const [capabilities, setCapabilities] = useState<DesktopCapabilities | null>(null);
-  const host = useMemo(() => createHostAdapter(window.storyStage), []);
-
-  const shot = useMemo(() => sampleEpisodePlan.shots.find((item) => item.id === selectedShot) ?? sampleEpisodePlan.shots[0]!, [selectedShot]);
-  const event = useMemo(() => sampleEpisodePlan.timeline.find((item) => item.id === selectedEvent), [selectedEvent]);
-
-  useEffect(() => {
-    return host.subscribeToRenderJobs(setRender);
-  }, [host]);
-
-  useEffect(() => {
-    let active = true;
-    void host.getCapabilities().then((next) => {
-      if (active) setCapabilities(next);
-    });
-    return () => { active = false; };
-  }, [host]);
-
-  const selectScene = (scene: Scene) => {
-    setSelectedScene(scene.id);
-    setSelectedShot(scene.shotIds[0]!);
-    setSelectedEvent(null);
-  };
-
-  const selectTimelineEvent = (timelineEvent: TimelineEvent) => {
-    setSelectedEvent(timelineEvent.id);
-    const matchingShot = sampleEpisodePlan.shots.find(
-      (candidate) => timelineEvent.startFrame >= candidate.startFrame && timelineEvent.startFrame < candidate.startFrame + candidate.durationInFrames,
-    );
-    if (matchingShot) {
-      setSelectedShot(matchingShot.id);
-      setSelectedScene(matchingShot.sceneId);
-    }
-  };
-
-  const selectShot = (nextShot: Shot) => {
-    setSelectedShot(nextShot.id);
-    setSelectedScene(nextShot.sceneId);
-    setSelectedEvent(null);
-  };
-
-  const startRender = async (simulateFailure = false) => {
-    if (!capabilities?.localRendering) return;
+  const preview = useMemo(() => {
     try {
-      const result = await host.startSampleRender({simulateFailure});
-      setRender((current) => current.status === "idle" ? {jobId: result.jobId, status: "queued", progress: null, message: "Render queued"} : current);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "The desktop render connection stopped unexpectedly";
-      setRender({jobId: "unstarted", status: "failed", progress: null, message, error: {code: "START_REJECTED", message}});
+      const draft = createProductionDraft({productionId: "production-preview", title, projectType: type, showPackId: pack.id, preset, script, assetRoutingPolicy: routing});
+      return buildAnimaticSync({draft});
+    } catch {
+      return null;
+    }
+  }, [pack.id, preset, routing, script, title, type]);
+
+  const chooseType = (nextType: ProjectType) => {
+    setType(nextType);
+    setRouting(defaultRouting(nextType));
+  };
+
+  const create = () => {
+    try {
+      const draft = createProductionDraft({productionId: `production-${Date.now().toString(36)}`, title, projectType: type, showPackId: pack.id, preset, script, assetRoutingPolicy: routing});
+      buildAnimaticSync({draft});
+      onCreate({...draft, overrides: []});
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "The production could not be created.");
     }
   };
 
-  const revealOutput = async () => {
-    if (render.status !== "completed") return;
-    const result = await host.openRenderedFile(render.jobId);
-    if (!result.ok) setRender({jobId: render.jobId, status: "failed", progress: null, message: result.error.message, error: result.error});
+  return (
+    <div className="new-shell">
+      <header className="new-topbar"><Brand /><button className="quiet-button" onClick={onBack}><ArrowLeft size={15} />Productions</button><span className="step-label">New production · analysis first</span></header>
+      <main className="new-main">
+        <section className="new-heading"><p className="eyebrow">Production setup</p><h1>Choose how this story should think.</h1><p>Project type changes the actual directing and asset-routing policy. Nothing below is decorative.</p></section>
+
+        <section className="setup-section" aria-labelledby="type-heading">
+          <div className="section-number">01</div><div className="section-title"><h2 id="type-heading">Production type</h2><p>Select the broad storytelling grammar.</p></div>
+          <div className="type-grid">
+            {projectOptions.map((option) => (
+              <button className={`type-card ${type === option.type ? "is-selected" : ""}`} key={option.type} onClick={() => chooseType(option.type)} style={{"--grammar-color": option.color} as React.CSSProperties}>
+                <span className="type-icon">{option.type === "kids" ? <PlayCircle size={26} /> : <ScanSearch size={26} />}</span>
+                <span className="type-copy"><small>{option.eyebrow}</small><strong>{option.title}</strong><span>{option.description}</span></span>
+                <span className="select-mark">{type === option.type ? <Check size={15} /> : null}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="setup-section" aria-labelledby="pack-heading">
+          <div className="section-number">02</div><div className="section-title"><h2 id="pack-heading">Show Pack + profile</h2><p>The lab identity and quantitative director selected by project type.</p></div>
+          <div className="pack-card">
+            <div className="pack-monogram" style={{background: pack.profile.accentColor}}>{type === "kids" ? "KA" : "WH"}</div>
+            <div><small>Engineering Show Pack · not final branding</small><h3>{pack.displayName}</h3><p>{pack.profile.id} · v{pack.profile.version}</p></div>
+            <dl><div><dt>Text</dt><dd>{pack.profile.textPolicy.mode.replaceAll("-", " ")}</dd></div><div><dt>Cadence</dt><dd>{profileCadence(pack)}</dd></div><div><dt>Asset factory</dt><dd>Manual ChatGPT Images</dd></div></dl>
+          </div>
+        </section>
+
+        <section className="setup-section" aria-labelledby="script-heading">
+          <div className="section-number">03</div><div className="section-title"><h2 id="script-heading">Script</h2><p>Paste screenplay-style text. Analysis updates before creation.</p></div>
+          <div className="script-layout">
+            <div className="script-editor"><label>Episode title<input aria-label="Episode title" value={title} onChange={(event) => setTitle(event.target.value)} /></label><label>Screenplay<textarea aria-label="Screenplay" value={script} onChange={(event) => setScript(event.target.value)} /></label></div>
+            <aside className="analysis-preview">
+              <div className="analysis-title"><FileText size={18} /><div><strong>Live analysis</strong><small>{preview ? "Script is structurally valid" : "Waiting for valid scene headings"}</small></div></div>
+              {preview ? <>
+                <div className="analysis-stats"><div><strong>{preview.creativePlan.scenes.length}</strong><span>Scenes</span></div><div><strong>{preview.storyAnalysis.characters.length}</strong><span>Characters</span></div><div><strong>{preview.storyAnalysis.locations.length}</strong><span>Locations</span></div><div><strong>{preview.storyAnalysis.props.length}</strong><span>Props</span></div></div>
+                <div className="entity-cloud">{[...preview.storyAnalysis.characters, ...preview.storyAnalysis.locations, ...preview.storyAnalysis.props].map((entity) => <span key={entity.id}>{entity.name}</span>)}</div>
+                <div className="duration-estimate"><Gauge size={16} /><span>Estimated animatic</span><strong>{formatDuration(preview.renderPlan.durationInFrames, preview.renderPlan.fps)}</strong></div>
+              </> : <div className="analysis-empty"><CircleAlert size={21} />Begin with a heading such as <code>INT. WORKSHOP - MORNING</code>.</div>}
+            </aside>
+          </div>
+        </section>
+
+        <section className="setup-section" aria-labelledby="policy-heading">
+          <div className="section-number">04</div><div className="section-title"><h2 id="policy-heading">Production preset</h2><p>Active limits for plan density, generated-art requirements, and preview size.</p></div>
+          <div className="preset-row">{(["draft", "studio", "premium"] as const).map((value) => <button className={preset === value ? "is-selected" : ""} key={value} onClick={() => setPreset(value)}><span>{value === "draft" ? "Draft animatic" : value}</span><small>{value === "draft" ? "Fast proof" : value === "studio" ? "Balanced production" : "Extended asset pass"}</small>{preset === value ? <Check size={14} /> : null}</button>)}</div>
+          <PolicySummary preset={preset} />
+        </section>
+
+        <section className="setup-section" aria-labelledby="assets-heading">
+          <div className="section-number">05</div><div className="section-title"><h2 id="assets-heading">Asset strategy</h2><p>These rules change generated briefs and evidence routing.</p></div>
+          <div className="strategy-grid">
+            <label><input type="checkbox" checked={routing.reuseApprovedFirst} onChange={(event) => setRouting({...routing, reuseApprovedFirst: event.target.checked})} /><span><strong>Reuse approved assets first</strong><small>Prefer identity-locked local assets.</small></span></label>
+            <label><input type="checkbox" checked={routing.generateMissing} onChange={(event) => setRouting({...routing, generateMissing: event.target.checked})} /><span><strong>Brief missing custom assets</strong><small>Export for ChatGPT Images; no paid call.</small></span></label>
+            <label className={type === "kids" ? "is-disabled" : ""}><input type="checkbox" disabled={type === "kids"} checked={routing.licensedSources !== "disabled"} onChange={(event) => setRouting({...routing, licensedSources: event.target.checked ? "factual-first" : "disabled"})} /><span><strong>Authenticated sources first</strong><small>Archive/public domain/licensed media for factual evidence.</small></span></label>
+            <label className={type === "kids" ? "is-disabled" : ""}><input type="checkbox" disabled={type === "kids"} checked={routing.allowGeneratedHistoricalReconstruction} onChange={(event) => setRouting({...routing, allowGeneratedHistoricalReconstruction: event.target.checked})} /><span><strong>Allow labeled reconstruction</strong><small>Generated history must never masquerade as archive.</small></span></label>
+          </div>
+        </section>
+
+        <footer className="create-footer">
+          <div>{preview ? <><PackageCheck size={18} /><span><strong>{preview.estimate.newRequirementCount} asset briefs</strong><small>{preview.estimate.shotCount} planned shots · {preview.estimate.deferredRequirementCount} deferred requirements</small></span></> : <><CircleAlert size={18} /><span><strong>Script needs attention</strong><small>Creation remains blocked until parsing succeeds.</small></span></>}</div>
+          {error ? <p role="alert">{error}</p> : null}
+          <button className="create-button" disabled={!preview || !title.trim()} onClick={create}>Create production <ArrowRight size={17} /></button>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+function Metric({label, value, detail}: {label: string; value: string; detail: string}) {
+  return <div className="metric"><span>{label}</span><strong>{value}</strong><small>{detail}</small></div>;
+}
+
+function DirectionBoard({build, selectedShotId, onSelect}: {build: AnimaticBuild; selectedShotId: string; onSelect: (id: string) => void}) {
+  return (
+    <div className="direction-board">
+      <div className="board-disclaimer"><ScanSearch size={16} /><div><strong>Direction blueprint · no artwork preview</strong><span>Cards show treatment, framing, cadence, and transitions. Generated imagery appears only after import and approval.</span></div></div>
+      {build.creativePlan.scenes.map((scene) => (
+        <section className="board-scene" key={scene.id}>
+          <header><div><span>Scene {String(scene.number).padStart(2, "0")}</span><h3>{scene.title}</h3></div><small>{scene.shotIds.length} shots</small></header>
+          <div className="shot-grid">{scene.shotIds.map((id) => {
+            const shot = build.renderPlan.shots.find((candidate) => candidate.id === id)!;
+            return <button aria-label={`Select shot ${shot.number} ${shot.title}`} className={`shot-card ${selectedShotId === id ? "is-selected" : ""}`} key={id} onClick={() => onSelect(id)}>
+              <div className={`shot-visual treatment-${shot.treatment}`}><span>{shot.treatment.replaceAll("-", " ")}</span><b>{shot.framing}</b></div>
+              <div className="shot-copy"><span>{shot.number}</span><strong>{shot.title}</strong><small>{(shot.durationInFrames / build.renderPlan.fps).toFixed(1)}s · {shot.transition.replaceAll("-", " ")}</small></div>
+            </button>;
+          })}</div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+function createGenerationJob(session: ProductionSession, build: AnimaticBuild): GenerationJobDraft {
+  const pack = getShowPack(session.showPackId);
+  return generationJobDraftSchema.parse({
+    schemaVersion: "1.0",
+    exchangeMode: "manual-chatgpt-images",
+    production: {id: session.productionId, revision: session.revision, title: session.title},
+    showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash},
+    briefs: build.resolvedPlan.generationBriefs,
+    expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-id>.png"},
+  });
+}
+
+function downloadBriefs(session: ProductionSession, payload: GenerationJobDraft) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"}));
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${session.productionId}-generation-job.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+}
+
+function AssetExchange({session, build, host, capabilities}: {session: ProductionSession; build: AnimaticBuild; host: HostAdapter; capabilities: DesktopCapabilities}) {
+  const [exportStatus, setExportStatus] = useState<string | null>(null);
+  const [reviewingExport, setReviewingExport] = useState(false);
+  const [exchangeJobId, setExchangeJobId] = useState<string | null>(null);
+  const [importedCount, setImportedCount] = useState(0);
+  const [manualMaskCount, setManualMaskCount] = useState(0);
+  const [missingRoleCount, setMissingRoleCount] = useState(0);
+  const [importError, setImportError] = useState<string | null>(null);
+  const generationJobDraft = useMemo(() => createGenerationJob(session, build), [build, session]);
+
+  const exportBriefs = async () => {
+    const payload = generationJobDraft;
+    if (!capabilities.manualImageExchange) {
+      downloadBriefs(session, payload);
+      setExportStatus(`Generation job exported for ${payload.briefs.length} briefs.`);
+      setReviewingExport(false);
+      return;
+    }
+    const result = await host.exportGenerationJob({serializedJob: JSON.stringify(payload)});
+    if (!result.ok) {
+      setExportStatus(null);
+      setImportError(result.error.message);
+      return;
+    }
+    setImportError(null);
+    setExchangeJobId(result.jobId);
+    setReviewingExport(false);
+    setExportStatus(`Private generation job exported for ${result.briefCount} briefs. Its folder is open.`);
+  };
+
+  const importBundle = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const parsed = candidateBundleSchema.parse(JSON.parse(await file.text()));
+      setImportedCount(parsed.assets.length);
+      setManualMaskCount(0);
+      setMissingRoleCount(0);
+      setImportError(null);
+    } catch (error) {
+      setImportedCount(0);
+      setImportError(error instanceof Error ? error.message : "Candidate bundle is invalid.");
+    }
+  };
+
+  const stageDesktopBundle = async () => {
+    if (!exchangeJobId) return;
+    const result = await host.stageCandidateBundle({exchangeJobId});
+    if (result.status === "cancelled") return;
+    if (result.status === "failed") {
+      setImportedCount(0);
+      setManualMaskCount(0);
+      setMissingRoleCount(0);
+      setImportError(result.error.message);
+      return;
+    }
+    setImportedCount(result.preparedCount);
+    setManualMaskCount(result.needsManualMaskCount);
+    setMissingRoleCount(result.missingRoleCount);
+    setImportError(null);
+  };
+
+  return (
+    <div className="asset-exchange">
+      <section className="provider-banner"><div className="provider-icon"><ImagePlus size={23} /></div><div><p className="eyebrow">Provider-neutral exchange</p><h2>Manual ChatGPT Images</h2><p>Export an approved brief, generate original candidates in ChatGPT, then import the result bundle. No API call or paid generation is hidden here.</p></div><span className="manual-badge">Manual round trip</span></section>
+      <div className="exchange-actions">
+        <button onClick={() => setReviewingExport(true)}><Download size={16} /><span><strong>Review generation export</strong><small>{capabilities.manualImageExchange ? "Nothing leaves before approval" : "JSON + expected output contract"}</small></span></button>
+        {capabilities.manualImageExchange
+          ? <button disabled={!exchangeJobId} onClick={() => void stageDesktopBundle()}><Upload size={16} /><span><strong>Import generated results</strong><small>{exchangeJobId ? "Secure native folder selection" : "Export a job first"}</small></span></button>
+          : <label><Upload size={16} /><span><strong>Validate candidate manifest</strong><small>Browser preview only{" / "}no file staging</small></span><input aria-label="Import candidate bundle" type="file" accept="application/json,.json" onChange={(event) => void importBundle(event.target.files?.[0])} /></label>}
+      </div>
+      {reviewingExport ? <section className="export-review" aria-label="Generation export review">
+        <header><div><p className="eyebrow">Human approval gate</p><h2>Exactly what will leave StoryStage</h2></div><span>{generationJobDraft.briefs.length} briefs</span></header>
+        <p>The JSON contains the production title, minimum source excerpts, Show Pack and style hashes, reference-asset hashes, prompts, and expected file roles. It contains no ChatGPT credentials, cookies, local paths, or candidate images.</p>
+        <div className="review-briefs">{generationJobDraft.briefs.map((brief) => <article key={brief.id}>
+          <div><strong>{brief.entity.name}</strong><small>{brief.outputRole.replaceAll("-", " ")}{" / "}{brief.candidateCount} candidates</small></div>
+          <p>{brief.sourceExcerpts.join(" ")}</p>
+          <dl><div><dt>References</dt><dd>{brief.referenceAssets.length || "None"}</dd></div><div><dt>Expected</dt><dd>{brief.expectedFiles.join(", ")}</dd></div></dl>
+        </article>)}</div>
+        <footer><button className="quiet-button" onClick={() => setReviewingExport(false)}>Cancel</button><button className="create-button" onClick={() => void exportBriefs()}><ShieldCheck size={15} />Approve and export generation job</button></footer>
+      </section> : null}
+      {exportStatus ? <p className="exchange-status"><Check size={14} />{exportStatus}</p> : null}
+      {importedCount > 0 ? <p className="exchange-status"><PackageCheck size={14} />{capabilities.manualImageExchange ? `Prepared ${importedCount} byte-verified candidates${manualMaskCount > 0 ? `; ${manualMaskCount} need a manual mask` : ""}${missingRoleCount > 0 ? `; ${missingRoleCount} expected roles are still missing` : ""}. Approval is the next gate.` : `Manifest contains ${importedCount} candidates. Open the desktop app to verify and stage the actual image bytes.`}</p> : null}
+      {importError ? <p className="exchange-error" role="alert"><CircleAlert size={14} />{importError}</p> : null}
+      <section className="request-list"><header><div><p className="eyebrow">Missing asset ledger</p><h2>{build.resolvedPlan.generationBriefs.length} generation briefs</h2></div><span>Approval required</span></header>
+        {build.resolvedPlan.generationBriefs.map((request) => {
+          return <article className="request-card" key={request.id}><span className="request-kind">{request.outputRole.replaceAll("-", " ")}</span><div><h3>{request.entity.name}</h3><p>{request.creativeRequirements[0]}</p></div><dl><div><dt>Candidates</dt><dd>{request.candidateCount}</dd></div><div><dt>Quality</dt><dd>{request.imageQuality}</dd></div><div><dt>Layers</dt><dd>{request.backgroundLayerTarget}</dd></div><div><dt>Pose pack</dt><dd>{request.posePack}</dd></div></dl><span className="request-state">{request.status}</span></article>;
+        })}
+      </section>
+    </div>
+  );
+}
+
+function Workspace({session, setSession, onExit, host, capabilities}: {session: ProductionSession; setSession: (next: ProductionSession) => void; onExit: () => void; host: HostAdapter; capabilities: DesktopCapabilities}) {
+  const build = useMemo(() => buildAnimaticSync({draft: draftFromSession(session), overrides: session.overrides}), [session]);
+  const [tab, setTab] = useState<WorkspaceTab>("direction");
+  const [selectedShotId, setSelectedShotId] = useState(build.renderPlan.shots[0]!.id);
+  const selectedShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
+  const currentOverride = session.overrides.find((override) => override.shotId === selectedShot.id);
+  const pack = getShowPack(session.showPackId);
+  const averageShot = build.metrics.averageShotSeconds;
+  const routed = ["insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"].reduce((sum, treatment) => sum + (build.metrics.treatmentDistribution[treatment] ?? 0), 0);
+
+  const updateOverride = (patch: Partial<ShotOverride>) => {
+    const nextOverride = {...currentOverride, shotId: selectedShot.id, ...patch};
+    setSession({...session, overrides: [...session.overrides.filter((override) => override.shotId !== selectedShot.id), nextOverride]});
   };
 
   return (
     <div className="workspace-shell">
-      <header className="workspace-topbar">
-        <div className="workspace-brand"><AppMark compact /><button className="back-button" onClick={onBack} aria-label="Back to productions"><ArrowLeft size={15} /></button><div className="production-crumb"><span>Frankly Weird History</span><strong>The Dancing Plague</strong></div></div>
-        <div className="save-state"><Cloud size={14} /><span>Saved just now</span></div>
-        <div className="workspace-actions"><button className="history-button" aria-label="Undo"><Undo2 size={15} /></button><button className="history-button" aria-label="Redo"><Redo2 size={15} /></button><span className="toolbar-rule" /><button className="secondary-button"><Save size={15} />Save</button><button className="preview-button"><Play size={14} fill="currentColor" />Preview</button><button className="primary-button" disabled={!capabilities?.localRendering} title={capabilities?.localRendering ? "Render locally" : "Desktop app required for local rendering"} onClick={() => void startRender()}><Clapperboard size={16} />Render</button><button className="bare-icon-button" aria-label="More workspace options"><MoreHorizontal size={19} /></button></div>
-      </header>
-
-      <div className="workspace-body">
-        <aside className="workspace-nav">
-          <p>Production</p>
-          <nav aria-label="Production sections">
-            {navItems.map(({icon: Icon, label}) => <button className={label === "Stage" ? "is-active" : ""} key={label}><Icon size={17} /><span>{label}</span>{label === "Board" ? <i>2</i> : null}</button>)}
-          </nav>
-          <div className="workspace-nav-spacer" />
-          <button className="ai-director-button"><Sparkles size={17} /><span><strong>Ask Director</strong><small>Context-aware help</small></span></button>
-          <button className="failure-test-button" disabled={!capabilities?.localRendering} onClick={() => void startRender(true)}><TestTube2 size={14} />Test worker failure</button>
-        </aside>
-
-        <main className="stage-workspace">
-          <div className="stage-header">
-            <div><p className="eyebrow">Scene 03 · Shot {shot.number}</p><h1>{shot.title}</h1></div>
-            <div className="stage-header-actions"><span className={`shot-status ${shot.status}`}><span />{shot.status}</span><button><Image size={15} />Compare</button><button className="direct-button"><Sparkles size={14} />Direct this shot</button></div>
+      <header className="workspace-topbar"><Brand /><button className="quiet-button" onClick={onExit}><ArrowLeft size={14} />Productions</button><div className="production-crumb"><span>{pack.displayName}</span><ChevronRight size={13} /><strong>{session.title}</strong></div><span className="saved-state"><Check size={13} />Active session</span></header>
+      <aside className="workspace-nav">
+        <button className={tab === "direction" ? "is-active" : ""} onClick={() => setTab("direction")}><Aperture size={18} /><span>Direction</span></button>
+        <button className={tab === "assets" ? "is-active" : ""} onClick={() => setTab("assets")}><Layers3 size={18} /><span>Assets</span><b>{build.resolvedPlan.generationBriefs.length}</b></button>
+        <div className="nav-spacer" />
+        <button disabled><ListChecks size={18} /><span>Preflight</span></button>
+      </aside>
+      <main className="workspace-main">
+        <header className="workspace-heading"><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : "Generated-asset exchange"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
+        {tab === "direction" ? <>
+          <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
+          <div className="workspace-grid">
+            <DirectionBoard build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
+            <aside className="shot-inspector">
+              <header><div><p className="eyebrow">Shot inspector</p><h2>{selectedShot.number}</h2></div><span>{selectedShot.treatment.replaceAll("-", " ")}</span></header>
+              <div className="intent-card"><WandSparkles size={19} /><div><small>Selected intent</small><strong>{selectedShot.title}</strong><p>{selectedShot.caption ?? selectedShot.actions[0]!.label}</p></div></div>
+              <label>Framing<select aria-label="Shot framing" value={currentOverride?.framing ?? selectedShot.framing} onChange={(event) => updateOverride({framing: event.target.value as ShotOverride["framing"]})}>{framings.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+              <label>Visual treatment<select aria-label="Visual treatment" value={currentOverride?.treatment ?? selectedShot.treatment} onChange={(event) => updateOverride({treatment: event.target.value as ShotOverride["treatment"]})}>{treatments.map((value) => <option key={value} value={value}>{value.replaceAll("-", " ")}</option>)}</select></label>
+              <label>Camera action<select aria-label="Camera action" value={currentOverride?.cameraAction ?? ""} onChange={(event) => updateOverride({cameraAction: event.target.value ? event.target.value as ShotOverride["cameraAction"] : undefined})}><option value="">Profile default</option>{cameraActions.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+              <label>Performance gesture<select aria-label="Performance gesture" value={currentOverride?.gesture ?? ""} onChange={(event) => updateOverride({gesture: event.target.value ? event.target.value as ShotOverride["gesture"] : undefined})}><option value="">Profile default</option>{pack.allowedGestures.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+              <label>Background<select aria-label="Background asset" value={currentOverride?.locationAssetId ?? selectedShot.locationAssetId} onChange={(event) => updateOverride({locationAssetId: event.target.value})}>{pack.assets.filter((asset) => asset.kind === "location").map((asset) => <option key={asset.id} value={asset.id}>{asset.displayName}</option>)}</select></label>
+              <div className="compiled-actions"><span>Compiled actions</span>{selectedShot.actions.map((action) => <div key={action.id}><b>{action.detail.type}</b><small>{action.endFrame - action.startFrame} fr</small></div>)}</div>
+              {currentOverride ? <p className="override-state"><Check size={13} />Override compiled into the current render plan.</p> : <p className="override-help">Change a field to create a semantic override. No JSON editing required.</p>}
+            </aside>
           </div>
-          <div className="preview-area">
-            <div className="player-frame">
-              <Player
-                component={StoryStageComposition}
-                inputProps={{plan: sampleEpisodePlan}}
-                durationInFrames={sampleEpisodePlan.durationInFrames}
-                compositionWidth={sampleEpisodePlan.width}
-                compositionHeight={sampleEpisodePlan.height}
-                fps={sampleEpisodePlan.fps}
-                acknowledgeRemotionLicense
-                controls
-                style={{width: "100%", height: "100%"}}
-              />
-              <div className="preview-badge"><span />720p animatic</div>
-              {capabilities && !capabilities.localRendering ? <div className="browser-render-notice">Desktop app required for local rendering</div> : null}
-            </div>
-            <RenderStatus render={render} onReveal={() => void revealOutput()} onRetry={() => void startRender(false)} />
-          </div>
-          <SceneStrip selectedId={selectedScene} selectedShotId={selectedShot} onSelect={selectScene} onSelectShot={selectShot} />
-          <SemanticTimeline selectedEvent={selectedEvent} onSelect={selectTimelineEvent} />
-        </main>
-
-        <Inspector shot={shot} event={event} />
-      </div>
+        </> : <AssetExchange session={session} build={build} host={host} capabilities={capabilities} />}
+      </main>
     </div>
   );
 }
 
 export function App() {
-  const [screen, setScreen] = useState<Screen>("productions");
+  const [screen, setScreen] = useState<Screen>("home");
+  const [session, setSession] = useState<ProductionSession | null>(null);
+  const [host] = useState(() => createHostAdapter(window.storyStage));
+  const [capabilities, setCapabilities] = useState<DesktopCapabilities>({localRendering: false, openRenderedFile: false, manualImageExchange: false});
 
-  return screen === "productions" ? (
-    <ProductionsScreen onOpen={() => setScreen("episode")} />
-  ) : (
-    <EpisodeWorkspace onBack={() => setScreen("productions")} />
-  );
+  useEffect(() => {
+    window.scrollTo({top: 0, left: 0, behavior: "auto"});
+  }, [screen]);
+
+  useEffect(() => {
+    void host.getCapabilities().then(setCapabilities);
+  }, [host]);
+
+  if (screen === "new-production") return <NewProductionScreen onBack={() => setScreen("home")} onCreate={(created) => {setSession(created); setScreen("workspace");}} />;
+  if (screen === "workspace" && session) return <Workspace session={session} setSession={setSession} onExit={() => setScreen("home")} host={host} capabilities={capabilities} />;
+  return <HomeScreen onNew={() => setScreen("new-production")} />;
 }

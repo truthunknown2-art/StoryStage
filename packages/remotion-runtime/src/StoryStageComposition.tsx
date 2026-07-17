@@ -1,5 +1,5 @@
 import {Audio} from "@remotion/media";
-import type {EpisodePlan} from "@storystage/contracts";
+import type {LegacyEpisodePlan} from "@storystage/fixtures";
 import {
   AbsoluteFill,
   Easing,
@@ -12,7 +12,7 @@ import {Captions} from "./Captions";
 import {CutoutCharacter} from "./CutoutCharacter";
 
 export type StoryStageCompositionProps = {
-  plan: EpisodePlan;
+  plan: LegacyEpisodePlan;
 };
 
 const PaperGrain: React.FC = () => (

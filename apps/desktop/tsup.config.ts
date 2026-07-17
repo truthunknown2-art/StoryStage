@@ -6,7 +6,10 @@ export default defineConfig({
   external: ["electron"],
   format: ["cjs"],
   noExternal: [
+    "@storystage/asset-pipeline",
     "@storystage/contracts",
+    "@storystage/story-engine",
+    "@noble/hashes",
     "zod",
   ],
   outDir: "dist",

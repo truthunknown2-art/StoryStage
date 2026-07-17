@@ -1,92 +1,113 @@
-import {cleanup, render, screen, waitFor} from "@testing-library/react";
+import {cleanup, render, screen, within} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {afterEach, describe, expect, it, vi} from "vitest";
-import {StrictMode} from "react";
 import {App} from "./App";
-
-vi.mock("@remotion/player", () => ({
-  Player: () => <div data-testid="remotion-player">Remotion preview</div>,
-}));
 
 afterEach(() => {
   cleanup();
-  delete window.storyStage;
+  vi.restoreAllMocks();
 });
 
+async function openProductionSetup() {
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(screen.getByRole("button", {name: "New production"}));
+  return user;
+}
+
+async function createDefaultProduction() {
+  const user = await openProductionSetup();
+  await user.click(screen.getByRole("button", {name: "Create production"}));
+  return user;
+}
+
 describe("StoryStage studio", () => {
-  it("opens the sample production and exposes the directing workspace", async () => {
+  it("opens a real production setup from the home screen", async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    expect(screen.getByRole("heading", {name: "Recent productions"})).toBeInTheDocument();
-    await user.click(screen.getByRole("button", {name: "Open The Dancing Plague"}));
+    expect(screen.getByRole("heading", {name: /Make the directing decisions/})).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: "New production"})).toBeEnabled();
+    expect(screen.getByRole("button", {name: /Show Packs/})).toBeDisabled();
 
-    expect(screen.getByTestId("remotion-player")).toBeInTheDocument();
-    expect(screen.getByRole("region", {name: "Scenes"})).toBeInTheDocument();
-    expect(screen.getByRole("region", {name: "Semantic timeline"})).toBeInTheDocument();
-    expect(screen.getAllByText("Slow push")).toHaveLength(2);
+    await user.click(screen.getByRole("button", {name: "New production"}));
+
+    expect(screen.getByRole("heading", {name: "Choose how this story should think."})).toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: "Production type"})).toBeInTheDocument();
+    expect((screen.getByLabelText("Screenplay") as HTMLTextAreaElement).value).toContain("INT. WORKSHOP");
+    expect(screen.queryByText(/intensity/i)).not.toBeInTheDocument();
   });
 
-  it("changes the selected shot when a scene is selected", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    await user.click(screen.getByRole("button", {name: "Open The Dancing Plague"}));
-    await user.click(screen.getByRole("button", {name: /The story pivots/}));
-    await user.click(screen.getByRole("button", {name: /2.02 · Otto points/}));
+  it("changes the actual Show Pack and routing rules for a kids production", async () => {
+    const user = await openProductionSetup();
 
-    expect(screen.getByRole("heading", {name: "Otto points"})).toBeInTheDocument();
-    expect(screen.getByText("2.02")).toBeInTheDocument();
+    expect(screen.getByText(/weird-history-director-v1/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: /Kids Adventure/}));
+
+    expect(screen.getByText(/kids-adventure-director-v1/)).toBeInTheDocument();
+    expect(screen.getByText("2.7-4.3s")).toBeInTheDocument();
+    expect(screen.getByRole("checkbox", {name: /Authenticated sources first/})).toBeDisabled();
+    expect(screen.getByRole("checkbox", {name: /Allow labeled reconstruction/})).toBeDisabled();
   });
 
-  it("updates the inspector for scene, shot, timeline, and character-action selections", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    await user.click(screen.getByRole("button", {name: "Open The Dancing Plague"}));
+  it("shows production presets as downstream policy, not decorative choices", async () => {
+    const user = await openProductionSetup();
+    const policySection = screen.getByRole("heading", {name: "Production preset"}).closest("section");
+    expect(policySection).not.toBeNull();
 
-    await user.click(screen.getByRole("button", {name: /01An ordinary morning/}));
-    expect(screen.getByRole("heading", {name: "Square establishes"})).toBeInTheDocument();
+    await user.click(within(policySection!).getByRole("button", {name: /premium/i}));
 
-    await user.click(screen.getByRole("button", {name: /1.02 · Iris notices/}));
-    expect(screen.getByRole("heading", {name: "Iris notices"})).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", {name: "Wide hold"}));
-    expect(screen.getByText("Locked 16:9 master")).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", {name: "Skeptical hold"}));
-    expect(screen.getAllByText("Skeptical hold")).toHaveLength(2);
-    expect(screen.getByText("Reaction pose")).toBeInTheDocument();
+    expect(within(policySection!).getByText("4")).toBeInTheDocument();
+    expect(within(policySection!).getByText("high")).toBeInTheDocument();
+    expect(within(policySection!).getByText("extended")).toBeInTheDocument();
+    expect(within(policySection!).getByText("2160p")).toBeInTheDocument();
   });
 
-  it("visibly disables local rendering in browser mode without creating a job", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    await user.click(screen.getByRole("button", {name: "Open The Dancing Plague"}));
+  it("builds the pasted script into a profile-driven direction board", async () => {
+    await createDefaultProduction();
 
-    const renderButton = screen.getByRole("button", {name: "Render"});
-    await waitFor(() => expect(renderButton).toBeDisabled());
-    expect(screen.getByText("Desktop app required for local rendering")).toBeInTheDocument();
-    expect(screen.queryByText("Preview render complete")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: "The Punctual Box"})).toBeInTheDocument();
+    expect(screen.getByText(/weird-history-director-v1/)).toBeInTheDocument();
+    expect(screen.getByText("Planned shots")).toBeInTheDocument();
+    expect(screen.getByText("Average shot")).toBeInTheDocument();
+    expect(screen.getByText("Editorial routing")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", {name: /Select shot/}).length).toBeGreaterThan(10);
   });
 
-  it("keeps desktop subscriptions StrictMode-safe", async () => {
-    const user = userEvent.setup();
-    let activeListeners = 0;
-    const subscribeToRenderJobs = vi.fn(() => {
-      activeListeners += 1;
-      return () => { activeListeners -= 1; };
-    });
-    window.storyStage = {
-      getCapabilities: vi.fn(async () => ({localRendering: true, openRenderedFile: true})),
-      startSampleRender: vi.fn(async () => ({jobId: "job-1"})),
-      subscribeToRenderJobs,
-      openRenderedFile: vi.fn(async () => ({ok: true as const})),
-    };
+  it("compiles inspector choices into semantic shot overrides", async () => {
+    const user = await createDefaultProduction();
 
-    const view = render(<StrictMode><App /></StrictMode>);
-    await user.click(screen.getByRole("button", {name: "Open The Dancing Plague"}));
-    await waitFor(() => expect(activeListeners).toBe(1));
-    expect(subscribeToRenderJobs).toHaveBeenCalledTimes(2);
-    view.unmount();
-    expect(activeListeners).toBe(0);
+    await user.selectOptions(screen.getByLabelText("Shot framing"), "close-up");
+    await user.selectOptions(screen.getByLabelText("Camera action"), "pan");
+    await user.selectOptions(screen.getByLabelText("Performance gesture"), "point");
+
+    expect(screen.getByLabelText("Shot framing")).toHaveValue("close-up");
+    expect(screen.getByText("Override compiled into the current render plan.")).toBeInTheDocument();
+    expect(screen.getAllByText("pan").some((element) => element.tagName === "B")).toBe(true);
+    expect(screen.getAllByText("gesture").some((element) => element.tagName === "B")).toBe(true);
+  });
+
+  it("exposes an honest manual ChatGPT Images exchange with downloadable briefs", async () => {
+    const user = await createDefaultProduction();
+    const createObjectURL = vi.fn(() => "blob:story-stage-brief");
+    const revokeObjectURL = vi.fn();
+    Object.defineProperty(URL, "createObjectURL", {configurable: true, value: createObjectURL});
+    Object.defineProperty(URL, "revokeObjectURL", {configurable: true, value: revokeObjectURL});
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
+
+    await user.click(screen.getByRole("button", {name: /Assets/}));
+
+    expect(screen.getByRole("heading", {name: "Manual ChatGPT Images"})).toBeInTheDocument();
+    expect(screen.getByText(/No API call or paid generation is hidden here/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", {name: /^Generate$/i})).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: /generation briefs/})).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", {name: /Review generation export/}));
+    expect(screen.getByRole("heading", {name: /Exactly what will leave StoryStage/})).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: /Approve and export generation job/}));
+
+    expect(createObjectURL).toHaveBeenCalledOnce();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:story-stage-brief");
+    expect(screen.getByText(/Generation job exported for/)).toBeInTheDocument();
   });
 });

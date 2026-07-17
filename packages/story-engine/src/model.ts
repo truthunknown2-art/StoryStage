@@ -1,11 +1,28 @@
 import {z} from "zod";
 
+export const STORY_ENGINE_COMPILER_VERSION = "0.2.0";
+
 const identifierSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/);
+const safeRelativePathSchema = z.string().min(1).refine((value) => !value.includes("\\") && !value.includes(":") && !value.startsWith("/") && !value.split("/").includes(".."), "Path must be a safe forward-slash relative path.");
 
 export const projectTypeSchema = z.enum(["kids", "explainer"]);
 export const productionPresetSchema = z.enum(["draft", "studio", "premium"]);
 export const visualModeSchema = z.enum(["kids-adventure", "weird-history-editorial"]);
+export const shotFramingSchema = z.enum(["wide", "medium", "close-up", "insert"]);
+export const shotTreatmentSchema = z.enum([
+  "environment",
+  "character-performance",
+  "reaction",
+  "insert",
+  "kinetic-type",
+  "diagram",
+  "licensed-media",
+  "generated-illustration",
+]);
+export const transitionStyleSchema = z.enum(["hard-cut", "foreground-wipe", "camera-carry", "brief-dissolve"]);
+export const gestureSchema = z.enum(["explain", "point", "lift", "shrug", "run", "listen", "celebrate", "none"]);
+export const cameraMoveSchema = z.enum(["locked", "cameraPush", "pan", "reframe"]);
 
 export const productionPolicySchema = z.object({
   preset: productionPresetSchema,
@@ -19,6 +36,36 @@ export const productionPolicySchema = z.object({
   cadenceMultiplier: z.number().positive(),
   outputHeight: z.union([z.literal(720), z.literal(1080), z.literal(2160)]),
   audioPasses: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+}).strict();
+
+export const assetRoutingPolicySchema = z.object({
+  reuseApprovedFirst: z.boolean(),
+  generateMissing: z.boolean(),
+  licensedSources: z.enum(["disabled", "factual-first", "allowed"]),
+  allowGeneratedHistoricalReconstruction: z.boolean(),
+  proposed3D: z.enum(["never", "review-only"]),
+}).strict();
+
+export const productionDraftSchema = z.object({
+  schemaVersion: z.literal("1.0"),
+  productionId: identifierSchema,
+  revision: z.number().int().positive(),
+  title: z.string().trim().min(1),
+  projectType: projectTypeSchema,
+  showPackId: identifierSchema,
+  preset: productionPresetSchema,
+  script: z.string().trim().min(1),
+  assetRoutingPolicy: assetRoutingPolicySchema,
+  format: z.object({
+    aspectRatio: z.enum(["16:9", "9:16"]),
+    fps: z.literal(30),
+  }).strict(),
+}).strict();
+
+export const productionDiagnosticSchema = z.object({
+  code: z.enum(["invalid-production", "invalid-script", "show-pack-mismatch", "planning-failed"]),
+  path: z.string(),
+  message: z.string().min(1),
 }).strict();
 
 export const sceneHeadingElementSchema = z.object({
@@ -46,15 +93,12 @@ export const actionElementSchema = z.object({
   text: z.string().min(1),
 }).strict();
 
-export const scriptElementSchema = z.discriminatedUnion("type", [
-  sceneHeadingElementSchema,
-  dialogueElementSchema,
-  actionElementSchema,
-]);
+export const scriptElementSchema = z.discriminatedUnion("type", [sceneHeadingElementSchema, dialogueElementSchema, actionElementSchema]);
 
 export const scriptDocumentSchema = z.object({
   schemaVersion: z.literal("1.0"),
   id: identifierSchema,
+  productionId: identifierSchema,
   title: z.string().min(1),
   sourceText: z.string().min(1),
   elements: z.array(scriptElementSchema).min(1),
@@ -65,10 +109,15 @@ export const storyEntitySchema = z.object({
   kind: z.enum(["character", "location", "prop"]),
   name: z.string().min(1),
   mentions: z.number().int().positive(),
+  sceneIds: z.array(identifierSchema).min(1),
+  sourceElementIds: z.array(identifierSchema).min(1),
+  confidence: z.number().min(0).max(1),
+  status: z.enum(["confirmed", "needs-review", "unresolved"]),
+  role: z.enum(["speaker", "presenter", "support", "prop", "location"]),
 }).strict();
 
 export const storyAnalysisSchema = z.object({
-  schemaVersion: z.literal("1.0"),
+  schemaVersion: z.literal("1.1"),
   documentId: identifierSchema,
   characters: z.array(storyEntitySchema),
   locations: z.array(storyEntitySchema),
@@ -76,46 +125,46 @@ export const storyAnalysisSchema = z.object({
   warnings: z.array(z.string().min(1)),
 }).strict();
 
-export const semanticActionTypeSchema = z.enum([
-  "enter",
-  "exit",
-  "talk",
-  "lookAt",
-  "gesture",
-  "react",
-  "holdPose",
-  "hardCut",
-  "cameraPush",
-  "reframe",
-  "insert",
-  "foregroundWipe",
-  "kineticType",
-  "beatAccent",
-  "pan",
+export const actionDetailSchema = z.discriminatedUnion("type", [
+  z.object({type: z.literal("talk"), dialogueLineId: identifierSchema, timingId: identifierSchema}).strict(),
+  z.object({type: z.literal("gesture"), gestureId: gestureSchema, intensity: z.number().min(0).max(1)}).strict(),
+  z.object({type: z.literal("react"), poseId: identifierSchema}).strict(),
+  z.object({type: z.literal("enter"), direction: z.enum(["left", "right", "foreground", "background"])}).strict(),
+  z.object({type: z.literal("exit"), direction: z.enum(["left", "right", "foreground", "background"])}).strict(),
+  z.object({type: z.literal("lookAt")}).strict(),
+  z.object({type: z.literal("holdPose"), poseId: identifierSchema}).strict(),
+  z.object({type: z.literal("hardCut")}).strict(),
+  z.object({type: z.literal("cameraPush"), fromScale: z.number().positive(), toScale: z.number().positive(), easingId: identifierSchema}).strict(),
+  z.object({type: z.literal("reframe"), framing: shotFramingSchema, easingId: identifierSchema}).strict(),
+  z.object({type: z.literal("insert"), visualRequirementId: identifierSchema}).strict(),
+  z.object({type: z.literal("foregroundWipe"), layer: z.enum(["character", "prop", "environment"])}).strict(),
+  z.object({type: z.literal("kineticType"), text: z.string().min(1), emphasis: z.enum(["word", "phrase"])}).strict(),
+  z.object({type: z.literal("beatAccent"), intensity: z.number().min(0).max(1)}).strict(),
+  z.object({type: z.literal("pan"), fromX: z.number(), toX: z.number(), easingId: identifierSchema}).strict(),
 ]);
-
-export const shotFramingSchema = z.enum(["wide", "medium", "close-up", "insert"]);
-export const shotTreatmentSchema = z.enum([
-  "environment",
-  "character-performance",
-  "reaction",
-  "insert",
-  "kinetic-type",
-  "diagram",
-  "licensed-media",
-  "generated-illustration",
-]);
-export const transitionStyleSchema = z.enum(["hard-cut", "foreground-wipe", "camera-carry", "brief-dissolve"]);
-export const gestureSchema = z.enum(["explain", "point", "lift", "shrug", "run", "listen", "celebrate", "none"]);
 
 export const semanticActionDraftSchema = z.object({
   id: identifierSchema,
-  type: semanticActionTypeSchema,
   actorName: z.string().min(1).nullable(),
   targetName: z.string().min(1).nullable(),
   label: z.string().min(1),
   startOffsetFrames: z.number().int().nonnegative(),
   durationInFrames: z.number().int().positive(),
+  detail: actionDetailSchema,
+}).strict();
+
+export const visualRequirementRoleSchema = z.enum(["background", "foreground", "character", "prop", "insert", "diagram", "evidence", "reconstruction"]);
+export const visualSourceIntentSchema = z.enum(["approved-recurring", "generated", "licensed-stock", "public-domain", "user-owned"]);
+
+export const visualRequirementSchema = z.object({
+  id: identifierSchema,
+  sceneId: identifierSchema,
+  shotId: identifierSchema,
+  role: visualRequirementRoleSchema,
+  entityId: identifierSchema.nullable(),
+  sourceIntent: visualSourceIntentSchema,
+  required: z.boolean(),
+  description: z.string().min(1),
 }).strict();
 
 export const creativeShotSchema = z.object({
@@ -129,6 +178,7 @@ export const creativeShotSchema = z.object({
   locationName: z.string().min(1),
   focusCharacterName: z.string().min(1).nullable(),
   sourceElementIds: z.array(identifierSchema).min(1),
+  visualRequirementIds: z.array(identifierSchema).min(1),
   durationInFrames: z.number().int().positive(),
   actions: z.array(semanticActionDraftSchema).min(1),
   caption: z.string().min(1).nullable(),
@@ -143,30 +193,75 @@ export const creativeSceneSchema = z.object({
   shotIds: z.array(identifierSchema).min(1),
 }).strict();
 
-export const creativeEpisodePlanSchema = z.object({
-  schemaVersion: z.literal("1.1"),
+const weight = z.number().min(0).max(1);
+export const directingProfileSchema = z.object({
   id: identifierSchema,
+  version: z.string().min(1),
+  projectType: projectTypeSchema,
+  visualMode: visualModeSchema,
+  cadence: z.object({
+    targetCutsPerMinute: z.number().positive(),
+    minShotFrames: z.number().int().positive(),
+    maxShotFrames: z.number().int().positive(),
+    maxStaticFrames: z.number().int().positive(),
+  }).strict(),
+  treatmentWeights: z.object({
+    environment: weight,
+    characterPerformance: weight,
+    reaction: weight,
+    insert: weight,
+    kineticType: weight,
+    diagram: weight,
+    licensedMedia: weight,
+    generatedIllustration: weight,
+  }).strict(),
+  framingWeights: z.object({wide: weight, medium: weight, closeUp: weight, insert: weight}).strict(),
+  cameraPolicy: z.object({moves: z.array(z.object({type: cameraMoveSchema, weight, maximumPerMinute: z.number().positive().optional()}).strict()).min(1)}).strict(),
+  transitionPolicy: z.object({hardCut: weight, foregroundWipe: weight, cameraCarry: weight, briefDissolve: weight}).strict(),
+  performancePolicy: z.object({gesturesPerMinute: z.number().nonnegative(), reactionsPerMinute: z.number().nonnegative(), poseChangesPerMinute: z.number().nonnegative()}).strict(),
+  textPolicy: z.object({mode: z.enum(["participation-cues", "editorial-keywords"]), maximumWords: z.number().int().positive(), targetEventsPerMinute: z.number().nonnegative()}).strict(),
+  accentColor: z.string().min(1),
+  qualityRules: z.array(z.string().min(1)).min(1),
+}).strict().superRefine((profile, context) => {
+  if (profile.cadence.minShotFrames > profile.cadence.maxShotFrames) context.addIssue({code: "custom", message: "Cadence minimum must not exceed cadence maximum."});
+  const totals = [
+    Object.values(profile.treatmentWeights).reduce((sum, value) => sum + value, 0),
+    Object.values(profile.framingWeights).reduce((sum, value) => sum + value, 0),
+    Object.values(profile.transitionPolicy).reduce((sum, value) => sum + value, 0),
+    profile.cameraPolicy.moves.reduce((sum, move) => sum + move.weight, 0),
+  ];
+  if (totals.some((total) => Math.abs(total - 1) > 0.001)) context.addIssue({code: "custom", message: "Every directing weight group must total 1."});
+});
+
+export const creativeEpisodePlanSchema = z.object({
+  schemaVersion: z.literal("1.2"),
+  id: identifierSchema,
+  productionId: identifierSchema,
+  planRevision: z.number().int().positive(),
+  compilerVersion: z.literal(STORY_ENGINE_COMPILER_VERSION),
   title: z.string().min(1),
   fps: z.number().int().positive(),
   width: z.number().int().positive(),
   height: z.number().int().positive(),
   projectType: projectTypeSchema,
   productionPolicy: productionPolicySchema,
+  assetRoutingPolicy: assetRoutingPolicySchema,
   showPackId: identifierSchema,
   directingProfileId: identifierSchema,
   analysis: storyAnalysisSchema,
   scenes: z.array(creativeSceneSchema).min(1),
   shots: z.array(creativeShotSchema).min(1),
+  visualRequirements: z.array(visualRequirementSchema).min(1),
 }).strict();
 
 export const assetOriginSchema = z.enum(["project-owned-code", "generated-approved", "licensed-stock", "user-owned"]);
-
 export const assetManifestEntrySchema = z.object({
   id: identifierSchema,
   kind: z.enum(["character-rig", "location", "prop", "overlay", "graphic", "placeholder"]),
   version: z.string().min(1),
   displayName: z.string().min(1),
   contentHash: hashSchema,
+  hashStatus: z.enum(["verified-metadata", "verified-bytes"]),
   origin: assetOriginSchema,
   license: z.string().min(1),
   localAssetKey: identifierSchema,
@@ -174,105 +269,145 @@ export const assetManifestEntrySchema = z.object({
   palette: z.tuple([z.string().min(1), z.string().min(1), z.string().min(1)]),
 }).strict();
 
-export const directingProfileSchema = z.object({
-  id: identifierSchema,
-  version: z.string().min(1),
-  projectType: projectTypeSchema,
-  visualMode: visualModeSchema,
-  cadenceSeconds: z.tuple([z.number().positive(), z.number().positive()]),
-  maxStaticSeconds: z.number().positive(),
-  shotMix: z.object({
-    wide: z.number().min(0).max(1),
-    medium: z.number().min(0).max(1),
-    closeUp: z.number().min(0).max(1),
-    insert: z.number().min(0).max(1),
-    graphic: z.number().min(0).max(1),
-  }).strict(),
-  cameraMoves: z.array(z.enum(["locked", "push", "pan", "track", "crash-in"])).min(1),
-  transitions: z.array(transitionStyleSchema).min(1),
-  textMode: z.enum(["participation-cues", "editorial-keywords"]),
-  accentColor: z.string().min(1),
-  qualityRules: z.array(z.string().min(1)).min(1),
-}).strict().superRefine((profile, context) => {
-  if (profile.cadenceSeconds[0] > profile.cadenceSeconds[1]) {
-    context.addIssue({code: "custom", message: "Cadence minimum must not exceed cadence maximum."});
-  }
-  const total = Object.values(profile.shotMix).reduce((sum, value) => sum + value, 0);
-  if (Math.abs(total - 1) > 0.001) context.addIssue({code: "custom", message: "Shot mix must total 1."});
-});
-
 export const assetFactoryPolicySchema = z.object({
   providerClass: z.literal("chatgpt-images"),
-  integrationStatus: z.enum(["disabled", "mock", "connected"]),
+  exchangeMode: z.enum(["manual-chatgpt-images", "openai-images-api"]),
   requiredCharacterOutputs: z.array(z.enum(["identity-sheet", "expression-set", "mouth-set", "pose-set", "separated-parts"])).min(1),
   requiredBackgroundOutputs: z.array(z.enum(["clean-plate", "depth-layers", "foreground-occluders"])).min(1),
   approvalRequired: z.literal(true),
 }).strict();
 
 export const showPackSchema = z.object({
-  schemaVersion: z.literal("1.1"),
+  schemaVersion: z.literal("1.2"),
   id: identifierSchema,
   version: z.string().min(1),
   displayName: z.string().min(1),
   contentHash: hashSchema,
+  hashStatus: z.literal("verified-metadata"),
   projectType: projectTypeSchema,
+  styleBible: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
   profile: directingProfileSchema,
   assetFactory: assetFactoryPolicySchema,
   assets: z.array(assetManifestEntrySchema).min(1),
+  roleBindings: z.object({narrationPresenterAssetId: identifierSchema.nullable()}).strict(),
   allowedGestures: z.array(gestureSchema).min(1),
   allowedFramings: z.array(shotFramingSchema).min(1),
 }).strict();
 
-export const assetGenerationRequestSchema = z.object({
+export const assetRequirementSchema = z.object({
+  id: identifierSchema,
+  entityId: identifierSchema.nullable(),
+  role: visualRequirementRoleSchema,
+  priority: z.enum(["recurring-character", "required-location", "repeated-prop", "single-shot-insert", "optional"]),
+  consumingSceneIds: z.array(identifierSchema).min(1),
+  consumingShotIds: z.array(identifierSchema).min(1),
+  sourceIntent: visualSourceIntentSchema,
+  status: z.enum(["resolved", "unresolved", "deferred"]),
+}).strict();
+
+export const generationBriefSchema = z.object({
   schemaVersion: z.literal("1.0"),
   id: identifierSchema,
-  showPackId: identifierSchema,
-  entityId: identifierSchema,
-  assetKind: z.enum(["character-identity", "character-parts", "background-plate", "background-layers", "prop", "illustration"]),
-  brief: z.string().min(1),
-  referenceAssetIds: z.array(identifierSchema),
+  exchangeMode: z.literal("manual-chatgpt-images"),
+  productionId: identifierSchema,
+  requirementId: identifierSchema,
+  showPack: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
+  styleBible: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
+  identityLock: z.object({id: identifierSchema, contentHash: hashSchema}).strict().nullable(),
+  entity: z.object({id: identifierSchema.nullable(), name: z.string().min(1), kind: z.enum(["character", "location", "prop", "visual"])}).strict(),
+  outputRole: z.enum(["character-canonical-sheet", "character-parts", "background-master", "background-layers", "prop-cutout", "editorial-illustration", "diagram", "reconstruction"]),
   candidateCount: z.number().int().nonnegative(),
   imageQuality: z.enum(["low", "medium", "high"]),
   backgroundLayerTarget: z.number().int().positive(),
   posePack: z.enum(["basic", "standard", "extended"]),
-  status: z.enum(["draft", "approved", "generating", "review", "accepted", "rejected"]),
+  controlledMatte: z.string().regex(/^#[a-fA-F0-9]{6}$/),
+  referenceAssets: z.array(z.object({assetId: identifierSchema, contentHash: hashSchema}).strict()),
+  sourceExcerpts: z.array(z.string().min(1)).min(1),
+  creativeRequirements: z.array(z.string().min(1)).min(1),
+  continuityRequirements: z.array(z.string().min(1)),
+  prohibitedChanges: z.array(z.string().min(1)).min(1),
+  expectedFiles: z.array(z.string().min(1)).min(1),
+  consumingSceneIds: z.array(identifierSchema).min(1),
+  consumingShotIds: z.array(identifierSchema).min(1),
+  approvalRequired: z.literal(true),
+  status: z.enum(["draft", "exported", "returned", "accepted", "rejected"]),
 }).strict();
+
+export const generationJobDraftSchema = z.object({
+  schemaVersion: z.literal("1.0"),
+  exchangeMode: z.literal("manual-chatgpt-images"),
+  production: z.object({id: identifierSchema, revision: z.number().int().positive(), title: z.string().min(1)}).strict(),
+  showPack: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
+  briefs: z.array(generationBriefSchema),
+  expectedOutputLayout: z.object({manifest: z.literal("candidate-bundle.json"), files: z.literal("candidates/<brief-id>/<candidate-id>.png")}).strict(),
+}).strict();
+
+export const generationJobSchema = generationJobDraftSchema.extend({
+  exchangeJobId: identifierSchema,
+  createdAt: z.string().datetime(),
+  contentHash: hashSchema,
+}).strict();
+
+export const rightsRecordSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict();
+export const candidateBundleAssetSchema = z.object({candidateId: identifierSchema, briefId: identifierSchema, fileRole: z.string().min(1), relativeFile: safeRelativePathSchema, contentHash: hashSchema, mediaType: z.enum(["image/png", "image/jpeg", "image/webp"]), width: z.number().int().positive(), height: z.number().int().positive(), rights: rightsRecordSchema}).strict();
+export const candidateBundleSchema = z.object({
+  schemaVersion: z.literal("1.0"),
+  exchangeMode: z.literal("manual-chatgpt-images"),
+  exchangeJobId: identifierSchema,
+  generationJobContentHash: hashSchema,
+  production: z.object({id: identifierSchema, revision: z.number().int().positive()}).strict(),
+  showPack: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
+  providerMetadata: z.object({provider: z.literal("chatgpt-images"), generatedAt: z.string().datetime(), conversationReference: z.string().min(1).nullable()}).strict(),
+  assets: z.array(candidateBundleAssetSchema).min(1),
+}).strict();
+export const preparedCandidateSchema = z.object({candidateId: identifierSchema, sourceContentHash: hashSchema, preparedContentHash: hashSchema, relativeFile: safeRelativePathSchema, preparationState: z.enum(["pending", "prepared", "needs-manual-mask", "rejected"]), checks: z.object({dimensions: z.boolean(), mediaType: z.boolean(), alphaOrMatte: z.boolean(), registration: z.boolean()}).strict()}).strict();
+export const assetApprovalSchema = z.object({candidateId: identifierSchema, status: z.enum(["pending", "approved", "rejected"]), approvedBy: z.literal("user").nullable(), approvedAt: z.string().datetime().nullable(), notes: z.string()}).strict();
+export const approvedAssetVersionSchema = z.object({assetId: identifierSchema, version: z.string().min(1), requirementId: identifierSchema, contentHash: hashSchema, relativeFile: safeRelativePathSchema, provenance: rightsRecordSchema, approvedAt: z.string().datetime()}).strict();
 
 export const resolvedEntitySchema = z.object({
   entityId: identifierSchema,
   entityName: z.string().min(1),
   assetId: identifierSchema,
   resolved: z.boolean(),
+  matchStrategy: z.enum(["explicit-binding", "identity-lock", "semantic-tag", "show-pack-role", "placeholder"]),
+  matchConfidence: z.number().min(0).max(1),
 }).strict();
+
+export const resolvedVisualSchema = z.object({requirementId: identifierSchema, assetId: identifierSchema, assetVersion: z.string().min(1), contentHash: hashSchema, resolutionStatus: z.enum(["approved", "placeholder", "unresolved"])}).strict();
 
 export const shotOverrideSchema = z.object({
   shotId: identifierSchema,
   framing: shotFramingSchema.optional(),
   gesture: gestureSchema.optional(),
+  gestureIntensity: z.number().min(0).max(1).optional(),
   treatment: shotTreatmentSchema.optional(),
+  cameraAction: z.enum(["hardCut", "cameraPush", "pan", "reframe", "foregroundWipe"]).optional(),
   locationAssetId: identifierSchema.optional(),
 }).strict();
 
 export const resolvedProductionPlanSchema = z.object({
-  schemaVersion: z.literal("1.1"),
+  schemaVersion: z.literal("1.2"),
   creativePlan: creativeEpisodePlanSchema,
   showPack: showPackSchema,
   characters: z.array(resolvedEntitySchema),
   locations: z.array(resolvedEntitySchema),
   props: z.array(resolvedEntitySchema),
+  approvedAssets: z.array(assetManifestEntrySchema),
+  requirements: z.array(assetRequirementSchema).min(1),
+  resolvedVisuals: z.array(resolvedVisualSchema).min(1),
   overrides: z.array(shotOverrideSchema),
-  generationRequests: z.array(assetGenerationRequestSchema),
+  generationBriefs: z.array(generationBriefSchema),
   warnings: z.array(z.string().min(1)),
 }).strict();
 
 export const compiledActionSchema = z.object({
   id: identifierSchema,
-  type: semanticActionTypeSchema,
   actorId: identifierSchema.nullable(),
   targetId: identifierSchema.nullable(),
   label: z.string().min(1),
   startFrame: z.number().int().nonnegative(),
   endFrame: z.number().int().positive(),
+  detail: actionDetailSchema,
 }).strict();
 
 export const renderShotSchema = z.object({
@@ -285,15 +420,46 @@ export const renderShotSchema = z.object({
   transition: transitionStyleSchema,
   locationAssetId: identifierSchema,
   focusCharacterId: identifierSchema.nullable(),
+  visualBindings: z.array(resolvedVisualSchema).min(1),
   startFrame: z.number().int().nonnegative(),
   durationInFrames: z.number().int().positive(),
   actions: z.array(compiledActionSchema).min(1),
   caption: z.string().min(1).nullable(),
 }).strict();
 
+export const directedPlanMetricsSchema = z.object({
+  averageShotSeconds: z.number().positive(),
+  medianShotSeconds: z.number().positive(),
+  cutsPerMinute: z.number().positive(),
+  framingDistribution: z.record(z.string(), z.number().min(0).max(1)),
+  treatmentDistribution: z.record(z.string(), z.number().min(0).max(1)),
+  cameraActionsPerMinute: z.number().nonnegative(),
+  transitionDistribution: z.record(z.string(), z.number().min(0).max(1)),
+  textEventsPerMinute: z.number().nonnegative(),
+  textWordsPerMinute: z.number().nonnegative(),
+  performanceEventsPerMinute: z.number().nonnegative(),
+  reactionsPerMinute: z.number().nonnegative(),
+  assetSourceDistribution: z.record(z.string(), z.number().min(0).max(1)),
+  maximumStaticFrames: z.number().int().positive(),
+}).strict();
+
+export const productionEstimateSchema = z.object({
+  shotCount: z.number().int().positive(),
+  durationSeconds: z.number().positive(),
+  newRequirementCount: z.number().int().nonnegative(),
+  deferredRequirementCount: z.number().int().nonnegative(),
+  estimatedCandidateImages: z.number().int().nonnegative(),
+  outputWidth: z.number().int().positive(),
+  outputHeight: z.number().int().positive(),
+}).strict();
+
 export const frameAccurateRenderPlanSchema = z.object({
-  schemaVersion: z.literal("1.1"),
+  schemaVersion: z.literal("1.2"),
   id: identifierSchema,
+  productionId: identifierSchema,
+  planRevision: z.number().int().positive(),
+  compilerVersion: z.literal(STORY_ENGINE_COMPILER_VERSION),
+  contentHash: hashSchema,
   title: z.string().min(1),
   fps: z.number().int().positive(),
   width: z.number().int().positive(),
@@ -301,6 +467,7 @@ export const frameAccurateRenderPlanSchema = z.object({
   durationInFrames: z.number().int().positive(),
   projectType: projectTypeSchema,
   productionPolicy: productionPolicySchema,
+  assetRoutingPolicy: assetRoutingPolicySchema,
   directingProfile: z.object({id: identifierSchema, version: z.string().min(1), visualMode: visualModeSchema}).strict(),
   showPack: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
   assets: z.array(assetManifestEntrySchema).min(1),
@@ -308,38 +475,48 @@ export const frameAccurateRenderPlanSchema = z.object({
   locations: z.array(resolvedEntitySchema),
   props: z.array(resolvedEntitySchema),
   shots: z.array(renderShotSchema).min(1),
+  metrics: directedPlanMetricsSchema,
   unresolvedWarnings: z.array(z.string().min(1)),
 }).strict().superRefine((plan, context) => {
   const finalFrame = Math.max(...plan.shots.map((shot) => shot.startFrame + shot.durationInFrames));
   if (finalFrame !== plan.durationInFrames) context.addIssue({code: "custom", message: "Duration must equal the final shot boundary."});
-  for (const shot of plan.shots) {
-    for (const action of shot.actions) {
-      const shotEnd = shot.startFrame + shot.durationInFrames;
-      if (action.endFrame <= action.startFrame || action.startFrame < shot.startFrame || action.endFrame > shotEnd) {
-        context.addIssue({code: "custom", message: `Action ${action.id} has an invalid frame range.`});
-      }
-    }
+  for (const shot of plan.shots) for (const action of shot.actions) {
+    const shotEnd = shot.startFrame + shot.durationInFrames;
+    if (action.endFrame <= action.startFrame || action.startFrame < shot.startFrame || action.endFrame > shotEnd) context.addIssue({code: "custom", message: `Action ${action.id} has an invalid frame range.`});
   }
 });
 
 export type ProjectType = z.infer<typeof projectTypeSchema>;
 export type ProductionPreset = z.infer<typeof productionPresetSchema>;
 export type ProductionPolicy = z.infer<typeof productionPolicySchema>;
-export type VisualMode = z.infer<typeof visualModeSchema>;
+export type AssetRoutingPolicy = z.infer<typeof assetRoutingPolicySchema>;
+export type ProductionDraft = z.infer<typeof productionDraftSchema>;
+export type ProductionDiagnostic = z.infer<typeof productionDiagnosticSchema>;
 export type ScriptElement = z.infer<typeof scriptElementSchema>;
 export type ScriptDocument = z.infer<typeof scriptDocumentSchema>;
 export type StoryAnalysis = z.infer<typeof storyAnalysisSchema>;
 export type StoryEntity = z.infer<typeof storyEntitySchema>;
-export type SemanticActionType = z.infer<typeof semanticActionTypeSchema>;
 export type ShotFraming = z.infer<typeof shotFramingSchema>;
 export type ShotTreatment = z.infer<typeof shotTreatmentSchema>;
 export type Gesture = z.infer<typeof gestureSchema>;
+export type ActionDetail = z.infer<typeof actionDetailSchema>;
 export type CreativeEpisodePlan = z.infer<typeof creativeEpisodePlanSchema>;
 export type CreativeShot = z.infer<typeof creativeShotSchema>;
+export type VisualRequirement = z.infer<typeof visualRequirementSchema>;
 export type AssetManifestEntry = z.infer<typeof assetManifestEntrySchema>;
 export type DirectingProfile = z.infer<typeof directingProfileSchema>;
 export type ShowPack = z.infer<typeof showPackSchema>;
-export type AssetGenerationRequest = z.infer<typeof assetGenerationRequestSchema>;
+export type AssetRequirement = z.infer<typeof assetRequirementSchema>;
+export type GenerationBrief = z.infer<typeof generationBriefSchema>;
+export type GenerationJobDraft = z.infer<typeof generationJobDraftSchema>;
+export type GenerationJob = z.infer<typeof generationJobSchema>;
+export type ResolvedVisual = z.infer<typeof resolvedVisualSchema>;
+export type CandidateBundle = z.infer<typeof candidateBundleSchema>;
+export type PreparedCandidate = z.infer<typeof preparedCandidateSchema>;
+export type AssetApproval = z.infer<typeof assetApprovalSchema>;
+export type ApprovedAssetVersion = z.infer<typeof approvedAssetVersionSchema>;
 export type ResolvedProductionPlan = z.infer<typeof resolvedProductionPlanSchema>;
 export type ShotOverride = z.infer<typeof shotOverrideSchema>;
 export type FrameAccurateRenderPlan = z.infer<typeof frameAccurateRenderPlanSchema>;
+export type DirectedPlanMetrics = z.infer<typeof directedPlanMetricsSchema>;
+export type ProductionEstimate = z.infer<typeof productionEstimateSchema>;
