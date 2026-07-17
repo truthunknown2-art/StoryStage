@@ -7,9 +7,10 @@
     "build": "tsup --config tsup.config.ts",
     "start": "electron dist/main.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run src/import-evidence-store.test.ts"
+    "test": "vitest run src/approval-recovery.test.ts"
   },
   "dependencies": {
+    "@storystage/asset-pipeline": "workspace:*",
     "@storystage/contracts": "workspace:*",
     "@storystage/story-engine": "workspace:*",
     "electron": "43.1.1"

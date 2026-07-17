@@ -1,9 +1,12 @@
 import {createHash, randomUUID} from "node:crypto";
-import {access, lstat, mkdir, readFile, readdir, realpath, rename, unlink, writeFile} from "node:fs/promises";
+import {access, lstat, mkdir, readFile, readdir, realpath, rename, writeFile} from "node:fs/promises";
 import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:path";
 import {pathToFileURL} from "node:url";
 import {app, BrowserWindow, dialog, ipcMain, shell, utilityProcess, type OpenDialogOptions} from "electron";
-import {commitImportEvidenceDirectory} from "./import-evidence-store";
+import {commitApprovalWorkflow} from "@storystage/asset-pipeline/approval-recovery";
+import {buildApprovedProductionRevisionDraft, buildSelectedCandidateRigArtifacts, persistAssetReviewRecordSnapshot, promotePreparedCandidateSet} from "@storystage/asset-pipeline/approved-asset-workflow";
+import {commitImportEvidenceDirectory} from "@storystage/asset-pipeline/import-evidence-store";
+import {createImportRecordFromStagedCandidates} from "@storystage/asset-pipeline/import-record-builder";
 import {
   IPC_CHANNELS,
   assetWorkerCommandSchema,
@@ -52,12 +55,12 @@ import {
   assetReviewRecordSchema,
   canTransitionGenerationExchange,
   candidateBundleSchema,
-  finalizeImportRecord,
   createImportValidationReport,
   finalizeAssetReviewRecord,
   finalizeProductionBundle,
   finalizeGenerationJob,
   generationExchangeStateSchema,
+  generationBriefsMatchAuthoritativePlan,
   generationJobSchema,
   generationJobDraftSchema,
   getShowPack,
@@ -82,14 +85,10 @@ import {
   verifyRigValidationReportHash,
   verifyRigDiagnosticReportHash,
   validateCandidateSets,
-  createAssetRigManifest,
-  validateAssetRigManifest,
-  finalizeRigDiagnosticReport,
   type CandidateBundle,
   type ApprovedAssetVersion,
   type AssetReviewRecord,
   type AssetRigManifest,
-  type AssetRigManifestDraft,
   type RigDiagnosticReport,
   type RigValidationReport,
   type GenerationExchangeState,
@@ -211,6 +210,8 @@ async function rehydrateGenerationExchangeRegistry(): Promise<void> {
           }
           const record: GenerationExchangeRecord = {job, jobFile, stateFile, state};
           if (!await validateRehydratedExchangeArtifacts(record)) continue;
+          await reconcileApprovedExchange(record);
+          if (!await validateRehydratedExchangeArtifacts(record)) continue;
           generationExchangeRegistry.set(job.exchangeJobId, record);
           if (!stateWasRecovered) await persistExchangeState(record, state);
         } catch {
@@ -303,23 +304,11 @@ function verifyGenerationDraftAgainstProduction(draft: GenerationJobDraft, bundl
     && draft.showPack.id === bundle.resolvedPlan.showPack.id
     && draft.showPack.version === bundle.resolvedPlan.showPack.version
     && draft.showPack.contentHash === bundle.resolvedPlan.showPack.contentHash
-    && hashCanonical(draft.briefs) === hashCanonical(bundle.resolvedPlan.generationBriefs);
+    && generationBriefsMatchAuthoritativePlan(draft.briefs, bundle.resolvedPlan.generationBriefs);
 }
 
 function createImportRecord(options: {exchange: GenerationExchangeRecord; importId: string; sourceMode: "structured-bundle" | "loose-files"; bundle: CandidateBundle; staged: StagedCandidate[]; originalNameById: Map<string, string>}): {record: ImportRecord; missingRoleCount: number} {
-  const {candidateSets, findings, missingRoleCount} = validateCandidateSets(options.exchange.job, options.bundle);
-  const briefById = new Map(options.exchange.job.briefs.map((brief) => [brief.id, brief]));
-  const bundleAssetById = new Map(options.bundle.assets.map((asset) => [asset.candidateId, asset]));
-  const assets = options.staged.map((stagedCandidate) => {
-    const asset = bundleAssetById.get(stagedCandidate.candidateId);
-    if (!asset) throw new Error(`Staged candidate ${stagedCandidate.candidateId} is absent from its immutable manifest.`);
-    const brief = briefById.get(asset.briefId);
-    if (!brief) throw new Error(`Staged candidate ${stagedCandidate.candidateId} names an unknown brief.`);
-    if (!stagedCandidate.checks.alphaOrMatte) findings.push({severity: "warning", code: "MANUAL_MASK_REQUIRED", candidateId: stagedCandidate.candidateId, message: `${options.originalNameById.get(stagedCandidate.candidateId) ?? stagedCandidate.candidateId} needs matte or alpha cleanup.`});
-    return {candidateId: stagedCandidate.candidateId, candidateSetId: asset.candidateSetId, briefId: asset.briefId, requirementId: brief.requirementId, fileRole: asset.fileRole, originalName: options.originalNameById.get(stagedCandidate.candidateId) ?? basename(asset.relativeFile), mediaType: asset.mediaType, width: asset.width, height: asset.height, rights: asset.rights, stagedCandidate};
-  });
-  findings.unshift({severity: "info", code: "BYTE_STAGING_COMPLETE", candidateId: null, message: `${assets.length} candidates were byte-verified; ${missingRoleCount} expected roles remain missing.`});
-  return {record: finalizeImportRecord({schemaVersion: "1.0", importId: options.importId, sourceMode: options.sourceMode, exchangeJobId: options.exchange.job.exchangeJobId, generationJobContentHash: options.exchange.job.contentHash, production: {id: options.exchange.job.production.id, revision: options.exchange.job.production.revision}, manifestContentHash: hashCanonical(options.bundle), candidateBundle: options.bundle, assets, candidateSets, findings, missingRoleCount}, new Date().toISOString()), missingRoleCount};
+  return createImportRecordFromStagedCandidates({job: options.exchange.job, importId: options.importId, sourceMode: options.sourceMode, bundle: options.bundle, staged: options.staged, originalNames: Object.fromEntries(options.originalNameById)});
 }
 
 async function persistImportRecord(stagingRoot: string, record: ImportRecord): Promise<void> {
@@ -533,48 +522,7 @@ async function readAssetReviewRecord(exchange: GenerationExchangeRecord, prepara
 
 async function persistAssetReviewRecord(exchange: GenerationExchangeRecord, record: AssetReviewRecord): Promise<void> {
   const reviewsRoot = join(importStagingRoot(exchange), "reviews");
-  await mkdir(reviewsRoot, {recursive: true});
-  const snapshotFile = join(reviewsRoot, `${record.contentHash}.json`);
-  try {
-    await writeFile(snapshotFile, `${JSON.stringify(record, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-  }
-  const currentFile = join(reviewsRoot, "current.json");
-  const temporaryFile = `${currentFile}.${randomUUID()}.tmp`;
-  await writeFile(temporaryFile, `${JSON.stringify({schemaVersion: "1.0", contentHash: record.contentHash, updatedAt: record.updatedAt}, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
-  await rename(temporaryFile, currentFile);
-}
-
-function rebaseRigManifest(manifest: AssetRigManifest): AssetRigManifest {
-  const rebaseBinding = <T extends {candidateId: string; relativeFile: string}>(binding: T): T => ({...binding, relativeFile: `files/${binding.candidateId}.png`});
-  let draft: AssetRigManifestDraft;
-  if (manifest.type === "character-rig") {
-    const {contentHash: _contentHash, ...identity} = manifest;
-    void _contentHash;
-    draft = {...identity, identityReference: rebaseBinding(manifest.identityReference), poses: {neutral: rebaseBinding(manifest.poses.neutral), talk: rebaseBinding(manifest.poses.talk), reaction: rebaseBinding(manifest.poses.reaction)}};
-  } else if (manifest.type === "background-layers") {
-    const {contentHash: _contentHash, ...identity} = manifest;
-    void _contentHash;
-    draft = {...identity, layers: manifest.layers.map((layer) => ({...layer, asset: rebaseBinding(layer.asset)})) as typeof manifest.layers};
-  } else {
-    const {contentHash: _contentHash, ...identity} = manifest;
-    void _contentHash;
-    draft = {...identity, cutout: rebaseBinding(manifest.cutout)};
-  }
-  return assetRigManifestSchema.parse({...draft, contentHash: hashCanonical(draft)});
-}
-
-async function writeImmutablePrivateFile(file: string, bytes: Uint8Array, expectedByteHash?: string): Promise<void> {
-  await mkdir(dirname(file), {recursive: true});
-  try {
-    await writeFile(file, bytes, {flag: "wx", mode: 0o600});
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-    const existing = await readFile(file);
-    const expected = expectedByteHash ?? createHash("sha256").update(bytes).digest("hex");
-    if (createHash("sha256").update(existing).digest("hex") !== expected) throw new Error("An immutable local asset version already exists with different bytes.");
-  }
+  await persistAssetReviewRecordSnapshot({reviewsRoot, record});
 }
 
 async function buildSelectedCandidateRig(exchange: GenerationExchangeRecord, report: PreparationReport, candidateSetId: string, createdAt: string): Promise<void> {
@@ -582,86 +530,12 @@ async function buildSelectedCandidateRig(exchange: GenerationExchangeRecord, rep
   const brief = exchange.job.briefs.find((candidate) => candidate.id === candidateSet?.briefId);
   if (!candidateSet || candidateSet.status !== "ready-for-review" || !brief) throw new Error("Only a prepared coherent candidate set can be selected for rigging.");
   const stagingRoot = importStagingRoot(exchange);
-  const preparedRoot = join(importStagingRoot(exchange), "prepared");
-  const manifestFile = join(preparedRoot, `rig-manifest-${candidateSetId}.json`);
-  const validationFile = join(preparedRoot, `rig-validation-${candidateSetId}.json`);
-  let manifest: AssetRigManifest;
-  try {
-    manifest = assetRigManifestSchema.parse(await readBoundJsonFile(manifestFile, 2_000_000));
-    if (!verifyAssetRigManifestHash(manifest) || manifest.candidateSetId !== candidateSetId || manifest.briefId !== brief.id || manifest.requirementId !== brief.requirementId) throw new Error("Existing selected-rig evidence is stale or mismatched.");
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    manifest = createAssetRigManifest(brief, candidateSetId, candidateSet.preparedCandidates, createdAt);
-    await writeImmutablePrivateFile(manifestFile, Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, "utf8"));
-  }
-  let validation: RigValidationReport;
-  try {
-    validation = rigValidationReportSchema.parse(await readBoundJsonFile(validationFile, 2_000_000));
-    if (!verifyRigValidationReportHash(validation) || validation.manifestContentHash !== manifest.contentHash || validation.candidateSetId !== candidateSetId) throw new Error("Existing selected-rig validation is stale or mismatched.");
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    validation = validateAssetRigManifest(manifest, createdAt);
-    await writeImmutablePrivateFile(validationFile, Buffer.from(`${JSON.stringify(validation, null, 2)}\n`, "utf8"));
-  }
-  if (validation.status !== "passed") throw new Error("The selected candidate set failed technical rig validation.");
-  try {
-    await readRigDiagnosticEvidence(stagingRoot, candidateSetId, manifest, validation);
-    return;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-  }
-
-  const videoRelativeFile = `prepared/rig-diagnostic-${candidateSetId}.mp4`;
-  const finalVideoFile = join(stagingRoot, ...videoRelativeFile.split("/"));
-  let videoBytes: Buffer;
-  try {
-    const existingInfo = await lstat(finalVideoFile);
-    if (existingInfo.isSymbolicLink() || !existingInfo.isFile() || existingInfo.size > 18 * 1024 * 1024) throw new Error("Existing rig diagnostic video is unavailable or unsafe.");
-    videoBytes = await readFile(finalVideoFile);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    const temporaryVideoFile = join(preparedRoot, `.rig-diagnostic-${candidateSetId}-${randomUUID()}.tmp.mp4`);
-    try {
-      await renderRigDiagnosticInWorker(stagingRoot, manifestFile, temporaryVideoFile, brief.entity.name);
-      videoBytes = await readFile(temporaryVideoFile);
-      await writeImmutablePrivateFile(finalVideoFile, videoBytes);
-    } finally {
-      await unlink(temporaryVideoFile).catch(() => undefined);
-    }
-  }
-  const videoContentHash = createHash("sha256").update(videoBytes).digest("hex");
-  const diagnostic = finalizeRigDiagnosticReport({schemaVersion: "1.0", candidateSetId, manifestContentHash: manifest.contentHash, validationReportContentHash: validation.contentHash, videoContentHash, videoRelativeFile, fps: 30, frameCount: 120, width: 1280, height: 720, sourceDiagnosticContentHash: null}, createdAt);
-  await writeImmutablePrivateFile(join(preparedRoot, `rig-diagnostic-${candidateSetId}.json`), Buffer.from(`${JSON.stringify(diagnostic, null, 2)}\n`, "utf8"));
+  await buildSelectedCandidateRigArtifacts({stagingRoot, report, brief, candidateSetId, createdAt, renderDiagnostic: async ({stagingRoot: root, manifestFile, outputFile, entityName}) => renderRigDiagnosticInWorker(root, manifestFile, outputFile, entityName)});
 }
 
 async function promoteCandidateSet(exchange: GenerationExchangeRecord, report: PreparationReport, importRecord: ImportRecord, candidateSetId: string, approvedAt: string): Promise<ApprovedAssetVersion> {
-  const candidateSet = report.candidateSets.find((candidate) => candidate.candidateSetId === candidateSetId);
-  if (!candidateSet || candidateSet.status !== "ready-for-review") throw new Error("Only a complete, review-ready candidate set can be approved.");
-  const stagingRoot = importStagingRoot(exchange);
-  const originalManifest = assetRigManifestSchema.parse(await readBoundJsonFile(join(stagingRoot, "prepared", `rig-manifest-${candidateSetId}.json`), 2_000_000));
-  const originalValidation = rigValidationReportSchema.parse(await readBoundJsonFile(join(stagingRoot, "prepared", `rig-validation-${candidateSetId}.json`), 2_000_000));
-  if (!verifyAssetRigManifestHash(originalManifest) || !verifyRigValidationReportHash(originalValidation) || originalValidation.status !== "passed" || originalValidation.manifestContentHash !== originalManifest.contentHash) throw new Error("Candidate rig validation is missing, failed, or stale.");
-  const selectedDiagnostic = await readRigDiagnosticEvidence(stagingRoot, candidateSetId, originalManifest, originalValidation);
-  const manifest = rebaseRigManifest(originalManifest);
-  const validation = validateAssetRigManifest(manifest, approvedAt);
-  if (validation.status !== "passed") throw new Error("Promoted rig failed validation after local-library rebasing.");
-  const diagnostic = finalizeRigDiagnosticReport({schemaVersion: "1.0", candidateSetId, manifestContentHash: manifest.contentHash, validationReportContentHash: validation.contentHash, videoContentHash: selectedDiagnostic.report.videoContentHash, videoRelativeFile: "rig-diagnostic.mp4", fps: 30, frameCount: 120, width: 1280, height: 720, sourceDiagnosticContentHash: selectedDiagnostic.report.contentHash}, approvedAt);
-  const assetId = `approved-${candidateSet.requirementId}`;
-  const version = `sha256-${manifest.contentHash.slice(0, 16)}`;
   const assetsRoot = join(app.getPath("userData"), ".storystage-local", "assets");
-  const versionRoot = join(assetsRoot, assetId, version);
-  for (const candidate of candidateSet.preparedCandidates) {
-    const bytes = await readVerifiedPrivateBytes(stagingRoot, candidate.relativeFile, candidate.preparedContentHash, 50 * 1024 * 1024);
-    await writeImmutablePrivateFile(join(versionRoot, "files", `${candidate.candidateId}.png`), bytes, candidate.preparedContentHash);
-  }
-  await writeImmutablePrivateFile(join(versionRoot, "manifest.json"), Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, "utf8"));
-  await writeImmutablePrivateFile(join(versionRoot, "rig-validation.json"), Buffer.from(`${JSON.stringify(validation, null, 2)}\n`, "utf8"));
-  await writeImmutablePrivateFile(join(versionRoot, "rig-diagnostic.mp4"), selectedDiagnostic.videoBytes, selectedDiagnostic.report.videoContentHash);
-  await writeImmutablePrivateFile(join(versionRoot, "rig-diagnostic.json"), Buffer.from(`${JSON.stringify(diagnostic, null, 2)}\n`, "utf8"));
-  const importedAssets = importRecord.assets.filter((asset) => asset.candidateSetId === candidateSetId);
-  const provenance = importedAssets[0]?.rights;
-  if (!provenance || importedAssets.some((asset) => hashCanonical(asset.rights) !== hashCanonical(provenance))) throw new Error("Candidate set provenance is missing or inconsistent.");
-  return {assetId, version, requirementId: candidateSet.requirementId, contentHash: manifest.contentHash, relativeFile: `${assetId}/${version}/manifest.json`, provenance, approvedAt};
+  return promotePreparedCandidateSet({stagingRoot: importStagingRoot(exchange), assetsRoot, report, importRecord, candidateSetId, approvedAt});
 }
 
 async function verifyApprovedAssetVersionOnDisk(approved: ApprovedAssetVersion): Promise<boolean> {
@@ -683,6 +557,68 @@ async function verifyApprovedAssetVersionOnDisk(approved: ApprovedAssetVersion):
   } catch {
     return false;
   }
+}
+
+function productionDraftPayload(bundle: ProductionBundle) {
+  return productionBundleDraftSchema.parse({
+    schemaVersion: bundle.schemaVersion,
+    production: bundle.production,
+    overrides: bundle.overrides,
+    approvedAssetVersions: bundle.approvedAssetVersions ?? [],
+    resolvedPlan: bundle.resolvedPlan,
+    renderPlan: bundle.renderPlan,
+    metrics: bundle.metrics,
+    estimate: bundle.estimate,
+  });
+}
+
+function approvedVersionsForExchange(exchange: GenerationExchangeRecord, reviewRecord: AssetReviewRecord): ApprovedAssetVersion[] | null {
+  const versions: ApprovedAssetVersion[] = [];
+  for (const brief of exchange.job.briefs) {
+    const decision = reviewRecord.decisions.find((candidate) => candidate.requirementId === brief.requirementId && candidate.status === "approved" && candidate.approvedAssetVersion);
+    if (!decision?.approvedAssetVersion) return null;
+    versions.push(decision.approvedAssetVersion);
+  }
+  return versions;
+}
+
+async function ensureApprovedProductionRevision(exchange: GenerationExchangeRecord, reviewRecord: AssetReviewRecord): Promise<ProductionBundle> {
+  const source = productionBundleRegistry.get(productionBundleKey(exchange.job.production.id, exchange.job.production.revision));
+  if (!source || source.bundle.contentHash !== exchange.job.productionBundleContentHash || !verifyProductionBundleHash(source.bundle)) throw new Error("The approved exchange lost its authoritative source production.");
+  const approved = approvedVersionsForExchange(exchange, reviewRecord);
+  if (!approved) throw new Error("The review record does not approve every generation requirement.");
+  if (!(await Promise.all(approved.map(verifyApprovedAssetVersionOnDisk))).every(Boolean)) throw new Error("An approved local asset failed recovery verification.");
+
+  const nextDraft = buildApprovedProductionRevisionDraft({sourceBundle: source.bundle, approvedAssetVersions: approved});
+  const targetKey = productionBundleKey(nextDraft.production.productionId, nextDraft.production.revision);
+  const existing = productionBundleRegistry.get(targetKey);
+  if (existing) {
+    if (!verifyProductionBundleHash(existing.bundle) || hashCanonical(productionDraftPayload(existing.bundle)) !== hashCanonical(nextDraft)) throw new Error("The recovery target production revision already contains different decisions.");
+    return existing.bundle;
+  }
+  const bundle = finalizeProductionBundle(nextDraft, reviewRecord.updatedAt);
+  await persistProductionBundle(bundle);
+  return bundle;
+}
+
+async function commitFullyApprovedExchange(exchange: GenerationExchangeRecord, reviewRecord: AssetReviewRecord): Promise<void> {
+  await commitApprovalWorkflow({
+    persistReview: () => persistAssetReviewRecord(exchange, reviewRecord),
+    ensureProduction: async () => { await ensureApprovedProductionRevision(exchange, reviewRecord); },
+    ensureApprovedState: async () => {
+      if (exchange.state.status === "needs-review") await transitionExchangeState(exchange, "approved", exchange.state.importId);
+      else if (exchange.state.status !== "approved") throw new Error(`A fully approved exchange cannot recover from ${exchange.state.status}.`);
+    },
+  });
+}
+
+async function reconcileApprovedExchange(exchange: GenerationExchangeRecord): Promise<void> {
+  if (!["needs-review", "approved"].includes(exchange.state.status)) return;
+  const preparationReport = await readPreparationReport(exchange);
+  if (!preparationReport) return;
+  const reviewRecord = await readAssetReviewRecord(exchange, preparationReport.contentHash);
+  if (!reviewRecord || !approvedVersionsForExchange(exchange, reviewRecord)) return;
+  await commitFullyApprovedExchange(exchange, reviewRecord);
 }
 
 async function validateRehydratedExchangeArtifacts(exchange: GenerationExchangeRecord): Promise<boolean> {
@@ -1469,7 +1405,8 @@ ipcMain.handle(IPC_CHANNELS.reviewCandidateSet, async (_event, rawRequest: unkno
     const request = reviewCandidateSetRequestSchema.parse(rawRequest);
     const exchange = generationExchangeRegistry.get(request.exchangeJobId);
     if (!exchange) throw new Error("This generation exchange is unknown or failed durable integrity checks.");
-    if (exchange.state.status !== "needs-review") throw new Error(`Candidate review cannot change an exchange in ${exchange.state.status}.`);
+    const isApprovedRetry = request.decision === "approve" && exchange.state.status === "approved";
+    if (exchange.state.status !== "needs-review" && !isApprovedRetry) throw new Error(`Candidate review cannot change an exchange in ${exchange.state.status}.`);
     const report = await readPreparationReport(exchange);
     const importRecord = await readImportRecord(exchange);
     if (!report || !importRecord || !exchange.state.importId) throw new Error("The preparation or import evidence is unavailable.");
@@ -1478,6 +1415,12 @@ ipcMain.handle(IPC_CHANNELS.reviewCandidateSet, async (_event, rawRequest: unkno
     const existing = await readAssetReviewRecord(exchange, report.contentHash);
     const decidedAt = new Date().toISOString();
     const existingDecision = existing?.decisions.find((decision) => decision.candidateSetId === candidateSet.candidateSetId);
+    if (request.decision === "approve" && existingDecision?.status === "approved" && existingDecision.approvedAssetVersion && existing) {
+      const allRequirementsApproved = Boolean(approvedVersionsForExchange(exchange, existing));
+      if (allRequirementsApproved) await commitFullyApprovedExchange(exchange, existing);
+      return reviewCandidateSetResultSchema.parse({status: "reviewed", exchangeStatus: allRequirementsApproved ? "approved" : "needs-review", decisions: existing.decisions, approvedAssetVersion: existingDecision.approvedAssetVersion});
+    }
+    if (isApprovedRetry) throw new Error("The approved exchange is missing its durable approval decision and cannot be changed.");
     if (request.decision === "approve" && existingDecision?.status !== "selected") throw new Error("Select and technically validate this coherent set before final approval.");
     if (request.decision === "select") await buildSelectedCandidateRig(exchange, report, candidateSet.candidateSetId, decidedAt);
     const approvedAssetVersion = request.decision === "approve" ? await promoteCandidateSet(exchange, report, importRecord, candidateSet.candidateSetId, decidedAt) : null;
@@ -1489,18 +1432,20 @@ ipcMain.handle(IPC_CHANNELS.reviewCandidateSet, async (_event, rawRequest: unkno
     }
     decisions.push({candidateSetId: candidateSet.candidateSetId, briefId: candidateSet.briefId, requirementId: candidateSet.requirementId, status: request.decision === "select" ? "selected" : request.decision === "approve" ? "approved" : "rejected", notes: request.notes, decidedAt, approvedAssetVersion});
     const reviewRecord = finalizeAssetReviewRecord({schemaVersion: "1.0", exchangeJobId: exchange.job.exchangeJobId, importId: exchange.state.importId, preparationReportContentHash: report.contentHash, decisions}, decidedAt);
-    await persistAssetReviewRecord(exchange, reviewRecord);
 
-    const allRequirementsApproved = exchange.job.briefs.every((brief) => reviewRecord.decisions.some((decision) => decision.requirementId === brief.requirementId && decision.status === "approved"));
+    const allRequirementsApproved = Boolean(approvedVersionsForExchange(exchange, reviewRecord));
     const selectedBriefSets = report.candidateSets.filter((set) => set.briefId === candidateSet.briefId);
     const selectedBriefRejected = selectedBriefSets.every((set) => reviewRecord.decisions.some((decision) => decision.candidateSetId === set.candidateSetId && decision.status === "rejected"));
     let exchangeStatus: "needs-review" | "approved" | "rejected" = "needs-review";
     if (allRequirementsApproved) {
-      await transitionExchangeState(exchange, "approved", exchange.state.importId);
+      await commitFullyApprovedExchange(exchange, reviewRecord);
       exchangeStatus = "approved";
-    } else if (selectedBriefRejected) {
-      await transitionExchangeState(exchange, "rejected", exchange.state.importId);
-      exchangeStatus = "rejected";
+    } else {
+      await persistAssetReviewRecord(exchange, reviewRecord);
+      if (selectedBriefRejected) {
+        await transitionExchangeState(exchange, "rejected", exchange.state.importId);
+        exchangeStatus = "rejected";
+      }
     }
     return reviewCandidateSetResultSchema.parse({status: "reviewed", exchangeStatus, decisions: reviewRecord.decisions, approvedAssetVersion});
   } catch (error) {

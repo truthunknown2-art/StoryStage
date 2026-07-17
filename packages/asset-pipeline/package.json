@@ -4,10 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./approval-recovery": "./src/approval-recovery.ts",
+    "./approved-asset-workflow": "./src/approved-asset-workflow.ts",
+    "./import-evidence-store": "./src/import-evidence-store.ts",
+    "./import-record-builder": "./src/import-record-builder.ts"
   },
   "scripts": {
-    "test": "vitest run src/index.test.ts",
+    "test": "vitest run src/index.test.ts src/import-evidence-store.test.ts src/approved-asset-workflow.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

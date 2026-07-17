@@ -20,6 +20,7 @@
     "@remotion/bundler": "4.0.490",
     "@remotion/renderer": "4.0.490",
     "@storystage/contracts": "workspace:*",
+    "@storystage/asset-pipeline": "workspace:*",
     "@storystage/fixtures": "workspace:*",
     "@storystage/remotion-runtime": "workspace:*",
     "@storystage/story-engine": "workspace:*",

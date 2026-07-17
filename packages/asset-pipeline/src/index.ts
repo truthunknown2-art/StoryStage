@@ -2,6 +2,7 @@ import {createHash} from "node:crypto";
 import {lstat, mkdir, readFile, realpath, writeFile} from "node:fs/promises";
 import {basename, isAbsolute, join, relative, resolve} from "node:path";
 import sharp from "sharp";
+export * from "./import-evidence-store";
 import {
   candidateBundleSchema,
   candidateSetContactSheetSchema,
@@ -427,9 +428,12 @@ export async function stageLooseCandidateFiles(input: StageLooseCandidateFilesIn
   return staged;
 }
 
-export async function verifyStagedCandidates(input: VerifyStagedCandidatesInput): Promise<StagedCandidate[]> {
+type VerifiedStagedCandidate = {candidate: StagedCandidate; bytes: Buffer; detected: DetectedImage};
+
+async function readVerifiedStagedCandidateBytes(input: VerifyStagedCandidatesInput): Promise<VerifiedStagedCandidate[]> {
   const candidates = stagedCandidateSchema.array().min(1).parse(input.candidates);
   const stagingRoot = await ensureTrustedStagingRoot(input.trustedStagingRoot, input.stagingRoot);
+  const verified: VerifiedStagedCandidate[] = [];
   for (const candidate of candidates) {
     const pathParts = candidate.relativeFile.split("/");
     const absoluteFile = resolve(stagingRoot, ...pathParts);
@@ -451,8 +455,13 @@ export async function verifyStagedCandidates(input: VerifyStagedCandidatesInput)
     if (candidate.checks.alphaOrMatte !== detected.hasAlpha || (candidate.stagingState === "staged-byte-verified") !== detected.hasAlpha) {
       throw new CandidateStagingError("media-mismatch", `Staged candidate alpha state changed after import: ${candidate.candidateId}`);
     }
+    verified.push({candidate, bytes, detected});
   }
-  return candidates;
+  return verified;
+}
+
+export async function verifyStagedCandidates(input: VerifyStagedCandidatesInput): Promise<StagedCandidate[]> {
+  return (await readVerifiedStagedCandidateBytes(input)).map(({candidate}) => candidate);
 }
 
 type PreparationSpec = {
@@ -484,11 +493,8 @@ function containedDimensions(sourceWidth: number, sourceHeight: number, targetWi
   return {width: Math.max(1, Math.round(sourceWidth * scale)), height: Math.max(1, Math.round(sourceHeight * scale))};
 }
 
-async function normalizeCandidate(input: CandidatePreparationInput, stagingRoot: string): Promise<{candidate: PreparedCandidate; bytes: Buffer}> {
+async function normalizeCandidate(input: CandidatePreparationInput, stagingRoot: string, sourceBytes: Buffer, detected: DetectedImage): Promise<{candidate: PreparedCandidate; bytes: Buffer}> {
   const spec = preparationSpec(input);
-  const sourceFile = resolve(stagingRoot, ...input.stagedCandidate.relativeFile.split("/"));
-  const sourceBytes = await readFile(sourceFile);
-  const detected = detectImage(sourceBytes);
   if (detected.mediaType !== input.expectedMediaType || detected.width !== input.expectedWidth || detected.height !== input.expectedHeight) throw new CandidateStagingError("media-mismatch", `${input.fileRole} no longer matches its imported codec or dimensions.`);
   const oriented = await sharp(sourceBytes, {limitInputPixels: DEFAULT_MAX_PIXELS, sequentialRead: true}).rotate().toBuffer();
   const stats = await sharp(oriented, {limitInputPixels: DEFAULT_MAX_PIXELS}).stats();
@@ -561,7 +567,8 @@ async function createContactSheet(candidateSetId: string, entries: Array<{candid
 export async function prepareCandidateSets(input: PrepareCandidateSetsInput): Promise<PreparationReport> {
   const request = prepareCandidateSetsRequestSchema.parse(input.request);
   const stagingRoot = await ensureTrustedStagingRoot(input.trustedStagingRoot, input.stagingRoot);
-  await verifyStagedCandidates({candidates: request.candidates.map((candidate) => candidate.stagedCandidate), trustedStagingRoot: input.trustedStagingRoot, stagingRoot});
+  const verifiedCandidates = await readVerifiedStagedCandidateBytes({candidates: request.candidates.map((candidate) => candidate.stagedCandidate), trustedStagingRoot: input.trustedStagingRoot, stagingRoot});
+  const verifiedById = new Map(verifiedCandidates.map((verified) => [verified.candidate.candidateId, verified]));
   await mkdir(resolve(stagingRoot, "prepared"), {recursive: true});
   const grouped = new Map<string, CandidatePreparationInput[]>();
   for (const candidate of request.candidates) grouped.set(candidate.candidateSetId, [...(grouped.get(candidate.candidateSetId) ?? []), candidate]);
@@ -573,7 +580,9 @@ export async function prepareCandidateSets(input: PrepareCandidateSetsInput): Pr
     const failures: CandidateSetPreparation["failures"] = [];
     for (const candidate of candidates) {
       try {
-        preparedEntries.push(await normalizeCandidate(candidate, stagingRoot));
+        const verified = verifiedById.get(candidate.stagedCandidate.candidateId);
+        if (!verified) throw new CandidateStagingError("hash-mismatch", `No securely verified bytes remain for ${candidate.stagedCandidate.candidateId}.`);
+        preparedEntries.push(await normalizeCandidate(candidate, stagingRoot, verified.bytes, verified.detected));
       } catch (error) {
         const needsMask = error instanceof CandidateStagingError && error.code === "media-mismatch" && /transparent background|matte/i.test(error.message);
         failures.push({candidateId: candidate.stagedCandidate.candidateId, candidateSetId, briefId: candidate.briefId, fileRole: candidate.fileRole, status: needsMask ? "needs-manual-mask" : "failed", code: needsMask ? "MANUAL_MASK_REQUIRED" : error instanceof CandidateStagingError ? error.code.toUpperCase().replaceAll("-", "_") : "PREPARATION_FAILED", message: error instanceof Error ? error.message : "Candidate preparation failed."});

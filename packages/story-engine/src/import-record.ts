@@ -96,7 +96,16 @@ const validateImportRecord = (record: z.infer<z.ZodObject<typeof importRecordFie
     if (importedIds.has(asset.candidateId)) context.addIssue({code: "custom", path: ["assets", index, "candidateId"], message: "Imported candidate IDs must be unique."});
     importedIds.add(asset.candidateId);
     const bundleAsset = bundleAssetById.get(asset.candidateId);
-    if (!bundleAsset || bundleAsset.briefId !== asset.briefId || bundleAsset.candidateSetId !== asset.candidateSetId || bundleAsset.fileRole !== asset.fileRole || bundleAsset.contentHash !== asset.stagedCandidate.sourceContentHash) {
+    if (!bundleAsset
+      || bundleAsset.briefId !== asset.briefId
+      || bundleAsset.candidateSetId !== asset.candidateSetId
+      || bundleAsset.fileRole !== asset.fileRole
+      || bundleAsset.mediaType !== asset.mediaType
+      || bundleAsset.width !== asset.width
+      || bundleAsset.height !== asset.height
+      || hashCanonical(bundleAsset.rights) !== hashCanonical(asset.rights)
+      || bundleAsset.contentHash !== asset.stagedCandidate.sourceContentHash
+      || bundleAsset.contentHash !== asset.stagedCandidate.stagedContentHash) {
       context.addIssue({code: "custom", path: ["assets", index], message: "Staged import asset must match its immutable candidate-bundle entry."});
     }
   }

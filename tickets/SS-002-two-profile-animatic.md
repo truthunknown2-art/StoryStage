@@ -24,10 +24,10 @@ SS-001 remains workstation infrastructure. Its sample is not a product-quality t
 
 - Gate 1: complete.
 - Gates 2-3: accepted by Pro at commit `1c60d93`.
-- Gate 4: locally implemented through exact production binding, atomic evidence, restart artifact validation, staged-byte reverification, real preparation, contact sheets, set selection, diagnostic video, final approval, revision rebuild, and real render. Fresh Pro acceptance is pending.
+- Gate 4: locally implemented through status-normalized restart binding, exact atomic evidence, verified-buffer-to-Sharp preparation, contact sheets, set selection, diagnostic video, crash-recoverable final approval, shared revision rebuild, and two-render decoded-frame proof. Fresh Pro acceptance is pending.
 - Gate 5: pending a real authenticated ChatGPT generation/import pass for both profiles. The deterministic SS-002 proof fixture is not production art.
 - Gate 6: first 2D pose-swap character, layered background, and prop paths are implemented. True part/skeletal rigging, richer face states, and Blender routing remain open.
-- Gate 7: an initial 24-second exact-plan Remotion path is implemented and proven with approved local pixels, pose changes, cuts, camera movement, captions, guide audio, and SFX.
+- Gate 7: an initial exact-plan Remotion path is implemented and proven with approved local pixels, pose changes, cuts, camera movement, captions, guide audio, and SFX. The minimal workflow proof is 6.08 seconds; the renderer supports longer slices.
 - Gate 8: shot overrides and asset review exist; full live-player timeline and all inspector interactions remain open.
 - Gate 9: pending polished kids and history outputs.
 

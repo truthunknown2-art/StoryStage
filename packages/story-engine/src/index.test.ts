@@ -16,6 +16,7 @@ import {
   finalizeImportRecord,
   finalizeRigDiagnosticReport,
   finalizeProductionBundle,
+  generationBriefsMatchAuthoritativePlan,
   generationBriefSchema,
   generationJobDraftSchema,
   generationExchangeStateSchema,
@@ -196,6 +197,8 @@ describe("StoryStage story engine", () => {
     expect(job.briefs[0]?.styleBible.principles.length).toBeGreaterThan(0);
     expect(generationJobDraftSchema.safeParse({...draft, production: {...draft.production, id: "different-production"}}).success).toBe(false);
     expect(generationJobDraftSchema.safeParse({...draft, briefs: draft.briefs.length > 0 ? [draft.briefs[0]!, draft.briefs[0]!] : []}).success).toBe(false);
+    expect(generationBriefsMatchAuthoritativePlan(job.briefs, build.resolvedPlan.generationBriefs)).toBe(true);
+    expect(generationBriefsMatchAuthoritativePlan(job.briefs, build.resolvedPlan.generationBriefs.map((brief, index) => index === 0 ? {...brief, candidateCount: brief.candidateCount + 1} : brief))).toBe(false);
   });
 
   it("persists a hash-bound production bundle that still derives from its resolved plan", () => {
@@ -232,6 +235,11 @@ describe("StoryStage story engine", () => {
     expect(verifyImportEvidence(record, report)).toBe(true);
     expect(verifyImportEvidence(record, {...report, assets: report.assets.map((asset, index) => index === 0 ? {...asset, width: asset.width + 1} : asset)})).toBe(false);
     expect(verifyImportEvidence(record, {...report, assets: report.assets.map((asset, index) => index === 0 ? {...asset, stagedContentHash: "f".repeat(64)} : asset)})).toBe(false);
+    const {createdAt: _createdAt, contentHash: _contentHash, ...recordDraft} = record;
+    void _createdAt;
+    void _contentHash;
+    expect(() => finalizeImportRecord({...recordDraft, assets: record.assets.map((asset, index) => index === 0 ? {...asset, width: asset.width + 1} : asset)}, "2026-07-17T00:08:00.000Z")).toThrow(/candidate-bundle entry/i);
+    expect(() => finalizeImportRecord({...recordDraft, assets: record.assets.map((asset, index) => index === 0 ? {...asset, rights: {...asset.rights, usageNotes: "Changed after bundle creation"}} : asset)}, "2026-07-17T00:08:00.000Z")).toThrow(/candidate-bundle entry/i);
   });
 
   it("enforces generation exchange lifecycle transitions", () => {

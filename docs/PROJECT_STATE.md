@@ -8,29 +8,30 @@ SS-001 remains accepted workstation infrastructure: browser studio, secure Elect
 
 `SS-002: Two-Profile Script-to-Animatic + Generated Asset Seam` is active.
 
-Pro rejected commit `e85e351` as a durable foundation while accepting its architectural direction. The next local milestone now closes the cited foundation cracks and consumes them in an executable asset-to-frame path:
+Pro rejected commit `49a7608` as a durable foundation while accepting parts of its architectural direction. The current local milestone addresses every cited blocker and consumes the corrected foundation in an executable asset-to-frame path:
 
 - Production bundles are finalized by Electron main, saved through per-production/revision queues, and rejected unless the complete stored render plan canonically equals a fresh compile of the included resolved plan.
-- Generation exports are bound to the exact acknowledged production-bundle content hash and exact authoritative generation briefs, both at export and restart rehydration.
-- Import evidence is a schema-checked, cross-file-bound, atomic directory transaction. Crash-point tests cover failure after each write and after atomic commit, followed by idempotent retry.
+- Generation exports are bound to the exact acknowledged production-bundle content hash and authoritative generation briefs. Restart comparison normalizes only the valid brief lifecycle status change from draft to exported.
+- Import evidence is a schema-checked, cross-file-bound, atomic directory transaction. Bundle metadata, import records, and validation reports bind role, codec, dimensions, rights, source hash, and staged hash. Crash-point tests cover failure after each write and after atomic commit, followed by idempotent retry.
 - Durable exchange states are schema-refined and rehydrated only when their required artifacts verify. Structured and loose staged bytes are reopened in the isolated worker before later trust transitions.
 - Sharp performs real decode, orientation normalization, metadata stripping, trim/padding, canonical canvas registration, alpha checks, prepared PNG writes, and contact-sheet generation.
 - Coherent contact sheets are compared before rigging. Only the selected set receives a role-specific manifest, technical validation, and a four-second moving diagnostic.
 - Final human approval binds the exact prepared bytes, manifest, validation report, watched diagnostic MP4, provenance, and immutable local asset version.
-- Approval creates a new production revision and recompiles the complete frame-accurate plan.
+- Approval is an idempotently recoverable review -> production revision -> approved-state transaction. Startup reconciliation completes any crash-stranded approval, and tests cover all three checkpoints.
+- Approval creates a new production revision through the same shared operation used by the desktop and proof runner, then recompiles the complete frame-accurate plan.
 - The SS-002 Remotion composition consumes the saved plan and approved local pixels. The render worker independently rechecks containment, symlinks, PNG codec/dimensions/alpha, hashes, validation, diagnostic evidence, and production-bundle derivation.
 
 ## Real proof
 
-`pnpm render:production-proof` creates a private deterministic engineering fixture and exercises the same selected-rig, approval, production-bundle, and render path.
+`pnpm render:production-proof` creates a private deterministic engineering fixture and exercises the concrete staging, evidence, Sharp preparation, selected-rig, review, approval transaction, production-revision, and render operations used by the desktop.
 
 Current proof evidence is under `artifacts/SS-002/`:
 
-- 24.04-second H.264 MP4
+- two 6.08-second H.264 MP4 renders of the same saved production revision
 - 1920x1080 at 30 fps
-- exactly 720 video frames
+- 181 probed video frames per render
 - stereo AAC stream
-- four exact-index decoded production frames and SHA-256 hashes
+- five exact-index decoded frame pairs with matching SHA-256 hashes
 - four-second moving diagnostic and content-bound report
 - exact production bundle, approved manifest, and diagnostic hashes
 
@@ -40,7 +41,7 @@ The proof art is deliberately simple local engineering art. It proves the execut
 
 - Gate 1 reference cut measurements: complete.
 - Gates 2-3 production draft, New Production UI, two-profile planning, metrics, and semantic overrides: accepted by Pro against commit `1c60d93`.
-- Gate 4 durable generation/import foundation and executable manual image exchange: locally implemented; fresh Pro acceptance pending.
+- Gate 4 durable generation/import foundation and executable manual image exchange: locally implemented and verified against Pro's `49a7608` blocker list; fresh Pro acceptance pending.
 - Gate 5 original ChatGPT production art for both profiles: pending a real authenticated manual generation round trip.
 - Gate 6 preparation and validation: implemented for 2D pose-swap characters, background layers, and props; skeletal/part rigging and Blender routing remain pending.
 - Gate 7 semantic Remotion animation: initial plan-driven 24-second slice implemented and proven; full episode coverage and visual polish remain pending.
