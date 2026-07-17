@@ -2,9 +2,9 @@
 
 Date: 2026-07-17
 Provider: built-in ChatGPT image tool (no API key)
-Status: **six local candidates satisfy the two-set brief contract; awaiting human review and StoryStage import**
+Status: **Pro accepted the six-candidate contract at `72078a2`; all six are technically prepared and the exchange is stopped at `needs-review`**
 
-Candidate pixels remain under ignored `artifacts/SS-009/generated-candidates/`. This ledger is provenance and mapping evidence; it is not approval. Each selected file must still pass StoryStage staging, preparation, diagnostic review, explicit human approval, immutable promotion, and delivery-rights reporting.
+Candidate pixels remain under ignored `artifacts/SS-009/generated-candidates/`. The reproducible non-approving packet is under ignored `artifacts/SS-009/reconstruction-review-packet/`. This ledger is provenance and mapping evidence; it is not approval. No candidate has been selected, rejected, approved, promoted, or bound to production.
 
 | Shot | Set | Authoritative brief | Local candidate | Source pixels | SHA-256 |
 | --- | --- | --- | --- | --- | --- |
@@ -16,6 +16,18 @@ Candidate pixels remain under ignored `artifacts/SS-009/generated-candidates/`. 
 | 1.08 | 2 | `brief-requirement-reconstruction-shot-shot-8-shot-8-reconstruction` | `shot-1-08-exhaustion-theory/set-2/candidate.png` | 1672×941 PNG | `9b2cdcf3eafb9e59585e838c1f52c57cc8c0f5a0ba7560a1d017b2280ebf7746` |
 
 Proposed rights record for review: `sourceType: generated`; `provider: ChatGPT Images`; `usageNotes: Original StoryStage Rook Pilot 001 generated reconstruction candidate; human approval required before production use.`
+
+## Non-approving preparation evidence
+
+Run `pnpm prepare:rook-pilot-review` to rebuild the packet from the six logged source PNGs. The script uses the same manifest validation, byte staging, immutable three-file import evidence, Sharp normalization, prepared-candidate registration, and preparation-report verification as the desktop path. It additionally creates one hash-bound two-set comparison sheet per reconstruction from the prepared bytes.
+
+- Six source PNGs were byte-verified against this ledger.
+- Six prepared assets are canonical 1920×1080 `editorial-visual` PNGs.
+- All six candidate sets are `ready-for-review`; the enclosing generation exchange is `needs-review`.
+- Shot 1.03 A/B sheet: `09b3393fa06804b3ef3915bb07882424c66931b1353c4cc76d73d2973afc0f8d`.
+- Shot 1.05 A/B sheet: `3b79879948410b0215a221a3ace9bbe44b3181636f54de46f260ce481487c609`.
+- Shot 1.08 A/B sheet: `8534936f8c4a4eb4c7662e77c83a4f57295922d1a6160242ad20166629b8b8b2`.
+- Human decisions recorded: zero. Rig diagnostics, selection, approval, promotion, production binding, and final render remain downstream gates.
 
 ## Exact prompts
 

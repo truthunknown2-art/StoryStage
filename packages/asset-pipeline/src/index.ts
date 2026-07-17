@@ -80,6 +80,15 @@ export type PrepareCandidateSetsInput = {
   stagingRoot: string;
 };
 
+export type PreparedCandidateComparisonSheet = {
+  briefId: string;
+  relativeFile: string;
+  contentHash: string;
+  width: number;
+  height: number;
+  cells: Array<{candidateId: string; candidateSetId: string; left: number; top: number; width: number; height: number}>;
+};
+
 export class CandidateStagingError extends Error {
   public constructor(
     public readonly code:
@@ -562,6 +571,49 @@ async function createContactSheet(candidateSetId: string, entries: Array<{candid
   const relativeFile = `prepared/contact-sheet-${candidateSetId}.png`;
   await writeFile(resolve(stagingRoot, ...relativeFile.split("/")), bytes, {flag: "wx", mode: 0o600});
   return candidateSetContactSheetSchema.parse({candidateSetId, relativeFile, contentHash: sha256(bytes), width, height, cells});
+}
+
+export async function createPreparedCandidateComparisonSheet(input: {trustedStagingRoot: string; stagingRoot: string; candidates: PreparedCandidate[] | unknown}): Promise<PreparedCandidateComparisonSheet> {
+  const candidates = preparedCandidateSchema.array().length(2).parse(input.candidates);
+  const [leftCandidate, rightCandidate] = candidates;
+  if (!leftCandidate || !rightCandidate) throw new CandidateStagingError("invalid-bundle", "A comparison sheet requires exactly two prepared candidates.");
+  if (leftCandidate.briefId !== rightCandidate.briefId || leftCandidate.requirementId !== rightCandidate.requirementId) throw new CandidateStagingError("invalid-bundle", "A comparison sheet cannot mix unrelated production requirements.");
+  if (leftCandidate.candidateSetId === rightCandidate.candidateSetId) throw new CandidateStagingError("invalid-bundle", "A comparison sheet requires two distinct candidate sets.");
+
+  const stagingRoot = await ensureTrustedStagingRoot(input.trustedStagingRoot, input.stagingRoot);
+  const verified = await Promise.all(candidates.map(async (candidate) => {
+    const relativeParts = candidate.relativeFile.split("/");
+    const absoluteFile = resolve(stagingRoot, ...relativeParts);
+    if (!isWithin(stagingRoot, absoluteFile)) throw new CandidateStagingError("untrusted-staging-root", `Prepared candidate escaped its trusted import root: ${candidate.candidateId}`);
+    let currentPath = stagingRoot;
+    for (const part of relativeParts) {
+      currentPath = join(currentPath, part);
+      if ((await lstat(currentPath)).isSymbolicLink()) throw new CandidateStagingError("symlink-rejected", `Prepared candidate path contains a symbolic link: ${candidate.candidateId}`);
+    }
+    const bytes = await readFile(absoluteFile);
+    if (sha256(bytes) !== candidate.preparedContentHash) throw new CandidateStagingError("hash-mismatch", `Prepared candidate bytes changed before comparison: ${candidate.candidateId}`);
+    const metadata = await sharp(bytes, {limitInputPixels: DEFAULT_MAX_PIXELS}).metadata();
+    if (metadata.width !== candidate.width || metadata.height !== candidate.height) throw new CandidateStagingError("dimension-mismatch", `Prepared candidate dimensions changed before comparison: ${candidate.candidateId}`);
+    return {candidate, bytes};
+  }));
+
+  const width = 1320;
+  const height = 450;
+  const cellWidth = 630;
+  const cellHeight = 354;
+  const top = 72;
+  const cells = verified.map(({candidate}, index) => ({candidateId: candidate.candidateId, candidateSetId: candidate.candidateSetId, left: 20 + index * 650, top, width: cellWidth, height: cellHeight}));
+  const imageOverlays = await Promise.all(verified.map(async ({bytes}, index) => ({input: await sharp(bytes).resize(cellWidth, cellHeight, {fit: "contain", background: {r: 16, g: 21, b: 22, alpha: 1}}).png().toBuffer(), left: cells[index]!.left, top})));
+  const labelOverlay = Buffer.from(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><style>.label{font-family:Arial,sans-serif;font-size:18px;font-weight:700;letter-spacing:2px;fill:#f3ead7}.id{font-family:Arial,sans-serif;font-size:12px;fill:#9cb0aa}</style><text class="label" x="20" y="31">CANDIDATE SET 1</text><text class="id" x="20" y="53">${leftCandidate.candidateSetId}</text><text class="label" x="670" y="31">CANDIDATE SET 2</text><text class="id" x="670" y="53">${rightCandidate.candidateSetId}</text></svg>`);
+  const bytes = await sharp({create: {width, height, channels: 4, background: {r: 10, g: 15, b: 16, alpha: 1}}}).composite([...imageOverlays, {input: labelOverlay, left: 0, top: 0}]).png({compressionLevel: 9}).toBuffer();
+  const relativeFile = `prepared/comparison-sheet-${leftCandidate.briefId}.png`;
+  try {
+    await writeFile(resolve(stagingRoot, ...relativeFile.split("/")), bytes, {flag: "wx", mode: 0o600});
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") throw new CandidateStagingError("output-collision", `Prepared comparison sheet already exists: ${leftCandidate.briefId}`);
+    throw error;
+  }
+  return {briefId: leftCandidate.briefId, relativeFile, contentHash: sha256(bytes), width, height, cells};
 }
 
 export async function prepareCandidateSets(input: PrepareCandidateSetsInput): Promise<PreparationReport> {

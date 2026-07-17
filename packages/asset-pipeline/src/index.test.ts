@@ -12,7 +12,7 @@ import {
   verifyPreparationReportHash,
   verifyRigValidationReportHash,
 } from "@storystage/story-engine";
-import {CandidateStagingError, prepareCandidateSets, stageCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "./index";
+import {CandidateStagingError, createPreparedCandidateComparisonSheet, prepareCandidateSets, stageCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "./index";
 
 const rgbaPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+Avz9WQAAAABJRU5ErkJggg==", "base64");
 
@@ -258,6 +258,36 @@ describe("candidate preparation and rig validation", () => {
     });
     expect(report.candidateSets[0]).toMatchObject({status: "needs-attention", preparedCandidates: [], contactSheet: null});
     expect(report.candidateSets[0]!.failures[0]).toMatchObject({status: "needs-manual-mask", code: "MANUAL_MASK_REQUIRED"});
+  });
+
+  it("creates a hash-bound side-by-side sheet from two distinct prepared sets", async () => {
+    const {root, trustedStagingRoot, stagingRoot} = await fixture();
+    const sourceFiles = await Promise.all([1, 2].map(async (setNumber) => {
+      const sourceFile = join(root, `editorial-${setNumber}.png`);
+      await writeFile(sourceFile, await opaqueFixture(320 + setNumber * 10, 180));
+      return {candidateId: `editorial-${setNumber}`, sourceFile};
+    }));
+    const staged = await stageLooseCandidateFiles({files: sourceFiles, trustedStagingRoot, stagingRoot});
+    const report = await prepareCandidateSets({
+      request: {
+        importId: "import-one",
+        importRecordContentHash: "f".repeat(64),
+        exchangeJobId: "job-one",
+        candidates: staged.map((entry, index) => ({candidateSetId: `editorial-set-${index + 1}`, briefId: "brief-editorial", requirementId: "requirement-editorial", fileRole: "candidate.png", expectedMediaType: entry.mediaType, expectedWidth: entry.width, expectedHeight: entry.height, outputRole: "reconstruction", stagedCandidate: entry.candidate})),
+      },
+      trustedStagingRoot,
+      stagingRoot,
+    });
+    const prepared = report.candidateSets.map((set) => set.preparedCandidates[0]!);
+    expect(prepared).toHaveLength(2);
+    expect(prepared.every((candidate) => candidate.width === 1920 && candidate.height === 1080)).toBe(true);
+
+    const comparison = await createPreparedCandidateComparisonSheet({trustedStagingRoot, stagingRoot, candidates: prepared});
+    const bytes = await readFile(join(stagingRoot, comparison.relativeFile));
+    expect(hash(bytes)).toBe(comparison.contentHash);
+    expect(comparison).toMatchObject({briefId: "brief-editorial", width: 1320, height: 450});
+    expect(comparison.cells.map((cell) => cell.candidateSetId)).toEqual(["editorial-set-1", "editorial-set-2"]);
+    expect(await sharp(bytes).metadata()).toMatchObject({format: "png", width: 1320, height: 450});
   });
 
   it("detects report and manifest tampering", async () => {
