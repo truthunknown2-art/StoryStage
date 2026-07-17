@@ -370,6 +370,15 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .locked-field > span { color: #66726e; font-size: 8px; }
 .locked-field strong { color: #9da8a3; font-size: 9px; text-transform: capitalize; }
 .locked-field small { color: #52605a; font-size: 7px; line-height: 1.35; }
+.requirement-routing { background: #101516; border: 1px solid #2d3937; border-radius: 6px; display: grid; gap: 7px; padding: 9px; }
+.requirement-routing > div:first-child { align-items: center; display: flex; justify-content: space-between; }
+.requirement-routing > div:first-child span { color: #65716d; font-size: 7px; text-transform: uppercase; }
+.requirement-routing > div:first-child strong { color: #8edaae; font-size: 7px; font-weight: 600; }
+.requirement-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.requirement-chips span { background: #1a2221; border: 1px solid #34413e; border-radius: 999px; color: #8e9b96; font-size: 7px; padding: 3px 6px; text-transform: capitalize; }
+.requirement-chips .is-approved { border-color: #31513f; color: #84c99f; }
+.requirement-chips .is-unresolved { border-color: #654a3f; color: #d39a84; }
+.requirement-routing small { color: #52605a; font-size: 7px; line-height: 1.4; }
 .compiled-actions { border-top: 1px solid #293132; display: grid; gap: 5px; padding-top: 11px; }
 .compiled-actions > span { color: #5e6a66; font-size: 7px; text-transform: uppercase; }
 .compiled-actions > div { align-items: center; display: flex; justify-content: space-between; }

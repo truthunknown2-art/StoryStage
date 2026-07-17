@@ -12,6 +12,7 @@ import {
   type StoryEntity,
   type VisualRequirement,
 } from "./model";
+import {applyTreatmentOverrides} from "./visual-requirements";
 
 type Match = {asset: AssetManifestEntry; strategy: "explicit-binding" | "identity-lock" | "semantic-tag" | "show-pack-role" | "placeholder"; confidence: number; resolved: boolean};
 
@@ -111,7 +112,8 @@ function visualGroupKey(visual: VisualRequirement): string {
   return `${visual.role}-shot-${visual.shotId}-${visual.id}`;
 }
 
-export function resolveAssets(creativePlan: CreativeEpisodePlan, showPack: ShowPack, overrides: ShotOverride[] = []): ResolvedProductionPlan {
+export function resolveAssets(creativePlanInput: CreativeEpisodePlan, showPack: ShowPack, overrides: ShotOverride[] = []): ResolvedProductionPlan {
+  const creativePlan = applyTreatmentOverrides(creativePlanInput, overrides);
   const placeholder = showPack.assets.find((asset) => asset.kind === "placeholder");
   if (!placeholder) throw new Error(`Show pack ${showPack.id} is missing a placeholder asset.`);
   const allEntities = [...creativePlan.analysis.characters, ...creativePlan.analysis.locations, ...creativePlan.analysis.props];

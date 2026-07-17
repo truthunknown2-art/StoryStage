@@ -1,7 +1,6 @@
 import {
   STORY_ENGINE_COMPILER_VERSION,
   creativeEpisodePlanSchema,
-  type AssetRoutingPolicy,
   type CreativeEpisodePlan,
   type CreativeShot,
   type DirectingProfile,
@@ -10,9 +9,9 @@ import {
   type ScriptDocument,
   type ShowPack,
   type StoryAnalysis,
-  type VisualRequirement,
 } from "./model";
 import type {DialogueTimingResult} from "./timing";
+import {buildVisualRequirementsForShot} from "./visual-requirements";
 
 const countWords = (value: string) => value.trim().split(/\s+/).filter(Boolean).length;
 const clamp = (value: number, minimum: number, maximum: number) => Math.max(minimum, Math.min(maximum, value));
@@ -63,12 +62,6 @@ function shouldSchedule(ratePerMinute: number, durationFrames: number, ordinal: 
   return stableFraction(ordinal * 3 + 1) < Math.min(1, (ratePerMinute * durationFrames) / 1800);
 }
 
-function sourceIntentFor(treatment: CreativeShot["treatment"], routing: AssetRoutingPolicy): VisualRequirement["sourceIntent"] {
-  if (treatment === "licensed-media") return routing.licensedSources === "disabled" ? "generated" : "public-domain";
-  if (treatment === "generated-illustration") return "generated";
-  return "approved-recurring";
-}
-
 function evenlySelectedIndices(length: number, count: number): Set<number> {
   if (count <= 0 || length <= 0) return new Set();
   const boundedCount = Math.min(length, count);
@@ -112,29 +105,17 @@ function applyProfileQuotas(inputShots: CreativeShot[], profile: DirectingProfil
 export type DirectEpisodeOptions = {draft: ProductionDraft; productionPolicy: ProductionPolicy; showPack: ShowPack};
 
 export function directEpisode(document: ScriptDocument, analysis: StoryAnalysis, timing: DialogueTimingResult, {draft, productionPolicy, showPack}: DirectEpisodeOptions): CreativeEpisodePlan {
-  const assetRoutingPolicy: AssetRoutingPolicy = draft.assetRoutingPolicy;
+  const assetRoutingPolicy = draft.assetRoutingPolicy;
   const profile = showPack.profile;
   const headingElements = document.elements.filter((element) => element.type === "scene-heading");
   const timingByLine = new Map(timing.lines.map((line) => [line.lineId, line.durationInFrames]));
-  const entityByName = new Map([...analysis.characters, ...analysis.locations, ...analysis.props].map((entity) => [entity.name.toLowerCase(), entity]));
   const shots: CreativeShot[] = [];
   const scenes: CreativeEpisodePlan["scenes"] = [];
-  const visualRequirements: VisualRequirement[] = [];
+  const visualRequirements: CreativeEpisodePlan["visualRequirements"] = [];
   let globalShotOrdinal = 0;
 
   const addRequirements = (shotId: string, sceneId: string, treatment: CreativeShot["treatment"], locationName: string, focusName: string | null, sourceElementIds: string[]) => {
-    const requirements: VisualRequirement[] = [];
-    const location = entityByName.get(locationName.toLowerCase());
-    requirements.push({id: `${shotId}-background`, sceneId, shotId, role: "background", entityId: location?.id ?? null, reusableConceptKey: null, sourceIntent: "approved-recurring", required: true, description: `Background for ${locationName}`});
-    if (focusName) {
-      const character = entityByName.get(focusName.toLowerCase());
-      requirements.push({id: `${shotId}-character`, sceneId, shotId, role: "character", entityId: character?.id ?? null, reusableConceptKey: null, sourceIntent: "approved-recurring", required: true, description: `On-screen performance for ${focusName}`});
-    }
-    const prop = analysis.props.find((candidate) => candidate.sourceElementIds.some((id) => sourceElementIds.includes(id)));
-    if (treatment === "insert" || prop) requirements.push({id: `${shotId}-insert`, sceneId, shotId, role: prop ? "prop" : "insert", entityId: prop?.id ?? null, reusableConceptKey: null, sourceIntent: prop ? "approved-recurring" : "generated", required: true, description: prop ? `Readable prop view of ${prop.name}` : "Editorial insert visual"});
-    if (treatment === "diagram" || treatment === "kinetic-type") requirements.push({id: `${shotId}-diagram`, sceneId, shotId, role: "diagram", entityId: null, reusableConceptKey: null, sourceIntent: "user-owned", required: true, description: treatment === "kinetic-type" ? "Profile-authored kinetic typography" : "Profile-authored explanatory diagram"});
-    if (treatment === "licensed-media") requirements.push({id: `${shotId}-evidence`, sceneId, shotId, role: "evidence", entityId: null, reusableConceptKey: null, sourceIntent: sourceIntentFor(treatment, assetRoutingPolicy), required: true, description: "Authenticated contextual evidence or licensed source"});
-    if (treatment === "generated-illustration") requirements.push({id: `${shotId}-reconstruction`, sceneId, shotId, role: assetRoutingPolicy.allowGeneratedHistoricalReconstruction ? "reconstruction" : "insert", entityId: null, reusableConceptKey: null, sourceIntent: "generated", required: true, description: "Original generated illustration with reconstruction labeling when factual"});
+    const requirements = buildVisualRequirementsForShot({id: shotId, sceneId, treatment, locationName, focusCharacterName: focusName, sourceElementIds}, analysis, assetRoutingPolicy);
     visualRequirements.push(...requirements);
     return requirements;
   };

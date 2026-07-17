@@ -154,14 +154,19 @@ describe("StoryStage studio", () => {
 
   it("compiles inspector choices into semantic shot overrides", async () => {
     const user = await createDefaultProduction();
+    const assetNavigationBefore = screen.getByRole("button", {name: /Assets/}).textContent;
 
     await user.selectOptions(screen.getByLabelText("Shot framing"), "close-up");
+    await user.selectOptions(screen.getByLabelText("Visual treatment"), "generated-illustration");
     await user.selectOptions(screen.getByLabelText("Shot transition"), "brief-dissolve");
     await user.selectOptions(screen.getByLabelText("Camera action"), "pan");
     await user.selectOptions(screen.getByLabelText("Performance gesture"), "point");
 
     expect(screen.getByLabelText("Shot framing")).toHaveValue("close-up");
+    expect(screen.getByLabelText("Visual treatment")).toHaveValue("generated-illustration");
     expect(screen.getByLabelText("Shot transition")).toHaveValue("brief-dissolve");
+    expect(within(screen.getByLabelText("Rerouted visual requirements")).getByText("reconstruction")).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: /Assets/}).textContent).not.toBe(assetNavigationBefore);
     expect(screen.getByText("Override compiled into the current render plan.")).toBeInTheDocument();
     expect(screen.getAllByText("pan").some((element) => element.tagName === "B")).toBe(true);
     expect(screen.getAllByText("gesture").some((element) => element.tagName === "B")).toBe(true);

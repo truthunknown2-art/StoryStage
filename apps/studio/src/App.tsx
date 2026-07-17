@@ -22,6 +22,7 @@ import {
   type ProductionDraft,
   type ProjectType,
   type ShotOverride,
+  type ShotTreatment,
   type VoiceTrack,
   musicTrackSchema,
   soundEffectAssetSchema,
@@ -110,6 +111,7 @@ const projectOptions: Array<{
 ];
 
 const framings = ["wide", "medium", "close-up", "insert"] as const;
+const treatments: ShotTreatment[] = ["environment", "character-performance", "reaction", "insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"];
 const cameraActions = ["cameraPush", "pan", "reframe"] as const;
 const transitionStyles = ["hard-cut", "foreground-wipe", "camera-carry", "brief-dissolve"] as const;
 
@@ -1019,7 +1021,11 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const [tab, setTab] = useState<WorkspaceTab>("direction");
   const [selectedShotId, setSelectedShotId] = useState(build.renderPlan.shots[0]!.id);
   const selectedShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
+  const baseSelectedShot = build.creativePlan.shots.find((shot) => shot.id === selectedShot.id) ?? build.creativePlan.shots[0]!;
   const currentOverride = session.overrides.find((override) => override.shotId === selectedShot.id);
+  const selectedRequirements = build.resolvedPlan.requirements.filter((requirement) => requirement.consumingShotIds.includes(selectedShot.id));
+  const selectedNewBriefs = build.resolvedPlan.generationBriefs.filter((brief) => brief.consumingShotIds.includes(selectedShot.id)).length;
+  const selectedDeferredRequirements = selectedRequirements.filter((requirement) => requirement.status === "deferred").length;
   const pack = getShowPack(session.showPackId);
   const averageShot = build.renderPlan.durationInFrames / build.renderPlan.shots.length / build.renderPlan.fps;
   const routed = ["insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"].reduce((sum, treatment) => sum + (build.metrics.treatmentDistribution[treatment] ?? 0), 0);
@@ -1050,7 +1056,14 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
     const existing = session.overrides.find((override) => override.shotId === shotId);
     const nextOverride = Object.fromEntries(Object.entries({...existing, shotId, ...patch}).filter(([, value]) => value !== undefined)) as ShotOverride;
     const remaining = session.overrides.filter((override) => override.shotId !== shotId);
-    setSession({...session, overrides: Object.keys(nextOverride).length === 1 ? remaining : [...remaining, nextOverride]});
+    const overrides = Object.keys(nextOverride).length === 1 ? remaining : [...remaining, nextOverride];
+    let approvedAssetVersions = session.approvedAssetVersions;
+    if (Object.prototype.hasOwnProperty.call(patch, "treatment")) {
+      const rerouted = buildAnimaticSync({draft: draftFromSession(session), overrides});
+      const validRequirementIds = new Set(rerouted.resolvedPlan.requirements.map((requirement) => requirement.id));
+      approvedAssetVersions = approvedAssetVersions.filter((approved) => validRequirementIds.has(approved.requirementId));
+    }
+    setSession({...session, overrides, approvedAssetVersions});
   };
   const updateOverride = (patch: Partial<ShotOverride>) => updateShotOverride(selectedShot.id, patch);
 
@@ -1085,7 +1098,8 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               <header><div><p className="eyebrow">Shot inspector</p><h2>{selectedShot.number}</h2></div><span>{selectedShot.treatment.replaceAll("-", " ")}</span></header>
               <div className="intent-card"><WandSparkles size={19} /><div><small>Selected intent</small><strong>{selectedShot.title}</strong><p>{selectedShot.caption ?? selectedShot.actions[0]!.label}</p></div></div>
               <label>Framing<select aria-label="Shot framing" value={currentOverride?.framing ?? selectedShot.framing} onChange={(event) => updateOverride({framing: event.target.value as ShotOverride["framing"]})}>{framings.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
-              <div className="locked-field"><span>Visual treatment</span><strong>{selectedShot.treatment.replaceAll("-", " ")}</strong><small>Asset-aware rerouting must update visual requirements; it is not a cosmetic shot override.</small></div>
+              <label>Visual treatment<select aria-label="Visual treatment" value={currentOverride?.treatment ?? ""} onChange={(event) => updateOverride({treatment: event.target.value ? event.target.value as ShotTreatment : undefined})}><option value="">Profile default · {baseSelectedShot.treatment.replaceAll("-", " ")}</option>{treatments.map((value) => <option key={value} value={value}>{value.replaceAll("-", " ")}</option>)}</select></label>
+              <div className="requirement-routing" aria-label="Rerouted visual requirements"><div><span>Active visual route</span><strong>{selectedNewBriefs} new · {selectedDeferredRequirements} deferred</strong></div><div className="requirement-chips">{selectedShot.visualBindings.map((binding) => <span className={`is-${binding.resolutionStatus}`} key={binding.requirementId}>{binding.role.replaceAll("-", " ")}</span>)}</div><small>Treatment changes rebuild requirement IDs, generation briefs, bindings, metrics, and the frozen render hash.</small></div>
               <label>Transition<select aria-label="Shot transition" value={currentOverride?.transition ?? ""} onChange={(event) => updateOverride({transition: event.target.value ? event.target.value as ShotOverride["transition"] : undefined})}><option value="">Profile default · {selectedShot.transition.replaceAll("-", " ")}</option>{transitionStyles.map((value) => <option key={value} value={value}>{value.replaceAll("-", " ")}</option>)}</select></label>
               <label>Camera action<select aria-label="Camera action" value={currentOverride?.cameraAction ?? ""} onChange={(event) => updateOverride({cameraAction: event.target.value ? event.target.value as ShotOverride["cameraAction"] : undefined})}><option value="">Profile default</option>{cameraActions.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
               <label>Performance gesture<select aria-label="Performance gesture" value={currentOverride?.gesture ?? ""} onChange={(event) => updateOverride({gesture: event.target.value ? event.target.value as ShotOverride["gesture"] : undefined})}><option value="">Profile default</option>{pack.allowedGestures.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>

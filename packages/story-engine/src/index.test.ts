@@ -337,10 +337,31 @@ describe("StoryStage story engine", () => {
     expect(build.renderPlan.shots.some((shot) => shot.visualBindings.some((binding) => binding.resolutionStatus !== "approved"))).toBe(true);
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.every((binding) => binding.contentHash.length === 64))).toBe(true);
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.find((binding) => binding.role === "background")?.assetId === shot.locationAssetId)).toBe(true);
-    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, treatment: "diagram"}).success).toBe(false);
+    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, treatment: "diagram"}).success).toBe(true);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, transition: "brief-dissolve"}).success).toBe(true);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, locationAssetId: "other-background"}).success).toBe(false);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, cameraAction: "hardCut"}).success).toBe(false);
+  });
+
+  it("reroutes treatment overrides through requirements, briefs, metrics, and render bindings", () => {
+    const base = buildFor("explainer");
+    const target = base.renderPlan.shots.find((shot) => shot.treatment === "licensed-media")!;
+    const rebuilt = buildAnimaticSync({draft: base.draft, overrides: [{shotId: target.id, treatment: "generated-illustration"}]});
+    const rerouted = rebuilt.renderPlan.shots.find((shot) => shot.id === target.id)!;
+    const activeCreativeShot = rebuilt.resolvedPlan.creativePlan.shots.find((shot) => shot.id === target.id)!;
+
+    expect(rerouted.treatment).toBe("generated-illustration");
+    expect(activeCreativeShot.treatment).toBe("generated-illustration");
+    expect(rerouted.visualBindings.some((binding) => binding.role === "reconstruction")).toBe(true);
+    expect(rerouted.visualBindings.some((binding) => binding.role === "evidence")).toBe(false);
+    expect(rebuilt.resolvedPlan.generationBriefs.some((brief) => brief.consumingShotIds.includes(target.id) && brief.outputRole === "reconstruction")).toBe(true);
+    expect(rebuilt.metrics.treatmentDistribution["generated-illustration"]).toBeGreaterThan(base.metrics.treatmentDistribution["generated-illustration"] ?? 0);
+    expect(rebuilt.metrics.treatmentDistribution["licensed-media"]).toBeLessThan(base.metrics.treatmentDistribution["licensed-media"] ?? 1);
+    expect(rebuilt.renderPlan.contentHash).not.toBe(base.renderPlan.contentHash);
+
+    const kinetic = buildAnimaticSync({draft: base.draft, overrides: [{shotId: target.id, treatment: "kinetic-type"}]}).renderPlan.shots.find((shot) => shot.id === target.id)!;
+    expect(kinetic.visualBindings.some((binding) => binding.role === "diagram")).toBe(true);
+    expect(kinetic.actions.some((action) => action.detail.type === "kineticType")).toBe(true);
   });
 
   it("compiles transition overrides into rendered transition metadata and actions", () => {

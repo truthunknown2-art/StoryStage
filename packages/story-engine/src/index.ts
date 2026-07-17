@@ -18,4 +18,5 @@ export * from "./sample-script";
 export * from "./script-parser";
 export * from "./show-pack";
 export * from "./timing";
+export * from "./visual-requirements";
 export * from "./wav-audio";
