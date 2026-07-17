@@ -1,7 +1,7 @@
 # SS-005 human gate completion path
 
 Date: 2026-07-17
-Status: **IMPLEMENTED — awaiting ChatGPT Pro audit**
+Status: **ACCEPTED by ChatGPT Pro at `0e5cd3e`**
 
 ## Outcome
 

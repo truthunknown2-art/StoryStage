@@ -10,7 +10,9 @@ SS-001 remains accepted workstation infrastructure: browser studio, secure Elect
 
 `SS-004: Verified Delivery Bundle + Durable Render Receipt` was accepted by Pro at `b6c9a1d`. Full renders now produce a probed content-hashed receipt and an atomic seven-file delivery binding the exact production, master, captions, rights/provenance, and toolchain. Delivery status survives restart and is re-verified before open/reveal; imported audio cannot pass the final gate without explicit content-bound clearance.
 
-`SS-005: Human Gate Completion Path` is active. The Studio now presents one ordered Finish Episode route through picture approval, voice listen-through and clearance, spoken timing locks, mix review, exact preflight, full rendering, and verified delivery. Every unresolved step can focus its owning control; the final action requests the exact full-production scope and shows the real job state rather than simulating completion.
+`SS-005: Human Gate Completion Path` was accepted by Pro at `0e5cd3e`. The Studio now presents one ordered Finish Episode route through picture approval, voice listen-through and clearance, spoken timing locks, mix review, exact preflight, full rendering, and verified delivery. Every unresolved step can focus its owning control; the final action requests the exact full-production scope, preserves terminal events emitted before job correlation, and shows real job and delivery state rather than simulating completion.
+
+`SS-006: Live Plan-Driven Remotion Preview` is active. The next slice embeds the final-production composition in Direction, makes its frame clock authoritative for the timeline and inspector, uses verified private playback media in desktop mode, and visibly watermarks all candidate or placeholder material without relaxing render or delivery gates.
 
 The SS-003 Rook pilot opening slice is engineering-complete and was accepted by Pro at `6bcd590`. It provides a fixed 26.33-second history production, a complete public Rook candidate, and a trusted terminal review/promotion path. The remaining Rook visual, final voice, timing, and mix decisions are real human gates rather than hidden implementation claims.
 
