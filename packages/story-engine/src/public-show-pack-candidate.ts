@@ -99,3 +99,9 @@ export function verifyPublicShowPackReviewRecordHash(recordInput: PublicShowPack
   const {contentHash, ...unhashed} = record;
   return hashCanonical(unhashed) === contentHash;
 }
+
+export function assertPublicShowPackReviewAttemptIsCompatible(record: PublicShowPackReviewRecord, currentRevision: number, requestedDecision: "approve" | "reject"): void {
+  const expected = requestedDecision === "approve" ? "approved" : "rejected";
+  if (record.decision !== expected) throw new Error("Rook already has the opposite final decision in this production lineage.");
+  if (record.sourceProductionRevision !== currentRevision && requestedDecision !== "approve") throw new Error("Rook is already bound in this production lineage; its approved target revision cannot be rejected.");
+}

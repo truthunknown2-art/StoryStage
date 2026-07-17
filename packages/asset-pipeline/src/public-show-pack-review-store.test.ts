@@ -3,7 +3,7 @@ import {mkdtemp, readdir, rm, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {afterEach, describe, expect, it} from "vitest";
 import {finalizePublicShowPackReviewRecord} from "@storystage/story-engine";
-import {persistPublicShowPackReviewRecord, readPublicShowPackReviewRecord} from "./public-show-pack-review-store";
+import {persistPublicShowPackReviewRecord, PublicShowPackReviewCoordinator, readPublicShowPackReviewRecord} from "./public-show-pack-review-store";
 
 const roots: string[] = [];
 afterEach(async () => {await Promise.all(roots.splice(0).map((root) => rm(root, {recursive: true, force: true})))});
@@ -56,5 +56,38 @@ describe("public Show Pack review store", () => {
     const corrupt = await setup();
     await writeFile(corrupt.file, "{partial", "utf8");
     await expect(persistPublicShowPackReviewRecord({file: corrupt.file, record: makeRecord()})).rejects.toThrow();
+  });
+
+  it("serializes simultaneous approval and rejection so approval side effects cannot be contradicted", async () => {
+    const coordinator = new PublicShowPackReviewCoordinator();
+    const durable: {decision: "approved" | "rejected" | null; approvedTarget: boolean} = {decision: null, approvedTarget: false};
+    const decide = (decision: "approved" | "rejected") => coordinator.run("production:1:rook", async () => {
+      if (durable.decision && durable.decision !== decision) throw new Error("opposite final decision");
+      if (decision === "approved") {
+        await Promise.resolve();
+        durable.approvedTarget = true;
+      }
+      durable.decision = decision;
+    });
+    const approval = decide("approved");
+    const rejection = decide("rejected");
+    await expect(approval).resolves.toBeUndefined();
+    await expect(rejection).rejects.toThrow("opposite final decision");
+    expect(durable).toEqual({decision: "approved", approvedTarget: true});
+  });
+
+  it("keeps an approval from creating an orphan target when simultaneous rejection wins", async () => {
+    const coordinator = new PublicShowPackReviewCoordinator();
+    const durable: {decision: "approved" | "rejected" | null; approvedTarget: boolean} = {decision: null, approvedTarget: false};
+    const decide = (decision: "approved" | "rejected") => coordinator.run("production:1:rook", async () => {
+      if (durable.decision && durable.decision !== decision) throw new Error("opposite final decision");
+      if (decision === "approved") durable.approvedTarget = true;
+      durable.decision = decision;
+    });
+    const rejection = decide("rejected");
+    const approval = decide("approved");
+    await expect(rejection).resolves.toBeUndefined();
+    await expect(approval).rejects.toThrow("opposite final decision");
+    expect(durable).toEqual({decision: "rejected", approvedTarget: false});
   });
 });

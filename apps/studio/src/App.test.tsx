@@ -107,10 +107,11 @@ describe("StoryStage studio", () => {
       return {ok: true as const, productionId: "rook-pilot-001", revision, contentHash: revision === 2 ? target.contentHash : "b".repeat(64)};
     });
     const loadProductionBundle = vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(target)}));
+    const listPublicShowPackCandidates = vi.fn(async (request: Parameters<StoryStageDesktopBridge["listPublicShowPackCandidates"]>[0]) => ({candidates: [{...rookCandidateSummary, ...(request.revision === 2 ? {canReview: false, review: {decision: "approved" as const, decidedAt: "2026-07-17T20:30:00.000Z", targetProductionRevision: 2, targetProductionBundleContentHash: target.contentHash}} : {})}]}));
     window.storyStage = makeDesktopBridge({
       saveProductionBundle,
       loadProductionBundle,
-      listPublicShowPackCandidates: vi.fn(async () => ({candidates: [rookCandidateSummary]})),
+      listPublicShowPackCandidates,
       reviewPublicShowPackCandidate: vi.fn(async () => ({status: "reviewed" as const, decision: "approved" as const, approvedAssetVersion: target.approvedAssetVersions![0]!, targetProductionRevision: 2, targetProductionBundleContentHash: target.contentHash})),
     });
     const user = await openProductionSetup();
@@ -123,6 +124,7 @@ describe("StoryStage studio", () => {
     await user.click(screen.getByRole("button", {name: /Approve Rook and bind/}));
     await waitFor(() => expect(loadProductionBundle).toHaveBeenCalledWith({productionId: "rook-pilot-001", revision: 2}));
     await waitFor(() => expect(screen.getByText(/Saved [a-f0-9]{8}/)).toHaveTextContent(`Saved ${target.contentHash.slice(0, 8)}`));
+    await waitFor(() => expect(listPublicShowPackCandidates).toHaveBeenCalledWith({productionId: "rook-pilot-001", revision: 2, productionBundleContentHash: target.contentHash}));
     const revisionTwoSave = saveProductionBundle.mock.calls.map(([request]) => JSON.parse(request.serializedDraft) as {production: {revision: number}; approvedAssetVersions?: ApprovedAssetVersion[]}).find((draft) => draft.production.revision === 2);
     expect(revisionTwoSave?.approvedAssetVersions?.[0]?.contentHash).toBe(target.approvedAssetVersions?.[0]?.contentHash);
     expect(screen.getByText("Approved and bound")).toBeInTheDocument();

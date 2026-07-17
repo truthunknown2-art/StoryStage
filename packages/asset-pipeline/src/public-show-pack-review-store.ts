@@ -10,6 +10,25 @@ import {
 
 export type PublicShowPackReviewStoreCheckpoint = "temporary-written" | "published";
 
+export class PublicShowPackReviewCoordinator {
+  private readonly tails = new Map<string, Promise<void>>();
+
+  async run<T>(key: string, operation: () => Promise<T>): Promise<T> {
+    const prior = this.tails.get(key) ?? Promise.resolve();
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {release = resolve;});
+    const tail = prior.catch(() => undefined).then(() => gate);
+    this.tails.set(key, tail);
+    await prior.catch(() => undefined);
+    try {
+      return await operation();
+    } finally {
+      release();
+      if (this.tails.get(key) === tail) this.tails.delete(key);
+    }
+  }
+}
+
 export async function readPublicShowPackReviewRecord(file: string): Promise<PublicShowPackReviewRecord | null> {
   try {
     const info = await lstat(file);

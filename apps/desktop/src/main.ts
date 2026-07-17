@@ -7,7 +7,7 @@ import {app, BrowserWindow, dialog, ipcMain, net, protocol, shell, utilityProces
 import {commitApprovalWorkflow} from "@storystage/asset-pipeline/approval-recovery";
 import {buildApprovedProductionRevisionDraft, buildSelectedCandidateRigArtifacts, persistAssetReviewRecordSnapshot, promotePreparedCandidateSet} from "@storystage/asset-pipeline/approved-asset-workflow";
 import {promotePublicShowPackCandidate, verifyPublicShowPackCandidate} from "@storystage/asset-pipeline/public-show-pack-promotion";
-import {persistPublicShowPackReviewRecord, readPublicShowPackReviewRecord} from "@storystage/asset-pipeline/public-show-pack-review-store";
+import {persistPublicShowPackReviewRecord, PublicShowPackReviewCoordinator, readPublicShowPackReviewRecord} from "@storystage/asset-pipeline/public-show-pack-review-store";
 import {commitImportEvidenceDirectory} from "@storystage/asset-pipeline/import-evidence-store";
 import {createImportRecordFromStagedCandidates} from "@storystage/asset-pipeline/import-record-builder";
 import {
@@ -74,6 +74,7 @@ import {
   assetReviewRecordSchema,
   canTransitionGenerationExchange,
   candidateBundleSchema,
+  assertPublicShowPackReviewAttemptIsCompatible,
   createImportValidationReport,
   finalizeAssetReviewRecord,
   finalizePublicShowPackReviewRecord,
@@ -146,6 +147,7 @@ const voiceTrackRegistry = new Map<string, VoiceTrack>();
 const musicTrackRegistry = new Map<string, MusicTrack>();
 const soundEffectRegistry = new Map<string, SoundEffectAsset>();
 const productionSaveQueues = new Map<string, Promise<ProductionBundle>>();
+const publicShowPackReviewCoordinator = new PublicShowPackReviewCoordinator();
 const looseImportRegistry = new Map<string, {
   exchange: GenerationExchangeRecord;
   trustedStagingRoot: string;
@@ -184,6 +186,43 @@ async function readPublicShowPackReview(productionId: string, revision: number, 
 async function persistPublicShowPackReview(record: ReturnType<typeof finalizePublicShowPackReviewRecord>): Promise<void> {
   const file = join(app.getPath("userData"), ".storystage-local", "show-pack-reviews", record.productionId, `r${record.sourceProductionRevision}`, record.candidateId, "review.json");
   await persistPublicShowPackReviewRecord({file, record});
+}
+
+const completedPublicReviewAcknowledgements = {identitySheet: true, neutralPose: true, talkPose: true, reactionPose: true, movingDiagnostic: true, identityConsistency: true, matteEdges: true, provenance: true} as const;
+const publicCandidateAssetPrefix = (candidateId: string) => `approved-${candidateId}-`;
+const publicCandidateAssetInBundle = (bundle: ProductionBundle, candidateId: string) => (bundle.approvedAssetVersions ?? []).find((asset) => asset.assetId.startsWith(publicCandidateAssetPrefix(candidateId))) ?? null;
+
+async function resolvePublicShowPackReviewForBundle(bundle: ProductionBundle, candidate: {candidateId: string; contentHash: string}): Promise<PublicShowPackReviewRecord | null> {
+  const exact = await readPublicShowPackReview(bundle.production.productionId, bundle.production.revision, candidate.candidateId);
+  const currentAsset = publicCandidateAssetInBundle(bundle, candidate.candidateId);
+  const next = productionBundleRegistry.get(productionBundleKey(bundle.production.productionId, bundle.production.revision + 1))?.bundle ?? null;
+  const nextAsset = next ? publicCandidateAssetInBundle(next, candidate.candidateId) : null;
+  if (exact) {
+    if (exact.decision === "rejected" && (currentAsset || nextAsset)) throw new Error("The durable Rook decision contradicts an approved production lineage.");
+    return exact;
+  }
+
+  if (currentAsset && bundle.production.revision > 1) {
+    const sourceRevision = bundle.production.revision - 1;
+    const source = productionBundleRegistry.get(productionBundleKey(bundle.production.productionId, sourceRevision))?.bundle ?? null;
+    if (!source || !verifyProductionBundleHash(source)) throw new Error("The approved Rook target lost its authoritative source revision.");
+    const sourceReview = await readPublicShowPackReview(bundle.production.productionId, sourceRevision, candidate.candidateId);
+    if (sourceReview) {
+      if (sourceReview.decision !== "approved" || sourceReview.targetProductionRevision !== bundle.production.revision || sourceReview.targetProductionBundleContentHash !== bundle.contentHash) throw new Error("The Rook source review contradicts its approved target revision.");
+      return sourceReview;
+    }
+    const recovered = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: bundle.production.productionId, sourceProductionRevision: sourceRevision, sourceProductionBundleContentHash: source.contentHash, decision: "approved", acknowledgements: completedPublicReviewAcknowledgements, decidedAt: currentAsset.approvedAt, approvedAssetVersion: currentAsset, targetProductionRevision: bundle.production.revision, targetProductionBundleContentHash: bundle.contentHash});
+    await persistPublicShowPackReview(recovered);
+    return recovered;
+  }
+
+  if (next && nextAsset) {
+    if (!verifyProductionBundleHash(next)) throw new Error("The recovered Rook target revision failed its content hash.");
+    const recovered = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: bundle.production.productionId, sourceProductionRevision: bundle.production.revision, sourceProductionBundleContentHash: bundle.contentHash, decision: "approved", acknowledgements: completedPublicReviewAcknowledgements, decidedAt: nextAsset.approvedAt, approvedAssetVersion: nextAsset, targetProductionRevision: next.production.revision, targetProductionBundleContentHash: next.contentHash});
+    await persistPublicShowPackReview(recovered);
+    return recovered;
+  }
+  return null;
 }
 
 async function publishImmutableVoiceFile(targetFile: string, bytes: Buffer): Promise<void> {
@@ -1264,7 +1303,7 @@ ipcMain.handle(IPC_CHANNELS.listPublicShowPackCandidates, async (_event, rawRequ
     const showPack = getShowPack(stored.bundle.production.showPackId);
     const {candidate} = await verifyPublicShowPackCandidate({candidateRoot: rookCandidateRoot(), expectedCandidateId: rookCandidateRelease.candidateId, expectedCandidateContentHash: rookCandidateRelease.contentHash});
     if (!publicShowPackCandidateMatchesRelease(candidate, showPack)) throw new Error("Rook was not prepared for this exact authoritative Show Pack release.");
-    const review = await readPublicShowPackReview(request.productionId, request.revision, candidate.candidateId);
+    const review = await resolvePublicShowPackReviewForBundle(stored.bundle, candidate);
     if (review?.decision === "approved") {
       if (!review.approvedAssetVersion || !(await verifyApprovedAssetVersionOnDisk(review.approvedAssetVersion))) throw new Error("The approved Rook review lost its private immutable asset.");
       const target = productionBundleRegistry.get(productionBundleKey(request.productionId, review.targetProductionRevision!));
@@ -1296,45 +1335,50 @@ ipcMain.handle(IPC_CHANNELS.listPublicShowPackCandidates, async (_event, rawRequ
 ipcMain.handle(IPC_CHANNELS.reviewPublicShowPackCandidate, async (_event, rawRequest: unknown) => {
   try {
     const request = reviewPublicShowPackCandidateRequestSchema.parse(rawRequest);
-    if (request.candidateId !== rookCandidateRelease.candidateId) throw new Error("This packaged candidate is not allowlisted by the desktop host.");
-    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
-    if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Rook review requires the current acknowledged production snapshot.");
-    if (stored.bundle.production.showPackId !== rookCandidateRelease.showPackId) throw new Error("Rook can only be reviewed for the Frankly Weird History Show Pack.");
-    const {candidate} = await verifyPublicShowPackCandidate({candidateRoot: rookCandidateRoot(), expectedCandidateId: rookCandidateRelease.candidateId, expectedCandidateContentHash: rookCandidateRelease.contentHash});
-    const authoritativeShowPack = getShowPack(stored.bundle.production.showPackId);
-    if (!publicShowPackCandidateMatchesRelease(candidate, authoritativeShowPack)) throw new Error("Rook was not prepared for this exact authoritative Show Pack release.");
-    const existingReview = await readPublicShowPackReview(request.productionId, request.revision, request.candidateId);
-    if (existingReview) {
-      if (existingReview.sourceProductionBundleContentHash !== stored.bundle.contentHash || existingReview.candidateContentHash !== candidate.contentHash || existingReview.decision !== (request.decision === "approve" ? "approved" : "rejected")) throw new Error("This production revision already has a different final Rook decision.");
-      if (existingReview.approvedAssetVersion && !(await verifyApprovedAssetVersionOnDisk(existingReview.approvedAssetVersion))) throw new Error("The previously approved Rook asset failed private integrity verification.");
-      return reviewPublicShowPackCandidateResultSchema.parse({status: "reviewed", decision: existingReview.decision, approvedAssetVersion: existingReview.approvedAssetVersion, targetProductionRevision: existingReview.targetProductionRevision, targetProductionBundleContentHash: existingReview.targetProductionBundleContentHash});
-    }
+    const queueKey = `${request.productionId}:r${request.revision}:${request.candidateId}`;
+    return await publicShowPackReviewCoordinator.run(queueKey, async () => {
+      if (request.candidateId !== rookCandidateRelease.candidateId) throw new Error("This packaged candidate is not allowlisted by the desktop host.");
+      const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+      if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Rook review requires the current acknowledged production snapshot.");
+      if (stored.bundle.production.showPackId !== rookCandidateRelease.showPackId) throw new Error("Rook can only be reviewed for the Frankly Weird History Show Pack.");
+      const {candidate} = await verifyPublicShowPackCandidate({candidateRoot: rookCandidateRoot(), expectedCandidateId: rookCandidateRelease.candidateId, expectedCandidateContentHash: rookCandidateRelease.contentHash});
+      const authoritativeShowPack = getShowPack(stored.bundle.production.showPackId);
+      if (!publicShowPackCandidateMatchesRelease(candidate, authoritativeShowPack)) throw new Error("Rook was not prepared for this exact authoritative Show Pack release.");
+      const existingReview = await resolvePublicShowPackReviewForBundle(stored.bundle, candidate);
+      if (existingReview) {
+        if (existingReview.candidateContentHash !== candidate.contentHash) throw new Error("The final Rook review belongs to a different packaged candidate release.");
+        assertPublicShowPackReviewAttemptIsCompatible(existingReview, request.revision, request.decision);
+        if (existingReview.sourceProductionRevision === request.revision && existingReview.sourceProductionBundleContentHash !== stored.bundle.contentHash) throw new Error("The final Rook review no longer matches its source production snapshot.");
+        if (existingReview.approvedAssetVersion && !(await verifyApprovedAssetVersionOnDisk(existingReview.approvedAssetVersion))) throw new Error("The previously approved Rook asset failed private integrity verification.");
+        return reviewPublicShowPackCandidateResultSchema.parse({status: "reviewed", decision: existingReview.decision, approvedAssetVersion: existingReview.approvedAssetVersion, targetProductionRevision: existingReview.targetProductionRevision, targetProductionBundleContentHash: existingReview.targetProductionBundleContentHash});
+      }
+      if (publicCandidateAssetInBundle(stored.bundle, candidate.candidateId)) throw new Error("Rook is already bound in this production revision and cannot receive another review decision.");
 
-    const decidedAt = new Date().toISOString();
-    if (request.decision === "reject") {
-      const record = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: request.productionId, sourceProductionRevision: request.revision, sourceProductionBundleContentHash: stored.bundle.contentHash, decision: "rejected", acknowledgements: request.acknowledgements, decidedAt, approvedAssetVersion: null, targetProductionRevision: null, targetProductionBundleContentHash: null});
+      const decidedAt = new Date().toISOString();
+      if (request.decision === "reject") {
+        const record = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: request.productionId, sourceProductionRevision: request.revision, sourceProductionBundleContentHash: stored.bundle.contentHash, decision: "rejected", acknowledgements: request.acknowledgements, decidedAt, approvedAssetVersion: null, targetProductionRevision: null, targetProductionBundleContentHash: null});
+        await persistPublicShowPackReview(record);
+        return reviewPublicShowPackCandidateResultSchema.parse({status: "reviewed", decision: "rejected", approvedAssetVersion: null, targetProductionRevision: null, targetProductionBundleContentHash: null});
+      }
+      if (Object.values(request.acknowledgements).some((value) => !value)) throw new Error("Approve Rook only after reviewing every pose, the moving diagnostic, matte edges, identity consistency, and provenance.");
+
+      const presenterAssetId = authoritativeShowPack.roleBindings.narrationPresenterAssetId;
+      const presenter = stored.bundle.resolvedPlan.characters.find((character) => character.matchStrategy === "show-pack-role" && character.assetId === presenterAssetId);
+      if (!presenter) throw new Error("The production has no unique Show Pack presenter binding for Rook.");
+      const matchingRequirements = stored.bundle.resolvedPlan.requirements.filter((requirement) => requirement.role === "character" && requirement.entityId === presenter.entityId);
+      if (matchingRequirements.length !== 1) throw new Error("Rook approval requires one unique presenter-character requirement.");
+      const requirement = matchingRequirements[0]!;
+      const approved = await promotePublicShowPackCandidate({candidateRoot: rookCandidateRoot(), assetsRoot: localAssetsRoot(), expectedCandidateId: candidate.candidateId, expectedCandidateContentHash: candidate.contentHash, requirementId: requirement.id, entityId: presenter.entityId, entityName: presenter.entityName, approvedAt: decidedAt});
+      const nextDraft = buildApprovedProductionRevisionDraft({sourceBundle: stored.bundle, approvedAssetVersions: [approved]});
+      const nextBundle = finalizeProductionBundle(nextDraft, approved.approvedAt);
+      const targetKey = productionBundleKey(nextBundle.production.productionId, nextBundle.production.revision);
+      const existingTarget = productionBundleRegistry.get(targetKey);
+      if (existingTarget && existingTarget.bundle.contentHash !== nextBundle.contentHash) throw new Error("The target production revision already contains different creative decisions.");
+      if (!existingTarget) await persistProductionBundle(nextBundle);
+      const record = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: request.productionId, sourceProductionRevision: request.revision, sourceProductionBundleContentHash: stored.bundle.contentHash, decision: "approved", acknowledgements: request.acknowledgements, decidedAt: approved.approvedAt, approvedAssetVersion: approved, targetProductionRevision: nextBundle.production.revision, targetProductionBundleContentHash: nextBundle.contentHash});
       await persistPublicShowPackReview(record);
-      return reviewPublicShowPackCandidateResultSchema.parse({status: "reviewed", decision: "rejected", approvedAssetVersion: null, targetProductionRevision: null, targetProductionBundleContentHash: null});
-    }
-    if (Object.values(request.acknowledgements).some((value) => !value)) throw new Error("Approve Rook only after reviewing every pose, the moving diagnostic, matte edges, identity consistency, and provenance.");
-
-    const showPack = getShowPack(stored.bundle.production.showPackId);
-    const presenterAssetId = showPack.roleBindings.narrationPresenterAssetId;
-    const presenter = stored.bundle.resolvedPlan.characters.find((character) => character.matchStrategy === "show-pack-role" && character.assetId === presenterAssetId);
-    if (!presenter) throw new Error("The production has no unique Show Pack presenter binding for Rook.");
-    const matchingRequirements = stored.bundle.resolvedPlan.requirements.filter((requirement) => requirement.role === "character" && requirement.entityId === presenter.entityId);
-    if (matchingRequirements.length !== 1) throw new Error("Rook approval requires one unique presenter-character requirement.");
-    const requirement = matchingRequirements[0]!;
-    const approved = await promotePublicShowPackCandidate({candidateRoot: rookCandidateRoot(), assetsRoot: localAssetsRoot(), expectedCandidateId: candidate.candidateId, expectedCandidateContentHash: candidate.contentHash, requirementId: requirement.id, entityId: presenter.entityId, entityName: presenter.entityName, approvedAt: decidedAt});
-    const nextDraft = buildApprovedProductionRevisionDraft({sourceBundle: stored.bundle, approvedAssetVersions: [approved]});
-    const nextBundle = finalizeProductionBundle(nextDraft, approved.approvedAt);
-    const targetKey = productionBundleKey(nextBundle.production.productionId, nextBundle.production.revision);
-    const existingTarget = productionBundleRegistry.get(targetKey);
-    if (existingTarget && existingTarget.bundle.contentHash !== nextBundle.contentHash) throw new Error("The target production revision already contains different creative decisions.");
-    if (!existingTarget) await persistProductionBundle(nextBundle);
-    const record = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: request.productionId, sourceProductionRevision: request.revision, sourceProductionBundleContentHash: stored.bundle.contentHash, decision: "approved", acknowledgements: request.acknowledgements, decidedAt: approved.approvedAt, approvedAssetVersion: approved, targetProductionRevision: nextBundle.production.revision, targetProductionBundleContentHash: nextBundle.contentHash});
-    await persistPublicShowPackReview(record);
-    return reviewPublicShowPackCandidateResultSchema.parse({status: "reviewed", decision: "approved", approvedAssetVersion: approved, targetProductionRevision: nextBundle.production.revision, targetProductionBundleContentHash: nextBundle.contentHash});
+      return reviewPublicShowPackCandidateResultSchema.parse({status: "reviewed", decision: "approved", approvedAssetVersion: approved, targetProductionRevision: nextBundle.production.revision, targetProductionBundleContentHash: nextBundle.contentHash});
+    });
   } catch (error) {
     return reviewPublicShowPackCandidateResultSchema.parse({status: "failed", error: {code: "SHOW_PACK_REVIEW_FAILED", message: error instanceof Error ? error.message : "Rook review could not be recorded."}});
   }

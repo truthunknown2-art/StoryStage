@@ -2,6 +2,7 @@ import {readFileSync} from "node:fs";
 import {describe, expect, it} from "vitest";
 import {
   analyzeStory,
+  assertPublicShowPackReviewAttemptIsCompatible,
   applyApprovedAssetVersion,
   buildAnimaticSync,
   canTransitionGenerationExchange,
@@ -16,6 +17,7 @@ import {
   createImportValidationReport,
   finalizeImportRecord,
   finalizeRigDiagnosticReport,
+  finalizePublicShowPackReviewRecord,
   finalizeProductionBundle,
   generationBriefsMatchAuthoritativePlan,
   generationBriefSchema,
@@ -193,6 +195,12 @@ describe("StoryStage story engine", () => {
     expect(publicShowPackCandidateMatchesRelease({showPack: {id: showPack.id, version: showPack.version, contentHash: showPack.contentHash}}, showPack)).toBe(true);
     expect(publicShowPackCandidateMatchesRelease({showPack: {id: showPack.id, version: "0.9.0", contentHash: showPack.contentHash}}, showPack)).toBe(false);
     expect(publicShowPackCandidateMatchesRelease({showPack: {id: showPack.id, version: showPack.version, contentHash: "f".repeat(64)}}, showPack)).toBe(false);
+  });
+
+  it("makes an approved public candidate terminal across its target revision", () => {
+    const review = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: "weird-history-rook-v1", candidateContentHash: "1".repeat(64), productionId: "rook-pilot-001", sourceProductionRevision: 1, sourceProductionBundleContentHash: "2".repeat(64), decision: "approved", acknowledgements: {identitySheet: true, neutralPose: true, talkPose: true, reactionPose: true, movingDiagnostic: true, identityConsistency: true, matteEdges: true, provenance: true}, decidedAt: "2026-07-17T22:00:00.000Z", approvedAssetVersion: {assetId: "approved-weird-history-rook-v1-requirement", version: "sha256-rook", requirementId: "requirement-rook", contentHash: "3".repeat(64), relativeFile: "approved-rook/manifest.json", provenance: {sourceType: "generated", provider: "ChatGPT Images", usageNotes: "Reviewed."}, approvedAt: "2026-07-17T22:00:00.000Z"}, targetProductionRevision: 2, targetProductionBundleContentHash: "4".repeat(64)});
+    expect(() => assertPublicShowPackReviewAttemptIsCompatible(review, 2, "approve")).not.toThrow();
+    expect(() => assertPublicShowPackReviewAttemptIsCompatible(review, 2, "reject")).toThrow(/opposite final decision|cannot be rejected/);
   });
 
   it("prioritizes real missing assets and leaves exhausted requirements visible", () => {
