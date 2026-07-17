@@ -3,10 +3,10 @@ import {lstat, mkdir, readFile, realpath} from "node:fs/promises";
 import {dirname, isAbsolute, relative, resolve} from "node:path";
 import {bundle} from "@remotion/bundler";
 import {getVideoMetadata, renderMedia, renderStill, selectComposition} from "@remotion/renderer";
-import type {RenderJobEvent} from "@storystage/contracts";
+import type {ProductionRenderScope, RenderJobEvent} from "@storystage/contracts";
 import {sampleEpisodePlan} from "@storystage/fixtures";
 import {STORY_STAGE_COMPOSITION_ID, STORY_STAGE_PRODUCTION_COMPOSITION_ID, STORY_STAGE_RIG_DIAGNOSTIC_COMPOSITION_ID} from "@storystage/remotion-runtime/manifest";
-import {assetRigManifestSchema, inspectPcmWav, productionBundleSchema, rigDiagnosticReportSchema, rigValidationReportSchema, verifyAssetRigManifestHash, verifyProductionBundleHash, verifyRigDiagnosticReportHash, verifyRigValidationReportHash, type ApprovedAssetVersion, type RigAssetBinding, type VoiceTrack} from "@storystage/story-engine";
+import {assetRigManifestSchema, getFullProductionRenderBlockers, inspectPcmWav, productionBundleSchema, rigDiagnosticReportSchema, rigValidationReportSchema, verifyAssetRigManifestHash, verifyProductionBundleHash, verifyRigDiagnosticReportHash, verifyRigValidationReportHash, type ApprovedAssetVersion, type RigAssetBinding, type VoiceTrack} from "@storystage/story-engine";
 import type {PlaybackAsset, ProductionCompositionProps, RigDiagnosticCompositionProps} from "@storystage/remotion-runtime";
 
 export type RenderSampleOptions = {
@@ -24,6 +24,7 @@ export type RenderProductionOptions = {
   jobId: string;
   onEvent?: (event: RenderJobEvent) => void;
   outputRoot: string;
+  scope: ProductionRenderScope;
   trustedProductionRoot: string;
   workspaceRoot: string;
 };
@@ -125,20 +126,26 @@ export async function renderProduction(options: RenderProductionOptions): Promis
   const bundleBytes = await trustedFile(options.trustedProductionRoot, options.bundleFile, 10_000_000);
   const productionBundle = productionBundleSchema.parse(JSON.parse(bundleBytes.toString("utf8")));
   if (!verifyProductionBundleHash(productionBundle) || productionBundle.contentHash !== options.bundleContentHash) throw new Error("Production render snapshot failed exact derivation or content-hash verification.");
+  if (options.scope === "full-production") {
+    const blockers = getFullProductionRenderBlockers({approvedAssetVersions: productionBundle.approvedAssetVersions ?? [], audioMix: productionBundle.audioMix, musicTrack: productionBundle.musicTrack, overrides: productionBundle.overrides, renderPlan: productionBundle.renderPlan, resolvedPlan: productionBundle.resolvedPlan, soundEffectAssets: productionBundle.soundEffectAssets, voiceTrack: productionBundle.voiceTrack});
+    if (blockers.length > 0) throw new Error(`Full production render is blocked: ${blockers.map((blocker) => blocker.message).join(" ")}`);
+  }
   const approvedVersions = productionBundle.approvedAssetVersions ?? [];
   if (approvedVersions.length === 0) throw new Error("A production render requires at least one human-approved asset version.");
   const playbackEntries = await Promise.all(approvedVersions.map(async (approved) => [approved.assetId, await playbackAsset(options.assetsRoot, approved)] as const));
   const voiceTrackDataUrl = productionBundle.voiceTrack?.approvalStatus === "approved" ? await approvedAudioDataUrl(options.assetsRoot, productionBundle.voiceTrack) : undefined;
   const musicTrackDataUrl = productionBundle.musicTrack?.approvalStatus === "approved" ? await approvedAudioDataUrl(options.assetsRoot, productionBundle.musicTrack) : undefined;
   const soundEffectEntries = await Promise.all((productionBundle.soundEffectAssets ?? []).filter((asset) => asset.approvalStatus === "approved").map(async (asset) => [asset.contentHash, await approvedAudioDataUrl(options.assetsRoot, asset)] as const));
-  const inputProps: ProductionCompositionProps = {plan: productionBundle.renderPlan, playbackAssets: Object.fromEntries(playbackEntries), sliceDurationInFrames: Math.min(productionBundle.renderPlan.durationInFrames, productionBundle.renderPlan.fps * 24), ...(voiceTrackDataUrl ? {voiceTrackDataUrl} : {}), ...(musicTrackDataUrl ? {musicTrackDataUrl} : {}), soundEffectDataUrls: Object.fromEntries(soundEffectEntries), soundEffectCues: productionBundle.soundEffectCues ?? [], ...(productionBundle.audioMix ? {audioMix: productionBundle.audioMix} : {})};
+  const renderDurationInFrames = options.scope === "full-production" ? productionBundle.renderPlan.durationInFrames : Math.min(productionBundle.renderPlan.durationInFrames, productionBundle.renderPlan.fps * 24);
+  const renderLabel = options.scope === "full-production" ? "full production" : "production slice";
+  const inputProps: ProductionCompositionProps = {plan: productionBundle.renderPlan, playbackAssets: Object.fromEntries(playbackEntries), sliceDurationInFrames: renderDurationInFrames, ...(voiceTrackDataUrl ? {voiceTrackDataUrl} : {}), ...(musicTrackDataUrl ? {musicTrackDataUrl} : {}), soundEffectDataUrls: Object.fromEntries(soundEffectEntries), soundEffectCues: productionBundle.soundEffectCues ?? [], ...(productionBundle.audioMix ? {audioMix: productionBundle.audioMix} : {})};
   const outputPath = resolve(options.outputRoot, `${options.jobId}.mp4`);
   await mkdir(options.outputRoot, {recursive: true});
-  const serveUrl = await bundle({entryPoint: resolve(options.workspaceRoot, "packages/remotion-runtime/src/remotion-entry.ts"), publicDir: resolve(options.workspaceRoot, "packages/remotion-runtime/public"), onProgress: (progress) => emit(options.onEvent, {jobId: options.jobId, status: "bundling", progress: Math.min(.18, progress / 100 * .18), message: "Bundling the plan-driven production slice"})});
+  const serveUrl = await bundle({entryPoint: resolve(options.workspaceRoot, "packages/remotion-runtime/src/remotion-entry.ts"), publicDir: resolve(options.workspaceRoot, "packages/remotion-runtime/public"), onProgress: (progress) => emit(options.onEvent, {jobId: options.jobId, status: "bundling", progress: Math.min(.18, progress / 100 * .18), message: `Bundling the plan-driven ${renderLabel}`})});
   const composition = await selectComposition({serveUrl, id: STORY_STAGE_PRODUCTION_COMPOSITION_ID, inputProps});
   await renderMedia({codec: "h264", composition, inputProps, outputLocation: outputPath, serveUrl, onProgress: ({progress}) => emit(options.onEvent, {jobId: options.jobId, status: "rendering", progress: .18 + progress * .76, message: `Rendering approved frames ${Math.round(progress * inputProps.sliceDurationInFrames)} of ${inputProps.sliceDurationInFrames}`})});
-  emit(options.onEvent, {jobId: options.jobId, status: "encoding", progress: null, message: "Finalizing the approved H.264 production slice"});
-  emit(options.onEvent, {jobId: options.jobId, status: "completed", progress: null, message: "Approved production slice complete", outputPath});
+  emit(options.onEvent, {jobId: options.jobId, status: "encoding", progress: null, message: `Finalizing the approved H.264 ${renderLabel}`});
+  emit(options.onEvent, {jobId: options.jobId, status: "completed", progress: null, message: options.scope === "full-production" ? "Full production render complete" : "Approved production slice complete", outputPath});
   return outputPath;
 }
 

@@ -13,6 +13,7 @@ export * from "./metrics";
 export * from "./pipeline";
 export * from "./production-policy";
 export * from "./production-bundle";
+export * from "./production-readiness";
 export * from "./rig-manifests";
 export * from "./sample-script";
 export * from "./script-parser";

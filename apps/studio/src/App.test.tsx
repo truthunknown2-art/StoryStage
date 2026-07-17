@@ -172,6 +172,17 @@ describe("StoryStage studio", () => {
     expect(screen.getAllByText("gesture").some((element) => element.tagName === "B")).toBe(true);
   });
 
+  it("separates the engineering slice from the gated full-production render", async () => {
+    const user = await createDefaultProduction();
+    const scope = screen.getByLabelText("Render scope");
+    expect(scope).toHaveValue("engineering-slice");
+    await user.selectOptions(scope, "full-production");
+    expect(screen.getByRole("button", {name: "Render full production"})).toBeDisabled();
+    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    expect(screen.getByText("Full production render gate")).toBeInTheDocument();
+    expect(screen.getByText(/final-output gates remain/)).toBeInTheDocument();
+  });
+
   it("edits and locks frame-accurate spoken timing instead of faking a voice track", async () => {
     const user = await createDefaultProduction();
     await user.click(screen.getByRole("button", {name: "Audio"}));
@@ -193,7 +204,7 @@ describe("StoryStage studio", () => {
 
     await user.click(screen.getByRole("button", {name: "Preflight"}));
     expect(screen.getByText(/1\/\d+ narration or dialogue cues have editor-locked frame timing/)).toBeInTheDocument();
-    expect(screen.getByText(/approved voice master/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: "Approved voice master bound"})).toBeInTheDocument();
   });
 
   it("imports, auditions, and approves an exact local WAV voice master", async () => {

@@ -14,7 +14,8 @@ export const desktopCapabilitiesSchema = z.object({
 }).strict();
 
 const productionIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
-export const startProductionRenderRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive()}).strict();
+export const productionRenderScopeSchema = z.enum(["engineering-slice", "full-production"]);
+export const startProductionRenderRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), scope: productionRenderScopeSchema}).strict();
 
 export const exportGenerationJobRequestSchema = z.object({
   serializedJob: z.string().min(2).max(2_000_000),
@@ -239,7 +240,7 @@ export const renderWorkerCommandSchema = z.discriminatedUnion("type", [
     bundleFile: z.string().min(1),
     assetsRoot: z.string().min(1),
     outputRoot: z.string().min(1),
-    request: z.object({jobId: z.string().min(1), bundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict(),
+    request: z.object({jobId: z.string().min(1), bundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), scope: productionRenderScopeSchema}).strict(),
   }).strict(),
   z.object({
     type: z.literal("start-rig-diagnostic"),
@@ -352,6 +353,7 @@ export const IPC_CHANNELS = {
 export type StartRenderRequest = z.input<typeof startRenderRequestSchema>;
 export type StartRenderResponse = z.infer<typeof startRenderResponseSchema>;
 export type StartProductionRenderRequest = z.infer<typeof startProductionRenderRequestSchema>;
+export type ProductionRenderScope = z.infer<typeof productionRenderScopeSchema>;
 export type DesktopCapabilities = z.infer<typeof desktopCapabilitiesSchema>;
 export type ExportGenerationJobRequest = z.infer<typeof exportGenerationJobRequestSchema>;
 export type ExportGenerationJobResult = z.infer<typeof exportGenerationJobResultSchema>;

@@ -5,6 +5,7 @@ import {
   candidateBundleSchema,
   createProductionDraft,
   generationJobDraftSchema,
+  getFullProductionRenderBlockers,
   getShowPack,
   productionPolicies,
   productionBundleSchema,
@@ -64,7 +65,7 @@ import {
 } from "lucide-react";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {createHostAdapter, type HostAdapter} from "./host";
-import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, RenderJobEvent, StagedCandidateSummary} from "@storystage/contracts";
+import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, ProductionRenderScope, RenderJobEvent, StagedCandidateSummary} from "@storystage/contracts";
 
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
@@ -608,10 +609,10 @@ function AudioTimingWorkspace({build, capabilities, host, overrides, productionB
   </section>;
 }
 
-function ApprovedRenderReview({build, job, onSelect, onReveal}: {build: AnimaticBuild; job: Extract<RenderJobEvent, {status: "completed"}>; onSelect: (id: string) => void; onReveal: () => void}) {
+function ApprovedRenderReview({build, job, onSelect, onReveal, scope}: {build: AnimaticBuild; job: Extract<RenderJobEvent, {status: "completed"}>; onSelect: (id: string) => void; onReveal: () => void; scope: ProductionRenderScope}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const {renderPlan} = build;
-  const durationInFrames = Math.min(renderPlan.durationInFrames, renderPlan.fps * 24);
+  const durationInFrames = scope === "full-production" ? renderPlan.durationInFrames : Math.min(renderPlan.durationInFrames, renderPlan.fps * 24);
   const reviewShots = renderPlan.shots.filter((shot) => shot.startFrame < durationInFrames);
   const [frame, setFrame] = useState(0);
   const activeShot = reviewShots.find((shot) => frame >= shot.startFrame && frame < Math.min(durationInFrames, shot.startFrame + shot.durationInFrames)) ?? reviewShots[0]!;
@@ -645,7 +646,7 @@ function ApprovedRenderReview({build, job, onSelect, onReveal}: {build: Animatic
       </div>
       <div className="approved-review-track" aria-label="Rendered shot boundaries">{reviewShots.map((shot) => <button aria-label={`Seek rendered shot ${shot.number} ${shot.title}`} className={shot.id === activeShot.id ? "is-active" : ""} key={shot.id} onClick={() => movePlayhead(shot.startFrame, true)} style={{flexGrow: Math.min(shot.durationInFrames, durationInFrames - shot.startFrame)}} title={`${shot.number} · ${shot.title}`}><span>{shot.number}</span></button>)}</div>
       <input aria-label="Approved render playhead" max={durationInFrames - 1} min={0} onChange={(event) => movePlayhead(Number(event.target.value), true)} step={1} type="range" value={frame} />
-      <footer><span>Frame {frame + 1} / {durationInFrames}</span><p>Native review playback follows the exact 24-second engineering slice. Re-render after changing direction or approved assets.</p></footer>
+      <footer><span>Frame {frame + 1} / {durationInFrames}</span><p>{scope === "full-production" ? "Native review playback follows the complete frozen production plan." : "Native review playback follows the exact 24-second engineering slice."} Re-render after changing direction or approved assets.</p></footer>
     </section>
   );
 }
@@ -985,6 +986,7 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
   const lockedSpokenTimings = session.overrides.filter((override) => override.timingLocked && spokenShotIds.has(override.shotId)).length;
   const planSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
   const voiceCoverageAligned = Boolean(session.voiceTrack && Math.abs(session.voiceTrack.durationInSeconds - planSeconds) <= Math.max(2, planSeconds * .1));
+  const fullRenderBlockers = getFullProductionRenderBlockers({approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, musicTrack: session.musicTrack ?? undefined, overrides: session.overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: session.soundEffectAssets, voiceTrack: session.voiceTrack ?? undefined});
   const items = [
     {id: "plan", ready: true, warning: false, title: "Script and direction compiled", detail: `${build.creativePlan.scenes.length} natural scenes · ${build.renderPlan.shots.length} shots · ${build.renderPlan.durationInFrames} exact frames`, action: "direction" as const},
     {id: "snapshot", ready: Boolean(productionBundleContentHash), warning: !capabilities.manualImageExchange, title: "Production snapshot saved", detail: productionBundleContentHash ? `Content ${productionBundleContentHash.slice(0, 12)}… is acknowledged by the desktop host.` : capabilities.manualImageExchange ? "The current production revision is still saving." : "Durable local snapshots require the desktop app.", action: "direction" as const},
@@ -996,6 +998,7 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
     {id: "custom-sfx", ready: session.soundEffectAssets.every((asset) => asset.approvalStatus === "approved"), warning: session.soundEffectAssets.some((asset) => asset.approvalStatus !== "approved"), title: "Custom SFX assets approved", detail: session.soundEffectAssets.length === 0 ? "No custom SFX assets are used; transition accents follow the reviewed mix decision." : `${session.soundEffectAssets.filter((asset) => asset.approvalStatus === "approved").length}/${session.soundEffectAssets.length} effects approved · ${session.soundEffectCues.length} shot-relative cues placed.`, action: "audio" as const},
     {id: "renderer", ready: capabilities.localRendering, warning: false, title: "Desktop renderer available", detail: capabilities.localRendering ? "The isolated render worker is available for approved local evidence." : "Desktop renderer unavailable in this host.", action: "direction" as const},
     {id: "slice", ready: capabilities.localRendering && Boolean(productionBundleContentHash) && approvedAssets > 0, warning: false, title: "Approved engineering slice can render", detail: approvedAssets > 0 ? "At least one approved asset is available for the current 24-second engineering render path." : "Approve at least one prepared asset before the engineering render action unlocks.", action: "assets" as const},
+    {id: "full-render", ready: capabilities.localRendering && Boolean(productionBundleContentHash) && fullRenderBlockers.length === 0, warning: false, title: "Full production render gate", detail: fullRenderBlockers.length === 0 ? `All ${build.renderPlan.durationInFrames} frames can enter the isolated full-production renderer.` : `${fullRenderBlockers.length} final-output gates remain: ${fullRenderBlockers.map((blocker) => blocker.message).join(" ")}`, action: fullRenderBlockers.some((blocker) => ["audio-mix", "custom-sfx", "spoken-timing", "voice-master"].includes(blocker.id)) ? "audio" as const : "assets" as const},
   ];
   const readyCount = items.filter((item) => item.ready).length;
 
@@ -1018,6 +1021,8 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const saveSequence = useRef(0);
   const [lastSavedHash, setLastSavedHash] = useState<string | null>(null);
   const [renderJob, setRenderJob] = useState<RenderJobEvent | null>(null);
+  const [renderScope, setRenderScope] = useState<ProductionRenderScope>("engineering-slice");
+  const [renderJobScope, setRenderJobScope] = useState<ProductionRenderScope>("engineering-slice");
   const [tab, setTab] = useState<WorkspaceTab>("direction");
   const [selectedShotId, setSelectedShotId] = useState(build.renderPlan.shots[0]!.id);
   const selectedShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
@@ -1029,6 +1034,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const pack = getShowPack(session.showPackId);
   const averageShot = build.renderPlan.durationInFrames / build.renderPlan.shots.length / build.renderPlan.fps;
   const routed = ["insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"].reduce((sum, treatment) => sum + (build.metrics.treatmentDistribution[treatment] ?? 0), 0);
+  const fullRenderBlockers = getFullProductionRenderBlockers({approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, musicTrack: session.musicTrack ?? undefined, overrides: session.overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: session.soundEffectAssets, voiceTrack: session.voiceTrack ?? undefined});
 
   useEffect(() => {
     if (!capabilities.manualImageExchange) return;
@@ -1043,10 +1049,11 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
 
   useEffect(() => host.subscribeToRenderJobs(setRenderJob), [host]);
 
-  const renderApprovedSlice = async () => {
+  const renderApprovedProduction = async () => {
     try {
-      const result = await host.startProductionRender({productionId: session.productionId, revision: session.revision});
-      setRenderJob({jobId: result.jobId, status: "queued", progress: null, message: "Approved production slice queued"});
+      const result = await host.startProductionRender({productionId: session.productionId, revision: session.revision, scope: renderScope});
+      setRenderJobScope(renderScope);
+      setRenderJob({jobId: result.jobId, status: "queued", progress: null, message: renderScope === "full-production" ? "Full production render queued" : "Approved production slice queued"});
     } catch (error) {
       setRenderJob({jobId: "render-start", status: "failed", progress: null, message: error instanceof Error ? error.message : "Production render could not start.", error: {code: "RENDER_START_FAILED", message: error instanceof Error ? error.message : "Production render could not start."}});
     }
@@ -1078,7 +1085,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
 
   return (
     <div className="workspace-shell">
-      <header className="workspace-topbar"><Brand /><button className="quiet-button" onClick={onExit}><ArrowLeft size={14} />Productions</button><div className="production-crumb"><span>{pack.displayName}</span><ChevronRight size={13} /><strong>{session.title}</strong></div><span className="saved-state"><Check size={13} />{lastSavedHash ? `Saved ${lastSavedHash.slice(0, 8)}` : "Saving"}</span><button className="render-slice-button" disabled={!lastSavedHash || session.approvedAssetVersions.length === 0 || Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onClick={() => void renderApprovedSlice()}><PlayCircle size={15} />{renderJob && !["completed", "failed"].includes(renderJob.status) ? renderJob.message : "Render approved 24s slice"}</button>{renderJob?.status === "completed" ? <button className="quiet-button" onClick={() => void host.openRenderedFile(renderJob.jobId)}>Open MP4</button> : null}</header>
+      <header className="workspace-topbar"><Brand /><button className="quiet-button" onClick={onExit}><ArrowLeft size={14} />Productions</button><div className="production-crumb"><span>{pack.displayName}</span><ChevronRight size={13} /><strong>{session.title}</strong></div><span className="saved-state"><Check size={13} />{lastSavedHash ? `Saved ${lastSavedHash.slice(0, 8)}` : "Saving"}</span><label className="render-scope">Render scope<select aria-label="Render scope" disabled={Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onChange={(event) => setRenderScope(event.target.value as ProductionRenderScope)} value={renderScope}><option value="engineering-slice">24s engineering slice</option><option value="full-production">Full production · {fullRenderBlockers.length === 0 ? formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps) : `${fullRenderBlockers.length} gates left`}</option></select></label><button className="render-slice-button" disabled={!lastSavedHash || !capabilities.localRendering || session.approvedAssetVersions.length === 0 || (renderScope === "full-production" && fullRenderBlockers.length > 0) || Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onClick={() => void renderApprovedProduction()}><PlayCircle size={15} />{renderJob && !["completed", "failed"].includes(renderJob.status) ? renderJob.message : renderScope === "full-production" ? "Render full production" : "Render approved 24s slice"}</button>{renderJob?.status === "completed" ? <button className="quiet-button" onClick={() => void host.openRenderedFile(renderJob.jobId)}>Open MP4</button> : null}</header>
       <aside className="workspace-nav">
         <button className={tab === "direction" ? "is-active" : ""} onClick={() => setTab("direction")}><Aperture size={18} /><span>Direction</span></button>
         <button className={tab === "assets" ? "is-active" : ""} onClick={() => setTab("assets")}><Layers3 size={18} /><span>Assets</span><b>{build.resolvedPlan.generationBriefs.length}</b></button>
@@ -1091,7 +1098,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
           <CutTimeline build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
-          {renderJob?.status === "completed" ? <ApprovedRenderReview build={build} job={renderJob} onReveal={() => void host.openRenderedFile(renderJob.jobId)} onSelect={setSelectedShotId} /> : null}
+          {renderJob?.status === "completed" ? <ApprovedRenderReview build={build} job={renderJob} onReveal={() => void host.openRenderedFile(renderJob.jobId)} onSelect={setSelectedShotId} scope={renderJobScope} /> : null}
           <div className="workspace-grid">
             <DirectionBoard build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
             <aside className="shot-inspector">

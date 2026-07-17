@@ -21,6 +21,7 @@ import {
   generationJobDraftSchema,
   generationExchangeStateSchema,
   getProductionPolicy,
+  getFullProductionRenderBlockers,
   getShowPack,
   measureDirectedPlan,
   parseScript,
@@ -362,6 +363,26 @@ describe("StoryStage story engine", () => {
     const kinetic = buildAnimaticSync({draft: base.draft, overrides: [{shotId: target.id, treatment: "kinetic-type"}]}).renderPlan.shots.find((shot) => shot.id === target.id)!;
     expect(kinetic.visualBindings.some((binding) => binding.role === "diagram")).toBe(true);
     expect(kinetic.actions.some((action) => action.detail.type === "kineticType")).toBe(true);
+  });
+
+  it("keeps the full-production renderer behind the actual approval gates", () => {
+    const build = buildFor("explainer");
+    const initialBlockers = getFullProductionRenderBlockers({approvedAssetVersions: [], audioMix: {profile: "explainer", voiceGain: 1, musicDecision: "pending", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: false}, overrides: [], renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: []});
+    expect(initialBlockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["approved-art", "audio-mix", "source-acquisition", "spoken-timing", "visual-bindings", "voice-master"]));
+
+    const sourceSpokenShotIds = new Set(build.resolvedPlan.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
+    const spokenShotIds = build.renderPlan.shots.filter((shot) => sourceSpokenShotIds.has(shot.id) || Boolean(shot.caption)).map((shot) => shot.id);
+    const approvedAssetVersion = {assetId: "approved-full-render-art", version: "1.0.0", requirementId: build.resolvedPlan.requirements[0]!.id, contentHash: "f".repeat(64), relativeFile: "approved-full-render-art/1.0.0/manifest.json", provenance: {sourceType: "generated" as const, provider: "chatgpt-images", usageNotes: "Human-approved production art"}, approvedAt: "2026-07-17T00:00:00.000Z"};
+    const readyBlockers = getFullProductionRenderBlockers({
+      approvedAssetVersions: [approvedAssetVersion],
+      audioMix: {profile: "explainer", voiceGain: 1, musicDecision: "none", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: true},
+      overrides: spokenShotIds.map((shotId) => ({shotId, timingLocked: true as const})),
+      renderPlan: {...build.renderPlan, shots: build.renderPlan.shots.map((shot) => ({...shot, visualBindings: shot.visualBindings.map((binding) => ({...binding, resolutionStatus: "approved" as const}))}))},
+      resolvedPlan: {...build.resolvedPlan, generationBriefs: [], requirements: build.resolvedPlan.requirements.map((requirement) => ({...requirement, status: "resolved" as const}))},
+      soundEffectAssets: [],
+      voiceTrack: {id: "voice-full-render-ready", contentHash: "a".repeat(64), relativeFile: "voice/production-one/r1/ready.wav", sourceFileName: "ready.wav", codec: "pcm-wav", durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: "2026-07-17T00:00:00.000Z", approvalStatus: "approved", approvedAt: "2026-07-17T00:01:00.000Z"},
+    });
+    expect(readyBlockers).toEqual([]);
   });
 
   it("compiles transition overrides into rendered transition metadata and actions", () => {

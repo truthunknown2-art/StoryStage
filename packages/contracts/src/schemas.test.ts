@@ -9,6 +9,7 @@ import {
   prepareGenerationImportRequestSchema,
   renderJobEventSchema,
   renderWorkerMessageSchema,
+  startProductionRenderRequestSchema,
   startRenderRequestSchema,
   stageCandidateBundleRequestSchema,
 } from "./schemas";
@@ -16,6 +17,14 @@ import {
 describe("StoryStage contracts", () => {
   it("rejects renderer-provided filesystem paths", () => {
     expect(startRenderRequestSchema.safeParse({outputPath: "C:/arbitrary/output.mp4"}).success).toBe(false);
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1, scope: "engineering-slice", outputPath: "C:/arbitrary/output.mp4"}).success).toBe(false);
+  });
+
+  it("requires an explicit bounded production render scope", () => {
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1, scope: "engineering-slice"}).success).toBe(true);
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1, scope: "full-production"}).success).toBe(true);
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1}).success).toBe(false);
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1, scope: "arbitrary-range"}).success).toBe(false);
   });
 
   it("keeps image exchange requests path-free and bounded", () => {

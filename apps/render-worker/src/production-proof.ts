@@ -376,7 +376,7 @@ async function main() {
   });
   if (approvedBundle.resolvedPlan.generationBriefs.some((candidate) => candidate.requirementId === draftBrief.requirementId)) throw new Error("The approved production revision still contains the resolved generation brief.");
 
-  const renderOptions = {assetsRoot, bundleContentHash: approvedBundle.contentHash, bundleFile: approvedBundleFile, outputRoot, trustedProductionRoot: productionsRoot, workspaceRoot};
+  const renderOptions = {assetsRoot, bundleContentHash: approvedBundle.contentHash, bundleFile: approvedBundleFile, outputRoot, scope: "engineering-slice" as const, trustedProductionRoot: productionsRoot, workspaceRoot};
   const passOneVideo = await renderProduction({...renderOptions, jobId: "approved-production-proof-pass-1"});
   const passTwoVideo = await renderProduction({...renderOptions, jobId: "approved-production-proof-pass-2"});
   const totalFrames = Math.min(approvedBundle.renderPlan.durationInFrames, approvedBundle.renderPlan.fps * 24);

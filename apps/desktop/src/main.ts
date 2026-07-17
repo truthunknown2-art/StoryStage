@@ -807,7 +807,7 @@ function failJob(jobId: string, code: string, message: string) {
   }
 }
 
-type ProductionRenderCommandInput = {trustedProductionRoot: string; bundleFile: string; assetsRoot: string; outputRoot: string; bundleContentHash: string};
+type ProductionRenderCommandInput = {trustedProductionRoot: string; bundleFile: string; assetsRoot: string; outputRoot: string; bundleContentHash: string; scope: "engineering-slice" | "full-production"};
 function startRenderWorker(jobId: string, simulateFailure: boolean, production?: ProductionRenderCommandInput) {
   const workerEntry = app.isPackaged
     ? resolve(process.resourcesPath, "render-worker/render-worker.cjs")
@@ -820,14 +820,15 @@ function startRenderWorker(jobId: string, simulateFailure: boolean, production?:
     clearTimeout(timeout);
     worker.kill();
   };
+  const timeoutMs = production?.scope === "full-production" ? 15 * 60_000 : 120_000;
   const timeout = setTimeout(() => {
-    failJob(jobId, "TIMEOUT", "The render worker did not respond within two minutes.");
+    failJob(jobId, "TIMEOUT", `The render worker did not respond within ${production?.scope === "full-production" ? "fifteen minutes" : "two minutes"}.`);
     stop();
-  }, 120_000);
+  }, timeoutMs);
 
   worker.on("spawn", () => {
     transitionJob({jobId, status: "bundling", progress: 0, message: "Starting render worker"});
-    worker.postMessage(renderWorkerCommandSchema.parse(production ? {type: "start-production", workspaceRoot, trustedProductionRoot: production.trustedProductionRoot, bundleFile: production.bundleFile, assetsRoot: production.assetsRoot, outputRoot: production.outputRoot, request: {jobId, bundleContentHash: production.bundleContentHash}} : {type: "start", workspaceRoot, request: {jobId, simulateFailure}}));
+    worker.postMessage(renderWorkerCommandSchema.parse(production ? {type: "start-production", workspaceRoot, trustedProductionRoot: production.trustedProductionRoot, bundleFile: production.bundleFile, assetsRoot: production.assetsRoot, outputRoot: production.outputRoot, request: {jobId, bundleContentHash: production.bundleContentHash, scope: production.scope}} : {type: "start", workspaceRoot, request: {jobId, simulateFailure}}));
   });
 
   worker.on("message", (rawMessage: unknown) => {
@@ -1753,7 +1754,7 @@ ipcMain.handle(IPC_CHANNELS.productionRenderStart, async (_event, payload: unkno
   await mkdir(outputRoot, {recursive: true});
   registerJob(jobId, outputRoot);
   try {
-    startRenderWorker(jobId, false, {trustedProductionRoot: join(localRoot, "productions"), bundleFile: stored.bundleFile, assetsRoot: join(localRoot, "assets"), outputRoot, bundleContentHash: stored.bundle.contentHash});
+    startRenderWorker(jobId, false, {trustedProductionRoot: join(localRoot, "productions"), bundleFile: stored.bundleFile, assetsRoot: join(localRoot, "assets"), outputRoot, bundleContentHash: stored.bundle.contentHash, scope: request.scope});
   } catch {
     failJob(jobId, "WORKER_START_FAILED", "The production render worker could not be started.");
   }

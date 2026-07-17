@@ -37,7 +37,7 @@ describe("render-worker protocol", () => {
       bundleFile: "C:/private/productions/production-one/r2/snapshots/hash.json",
       assetsRoot: "C:/private/assets",
       outputRoot: "C:/private/renders/production-one/r2",
-      request: {jobId: "job-production", bundleContentHash: "a".repeat(64)},
+      request: {jobId: "job-production", bundleContentHash: "a".repeat(64), scope: "full-production" as const},
     };
     const fakeProductionRender = vi.fn(async ({jobId, onEvent}) => {
       const outputPath = "C:/private/renders/production-one/r2/job-production.mp4";
@@ -47,7 +47,7 @@ describe("render-worker protocol", () => {
 
     await runWorkerCommand(productionCommand, (message) => messages.push(message), undefined, fakeProductionRender);
 
-    expect(fakeProductionRender).toHaveBeenCalledWith(expect.objectContaining({jobId: "job-production", bundleContentHash: "a".repeat(64), bundleFile: productionCommand.bundleFile, assetsRoot: productionCommand.assetsRoot}));
+    expect(fakeProductionRender).toHaveBeenCalledWith(expect.objectContaining({jobId: "job-production", bundleContentHash: "a".repeat(64), bundleFile: productionCommand.bundleFile, assetsRoot: productionCommand.assetsRoot, scope: "full-production"}));
     expect(messages.at(-1)?.payload).toMatchObject({jobId: "job-production", status: "completed"});
   });
 
