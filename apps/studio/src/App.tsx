@@ -74,7 +74,8 @@ import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeS
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
 type Screen = "home" | "new-production" | "workspace";
-type WorkspaceTab = "direction" | "assets" | "audio" | "preflight";
+type WorkspaceTab = "direction" | "assets" | "audio" | "finish";
+type FinishNavigationTarget = {tab: Exclude<WorkspaceTab, "finish">; targetId: string};
 
 type ProductionSession = ProductionDraft & {
   overrides: ShotOverride[];
@@ -518,7 +519,7 @@ function VoiceTrackReview({build, capabilities, host, productionBundleContentHas
     else setError(result.error.message);
   };
 
-  return <article className="voice-master-card">
+  return <article className="voice-master-card" id="finish-voice-master" tabIndex={-1}>
     <header><div><p className="eyebrow">Local voice master</p><h3>{track ? track.sourceFileName : "No recording bound"}</h3><p>{track ? `${track.codec.replaceAll("-", " ")} · ${track.sampleRate / 1000} kHz · ${track.channels === 1 ? "mono" : "stereo"} · ${track.durationInSeconds.toFixed(2)}s` : "Import one uncompressed PCM/float WAV. The desktop copies and hashes it into private local storage."}</p></div><span className={track?.approvalStatus === "approved" ? "is-approved" : ""}>{track?.approvalStatus ?? "required"}</span></header>
     {track ? <><audio aria-label="Imported voice master" controls key={track.contentHash} onEnded={() => setListenedThrough(true)} preload="metadata" src={voiceTrackMediaUrl(track.contentHash)} /><div className={coverageAligned ? "voice-coverage is-aligned" : "voice-coverage"}><strong>{coverageAligned ? "Runtime aligned" : "Runtime needs review"}</strong><span>Voice {track.durationInSeconds.toFixed(1)}s · plan {planSeconds.toFixed(1)}s · Δ {durationDifference.toFixed(1)}s</span></div></> : null}
     {track?.approvalStatus === "imported" ? <MediaRightsEditor draft={rightsDraft} label="Voice master" onChange={setRightsDraft} /> : null}
@@ -618,7 +619,7 @@ function AudioMixReview({mix, musicTrack, onMix}: {mix: AudioMix; musicTrack: Mu
   const change = (patch: Partial<AudioMix>) => onMix(audioMixSchema.parse({...mix, musicGain, musicLoop, ...patch, reviewed: false}));
   const approvedMusicAvailable = musicTrack?.approvalStatus === "approved";
   const canReview = mix.musicDecision === "none" || (mix.musicDecision === "approved-master" && approvedMusicAvailable);
-  return <article className="audio-mix-card">
+  return <article className="audio-mix-card" id="finish-mix-review" tabIndex={-1}>
     <header><div><p className="eyebrow">Profile-aware final mix</p><h3>Voice, music & transition SFX</h3><p>Every audible layer must be an explicit editorial decision. StoryStage never sneaks a guide loop into a render.</p></div><span className={mix.reviewed ? "is-reviewed" : ""}>{mix.reviewed ? "reviewed" : "decision required"}</span></header>
     <div className="audio-mix-controls">
       <label>Voice gain <strong>{mix.voiceGain.toFixed(2)}×</strong><input aria-label="Voice gain" max="2" min="0" onChange={(event) => change({voiceGain: Number(event.target.value)})} step="0.05" type="range" value={mix.voiceGain} /></label>
@@ -649,7 +650,7 @@ function AudioTimingWorkspace({build, capabilities, host, overrides, productionB
     <MusicTrackReview capabilities={capabilities} host={host} onTrack={onMusicTrack} productionBundleContentHash={productionBundleContentHash} session={session} />
     <SoundEffectWorkspace build={build} capabilities={capabilities} host={host} onAssets={onSoundEffectAssets} onCues={onSoundEffectCues} productionBundleContentHash={productionBundleContentHash} selectedShot={selectedRenderShot} session={session} />
     <AudioMixReview mix={session.audioMix} musicTrack={session.musicTrack} onMix={onAudioMix} />
-    <div className="audio-workspace-grid">
+    <div className="audio-workspace-grid" id="finish-timing-editor" tabIndex={-1}>
       <div className="audio-cue-list">{cues.map((shot) => <button aria-label={`Select timing cue ${shot.number}`} className={shot.id === selected?.id ? "is-active" : ""} key={shot.id} onClick={() => onSelect(shot.id)}>
         <span className="cue-time">{formatTimecode(shot.startFrame, build.renderPlan.fps)}</span><div><strong>{shot.number} · {speakerFor(shot)}</strong><p>{shot.caption ?? "Caption intentionally removed"}</p></div><span className={lockedIds.has(shot.id) ? "cue-status is-locked" : "cue-status"}>{lockedIds.has(shot.id) ? "locked" : "estimate"}</span>
       </button>)}</div>
@@ -788,7 +789,7 @@ function ShowPackCandidateLibrary({host, onReviewed, productionBundleContentHash
       setReviewing(false);
     }
   };
-  return <section className="show-pack-candidate" aria-label="Show Pack art candidates">
+  return <section className="show-pack-candidate" aria-label="Show Pack art candidates" id="finish-picture-review" tabIndex={-1}>
     <header><div><p className="eyebrow">Original Show Pack candidate</p><h2>{candidate.displayName}</h2><p>Generated with the built-in ChatGPT image tool and locally matte-validated. The desktop host re-verifies every packaged hash before it can publish or bind Rook.</p></div><span>{alreadyBound || candidate.review.decision === "approved" ? "Approved and bound" : candidate.review.decision === "rejected" ? "Rejected" : "Needs human review"}</span></header>
     <div className="show-pack-candidate-body">
       <div className="show-pack-candidate-media"><img className="identity-sheet" alt="Rook presenter canonical identity sheet" loading="lazy" src={identity.url} /><div className="pose-strip">{poses.map((pose) => <figure key={pose.label}><img alt={`Rook ${pose.label} pose`} loading="lazy" src={pose.file.url} /><figcaption>{pose.label}</figcaption></figure>)}</div></div>
@@ -1067,7 +1068,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, onS
           <footer><span>{candidateSet.rig ? `${candidateSet.rig.type.replaceAll("-", " ")} / ${candidateSet.rig.validationStatus}` : "Compare before rigging"}</span><div><button disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "")} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, "reject")}>Reject</button><button className="approve-set" disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "") || (assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" && !candidateSet.rig)} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "approve" : "select")}>{reviewingSetId === candidateSet.candidateSetId ? "Building proof..." : assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "Final approve" : "Select for rig"}</button></div></footer>
         </article>)}</div>
       </section> : null}
-      <section className="request-list"><header><div><p className="eyebrow">Missing asset ledger</p><h2>{build.resolvedPlan.generationBriefs.length} generation briefs</h2></div><span>Approval required</span></header>
+      <section className="request-list" id="finish-asset-approvals" tabIndex={-1}><header><div><p className="eyebrow">Missing asset ledger</p><h2>{build.resolvedPlan.generationBriefs.length} generation briefs</h2></div><span>Approval required</span></header>
         {build.resolvedPlan.generationBriefs.map((request) => {
           return <article className="request-card" key={request.id}><span className="request-kind">{request.outputRole.replaceAll("-", " ")}</span><div><h3>{request.entity.name}</h3><p>{request.creativeRequirements[0]}</p></div><dl><div><dt>Candidates</dt><dd>{request.candidateCount}</dd></div><div><dt>Quality</dt><dd>{request.imageQuality}</dd></div><div><dt>Layers</dt><dd>{request.backgroundLayerTarget}</dd></div><div><dt>Pose pack</dt><dd>{request.posePack}</dd></div></dl><span className="request-state">{request.status}</span></article>;
         })}
@@ -1076,15 +1077,35 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, onS
   );
 }
 
-function ProductionPreflight({session, build, capabilities, productionBundleContentHash, onNavigate}: {session: ProductionSession; build: AnimaticBuild; capabilities: DesktopCapabilities; productionBundleContentHash: string | null; onNavigate: (tab: WorkspaceTab) => void}) {
+function FinishEpisodeWorkspace({session, build, capabilities, productionBundleContentHash, delivery, renderJob, renderJobScope, onNavigate, onRender}: {session: ProductionSession; build: AnimaticBuild; capabilities: DesktopCapabilities; productionBundleContentHash: string | null; delivery: VerifiedDeliverySummary | null; renderJob: RenderJobEvent | null; renderJobScope: ProductionRenderScope; onNavigate: (target: FinishNavigationTarget) => void; onRender: () => void}) {
   const missingApprovals = build.resolvedPlan.generationBriefs.length;
   const deferredSources = build.resolvedPlan.requirements.filter((requirement) => requirement.status === "deferred").length;
   const approvedAssets = session.approvedAssetVersions.length;
-  const spokenShotIds = new Set(build.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
+  const spokenShotIds = new Set(build.renderPlan.shots.filter((shot) => shot.actions.some((action) => action.detail.type === "talk") || Boolean(shot.caption)).map((shot) => shot.id));
   const lockedSpokenTimings = session.overrides.filter((override) => override.timingLocked && spokenShotIds.has(override.shotId)).length;
   const planSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
   const voiceCoverageAligned = Boolean(session.voiceTrack && Math.abs(session.voiceTrack.durationInSeconds - planSeconds) <= Math.max(2, planSeconds * .1));
   const fullRenderBlockers = getFullProductionRenderBlockers({approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, musicTrack: session.musicTrack ?? undefined, overrides: session.overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: session.soundEffectAssets, soundEffectCues: session.soundEffectCues, voiceTrack: session.voiceTrack ?? undefined});
+  const pictureReady = !fullRenderBlockers.some((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id));
+  const voiceReady = spokenShotIds.size === 0 || Boolean(session.voiceTrack?.approvalStatus === "approved" && session.voiceTrack.rights && voiceCoverageAligned);
+  const timingReady = spokenShotIds.size === 0 || lockedSpokenTimings === spokenShotIds.size;
+  const usedSoundEffectHashes = new Set(session.soundEffectCues.map((cue) => cue.assetContentHash));
+  const customEffectsReady = session.soundEffectAssets.every((asset) => asset.approvalStatus === "approved" && (!usedSoundEffectHashes.has(asset.contentHash) || Boolean(asset.rights)));
+  const mixReady = session.audioMix.reviewed && session.audioMix.musicDecision !== "pending" && (session.audioMix.musicDecision !== "approved-master" || Boolean(session.musicTrack?.approvalStatus === "approved" && session.musicTrack.rights)) && customEffectsReady;
+  const preflightReady = capabilities.localRendering && Boolean(productionBundleContentHash) && fullRenderBlockers.length === 0;
+  const finalRenderJob = renderJobScope === "full-production" ? renderJob : null;
+  const renderActive = Boolean(finalRenderJob && !["completed", "failed"].includes(finalRenderJob.status));
+  const pictureLabel = session.productionId === rookPilot001.id ? "Review and approve Rook picture" : "Review and approve picture";
+  const finishSteps: Array<{id: string; title: string; detail: string; ready: boolean; target?: FinishNavigationTarget; action?: string}> = [
+    {id: "picture", title: pictureLabel, detail: pictureReady ? `${approvedAssets} immutable art versions cover every final shot.` : `${Math.max(missingApprovals, fullRenderBlockers.filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)).length)} picture gates still need human review.`, ready: Boolean(delivery) || pictureReady, target: {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-picture-review" : "finish-asset-approvals"}, action: session.productionId === rookPilot001.id ? "Review Rook" : "Review artwork"},
+    {id: "voice", title: "Approve the final voice", detail: voiceReady ? spokenShotIds.size === 0 ? "This cut has no spoken performance." : `${session.voiceTrack?.sourceFileName} is listened-through, rights-cleared, hash-bound, and aligned to picture.` : !session.voiceTrack ? "Import the final WAV, listen through, document rights, and approve the exact take." : session.voiceTrack.approvalStatus !== "approved" ? "Listen through and approve the imported take with rights evidence." : "The approved take must be aligned to the final frame duration and carry rights evidence.", ready: Boolean(delivery) || voiceReady, target: {tab: "audio", targetId: "finish-voice-master"}, action: session.voiceTrack ? "Finish voice approval" : "Import voice"},
+    {id: "timing", title: "Lock every spoken beat", detail: spokenShotIds.size === 0 ? "No spoken timing locks are required." : `${lockedSpokenTimings}/${spokenShotIds.size} spoken cues have editor-reviewed frame timing.`, ready: Boolean(delivery) || timingReady, target: {tab: "audio", targetId: "finish-timing-editor"}, action: "Review timing"},
+    {id: "mix", title: "Approve the final mix", detail: mixReady ? `Voice ${session.audioMix.voiceGain.toFixed(2)}x, music ${session.audioMix.musicDecision}, transition SFX ${session.audioMix.transitionSfx}.` : "Choose the music and SFX treatment, clear any used audio, then record the mix review.", ready: Boolean(delivery) || mixReady, target: {tab: "audio", targetId: "finish-mix-review"}, action: "Review mix"},
+    {id: "preflight", title: "Pass final preflight", detail: preflightReady ? `${build.renderPlan.durationInFrames} frozen frames are ready for the isolated desktop renderer.` : !capabilities.localRendering ? "Open this production in the desktop app to finish and render." : `${fullRenderBlockers.length} final-output gates remain on the saved production snapshot.`, ready: Boolean(delivery) || preflightReady, target: fullRenderBlockers.some((blocker) => ["audio-mix", "custom-sfx", "rights-clearance", "spoken-timing", "voice-master"].includes(blocker.id)) ? {tab: "audio", targetId: "finish-voice-master"} : {tab: "assets", targetId: "finish-asset-approvals"}, action: "Resolve blockers"},
+    {id: "delivery", title: "Render and verify delivery", detail: delivery ? `Verified 1080p master, ${delivery.master.frameCount} frames, ${delivery.captionCueCount} caption cues, and cleared consumed-media rights.` : finalRenderJob?.status === "failed" ? finalRenderJob.error.message : renderActive ? finalRenderJob?.message ?? "Final render in progress." : preflightReady ? "The final render will atomically publish and reopen a seven-file verified delivery." : "This unlocks automatically after final preflight passes.", ready: Boolean(delivery), action: preflightReady ? finalRenderJob?.status === "failed" ? "Retry final render" : "Render & publish delivery" : undefined},
+  ];
+  const completedFinishSteps = finishSteps.filter((step) => step.ready).length;
+  const nextFinishStep = finishSteps.find((step) => !step.ready);
   const items = [
     {id: "plan", ready: true, warning: false, title: "Script and direction compiled", detail: `${build.creativePlan.scenes.length} natural scenes · ${build.renderPlan.shots.length} shots · ${build.renderPlan.durationInFrames} exact frames`, action: "direction" as const},
     {id: "snapshot", ready: Boolean(productionBundleContentHash), warning: !capabilities.manualImageExchange, title: "Production snapshot saved", detail: productionBundleContentHash ? `Content ${productionBundleContentHash.slice(0, 12)}… is acknowledged by the desktop host.` : capabilities.manualImageExchange ? "The current production revision is still saving." : "Durable local snapshots require the desktop app.", action: "direction" as const},
@@ -1098,17 +1119,54 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
     {id: "slice", ready: capabilities.localRendering && Boolean(productionBundleContentHash) && approvedAssets > 0, warning: false, title: "Approved engineering slice can render", detail: approvedAssets > 0 ? "At least one approved asset is available for the current 24-second engineering render path." : "Approve at least one prepared asset before the engineering render action unlocks.", action: "assets" as const},
     {id: "full-render", ready: capabilities.localRendering && Boolean(productionBundleContentHash) && fullRenderBlockers.length === 0, warning: false, title: "Full production render gate", detail: fullRenderBlockers.length === 0 ? `All ${build.renderPlan.durationInFrames} frames can enter the isolated full-production renderer.` : `${fullRenderBlockers.length} final-output gates remain: ${fullRenderBlockers.map((blocker) => blocker.message).join(" ")}`, action: fullRenderBlockers.some((blocker) => ["audio-mix", "custom-sfx", "spoken-timing", "voice-master"].includes(blocker.id)) ? "audio" as const : "assets" as const},
   ];
-  const readyCount = items.filter((item) => item.ready).length;
+  const evidenceItems = items.filter((item) => item.id !== "slice").map((item) => {
+    if (delivery) return {...item, ready: true};
+    if (item.id === "assets") return {...item, ready: pictureReady};
+    if (item.id === "voice") return {...item, ready: voiceReady};
+    if (item.id === "timing") return {...item, ready: timingReady};
+    if (item.id === "mix") return {...item, ready: mixReady};
+    if (item.id === "custom-sfx") return {...item, ready: customEffectsReady};
+    if (item.id === "full-render") return {...item, ready: preflightReady};
+    return item;
+  });
+  const readyCount = evidenceItems.filter((item) => item.ready).length;
+  const evidenceTarget = (item: (typeof evidenceItems)[number]): FinishNavigationTarget => {
+    if (item.id === "voice") return {tab: "audio", targetId: "finish-voice-master"};
+    if (item.id === "timing") return {tab: "audio", targetId: "finish-timing-editor"};
+    if (["mix", "custom-sfx"].includes(item.id)) return {tab: "audio", targetId: "finish-mix-review"};
+    if (item.action === "audio") return {tab: "audio", targetId: "finish-voice-master"};
+    if (item.action === "assets") return {tab: "assets", targetId: item.id === "assets" && session.productionId === rookPilot001.id ? "finish-picture-review" : "finish-asset-approvals"};
+    return {tab: "direction", targetId: "finish-direction"};
+  };
 
   return (
-    <section className="preflight-panel" aria-label="Production preflight">
-      <header><div><p className="eyebrow">Honest readiness check</p><h2>Production preflight</h2><p>This separates an engineering render from a genuinely finished episode. No green badge is decorative.</p></div><strong>{readyCount}/{items.length} ready</strong></header>
-      <div className="preflight-items">{items.map((item) => <article className={item.ready ? "is-ready" : item.warning ? "is-warning" : "is-blocked"} key={item.id}>
-        <span className="preflight-state">{item.ready ? <Check size={15} /> : <CircleAlert size={15} />}</span>
-        <div><h3>{item.title}</h3><p>{item.detail}</p></div>
-        {!item.ready ? <button onClick={() => onNavigate(item.action)}>{item.action === "assets" ? "Open assets" : item.action === "audio" ? "Open timing" : "Open direction"}</button> : <small>Verified</small>}
-      </article>)}</div>
-      <footer><CircleAlert size={16} /><p><strong>Finished-episode gate remains closed.</strong> Timing, a voice master, pose-swap mouth cues, and reviewed layer decisions are only part of the chain; final profile artwork, any selected soundtrack masters, performance polish, and full-length approved-pixel playback still require evidence before StoryStage can claim a publishable episode.</p></footer>
+    <section className="finish-episode" aria-label="Finish episode">
+      <header className={delivery ? "is-delivered" : ""}>
+        <div><p className="eyebrow">Guided completion path</p><h2>{delivery ? "Episode delivered" : "Finish episode"}</h2><p>{delivery ? "The exact current production has a restart-safe verified master." : "One ordered path from human review to a verified master. Every check is backed by saved evidence."}</p></div>
+        <strong>{completedFinishSteps}/{finishSteps.length} complete</strong>
+      </header>
+
+      {nextFinishStep ? <section className="finish-next-action" aria-label="Next finish action">
+        <span>Next</span><div><strong>{nextFinishStep.title}</strong><p>{nextFinishStep.detail}</p></div>
+        {nextFinishStep.id === "delivery" && preflightReady ? <button disabled={renderActive} onClick={onRender}><PlayCircle size={15} />{renderActive ? "Final render running" : nextFinishStep.action}</button> : nextFinishStep.target ? <button onClick={() => onNavigate(nextFinishStep.target!)}><ArrowRight size={15} />{nextFinishStep.action}</button> : null}
+      </section> : null}
+
+      <ol className="finish-steps" aria-label="Episode finish steps">{finishSteps.map((step, index) => <li className={step.ready ? "is-ready" : step.id === nextFinishStep?.id ? "is-current" : "is-waiting"} key={step.id}>
+        <span className="finish-step-number">{step.ready ? <Check size={14} /> : index + 1}</span>
+        <div><strong>{step.title}</strong><p>{step.detail}</p>{step.id === "delivery" && renderActive && finalRenderJob ? <div className="finish-render-progress"><span style={{width: `${typeof finalRenderJob.progress === "number" ? Math.max(4, finalRenderJob.progress * 100) : 8}%`}} /></div> : null}</div>
+        {!step.ready && step.id !== nextFinishStep?.id && step.target ? <button onClick={() => onNavigate(step.target!)}>Open</button> : step.ready ? <small>Done</small> : null}
+      </li>)}</ol>
+
+      <section className="finish-evidence" aria-label="Detailed finish evidence">
+        <header><div><p className="eyebrow">Technical gate evidence</p><h3>Nothing hand-waved</h3></div><strong>{readyCount}/{evidenceItems.length} verified</strong></header>
+        <div className="preflight-items">{evidenceItems.map((item) => <article className={item.ready ? "is-ready" : item.warning ? "is-warning" : "is-blocked"} key={item.id}>
+          <span className="preflight-state">{item.ready ? <Check size={15} /> : <CircleAlert size={15} />}</span>
+          <div><h3>{item.title}</h3><p>{item.detail}</p></div>
+          {!item.ready ? <button onClick={() => onNavigate(evidenceTarget(item))}>Fix this</button> : <small>Verified</small>}
+        </article>)}</div>
+      </section>
+
+      <footer className={delivery ? "is-ready" : "is-blocked"}>{delivery ? <ShieldCheck size={17} /> : <CircleAlert size={17} />}<p><strong>{delivery ? "Verified delivery is current." : "Final delivery stays locked until the evidence is complete."}</strong> {delivery ? `Manifest ${delivery.deliveryManifestContentHash.slice(0, 12)} binds the master, captions, production snapshot, receipt, provenance, and file hashes.` : "Use the next action above; StoryStage will not silently skip picture, voice, timing, mix, rights, or render verification."}</p></footer>
     </section>
   );
 }
@@ -1123,6 +1181,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const [renderScope, setRenderScope] = useState<ProductionRenderScope>("engineering-slice");
   const [renderJobScope, setRenderJobScope] = useState<ProductionRenderScope>("engineering-slice");
   const [tab, setTab] = useState<WorkspaceTab>("direction");
+  const [focusRequest, setFocusRequest] = useState<{target: FinishNavigationTarget; nonce: number} | null>(null);
   const [selectedShotId, setSelectedShotId] = useState(build.renderPlan.shots[0]!.id);
   const selectedShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
   const baseSelectedShot = build.creativePlan.shots.find((shot) => shot.id === selectedShot.id) ?? build.creativePlan.shots[0]!;
@@ -1154,11 +1213,35 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
     return () => {current = false;};
   }, [host, lastSavedHash, session.productionId, session.revision]);
 
-  const renderApprovedProduction = async () => {
+  useEffect(() => {
+    if (!focusRequest || tab !== focusRequest.target.tab) return;
+    let attempts = 0;
+    const interval = window.setInterval(() => {
+      attempts += 1;
+      const target = document.getElementById(focusRequest.target.targetId);
+      if (!target && attempts < 20) return;
+      window.clearInterval(interval);
+      if (!target) return;
+      target.scrollIntoView?.({behavior: "smooth", block: "center"});
+      target.classList.add("finish-focus-pulse");
+      const actionable = target.matches("button, input, select, textarea") ? target : target.querySelector<HTMLElement>("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex='0']");
+      (actionable instanceof HTMLElement ? actionable : target).focus({preventScroll: true});
+      window.setTimeout(() => target.classList.remove("finish-focus-pulse"), 1600);
+    }, 50);
+    return () => window.clearInterval(interval);
+  }, [focusRequest, tab]);
+
+  const navigateToFinishTarget = (target: FinishNavigationTarget) => {
+    setTab(target.tab);
+    setFocusRequest({target, nonce: Date.now()});
+  };
+
+  const renderApprovedProduction = async (scope: ProductionRenderScope = renderScope) => {
     try {
-      const result = await host.startProductionRender({productionId: session.productionId, revision: session.revision, scope: renderScope});
-      setRenderJobScope(renderScope);
-      setRenderJob({jobId: result.jobId, status: "queued", progress: null, message: renderScope === "full-production" ? "Full production render queued" : "Approved production slice queued"});
+      const result = await host.startProductionRender({productionId: session.productionId, revision: session.revision, scope});
+      setRenderScope(scope);
+      setRenderJobScope(scope);
+      setRenderJob({jobId: result.jobId, status: "queued", progress: null, message: scope === "full-production" ? "Full production render queued" : "Approved production slice queued"});
     } catch (error) {
       setRenderJob({jobId: "render-start", status: "failed", progress: null, message: error instanceof Error ? error.message : "Production render could not start.", error: {code: "RENDER_START_FAILED", message: error instanceof Error ? error.message : "Production render could not start."}});
     }
@@ -1205,10 +1288,10 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
         <button className={tab === "assets" ? "is-active" : ""} onClick={() => setTab("assets")}><Layers3 size={18} /><span>Assets</span><b>{build.resolvedPlan.generationBriefs.length}</b></button>
         <button className={tab === "audio" ? "is-active" : ""} onClick={() => setTab("audio")}><Mic2 size={18} /><span>Audio</span></button>
         <div className="nav-spacer" />
-        <button className={tab === "preflight" ? "is-active" : ""} onClick={() => setTab("preflight")}><ListChecks size={18} /><span>Preflight</span></button>
+        <button aria-label="Finish episode" className={tab === "finish" ? "is-active" : ""} onClick={() => setTab("finish")}><ListChecks size={18} /><span>Finish</span><b>{delivery ? <Check size={9} /> : fullRenderBlockers.length}</b></button>
       </aside>
       <main className="workspace-main">
-        <header className="workspace-heading"><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : tab === "assets" ? "Generated-asset exchange" : tab === "audio" ? "Spoken editorial timing" : "Production readiness"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
+        <header className="workspace-heading" id="finish-direction" tabIndex={-1}><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : tab === "assets" ? "Generated-asset exchange" : tab === "audio" ? "Spoken editorial timing" : "Guided episode completion"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
         {delivery ? <section className="verified-delivery-banner" aria-label="Verified delivery"><ShieldCheck size={20} /><div><small>Verified delivery</small><strong>1080p master · {delivery.master.frameCount} frames · {delivery.captionCueCount} caption cues · rights cleared</strong><span>Production {delivery.revision} · {delivery.productionBundleContentHash.slice(0, 10)} · manifest {delivery.deliveryManifestContentHash.slice(0, 10)}</span></div><button onClick={() => void host.openDeliveryMaster(delivery.deliveryManifestContentHash)}>Open master</button><button onClick={() => void host.revealDeliveryBundle(delivery.deliveryManifestContentHash)}>Reveal bundle</button></section> : null}
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
@@ -1230,7 +1313,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               {currentOverride ? <p className="override-state"><Check size={13} />Override compiled into the current render plan.</p> : <p className="override-help">Change a field to create a semantic override. No JSON editing required.</p>}
             </aside>
           </div>
-        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} onShowPackReviewed={adoptShowPackReview} productionBundleContentHash={lastSavedHash} /> : tab === "audio" ? <AudioTimingWorkspace build={build} capabilities={capabilities} host={host} onAudioMix={applyAudioMix} onMusicTrack={applyMusicTrack} onOverride={updateShotOverride} onSelect={setSelectedShotId} onSoundEffectAssets={applySoundEffectAssets} onSoundEffectCues={applySoundEffectCues} onVoiceTrack={applyVoiceTrack} overrides={session.overrides} productionBundleContentHash={lastSavedHash} selectedShotId={selectedShot.id} session={session} /> : <ProductionPreflight session={session} build={build} capabilities={capabilities} productionBundleContentHash={lastSavedHash} onNavigate={setTab} />}
+        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} onShowPackReviewed={adoptShowPackReview} productionBundleContentHash={lastSavedHash} /> : tab === "audio" ? <AudioTimingWorkspace build={build} capabilities={capabilities} host={host} onAudioMix={applyAudioMix} onMusicTrack={applyMusicTrack} onOverride={updateShotOverride} onSelect={setSelectedShotId} onSoundEffectAssets={applySoundEffectAssets} onSoundEffectCues={applySoundEffectCues} onVoiceTrack={applyVoiceTrack} overrides={session.overrides} productionBundleContentHash={lastSavedHash} selectedShotId={selectedShot.id} session={session} /> : <FinishEpisodeWorkspace session={session} build={build} capabilities={capabilities} delivery={delivery} onNavigate={navigateToFinishTarget} onRender={() => void renderApprovedProduction("full-production")} productionBundleContentHash={lastSavedHash} renderJob={renderJob} renderJobScope={renderJobScope} />}
       </main>
     </div>
   );

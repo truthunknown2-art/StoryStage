@@ -1,7 +1,7 @@
 # SS-004 verified delivery bundle
 
 Date: 2026-07-17
-Status: **IMPLEMENTED AND LOCALLY PROVEN — awaiting ChatGPT Pro audit**
+Status: **ACCEPTED BY CHATGPT PRO at `b6c9a1d`**
 
 ## Outcome
 
@@ -23,6 +23,10 @@ StoryStage now converts a successful full-production render into a verified, con
 - `pnpm render:production-proof` rendered an exact approved 181-frame production at 1920x1080/30 with stereo AAC, persisted receipt `ffb140c3740f6f5ef335bc8ecc0388f9145e17ded0684301ba039cf658cfca85`, and published delivery manifest `d743e43c0b08f2a79a5dfc94b0a05cf5d40a5bd6b73eada7147cd14986a919a4`.
 - The real proof reopened the delivery after simulated restart and republished it idempotently. The delivery has exactly seven files, one deterministic SRT cue for the one-line proof script, and cleared consumed-media rights.
 - Private executable evidence is under `artifacts/SS-002/` and remains ignored by Git.
+
+## Pro acceptance
+
+Pro's corrected narrow audit accepted SS-004 as engineering-complete at `b6c9a1d`. It confirmed that consumed-audio rights are independently enforced at approval, full-production readiness, and delivery publication, including the direct publisher-level rejection and provenance tests. The initial rejection was withdrawn after the audit reopened the cited implementation rather than relying on an incomplete schema summary.
 
 ## Product truth
 

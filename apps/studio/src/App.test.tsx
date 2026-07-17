@@ -2,7 +2,7 @@ import {cleanup, fireEvent, render, screen, waitFor, within} from "@testing-libr
 import userEvent from "@testing-library/user-event";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {StoryStageDesktopBridge} from "@storystage/contracts";
-import {audioMixSchema, buildAnimaticSync, createRookPilot001Fixture, finalizeProductionBundle, type ApprovedAssetVersion} from "@storystage/story-engine";
+import {audioMixSchema, buildAnimaticSync, createRookPilot001Fixture, finalizeProductionBundle, getFullProductionRenderBlockers, type ApprovedAssetVersion} from "@storystage/story-engine";
 import {App} from "./App";
 
 afterEach(() => {
@@ -69,6 +69,24 @@ function createApprovedRookTargetBundle() {
   const build = buildAnimaticSync({draft, overrides: fixture.overrides, approvedAssetVersions: [approved]});
   const audioMix = audioMixSchema.parse({profile: "explainer", voiceGain: 1, musicDecision: "pending", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: false});
   return finalizeProductionBundle({schemaVersion: "1.0", production: draft, overrides: fixture.overrides, approvedAssetVersions: [approved], audioMix, soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T20:30:00.000Z");
+}
+
+function createGateReadyRookBundle() {
+  const fixture = createRookPilot001Fixture();
+  const source = buildAnimaticSync(fixture);
+  const approvedAt = "2026-07-17T21:00:00.000Z";
+  const approvedAssetVersions: ApprovedAssetVersion[] = source.resolvedPlan.requirements.map((requirement, index) => {
+    const contentHash = (index + 1).toString(16).padStart(64, "0");
+    const assetId = `approved-finish-${index + 1}`;
+    return {assetId, version: contentHash.slice(0, 12), requirementId: requirement.id, contentHash, relativeFile: `${assetId}/${contentHash}/manifest.json`, provenance: {sourceType: "generated", provider: "ChatGPT Images", usageNotes: "Human-reviewed finish-flow test art."}, approvedAt};
+  });
+  const spokenShotIds = source.renderPlan.shots.filter((shot) => shot.actions.some((action) => action.detail.type === "talk") || Boolean(shot.caption)).map((shot) => shot.id);
+  const overrides = source.renderPlan.shots.map((shot) => ({...fixture.overrides.find((override) => override.shotId === shot.id), shotId: shot.id, ...(spokenShotIds.includes(shot.id) ? {timingLocked: true as const} : {})}));
+  const build = buildAnimaticSync({draft: fixture.draft, overrides, approvedAssetVersions});
+  const audioMix = audioMixSchema.parse({profile: "explainer", voiceGain: 1, musicDecision: "none", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: true});
+  const voiceTrack = {id: "voice-finish-ready", contentHash: "f".repeat(64), relativeFile: `voice/${fixture.draft.productionId}/r${fixture.draft.revision}/${"f".repeat(64)}.wav`, sourceFileName: "final-rook-narration.wav", codec: "pcm-wav" as const, durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 24 as const, importedAt: approvedAt, approvalStatus: "approved" as const, approvedAt, rights: {sourceType: "user-owned" as const, provider: "Operator", usageNotes: "Original narration recording.", clearanceStatus: "cleared" as const, evidenceReference: "Operator recording ledger 2026-07-17"}};
+  expect(getFullProductionRenderBlockers({approvedAssetVersions, audioMix, overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: [], soundEffectCues: [], voiceTrack})).toEqual([]);
+  return finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides, approvedAssetVersions, audioMix, soundEffectAssets: [], soundEffectCues: [], voiceTrack, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
 }
 
 describe("StoryStage studio", () => {
@@ -162,6 +180,10 @@ describe("StoryStage studio", () => {
     await user.click(within(banner).getByRole("button", {name: "Reveal bundle"}));
     expect(openDeliveryMaster).toHaveBeenCalledWith(manifestHash);
     expect(revealDeliveryBundle).toHaveBeenCalledWith(manifestHash);
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    expect(screen.getByRole("heading", {name: "Episode delivered"})).toBeInTheDocument();
+    expect(screen.getByText("6/6 complete")).toBeInTheDocument();
+    expect(screen.getByText(/Verified delivery is current/)).toBeInTheDocument();
   });
 
   it("changes the actual Show Pack and routing rules for a kids production", async () => {
@@ -218,15 +240,39 @@ describe("StoryStage studio", () => {
 
   it("turns preflight into an evidence-backed readiness view instead of a disabled placeholder", async () => {
     const user = await createDefaultProduction();
-    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
 
-    expect(screen.getByRole("heading", {name: "Production preflight"})).toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: "Finish episode"})).toBeInTheDocument();
+    expect(screen.getByRole("region", {name: "Next finish action"})).toHaveTextContent("Review and approve picture");
     expect(screen.getByText(/asset approvals still required/)).toBeInTheDocument();
     expect(screen.getByText("Desktop renderer unavailable in this host.")).toBeInTheDocument();
-    expect(screen.getByText(/Finished-episode gate remains closed/)).toBeInTheDocument();
+    expect(screen.getByText(/Final delivery stays locked/)).toBeInTheDocument();
 
-    await user.click(screen.getAllByRole("button", {name: "Open assets"})[0]!);
+    await user.click(screen.getByRole("button", {name: "Review artwork"}));
     expect(screen.getByRole("heading", {name: "Manual ChatGPT Images"})).toBeInTheDocument();
+    await waitFor(() => expect(document.getElementById("finish-asset-approvals")).toHaveFocus());
+  });
+
+  it("starts the exact full-production render from the guided finish path", async () => {
+    const bundle = createGateReadyRookBundle();
+    const startProductionRender = vi.fn(async () => ({jobId: "finish-render-one"}));
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [{productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash}]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
+      startProductionRender,
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", {name: new RegExp(bundle.production.title)}));
+    await waitFor(() => expect(screen.getByText(`Saved ${bundle.contentHash.slice(0, 8)}`)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+
+    expect(screen.getByRole("region", {name: "Next finish action"})).toHaveTextContent("Render and verify delivery");
+    expect(screen.getByText("5/6 complete")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: "Render & publish delivery"}));
+    expect(startProductionRender).toHaveBeenCalledWith({productionId: bundle.production.productionId, revision: bundle.production.revision, scope: "full-production"});
+    expect(screen.getByRole("button", {name: "Final render running"})).toBeDisabled();
   });
 
   it("plays a completed approved render inside the direction workspace", async () => {
@@ -274,7 +320,7 @@ describe("StoryStage studio", () => {
     expect(scope).toHaveValue("engineering-slice");
     await user.selectOptions(scope, "full-production");
     expect(screen.getByRole("button", {name: "Render full production"})).toBeDisabled();
-    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
     expect(screen.getByText("Full production render gate")).toBeInTheDocument();
     expect(screen.getByText(/final-output gates remain/)).toBeInTheDocument();
   });
@@ -311,7 +357,7 @@ describe("StoryStage studio", () => {
     expect(screen.getByLabelText(/Duration for shot/)).toHaveValue(7.2);
     expect(screen.getByText("Timing locked")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
     expect(screen.getByText(/1\/\d+ narration or dialogue cues have editor-locked frame timing/)).toBeInTheDocument();
     expect(screen.getByRole("heading", {name: "Approved voice master bound"})).toBeInTheDocument();
   });
@@ -380,7 +426,7 @@ describe("StoryStage studio", () => {
     await user.selectOptions(screen.getByLabelText("Music decision"), "approved-master");
     expect(screen.getByLabelText("Music gain")).toBeEnabled();
     await user.click(screen.getByRole("button", {name: "Mark mix reviewed"}));
-    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
     expect(screen.getByText(/music approved-master/)).toBeInTheDocument();
   });
 
@@ -417,7 +463,7 @@ describe("StoryStage studio", () => {
       rights: expect.objectContaining({clearanceStatus: "cleared", evidenceReference: "Original operator recording"}),
     }));
 
-    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
     expect(screen.getByText(/1\/1 effects approved · 1 shot-relative cues placed/)).toBeInTheDocument();
   });
 
@@ -433,7 +479,7 @@ describe("StoryStage studio", () => {
     await user.click(screen.getByRole("button", {name: "Mark mix reviewed"}));
     expect(screen.getByText("reviewed")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
     expect(screen.getByText("Music and SFX decisions reviewed")).toBeInTheDocument();
     expect(screen.getByText(/music none · transition SFX off/)).toBeInTheDocument();
   });
