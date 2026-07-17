@@ -1,0 +1,34 @@
+{
+  "name": "@storystage/render-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsup --config tsup.config.ts",
+    "render:sample": "tsx src/cli.ts sample",
+    "render:proof": "tsx src/cli.ts proof",
+    "render:determinism": "tsx src/cli.ts determinism",
+    "render:audio": "tsx src/cli.ts audio",
+    "test": "vitest run src/worker-protocol.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.490",
+    "@remotion/renderer": "4.0.490",
+    "@storystage/contracts": "workspace:*",
+    "@storystage/fixtures": "workspace:*",
+    "@storystage/remotion-runtime": "workspace:*",
+    "ffmpeg-static": "5.3.0",
+    "ffprobe-static": "3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  }
+}

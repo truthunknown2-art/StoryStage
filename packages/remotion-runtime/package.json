@@ -1,0 +1,26 @@
+{
+  "name": "@storystage/remotion-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.tsx",
+    "./entry": "./src/remotion-entry.ts",
+    "./manifest": "./src/manifest.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/captions": "4.0.490",
+    "@remotion/media": "4.0.490",
+    "@storystage/contracts": "workspace:*",
+    "@storystage/fixtures": "workspace:*",
+    "react": "19.2.3",
+    "remotion": "4.0.490"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.7",
+    "typescript": "5.9.3"
+  }
+}

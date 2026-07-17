@@ -1,33 +1,38 @@
 {
-  "name": "StoryStage",
-  "version": "1.0.0",
-  "description": "My Remotion video",
-  "repository": {},
+  "name": "storystage",
+  "version": "0.1.0",
+  "description": "A directable, deterministic animation production studio.",
   "license": "UNLICENSED",
   "private": true,
-  "dependencies": {
-    "@remotion/cli": "4.0.490",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "remotion": "4.0.490",
-    "@remotion/tailwind-v4": "4.0.490",
-    "tailwindcss": "4.0.0"
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "build": "pnpm --filter @storystage/render-worker build && pnpm --filter @storystage/desktop build && pnpm --filter @storystage/studio build",
+    "build:desktop": "pnpm --filter @storystage/render-worker build && pnpm --filter @storystage/desktop build",
+    "dev": "pnpm build:desktop && concurrently --kill-others-on-fail --names studio,desktop --prefix-colors cyan,magenta \"pnpm --filter @storystage/studio dev\" \"wait-on http://127.0.0.1:5173 && pnpm --filter @storystage/desktop start\"",
+    "dev:web": "pnpm --filter @storystage/studio dev",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "render:sample": "pnpm --filter @storystage/render-worker render:sample",
+    "render:proof": "pnpm --filter @storystage/render-worker render:proof",
+    "render:determinism": "pnpm --filter @storystage/render-worker render:determinism",
+    "render:audio": "pnpm --filter @storystage/render-worker render:audio",
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.490",
-    "@types/react": "19.2.7",
-    "@types/web": "0.0.166",
+    "@types/node": "24.10.1",
+    "concurrently": "9.2.1",
     "eslint": "9.19.0",
     "prettier": "3.8.1",
-    "typescript": "5.9.3"
-  },
-  "scripts": {
-    "dev": "remotion studio",
-    "build": "remotion bundle",
-    "upgrade": "remotion upgrade",
-    "lint": "eslint src && tsc"
-  },
-  "sideEffects": [
-    "*.css"
-  ]
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10",
+    "wait-on": "9.0.3"
+  }
 }

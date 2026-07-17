@@ -1,54 +1,43 @@
-# Remotion video
+# StoryStage
 
-<p align="center">
-  <a href="https://github.com/remotion-dev/logo">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-dark.apng">
-      <img alt="Animated Remotion Logo" src="https://github.com/remotion-dev/logo/raw/main/animated-logo-banner-light.gif">
-    </picture>
-  </a>
-</p>
+StoryStage is a directable animation production studio. It converts a structured, inspectable episode plan into deterministic Remotion previews and local renders instead of asking a model to improvise an entire video in one opaque pass.
 
-Welcome to your Remotion project!
+SS-001 is the walking skeleton: a polished studio shell, a 12-second cutout-animation sample, a secure Electron boundary, and a real local MP4 render pipeline.
 
-## Commands
+## Requirements
 
-**Install Dependencies**
+- Node.js 20.19 or newer
+- pnpm 11
 
-```console
-npm i
+## Run it
+
+```powershell
+pnpm install
+pnpm dev
 ```
 
-**Start Preview**
+`pnpm dev` starts the Vite interface at <http://127.0.0.1:5173> and opens the same interface in Electron.
 
-```console
-npm run dev
+```powershell
+pnpm dev:web
+pnpm render:sample
+pnpm render:determinism
+pnpm render:audio
+pnpm verify
+pnpm build
 ```
 
-**Render video**
+The sample is written to `artifacts/SS-001/sample.mp4`. The determinism command renders two passes, extracts exact frame indices 0, 180, and 330 from each, compares SHA-256 hashes, records the extraction commands, captures the toolchain environment, and verifies the sample's audio stream. `pnpm render:audio` can rerun the audio-stream and `volumedetect` proof independently.
 
-```console
-npx remotion render
-```
+## Workspace
 
-**Upgrade Remotion**
+- `apps/studio` — pure React/Vite interface and Remotion Player
+- `apps/desktop` — sandboxed Electron main/preload boundary and worker supervision
+- `apps/render-worker` — independently invokable Remotion renderer and evidence tooling
+- `packages/contracts` — Zod schemas, job states, and process protocols
+- `packages/fixtures` — schema-valid sample productions and episode plan
+- `packages/remotion-runtime` — deterministic composition and frame-driven animation
+- `docs` — product, UI, quality, state, architecture, and ADRs
+- `tickets` / `reports` — implementation instructions and permanent evidence
 
-```console
-npx remotion upgrade
-```
-
-## Docs
-
-Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
-
-## Help
-
-We provide help on our [Discord server](https://discord.gg/6VzzNDwUwV).
-
-## Issues
-
-Found an issue with Remotion? [File an issue here](https://github.com/remotion-dev/remotion/issues/new).
-
-## License
-
-Note that for some entities a company license is needed. [Read the terms here](https://github.com/remotion-dev/remotion/blob/main/LICENSE.md).
+Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before changing a package or process boundary.

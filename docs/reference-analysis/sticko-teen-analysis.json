@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0",
+  "reference": {
+    "title": "Your Teen Tells Their Best Friend This Instead Of You",
+    "creator": "Sticko Explains",
+    "url": "https://www.youtube.com/watch?v=TBeVGhTd4RI",
+    "durationSeconds": 740
+  },
+  "method": {
+    "coarseSampleIntervalSeconds": 20,
+    "denseSampleWindowSeconds": [0, 30],
+    "denseSampleIntervalSeconds": 1,
+    "decodedSampleCount": 67,
+    "sceneDetector": "ffmpeg scdet",
+    "sceneDetectorThreshold": 8,
+    "limitations": [
+      "The detector may count abrupt internal graphic changes as cuts, which is still relevant to perceptual edit velocity.",
+      "Classifications describe production grammar and are not reusable source artwork."
+    ]
+  },
+  "measured": {
+    "detectedHardResetCount": 314,
+    "detectedMedianIntervalSeconds": 1.75,
+    "detectedMeanIntervalSeconds": 2.35,
+    "detectedMinIntervalSeconds": 0.208,
+    "detectedMaxIntervalSeconds": 12.292,
+    "detectedCutTimestampsSeconds": [1.542,2.75,3.583,5.25,7.167,11.208,13.833,16.625,18.958,20.75,21.25,22.417,26.833,27.958,33.458,34.417,38.917,40.708,41.708,47.125,49.292,50.375,52.458,53.792,55.792,60.208,61.792,63.625,64.917,66.333,67.5,68.625,71.208,73.292,75.417,78.208,82.083,82.917,83.583,86.25,87.125,95.833,99.292,110.208,122.5,123.417,129.208,133.333,134.125,135.208,137.792,140.417,144.75,146.292,147.458,148.958,151.708,158.958,161.333,164.125,165.583,166.792,167.583,168.25,170.208,171.708,174.25,180.875,185.208,188.375,189.292,198.042,200.667,207.25,209.083,210.292,212.917,214.542,218.208,219.958,220.458,221.5,223.042,224.417,225.542,226.667,229.042,232.083,235.208,238.417,243.333,243.792,244.542,245.958,247.333,249,251.5,252.5,254.042,255.292,256.167,257.042,259.333,260.292,261.625,262.25,263.458,274,275.917,276.667,279.458,280.083,280.625,282.625,285.583,286.542,288,289.625,291.292,293.833,297.792,299.542,302.083,304.25,308.458,312.083,314.5,315.292,316.542,317.917,322.333,323.875,332.333,333.5,335.375,339.667,342.542,345,346.167,346.917,349,350.25,350.875,352.458,361.5,362.208,366.75,368.667,370.542,371.708,373.625,374.667,375.875,377.125,381.125,382.583,382.792,385.708,388.083,388.417,389.542,389.833,391.333,395.25,396.042,396.792,399.25,400.667,403.083,403.5,405.083,408.5,410.5,411.292,413.708,416.583,418.25,428.542,430.083,432.125,433,434.083,435.417,438.375,441,442.292,443.167,444.583,446.167,451.5,453.292,455.25,463.542,465.167,468.458,470.958,472.958,475.125,475.792,476.833,477.625,480.542,481.75,482.917,486.167,490.75,498.333,499.792,503.833,504.667,505.458,506.542,507.75,508.625,509.5,515.708,517.25,523.208,524.875,527.25,529,531.417,532.5,533.625,535.5,538.75,540.75,541.583,542.792,544.542,546.708,547.792,548.667,551.5,552.417,554.917,556.833,557.75,558.208,559.125,561.083,567.375,570.667,573.792,574.958,578,585.708,587.792,589.125,591.708,598.5,601.667,603.25,603.917,605.417,608.375,609.083,610.292,613.458,615.25,617.333,620.375,621.458,627.292,628.458,629.375,630.833,633.333,638.792,639.708,643.083,644.667,646.208,647.417,648.708,650.167,655.375,656.5,658,661.333,663.333,664.417,665.375,667.125,669.375,672.042,673.125,675.042,676.167,677.5,679.375,681.375,685.25,687.583,689.042,693.792,697.458,699.25,699.833,702.583,704.167,707.042,708.75,710.292,712.75,714.833,716.333,717.875,719.333,721.333,729.833,733.083,736.583,737.833]
+  },
+  "observedGrammar": {
+    "shotSizes": ["full-body presenter", "face close-up", "prop or diagram insert", "full-frame keyword", "contextual photo crop"],
+    "cameraMotion": ["mostly locked composition", "restrained crop or push", "short pan over still material", "abrupt punch-in"],
+    "transitions": ["hard cut", "spatial reset", "rare motivated graphic transition"],
+    "assetSources": ["reusable stick rigs", "kinetic typography", "icons and diagrams", "cutout props", "cropped or tinted contextual photographs"],
+    "textDensity": "One short idea or highlighted operative word; typography often functions as the shot itself.",
+    "performanceFrequency": "Presenter poses are economical; visual novelty comes primarily from layout, evidence, type, and prop changes.",
+    "audioRhythm": "Narration clauses drive hard visual resets; sparse editorial SFX punctuate reveals."
+  }
+}

@@ -1,7 +1,10 @@
-node_modules
-dist
+node_modules/
+node_modules.broken/
+dist/
+coverage/
+out/
+artifacts/
+.vite/
+*.log
 .DS_Store
-.env
-
-# Ignore the output video from Git but not videos you import into src/.
-out
+Thumbs.db

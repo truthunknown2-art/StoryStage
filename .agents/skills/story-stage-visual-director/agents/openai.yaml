@@ -1,0 +1,4 @@
+interface:
+  display_name: "StoryStage Visual Director"
+  short_description: "Analyze and author StoryStage directing profiles"
+  default_prompt: "Use $story-stage-visual-director to analyze a reference and improve a StoryStage directing profile."
