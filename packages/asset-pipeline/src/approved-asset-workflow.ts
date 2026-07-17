@@ -88,7 +88,7 @@ async function readVerifiedBytes(root: string, relativeFile: string, expectedHas
   return bytes;
 }
 
-async function writeImmutable(file: string, bytes: Uint8Array, expectedHash?: string): Promise<void> {
+export async function writeImmutable(file: string, bytes: Uint8Array, expectedHash?: string): Promise<void> {
   await mkdir(dirname(file), {recursive: true});
   const temporaryFile = `${file}.${randomUUID()}.tmp`;
   await writeFile(temporaryFile, bytes, {flag: "wx", mode: 0o600});
@@ -105,7 +105,7 @@ async function writeImmutable(file: string, bytes: Uint8Array, expectedHash?: st
   }
 }
 
-function rebaseRigManifest(manifest: AssetRigManifest): AssetRigManifest {
+export function rebaseRigManifest(manifest: AssetRigManifest): AssetRigManifest {
   const rebaseBinding = <T extends {candidateId: string; relativeFile: string}>(binding: T): T => ({...binding, relativeFile: `files/${binding.candidateId}.png`});
   let draft: AssetRigManifestDraft;
   if (manifest.type === "character-rig") {

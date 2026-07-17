@@ -25,6 +25,7 @@ import {
   listGenerationExchangesRequestSchema,
   listGenerationExchangesResultSchema,
   listProductionBundlesResultSchema,
+  listPublicShowPackCandidatesResultSchema,
   loadProductionBundleRequestSchema,
   loadProductionBundleResultSchema,
   openRenderedFileResultSchema,
@@ -32,6 +33,8 @@ import {
   prepareGenerationImportResultSchema,
   reviewCandidateSetRequestSchema,
   reviewCandidateSetResultSchema,
+  reviewPublicShowPackCandidateRequestSchema,
+  reviewPublicShowPackCandidateResultSchema,
   saveProductionBundleRequestSchema,
   saveProductionBundleResultSchema,
   renderJobEventSchema,
@@ -54,6 +57,7 @@ import {
   type LoadProductionBundleRequest,
   type PrepareGenerationImportRequest,
   type ReviewCandidateSetRequest,
+  type ReviewPublicShowPackCandidateRequest,
   type RenderJobEvent,
   type SaveProductionBundleRequest,
   type StartRenderRequest,
@@ -104,6 +108,11 @@ const bridge: StoryStageDesktopBridge = {
   reviewCandidateSet: async (request: ReviewCandidateSetRequest) => {
     const payload = reviewCandidateSetRequestSchema.parse(request);
     return reviewCandidateSetResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.reviewCandidateSet, payload));
+  },
+  listPublicShowPackCandidates: async () => listPublicShowPackCandidatesResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.listPublicShowPackCandidates)),
+  reviewPublicShowPackCandidate: async (request: ReviewPublicShowPackCandidateRequest) => {
+    const payload = reviewPublicShowPackCandidateRequestSchema.parse(request);
+    return reviewPublicShowPackCandidateResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.reviewPublicShowPackCandidate, payload));
   },
   importVoiceTrack: async (request: ImportVoiceTrackRequest) => {
     const payload = importVoiceTrackRequestSchema.parse(request);

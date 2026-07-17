@@ -3,6 +3,7 @@ import {defineConfig} from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
+  publicDir: "../../packages/remotion-runtime/public",
   server: {
     host: "127.0.0.1",
     port: 5173,

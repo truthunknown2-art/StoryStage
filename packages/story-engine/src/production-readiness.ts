@@ -24,6 +24,17 @@ export function getFullProductionRenderBlockers(input: FullProductionReadinessIn
 
   const nonApprovedBindings = input.renderPlan.shots.flatMap((shot) => shot.visualBindings).filter((binding) => binding.resolutionStatus !== "approved").length;
   if (nonApprovedBindings > 0) blockers.push({id: "visual-bindings", message: `${nonApprovedBindings} shot bindings still resolve to placeholders or unresolved media.`});
+  if (input.renderPlan.directingProfile.visualMode === "weird-history-editorial") {
+    const privatePlaybackAssetIds = new Set(input.approvedAssetVersions.map((asset) => asset.assetId));
+    const silentFallbackShots = input.renderPlan.shots.filter((shot) => {
+      const characterBindings = shot.visualBindings.filter((binding) => binding.role === "character");
+      const charactersRenderable = characterBindings.length === 0 || characterBindings.every((binding) => privatePlaybackAssetIds.has(binding.assetId));
+      const codeTreatment = ["environment", "character-performance", "reaction"].includes(shot.treatment)
+        || (shot.treatment === "kinetic-type" && shot.actions.some((action) => action.detail.type === "kineticType" && action.detail.text.trim().length > 0));
+      return !charactersRenderable || (!codeTreatment && !shot.visualBindings.some((binding) => privatePlaybackAssetIds.has(binding.assetId)));
+    }).length;
+    if (silentFallbackShots > 0 && !blockers.some((blocker) => blocker.id === "visual-bindings")) blockers.push({id: "visual-bindings", message: `${silentFallbackShots} history shots would still use a silent generic fallback instead of verified playback bytes or a named code-authored treatment.`});
+  }
 
   const sourceSpokenShotIds = new Set(input.resolvedPlan.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
   const spokenShotIds = new Set(input.renderPlan.shots.filter((shot) => sourceSpokenShotIds.has(shot.id) || Boolean(shot.caption)).map((shot) => shot.id));

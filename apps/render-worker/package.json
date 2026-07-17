@@ -14,7 +14,8 @@
     "render:audio": "tsx src/cli.ts audio",
     "test": "vitest run src/worker-protocol.test.ts",
     "typecheck": "tsc --noEmit",
-    "render:production-proof": "tsx src/production-proof.ts"
+    "render:production-proof": "tsx src/production-proof.ts",
+    "render:rook-preview": "tsx src/rook-pilot-visual-preview.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.490",

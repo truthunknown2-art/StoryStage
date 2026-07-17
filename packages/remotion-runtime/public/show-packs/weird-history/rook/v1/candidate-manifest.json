@@ -1,6 +1,7 @@
 {
   "schemaVersion": "1.0",
   "candidateId": "weird-history-rook-v1",
+  "version": "1.0.0",
   "showPackId": "weird-history-editorial-v1",
   "displayName": "Rook editorial presenter",
   "status": "candidate-needs-human-review",
@@ -22,6 +23,20 @@
     {"role": "talk-pose", "file": "talk-pose.png", "contentHash": "3997a7596c54e5d31c32b0e8391539d8ca47a6fcd8e9ec8b57425eeec944fa6c", "mediaType": "image/png", "width": 1024, "height": 1536, "alpha": true},
     {"role": "reaction-pose", "file": "reaction-pose.png", "contentHash": "82836c092dc924e5e0c2d75445a774965d851c56cef9f48e5d60e3eedec70433", "mediaType": "image/png", "width": 1024, "height": 1536, "alpha": true}
   ],
+  "preparedFiles": [
+    {"role": "identity-sheet", "file": "prepared/rook-v1-identity.png", "contentHash": "91aae474f5e0f4472f8ae366f464b1dec8ff8eb22837bf853848e63317349db6", "width": 1600, "height": 1800},
+    {"role": "neutral-pose", "file": "prepared/rook-v1-neutral.png", "contentHash": "f3f402762a6aa7e72932018fb3a241dd2eeabf67680703eeb4c20240ca56cf14", "width": 1600, "height": 1800},
+    {"role": "talk-pose", "file": "prepared/rook-v1-talk.png", "contentHash": "0d4558e5bafd70cbc662f28323ab27101762999f34225f5ed41d2182f1617fb8", "width": 1600, "height": 1800},
+    {"role": "reaction-pose", "file": "prepared/rook-v1-reaction.png", "contentHash": "744746bb23a6f10bad4b3386d9e75b7d79fbb4e7f3ed1e3adc7c62bdbfb6be82", "width": 1600, "height": 1800}
+  ],
+  "evidence": {
+    "prompts": {"file": "PROMPTS.md", "fileContentHash": "ef897bfcec57fe3571ada5701618db5f65b8bceb53ad34a0686544fa1505363a"},
+    "contactSheet": {"file": "prepared/contact-sheet-rook-v1.png", "fileContentHash": "bf333af2f722ffdcae861e91bd9537a8febce1730b92c5b6ab77d7d78f355374"},
+    "rigManifest": {"file": "prepared/rig-manifest-rook-v1.json", "fileContentHash": "da3cc1160312438f104081c3c0e3862062551498fea1042c2b0f90598a1a7b3a", "contentHash": "48fa071180f3f47fb30f4cca7a164f67c5c6abc943def9e2bf22e771009c9299"},
+    "rigValidation": {"file": "prepared/rig-validation-rook-v1.json", "fileContentHash": "45c14eccbed920ec3939a44038cb5de45c19cd12d7f186c2774e80fb71f347f5", "contentHash": "5fe76aeea8eec3b786654c172cb4cc83ed03735088618320fcef06ec645709e1"},
+    "diagnosticReport": {"file": "prepared/rig-diagnostic-rook-v1.json", "fileContentHash": "90b02a62eba320e5a03deb206ce68244fef76918ef9034c90b41eefeab59c914", "contentHash": "23979749b696754e945cde0e20f9499ee77e7f62b41d1aa48c0d236326e2671f"},
+    "diagnosticVideo": {"file": "prepared/rig-diagnostic-rook-v1.mp4", "fileContentHash": "a3e868d31b222e723dfbefc48349cd3549318dd3e4b3806c5b9a207487e40f29"}
+  },
   "validation": {
     "transparentCorners": true,
     "brightGreenEdgePixels": 0,
@@ -34,5 +49,6 @@
     "rigValidationReport": "prepared/rig-validation-rook-v1.json",
     "movingDiagnosticFile": "prepared/rig-diagnostic-rook-v1.mp4",
     "movingDiagnosticContentHash": "a3e868d31b222e723dfbefc48349cd3549318dd3e4b3806c5b9a207487e40f29"
-  }
+  },
+  "contentHash": "86558382828a8db94cdc8c30369e3ff84c7aad0919081a1fe736efc5bb2f84d7"
 }

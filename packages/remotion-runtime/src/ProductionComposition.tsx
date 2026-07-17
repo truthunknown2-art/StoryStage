@@ -3,6 +3,8 @@ import type {Caption} from "@remotion/captions";
 import type {AudioMix, FrameAccurateRenderPlan, SoundEffectCue} from "@storystage/story-engine";
 import {AbsoluteFill, Easing, Img, interpolate, Sequence, staticFile, useCurrentFrame} from "remotion";
 import {Captions} from "./Captions";
+import {HistoryEditorialStage} from "./HistoryEditorialStage";
+import {HistoryKineticType} from "./HistoryKineticType";
 
 export type CharacterPlaybackAsset = {type: "character-rig"; assetId: string; neutral: string; talk: string; reaction: string};
 export type BackgroundPlaybackAsset = {type: "background-layers"; assetId: string; far: string; midground: string; foreground: string};
@@ -18,6 +20,7 @@ export type ProductionCompositionProps = {
   soundEffectDataUrls?: Record<string, string>;
   soundEffectCues?: SoundEffectCue[];
   audioMix?: AudioMix;
+  previewWatermark?: string;
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
@@ -72,9 +75,11 @@ const CharacterPerformance: React.FC<{asset: CharacterPlaybackAsset; projectType
   const mouthPhase = activeTalk ? (absoluteFrame - activeTalk.startFrame + (cue?.phaseOffsetFrames ?? 0)) % (openFrames + closedFrames) : 0;
   const mouthOpen = Boolean(activeTalk && mouthPhase < openFrames);
   const pose = mouthOpen ? asset.talk : activePerformance ? asset.reaction : asset.neutral;
+  const closeUp = shot.framing === "close-up";
+  const characterHeight = shot.framing === "wide" ? "76%" : closeUp ? "104%" : "88%";
   const entrance = interpolate(frame, [0, Math.min(14, shot.durationInFrames - 1)], [side === "left" ? -90 : 90, 0], {easing: Easing.bezier(.2, .8, .2, 1), extrapolateLeft: "clamp", extrapolateRight: "clamp"});
   const gestureLift = activePerformance?.detail.type === "gesture" || activePerformance?.detail.type === "react" ? interpolate(absoluteFrame, [activePerformance.startFrame, Math.min(activePerformance.endFrame, activePerformance.startFrame + 10), activePerformance.endFrame], [0, -30, 0], {extrapolateLeft: "clamp", extrapolateRight: "clamp"}) : 0;
-  return <Img src={pose} style={{bottom: -20, filter: "drop-shadow(18px 22px 12px rgba(0,0,0,.28))", height: "88%", objectFit: "contain", objectPosition: "bottom", position: "absolute", right: side === "right" ? 50 : undefined, left: side === "left" ? 50 : undefined, scale: interpolate(frame, [0, shot.durationInFrames], [.96, 1.02], {extrapolateRight: "clamp"}), translate: `${entrance}px ${gestureLift + Math.sin(frame / 8) * 3}px`, width: "48%"}} />;
+  return <Img src={pose} style={{bottom: closeUp ? -150 : -20, filter: "drop-shadow(18px 22px 12px rgba(0,0,0,.28))", height: characterHeight, objectFit: "contain", objectPosition: "bottom", position: "absolute", right: side === "right" ? 50 : undefined, left: side === "left" ? 50 : undefined, scale: interpolate(frame, [0, shot.durationInFrames], [.96, 1.02], {extrapolateRight: "clamp"}), translate: `${entrance}px ${gestureLift + Math.sin(frame / 8) * 3}px`, width: closeUp ? "58%" : "48%"}} />;
 };
 
 const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record<string, PlaybackAsset>; shot: RenderShot}> = ({plan, playbackAssets, shot}) => {
@@ -84,17 +89,21 @@ const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record
   const characters = shot.visualBindings.map((binding) => playbackAssets[binding.assetId]).filter((asset): asset is CharacterPlaybackAsset => asset?.type === "character-rig");
   const props = shot.visualBindings.map((binding) => playbackAssets[binding.assetId]).filter((asset): asset is PropPlaybackAsset => asset?.type === "prop");
   const palette = fallbackPalette(plan.projectType);
-  const titleIn = interpolate(frame, [0, Math.min(8, shot.durationInFrames - 1)], [0, 1], {extrapolateRight: "clamp"});
+  const historyMode = plan.directingProfile.visualMode === "weird-history-editorial";
+  const kineticType = historyMode && shot.treatment === "kinetic-type" && shot.actions.some((action) => action.detail.type === "kineticType");
+  const ordinal = Number(shot.number.split(".").at(-1) ?? 1);
+  const singleCharacterSide = kineticType || ordinal % 2 === 1 ? "left" : "right";
   return <AbsoluteFill style={{background: palette.ink, overflow: "hidden"}}>
-    <ShotBackground asset={background?.type === "background-layers" ? background : undefined} projectType={plan.projectType} shot={shot} />
-    {characters.slice(0, 2).map((asset, index) => <CharacterPerformance asset={asset} key={asset.assetId} projectType={plan.projectType} shot={shot} side={index === 0 ? "left" : "right"} />)}
+    {background?.type === "background-layers" ? <ShotBackground asset={background} projectType={plan.projectType} shot={shot} /> : historyMode ? <HistoryEditorialStage shot={shot} /> : <ShotBackground projectType={plan.projectType} shot={shot} />}
+    {kineticType ? <HistoryKineticType reservePresenter={characters.length > 0} shot={shot} /> : null}
+    {characters.slice(0, 2).map((asset, index) => <CharacterPerformance asset={asset} key={asset.assetId} projectType={plan.projectType} shot={shot} side={index === 0 ? singleCharacterSide : singleCharacterSide === "left" ? "right" : "left"} />)}
     {props.slice(0, 1).map((asset) => <Img key={asset.assetId} src={asset.cutout} style={{bottom: 90, filter: "drop-shadow(12px 16px 10px rgba(0,0,0,.3))", height: "38%", objectFit: "contain", position: "absolute", right: characters.length > 0 ? "32%" : "10%", rotate: `${interpolate(frame, [0, shot.durationInFrames], [-3, 3], {extrapolateRight: "clamp"})}deg`, translate: `0 ${Math.sin(frame / 6) * 8}px`, width: "28%"}} />)}
-    {characters.length === 0 && props.length === 0 ? <div style={{alignItems: "center", display: "flex", height: "100%", justifyContent: "center", padding: "100px"}}><div style={{color: palette.ink, fontFamily: "Georgia, serif", fontSize: 92, fontWeight: 800, lineHeight: .95, maxWidth: 1200, opacity: .86, textAlign: "center"}}>{shot.title}</div></div> : null}
-    <div style={{background: palette.ink, color: palette.paper, fontFamily: "Arial, sans-serif", fontSize: 24, fontWeight: 800, left: 70, letterSpacing: 4, opacity: titleIn, padding: "14px 18px", position: "absolute", textTransform: "uppercase", top: 62}}>{shot.number} · {shot.treatment.replaceAll("-", " ")}</div>
+    {characters.length === 0 && props.length === 0 && !historyMode ? <div style={{alignItems: "center", display: "flex", height: "100%", justifyContent: "center", padding: "100px"}}><div style={{color: palette.ink, fontFamily: "Georgia, serif", fontSize: 92, fontWeight: 800, lineHeight: .95, maxWidth: 1200, opacity: .86, textAlign: "center"}}>{shot.title}</div></div> : null}
+    {historyMode ? <div style={{color: "rgba(23,27,29,.62)", fontFamily: "Arial, sans-serif", fontSize: 18, fontWeight: 900, left: 70, letterSpacing: 5, position: "absolute", textTransform: "uppercase", top: 48}}>Frankly Weird History</div> : null}
   </AbsoluteFill>;
 };
 
-export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl, musicTrackDataUrl, soundEffectDataUrls = {}, soundEffectCues = [], audioMix}) => {
+export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl, musicTrackDataUrl, soundEffectDataUrls = {}, soundEffectCues = [], audioMix, previewWatermark}) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
   const captions: Caption[] = plan.shots.filter((shot) => shot.caption && shot.startFrame < duration).map((shot) => ({text: shot.caption!, startMs: shot.startFrame / plan.fps * 1000, endMs: Math.min(duration, shot.startFrame + shot.durationInFrames) / plan.fps * 1000, timestampMs: null, confidence: null}));
   return <AbsoluteFill style={{background: "#111718"}}>
@@ -109,5 +118,6 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({pla
     })}
     {audioMix?.transitionSfx === "paper-flip" ? plan.shots.filter((shot) => shot.startFrame > 0 && shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={18} key={`sfx-${shot.id}`}><Audio src={staticFile("audio/paper-flip.wav")} volume={() => audioMix.transitionSfxGain} /></Sequence>) : null}
     <Captions captions={captions} />
+    {previewWatermark ? <div style={{background: "rgba(16,20,20,.86)", bottom: 28, color: "#f4f1e8", fontFamily: "Arial, sans-serif", fontSize: 22, fontWeight: 900, left: 28, letterSpacing: 2, padding: "12px 16px", position: "absolute", textTransform: "uppercase"}}>{previewWatermark}</div> : null}
   </AbsoluteFill>;
 };

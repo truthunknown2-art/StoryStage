@@ -121,6 +121,34 @@ export const approvedAssetVersionBridgeSchema = z.object({
   provenance: z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict(),
   approvedAt: z.string().datetime(),
 }).strict();
+export const publicShowPackCandidateSummarySchema = z.object({
+  candidateId: productionIdSchema,
+  version: z.string().min(1),
+  showPackId: productionIdSchema,
+  displayName: z.string().min(1),
+  status: z.literal("candidate-needs-human-review"),
+  contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  identityLock: z.string().min(1),
+  provenance: z.object({provider: z.string().min(1), usageNotes: z.string().min(1)}).strict(),
+  files: z.array(z.object({role: z.enum(["identity-sheet", "neutral-pose", "talk-pose", "reaction-pose"]), url: z.string().startsWith("/"), width: z.number().int().positive(), height: z.number().int().positive()}).strict()).length(4),
+  diagnosticUrl: z.string().startsWith("/"),
+  verifiedByHost: z.boolean(),
+  canReview: z.boolean(),
+}).strict();
+export const listPublicShowPackCandidatesResultSchema = z.object({candidates: z.array(publicShowPackCandidateSummarySchema)}).strict();
+export const publicShowPackReviewAcknowledgementsBridgeSchema = z.object({identitySheet: z.boolean(), neutralPose: z.boolean(), talkPose: z.boolean(), reactionPose: z.boolean(), movingDiagnostic: z.boolean(), identityConsistency: z.boolean(), matteEdges: z.boolean(), provenance: z.boolean()}).strict();
+export const reviewPublicShowPackCandidateRequestSchema = z.object({
+  productionId: productionIdSchema,
+  revision: z.number().int().positive(),
+  productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  candidateId: productionIdSchema,
+  decision: z.enum(["approve", "reject"]),
+  acknowledgements: publicShowPackReviewAcknowledgementsBridgeSchema,
+}).strict();
+export const reviewPublicShowPackCandidateResultSchema = z.discriminatedUnion("status", [
+  z.object({status: z.literal("reviewed"), decision: z.enum(["approved", "rejected"]), approvedAssetVersion: approvedAssetVersionBridgeSchema.nullable(), targetProductionRevision: z.number().int().positive().nullable(), targetProductionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/).nullable()}).strict(),
+  z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
 export const candidateSetReviewSummarySchema = z.object({candidateSetId: productionIdSchema, briefId: productionIdSchema, requirementId: productionIdSchema, status: z.enum(["selected", "approved", "rejected"]), notes: z.string(), decidedAt: z.string().datetime(), approvedAssetVersion: approvedAssetVersionBridgeSchema.nullable()}).strict();
 export const reviewCandidateSetRequestSchema = z.object({exchangeJobId: productionIdSchema, candidateSetId: productionIdSchema, decision: z.enum(["select", "approve", "reject"]), notes: z.string().max(2_000)}).strict();
 export const reviewCandidateSetResultSchema = z.discriminatedUnion("status", [
@@ -338,6 +366,8 @@ export const IPC_CHANNELS = {
   getGenerationExchange: "storystage:get-generation-exchange",
   prepareGenerationImport: "storystage:prepare-generation-import",
   reviewCandidateSet: "storystage:review-candidate-set",
+  listPublicShowPackCandidates: "storystage:list-public-show-pack-candidates",
+  reviewPublicShowPackCandidate: "storystage:review-public-show-pack-candidate",
   importVoiceTrack: "storystage:import-voice-track",
   approveVoiceTrack: "storystage:approve-voice-track",
   importMusicTrack: "storystage:import-music-track",
@@ -384,6 +414,10 @@ export type ApprovedAssetVersionBridge = z.infer<typeof approvedAssetVersionBrid
 export type CandidateSetReviewSummary = z.infer<typeof candidateSetReviewSummarySchema>;
 export type ReviewCandidateSetRequest = z.infer<typeof reviewCandidateSetRequestSchema>;
 export type ReviewCandidateSetResult = z.infer<typeof reviewCandidateSetResultSchema>;
+export type PublicShowPackCandidateSummary = z.infer<typeof publicShowPackCandidateSummarySchema>;
+export type ListPublicShowPackCandidatesResult = z.infer<typeof listPublicShowPackCandidatesResultSchema>;
+export type ReviewPublicShowPackCandidateRequest = z.infer<typeof reviewPublicShowPackCandidateRequestSchema>;
+export type ReviewPublicShowPackCandidateResult = z.infer<typeof reviewPublicShowPackCandidateResultSchema>;
 export type VoiceTrackBridge = z.infer<typeof voiceTrackBridgeSchema>;
 export type ImportVoiceTrackRequest = z.infer<typeof importVoiceTrackRequestSchema>;
 export type ImportVoiceTrackResult = z.infer<typeof importVoiceTrackResultSchema>;
@@ -420,6 +454,8 @@ export type StoryStageDesktopBridge = {
   getGenerationExchange: (request: GetGenerationExchangeRequest) => Promise<GetGenerationExchangeResult>;
   prepareGenerationImport: (request: PrepareGenerationImportRequest) => Promise<PrepareGenerationImportResult>;
   reviewCandidateSet: (request: ReviewCandidateSetRequest) => Promise<ReviewCandidateSetResult>;
+  listPublicShowPackCandidates: () => Promise<ListPublicShowPackCandidatesResult>;
+  reviewPublicShowPackCandidate: (request: ReviewPublicShowPackCandidateRequest) => Promise<ReviewPublicShowPackCandidateResult>;
   importVoiceTrack: (request: ImportVoiceTrackRequest) => Promise<ImportVoiceTrackResult>;
   approveVoiceTrack: (request: ApproveVoiceTrackRequest) => Promise<ApproveVoiceTrackResult>;
   importMusicTrack: (request: ImportMusicTrackRequest) => Promise<ImportMusicTrackResult>;

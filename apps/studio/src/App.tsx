@@ -4,12 +4,14 @@ import {
   buildAnimaticSync,
   candidateBundleSchema,
   createProductionDraft,
+  createRookPilot001Fixture,
   generationJobDraftSchema,
   getFullProductionRenderBlockers,
   getShowPack,
   productionPolicies,
   productionBundleSchema,
   productionBundleDraftSchema,
+  rookPilot001,
   sampleWorkshopScript,
   showPacks,
   type AnimaticBuild,
@@ -65,13 +67,7 @@ import {
 } from "lucide-react";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {createHostAdapter, type HostAdapter} from "./host";
-import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, ProductionRenderScope, RenderJobEvent, StagedCandidateSummary} from "@storystage/contracts";
-import rookCandidateManifest from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/candidate-manifest.json";
-import rookIdentitySheetUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/identity-sheet.png";
-import rookNeutralPoseUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/prepared/rook-v1-neutral.png";
-import rookReactionPoseUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/prepared/rook-v1-reaction.png";
-import rookTalkPoseUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/prepared/rook-v1-talk.png";
-import rookRigDiagnosticUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/prepared/rig-diagnostic-rook-v1.mp4";
+import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, ProductionRenderScope, PublicShowPackCandidateSummary, RenderJobEvent, StagedCandidateSummary} from "@storystage/contracts";
 
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
@@ -190,7 +186,7 @@ function HomeScreen({onNew, recentProductions, onResume}: {onNew: () => void; re
         </header>
         <section className="home-intro">
           <div className="intro-copy">
-            <span className="status-chip"><Sparkles size={13} />SS-002 in progress</span>
+            <span className="status-chip"><Sparkles size={13} />SS-003 Rook pilot in progress</span>
             <h2>Two production grammars.<br />One deterministic pipeline.</h2>
             <p>Start with a script and a real production policy. StoryStage extracts the cast and locations, directs profile-specific shots, identifies missing art, and freezes approved decisions for render.</p>
             <button className="secondary-action" onClick={onNew}>Create from script <ArrowRight size={16} /></button>
@@ -237,15 +233,25 @@ function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: 
   const [routing, setRouting] = useState<AssetRoutingPolicy>(() => defaultRouting("explainer"));
   const [error, setError] = useState<string | null>(null);
   const pack = showPacks.find((candidate) => candidate.projectType === type)!;
+  const isExactRookPilot = type === "explainer"
+    && title === rookPilot001.title
+    && script === rookPilot001.script
+    && preset === "studio"
+    && routing.reuseApprovedFirst
+    && routing.generateMissing
+    && routing.licensedSources === "disabled"
+    && !routing.allowGeneratedHistoricalReconstruction
+    && routing.proposed3D === "never";
 
   const preview = useMemo(() => {
     try {
+      if (isExactRookPilot) return buildAnimaticSync(createRookPilot001Fixture());
       const draft = createProductionDraft({productionId: "production-preview", title, projectType: type, showPackId: pack.id, preset, script, assetRoutingPolicy: routing});
       return buildAnimaticSync({draft});
     } catch {
       return null;
     }
-  }, [pack.id, preset, routing, script, title, type]);
+  }, [isExactRookPilot, pack.id, preset, routing, script, title, type]);
 
   const chooseType = (nextType: ProjectType) => {
     setType(nextType);
@@ -254,12 +260,26 @@ function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: 
 
   const create = () => {
     try {
+      if (isExactRookPilot) {
+        const fixture = createRookPilot001Fixture();
+        buildAnimaticSync(fixture);
+        onCreate({...fixture.draft, overrides: fixture.overrides, approvedAssetVersions: [], audioMix: defaultAudioMix("explainer"), musicTrack: null, soundEffectAssets: [], soundEffectCues: [], voiceTrack: null});
+        return;
+      }
       const draft = createProductionDraft({productionId: `production-${Date.now().toString(36)}`, title, projectType: type, showPackId: pack.id, preset, script, assetRoutingPolicy: routing});
       buildAnimaticSync({draft});
       onCreate({...draft, overrides: [], approvedAssetVersions: [], audioMix: defaultAudioMix(type), musicTrack: null, soundEffectAssets: [], soundEffectCues: [], voiceTrack: null});
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The production could not be created.");
     }
+  };
+  const loadRookPilot = () => {
+    setType("explainer");
+    setTitle(rookPilot001.title);
+    setScript(rookPilot001.script);
+    setPreset("studio");
+    setRouting({reuseApprovedFirst: true, generateMissing: true, licensedSources: "disabled", allowGeneratedHistoricalReconstruction: false, proposed3D: "never"});
+    setError(null);
   };
 
   return (
@@ -293,7 +313,7 @@ function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: 
         <section className="setup-section" aria-labelledby="script-heading">
           <div className="section-number">03</div><div className="section-title"><h2 id="script-heading">Script</h2><p>Paste screenplay-style text. Analysis updates before creation.</p></div>
           <div className="script-layout">
-            <div className="script-editor"><label>Episode title<input aria-label="Episode title" value={title} onChange={(event) => setTitle(event.target.value)} /></label><label>Screenplay<textarea aria-label="Screenplay" value={script} onChange={(event) => setScript(event.target.value)} /></label></div>
+            <div className="script-editor"><button className="pilot-template-button" onClick={loadRookPilot}><Clapperboard size={15} /><span><strong>Load Rook Pilot 001</strong><small>26-second gate-complete history short template</small></span></button><label>Episode title<input aria-label="Episode title" value={title} onChange={(event) => setTitle(event.target.value)} /></label><label>Screenplay<textarea aria-label="Screenplay" value={script} onChange={(event) => setScript(event.target.value)} /></label></div>
             <aside className="analysis-preview">
               <div className="analysis-title"><FileText size={18} /><div><strong>Live analysis</strong><small>{preview ? "Script is structurally valid" : "Waiting for valid scene headings"}</small></div></div>
               {preview ? <>
@@ -711,17 +731,42 @@ function buildChatGptAssetPrompt(session: ProductionSession, brief: GenerationBr
 
 const suggestedAssetFilename = (brief: GenerationBrief, candidateSetNumber: number, fileRole: string) => `${brief.entity.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "asset"}-set-${candidateSetNumber}-${fileRole}`;
 
-function ShowPackCandidateLibrary({showPackId}: {showPackId: string}) {
-  if (showPackId !== rookCandidateManifest.showPackId) return null;
-  const poses = [{label: "Neutral", url: rookNeutralPoseUrl}, {label: "Talk", url: rookTalkPoseUrl}, {label: "Reaction", url: rookReactionPoseUrl}];
+function ShowPackCandidateLibrary({host, onApprovedAsset, productionBundleContentHash, session}: {host: HostAdapter; onApprovedAsset: (approved: ApprovedAssetVersion) => void; productionBundleContentHash: string | null; session: ProductionSession}) {
+  const [candidate, setCandidate] = useState<PublicShowPackCandidateSummary | null>(null);
+  const [acknowledgements, setAcknowledgements] = useState({identitySheet: false, neutralPose: false, talkPose: false, reactionPose: false, movingDiagnostic: false, identityConsistency: false, matteEdges: false, provenance: false});
+  const [reviewStatus, setReviewStatus] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void host.listPublicShowPackCandidates().then((result) => {if (live) setCandidate(result.candidates.find((entry) => entry.showPackId === session.showPackId) ?? null);}).catch(() => {if (live) setCandidate(null);});
+    return () => {live = false;};
+  }, [host, session.showPackId]);
+  if (!candidate) return null;
+  const byRole = new Map(candidate.files.map((file) => [file.role, file]));
+  const identity = byRole.get("identity-sheet")!;
+  const poses = (["neutral-pose", "talk-pose", "reaction-pose"] as const).map((role) => ({label: role.replace("-pose", ""), file: byRole.get(role)!}));
+  const allAcknowledged = Object.values(acknowledgements).every(Boolean);
+  const alreadyBound = session.approvedAssetVersions.some((asset) => asset.assetId.startsWith(`approved-${candidate.candidateId}-`));
+  const decide = async (decision: "approve" | "reject") => {
+    if (!productionBundleContentHash) return;
+    setReviewing(true);
+    const result = await host.reviewPublicShowPackCandidate({productionId: session.productionId, revision: session.revision, productionBundleContentHash, candidateId: candidate.candidateId, decision, acknowledgements});
+    setReviewing(false);
+    if (result.status === "failed") {setReviewStatus(result.error.message); return;}
+    if (result.approvedAssetVersion) onApprovedAsset(result.approvedAssetVersion);
+    setReviewStatus(result.decision === "approved" ? `Approved and bound to production revision ${result.targetProductionRevision}.` : "Rejected for this production revision. No asset was bound.");
+  };
   return <section className="show-pack-candidate" aria-label="Show Pack art candidates">
-    <header><div><p className="eyebrow">Original Show Pack candidate</p><h2>{rookCandidateManifest.displayName}</h2><p>Generated with the built-in ChatGPT image tool and locally matte-validated. It is visible here for real review, but it is not silently treated as approved production art.</p></div><span>Needs human review</span></header>
+    <header><div><p className="eyebrow">Original Show Pack candidate</p><h2>{candidate.displayName}</h2><p>Generated with the built-in ChatGPT image tool and locally matte-validated. The desktop host re-verifies every packaged hash before it can publish or bind Rook.</p></div><span>{alreadyBound ? "Approved and bound" : "Needs human review"}</span></header>
     <div className="show-pack-candidate-body">
-      <div className="show-pack-candidate-media"><img className="identity-sheet" alt="Rook presenter canonical identity sheet" loading="lazy" src={rookIdentitySheetUrl} /><div className="pose-strip">{poses.map((pose) => <figure key={pose.label}><img alt={`Rook ${pose.label.toLowerCase()} pose`} loading="lazy" src={pose.url} /><figcaption>{pose.label}</figcaption></figure>)}</div></div>
-      <aside><strong>Identity-locked pose set</strong><p>{rookCandidateManifest.style.identityLock}</p><div>{rookCandidateManifest.files.map((file) => <span key={file.role}><Check size={12} />{file.role.replaceAll("-", " ")}<small>{file.width} x {file.height}{file.alpha ? " / alpha" : ""}</small></span>)}</div><div className="candidate-check"><ShieldCheck size={14} /><p>Canvas, common ground line, manifest hash, and all three pose bindings passed technical rig validation.</p></div></aside>
+      <div className="show-pack-candidate-media"><img className="identity-sheet" alt="Rook presenter canonical identity sheet" loading="lazy" src={identity.url} /><div className="pose-strip">{poses.map((pose) => <figure key={pose.label}><img alt={`Rook ${pose.label} pose`} loading="lazy" src={pose.file.url} /><figcaption>{pose.label}</figcaption></figure>)}</div></div>
+      <aside><strong>Identity-locked pose set</strong><p>{candidate.identityLock}</p><div>{candidate.files.map((file) => <span key={file.role}><Check size={12} />{file.role.replaceAll("-", " ")}<small>{file.width} x {file.height}</small></span>)}</div><div className="candidate-check"><ShieldCheck size={14} /><p>{candidate.verifiedByHost ? "The desktop host verified the source, prepared pixels, prompts, manifest, validation, and moving diagnostic." : "Browser preview only. Open the desktop app for trusted hash verification and review."}</p></div></aside>
     </div>
-    <div className="rig-diagnostic"><div><strong>4-second moving rig diagnostic</strong><span>Rendered locally / human review pending</span></div><video aria-label="Rook moving rig diagnostic" controls muted preload="metadata" src={rookRigDiagnosticUrl} /></div>
-    <footer><ShieldCheck size={14} /><p>Four SHA-256-bound source files are present. Transparent corners, chroma-edge checks, normalization, and moving-diagnostic creation passed; identity consistency still needs your visual approval.</p></footer>
+    <div className="rig-diagnostic"><div><strong>4-second moving rig diagnostic</strong><span>Watch the whole motion test before approval</span></div><video aria-label="Rook moving rig diagnostic" controls muted preload="metadata" src={candidate.diagnosticUrl} /></div>
+    {!alreadyBound ? <div className="candidate-acknowledgements" aria-label="Rook review acknowledgements">{([
+      ["identitySheet", "Identity sheet"], ["neutralPose", "Neutral pose"], ["talkPose", "Talk pose"], ["reactionPose", "Reaction pose"], ["movingDiagnostic", "Moving diagnostic"], ["identityConsistency", "Identity consistency"], ["matteEdges", "Matte and edges"], ["provenance", "Generation provenance"],
+    ] as const).map(([key, label]) => <label key={key}><input type="checkbox" checked={acknowledgements[key]} onChange={(event) => setAcknowledgements({...acknowledgements, [key]: event.target.checked})} />{label}</label>)}</div> : null}
+    <footer><ShieldCheck size={14} /><p>{reviewStatus ?? (candidate.canReview ? "Approval creates a private immutable asset and a new production revision. Nothing is auto-approved after playback." : "Desktop review is required to approve or reject this candidate.")}</p>{!alreadyBound ? <div className="candidate-review-actions"><button className="quiet-button" disabled={!candidate.canReview || !productionBundleContentHash || reviewing} onClick={() => void decide("reject")}>Reject candidate</button><button className="create-button" disabled={!candidate.canReview || !productionBundleContentHash || !allAcknowledged || reviewing} onClick={() => void decide("approve")}><ShieldCheck size={14} />{reviewing ? "Recording review..." : "Approve Rook and bind"}</button></div> : null}</footer>
   </section>;
 }
 
@@ -926,7 +971,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
   return (
     <div className="asset-exchange">
       <section className="provider-banner"><div className="provider-icon"><ImagePlus size={23} /></div><div><p className="eyebrow">Provider-neutral exchange</p><h2>Manual ChatGPT Images</h2><p>Export an approved brief, generate original candidates in ChatGPT, then import the result bundle. No API call or paid generation is hidden here.</p></div><span className="manual-badge">Manual round trip</span></section>
-      <ShowPackCandidateLibrary showPackId={session.showPackId} />
+      <ShowPackCandidateLibrary host={host} onApprovedAsset={onApprovedAsset} productionBundleContentHash={productionBundleContentHash} session={session} />
       <div className={`exchange-actions ${capabilities.manualImageExchange ? "is-desktop" : ""}`}>
         <button disabled={capabilities.manualImageExchange && !productionBundleContentHash} onClick={() => setReviewingExport(true)}><Download size={16} /><span><strong>Review generation export</strong><small>{capabilities.manualImageExchange ? productionBundleContentHash ? "Bound to the acknowledged production snapshot" : "Waiting for the production snapshot to save" : "JSON + expected output contract"}</small></span></button>
         {capabilities.manualImageExchange

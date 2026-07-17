@@ -9,6 +9,7 @@ import {
   compileAnimation,
   createEstimatedTiming,
   createProductionDraft,
+  createRookPilot001Fixture,
   directEpisode,
   finalizeGenerationJob,
   finalizeAssetReviewRecord,
@@ -168,6 +169,22 @@ describe("StoryStage story engine", () => {
     const presenter = build.resolvedPlan.characters.find((character) => character.entityName === "NARRATOR");
     expect(presenter).toMatchObject({assetId: "history-rig-guide", matchStrategy: "show-pack-role", resolved: true});
     expect(build.creativePlan.shots.every((shot) => shot.focusCharacterName === "NARRATOR")).toBe(true);
+    const narratedShots = build.renderPlan.shots.filter((shot) => Boolean(shot.caption));
+    expect(narratedShots.length).toBeGreaterThan(0);
+    expect(narratedShots.every((shot) => shot.actions.some((action) => action.detail.type === "talk" && action.detail.mouthCue?.mode === "timing-driven-pose-swap"))).toBe(true);
+  });
+
+  it("keeps Rook Pilot 001 inside its fixed short-form editorial envelope", () => {
+    const fixture = createRookPilot001Fixture();
+    const build = buildAnimaticSync(fixture);
+    const durationSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
+    expect(durationSeconds).toBeGreaterThanOrEqual(25);
+    expect(durationSeconds).toBeLessThanOrEqual(40);
+    expect(build.renderPlan.shots.length).toBeGreaterThanOrEqual(10);
+    expect(build.renderPlan.shots.length).toBeLessThanOrEqual(16);
+    expect(new Set(build.renderPlan.shots.map((shot) => shot.treatment)).size).toBeGreaterThanOrEqual(3);
+    expect(build.renderPlan.shots.every((shot) => ["environment", "character-performance", "reaction", "kinetic-type"].includes(shot.treatment))).toBe(true);
+    expect(build.renderPlan.shots.filter((shot) => shot.caption).every((shot) => shot.actions.some((action) => action.detail.type === "talk"))).toBe(true);
   });
 
   it("prioritizes real missing assets and leaves exhausted requirements visible", () => {
@@ -377,7 +394,7 @@ describe("StoryStage story engine", () => {
       approvedAssetVersions: [approvedAssetVersion],
       audioMix: {profile: "explainer", voiceGain: 1, musicDecision: "none", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: true},
       overrides: spokenShotIds.map((shotId) => ({shotId, timingLocked: true as const})),
-      renderPlan: {...build.renderPlan, shots: build.renderPlan.shots.map((shot) => ({...shot, visualBindings: shot.visualBindings.map((binding) => ({...binding, resolutionStatus: "approved" as const}))}))},
+      renderPlan: {...build.renderPlan, shots: build.renderPlan.shots.map((shot) => ({...shot, visualBindings: shot.visualBindings.map((binding) => ({...binding, ...(binding.role === "character" ? {assetId: approvedAssetVersion.assetId} : {}), resolutionStatus: "approved" as const}))}))},
       resolvedPlan: {...build.resolvedPlan, generationBriefs: [], requirements: build.resolvedPlan.requirements.map((requirement) => ({...requirement, status: "resolved" as const}))},
       soundEffectAssets: [],
       voiceTrack: {id: "voice-full-render-ready", contentHash: "a".repeat(64), relativeFile: "voice/production-one/r1/ready.wav", sourceFileName: "ready.wav", codec: "pcm-wav", durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: "2026-07-17T00:00:00.000Z", approvalStatus: "approved", approvedAt: "2026-07-17T00:01:00.000Z"},

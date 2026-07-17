@@ -25,7 +25,8 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "verify:privacy": "node scripts/verify-privacy.mjs",
     "verify": "pnpm verify:privacy && pnpm lint && pnpm typecheck && pnpm test",
-    "render:production-proof": "pnpm --filter @storystage/render-worker render:production-proof"
+    "render:production-proof": "pnpm --filter @storystage/render-worker render:production-proof",
+    "render:rook-preview": "pnpm --filter @storystage/render-worker render:rook-preview"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.490",

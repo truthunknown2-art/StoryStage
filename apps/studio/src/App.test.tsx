@@ -37,6 +37,8 @@ function makeDesktopBridge(overrides: Partial<StoryStageDesktopBridge> = {}): St
     getGenerationExchange: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
     prepareGenerationImport: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
     reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
+    listPublicShowPackCandidates: vi.fn(async () => ({candidates: []})),
+    reviewPublicShowPackCandidate: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
     importVoiceTrack: vi.fn(async () => ({status: "cancelled" as const})),
     approveVoiceTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
     importMusicTrack: vi.fn(async () => ({status: "cancelled" as const})),
@@ -66,6 +68,21 @@ describe("StoryStage studio", () => {
     expect(screen.getByRole("heading", {name: "Production type"})).toBeInTheDocument();
     expect((screen.getByLabelText("Screenplay") as HTMLTextAreaElement).value).toContain("INT. WORKSHOP");
     expect(screen.queryByText(/intensity/i)).not.toBeInTheDocument();
+  });
+
+  it("loads the fixed Rook Pilot 001 production template", async () => {
+    const user = await openProductionSetup();
+    await user.click(screen.getByRole("button", {name: /Load Rook Pilot 001/}));
+    expect(screen.getByLabelText("Episode title")).toHaveValue("The Dancing Plague Had a Payroll");
+    expect((screen.getByLabelText("Screenplay") as HTMLTextAreaElement).value).toContain("approved its entertainment budget");
+    expect(screen.getByText(/11 planned shots/)).toBeInTheDocument();
+    expect(screen.getByText("0:26")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", {name: "Create production"}));
+    const shotButtons = screen.getAllByRole("button", {name: /Select shot/});
+    expect(shotButtons).toHaveLength(11);
+    for (const button of shotButtons) expect(button).not.toHaveAccessibleName(/insert|licensed media|diagram|generated illustration/i);
+    expect(screen.getAllByText("kinetic type").length).toBeGreaterThan(0);
   });
 
   it("changes the actual Show Pack and routing rules for a kids production", async () => {
@@ -186,13 +203,14 @@ describe("StoryStage studio", () => {
   it("shows generated Show Pack art as a review candidate without faking approval", async () => {
     const user = await createDefaultProduction();
     await user.click(screen.getByRole("button", {name: /Assets/}));
-    expect(screen.getByRole("heading", {name: "Rook editorial presenter"})).toBeInTheDocument();
+    expect(await screen.findByRole("heading", {name: "Rook editorial presenter"})).toBeInTheDocument();
     expect(screen.getByText("Needs human review")).toBeInTheDocument();
     expect(screen.getByAltText("Rook presenter canonical identity sheet")).toHaveAttribute("src", expect.stringContaining("identity-sheet"));
     expect(screen.getByAltText("Rook neutral pose")).toHaveAttribute("src", expect.stringContaining("rook-v1-neutral"));
     expect(screen.getByLabelText("Rook moving rig diagnostic")).toHaveAttribute("src", expect.stringContaining("rig-diagnostic-rook-v1"));
-    expect(screen.getByText(/common ground line/)).toBeInTheDocument();
-    expect(screen.getByText(/not silently treated as approved production art/)).toBeInTheDocument();
+    expect(screen.getAllByText(/browser preview only/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", {name: /Approve Rook and bind/})).toBeDisabled();
+    expect(screen.getByText(/desktop review is required/i)).toBeInTheDocument();
   });
 
   it("edits and locks frame-accurate spoken timing instead of faking a voice track", async () => {
@@ -376,6 +394,8 @@ describe("StoryStage studio", () => {
       getGenerationExchange: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
       prepareGenerationImport: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
       reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
+      listPublicShowPackCandidates: vi.fn(async () => ({candidates: []})),
+      reviewPublicShowPackCandidate: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
       importVoiceTrack: vi.fn(async () => ({status: "cancelled" as const})),
       approveVoiceTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
       importMusicTrack: vi.fn(async () => ({status: "cancelled" as const})),
