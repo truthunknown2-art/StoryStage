@@ -251,6 +251,16 @@ describe("StoryStage studio", () => {
     await user.click(screen.getByRole("button", {name: "Review artwork"}));
     expect(screen.getByRole("heading", {name: "Manual ChatGPT Images"})).toBeInTheDocument();
     await waitFor(() => expect(document.getElementById("finish-asset-approvals")).toHaveFocus());
+
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    const voiceStep = screen.getByText("Approve the final voice").closest("li")!;
+    await user.click(within(voiceStep).getByRole("button", {name: "Open"}));
+    await waitFor(() => expect(document.getElementById("finish-voice-master")).toHaveFocus());
+
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    const timingStep = screen.getByText("Lock every spoken beat").closest("li")!;
+    await user.click(within(timingStep).getByRole("button", {name: "Open"}));
+    await waitFor(() => expect(screen.getAllByRole("button", {name: /Select timing cue/})[0]).toHaveFocus());
   });
 
   it("starts the exact full-production render from the guided finish path", async () => {

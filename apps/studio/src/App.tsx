@@ -597,7 +597,7 @@ function SoundEffectWorkspace({build, capabilities, host, productionBundleConten
   const updateCue = (id: string, patch: Partial<SoundEffectCue>) => onCues(session.soundEffectCues.map((cue) => cue.id === id ? soundEffectCueSchema.parse({...cue, ...patch}) : cue));
   const removeCue = (id: string) => onCues(session.soundEffectCues.filter((cue) => cue.id !== id));
 
-  return <article className="sfx-workspace-card">
+  return <article className="sfx-workspace-card" id="finish-sfx-review" tabIndex={-1}>
     <header><div><p className="eyebrow">Cue-placed local SFX</p><h3>Approved effects library</h3><p>Import reusable WAV effects, listen through, approve the exact bytes, then place cues relative to the selected shot.</p></div><button disabled={!capabilities.localAudioImport || !productionBundleContentHash || busyHash !== null} onClick={() => void importAsset()}><Upload size={13} />{busyHash === "import" ? "Importing…" : "Import SFX WAV"}</button></header>
     {error ? <p className="voice-error" role="alert">{error}</p> : null}
     {session.soundEffectAssets.length > 0 ? <div className="sfx-asset-list">{session.soundEffectAssets.map((asset) => {
@@ -1093,6 +1093,17 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   const customEffectsReady = session.soundEffectAssets.every((asset) => asset.approvalStatus === "approved" && (!usedSoundEffectHashes.has(asset.contentHash) || Boolean(asset.rights)));
   const mixReady = session.audioMix.reviewed && session.audioMix.musicDecision !== "pending" && (session.audioMix.musicDecision !== "approved-master" || Boolean(session.musicTrack?.approvalStatus === "approved" && session.musicTrack.rights)) && customEffectsReady;
   const preflightReady = capabilities.localRendering && Boolean(productionBundleContentHash) && fullRenderBlockers.length === 0;
+  const targetForFullRenderBlocker = (): FinishNavigationTarget => {
+    const blocker = fullRenderBlockers[0];
+    if (!blocker) return {tab: "direction", targetId: "finish-direction"};
+    if (["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)) return {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-picture-review" : "finish-asset-approvals"};
+    if (blocker.id === "spoken-timing") return {tab: "audio", targetId: "finish-timing-editor"};
+    if (blocker.id === "voice-master") return {tab: "audio", targetId: "finish-voice-master"};
+    if (blocker.id === "custom-sfx") return {tab: "audio", targetId: "finish-sfx-review"};
+    if (blocker.id === "rights-clearance" && !voiceReady) return {tab: "audio", targetId: "finish-voice-master"};
+    if (blocker.id === "rights-clearance" && !customEffectsReady) return {tab: "audio", targetId: "finish-sfx-review"};
+    return {tab: "audio", targetId: "finish-mix-review"};
+  };
   const finalRenderJob = renderJobScope === "full-production" ? renderJob : null;
   const renderActive = Boolean(finalRenderJob && !["completed", "failed"].includes(finalRenderJob.status));
   const pictureLabel = session.productionId === rookPilot001.id ? "Review and approve Rook picture" : "Review and approve picture";
@@ -1100,8 +1111,8 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
     {id: "picture", title: pictureLabel, detail: pictureReady ? `${approvedAssets} immutable art versions cover every final shot.` : `${Math.max(missingApprovals, fullRenderBlockers.filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)).length)} picture gates still need human review.`, ready: Boolean(delivery) || pictureReady, target: {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-picture-review" : "finish-asset-approvals"}, action: session.productionId === rookPilot001.id ? "Review Rook" : "Review artwork"},
     {id: "voice", title: "Approve the final voice", detail: voiceReady ? spokenShotIds.size === 0 ? "This cut has no spoken performance." : `${session.voiceTrack?.sourceFileName} is listened-through, rights-cleared, hash-bound, and aligned to picture.` : !session.voiceTrack ? "Import the final WAV, listen through, document rights, and approve the exact take." : session.voiceTrack.approvalStatus !== "approved" ? "Listen through and approve the imported take with rights evidence." : "The approved take must be aligned to the final frame duration and carry rights evidence.", ready: Boolean(delivery) || voiceReady, target: {tab: "audio", targetId: "finish-voice-master"}, action: session.voiceTrack ? "Finish voice approval" : "Import voice"},
     {id: "timing", title: "Lock every spoken beat", detail: spokenShotIds.size === 0 ? "No spoken timing locks are required." : `${lockedSpokenTimings}/${spokenShotIds.size} spoken cues have editor-reviewed frame timing.`, ready: Boolean(delivery) || timingReady, target: {tab: "audio", targetId: "finish-timing-editor"}, action: "Review timing"},
-    {id: "mix", title: "Approve the final mix", detail: mixReady ? `Voice ${session.audioMix.voiceGain.toFixed(2)}x, music ${session.audioMix.musicDecision}, transition SFX ${session.audioMix.transitionSfx}.` : "Choose the music and SFX treatment, clear any used audio, then record the mix review.", ready: Boolean(delivery) || mixReady, target: {tab: "audio", targetId: "finish-mix-review"}, action: "Review mix"},
-    {id: "preflight", title: "Pass final preflight", detail: preflightReady ? `${build.renderPlan.durationInFrames} frozen frames are ready for the isolated desktop renderer.` : !capabilities.localRendering ? "Open this production in the desktop app to finish and render." : `${fullRenderBlockers.length} final-output gates remain on the saved production snapshot.`, ready: Boolean(delivery) || preflightReady, target: fullRenderBlockers.some((blocker) => ["audio-mix", "custom-sfx", "rights-clearance", "spoken-timing", "voice-master"].includes(blocker.id)) ? {tab: "audio", targetId: "finish-voice-master"} : {tab: "assets", targetId: "finish-asset-approvals"}, action: "Resolve blockers"},
+    {id: "mix", title: "Approve the final mix", detail: mixReady ? `Voice ${session.audioMix.voiceGain.toFixed(2)}x, music ${session.audioMix.musicDecision}, transition SFX ${session.audioMix.transitionSfx}.` : "Choose the music and SFX treatment, clear any used audio, then record the mix review.", ready: Boolean(delivery) || mixReady, target: customEffectsReady ? {tab: "audio", targetId: "finish-mix-review"} : {tab: "audio", targetId: "finish-sfx-review"}, action: customEffectsReady ? "Review mix" : "Review sound effects"},
+    {id: "preflight", title: "Pass final preflight", detail: preflightReady ? `${build.renderPlan.durationInFrames} frozen frames are ready for the isolated desktop renderer.` : !capabilities.localRendering ? "Open this production in the desktop app to finish and render." : `${fullRenderBlockers.length} final-output gates remain on the saved production snapshot.`, ready: Boolean(delivery) || preflightReady, target: targetForFullRenderBlocker(), action: "Resolve blockers"},
     {id: "delivery", title: "Render and verify delivery", detail: delivery ? `Verified 1080p master, ${delivery.master.frameCount} frames, ${delivery.captionCueCount} caption cues, and cleared consumed-media rights.` : finalRenderJob?.status === "failed" ? finalRenderJob.error.message : renderActive ? finalRenderJob?.message ?? "Final render in progress." : preflightReady ? "The final render will atomically publish and reopen a seven-file verified delivery." : "This unlocks automatically after final preflight passes.", ready: Boolean(delivery), action: preflightReady ? finalRenderJob?.status === "failed" ? "Retry final render" : "Render & publish delivery" : undefined},
   ];
   const completedFinishSteps = finishSteps.filter((step) => step.ready).length;
@@ -1133,7 +1144,9 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   const evidenceTarget = (item: (typeof evidenceItems)[number]): FinishNavigationTarget => {
     if (item.id === "voice") return {tab: "audio", targetId: "finish-voice-master"};
     if (item.id === "timing") return {tab: "audio", targetId: "finish-timing-editor"};
-    if (["mix", "custom-sfx"].includes(item.id)) return {tab: "audio", targetId: "finish-mix-review"};
+    if (item.id === "mix") return {tab: "audio", targetId: "finish-mix-review"};
+    if (item.id === "custom-sfx") return {tab: "audio", targetId: "finish-sfx-review"};
+    if (item.id === "full-render") return targetForFullRenderBlocker();
     if (item.action === "audio") return {tab: "audio", targetId: "finish-voice-master"};
     if (item.action === "assets") return {tab: "assets", targetId: item.id === "assets" && session.productionId === rookPilot001.id ? "finish-picture-review" : "finish-asset-approvals"};
     return {tab: "direction", targetId: "finish-direction"};
