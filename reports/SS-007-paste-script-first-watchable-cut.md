@@ -1,7 +1,7 @@
 # SS-007 paste script to first watchable cut
 
 Date: 2026-07-17
-Status: **IMPLEMENTED - awaiting ChatGPT Pro audit**
+Status: **IMPLEMENTED - Pro blocker correction awaiting re-audit**
 
 ## Outcome
 
@@ -14,6 +14,7 @@ StoryStage's real entry point now behaves like a product: choose Kids or History
 - The preview's truth strip distinguishes no narration, silent first cut, draft voice, incomplete voice rights, timing mismatch, and approved narration from the current production evidence.
 - Candidate public art and non-private placeholders retain their in-composition preview-only watermarks. A first cut never presents either as approved picture.
 - A compact path derives Picture, Voice, Timing, Mix, and Delivery readiness from the actual session, approved assets, audio state, review state, and verified delivery.
+- Picture readiness uses the same `approved-art`, `source-acquisition`, and `visual-bindings` gates as the full-production renderer. Valid code-authored Show Pack treatments do not leave the path falsely stuck on Picture.
 - Exactly one next upgrade is highlighted. Its action routes to the workspace that owns the evidence: Assets, Audio, or Finish.
 - Kids Adventure and Frankly Weird History retain distinct directing profiles, shot grammar, and fallback visual treatments.
 - This slice adds no generation service, credentials, browser-session access, automatic approval, render bypass, or delivery shortcut.

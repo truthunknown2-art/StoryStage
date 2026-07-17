@@ -157,6 +157,13 @@ describe("StoryStage studio", () => {
     const revisionTwoSave = saveProductionBundle.mock.calls.map(([request]) => JSON.parse(request.serializedDraft) as {production: {revision: number}; approvedAssetVersions?: ApprovedAssetVersion[]}).find((draft) => draft.production.revision === 2);
     expect(revisionTwoSave?.approvedAssetVersions?.[0]?.contentHash).toBe(target.approvedAssetVersions?.[0]?.contentHash);
     expect(screen.getByText("Approved and bound")).toBeInTheDocument();
+
+    const pictureBlockers = getFullProductionRenderBlockers({approvedAssetVersions: target.approvedAssetVersions ?? [], audioMix: target.audioMix, overrides: target.overrides, renderPlan: target.renderPlan, resolvedPlan: target.resolvedPlan, soundEffectAssets: target.soundEffectAssets, soundEffectCues: target.soundEffectCues, voiceTrack: target.voiceTrack}).filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id));
+    expect(pictureBlockers).toEqual([]);
+    await user.click(screen.getByRole("button", {name: /Direction/}));
+    const upgradePath = within(screen.getByRole("region", {name: "Live production preview"})).getByRole("region", {name: "First cut upgrade path"});
+    expect(within(upgradePath).getByText("Next: Add voice")).toBeInTheDocument();
+    expect(within(upgradePath).getByText("Picture").closest("li")).toHaveTextContent("Ready");
   });
 
   it("shows a durable rejected Rook decision without offering incompatible actions", async () => {

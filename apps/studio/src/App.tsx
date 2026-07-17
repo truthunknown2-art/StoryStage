@@ -464,8 +464,8 @@ function LiveProductionPreview({build, delivered, onNavigate, onSelect, selected
   const voiceTrackDataUrl = session.voiceTrack?.approvalStatus === "approved" ? voiceTrackMediaUrl(session.voiceTrack.contentHash) : undefined;
   const musicTrackDataUrl = session.musicTrack?.approvalStatus === "approved" ? musicTrackMediaUrl(session.musicTrack.contentHash) : undefined;
   const soundEffectDataUrls = Object.fromEntries(session.soundEffectAssets.filter((asset) => asset.approvalStatus === "approved").map((asset) => [asset.contentHash, soundEffectMediaUrl(asset.contentHash)]));
-  const approvedAssetIds = new Set(session.approvedAssetVersions.map((approved) => approved.assetId));
-  const pictureReady = session.approvedAssetVersions.length > 0 && build.renderPlan.shots.every((shot) => shot.visualBindings.every((binding) => approvedAssetIds.has(binding.assetId)));
+  const fullRenderBlockers = getFullProductionRenderBlockers({approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, musicTrack: session.musicTrack ?? undefined, overrides: session.overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: session.soundEffectAssets, soundEffectCues: session.soundEffectCues, voiceTrack: session.voiceTrack ?? undefined});
+  const pictureReady = !fullRenderBlockers.some((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id));
   const spokenShots = build.renderPlan.shots.filter((shot) => shot.actions.some((action) => action.detail.type === "talk") || Boolean(shot.caption));
   const timingReady = spokenShots.every((shot) => session.overrides.some((override) => override.shotId === shot.id && override.timingLocked));
   const planSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
