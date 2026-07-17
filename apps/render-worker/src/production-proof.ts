@@ -354,7 +354,7 @@ async function main() {
   const voiceRelativeFile = `voice/${revisionTwoDraft.production.productionId}/r${revisionTwoDraft.production.revision}/${voiceContentHash}.wav`;
   await mkdir(resolve(assetsRoot, ...voiceRelativeFile.split("/").slice(0, -1)), {recursive: true});
   await writeFile(resolve(assetsRoot, ...voiceRelativeFile.split("/")), voiceBytes, {flag: "wx"});
-  const approvedBundle = finalizeProductionBundle({...revisionTwoDraft, voiceTrack: {id: `voice-${voiceContentHash.slice(0, 20)}`, contentHash: voiceContentHash, relativeFile: voiceRelativeFile, sourceFileName: "engineering-voice-proof.wav", codec: "pcm-wav", durationInSeconds: revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt}}, approvedAt);
+  const approvedBundle = finalizeProductionBundle({...revisionTwoDraft, audioMix: {profile: "kids", voiceGain: .95, musicDecision: "none", transitionSfx: "off", transitionSfxGain: .1, reviewed: true}, voiceTrack: {id: `voice-${voiceContentHash.slice(0, 20)}`, contentHash: voiceContentHash, relativeFile: voiceRelativeFile, sourceFileName: "engineering-voice-proof.wav", codec: "pcm-wav", durationInSeconds: revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt}}, approvedAt);
   let approvedBundleFile = "";
   const approvedState = generationExchangeStateSchema.parse({schemaVersion: "1.0", exchangeJobId: generationJob.exchangeJobId, generationJobContentHash: generationJob.contentHash, production: {id: generationJob.production.id, revision: generationJob.production.revision}, status: "approved", importId, supersededBy: null, updatedAt: approvedAt});
   const approvedStateFile = resolve(privateRoot, "jobs/outbox", generationJob.exchangeJobId, "state-approved.json");
@@ -421,7 +421,7 @@ async function main() {
     approvedVoiceTrackContentHash: approvedBundle.voiceTrack?.contentHash,
     frameComparisons,
     decodedFrameHashesMatch: true,
-    workflowOperations: ["finalize source production", "finalize manual generation job", "stage manifest-bound candidate bytes", "commit exact import evidence", "Sharp normalize and contact sheet", "render selected-rig diagnostic", "persist selected review", "promote immutable approved asset", "persist approved review", "bind approved WAV voice master", "build next production revision", "render exact saved revision twice", "compare decoded frames"],
+    workflowOperations: ["finalize source production", "finalize manual generation job", "stage manifest-bound candidate bytes", "commit exact import evidence", "Sharp normalize and contact sheet", "render selected-rig diagnostic", "persist selected review", "promote immutable approved asset", "persist approved review", "bind approved WAV voice master", "freeze reviewed audio mix", "compile profile-specific mouth cues", "build next production revision", "render exact saved revision twice", "compare decoded frames"],
     evidenceFiles,
     note: "The artwork is intentionally crude engineering fixture art, not the visual-quality target. This report proves workflow integrity and deterministic playback through the same concrete operations used by the desktop application.",
   };

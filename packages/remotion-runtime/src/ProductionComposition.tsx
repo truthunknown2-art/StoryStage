@@ -1,6 +1,6 @@
 import {Audio} from "@remotion/media";
 import type {Caption} from "@remotion/captions";
-import type {FrameAccurateRenderPlan} from "@storystage/story-engine";
+import type {AudioMix, FrameAccurateRenderPlan} from "@storystage/story-engine";
 import {AbsoluteFill, Easing, Img, interpolate, Sequence, staticFile, useCurrentFrame} from "remotion";
 import {Captions} from "./Captions";
 
@@ -14,6 +14,7 @@ export type ProductionCompositionProps = {
   playbackAssets: Record<string, PlaybackAsset>;
   sliceDurationInFrames: number;
   voiceTrackDataUrl?: string;
+  audioMix?: AudioMix;
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
@@ -55,13 +56,21 @@ const ShotBackground: React.FC<{asset?: BackgroundPlaybackAsset; projectType: Fr
   </AbsoluteFill>;
 };
 
-const CharacterPerformance: React.FC<{asset: CharacterPlaybackAsset; shot: RenderShot; side: "left" | "right"}> = ({asset, shot, side}) => {
+const CharacterPerformance: React.FC<{asset: CharacterPlaybackAsset; projectType: FrameAccurateRenderPlan["projectType"]; shot: RenderShot; side: "left" | "right"}> = ({asset, projectType, shot, side}) => {
   const frame = useCurrentFrame();
   const absoluteFrame = shot.startFrame + frame;
-  const active = shot.actions.find((action) => absoluteFrame >= action.startFrame && absoluteFrame < action.endFrame);
-  const pose = active?.detail.type === "talk" ? asset.talk : active?.detail.type === "react" || active?.detail.type === "poseChange" || active?.detail.type === "gesture" ? asset.reaction : asset.neutral;
+  const activeTalk = shot.actions.find((action) => action.detail.type === "talk" && absoluteFrame >= action.startFrame && absoluteFrame < action.endFrame);
+  const activePerformance = shot.actions.find((action) => ["react", "poseChange", "gesture"].includes(action.detail.type) && absoluteFrame >= action.startFrame && absoluteFrame < action.endFrame);
+  const cue = activeTalk?.detail.type === "talk" ? activeTalk.detail.mouthCue : undefined;
+  const defaultOpenFrames = projectType === "kids" ? 4 : 3;
+  const defaultClosedFrames = projectType === "kids" ? 3 : 2;
+  const openFrames = cue?.openFrames ?? defaultOpenFrames;
+  const closedFrames = cue?.closedFrames ?? defaultClosedFrames;
+  const mouthPhase = activeTalk ? (absoluteFrame - activeTalk.startFrame + (cue?.phaseOffsetFrames ?? 0)) % (openFrames + closedFrames) : 0;
+  const mouthOpen = Boolean(activeTalk && mouthPhase < openFrames);
+  const pose = mouthOpen ? asset.talk : activePerformance ? asset.reaction : asset.neutral;
   const entrance = interpolate(frame, [0, Math.min(14, shot.durationInFrames - 1)], [side === "left" ? -90 : 90, 0], {easing: Easing.bezier(.2, .8, .2, 1), extrapolateLeft: "clamp", extrapolateRight: "clamp"});
-  const gestureLift = active?.detail.type === "gesture" || active?.detail.type === "react" ? interpolate(absoluteFrame, [active.startFrame, Math.min(active.endFrame, active.startFrame + 10), active.endFrame], [0, -30, 0], {extrapolateLeft: "clamp", extrapolateRight: "clamp"}) : 0;
+  const gestureLift = activePerformance?.detail.type === "gesture" || activePerformance?.detail.type === "react" ? interpolate(absoluteFrame, [activePerformance.startFrame, Math.min(activePerformance.endFrame, activePerformance.startFrame + 10), activePerformance.endFrame], [0, -30, 0], {extrapolateLeft: "clamp", extrapolateRight: "clamp"}) : 0;
   return <Img src={pose} style={{bottom: -20, filter: "drop-shadow(18px 22px 12px rgba(0,0,0,.28))", height: "88%", objectFit: "contain", objectPosition: "bottom", position: "absolute", right: side === "right" ? 50 : undefined, left: side === "left" ? 50 : undefined, scale: interpolate(frame, [0, shot.durationInFrames], [.96, 1.02], {extrapolateRight: "clamp"}), translate: `${entrance}px ${gestureLift + Math.sin(frame / 8) * 3}px`, width: "48%"}} />;
 };
 
@@ -75,20 +84,20 @@ const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record
   const titleIn = interpolate(frame, [0, Math.min(8, shot.durationInFrames - 1)], [0, 1], {extrapolateRight: "clamp"});
   return <AbsoluteFill style={{background: palette.ink, overflow: "hidden"}}>
     <ShotBackground asset={background?.type === "background-layers" ? background : undefined} projectType={plan.projectType} shot={shot} />
-    {characters.slice(0, 2).map((asset, index) => <CharacterPerformance asset={asset} key={asset.assetId} shot={shot} side={index === 0 ? "left" : "right"} />)}
+    {characters.slice(0, 2).map((asset, index) => <CharacterPerformance asset={asset} key={asset.assetId} projectType={plan.projectType} shot={shot} side={index === 0 ? "left" : "right"} />)}
     {props.slice(0, 1).map((asset) => <Img key={asset.assetId} src={asset.cutout} style={{bottom: 90, filter: "drop-shadow(12px 16px 10px rgba(0,0,0,.3))", height: "38%", objectFit: "contain", position: "absolute", right: characters.length > 0 ? "32%" : "10%", rotate: `${interpolate(frame, [0, shot.durationInFrames], [-3, 3], {extrapolateRight: "clamp"})}deg`, translate: `0 ${Math.sin(frame / 6) * 8}px`, width: "28%"}} />)}
     {characters.length === 0 && props.length === 0 ? <div style={{alignItems: "center", display: "flex", height: "100%", justifyContent: "center", padding: "100px"}}><div style={{color: palette.ink, fontFamily: "Georgia, serif", fontSize: 92, fontWeight: 800, lineHeight: .95, maxWidth: 1200, opacity: .86, textAlign: "center"}}>{shot.title}</div></div> : null}
     <div style={{background: palette.ink, color: palette.paper, fontFamily: "Arial, sans-serif", fontSize: 24, fontWeight: 800, left: 70, letterSpacing: 4, opacity: titleIn, padding: "14px 18px", position: "absolute", textTransform: "uppercase", top: 62}}>{shot.number} · {shot.treatment.replaceAll("-", " ")}</div>
   </AbsoluteFill>;
 };
 
-export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl}) => {
+export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl, audioMix}) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
   const captions: Caption[] = plan.shots.filter((shot) => shot.caption && shot.startFrame < duration).map((shot) => ({text: shot.caption!, startMs: shot.startFrame / plan.fps * 1000, endMs: Math.min(duration, shot.startFrame + shot.durationInFrames) / plan.fps * 1000, timestampMs: null, confidence: null}));
   return <AbsoluteFill style={{background: "#111718"}}>
     {plan.shots.filter((shot) => shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={Math.min(shot.durationInFrames, duration - shot.startFrame)} key={shot.id}><TransitionedShot projectType={plan.projectType} shot={shot}><ShotScene plan={plan} playbackAssets={playbackAssets} shot={shot} /></TransitionedShot></Sequence>)}
-    {voiceTrackDataUrl ? <Audio src={voiceTrackDataUrl} volume={1} /> : <Audio loop src={staticFile("audio/paper-flip.wav")} volume={0.025} />}
-    {plan.shots.filter((shot) => shot.startFrame > 0 && shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={18} key={`sfx-${shot.id}`}><Audio src={staticFile("audio/paper-flip.wav")} volume={0.2} /></Sequence>)}
+    {voiceTrackDataUrl ? <Audio src={voiceTrackDataUrl} volume={() => audioMix?.voiceGain ?? 1} /> : null}
+    {audioMix?.transitionSfx === "paper-flip" ? plan.shots.filter((shot) => shot.startFrame > 0 && shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={18} key={`sfx-${shot.id}`}><Audio src={staticFile("audio/paper-flip.wav")} volume={() => audioMix.transitionSfxGain} /></Sequence>) : null}
     <Captions captions={captions} />
   </AbsoluteFill>;
 };

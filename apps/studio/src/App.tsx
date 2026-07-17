@@ -1,5 +1,6 @@
 /* eslint-disable @remotion/warn-native-media-tag -- native media is intentional in the Electron review UI, outside a Remotion composition. */
 import {
+  audioMixSchema,
   buildAnimaticSync,
   candidateBundleSchema,
   createProductionDraft,
@@ -11,6 +12,7 @@ import {
   sampleWorkshopScript,
   showPacks,
   type AnimaticBuild,
+  type AudioMix,
   type ApprovedAssetVersion,
   type AssetRoutingPolicy,
   type GenerationBrief,
@@ -65,6 +67,7 @@ type WorkspaceTab = "direction" | "assets" | "audio" | "preflight";
 type ProductionSession = ProductionDraft & {
   overrides: ShotOverride[];
   approvedAssetVersions: ApprovedAssetVersion[];
+  audioMix: AudioMix;
   voiceTrack: VoiceTrack | null;
 };
 
@@ -109,9 +112,19 @@ const defaultRouting = (type: ProjectType): AssetRoutingPolicy => ({
   proposed3D: "never",
 });
 
-const draftFromSession = ({overrides, approvedAssetVersions, voiceTrack, ...draft}: ProductionSession): ProductionDraft => {
+const defaultAudioMix = (type: ProjectType): AudioMix => audioMixSchema.parse({
+  profile: type,
+  voiceGain: 1,
+  musicDecision: "pending",
+  transitionSfx: type === "explainer" ? "paper-flip" : "off",
+  transitionSfxGain: type === "explainer" ? .14 : .1,
+  reviewed: false,
+});
+
+const draftFromSession = ({overrides, approvedAssetVersions, audioMix, voiceTrack, ...draft}: ProductionSession): ProductionDraft => {
   void overrides;
   void approvedAssetVersions;
+  void audioMix;
   void voiceTrack;
   return draft;
 };
@@ -220,7 +233,7 @@ function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: 
     try {
       const draft = createProductionDraft({productionId: `production-${Date.now().toString(36)}`, title, projectType: type, showPackId: pack.id, preset, script, assetRoutingPolicy: routing});
       buildAnimaticSync({draft});
-      onCreate({...draft, overrides: [], approvedAssetVersions: [], voiceTrack: null});
+      onCreate({...draft, overrides: [], approvedAssetVersions: [], audioMix: defaultAudioMix(type), voiceTrack: null});
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The production could not be created.");
     }
@@ -454,7 +467,22 @@ function VoiceTrackReview({build, capabilities, host, productionBundleContentHas
   </article>;
 }
 
-function AudioTimingWorkspace({build, capabilities, host, overrides, productionBundleContentHash, session, selectedShotId, onSelect, onOverride, onVoiceTrack}: {build: AnimaticBuild; capabilities: DesktopCapabilities; host: HostAdapter; overrides: ShotOverride[]; productionBundleContentHash: string | null; session: ProductionSession; selectedShotId: string; onSelect: (id: string) => void; onOverride: (shotId: string, patch: Partial<ShotOverride>) => void; onVoiceTrack: (track: VoiceTrack) => void}) {
+function AudioMixReview({mix, onMix}: {mix: AudioMix; onMix: (mix: AudioMix) => void}) {
+  const change = (patch: Partial<AudioMix>) => onMix(audioMixSchema.parse({...mix, ...patch, reviewed: false}));
+  const canReview = mix.musicDecision !== "pending";
+  return <article className="audio-mix-card">
+    <header><div><p className="eyebrow">Profile-aware final mix</p><h3>Voice, music & transition SFX</h3><p>Every audible layer must be an explicit editorial decision. StoryStage never sneaks a guide loop into a render.</p></div><span className={mix.reviewed ? "is-reviewed" : ""}>{mix.reviewed ? "reviewed" : "decision required"}</span></header>
+    <div className="audio-mix-controls">
+      <label>Voice gain <strong>{mix.voiceGain.toFixed(2)}×</strong><input aria-label="Voice gain" max="2" min="0" onChange={(event) => change({voiceGain: Number(event.target.value)})} step="0.05" type="range" value={mix.voiceGain} /></label>
+      <label>Music decision<select aria-label="Music decision" onChange={(event) => change({musicDecision: event.target.value as AudioMix["musicDecision"]})} value={mix.musicDecision}><option value="pending">Music master still required</option><option value="none">No music — intentional dry mix</option></select></label>
+      <label>Transition SFX<select aria-label="Transition SFX" onChange={(event) => change({transitionSfx: event.target.value as AudioMix["transitionSfx"]})} value={mix.transitionSfx}><option value="off">Off</option><option value="paper-flip">Project-owned paper flip</option></select></label>
+      <label>SFX gain <strong>{mix.transitionSfxGain.toFixed(2)}×</strong><input aria-label="Transition SFX gain" disabled={mix.transitionSfx === "off"} max="1" min="0" onChange={(event) => change({transitionSfxGain: Number(event.target.value)})} step="0.01" type="range" value={mix.transitionSfxGain} /></label>
+    </div>
+    <footer><p>{mix.profile === "kids" ? "Kids default: performance-forward, no automatic cut noise." : "History default: restrained paper accents for fast editorial resets."}</p><button disabled={!canReview || mix.reviewed} onClick={() => onMix(audioMixSchema.parse({...mix, reviewed: true}))}><ListChecks size={13} />{mix.reviewed ? "Mix decisions reviewed" : canReview ? "Mark mix reviewed" : "Resolve music first"}</button></footer>
+  </article>;
+}
+
+function AudioTimingWorkspace({build, capabilities, host, overrides, productionBundleContentHash, session, selectedShotId, onSelect, onAudioMix, onOverride, onVoiceTrack}: {build: AnimaticBuild; capabilities: DesktopCapabilities; host: HostAdapter; overrides: ShotOverride[]; productionBundleContentHash: string | null; session: ProductionSession; selectedShotId: string; onSelect: (id: string) => void; onAudioMix: (mix: AudioMix) => void; onOverride: (shotId: string, patch: Partial<ShotOverride>) => void; onVoiceTrack: (track: VoiceTrack) => void}) {
   const sourceSpokenIds = new Set(build.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
   const cues = build.renderPlan.shots.filter((shot) => sourceSpokenIds.has(shot.id) || Boolean(shot.caption));
   const selected = cues.find((shot) => shot.id === selectedShotId) ?? cues[0];
@@ -468,13 +496,14 @@ function AudioTimingWorkspace({build, capabilities, host, overrides, productionB
   return <section className="audio-workspace" aria-label="Narration timing workspace">
     <header><div><p className="eyebrow">Frame-accurate spoken edit</p><h2>Narration & caption timing</h2><p>Retiming a cue shifts every downstream shot boundary and the deterministic render plan. Lock only timing you have actually reviewed.</p></div><div className="audio-lock-score"><strong>{cues.filter((shot) => lockedIds.has(shot.id)).length}/{cues.length}</strong><span>spoken cues locked</span></div></header>
     <VoiceTrackReview build={build} capabilities={capabilities} host={host} onTrack={onVoiceTrack} productionBundleContentHash={productionBundleContentHash} session={session} />
+    <AudioMixReview mix={session.audioMix} onMix={onAudioMix} />
     <div className="audio-workspace-grid">
       <div className="audio-cue-list">{cues.map((shot) => <button aria-label={`Select timing cue ${shot.number}`} className={shot.id === selected?.id ? "is-active" : ""} key={shot.id} onClick={() => onSelect(shot.id)}>
         <span className="cue-time">{formatTimecode(shot.startFrame, build.renderPlan.fps)}</span><div><strong>{shot.number} · {speakerFor(shot)}</strong><p>{shot.caption ?? "Caption intentionally removed"}</p></div><span className={lockedIds.has(shot.id) ? "cue-status is-locked" : "cue-status"}>{lockedIds.has(shot.id) ? "locked" : "estimate"}</span>
       </button>)}</div>
       {selected ? <AudioCueEditor build={build} key={selected.id} locked={lockedIds.has(selected.id)} onOverride={onOverride} shot={selected} /> : <div className="audio-empty"><Mic2 size={20} /><p>No spoken cues were derived from this script.</p></div>}
     </div>
-    <footer><CircleAlert size={15} /><p>This workspace locks editorial text and frame timing. It does not pretend a voice recording, performance approval, music license, or final mix exists.</p></footer>
+    <footer><CircleAlert size={15} /><p>Timing-driven mouth cues compile into the immutable render plan. They are a deterministic two-pose performance pass, not phoneme recognition; final character art and performance review still matter.</p></footer>
   </section>;
 }
 
@@ -862,6 +891,7 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
     {id: "sources", ready: deferredSources === 0, warning: deferredSources > 0, title: "Deferred source acquisitions cleared", detail: deferredSources === 0 ? "No licensed, archive, or generation requirement is deferred." : `${deferredSources} requirements still need an approved source or an explicit production decision.`, action: "assets" as const},
     {id: "timing", ready: spokenShotIds.size === 0 || lockedSpokenTimings === spokenShotIds.size, warning: false, title: "Spoken timing reviewed and locked", detail: spokenShotIds.size === 0 ? "This production has no derived spoken cues." : `${lockedSpokenTimings}/${spokenShotIds.size} narration or dialogue cues have editor-locked frame timing.`, action: "audio" as const},
     {id: "voice", ready: session.voiceTrack?.approvalStatus === "approved" && voiceCoverageAligned, warning: Boolean(session.voiceTrack && !voiceCoverageAligned), title: "Approved voice master bound", detail: !session.voiceTrack ? "Import, listen through, and approve a local WAV voice master." : session.voiceTrack.approvalStatus !== "approved" ? `${session.voiceTrack.sourceFileName} is imported but not yet listened-through and approved.` : voiceCoverageAligned ? `${session.voiceTrack.sourceFileName} is approved, hash-bound, and runtime-aligned.` : `Approved voice is ${session.voiceTrack.durationInSeconds.toFixed(1)}s while the plan is ${planSeconds.toFixed(1)}s; retime before final render.`, action: "audio" as const},
+    {id: "mix", ready: session.audioMix.reviewed, warning: session.audioMix.musicDecision === "pending", title: "Music and SFX decisions reviewed", detail: session.audioMix.reviewed ? `Voice ${session.audioMix.voiceGain.toFixed(2)}× · music ${session.audioMix.musicDecision} · transition SFX ${session.audioMix.transitionSfx}.` : session.audioMix.musicDecision === "pending" ? "Choose an approved music path or explicitly choose a dry mix, then review the SFX decision." : "The layer choices changed and need a fresh editorial review.", action: "audio" as const},
     {id: "renderer", ready: capabilities.localRendering, warning: false, title: "Desktop renderer available", detail: capabilities.localRendering ? "The isolated render worker is available for approved local evidence." : "Desktop renderer unavailable in this host.", action: "direction" as const},
     {id: "slice", ready: capabilities.localRendering && Boolean(productionBundleContentHash) && approvedAssets > 0, warning: false, title: "Approved engineering slice can render", detail: approvedAssets > 0 ? "At least one approved asset is available for the current 24-second engineering render path." : "Approve at least one prepared asset before the engineering render action unlocks.", action: "assets" as const},
   ];
@@ -875,7 +905,7 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
         <div><h3>{item.title}</h3><p>{item.detail}</p></div>
         {!item.ready ? <button onClick={() => onNavigate(item.action)}>{item.action === "assets" ? "Open assets" : item.action === "audio" ? "Open timing" : "Open direction"}</button> : <small>Verified</small>}
       </article>)}</div>
-      <footer><CircleAlert size={16} /><p><strong>Finished-episode gate remains closed.</strong> Timing and an approved voice master are only part of the chain; lip sync, music/SFX decisions, final profile artwork, and full-length approved-pixel playback still require implemented evidence before StoryStage can claim a publishable episode.</p></footer>
+      <footer><CircleAlert size={16} /><p><strong>Finished-episode gate remains closed.</strong> Timing, a voice master, pose-swap mouth cues, and reviewed layer decisions are only part of the chain; final profile artwork, any selected soundtrack masters, performance polish, and full-length approved-pixel playback still require evidence before StoryStage can claim a publishable episode.</p></footer>
     </section>
   );
 }
@@ -898,7 +928,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
     if (!capabilities.manualImageExchange) return;
     const sequence = ++saveSequence.current;
     setLastSavedHash(null);
-    const draft = productionBundleDraftSchema.parse({schemaVersion: "1.0", production: draftFromSession(session), overrides: session.overrides, approvedAssetVersions: session.approvedAssetVersions, ...(session.voiceTrack ? {voiceTrack: session.voiceTrack} : {}), resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate});
+    const draft = productionBundleDraftSchema.parse({schemaVersion: "1.0", production: draftFromSession(session), overrides: session.overrides, approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, ...(session.voiceTrack ? {voiceTrack: session.voiceTrack} : {}), resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate});
     saveQueue.current = saveQueue.current.then(async () => {
       const result = await host.saveProductionBundle({serializedDraft: JSON.stringify(draft)});
       if (result.ok && sequence === saveSequence.current) setLastSavedHash(result.contentHash);
@@ -928,6 +958,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
     setSession({...session, revision: session.revision + 1, approvedAssetVersions: [...session.approvedAssetVersions.filter((asset) => asset.requirementId !== approved.requirementId), approved]});
   };
   const applyVoiceTrack = (voiceTrack: VoiceTrack) => setSession({...session, voiceTrack});
+  const applyAudioMix = (audioMix: AudioMix) => setSession({...session, audioMix});
 
   return (
     <div className="workspace-shell">
@@ -960,7 +991,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               {currentOverride ? <p className="override-state"><Check size={13} />Override compiled into the current render plan.</p> : <p className="override-help">Change a field to create a semantic override. No JSON editing required.</p>}
             </aside>
           </div>
-        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} productionBundleContentHash={lastSavedHash} /> : tab === "audio" ? <AudioTimingWorkspace build={build} capabilities={capabilities} host={host} onOverride={updateShotOverride} onSelect={setSelectedShotId} onVoiceTrack={applyVoiceTrack} overrides={session.overrides} productionBundleContentHash={lastSavedHash} selectedShotId={selectedShot.id} session={session} /> : <ProductionPreflight session={session} build={build} capabilities={capabilities} productionBundleContentHash={lastSavedHash} onNavigate={setTab} />}
+        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} productionBundleContentHash={lastSavedHash} /> : tab === "audio" ? <AudioTimingWorkspace build={build} capabilities={capabilities} host={host} onAudioMix={applyAudioMix} onOverride={updateShotOverride} onSelect={setSelectedShotId} onVoiceTrack={applyVoiceTrack} overrides={session.overrides} productionBundleContentHash={lastSavedHash} selectedShotId={selectedShot.id} session={session} /> : <ProductionPreflight session={session} build={build} capabilities={capabilities} productionBundleContentHash={lastSavedHash} onNavigate={setTab} />}
       </main>
     </div>
   );
@@ -986,7 +1017,7 @@ export function App() {
     const result = await host.loadProductionBundle({productionId: production.productionId, revision: production.revision});
     if (!result.ok) return;
     const bundle = productionBundleSchema.parse(JSON.parse(result.serializedBundle));
-    setSession({...bundle.production, overrides: bundle.overrides, approvedAssetVersions: bundle.approvedAssetVersions ?? [], voiceTrack: bundle.voiceTrack ?? null});
+    setSession({...bundle.production, overrides: bundle.overrides, approvedAssetVersions: bundle.approvedAssetVersions ?? [], audioMix: bundle.audioMix ?? defaultAudioMix(bundle.production.projectType), voiceTrack: bundle.voiceTrack ?? null});
     setScreen("workspace");
   };
 

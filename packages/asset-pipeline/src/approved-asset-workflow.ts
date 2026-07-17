@@ -150,6 +150,7 @@ export function buildApprovedProductionRevisionDraft(input: {sourceBundle: Produ
     production: rebuilt.draft,
     overrides: input.sourceBundle.overrides,
     approvedAssetVersions,
+    ...(input.sourceBundle.audioMix ? {audioMix: input.sourceBundle.audioMix} : {}),
     ...(input.sourceBundle.voiceTrack ? {voiceTrack: input.sourceBundle.voiceTrack} : {}),
     resolvedPlan: rebuilt.resolvedPlan,
     renderPlan: rebuilt.renderPlan,

@@ -9,6 +9,13 @@ const cameraActionDetail = (type: NonNullable<ResolvedProductionPlan["overrides"
   return {type: "reframe", framing, easingId: "ease-standard"};
 };
 
+const mouthCueFor = (projectType: FrameAccurateRenderPlan["projectType"], timingId: string) => {
+  const seed = [...timingId].reduce((sum, character, index) => sum + character.charCodeAt(0) * (index + 1), 0);
+  const openFrames = projectType === "kids" ? 4 : 3;
+  const closedFrames = projectType === "kids" ? 3 : 2;
+  return {mode: "timing-driven-pose-swap" as const, openFrames, closedFrames, phaseOffsetFrames: seed % (openFrames + closedFrames)};
+};
+
 export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRenderPlan {
   const {creativePlan, showPack} = plan;
   const overrideByShot = new Map(plan.overrides.map((override) => [override.shotId, override]));
@@ -26,12 +33,14 @@ export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRen
     const startFrame = cursor;
     cursor += durationInFrames;
     const focusCharacterId = shot.focusCharacterName ? entityIdByName.get(shot.focusCharacterName.toLowerCase()) ?? null : null;
-    const actions = shot.actions.map((action) => {
+    const actions: FrameAccurateRenderPlan["shots"][number]["actions"] = shot.actions.map((action) => {
       const localStart = Math.min(action.startOffsetFrames, Math.max(0, durationInFrames - 1));
       const fillsOriginalShot = action.startOffsetFrames + action.durationInFrames >= shot.durationInFrames;
       const requestedDuration = fillsOriginalShot ? durationInFrames - localStart : action.durationInFrames;
       const duration = Math.max(1, Math.min(requestedDuration, durationInFrames - localStart));
-      return {id: action.id, actorId: action.actorName ? entityIdByName.get(action.actorName.toLowerCase()) ?? null : null, targetId: action.targetName ? entityIdByName.get(action.targetName.toLowerCase()) ?? null : null, label: action.label, startFrame: startFrame + localStart, endFrame: startFrame + localStart + duration, detail: action.detail};
+      let detail: ActionDetail = action.detail;
+      if (action.detail.type === "talk") detail = {...action.detail, mouthCue: mouthCueFor(creativePlan.projectType, action.detail.timingId)};
+      return {id: action.id, actorId: action.actorName ? entityIdByName.get(action.actorName.toLowerCase()) ?? null : null, targetId: action.targetName ? entityIdByName.get(action.targetName.toLowerCase()) ?? null : null, label: action.label, startFrame: startFrame + localStart, endFrame: startFrame + localStart + duration, detail};
     });
 
     if (override?.gesture) {

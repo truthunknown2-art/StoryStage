@@ -188,6 +188,14 @@ describe("StoryStage story engine", () => {
     expect(changed.actions.some((action) => action.detail.type === "gesture" && action.detail.gestureId === "point" && action.detail.intensity === 0.9)).toBe(true);
   });
 
+  it("freezes profile-specific timing-driven mouth cues into the render plan", () => {
+    const kidsTalk = buildFor("kids").renderPlan.shots.flatMap((shot) => shot.actions).find((action) => action.detail.type === "talk");
+    const historyTalk = buildFor("explainer").renderPlan.shots.flatMap((shot) => shot.actions).find((action) => action.detail.type === "talk");
+    expect(kidsTalk?.detail.type === "talk" ? kidsTalk.detail.mouthCue : null).toMatchObject({mode: "timing-driven-pose-swap", openFrames: 4, closedFrames: 3});
+    expect(historyTalk?.detail.type === "talk" ? historyTalk.detail.mouthCue : null).toMatchObject({mode: "timing-driven-pose-swap", openFrames: 3, closedFrames: 2});
+    expect(verifyRenderPlanHash({...buildFor("kids").renderPlan, shots: buildFor("kids").renderPlan.shots.map((shot, index) => index === 0 ? {...shot, title: "tampered"} : shot)})).toBe(false);
+  });
+
   it("uses one validated manual exchange schema and keeps prompts out of render plans", () => {
     const build = buildFor("explainer");
     const brief = generationBriefSchema.parse(build.resolvedPlan.generationBriefs[0]);
@@ -220,12 +228,29 @@ describe("StoryStage story engine", () => {
 
   it("persists a hash-bound production bundle that still derives from its resolved plan", () => {
     const build = buildFor("kids", "studio", "production-bundle");
-    const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z");
+    const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], audioMix: {profile: "kids", voiceGain: 1, musicDecision: "none", transitionSfx: "off", transitionSfxGain: .1, reviewed: true}, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z");
 
     expect(verifyProductionBundleHash(bundle)).toBe(true);
     expect(verifyProductionBundleHash({...bundle, savedAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
+    expect(verifyProductionBundleHash({...bundle, audioMix: {...bundle.audioMix!, voiceGain: .4}})).toBe(false);
     expect(() => finalizeProductionBundle({schemaVersion: "1.0", production: {...build.draft, productionId: "other-production"}, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z")).toThrow(/identity/i);
     expect(() => finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: {...build.renderPlan, shots: build.renderPlan.shots.map((shot, index) => index === 0 ? {...shot, title: "Divergent shot with retained hash"} : shot)}, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z")).toThrow(/exactly derive|content hash/i);
+  });
+
+  it("rehydrates the exact pre-mouth-cue plan shape for one-way workspace migration", () => {
+    const build = buildFor("explainer", "studio", "production-legacy-mouth-cues");
+    const {contentHash: _contentHash, ...currentPayload} = build.renderPlan;
+    void _contentHash;
+    const legacyPayload = {...currentPayload, shots: currentPayload.shots.map((shot) => ({...shot, actions: shot.actions.map((action) => {
+      if (action.detail.type !== "talk") return action;
+      const {mouthCue: _mouthCue, ...legacyTalk} = action.detail;
+      void _mouthCue;
+      return {...action, detail: legacyTalk};
+    })}))};
+    const legacyRenderPlan = {...legacyPayload, contentHash: hashCanonical(legacyPayload)};
+    const migrated = finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: legacyRenderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z");
+    expect(verifyProductionBundleHash(migrated)).toBe(true);
+    expect(migrated.renderPlan.shots.flatMap((shot) => shot.actions).filter((action) => action.detail.type === "talk").every((action) => action.detail.type === "talk" && action.detail.mouthCue === undefined)).toBe(true);
   });
 
   it("validates complete candidate kits by set and preserves the import evidence", () => {

@@ -184,7 +184,7 @@ describe("StoryStage studio", () => {
 
     await user.click(screen.getByRole("button", {name: "Preflight"}));
     expect(screen.getByText(/1\/\d+ narration or dialogue cues have editor-locked frame timing/)).toBeInTheDocument();
-    expect(screen.getByText(/approved voice master/)).toBeInTheDocument();
+    expect(screen.getByText(/approved voice master/i)).toBeInTheDocument();
   });
 
   it("imports, auditions, and approves an exact local WAV voice master", async () => {
@@ -211,6 +211,23 @@ describe("StoryStage studio", () => {
 
     expect(await screen.findByText("Approved bytes are render-bound")).toBeInTheDocument();
     expect(bridge.approveVoiceTrack).toHaveBeenCalledWith(expect.objectContaining({voiceTrackContentHash: "a".repeat(64), listenedThrough: true}));
+  });
+
+  it("requires explicit profile-aware music and SFX mix decisions", async () => {
+    const user = await createDefaultProduction();
+    await user.click(screen.getByRole("button", {name: "Audio"}));
+
+    expect(screen.getByRole("heading", {name: "Voice, music & transition SFX"})).toBeInTheDocument();
+    expect(screen.getByLabelText("Transition SFX")).toHaveValue("paper-flip");
+    expect(screen.getByRole("button", {name: "Resolve music first"})).toBeDisabled();
+    await user.selectOptions(screen.getByLabelText("Music decision"), "none");
+    await user.selectOptions(screen.getByLabelText("Transition SFX"), "off");
+    await user.click(screen.getByRole("button", {name: "Mark mix reviewed"}));
+    expect(screen.getByText("reviewed")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    expect(screen.getByText("Music and SFX decisions reviewed")).toBeInTheDocument();
+    expect(screen.getByText(/music none · transition SFX off/)).toBeInTheDocument();
   });
 
   it("exposes an honest manual ChatGPT Images exchange with downloadable briefs", async () => {

@@ -126,7 +126,12 @@ export const storyAnalysisSchema = z.object({
 }).strict();
 
 export const actionDetailSchema = z.discriminatedUnion("type", [
-  z.object({type: z.literal("talk"), dialogueLineId: identifierSchema, timingId: identifierSchema}).strict(),
+  z.object({
+    type: z.literal("talk"),
+    dialogueLineId: identifierSchema,
+    timingId: identifierSchema,
+    mouthCue: z.object({mode: z.literal("timing-driven-pose-swap"), openFrames: z.number().int().min(1).max(12), closedFrames: z.number().int().min(1).max(12), phaseOffsetFrames: z.number().int().min(0).max(23)}).strict().optional(),
+  }).strict(),
   z.object({type: z.literal("gesture"), gestureId: gestureSchema, intensity: z.number().min(0).max(1)}).strict(),
   z.object({type: z.literal("react"), poseId: identifierSchema}).strict(),
   z.object({type: z.literal("enter"), direction: z.enum(["left", "right", "foreground", "background"])}).strict(),
@@ -433,6 +438,16 @@ export const preparedCandidateSchema = z.object({
 });
 export const assetApprovalSchema = z.object({candidateId: identifierSchema, status: z.enum(["pending", "approved", "rejected"]), approvedBy: z.literal("user").nullable(), approvedAt: z.string().datetime().nullable(), notes: z.string()}).strict();
 export const approvedAssetVersionSchema = z.object({assetId: identifierSchema, version: z.string().min(1), requirementId: identifierSchema, contentHash: hashSchema, relativeFile: safeRelativePathSchema, provenance: rightsRecordSchema, approvedAt: z.string().datetime()}).strict();
+export const audioMixSchema = z.object({
+  profile: projectTypeSchema,
+  voiceGain: z.number().min(0).max(2),
+  musicDecision: z.enum(["pending", "none"]),
+  transitionSfx: z.enum(["off", "paper-flip"]),
+  transitionSfxGain: z.number().min(0).max(1),
+  reviewed: z.boolean(),
+}).strict().superRefine((mix, context) => {
+  if (mix.reviewed && mix.musicDecision === "pending") context.addIssue({code: "custom", path: ["musicDecision"], message: "A reviewed mix must explicitly choose no music or bind an approved music master."});
+});
 export const voiceTrackSchema = z.object({
   id: identifierSchema,
   contentHash: hashSchema,
@@ -613,6 +628,7 @@ export type StagedCandidate = z.infer<typeof stagedCandidateSchema>;
 export type PreparedCandidate = z.infer<typeof preparedCandidateSchema>;
 export type AssetApproval = z.infer<typeof assetApprovalSchema>;
 export type ApprovedAssetVersion = z.infer<typeof approvedAssetVersionSchema>;
+export type AudioMix = z.infer<typeof audioMixSchema>;
 export type VoiceTrack = z.infer<typeof voiceTrackSchema>;
 export type ResolvedProductionPlan = z.infer<typeof resolvedProductionPlanSchema>;
 export type ShotOverride = z.infer<typeof shotOverrideSchema>;

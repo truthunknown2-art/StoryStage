@@ -258,6 +258,21 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .voice-master-card > footer button.approve-voice { background: #263b30; border-color: #466451; color: #9ad8b0; }
 .voice-master-card > footer button:disabled { cursor: not-allowed; opacity: .4; }
 .voice-master-card > footer small { color: #81c59c; }
+.audio-mix-card { background: #111718; border: 1px solid #30393b; border-radius: 9px; display: grid; gap: 13px; padding: 15px 17px; }
+.audio-mix-card > header { align-items: flex-start; display: flex; justify-content: space-between; }
+.audio-mix-card h3 { color: #d5dcda; font-size: 13px; margin: 4px 0; }
+.audio-mix-card > header p:last-child { color: #687370; font-size: 8px; }
+.audio-mix-card > header > span { border: 1px solid #57483b; border-radius: 999px; color: #bc9678; font-size: 7px; padding: 5px 7px; text-transform: uppercase; }
+.audio-mix-card > header > span.is-reviewed { border-color: #40604b; color: #8acda4; }
+.audio-mix-controls { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.audio-mix-controls label { color: #7a8581; display: grid; font-size: 7px; gap: 6px; text-transform: uppercase; }
+.audio-mix-controls label strong { color: #b7c3be; font-family: "DM Mono", "Consolas", monospace; }
+.audio-mix-controls select { background: #151b1c; border: 1px solid #343d3f; border-radius: 5px; color: #abb4b1; font-size: 8px; min-width: 0; padding: 8px; }
+.audio-mix-controls input[type="range"] { accent-color: #75c69a; width: 100%; }
+.audio-mix-card > footer { align-items: center; display: flex; justify-content: space-between; }
+.audio-mix-card > footer p { color: #69736f; font-size: 8px; }
+.audio-mix-card > footer button { align-items: center; background: #263b30; border: 1px solid #466451; border-radius: 5px; color: #9ad8b0; display: inline-flex; font-size: 8px; gap: 6px; padding: 8px 10px; }
+.audio-mix-card > footer button:disabled { cursor: not-allowed; opacity: .4; }
 .audio-workspace-grid { display: grid; gap: 14px; grid-template-columns: minmax(300px, .85fr) minmax(420px, 1.15fr); min-height: 430px; }
 .audio-cue-list { background: #101516; border: 1px solid #2b3234; border-radius: 9px; max-height: 560px; overflow: auto; padding: 7px; }
 .audio-cue-list > button { align-items: center; background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; display: grid; gap: 10px; grid-template-columns: 62px minmax(0, 1fr) auto; padding: 10px; text-align: left; width: 100%; }
@@ -514,5 +529,6 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   .create-footer { margin-left: 245px; }
   .shot-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .exchange-actions.is-desktop { grid-template-columns: 1fr 1fr; }
+  .audio-mix-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .prepared-set-grid { grid-template-columns: 1fr; }
 }

@@ -2,6 +2,7 @@ import {z} from "zod";
 import {hashCanonical} from "./canonical-hash";
 import {compileAnimation, verifyRenderPlanHash} from "./animation-compiler";
 import {
+  audioMixSchema,
   directedPlanMetricsSchema,
   approvedAssetVersionSchema,
   frameAccurateRenderPlanSchema,
@@ -22,7 +23,20 @@ const productionBundleFields = {
   metrics: directedPlanMetricsSchema,
   estimate: productionEstimateSchema,
   approvedAssetVersions: z.array(approvedAssetVersionSchema).optional(),
+  audioMix: audioMixSchema.optional(),
   voiceTrack: voiceTrackSchema.optional(),
+};
+
+const withoutTimingDrivenMouthCues = (plan: z.infer<typeof frameAccurateRenderPlanSchema>) => {
+  const {contentHash: _contentHash, ...payload} = plan;
+  void _contentHash;
+  const legacyPayload = {...payload, shots: payload.shots.map((shot) => ({...shot, actions: shot.actions.map((action) => {
+    if (action.detail.type !== "talk") return action;
+    const {mouthCue: _mouthCue, ...legacyTalk} = action.detail;
+    void _mouthCue;
+    return {...action, detail: legacyTalk};
+  })}))};
+  return frameAccurateRenderPlanSchema.parse({...legacyPayload, contentHash: hashCanonical(legacyPayload)});
 };
 
 const validateProductionBundle = (bundle: z.infer<z.ZodObject<typeof productionBundleFields>>, context: z.RefinementCtx) => {
@@ -32,12 +46,15 @@ const validateProductionBundle = (bundle: z.infer<z.ZodObject<typeof productionB
   if (bundle.resolvedPlan.creativePlan.planRevision !== revision || bundle.renderPlan.planRevision !== revision) context.addIssue({code: "custom", message: "Production bundle plans must share the production revision."});
   if (bundle.resolvedPlan.showPack.id !== bundle.production.showPackId || bundle.renderPlan.showPack.id !== bundle.production.showPackId || bundle.resolvedPlan.showPack.contentHash !== bundle.renderPlan.showPack.contentHash) context.addIssue({code: "custom", message: "Production bundle plans must share the authoritative Show Pack identity and hash."});
   const compiledRenderPlan = compileAnimation(bundle.resolvedPlan);
-  if (!verifyRenderPlanHash(bundle.renderPlan) || hashCanonical(compiledRenderPlan) !== hashCanonical(bundle.renderPlan)) context.addIssue({code: "custom", message: "Production bundle render plan must exactly derive from the included resolved plan."});
+  const matchesCurrentCompiler = hashCanonical(compiledRenderPlan) === hashCanonical(bundle.renderPlan);
+  const matchesPreMouthCueCompiler = hashCanonical(withoutTimingDrivenMouthCues(compiledRenderPlan)) === hashCanonical(bundle.renderPlan);
+  if (!verifyRenderPlanHash(bundle.renderPlan) || (!matchesCurrentCompiler && !matchesPreMouthCueCompiler)) context.addIssue({code: "custom", message: "Production bundle render plan must exactly derive from the included resolved plan."});
   const creativePlan = bundle.resolvedPlan.creativePlan;
   const aspectMatches = bundle.production.format.aspectRatio === "16:9" ? creativePlan.width * 9 === creativePlan.height * 16 : creativePlan.width * 16 === creativePlan.height * 9;
   if (creativePlan.title !== bundle.production.title || creativePlan.projectType !== bundle.production.projectType || creativePlan.fps !== bundle.production.format.fps || !aspectMatches) context.addIssue({code: "custom", message: "Production bundle draft must match the included creative plan."});
   if (hashCanonical(bundle.overrides) !== hashCanonical(bundle.resolvedPlan.overrides)) context.addIssue({code: "custom", message: "Production bundle overrides must match the resolved plan."});
   if (hashCanonical(bundle.metrics) !== hashCanonical(bundle.renderPlan.metrics)) context.addIssue({code: "custom", message: "Production bundle metrics must match the frozen render plan."});
+  if (bundle.audioMix && bundle.audioMix.profile !== bundle.production.projectType) context.addIssue({code: "custom", path: ["audioMix", "profile"], message: "Audio mix profile must match the production type."});
   if (bundle.voiceTrack && !bundle.voiceTrack.relativeFile.startsWith(`voice/${identity}/`)) context.addIssue({code: "custom", path: ["voiceTrack", "relativeFile"], message: "Voice tracks must stay inside their production-scoped private asset path."});
   for (const [index, approved] of (bundle.approvedAssetVersions ?? []).entries()) {
     const requirement = bundle.resolvedPlan.requirements.find((candidate) => candidate.id === approved.requirementId);
