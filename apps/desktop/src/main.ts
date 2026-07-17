@@ -4,6 +4,9 @@ import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:
 import {pathToFileURL} from "node:url";
 import {productionDraftPayload} from "./production-draft-payload";
 import {assertApprovedPublicReviewLineage} from "./public-review-lineage";
+import {assertVerifiedFullRenderReceipt} from "./render-receipt";
+import {publishDeliveryBundle, readVerifiedDeliveryBundle, type VerifiedDeliveryBundle} from "./delivery-store";
+import {ProductionMutationCoordinator, StaleProductionError} from "./production-mutation-lock";
 import {app, BrowserWindow, dialog, ipcMain, net, protocol, shell, utilityProcess, type OpenDialogOptions} from "electron";
 import {commitApprovalWorkflow} from "@storystage/asset-pipeline/approval-recovery";
 import {buildApprovedProductionRevisionDraft, buildSelectedCandidateRigArtifacts, persistAssetReviewRecordSnapshot, promotePreparedCandidateSet} from "@storystage/asset-pipeline/approved-asset-workflow";
@@ -29,6 +32,8 @@ import {
   finalizeLooseCandidateMappingResultSchema,
   getGenerationExchangeRequestSchema,
   getGenerationExchangeResultSchema,
+  getVerifiedDeliveryRequestSchema,
+  getVerifiedDeliveryResultSchema,
   importLooseCandidateFilesRequestSchema,
   importLooseCandidateFilesResultSchema,
   importMusicTrackRequestSchema,
@@ -53,6 +58,7 @@ import {
   reviewPublicShowPackCandidateRequestSchema,
   reviewPublicShowPackCandidateResultSchema,
   productionBundleSummarySchema,
+  verifiedDeliverySummarySchema,
   stagedCandidateSummarySchema,
   renderJobEventSchema,
   renderWorkerCommandSchema,
@@ -96,6 +102,7 @@ import {
   publicShowPackCandidateMatchesRelease,
   prepareCandidateSetsRequestSchema,
   rigValidationReportSchema,
+  renderReceiptSchema,
   rigDiagnosticReportSchema,
   stagedCandidateSchema,
   productionBundleSchema,
@@ -136,6 +143,7 @@ type JobRecord = {
   event: RenderJobEvent;
   phaseProgress: Partial<Record<"bundling" | "rendering", number>>;
   allowedOutputRoot: string;
+  productionBinding?: {productionId: string; revision: number; bundleContentHash: string; scope: "engineering-slice" | "full-production"};
 };
 
 let mainWindow: BrowserWindow | null = null;
@@ -144,10 +152,11 @@ const jobRegistry = new Map<string, JobRecord>();
 type GenerationExchangeRecord = {job: GenerationJob; jobFile: string; stateFile: string; state: GenerationExchangeState};
 const generationExchangeRegistry = new Map<string, GenerationExchangeRecord>();
 const productionBundleRegistry = new Map<string, {bundle: ProductionBundle; bundleFile: string}>();
+const deliveryRegistry = new Map<string, VerifiedDeliveryBundle>();
 const voiceTrackRegistry = new Map<string, VoiceTrack>();
 const musicTrackRegistry = new Map<string, MusicTrack>();
 const soundEffectRegistry = new Map<string, SoundEffectAsset>();
-const productionSaveQueues = new Map<string, Promise<ProductionBundle>>();
+const productionMutations = new ProductionMutationCoordinator();
 const publicShowPackReviewCoordinator = new PublicShowPackReviewCoordinator();
 const looseImportRegistry = new Map<string, {
   exchange: GenerationExchangeRecord;
@@ -383,6 +392,29 @@ const productionBundleKey = (productionId: string, revision: number) => `${produ
 
 function summarizeProductionBundle(bundle: ProductionBundle): ProductionBundleSummary {
   return productionBundleSummarySchema.parse({productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash});
+}
+
+function summarizeDelivery(delivery: VerifiedDeliveryBundle) {
+  return verifiedDeliverySummarySchema.parse({deliveryManifestContentHash: delivery.manifest.contentHash, productionId: delivery.bundle.production.productionId, revision: delivery.bundle.production.revision, productionBundleContentHash: delivery.bundle.contentHash, rightsStatus: "cleared", captionCueCount: delivery.captionCueCount, master: {width: delivery.receipt.master.width, height: delivery.receipt.master.height, fps: delivery.receipt.master.fps, frameCount: delivery.receipt.master.frameCount, durationInSeconds: delivery.receipt.master.durationInSeconds}});
+}
+
+async function rehydrateDeliveryRegistry(): Promise<void> {
+  deliveryRegistry.clear();
+  const deliveriesRoot = join(app.getPath("userData"), ".storystage-local", "deliveries");
+  await mkdir(deliveriesRoot, {recursive: true});
+  const info = await lstat(deliveriesRoot);
+  if (info.isSymbolicLink() || !info.isDirectory()) throw new Error("The private delivery root is not a trusted local directory.");
+  const canonicalRoot = await realpath(deliveriesRoot);
+  for (const productionDirectory of await realChildDirectories(deliveriesRoot, canonicalRoot)) for (const revisionDirectory of await realChildDirectories(productionDirectory.path, canonicalRoot)) for (const bundleDirectory of await realChildDirectories(revisionDirectory.path, canonicalRoot)) for (const deliveryDirectory of await realChildDirectories(bundleDirectory.path, canonicalRoot)) {
+    if (deliveryDirectory.name.startsWith(".tmp-")) continue;
+    try {
+      const delivery = await readVerifiedDeliveryBundle(deliveryDirectory.path);
+      if (productionDirectory.name !== delivery.bundle.production.productionId || revisionDirectory.name !== `r${delivery.bundle.production.revision}` || bundleDirectory.name !== delivery.bundle.contentHash || deliveryDirectory.name !== delivery.manifest.contentHash) continue;
+      deliveryRegistry.set(delivery.manifest.contentHash, delivery);
+    } catch {
+      // Partial or tampered deliveries are quarantined by omission and can never be opened by manifest identity.
+    }
+  }
 }
 
 async function rehydrateProductionBundleRegistry(): Promise<void> {
@@ -851,9 +883,9 @@ const failedEvent = (jobId: string, code: string, message: string): RenderJobEve
   error: {code, message},
 });
 
-function registerJob(jobId: string, allowedOutputRoot: string) {
+function registerJob(jobId: string, allowedOutputRoot: string, productionBinding?: JobRecord["productionBinding"]) {
   const event = renderJobEventSchema.parse({jobId, status: "queued", progress: null, message: "Render queued"});
-  jobRegistry.set(jobId, {event, phaseProgress: {}, allowedOutputRoot});
+  jobRegistry.set(jobId, {event, phaseProgress: {}, allowedOutputRoot, ...(productionBinding ? {productionBinding} : {})});
   activeJobId = jobId;
   emitJob(event);
 }
@@ -937,9 +969,32 @@ function startRenderWorker(jobId: string, simulateFailure: boolean, production?:
             realpath(record.allowedOutputRoot),
           ]);
           if (!canonicalOutput.startsWith(`${canonicalRoot}${sep}`)) throw new Error("Output escaped the allowed artifact directory.");
-          if (!transitionJob({...event, outputPath: canonicalOutput})) failJob(jobId, "INVALID_TRANSITION", "The worker completed from an invalid job state.");
-        } catch {
-          failJob(jobId, "UNSAFE_OUTPUT_PATH", "The worker returned an unavailable or unsafe output path.");
+          let completionEvent = {...event, outputPath: canonicalOutput};
+          if (record.productionBinding?.scope === "full-production") {
+            if (!event.renderReceipt) throw new Error("The full-production worker did not return a durable render receipt.");
+            const [canonicalReceipt, receiptInfo, masterBytes] = await Promise.all([realpath(event.renderReceipt.path), lstat(event.renderReceipt.path), readFile(canonicalOutput)]);
+            if (!canonicalReceipt.startsWith(`${canonicalRoot}${sep}`) || receiptInfo.isSymbolicLink() || !receiptInfo.isFile() || receiptInfo.size > 2_000_000) throw new Error("The render receipt escaped its trusted output root.");
+            const receipt = renderReceiptSchema.parse(JSON.parse(await readFile(canonicalReceipt, "utf8")));
+            if (receipt.contentHash !== event.renderReceipt.contentHash) throw new Error("The worker receipt identity changed before host verification.");
+            const binding = record.productionBinding;
+            const delivery = await productionMutations.run(productionBundleKey(binding.productionId, binding.revision), async () => {
+              const current = productionBundleRegistry.get(productionBundleKey(binding.productionId, binding.revision))?.bundle;
+              if (!current || current.contentHash !== binding.bundleContentHash) throw new StaleProductionError("The production changed while rendering; the old cut was not published as a delivery.");
+              const snapshot = await readProductionBundleSnapshot(binding.productionId, binding.revision, binding.bundleContentHash);
+              if (!snapshot) throw new Error("The exact immutable render snapshot is unavailable.");
+              assertVerifiedFullRenderReceipt({receipt, bundle: snapshot, masterBytes, masterFile: canonicalOutput});
+              const localRoot = join(app.getPath("userData"), ".storystage-local");
+              return publishDeliveryBundle({deliveryRoot: join(localRoot, "deliveries"), bundleFile: join(localRoot, "productions", binding.productionId, `r${binding.revision}`, "snapshots", `${binding.bundleContentHash}.json`), receiptFile: canonicalReceipt, masterFile: canonicalOutput, ...(snapshot.audioMix?.transitionSfx === "paper-flip" ? {transitionSfxFile: resolve(workspaceRoot, "packages/remotion-runtime/public/audio/paper-flip.wav")} : {})});
+            });
+            deliveryRegistry.set(delivery.manifest.contentHash, delivery);
+            completionEvent = {...completionEvent, message: "Full production and verified delivery complete", delivery: summarizeDelivery(delivery)};
+          } else if (event.renderReceipt) throw new Error("Only a full-production render may return a delivery receipt.");
+          const {renderReceipt: privateReceipt, ...publicCompletionEvent} = completionEvent;
+          void privateReceipt;
+          if (!transitionJob(publicCompletionEvent)) failJob(jobId, "INVALID_TRANSITION", "The worker completed from an invalid job state.");
+        } catch (error) {
+          const code = error instanceof StaleProductionError ? error.code : record.productionBinding?.scope === "full-production" ? "DELIVERY_PUBLISH_FAILED" : "UNSAFE_OUTPUT_PATH";
+          failJob(jobId, code, error instanceof Error ? error.message : "The verified render or delivery could not be published safely.");
         } finally {
           stop();
         }
@@ -1286,8 +1341,7 @@ ipcMain.handle(IPC_CHANNELS.saveProductionBundle, async (_event, rawRequest: unk
     const request = saveProductionBundleRequestSchema.parse(rawRequest);
     const draft = productionBundleDraftSchema.parse(JSON.parse(request.serializedDraft));
     const key = productionBundleKey(draft.production.productionId, draft.production.revision);
-    const priorSave = productionSaveQueues.get(key);
-    const currentSave = (priorSave ? priorSave.then(() => undefined, () => undefined) : Promise.resolve()).then(async () => {
+    const bundle = await productionMutations.run(key, async () => {
       const showPack = getShowPack(draft.production.showPackId);
       if (!verifyShowPackHash(showPack) || draft.resolvedPlan.showPack.contentHash !== showPack.contentHash) throw new Error("Production bundle references a stale or non-authoritative Show Pack.");
       const existing = productionBundleRegistry.get(key);
@@ -1296,13 +1350,7 @@ ipcMain.handle(IPC_CHANNELS.saveProductionBundle, async (_event, rawRequest: unk
       await persistProductionBundle(bundle);
       return bundle;
     });
-    productionSaveQueues.set(key, currentSave);
-    try {
-      const bundle = await currentSave;
-      return saveProductionBundleResultSchema.parse({ok: true, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash});
-    } finally {
-      if (productionSaveQueues.get(key) === currentSave) productionSaveQueues.delete(key);
-    }
+    return saveProductionBundleResultSchema.parse({ok: true, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash});
   } catch (error) {
     return saveProductionBundleResultSchema.parse({ok: false, error: {code: "INVALID_PRODUCTION_BUNDLE", message: error instanceof Error ? error.message : "Production bundle could not be persisted."}});
   }
@@ -1445,7 +1493,7 @@ ipcMain.handle(IPC_CHANNELS.approveVoiceTrack, async (_event, rawRequest: unknow
     const track = stored?.bundle.voiceTrack;
     if (!stored || !track || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash || track.contentHash !== request.voiceTrackContentHash) throw new Error("Voice approval requires the exact saved imported track.");
     await readVerifiedVoiceTrack(track);
-    const approved = voiceTrackSchema.parse({...track, approvalStatus: "approved", approvedAt: new Date().toISOString()});
+    const approved = voiceTrackSchema.parse({...track, approvalStatus: "approved", approvedAt: new Date().toISOString(), rights: request.rights});
     voiceTrackRegistry.set(approved.contentHash, approved);
     return approveVoiceTrackResultSchema.parse({ok: true, track: approved});
   } catch (error) {
@@ -1488,7 +1536,7 @@ ipcMain.handle(IPC_CHANNELS.approveMusicTrack, async (_event, rawRequest: unknow
     const track = stored?.bundle.musicTrack;
     if (!stored || !track || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash || track.contentHash !== request.musicTrackContentHash) throw new Error("Music approval requires the exact saved imported track.");
     await readVerifiedMusicTrack(track);
-    const approved = musicTrackSchema.parse({...track, approvalStatus: "approved", approvedAt: new Date().toISOString()});
+    const approved = musicTrackSchema.parse({...track, approvalStatus: "approved", approvedAt: new Date().toISOString(), rights: request.rights});
     musicTrackRegistry.set(approved.contentHash, approved);
     return approveMusicTrackResultSchema.parse({ok: true, track: approved});
   } catch (error) {
@@ -1532,7 +1580,7 @@ ipcMain.handle(IPC_CHANNELS.approveSoundEffect, async (_event, rawRequest: unkno
     const asset = stored?.bundle.soundEffectAssets?.find((candidate) => candidate.contentHash === request.soundEffectContentHash);
     if (!stored || !asset || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Sound-effect approval requires the exact saved imported asset.");
     await readVerifiedSoundEffect(asset);
-    const approved = soundEffectAssetSchema.parse({...asset, approvalStatus: "approved", approvedAt: new Date().toISOString()});
+    const approved = soundEffectAssetSchema.parse({...asset, approvalStatus: "approved", approvedAt: new Date().toISOString(), rights: request.rights});
     soundEffectRegistry.set(approved.contentHash, approved);
     return approveSoundEffectResultSchema.parse({ok: true, track: approved});
   } catch (error) {
@@ -1924,13 +1972,58 @@ ipcMain.handle(IPC_CHANNELS.productionRenderStart, async (_event, payload: unkno
   const localRoot = join(app.getPath("userData"), ".storystage-local");
   const outputRoot = join(localRoot, "renders", request.productionId, `r${request.revision}`);
   await mkdir(outputRoot, {recursive: true});
-  registerJob(jobId, outputRoot);
+  registerJob(jobId, outputRoot, {productionId: request.productionId, revision: request.revision, bundleContentHash: stored.bundle.contentHash, scope: request.scope});
   try {
     startRenderWorker(jobId, false, {trustedProductionRoot: join(localRoot, "productions"), bundleFile: stored.bundleFile, assetsRoot: join(localRoot, "assets"), outputRoot, bundleContentHash: stored.bundle.contentHash, scope: request.scope});
   } catch {
     failJob(jobId, "WORKER_START_FAILED", "The production render worker could not be started.");
   }
   return startRenderResponseSchema.parse({jobId});
+});
+
+ipcMain.handle(IPC_CHANNELS.getVerifiedDelivery, async (_event, rawRequest: unknown) => {
+  const request = getVerifiedDeliveryRequestSchema.parse(rawRequest);
+  const candidate = [...deliveryRegistry.values()].find((delivery) => delivery.bundle.production.productionId === request.productionId && delivery.bundle.production.revision === request.revision && delivery.bundle.contentHash === request.productionBundleContentHash);
+  if (!candidate) return getVerifiedDeliveryResultSchema.parse({delivery: null});
+  try {
+    const verified = await readVerifiedDeliveryBundle(candidate.directory);
+    deliveryRegistry.set(verified.manifest.contentHash, verified);
+    return getVerifiedDeliveryResultSchema.parse({delivery: summarizeDelivery(verified)});
+  } catch {
+    deliveryRegistry.delete(candidate.manifest.contentHash);
+    return getVerifiedDeliveryResultSchema.parse({delivery: null});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.openDeliveryMaster, async (_event, rawManifestHash: unknown) => {
+  const manifestHash = verifiedDeliverySummarySchema.shape.deliveryManifestContentHash.parse(rawManifestHash);
+  const candidate = deliveryRegistry.get(manifestHash);
+  if (!candidate) return openRenderedFileResultSchema.parse({ok: false, error: {code: "DELIVERY_UNAVAILABLE", message: "This verified delivery is unavailable."}});
+  try {
+    const verified = await readVerifiedDeliveryBundle(candidate.directory);
+    deliveryRegistry.set(manifestHash, verified);
+    const errorMessage = await shell.openPath(join(verified.directory, "master.mp4"));
+    if (errorMessage) throw new Error(errorMessage);
+    return openRenderedFileResultSchema.parse({ok: true});
+  } catch (error) {
+    deliveryRegistry.delete(manifestHash);
+    return openRenderedFileResultSchema.parse({ok: false, error: {code: "DELIVERY_UNVERIFIED", message: error instanceof Error ? error.message : "The delivery failed verification."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.revealDeliveryBundle, async (_event, rawManifestHash: unknown) => {
+  const manifestHash = verifiedDeliverySummarySchema.shape.deliveryManifestContentHash.parse(rawManifestHash);
+  const candidate = deliveryRegistry.get(manifestHash);
+  if (!candidate) return openRenderedFileResultSchema.parse({ok: false, error: {code: "DELIVERY_UNAVAILABLE", message: "This verified delivery is unavailable."}});
+  try {
+    const verified = await readVerifiedDeliveryBundle(candidate.directory);
+    deliveryRegistry.set(manifestHash, verified);
+    shell.showItemInFolder(join(verified.directory, "delivery-manifest.json"));
+    return openRenderedFileResultSchema.parse({ok: true});
+  } catch (error) {
+    deliveryRegistry.delete(manifestHash);
+    return openRenderedFileResultSchema.parse({ok: false, error: {code: "DELIVERY_UNVERIFIED", message: error instanceof Error ? error.message : "The delivery failed verification."}});
+  }
 });
 
 ipcMain.handle(IPC_CHANNELS.openRenderedFile, async (_event, rawJobId: unknown) => {
@@ -1951,6 +2044,7 @@ ipcMain.handle(IPC_CHANNELS.openRenderedFile, async (_event, rawJobId: unknown) 
 app.whenReady().then(async () => {
   installRenderedMediaProtocol();
   await rehydrateProductionBundleRegistry();
+  await rehydrateDeliveryRegistry();
   await rehydrateGenerationExchangeRegistry();
   await rehydrateLooseImportRegistry();
   await createWindow();

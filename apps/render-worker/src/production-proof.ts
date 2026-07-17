@@ -1,6 +1,7 @@
 import {execFile} from "node:child_process";
 import {createHash} from "node:crypto";
 import {mkdir, readFile, rm, writeFile} from "node:fs/promises";
+import {createRequire} from "node:module";
 import {isAbsolute, relative, resolve} from "node:path";
 import {promisify} from "node:util";
 import {deflateSync} from "node:zlib";
@@ -37,6 +38,9 @@ import {
   type ProductionBundle,
 } from "@storystage/story-engine";
 import {readSampleMetadata, renderProduction, renderRigDiagnostic} from "./render-service";
+
+const require = createRequire(import.meta.url);
+const {publishDeliveryBundle, readVerifiedDeliveryBundle} = require("../../desktop/src/delivery-store.ts") as typeof import("../../desktop/src/delivery-store");
 
 const workspaceRoot = resolve(import.meta.dirname, "../../..");
 const proofRoot = resolve(workspaceRoot, "artifacts/SS-002");
@@ -348,7 +352,10 @@ async function main() {
     preparationReportContentHash: preparationReport.contentHash,
     decisions: selectedReview.decisions.map((decision) => decision.candidateSetId === selectedSet.candidateSetId ? {...decision, status: "approved" as const, notes: "Approved after contact-sheet comparison and moving rig diagnostic.", decidedAt: approvedAt, approvedAssetVersion} : decision),
   }, approvedAt);
-  const revisionTwoDraft = buildApprovedProductionRevisionDraft({sourceBundle, approvedAssetVersions: [approvedAssetVersion]});
+  const revisionTwoApprovalDraft = buildApprovedProductionRevisionDraft({sourceBundle, approvedAssetVersions: [approvedAssetVersion]});
+  const timingOverrides = revisionTwoApprovalDraft.renderPlan.shots.filter((shot) => shot.actions.some((action) => action.detail.type === "talk") || Boolean(shot.caption)).map((shot) => ({shotId: shot.id, timingLocked: true as const}));
+  const lockedBuild = buildAnimaticSync({draft: revisionTwoApprovalDraft.production, overrides: timingOverrides, approvedAssetVersions: revisionTwoApprovalDraft.approvedAssetVersions});
+  const revisionTwoDraft = {...revisionTwoApprovalDraft, overrides: timingOverrides, resolvedPlan: lockedBuild.resolvedPlan, renderPlan: lockedBuild.renderPlan, metrics: lockedBuild.metrics, estimate: lockedBuild.estimate};
   const voiceBytes = makeVoiceProofWav(Math.round(revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps * 48_000));
   const voiceContentHash = sha256(voiceBytes);
   const voiceRelativeFile = `voice/${revisionTwoDraft.production.productionId}/r${revisionTwoDraft.production.revision}/${voiceContentHash}.wav`;
@@ -365,7 +372,15 @@ async function main() {
   await mkdir(resolve(assetsRoot, ...soundEffectRelativeFile.split("/").slice(0, -1)), {recursive: true});
   await writeFile(resolve(assetsRoot, ...soundEffectRelativeFile.split("/")), soundEffectBytes, {flag: "wx"});
   const cueShot = revisionTwoDraft.renderPlan.shots[1] ?? revisionTwoDraft.renderPlan.shots[0]!;
-  const approvedBundle = finalizeProductionBundle({...revisionTwoDraft, audioMix: {profile: "kids", voiceGain: .95, musicDecision: "approved-master", musicGain: .08, musicLoop: true, transitionSfx: "off", transitionSfxGain: .1, reviewed: true}, musicTrack: {id: `music-${musicContentHash.slice(0, 20)}`, contentHash: musicContentHash, relativeFile: musicRelativeFile, sourceFileName: "engineering-music-proof.wav", codec: "pcm-wav", durationInSeconds: revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt}, soundEffectAssets: [{id: `sfx-${soundEffectContentHash.slice(0, 20)}`, contentHash: soundEffectContentHash, relativeFile: soundEffectRelativeFile, sourceFileName: "engineering-impact-proof.wav", codec: "pcm-wav", durationInSeconds: .35, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt}], soundEffectCues: [{id: "sfx-cue-engineering-impact", assetContentHash: soundEffectContentHash, shotId: cueShot.id, offsetInFrames: Math.min(4, cueShot.durationInFrames - 1), gain: .35, label: "Engineering impact"}], voiceTrack: {id: `voice-${voiceContentHash.slice(0, 20)}`, contentHash: voiceContentHash, relativeFile: voiceRelativeFile, sourceFileName: "engineering-voice-proof.wav", codec: "pcm-wav", durationInSeconds: revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt}}, approvedAt);
+  const engineeringRights = (label: string) => ({sourceType: "project-owned" as const, provider: "StoryStage engineering proof", usageNotes: `Generated locally for the ${label} proof; not sourced from third-party media.`, clearanceStatus: "cleared" as const, evidenceReference: `SS-004 engineering proof ledger: ${label}`});
+  const approvedBundle = finalizeProductionBundle({
+    ...revisionTwoDraft,
+    audioMix: {profile: "kids", voiceGain: .95, musicDecision: "approved-master", musicGain: .08, musicLoop: true, transitionSfx: "off", transitionSfxGain: .1, reviewed: true},
+    musicTrack: {id: `music-${musicContentHash.slice(0, 20)}`, contentHash: musicContentHash, relativeFile: musicRelativeFile, sourceFileName: "engineering-music-proof.wav", codec: "pcm-wav", durationInSeconds: revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt, rights: engineeringRights("music master")},
+    soundEffectAssets: [{id: `sfx-${soundEffectContentHash.slice(0, 20)}`, contentHash: soundEffectContentHash, relativeFile: soundEffectRelativeFile, sourceFileName: "engineering-impact-proof.wav", codec: "pcm-wav", durationInSeconds: .35, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt, rights: engineeringRights("sound effect master")}],
+    soundEffectCues: [{id: "sfx-cue-engineering-impact", assetContentHash: soundEffectContentHash, shotId: cueShot.id, offsetInFrames: Math.min(4, cueShot.durationInFrames - 1), gain: .35, label: "Engineering impact"}],
+    voiceTrack: {id: `voice-${voiceContentHash.slice(0, 20)}`, contentHash: voiceContentHash, relativeFile: voiceRelativeFile, sourceFileName: "engineering-voice-proof.wav", codec: "pcm-wav", durationInSeconds: revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt, rights: engineeringRights("voice master")},
+  }, approvedAt);
   let approvedBundleFile = "";
   const approvedState = generationExchangeStateSchema.parse({schemaVersion: "1.0", exchangeJobId: generationJob.exchangeJobId, generationJobContentHash: generationJob.contentHash, production: {id: generationJob.production.id, revision: generationJob.production.revision}, status: "approved", importId, supersededBy: null, updatedAt: approvedAt});
   const approvedStateFile = resolve(privateRoot, "jobs/outbox", generationJob.exchangeJobId, "state-approved.json");
@@ -389,6 +404,15 @@ async function main() {
     frameComparisons.push({frame, passOneFile, passTwoFile, passOneHash, passTwoHash, matches: passOneHash === passTwoHash});
   }
   if (frameComparisons.some((comparison) => !comparison.matches)) throw new Error("Decoded production frames changed across identical renders.");
+  let fullRenderReceipt: {contentHash: string; path: string} | undefined;
+  const fullProductionVideo = await renderProduction({...renderOptions, scope: "full-production", jobId: "approved-production-proof-full", onEvent: (event) => {
+    if (event.status === "completed" && event.renderReceipt) fullRenderReceipt = event.renderReceipt;
+  }});
+  if (!fullRenderReceipt) throw new Error("The full-production proof did not produce a durable render receipt.");
+  const publishedDelivery = await publishDeliveryBundle({deliveryRoot: resolve(proofRoot, "deliveries"), bundleFile: approvedBundleFile, receiptFile: fullRenderReceipt.path, masterFile: fullProductionVideo});
+  const idempotentDelivery = await publishDeliveryBundle({deliveryRoot: resolve(proofRoot, "deliveries"), bundleFile: approvedBundleFile, receiptFile: fullRenderReceipt.path, masterFile: fullProductionVideo});
+  const restartedDelivery = await readVerifiedDeliveryBundle(publishedDelivery.directory);
+  if (idempotentDelivery.directory !== publishedDelivery.directory || restartedDelivery.manifest.contentHash !== publishedDelivery.manifest.contentHash) throw new Error("The verified delivery did not survive idempotent publication and restart rehydration.");
   const probe = await execFileAsync(ffprobeStatic.path, ["-v", "error", "-show_streams", "-of", "json", passOneVideo], {maxBuffer: 10 * 1024 * 1024});
   const contactSheet = selectedSet.contactSheet!;
   const evidenceFiles = {
@@ -410,8 +434,8 @@ async function main() {
   };
   const report = {
     generatedAt: new Date().toISOString(),
-    verdict: "PASS: the real candidate-to-approved-production path rendered twice with identical decoded frames.",
-    productionVideos: [passOneVideo, passTwoVideo],
+    verdict: "PASS: the real candidate-to-approved-production path rendered twice with identical decoded frames, then published a restart-verified delivery bundle.",
+    productionVideos: [passOneVideo, passTwoVideo, fullProductionVideo],
     productionVideoByteHashes: [sha256(await readFile(passOneVideo)), sha256(await readFile(passTwoVideo))],
     metadata: await readSampleMetadata(passOneVideo),
     streams: JSON.parse(probe.stdout),
@@ -432,9 +456,14 @@ async function main() {
     approvedVoiceTrackContentHash: approvedBundle.voiceTrack?.contentHash,
     approvedMusicTrackContentHash: approvedBundle.musicTrack?.contentHash,
     approvedSoundEffectContentHashes: approvedBundle.soundEffectAssets?.map((asset) => asset.contentHash),
+    fullRenderReceiptContentHash: fullRenderReceipt.contentHash,
+    verifiedDeliveryManifestContentHash: publishedDelivery.manifest.contentHash,
+    verifiedDeliveryDirectory: publishedDelivery.directory,
+    verifiedDeliveryCaptionCueCount: publishedDelivery.captionCueCount,
+    verifiedDeliveryRightsStatus: "cleared",
     frameComparisons,
     decodedFrameHashesMatch: true,
-    workflowOperations: ["finalize source production", "finalize manual generation job", "stage manifest-bound candidate bytes", "commit exact import evidence", "Sharp normalize and contact sheet", "render selected-rig diagnostic", "persist selected review", "promote immutable approved asset", "persist approved review", "bind approved WAV voice master", "bind approved WAV music master", "bind approved WAV sound effect", "place shot-relative SFX cue", "freeze reviewed audio mix", "compile profile-specific mouth cues", "build next production revision", "render exact saved revision twice", "compare decoded frames"],
+    workflowOperations: ["finalize source production", "finalize manual generation job", "stage manifest-bound candidate bytes", "commit exact import evidence", "Sharp normalize and contact sheet", "render selected-rig diagnostic", "persist selected review", "promote immutable approved asset", "persist approved review", "bind approved WAV voice master with rights", "bind approved WAV music master with rights", "bind approved WAV sound effect with rights", "place shot-relative SFX cue", "freeze reviewed audio mix", "compile profile-specific mouth cues", "lock every spoken cue", "build next production revision", "render exact saved revision twice", "compare decoded frames", "render exact full production", "verify durable render receipt", "atomically publish delivery", "reopen delivery after simulated restart"],
     evidenceFiles,
     note: "The artwork is intentionally crude engineering fixture art, not the visual-quality target. This report proves workflow integrity and deterministic playback through the same concrete operations used by the desktop application.",
   };

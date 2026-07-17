@@ -34,6 +34,9 @@ describe("host adapters", () => {
       startProductionRender: vi.fn(async () => ({jobId: "production-job-1"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),
       openRenderedFile: vi.fn(async () => ({ok: true as const})),
+      getVerifiedDelivery: vi.fn(async () => ({delivery: null})),
+      openDeliveryMaster: vi.fn(async () => ({ok: true as const})),
+      revealDeliveryBundle: vi.fn(async () => ({ok: true as const})),
     };
     const host = new DesktopHostAdapter(bridge);
     expect(await host.startSampleRender({})).toEqual({jobId: "job-1"});

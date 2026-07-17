@@ -18,6 +18,7 @@ import {
   type AudioMix,
   type ApprovedAssetVersion,
   type AssetRoutingPolicy,
+  type ClearedRightsRecord,
   type GenerationBrief,
   type GenerationJobDraft,
   type MusicTrack,
@@ -68,7 +69,7 @@ import {
 } from "lucide-react";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {createHostAdapter, type HostAdapter} from "./host";
-import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, ProductionRenderScope, PublicShowPackCandidateSummary, RenderJobEvent, ReviewPublicShowPackCandidateResult, StagedCandidateSummary} from "@storystage/contracts";
+import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, ProductionRenderScope, PublicShowPackCandidateSummary, RenderJobEvent, ReviewPublicShowPackCandidateResult, StagedCandidateSummary, VerifiedDeliverySummary} from "@storystage/contracts";
 
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
@@ -449,11 +450,11 @@ function CutTimeline({build, selectedShotId, onSelect}: {build: AnimaticBuild; s
 type RenderShot = AnimaticBuild["renderPlan"]["shots"][number];
 
 function AudioCueEditor({build, shot, locked, onOverride}: {build: AnimaticBuild; shot: RenderShot; locked: boolean; onOverride: (shotId: string, patch: Partial<ShotOverride>) => void}) {
-  const [captionDraft, setCaptionDraft] = useState(shot.caption ?? "");
-  const [durationDraft, setDurationDraft] = useState((shot.durationInFrames / build.renderPlan.fps).toFixed(2));
   const creativeShot = build.creativePlan.shots.find((candidate) => candidate.id === shot.id)!;
+  const [captionDraft, setCaptionDraft] = useState(shot.caption ?? creativeShot.sourceExcerpt);
+  const [durationDraft, setDurationDraft] = useState((shot.durationInFrames / build.renderPlan.fps).toFixed(2));
 
-  useEffect(() => setCaptionDraft(shot.caption ?? ""), [shot.caption]);
+  useEffect(() => setCaptionDraft(shot.caption ?? creativeShot.sourceExcerpt), [creativeShot.sourceExcerpt, shot.caption]);
   useEffect(() => setDurationDraft((shot.durationInFrames / build.renderPlan.fps).toFixed(2)), [build.renderPlan.fps, shot.durationInFrames]);
 
   const normalizedDuration = () => {
@@ -480,12 +481,21 @@ const voiceTrackMediaUrl = (contentHash: string) => `storystage-media://voice/${
 const musicTrackMediaUrl = (contentHash: string) => `storystage-media://music/${encodeURIComponent(contentHash)}`;
 const soundEffectMediaUrl = (contentHash: string) => `storystage-media://sfx/${encodeURIComponent(contentHash)}`;
 
+type MediaRightsDraft = {sourceType: ClearedRightsRecord["sourceType"]; provider: string; usageNotes: string; evidenceReference: string; confirmed: boolean};
+const defaultMediaRights = (): MediaRightsDraft => ({sourceType: "user-owned", provider: "Operator supplied", usageNotes: "Cleared for this StoryStage production.", evidenceReference: "", confirmed: false});
+const finalizedMediaRights = (draft: MediaRightsDraft): ClearedRightsRecord | null => draft.confirmed && draft.provider.trim() && draft.usageNotes.trim() && draft.evidenceReference.trim() ? {sourceType: draft.sourceType, provider: draft.provider.trim(), usageNotes: draft.usageNotes.trim(), clearanceStatus: "cleared", evidenceReference: draft.evidenceReference.trim()} : null;
+
+function MediaRightsEditor({draft, label, onChange}: {draft: MediaRightsDraft; label: string; onChange: (draft: MediaRightsDraft) => void}) {
+  return <fieldset className="media-rights-editor"><legend>{label} rights</legend><label>Source<select aria-label={`${label} rights source`} onChange={(event) => onChange({...draft, sourceType: event.target.value as MediaRightsDraft["sourceType"]})} value={draft.sourceType}><option value="user-owned">I own/control it</option><option value="licensed">Licensed</option><option value="public-domain">Public domain</option><option value="generated">Generated</option></select></label><label>Provider / owner<input aria-label={`${label} rights provider`} onChange={(event) => onChange({...draft, provider: event.target.value})} value={draft.provider} /></label><label>Usage notes<input aria-label={`${label} rights notes`} onChange={(event) => onChange({...draft, usageNotes: event.target.value})} value={draft.usageNotes} /></label><label>Evidence reference<input aria-label={`${label} rights evidence`} onChange={(event) => onChange({...draft, evidenceReference: event.target.value})} placeholder="License, invoice, source URL, or owned recording note" value={draft.evidenceReference} /></label><label className="rights-confirmation"><input aria-label={`${label} rights cleared`} checked={draft.confirmed} onChange={(event) => onChange({...draft, confirmed: event.target.checked})} type="checkbox" />I confirm this exact file is cleared for this production.</label></fieldset>;
+}
+
 function VoiceTrackReview({build, capabilities, host, productionBundleContentHash, session, onTrack}: {build: AnimaticBuild; capabilities: DesktopCapabilities; host: HostAdapter; productionBundleContentHash: string | null; session: ProductionSession; onTrack: (track: VoiceTrack) => void}) {
   const [listenedThrough, setListenedThrough] = useState(false);
+  const [rightsDraft, setRightsDraft] = useState<MediaRightsDraft>(defaultMediaRights);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const track = session.voiceTrack;
-  useEffect(() => {setListenedThrough(false); setError(null);}, [track?.contentHash]);
+  useEffect(() => {setListenedThrough(false); setRightsDraft(defaultMediaRights()); setError(null);}, [track?.contentHash]);
   const planSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
   const durationDifference = track ? Math.abs(track.durationInSeconds - planSeconds) : 0;
   const coverageAligned = Boolean(track && durationDifference <= Math.max(2, planSeconds * .1));
@@ -499,9 +509,10 @@ function VoiceTrackReview({build, capabilities, host, productionBundleContentHas
     if (result.status === "failed") setError(result.error.message);
   };
   const approveTrack = async () => {
-    if (!track || !productionBundleContentHash || !listenedThrough) return;
+    const rights = finalizedMediaRights(rightsDraft);
+    if (!track || !productionBundleContentHash || !listenedThrough || !rights) return;
     setBusy(true); setError(null);
-    const result = await host.approveVoiceTrack({productionId: session.productionId, revision: session.revision, productionBundleContentHash, voiceTrackContentHash: track.contentHash, listenedThrough: true});
+    const result = await host.approveVoiceTrack({productionId: session.productionId, revision: session.revision, productionBundleContentHash, voiceTrackContentHash: track.contentHash, listenedThrough: true, rights});
     setBusy(false);
     if (result.ok) onTrack(voiceTrackSchema.parse(result.track));
     else setError(result.error.message);
@@ -510,17 +521,19 @@ function VoiceTrackReview({build, capabilities, host, productionBundleContentHas
   return <article className="voice-master-card">
     <header><div><p className="eyebrow">Local voice master</p><h3>{track ? track.sourceFileName : "No recording bound"}</h3><p>{track ? `${track.codec.replaceAll("-", " ")} · ${track.sampleRate / 1000} kHz · ${track.channels === 1 ? "mono" : "stereo"} · ${track.durationInSeconds.toFixed(2)}s` : "Import one uncompressed PCM/float WAV. The desktop copies and hashes it into private local storage."}</p></div><span className={track?.approvalStatus === "approved" ? "is-approved" : ""}>{track?.approvalStatus ?? "required"}</span></header>
     {track ? <><audio aria-label="Imported voice master" controls key={track.contentHash} onEnded={() => setListenedThrough(true)} preload="metadata" src={voiceTrackMediaUrl(track.contentHash)} /><div className={coverageAligned ? "voice-coverage is-aligned" : "voice-coverage"}><strong>{coverageAligned ? "Runtime aligned" : "Runtime needs review"}</strong><span>Voice {track.durationInSeconds.toFixed(1)}s · plan {planSeconds.toFixed(1)}s · Δ {durationDifference.toFixed(1)}s</span></div></> : null}
+    {track?.approvalStatus === "imported" ? <MediaRightsEditor draft={rightsDraft} label="Voice master" onChange={setRightsDraft} /> : null}
     {error ? <p className="voice-error" role="alert">{error}</p> : null}
-    <footer><button disabled={!capabilities.localAudioImport || !productionBundleContentHash || busy} onClick={() => void importTrack()}><Upload size={13} />{busy ? "Working…" : track ? "Replace WAV" : "Import WAV"}</button>{track?.approvalStatus === "imported" ? <button className="approve-voice" disabled={!listenedThrough || !productionBundleContentHash || busy} onClick={() => void approveTrack()}><Check size={13} />{listenedThrough ? "Approve listened take" : "Listen through to approve"}</button> : track?.approvalStatus === "approved" ? <small><ShieldCheck size={13} />Approved bytes are render-bound</small> : null}</footer>
+    <footer><button disabled={!capabilities.localAudioImport || !productionBundleContentHash || busy} onClick={() => void importTrack()}><Upload size={13} />{busy ? "Working…" : track ? "Replace WAV" : "Import WAV"}</button>{track?.approvalStatus === "imported" ? <button className="approve-voice" disabled={!listenedThrough || !productionBundleContentHash || !finalizedMediaRights(rightsDraft) || busy} onClick={() => void approveTrack()}><Check size={13} />{!listenedThrough ? "Listen through to approve" : finalizedMediaRights(rightsDraft) ? "Approve listened take" : "Confirm rights to approve"}</button> : track?.approvalStatus === "approved" ? <small><ShieldCheck size={13} />Approved bytes and rights are render-bound</small> : null}</footer>
   </article>;
 }
 
 function MusicTrackReview({capabilities, host, productionBundleContentHash, session, onTrack}: {capabilities: DesktopCapabilities; host: HostAdapter; productionBundleContentHash: string | null; session: ProductionSession; onTrack: (track: MusicTrack) => void}) {
   const [listenedThrough, setListenedThrough] = useState(false);
+  const [rightsDraft, setRightsDraft] = useState<MediaRightsDraft>(defaultMediaRights);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const track = session.musicTrack;
-  useEffect(() => {setListenedThrough(false); setError(null);}, [track?.contentHash]);
+  useEffect(() => {setListenedThrough(false); setRightsDraft(defaultMediaRights()); setError(null);}, [track?.contentHash]);
   const importTrack = async () => {
     if (!productionBundleContentHash) return;
     setBusy(true); setError(null);
@@ -530,9 +543,10 @@ function MusicTrackReview({capabilities, host, productionBundleContentHash, sess
     if (result.status === "failed") setError(result.error.message);
   };
   const approveTrack = async () => {
-    if (!track || !productionBundleContentHash || !listenedThrough) return;
+    const rights = finalizedMediaRights(rightsDraft);
+    if (!track || !productionBundleContentHash || !listenedThrough || !rights) return;
     setBusy(true); setError(null);
-    const result = await host.approveMusicTrack({productionId: session.productionId, revision: session.revision, productionBundleContentHash, musicTrackContentHash: track.contentHash, listenedThrough: true});
+    const result = await host.approveMusicTrack({productionId: session.productionId, revision: session.revision, productionBundleContentHash, musicTrackContentHash: track.contentHash, listenedThrough: true, rights});
     setBusy(false);
     if (result.ok) onTrack(musicTrackSchema.parse(result.track));
     else setError(result.error.message);
@@ -540,13 +554,15 @@ function MusicTrackReview({capabilities, host, productionBundleContentHash, sess
   return <article className="voice-master-card music-master-card">
     <header><div><p className="eyebrow">Local music master</p><h3>{track ? track.sourceFileName : "No music bound"}</h3><p>{track ? `${track.codec.replaceAll("-", " ")} · ${track.sampleRate / 1000} kHz · ${track.channels === 1 ? "mono" : "stereo"} · ${track.durationInSeconds.toFixed(2)}s` : "Import one uncompressed PCM/float WAV. Approval requires a full in-app listen-through."}</p></div><span className={track?.approvalStatus === "approved" ? "is-approved" : ""}>{track?.approvalStatus ?? "optional"}</span></header>
     {track ? <audio aria-label="Imported music master" controls key={track.contentHash} onEnded={() => setListenedThrough(true)} preload="metadata" src={musicTrackMediaUrl(track.contentHash)} /> : null}
+    {track?.approvalStatus === "imported" ? <MediaRightsEditor draft={rightsDraft} label="Music master" onChange={setRightsDraft} /> : null}
     {error ? <p className="voice-error" role="alert">{error}</p> : null}
-    <footer><button disabled={!capabilities.localAudioImport || !productionBundleContentHash || busy} onClick={() => void importTrack()}><Upload size={13} />{busy ? "Working…" : track ? "Replace music WAV" : "Import music WAV"}</button>{track?.approvalStatus === "imported" ? <button className="approve-voice" disabled={!listenedThrough || !productionBundleContentHash || busy} onClick={() => void approveTrack()}><Check size={13} />{listenedThrough ? "Approve listened music" : "Listen through to approve"}</button> : track?.approvalStatus === "approved" ? <small><ShieldCheck size={13} />Approved music bytes are render-bound</small> : null}</footer>
+    <footer><button disabled={!capabilities.localAudioImport || !productionBundleContentHash || busy} onClick={() => void importTrack()}><Upload size={13} />{busy ? "Working…" : track ? "Replace music WAV" : "Import music WAV"}</button>{track?.approvalStatus === "imported" ? <button className="approve-voice" disabled={!listenedThrough || !productionBundleContentHash || !finalizedMediaRights(rightsDraft) || busy} onClick={() => void approveTrack()}><Check size={13} />{!listenedThrough ? "Listen through to approve" : finalizedMediaRights(rightsDraft) ? "Approve listened music" : "Confirm rights to approve"}</button> : track?.approvalStatus === "approved" ? <small><ShieldCheck size={13} />Approved music bytes and rights are render-bound</small> : null}</footer>
   </article>;
 }
 
 function SoundEffectWorkspace({build, capabilities, host, productionBundleContentHash, selectedShot, session, onAssets, onCues}: {build: AnimaticBuild; capabilities: DesktopCapabilities; host: HostAdapter; productionBundleContentHash: string | null; selectedShot: RenderShot; session: ProductionSession; onAssets: (assets: SoundEffectAsset[]) => void; onCues: (cues: SoundEffectCue[]) => void}) {
   const [listenedHashes, setListenedHashes] = useState<Set<string>>(() => new Set());
+  const [rightsDrafts, setRightsDrafts] = useState<Record<string, MediaRightsDraft>>({});
   const [busyHash, setBusyHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const importAsset = async () => {
@@ -556,14 +572,16 @@ function SoundEffectWorkspace({build, capabilities, host, productionBundleConten
     setBusyHash(null);
     if (result.status === "imported") {
       const asset = soundEffectAssetSchema.parse(result.track);
+      setRightsDrafts((current) => ({...current, [asset.contentHash]: defaultMediaRights()}));
       onAssets([...session.soundEffectAssets.filter((candidate) => candidate.contentHash !== asset.contentHash), asset]);
     }
     if (result.status === "failed") setError(result.error.message);
   };
   const approveAsset = async (asset: SoundEffectAsset) => {
-    if (!productionBundleContentHash || !listenedHashes.has(asset.contentHash)) return;
+    const rights = finalizedMediaRights(rightsDrafts[asset.contentHash] ?? defaultMediaRights());
+    if (!productionBundleContentHash || !listenedHashes.has(asset.contentHash) || !rights) return;
     setBusyHash(asset.contentHash); setError(null);
-    const result = await host.approveSoundEffect({productionId: session.productionId, revision: session.revision, productionBundleContentHash, soundEffectContentHash: asset.contentHash, listenedThrough: true});
+    const result = await host.approveSoundEffect({productionId: session.productionId, revision: session.revision, productionBundleContentHash, soundEffectContentHash: asset.contentHash, listenedThrough: true, rights});
     setBusyHash(null);
     if (result.ok) {
       const approved = soundEffectAssetSchema.parse(result.track);
@@ -581,7 +599,11 @@ function SoundEffectWorkspace({build, capabilities, host, productionBundleConten
   return <article className="sfx-workspace-card">
     <header><div><p className="eyebrow">Cue-placed local SFX</p><h3>Approved effects library</h3><p>Import reusable WAV effects, listen through, approve the exact bytes, then place cues relative to the selected shot.</p></div><button disabled={!capabilities.localAudioImport || !productionBundleContentHash || busyHash !== null} onClick={() => void importAsset()}><Upload size={13} />{busyHash === "import" ? "Importing…" : "Import SFX WAV"}</button></header>
     {error ? <p className="voice-error" role="alert">{error}</p> : null}
-    {session.soundEffectAssets.length > 0 ? <div className="sfx-asset-list">{session.soundEffectAssets.map((asset) => <div key={asset.contentHash}><div><strong>{asset.sourceFileName}</strong><small>{asset.durationInSeconds.toFixed(2)}s · {asset.approvalStatus}</small></div><audio aria-label={`Sound effect ${asset.sourceFileName}`} controls onEnded={() => setListenedHashes((current) => new Set(current).add(asset.contentHash))} preload="metadata" src={soundEffectMediaUrl(asset.contentHash)} />{asset.approvalStatus === "imported" ? <button disabled={!listenedHashes.has(asset.contentHash) || !productionBundleContentHash || busyHash !== null} onClick={() => void approveAsset(asset)}>{listenedHashes.has(asset.contentHash) ? "Approve listened SFX" : "Listen through"}</button> : <button onClick={() => placeCue(asset)}>Place on {selectedShot.number}</button>}</div>)}</div> : <p className="sfx-empty">No custom effects imported. The profile transition accent remains a separate mix choice.</p>}
+    {session.soundEffectAssets.length > 0 ? <div className="sfx-asset-list">{session.soundEffectAssets.map((asset) => {
+      const rightsDraft = rightsDrafts[asset.contentHash] ?? defaultMediaRights();
+      const rights = finalizedMediaRights(rightsDraft);
+      return <div key={asset.contentHash}><div><strong>{asset.sourceFileName}</strong><small>{asset.durationInSeconds.toFixed(2)}s · {asset.approvalStatus}</small></div><audio aria-label={`Sound effect ${asset.sourceFileName}`} controls onEnded={() => setListenedHashes((current) => new Set(current).add(asset.contentHash))} preload="metadata" src={soundEffectMediaUrl(asset.contentHash)} />{asset.approvalStatus === "imported" ? <><MediaRightsEditor draft={rightsDraft} label={`Sound effect ${asset.sourceFileName}`} onChange={(next) => setRightsDrafts((current) => ({...current, [asset.contentHash]: next}))} /><button disabled={!listenedHashes.has(asset.contentHash) || !rights || !productionBundleContentHash || busyHash !== null} onClick={() => void approveAsset(asset)}>{!listenedHashes.has(asset.contentHash) ? "Listen through" : rights ? "Approve listened SFX" : "Confirm rights to approve"}</button></> : <button onClick={() => placeCue(asset)}>Place on {selectedShot.number}</button>}</div>;
+    })}</div> : <p className="sfx-empty">No custom effects imported. The profile transition accent remains a separate mix choice.</p>}
     {session.soundEffectCues.length > 0 ? <div className="sfx-cue-list"><h4>Placed cues</h4>{session.soundEffectCues.map((cue) => {
       const asset = session.soundEffectAssets.find((candidate) => candidate.contentHash === cue.assetContentHash);
       const planShot = build.renderPlan.shots.find((candidate) => candidate.id === cue.shotId);
@@ -611,8 +633,7 @@ function AudioMixReview({mix, musicTrack, onMix}: {mix: AudioMix; musicTrack: Mu
 }
 
 function AudioTimingWorkspace({build, capabilities, host, overrides, productionBundleContentHash, session, selectedShotId, onSelect, onAudioMix, onMusicTrack, onOverride, onSoundEffectAssets, onSoundEffectCues, onVoiceTrack}: {build: AnimaticBuild; capabilities: DesktopCapabilities; host: HostAdapter; overrides: ShotOverride[]; productionBundleContentHash: string | null; session: ProductionSession; selectedShotId: string; onSelect: (id: string) => void; onAudioMix: (mix: AudioMix) => void; onMusicTrack: (track: MusicTrack) => void; onOverride: (shotId: string, patch: Partial<ShotOverride>) => void; onSoundEffectAssets: (assets: SoundEffectAsset[]) => void; onSoundEffectCues: (cues: SoundEffectCue[]) => void; onVoiceTrack: (track: VoiceTrack) => void}) {
-  const sourceSpokenIds = new Set(build.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
-  const cues = build.renderPlan.shots.filter((shot) => sourceSpokenIds.has(shot.id) || Boolean(shot.caption));
+  const cues = build.renderPlan.shots.filter((shot) => shot.actions.some((action) => action.detail.type === "talk") || Boolean(shot.caption));
   const selected = cues.find((shot) => shot.id === selectedShotId) ?? cues[0];
   const selectedRenderShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
   const lockedIds = new Set(overrides.filter((override) => override.timingLocked).map((override) => override.shotId));
@@ -1063,7 +1084,7 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
   const lockedSpokenTimings = session.overrides.filter((override) => override.timingLocked && spokenShotIds.has(override.shotId)).length;
   const planSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
   const voiceCoverageAligned = Boolean(session.voiceTrack && Math.abs(session.voiceTrack.durationInSeconds - planSeconds) <= Math.max(2, planSeconds * .1));
-  const fullRenderBlockers = getFullProductionRenderBlockers({approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, musicTrack: session.musicTrack ?? undefined, overrides: session.overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: session.soundEffectAssets, voiceTrack: session.voiceTrack ?? undefined});
+  const fullRenderBlockers = getFullProductionRenderBlockers({approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, musicTrack: session.musicTrack ?? undefined, overrides: session.overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: session.soundEffectAssets, soundEffectCues: session.soundEffectCues, voiceTrack: session.voiceTrack ?? undefined});
   const items = [
     {id: "plan", ready: true, warning: false, title: "Script and direction compiled", detail: `${build.creativePlan.scenes.length} natural scenes · ${build.renderPlan.shots.length} shots · ${build.renderPlan.durationInFrames} exact frames`, action: "direction" as const},
     {id: "snapshot", ready: Boolean(productionBundleContentHash), warning: !capabilities.manualImageExchange, title: "Production snapshot saved", detail: productionBundleContentHash ? `Content ${productionBundleContentHash.slice(0, 12)}… is acknowledged by the desktop host.` : capabilities.manualImageExchange ? "The current production revision is still saving." : "Durable local snapshots require the desktop app.", action: "direction" as const},
@@ -1098,6 +1119,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const saveSequence = useRef(0);
   const [lastSavedHash, setLastSavedHash] = useState<string | null>(null);
   const [renderJob, setRenderJob] = useState<RenderJobEvent | null>(null);
+  const [delivery, setDelivery] = useState<VerifiedDeliverySummary | null>(null);
   const [renderScope, setRenderScope] = useState<ProductionRenderScope>("engineering-slice");
   const [renderJobScope, setRenderJobScope] = useState<ProductionRenderScope>("engineering-slice");
   const [tab, setTab] = useState<WorkspaceTab>("direction");
@@ -1111,7 +1133,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const pack = getShowPack(session.showPackId);
   const averageShot = build.renderPlan.durationInFrames / build.renderPlan.shots.length / build.renderPlan.fps;
   const routed = ["insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"].reduce((sum, treatment) => sum + (build.metrics.treatmentDistribution[treatment] ?? 0), 0);
-  const fullRenderBlockers = getFullProductionRenderBlockers({approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, musicTrack: session.musicTrack ?? undefined, overrides: session.overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: session.soundEffectAssets, voiceTrack: session.voiceTrack ?? undefined});
+  const fullRenderBlockers = getFullProductionRenderBlockers({approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, musicTrack: session.musicTrack ?? undefined, overrides: session.overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: session.soundEffectAssets, soundEffectCues: session.soundEffectCues, voiceTrack: session.voiceTrack ?? undefined});
 
   useEffect(() => {
     if (!capabilities.manualImageExchange) return;
@@ -1124,7 +1146,13 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
     });
   }, [build, capabilities.manualImageExchange, host, session]);
 
-  useEffect(() => host.subscribeToRenderJobs(setRenderJob), [host]);
+  useEffect(() => host.subscribeToRenderJobs((event) => {setRenderJob(event); if (event.status === "completed" && event.delivery) setDelivery(event.delivery);}), [host]);
+  useEffect(() => {
+    if (!lastSavedHash) {setDelivery(null); return;}
+    let current = true;
+    void host.getVerifiedDelivery({productionId: session.productionId, revision: session.revision, productionBundleContentHash: lastSavedHash}).then((result) => {if (current) setDelivery(result.delivery);});
+    return () => {current = false;};
+  }, [host, lastSavedHash, session.productionId, session.revision]);
 
   const renderApprovedProduction = async () => {
     try {
@@ -1171,7 +1199,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
 
   return (
     <div className="workspace-shell">
-      <header className="workspace-topbar"><Brand /><button className="quiet-button" onClick={onExit}><ArrowLeft size={14} />Productions</button><div className="production-crumb"><span>{pack.displayName}</span><ChevronRight size={13} /><strong>{session.title}</strong></div><span className="saved-state"><Check size={13} />{lastSavedHash ? `Saved ${lastSavedHash.slice(0, 8)}` : "Saving"}</span><label className="render-scope">Render scope<select aria-label="Render scope" disabled={Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onChange={(event) => setRenderScope(event.target.value as ProductionRenderScope)} value={renderScope}><option value="engineering-slice">24s engineering slice</option><option value="full-production">Full production · {fullRenderBlockers.length === 0 ? formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps) : `${fullRenderBlockers.length} gates left`}</option></select></label><button className="render-slice-button" disabled={!lastSavedHash || !capabilities.localRendering || session.approvedAssetVersions.length === 0 || (renderScope === "full-production" && fullRenderBlockers.length > 0) || Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onClick={() => void renderApprovedProduction()}><PlayCircle size={15} />{renderJob && !["completed", "failed"].includes(renderJob.status) ? renderJob.message : renderScope === "full-production" ? "Render full production" : "Render approved 24s slice"}</button>{renderJob?.status === "completed" ? <button className="quiet-button" onClick={() => void host.openRenderedFile(renderJob.jobId)}>Open MP4</button> : null}</header>
+      <header className="workspace-topbar"><Brand /><button className="quiet-button" onClick={onExit}><ArrowLeft size={14} />Productions</button><div className="production-crumb"><span>{pack.displayName}</span><ChevronRight size={13} /><strong>{session.title}</strong></div><span className="saved-state"><Check size={13} />{lastSavedHash ? `Saved ${lastSavedHash.slice(0, 8)}` : "Saving"}</span><label className="render-scope">Render scope<select aria-label="Render scope" disabled={Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onChange={(event) => setRenderScope(event.target.value as ProductionRenderScope)} value={renderScope}><option value="engineering-slice">24s engineering slice</option><option value="full-production">Full production · {fullRenderBlockers.length === 0 ? formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps) : `${fullRenderBlockers.length} gates left`}</option></select></label><button className="render-slice-button" disabled={!lastSavedHash || !capabilities.localRendering || session.approvedAssetVersions.length === 0 || (renderScope === "full-production" && fullRenderBlockers.length > 0) || Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onClick={() => void renderApprovedProduction()}><PlayCircle size={15} />{renderJob && !["completed", "failed"].includes(renderJob.status) ? renderJob.message : renderScope === "full-production" ? "Render full production" : "Render approved 24s slice"}</button>{delivery ? <><button className="quiet-button" onClick={() => void host.openDeliveryMaster(delivery.deliveryManifestContentHash)}>Open master</button><button className="quiet-button" onClick={() => void host.revealDeliveryBundle(delivery.deliveryManifestContentHash)}>Reveal delivery</button></> : renderJob?.status === "completed" ? <button className="quiet-button" onClick={() => void host.openRenderedFile(renderJob.jobId)}>Open MP4</button> : null}</header>
       <aside className="workspace-nav">
         <button className={tab === "direction" ? "is-active" : ""} onClick={() => setTab("direction")}><Aperture size={18} /><span>Direction</span></button>
         <button className={tab === "assets" ? "is-active" : ""} onClick={() => setTab("assets")}><Layers3 size={18} /><span>Assets</span><b>{build.resolvedPlan.generationBriefs.length}</b></button>
@@ -1181,6 +1209,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
       </aside>
       <main className="workspace-main">
         <header className="workspace-heading"><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : tab === "assets" ? "Generated-asset exchange" : tab === "audio" ? "Spoken editorial timing" : "Production readiness"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
+        {delivery ? <section className="verified-delivery-banner" aria-label="Verified delivery"><ShieldCheck size={20} /><div><small>Verified delivery</small><strong>1080p master · {delivery.master.frameCount} frames · {delivery.captionCueCount} caption cues · rights cleared</strong><span>Production {delivery.revision} · {delivery.productionBundleContentHash.slice(0, 10)} · manifest {delivery.deliveryManifestContentHash.slice(0, 10)}</span></div><button onClick={() => void host.openDeliveryMaster(delivery.deliveryManifestContentHash)}>Open master</button><button onClick={() => void host.revealDeliveryBundle(delivery.deliveryManifestContentHash)}>Reveal bundle</button></section> : null}
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
           <CutTimeline build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />

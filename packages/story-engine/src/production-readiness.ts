@@ -1,7 +1,7 @@
-import type {AudioMix, ApprovedAssetVersion, FrameAccurateRenderPlan, MusicTrack, ResolvedProductionPlan, ShotOverride, SoundEffectAsset, VoiceTrack} from "./model";
+import type {AudioMix, ApprovedAssetVersion, FrameAccurateRenderPlan, MusicTrack, ResolvedProductionPlan, ShotOverride, SoundEffectAsset, SoundEffectCue, VoiceTrack} from "./model";
 
 export type FullProductionRenderBlocker = {
-  id: "approved-art" | "audio-mix" | "custom-sfx" | "source-acquisition" | "spoken-timing" | "visual-bindings" | "voice-master";
+  id: "approved-art" | "audio-mix" | "custom-sfx" | "rights-clearance" | "source-acquisition" | "spoken-timing" | "visual-bindings" | "voice-master";
   message: string;
 };
 
@@ -13,6 +13,7 @@ export type FullProductionReadinessInput = {
   renderPlan: FrameAccurateRenderPlan;
   resolvedPlan: ResolvedProductionPlan;
   soundEffectAssets?: SoundEffectAsset[];
+  soundEffectCues?: SoundEffectCue[];
   voiceTrack?: VoiceTrack;
 };
 
@@ -36,8 +37,7 @@ export function getFullProductionRenderBlockers(input: FullProductionReadinessIn
     if (silentFallbackShots > 0 && !blockers.some((blocker) => blocker.id === "visual-bindings")) blockers.push({id: "visual-bindings", message: `${silentFallbackShots} history shots would still use a silent generic fallback instead of verified playback bytes or a named code-authored treatment.`});
   }
 
-  const sourceSpokenShotIds = new Set(input.resolvedPlan.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
-  const spokenShotIds = new Set(input.renderPlan.shots.filter((shot) => sourceSpokenShotIds.has(shot.id) || Boolean(shot.caption)).map((shot) => shot.id));
+  const spokenShotIds = new Set(input.renderPlan.shots.filter((shot) => shot.actions.some((action) => action.detail.type === "talk") || Boolean(shot.caption)).map((shot) => shot.id));
   const lockedSpokenIds = new Set(input.overrides.filter((override) => override.timingLocked && spokenShotIds.has(override.shotId)).map((override) => override.shotId));
   if (lockedSpokenIds.size !== spokenShotIds.size) blockers.push({id: "spoken-timing", message: `${lockedSpokenIds.size}/${spokenShotIds.size} spoken cues have editor-locked frame timing.`});
 
@@ -53,5 +53,12 @@ export function getFullProductionRenderBlockers(input: FullProductionReadinessIn
   if (!mixReady) blockers.push({id: "audio-mix", message: "Voice, music, and transition-SFX decisions need final review."});
   const unapprovedEffects = (input.soundEffectAssets ?? []).filter((asset) => asset.approvalStatus !== "approved").length;
   if (unapprovedEffects > 0) blockers.push({id: "custom-sfx", message: `${unapprovedEffects} custom sound effects are not approved.`});
+  const usedEffectHashes = new Set((input.soundEffectCues ?? []).map((cue) => cue.assetContentHash));
+  const unclearedAudio = [
+    ...(input.voiceTrack?.approvalStatus === "approved" ? input.voiceTrack.rights ? [] : ["voice master"] : []),
+    ...(input.audioMix?.musicDecision === "approved-master" && input.musicTrack?.approvalStatus === "approved" ? input.musicTrack.rights ? [] : ["music master"] : []),
+    ...(input.soundEffectAssets ?? []).filter((asset) => usedEffectHashes.has(asset.contentHash) && asset.approvalStatus === "approved" && !asset.rights).map((asset) => `sound effect ${asset.sourceFileName}`),
+  ];
+  if (unclearedAudio.length > 0) blockers.push({id: "rights-clearance", message: `Content-bound rights clearance is missing for ${unclearedAudio.join(", ")}.`});
   return blockers;
 }

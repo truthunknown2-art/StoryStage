@@ -8,6 +8,8 @@ SS-001 remains accepted workstation infrastructure: browser studio, secure Elect
 
 `SS-002: Two-Profile Script-to-Animatic + Generated Asset Seam` is active.
 
+`SS-004: Verified Delivery Bundle + Durable Render Receipt` is implemented and locally proven, awaiting Pro audit. Full renders now produce a probed content-hashed receipt and an atomic seven-file delivery binding the exact production, master, captions, rights/provenance, and toolchain. Delivery status survives restart and is re-verified before open/reveal; imported audio cannot pass the final gate without explicit content-bound clearance.
+
 The SS-003 Rook pilot opening slice is engineering-complete and was accepted by Pro at `6bcd590`. It provides a fixed 26.33-second history production, a complete public Rook candidate, and a trusted terminal review/promotion path. The remaining Rook visual, final voice, timing, and mix decisions are real human gates rather than hidden implementation claims.
 
 Pro's narrow re-audit of follow-up commit `1c0d6a2` accepted Gate 4, marked D resolved, found no remaining code-level blocker in scope, and called the result an honest durable foundation for continued product work. That acceptance covers the import, preparation, selection, promotion, approval-recovery, and approved-frame foundation; it does not claim product completion or final visual quality.
@@ -58,6 +60,8 @@ Current proof evidence is under `artifacts/SS-002/`:
 - five exact-index decoded frame pairs with matching SHA-256 hashes
 - four-second moving diagnostic and content-bound report
 - exact production bundle, approved manifest, and diagnostic hashes
+- a real full-production receipt and content-addressed seven-file delivery
+- deterministic SRT output, consumed-media rights report, atomic idempotent publication, and restart re-verification
 
 The proof art is deliberately simple local engineering art. It proves the executable path; it is not evidence of the requested visual style or a substitute for original ChatGPT-generated production assets.
 

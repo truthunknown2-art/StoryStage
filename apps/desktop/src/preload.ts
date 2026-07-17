@@ -22,6 +22,8 @@ import {
   importVoiceTrackResultSchema,
   getGenerationExchangeRequestSchema,
   getGenerationExchangeResultSchema,
+  getVerifiedDeliveryRequestSchema,
+  getVerifiedDeliveryResultSchema,
   listGenerationExchangesRequestSchema,
   listGenerationExchangesResultSchema,
   listProductionBundlesResultSchema,
@@ -53,6 +55,7 @@ import {
   type ImportMusicTrackRequest,
   type ImportSoundEffectRequest,
   type ImportVoiceTrackRequest,
+  type GetVerifiedDeliveryRequest,
   type GetGenerationExchangeRequest,
   type ListGenerationExchangesRequest,
   type ListPublicShowPackCandidatesRequest,
@@ -160,6 +163,12 @@ const bridge: StoryStageDesktopBridge = {
     return () => ipcRenderer.removeListener(IPC_CHANNELS.renderEvent, handler);
   },
   openRenderedFile: async (jobId: string) => openRenderedFileResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.openRenderedFile, jobId)),
+  getVerifiedDelivery: async (request: GetVerifiedDeliveryRequest) => {
+    const payload = getVerifiedDeliveryRequestSchema.parse(request);
+    return getVerifiedDeliveryResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.getVerifiedDelivery, payload));
+  },
+  openDeliveryMaster: async (deliveryManifestContentHash: string) => openRenderedFileResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.openDeliveryMaster, deliveryManifestContentHash)),
+  revealDeliveryBundle: async (deliveryManifestContentHash: string) => openRenderedFileResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.revealDeliveryBundle, deliveryManifestContentHash)),
 };
 
 contextBridge.exposeInMainWorld("storyStage", bridge);

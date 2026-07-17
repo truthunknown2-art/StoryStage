@@ -20,6 +20,8 @@ import type {
   ImportVoiceTrackResult,
   GetGenerationExchangeRequest,
   GetGenerationExchangeResult,
+  GetVerifiedDeliveryRequest,
+  GetVerifiedDeliveryResult,
   ListGenerationExchangesRequest,
   ListGenerationExchangesResult,
   ListProductionBundlesResult,
@@ -70,6 +72,9 @@ export interface HostAdapter {
   startProductionRender(request: StartProductionRenderRequest): Promise<StartRenderResponse>;
   subscribeToRenderJobs(listener: (event: RenderJobEvent) => void): () => void;
   openRenderedFile(jobId: string): Promise<OpenRenderedFileResult>;
+  getVerifiedDelivery(request: GetVerifiedDeliveryRequest): Promise<GetVerifiedDeliveryResult>;
+  openDeliveryMaster(deliveryManifestContentHash: string): Promise<OpenRenderedFileResult>;
+  revealDeliveryBundle(deliveryManifestContentHash: string): Promise<OpenRenderedFileResult>;
 }
 
 export class BrowserHostAdapter implements HostAdapter {
@@ -156,6 +161,9 @@ export class BrowserHostAdapter implements HostAdapter {
   };
   subscribeToRenderJobs = () => () => undefined;
   openRenderedFile = async (): Promise<OpenRenderedFileResult> => ({ok: false, error: {code: "DESKTOP_REQUIRED", message: "Opening rendered files requires the desktop app."}});
+  getVerifiedDelivery = async (_request: GetVerifiedDeliveryRequest): Promise<GetVerifiedDeliveryResult> => {void _request; return {delivery: null};};
+  openDeliveryMaster = async (): Promise<OpenRenderedFileResult> => ({ok: false, error: {code: "DESKTOP_REQUIRED", message: "Opening delivery masters requires the desktop app."}});
+  revealDeliveryBundle = async (): Promise<OpenRenderedFileResult> => ({ok: false, error: {code: "DESKTOP_REQUIRED", message: "Revealing delivery bundles requires the desktop app."}});
 }
 
 export class DesktopHostAdapter implements HostAdapter {
@@ -184,6 +192,9 @@ export class DesktopHostAdapter implements HostAdapter {
   startProductionRender = (request: StartProductionRenderRequest) => this.bridge.startProductionRender(request);
   subscribeToRenderJobs = (listener: (event: RenderJobEvent) => void) => this.bridge.subscribeToRenderJobs(listener);
   openRenderedFile = (jobId: string) => this.bridge.openRenderedFile(jobId);
+  getVerifiedDelivery = (request: GetVerifiedDeliveryRequest) => this.bridge.getVerifiedDelivery(request);
+  openDeliveryMaster = (deliveryManifestContentHash: string) => this.bridge.openDeliveryMaster(deliveryManifestContentHash);
+  revealDeliveryBundle = (deliveryManifestContentHash: string) => this.bridge.revealDeliveryBundle(deliveryManifestContentHash);
 }
 
 export const createHostAdapter = (bridge?: StoryStageDesktopBridge): HostAdapter =>

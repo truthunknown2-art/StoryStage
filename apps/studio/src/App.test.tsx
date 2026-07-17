@@ -50,6 +50,9 @@ function makeDesktopBridge(overrides: Partial<StoryStageDesktopBridge> = {}): St
     startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
     subscribeToRenderJobs: vi.fn(() => () => undefined),
     openRenderedFile: vi.fn(async () => ({ok: true as const})),
+    getVerifiedDelivery: vi.fn(async () => ({delivery: null})),
+    openDeliveryMaster: vi.fn(async () => ({ok: true as const})),
+    revealDeliveryBundle: vi.fn(async () => ({ok: true as const})),
     ...overrides,
   };
 }
@@ -142,6 +145,23 @@ describe("StoryStage studio", () => {
     expect(screen.getByText("Rejected for this production revision. No asset was bound.")).toBeInTheDocument();
     expect(screen.queryByRole("button", {name: /Approve Rook and bind/})).not.toBeInTheDocument();
     expect(listPublicShowPackCandidates).toHaveBeenCalledWith({productionId: "rook-pilot-001", revision: 1, productionBundleContentHash: "a".repeat(64)});
+  });
+
+  it("rehydrates an exact verified delivery and exposes only main-owned open actions", async () => {
+    const manifestHash = "d".repeat(64);
+    const getVerifiedDelivery = vi.fn(async () => ({delivery: {deliveryManifestContentHash: manifestHash, productionId: "production-one", revision: 1, productionBundleContentHash: "a".repeat(64), rightsStatus: "cleared" as const, captionCueCount: 11, master: {width: 1920 as const, height: 1080 as const, fps: 30 as const, frameCount: 792, durationInSeconds: 26.4}}}));
+    const openDeliveryMaster = vi.fn(async () => ({ok: true as const}));
+    const revealDeliveryBundle = vi.fn(async () => ({ok: true as const}));
+    window.storyStage = makeDesktopBridge({getVerifiedDelivery, openDeliveryMaster, revealDeliveryBundle});
+    const user = await createDefaultProduction();
+
+    const banner = await screen.findByRole("region", {name: "Verified delivery"});
+    expect(within(banner).getByText(/1080p master.*792 frames.*11 caption cues.*rights cleared/)).toBeInTheDocument();
+    expect(getVerifiedDelivery).toHaveBeenCalledWith(expect.objectContaining({revision: 1, productionBundleContentHash: "a".repeat(64)}));
+    await user.click(within(banner).getByRole("button", {name: "Open master"}));
+    await user.click(within(banner).getByRole("button", {name: "Reveal bundle"}));
+    expect(openDeliveryMaster).toHaveBeenCalledWith(manifestHash);
+    expect(revealDeliveryBundle).toHaveBeenCalledWith(manifestHash);
   });
 
   it("changes the actual Show Pack and routing rules for a kids production", async () => {
@@ -314,12 +334,18 @@ describe("StoryStage studio", () => {
     expect(player).toHaveAttribute("src", `storystage-media://voice/${"a".repeat(64)}`);
     expect(screen.getByRole("button", {name: "Listen through to approve"})).toBeDisabled();
     fireEvent.ended(player);
+    await user.type(screen.getByLabelText("Voice master rights evidence"), "Recorded and owned by the operator");
+    await user.click(screen.getByLabelText("Voice master rights cleared"));
     const approve = screen.getByRole("button", {name: "Approve listened take"});
     await waitFor(() => expect(approve).toBeEnabled());
     await user.click(approve);
 
-    expect(await screen.findByText("Approved bytes are render-bound")).toBeInTheDocument();
-    expect(bridge.approveVoiceTrack).toHaveBeenCalledWith(expect.objectContaining({voiceTrackContentHash: "a".repeat(64), listenedThrough: true}));
+    expect(await screen.findByText("Approved bytes and rights are render-bound")).toBeInTheDocument();
+    expect(bridge.approveVoiceTrack).toHaveBeenCalledWith(expect.objectContaining({
+      voiceTrackContentHash: "a".repeat(64),
+      listenedThrough: true,
+      rights: expect.objectContaining({clearanceStatus: "cleared", evidenceReference: "Recorded and owned by the operator"}),
+    }));
   });
 
   it("imports, auditions, approves, and selects an exact local music master", async () => {
@@ -339,11 +365,17 @@ describe("StoryStage studio", () => {
     const player = await screen.findByLabelText("Imported music master");
     expect(player).toHaveAttribute("src", `storystage-media://music/${"b".repeat(64)}`);
     fireEvent.ended(player);
+    await user.type(screen.getByLabelText("Music master rights evidence"), "Licensed music receipt 2026-07-17");
+    await user.click(screen.getByLabelText("Music master rights cleared"));
     const approveMusic = screen.getByRole("button", {name: "Approve listened music"});
     await waitFor(() => expect(approveMusic).toBeEnabled());
     await user.click(approveMusic);
-    expect(await screen.findByText("Approved music bytes are render-bound")).toBeInTheDocument();
-    expect(bridge.approveMusicTrack).toHaveBeenCalledWith(expect.objectContaining({musicTrackContentHash: "b".repeat(64), listenedThrough: true}));
+    expect(await screen.findByText("Approved music bytes and rights are render-bound")).toBeInTheDocument();
+    expect(bridge.approveMusicTrack).toHaveBeenCalledWith(expect.objectContaining({
+      musicTrackContentHash: "b".repeat(64),
+      listenedThrough: true,
+      rights: expect.objectContaining({clearanceStatus: "cleared", evidenceReference: "Licensed music receipt 2026-07-17"}),
+    }));
 
     await user.selectOptions(screen.getByLabelText("Music decision"), "approved-master");
     expect(screen.getByLabelText("Music gain")).toBeEnabled();
@@ -367,6 +399,8 @@ describe("StoryStage studio", () => {
     await user.click(importButton);
     const player = await screen.findByLabelText("Sound effect clock-hit.wav");
     fireEvent.ended(player);
+    await user.type(screen.getByLabelText("Sound effect clock-hit.wav rights evidence"), "Original operator recording");
+    await user.click(screen.getByLabelText("Sound effect clock-hit.wav rights cleared"));
     const approve = screen.getByRole("button", {name: "Approve listened SFX"});
     await waitFor(() => expect(approve).toBeEnabled());
     await user.click(approve);
@@ -377,7 +411,11 @@ describe("StoryStage studio", () => {
     await user.clear(screen.getByLabelText("Offset frames for clock-hit"));
     await user.type(screen.getByLabelText("Offset frames for clock-hit"), "4");
     expect(screen.getByLabelText("Offset frames for clock-hit")).toHaveValue(4);
-    expect(bridge.approveSoundEffect).toHaveBeenCalledWith(expect.objectContaining({soundEffectContentHash: "c".repeat(64), listenedThrough: true}));
+    expect(bridge.approveSoundEffect).toHaveBeenCalledWith(expect.objectContaining({
+      soundEffectContentHash: "c".repeat(64),
+      listenedThrough: true,
+      rights: expect.objectContaining({clearanceStatus: "cleared", evidenceReference: "Original operator recording"}),
+    }));
 
     await user.click(screen.getByRole("button", {name: "Preflight"}));
     expect(screen.getByText(/1\/1 effects approved · 1 shot-relative cues placed/)).toBeInTheDocument();
@@ -465,6 +503,9 @@ describe("StoryStage studio", () => {
       startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),
       openRenderedFile: vi.fn(async () => ({ok: true as const})),
+      getVerifiedDelivery: vi.fn(async () => ({delivery: null})),
+      openDeliveryMaster: vi.fn(async () => ({ok: true as const})),
+      revealDeliveryBundle: vi.fn(async () => ({ok: true as const})),
     };
     window.storyStage = bridge;
     const user = await createDefaultProduction();

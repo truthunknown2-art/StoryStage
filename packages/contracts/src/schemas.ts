@@ -118,7 +118,7 @@ export const approvedAssetVersionBridgeSchema = z.object({
   requirementId: productionIdSchema,
   contentHash: z.string().regex(/^[a-f0-9]{64}$/),
   relativeFile: z.string().min(1),
-  provenance: z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict(),
+  provenance: z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned", "project-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict(),
   approvedAt: z.string().datetime(),
 }).strict();
 export const publicShowPackCandidateSummarySchema = z.object({
@@ -175,6 +175,7 @@ export const voiceTrackBridgeSchema = z.object({
   importedAt: z.string().datetime(),
   approvalStatus: z.enum(["imported", "approved"]),
   approvedAt: z.string().datetime().nullable(),
+  rights: z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned", "project-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1), clearanceStatus: z.literal("cleared"), evidenceReference: z.string().trim().min(1).max(500)}).strict().optional(),
 }).strict();
 export const importVoiceTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict();
 export const importVoiceTrackResultSchema = z.discriminatedUnion("status", [
@@ -182,18 +183,19 @@ export const importVoiceTrackResultSchema = z.discriminatedUnion("status", [
   z.object({status: z.literal("cancelled")}).strict(),
   z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
 ]);
-export const approveVoiceTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), voiceTrackContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true)}).strict();
+const clearedMediaRightsBridgeSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned", "project-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1), clearanceStatus: z.literal("cleared"), evidenceReference: z.string().trim().min(1).max(500)}).strict();
+export const approveVoiceTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), voiceTrackContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true), rights: clearedMediaRightsBridgeSchema}).strict();
 export const approveVoiceTrackResultSchema = z.discriminatedUnion("ok", [
   z.object({ok: z.literal(true), track: voiceTrackBridgeSchema}).strict(),
   z.object({ok: z.literal(false), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
 ]);
 export const importMusicTrackRequestSchema = importVoiceTrackRequestSchema;
 export const importMusicTrackResultSchema = importVoiceTrackResultSchema;
-export const approveMusicTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), musicTrackContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true)}).strict();
+export const approveMusicTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), musicTrackContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true), rights: clearedMediaRightsBridgeSchema}).strict();
 export const approveMusicTrackResultSchema = approveVoiceTrackResultSchema;
 export const importSoundEffectRequestSchema = importVoiceTrackRequestSchema;
 export const importSoundEffectResultSchema = importVoiceTrackResultSchema;
-export const approveSoundEffectRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), soundEffectContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true)}).strict();
+export const approveSoundEffectRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), soundEffectContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true), rights: clearedMediaRightsBridgeSchema}).strict();
 export const approveSoundEffectResultSchema = approveVoiceTrackResultSchema;
 
 export const saveProductionBundleRequestSchema = z.object({serializedDraft: z.string().min(2).max(10_000_000)}).strict();
@@ -223,6 +225,18 @@ const activeJobFields = {
   message: z.string().min(1),
 };
 
+export const verifiedDeliverySummarySchema = z.object({
+  deliveryManifestContentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  productionId: productionIdSchema,
+  revision: z.number().int().positive(),
+  productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  rightsStatus: z.literal("cleared"),
+  captionCueCount: z.number().int().nonnegative(),
+  master: z.object({width: z.literal(1920), height: z.literal(1080), fps: z.literal(30), frameCount: z.number().int().positive(), durationInSeconds: z.number().positive()}).strict(),
+}).strict();
+export const getVerifiedDeliveryRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict();
+export const getVerifiedDeliveryResultSchema = z.object({delivery: verifiedDeliverySummarySchema.nullable()}).strict();
+
 export const idleRenderJobSchema = z.object({
   status: z.literal("idle"),
   progress: z.null(),
@@ -238,6 +252,8 @@ export const completedRenderJobSchema = z.object({
   status: z.literal("completed"),
   progress: z.null(),
   outputPath: z.string().min(1),
+  renderReceipt: z.object({contentHash: z.string().regex(/^[a-f0-9]{64}$/), path: z.string().min(1)}).strict().optional(),
+  delivery: verifiedDeliverySummarySchema.optional(),
 }).strict();
 export const failedRenderJobSchema = z.object({
   ...activeJobFields,
@@ -384,6 +400,9 @@ export const IPC_CHANNELS = {
   renderStart: "storystage:render-start",
   productionRenderStart: "storystage:production-render-start",
   openRenderedFile: "storystage:open-rendered-file",
+  getVerifiedDelivery: "storystage:get-verified-delivery",
+  openDeliveryMaster: "storystage:open-delivery-master",
+  revealDeliveryBundle: "storystage:reveal-delivery-bundle",
 } as const;
 
 export type StartRenderRequest = z.input<typeof startRenderRequestSchema>;
@@ -442,6 +461,9 @@ export type RenderJobEvent = z.infer<typeof renderJobEventSchema>;
 export type RenderJobState = z.infer<typeof renderJobStateSchema>;
 export type RenderJobStatus = RenderJobState["status"];
 export type OpenRenderedFileResult = z.infer<typeof openRenderedFileResultSchema>;
+export type VerifiedDeliverySummary = z.infer<typeof verifiedDeliverySummarySchema>;
+export type GetVerifiedDeliveryRequest = z.infer<typeof getVerifiedDeliveryRequestSchema>;
+export type GetVerifiedDeliveryResult = z.infer<typeof getVerifiedDeliveryResultSchema>;
 export type RenderWorkerCommand = z.infer<typeof renderWorkerCommandSchema>;
 export type RenderWorkerMessage = z.infer<typeof renderWorkerMessageSchema>;
 export type AssetWorkerCommand = z.infer<typeof assetWorkerCommandSchema>;
@@ -473,4 +495,7 @@ export type StoryStageDesktopBridge = {
   startProductionRender: (request: StartProductionRenderRequest) => Promise<StartRenderResponse>;
   subscribeToRenderJobs: (listener: (event: RenderJobEvent) => void) => () => void;
   openRenderedFile: (jobId: string) => Promise<OpenRenderedFileResult>;
+  getVerifiedDelivery: (request: GetVerifiedDeliveryRequest) => Promise<GetVerifiedDeliveryResult>;
+  openDeliveryMaster: (deliveryManifestContentHash: string) => Promise<OpenRenderedFileResult>;
+  revealDeliveryBundle: (deliveryManifestContentHash: string) => Promise<OpenRenderedFileResult>;
 };

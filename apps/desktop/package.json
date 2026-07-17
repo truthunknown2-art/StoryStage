@@ -7,7 +7,7 @@
     "build": "tsup --config tsup.config.ts && node ../../scripts/verify-desktop-bundle.mjs",
     "start": "electron dist/main.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run src/approval-recovery.test.ts src/production-draft-payload.test.ts src/public-review-lineage.test.ts"
+    "test": "vitest run src/approval-recovery.test.ts src/production-draft-payload.test.ts src/public-review-lineage.test.ts src/render-receipt.test.ts src/delivery-store.test.ts src/production-mutation-lock.test.ts"
   },
   "dependencies": {
     "@storystage/asset-pipeline": "workspace:*",

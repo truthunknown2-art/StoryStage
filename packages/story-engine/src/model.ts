@@ -400,7 +400,8 @@ export const generationExchangeStateSchema = z.object({
   if (state.status !== "superseded" && state.supersededBy !== null) context.addIssue({code: "custom", path: ["supersededBy"], message: "Only a superseded exchange may identify a replacement."});
 });
 
-export const rightsRecordSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict();
+export const rightsRecordSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned", "project-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict();
+export const clearedRightsRecordSchema = rightsRecordSchema.extend({clearanceStatus: z.literal("cleared"), evidenceReference: z.string().trim().min(1).max(500)}).strict();
 export const candidateBundleAssetSchema = z.object({candidateId: identifierSchema, candidateSetId: identifierSchema, briefId: identifierSchema, fileRole: z.string().min(1), relativeFile: safeRelativePathSchema, contentHash: hashSchema, mediaType: z.enum(["image/png", "image/jpeg", "image/webp"]), width: z.number().int().positive(), height: z.number().int().positive(), rights: rightsRecordSchema}).strict();
 export const candidateBundleSchema = z.object({
   schemaVersion: z.literal("1.0"),
@@ -463,6 +464,7 @@ export const voiceTrackSchema = z.object({
   importedAt: z.string().datetime(),
   approvalStatus: z.enum(["imported", "approved"]),
   approvedAt: z.string().datetime().nullable(),
+  rights: clearedRightsRecordSchema.optional(),
 }).strict().superRefine((track, context) => {
   if ((track.approvalStatus === "approved") !== Boolean(track.approvedAt)) context.addIssue({code: "custom", path: ["approvedAt"], message: "Approved voice tracks require an approval timestamp; imported tracks must not have one."});
 });
@@ -641,6 +643,7 @@ export type StagedCandidate = z.infer<typeof stagedCandidateSchema>;
 export type PreparedCandidate = z.infer<typeof preparedCandidateSchema>;
 export type AssetApproval = z.infer<typeof assetApprovalSchema>;
 export type ApprovedAssetVersion = z.infer<typeof approvedAssetVersionSchema>;
+export type ClearedRightsRecord = z.infer<typeof clearedRightsRecordSchema>;
 export type AudioMix = z.infer<typeof audioMixSchema>;
 export type VoiceTrack = z.infer<typeof voiceTrackSchema>;
 export type MusicTrack = z.infer<typeof musicTrackSchema>;

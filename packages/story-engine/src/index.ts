@@ -6,6 +6,7 @@ export * from "./asset-resolver";
 export * from "./canonical-hash";
 export * from "./candidate-set-validation";
 export * from "./director";
+export * from "./delivery";
 export * from "./generation-exchange";
 export * from "./import-record";
 export * from "./model";

@@ -1,12 +1,15 @@
 import {createHash} from "node:crypto";
-import {lstat, mkdir, readFile, realpath} from "node:fs/promises";
-import {dirname, isAbsolute, relative, resolve} from "node:path";
+import {execFile} from "node:child_process";
+import {lstat, mkdir, readFile, realpath, stat, writeFile} from "node:fs/promises";
+import {basename, dirname, isAbsolute, relative, resolve} from "node:path";
+import {promisify} from "node:util";
 import {bundle} from "@remotion/bundler";
 import {getVideoMetadata, renderMedia, renderStill, selectComposition} from "@remotion/renderer";
+import ffprobeStatic from "ffprobe-static";
 import type {ProductionRenderScope, RenderJobEvent} from "@storystage/contracts";
 import {sampleEpisodePlan} from "@storystage/fixtures";
 import {STORY_STAGE_COMPOSITION_ID, STORY_STAGE_PRODUCTION_COMPOSITION_ID, STORY_STAGE_RIG_DIAGNOSTIC_COMPOSITION_ID} from "@storystage/remotion-runtime/manifest";
-import {assetRigManifestSchema, getFullProductionRenderBlockers, inspectPcmWav, productionBundleSchema, rigDiagnosticReportSchema, rigValidationReportSchema, verifyAssetRigManifestHash, verifyProductionBundleHash, verifyRigDiagnosticReportHash, verifyRigValidationReportHash, type ApprovedAssetVersion, type RigAssetBinding, type VoiceTrack} from "@storystage/story-engine";
+import {assetRigManifestSchema, deliveryRenderPlanContentHash, finalizeRenderReceipt, getFullProductionRenderBlockers, inspectPcmWav, productionBundleSchema, rigDiagnosticReportSchema, rigValidationReportSchema, verifyAssetRigManifestHash, verifyProductionBundleHash, verifyRigDiagnosticReportHash, verifyRigValidationReportHash, type ApprovedAssetVersion, type ProductionBundle, type RigAssetBinding, type VoiceTrack} from "@storystage/story-engine";
 import type {PlaybackAsset, ProductionCompositionProps, RigDiagnosticCompositionProps} from "@storystage/remotion-runtime";
 
 export type RenderSampleOptions = {
@@ -31,6 +34,7 @@ export type RenderProductionOptions = {
 export type RenderRigDiagnosticOptions = {entityName: string; importRoot: string; jobId: string; manifestFile: string; onEvent?: (event: RenderJobEvent) => void; outputFile: string; workspaceRoot: string};
 
 const emit = (listener: RenderSampleOptions["onEvent"], event: RenderJobEvent) => listener?.(event);
+const execFileAsync = promisify(execFile);
 
 const isWithin = (root: string, candidate: string) => {const path = relative(root, candidate); return path === "" || (!path.startsWith("..") && !isAbsolute(path));};
 async function trustedFile(root: string, file: string, maxBytes: number): Promise<Buffer> {
@@ -99,6 +103,48 @@ async function playbackAsset(assetsRoot: string, approved: ApprovedAssetVersion)
   return {type: "prop", assetId: approved.assetId, cutout: await imageDataUrl(versionRoot, manifest.cutout, true)};
 }
 
+type ProbedStream = {codec_name?: string; codec_type?: string; width?: number; height?: number; avg_frame_rate?: string; nb_frames?: string; duration?: string; channels?: number; sample_rate?: string};
+async function persistFullProductionRenderReceipt(input: {bundle: ProductionBundle; jobId: string; outputPath: string; outputRoot: string}) {
+  const {stdout} = await execFileAsync(ffprobeStatic.path, ["-v", "error", "-show_streams", "-of", "json", input.outputPath], {maxBuffer: 10 * 1024 * 1024});
+  const streams = (JSON.parse(stdout) as {streams?: ProbedStream[]}).streams ?? [];
+  const video = streams.find((stream) => stream.codec_type === "video");
+  const audio = streams.find((stream) => stream.codec_type === "audio");
+  if (!video || video.codec_name !== "h264" || video.width !== 1920 || video.height !== 1080) throw new Error("The full-production master failed its H.264 1080p delivery probe.");
+  const [rateNumerator, rateDenominator] = (video.avg_frame_rate ?? "0/1").split("/").map(Number);
+  const fps = rateDenominator ? rateNumerator! / rateDenominator : 0;
+  if (fps !== input.bundle.renderPlan.fps || fps !== 30) throw new Error("The full-production master failed its exact frame-rate delivery probe.");
+  const durationInSeconds = Number(video.duration);
+  const frameCount = Number(video.nb_frames || Math.round(durationInSeconds * fps));
+  if (frameCount !== input.bundle.renderPlan.durationInFrames || !Number.isFinite(durationInSeconds) || Math.abs(durationInSeconds - frameCount / fps) > 1 / fps) throw new Error("The full-production master failed its exact duration and frame-count delivery probe.");
+  const expectsAudio = Boolean(input.bundle.voiceTrack || input.bundle.musicTrack || (input.bundle.soundEffectCues?.length ?? 0) > 0 || input.bundle.audioMix?.transitionSfx !== "off");
+  if (expectsAudio && (!audio || audio.codec_name !== "aac")) throw new Error("The full-production master is missing its required AAC delivery stream.");
+  const outputBytes = await readFile(input.outputPath);
+  const outputInfo = await stat(input.outputPath);
+  if (!outputInfo.isFile() || outputInfo.size === 0) throw new Error("The full-production master is empty.");
+  let ffmpegVersion = "ffmpeg-static-5.3.0";
+  try {
+    const version = await execFileAsync(ffprobeStatic.path, ["-version"], {maxBuffer: 1_000_000});
+    ffmpegVersion = version.stdout.split(/\r?\n/, 1)[0]?.trim() || ffmpegVersion;
+  } catch {
+    // The verified media probe above is authoritative; retain the packaged tool identifier if version text is unavailable.
+  }
+  const completedAt = new Date().toISOString();
+  const receipt = finalizeRenderReceipt({
+    schemaVersion: "1.0",
+    renderId: `render-${input.jobId.replaceAll("-", "").slice(0, 24)}`,
+    production: {id: input.bundle.production.productionId, revision: input.bundle.production.revision, bundleContentHash: input.bundle.contentHash, renderPlanContentHash: deliveryRenderPlanContentHash(input.bundle.renderPlan)},
+    scope: "full-production",
+    master: {relativeFile: basename(input.outputPath), sha256: createHash("sha256").update(outputBytes).digest("hex"), byteLength: outputInfo.size, codec: "h264", width: 1920, height: 1080, fps: 30, frameCount, durationInSeconds, audio: audio ? {codec: "aac", channels: audio.channels ?? 2, sampleRate: Number(audio.sample_rate ?? 48_000)} : null},
+    toolchain: {storyStageVersion: "0.1.0", storyStageCommit: process.env.STORYSTAGE_COMMIT ?? "development-worktree", compilerVersion: input.bundle.renderPlan.compilerVersion, remotionVersion: "4.0.490", ffmpegVersion, platform: process.platform, architecture: process.arch},
+    completedAt,
+  });
+  const receiptDirectory = resolve(input.outputRoot, "receipts", input.bundle.contentHash);
+  await mkdir(receiptDirectory, {recursive: true});
+  const receiptPath = resolve(receiptDirectory, `${receipt.contentHash}.json`);
+  await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, {encoding: "utf8", flag: "wx", mode: 0o600});
+  return {contentHash: receipt.contentHash, path: receiptPath};
+}
+
 export async function renderRigDiagnostic(options: RenderRigDiagnosticOptions): Promise<string> {
   emit(options.onEvent, {jobId: options.jobId, status: "bundling", progress: 0, message: "Bundling selected rig diagnostic"});
   const manifestBytes = await trustedFile(options.importRoot, options.manifestFile, 2_000_000);
@@ -127,7 +173,7 @@ export async function renderProduction(options: RenderProductionOptions): Promis
   const productionBundle = productionBundleSchema.parse(JSON.parse(bundleBytes.toString("utf8")));
   if (!verifyProductionBundleHash(productionBundle) || productionBundle.contentHash !== options.bundleContentHash) throw new Error("Production render snapshot failed exact derivation or content-hash verification.");
   if (options.scope === "full-production") {
-    const blockers = getFullProductionRenderBlockers({approvedAssetVersions: productionBundle.approvedAssetVersions ?? [], audioMix: productionBundle.audioMix, musicTrack: productionBundle.musicTrack, overrides: productionBundle.overrides, renderPlan: productionBundle.renderPlan, resolvedPlan: productionBundle.resolvedPlan, soundEffectAssets: productionBundle.soundEffectAssets, voiceTrack: productionBundle.voiceTrack});
+    const blockers = getFullProductionRenderBlockers({approvedAssetVersions: productionBundle.approvedAssetVersions ?? [], audioMix: productionBundle.audioMix, musicTrack: productionBundle.musicTrack, overrides: productionBundle.overrides, renderPlan: productionBundle.renderPlan, resolvedPlan: productionBundle.resolvedPlan, soundEffectAssets: productionBundle.soundEffectAssets, soundEffectCues: productionBundle.soundEffectCues, voiceTrack: productionBundle.voiceTrack});
     if (blockers.length > 0) throw new Error(`Full production render is blocked: ${blockers.map((blocker) => blocker.message).join(" ")}`);
   }
   const approvedVersions = productionBundle.approvedAssetVersions ?? [];
@@ -145,7 +191,8 @@ export async function renderProduction(options: RenderProductionOptions): Promis
   const composition = await selectComposition({serveUrl, id: STORY_STAGE_PRODUCTION_COMPOSITION_ID, inputProps});
   await renderMedia({codec: "h264", composition, inputProps, outputLocation: outputPath, serveUrl, onProgress: ({progress}) => emit(options.onEvent, {jobId: options.jobId, status: "rendering", progress: .18 + progress * .76, message: `Rendering approved frames ${Math.round(progress * inputProps.sliceDurationInFrames)} of ${inputProps.sliceDurationInFrames}`})});
   emit(options.onEvent, {jobId: options.jobId, status: "encoding", progress: null, message: `Finalizing the approved H.264 ${renderLabel}`});
-  emit(options.onEvent, {jobId: options.jobId, status: "completed", progress: null, message: options.scope === "full-production" ? "Full production render complete" : "Approved production slice complete", outputPath});
+  const renderReceipt = options.scope === "full-production" ? await persistFullProductionRenderReceipt({bundle: productionBundle, jobId: options.jobId, outputPath, outputRoot: options.outputRoot}) : undefined;
+  emit(options.onEvent, {jobId: options.jobId, status: "completed", progress: null, message: options.scope === "full-production" ? "Full production render and receipt verified" : "Approved production slice complete", outputPath, ...(renderReceipt ? {renderReceipt} : {})});
   return outputPath;
 }
 
