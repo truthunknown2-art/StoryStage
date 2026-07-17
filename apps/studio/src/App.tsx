@@ -66,6 +66,12 @@ import {
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {createHostAdapter, type HostAdapter} from "./host";
 import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, ProductionRenderScope, RenderJobEvent, StagedCandidateSummary} from "@storystage/contracts";
+import rookCandidateManifest from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/candidate-manifest.json";
+import rookIdentitySheetUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/identity-sheet.png";
+import rookNeutralPoseUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/prepared/rook-v1-neutral.png";
+import rookReactionPoseUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/prepared/rook-v1-reaction.png";
+import rookTalkPoseUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/prepared/rook-v1-talk.png";
+import rookRigDiagnosticUrl from "../../../packages/remotion-runtime/public/show-packs/weird-history/rook/v1/prepared/rig-diagnostic-rook-v1.mp4";
 
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
@@ -705,6 +711,20 @@ function buildChatGptAssetPrompt(session: ProductionSession, brief: GenerationBr
 
 const suggestedAssetFilename = (brief: GenerationBrief, candidateSetNumber: number, fileRole: string) => `${brief.entity.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "asset"}-set-${candidateSetNumber}-${fileRole}`;
 
+function ShowPackCandidateLibrary({showPackId}: {showPackId: string}) {
+  if (showPackId !== rookCandidateManifest.showPackId) return null;
+  const poses = [{label: "Neutral", url: rookNeutralPoseUrl}, {label: "Talk", url: rookTalkPoseUrl}, {label: "Reaction", url: rookReactionPoseUrl}];
+  return <section className="show-pack-candidate" aria-label="Show Pack art candidates">
+    <header><div><p className="eyebrow">Original Show Pack candidate</p><h2>{rookCandidateManifest.displayName}</h2><p>Generated with the built-in ChatGPT image tool and locally matte-validated. It is visible here for real review, but it is not silently treated as approved production art.</p></div><span>Needs human review</span></header>
+    <div className="show-pack-candidate-body">
+      <div className="show-pack-candidate-media"><img className="identity-sheet" alt="Rook presenter canonical identity sheet" loading="lazy" src={rookIdentitySheetUrl} /><div className="pose-strip">{poses.map((pose) => <figure key={pose.label}><img alt={`Rook ${pose.label.toLowerCase()} pose`} loading="lazy" src={pose.url} /><figcaption>{pose.label}</figcaption></figure>)}</div></div>
+      <aside><strong>Identity-locked pose set</strong><p>{rookCandidateManifest.style.identityLock}</p><div>{rookCandidateManifest.files.map((file) => <span key={file.role}><Check size={12} />{file.role.replaceAll("-", " ")}<small>{file.width} x {file.height}{file.alpha ? " / alpha" : ""}</small></span>)}</div><div className="candidate-check"><ShieldCheck size={14} /><p>Canvas, common ground line, manifest hash, and all three pose bindings passed technical rig validation.</p></div></aside>
+    </div>
+    <div className="rig-diagnostic"><div><strong>4-second moving rig diagnostic</strong><span>Rendered locally / human review pending</span></div><video aria-label="Rook moving rig diagnostic" controls muted preload="metadata" src={rookRigDiagnosticUrl} /></div>
+    <footer><ShieldCheck size={14} /><p>Four SHA-256-bound source files are present. Transparent corners, chroma-edge checks, normalization, and moving-diagnostic creation passed; identity consistency still needs your visual approval.</p></footer>
+  </section>;
+}
+
 function AssetExchange({session, build, host, capabilities, onApprovedAsset, productionBundleContentHash}: {session: ProductionSession; build: AnimaticBuild; host: HostAdapter; capabilities: DesktopCapabilities; onApprovedAsset: (approved: ApprovedAssetVersion) => void; productionBundleContentHash: string | null}) {
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [reviewingExport, setReviewingExport] = useState(false);
@@ -906,6 +926,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
   return (
     <div className="asset-exchange">
       <section className="provider-banner"><div className="provider-icon"><ImagePlus size={23} /></div><div><p className="eyebrow">Provider-neutral exchange</p><h2>Manual ChatGPT Images</h2><p>Export an approved brief, generate original candidates in ChatGPT, then import the result bundle. No API call or paid generation is hidden here.</p></div><span className="manual-badge">Manual round trip</span></section>
+      <ShowPackCandidateLibrary showPackId={session.showPackId} />
       <div className={`exchange-actions ${capabilities.manualImageExchange ? "is-desktop" : ""}`}>
         <button disabled={capabilities.manualImageExchange && !productionBundleContentHash} onClick={() => setReviewingExport(true)}><Download size={16} /><span><strong>Review generation export</strong><small>{capabilities.manualImageExchange ? productionBundleContentHash ? "Bound to the acknowledged production snapshot" : "Waiting for the production snapshot to save" : "JSON + expected output contract"}</small></span></button>
         {capabilities.manualImageExchange

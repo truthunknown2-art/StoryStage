@@ -20,6 +20,7 @@
     "render:proof": "pnpm --filter @storystage/render-worker render:proof",
     "render:determinism": "pnpm --filter @storystage/render-worker render:determinism",
     "render:audio": "pnpm --filter @storystage/render-worker render:audio",
+    "prepare:rook": "tsx scripts/prepare-rook-show-pack.ts",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck",
     "verify:privacy": "node scripts/verify-privacy.mjs",

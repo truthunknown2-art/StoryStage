@@ -183,6 +183,18 @@ describe("StoryStage studio", () => {
     expect(screen.getByText(/final-output gates remain/)).toBeInTheDocument();
   });
 
+  it("shows generated Show Pack art as a review candidate without faking approval", async () => {
+    const user = await createDefaultProduction();
+    await user.click(screen.getByRole("button", {name: /Assets/}));
+    expect(screen.getByRole("heading", {name: "Rook editorial presenter"})).toBeInTheDocument();
+    expect(screen.getByText("Needs human review")).toBeInTheDocument();
+    expect(screen.getByAltText("Rook presenter canonical identity sheet")).toHaveAttribute("src", expect.stringContaining("identity-sheet"));
+    expect(screen.getByAltText("Rook neutral pose")).toHaveAttribute("src", expect.stringContaining("rook-v1-neutral"));
+    expect(screen.getByLabelText("Rook moving rig diagnostic")).toHaveAttribute("src", expect.stringContaining("rig-diagnostic-rook-v1"));
+    expect(screen.getByText(/common ground line/)).toBeInTheDocument();
+    expect(screen.getByText(/not silently treated as approved production art/)).toBeInTheDocument();
+  });
+
   it("edits and locks frame-accurate spoken timing instead of faking a voice track", async () => {
     const user = await createDefaultProduction();
     await user.click(screen.getByRole("button", {name: "Audio"}));

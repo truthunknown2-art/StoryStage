@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "1.0",
+  "manifestId": "manifest-rook-v1",
+  "candidateSetId": "rook-v1",
+  "briefId": "brief-show-pack-rook-v1",
+  "requirementId": "requirement-show-pack-rook-v1",
+  "entityId": "character-rook",
+  "entityName": "Rook",
+  "createdAt": "2026-07-17T17:00:00.000Z",
+  "type": "character-rig",
+  "animationMode": "pose-swap-2d",
+  "identityReference": {
+    "candidateId": "rook-v1-identity",
+    "fileRole": "identity-sheet.png",
+    "contentHash": "91aae474f5e0f4472f8ae366f464b1dec8ff8eb22837bf853848e63317349db6",
+    "relativeFile": "prepared/rook-v1-identity.png",
+    "width": 1600,
+    "height": 1800,
+    "registration": {
+      "anchorX": 0.5,
+      "anchorY": 0.98,
+      "pivotX": 800,
+      "pivotY": 1432,
+      "groundY": 1432
+    }
+  },
+  "poses": {
+    "neutral": {
+      "candidateId": "rook-v1-neutral",
+      "fileRole": "neutral-pose.png",
+      "contentHash": "f3f402762a6aa7e72932018fb3a241dd2eeabf67680703eeb4c20240ca56cf14",
+      "relativeFile": "prepared/rook-v1-neutral.png",
+      "width": 1600,
+      "height": 1800,
+      "registration": {
+        "anchorX": 0.5,
+        "anchorY": 0.98,
+        "pivotX": 800,
+        "pivotY": 1763,
+        "groundY": 1763
+      }
+    },
+    "talk": {
+      "candidateId": "rook-v1-talk",
+      "fileRole": "talk-pose.png",
+      "contentHash": "0d4558e5bafd70cbc662f28323ab27101762999f34225f5ed41d2182f1617fb8",
+      "relativeFile": "prepared/rook-v1-talk.png",
+      "width": 1600,
+      "height": 1800,
+      "registration": {
+        "anchorX": 0.5,
+        "anchorY": 0.98,
+        "pivotX": 800,
+        "pivotY": 1763,
+        "groundY": 1763
+      }
+    },
+    "reaction": {
+      "candidateId": "rook-v1-reaction",
+      "fileRole": "reaction-pose.png",
+      "contentHash": "744746bb23a6f10bad4b3386d9e75b7d79fbb4e7f3ed1e3adc7c62bdbfb6be82",
+      "relativeFile": "prepared/rook-v1-reaction.png",
+      "width": 1600,
+      "height": 1800,
+      "registration": {
+        "anchorX": 0.5,
+        "anchorY": 0.98,
+        "pivotX": 800,
+        "pivotY": 1763,
+        "groundY": 1763
+      }
+    }
+  },
+  "contentHash": "48fa071180f3f47fb30f4cca7a164f67c5c6abc943def9e2bf22e771009c9299"
+}

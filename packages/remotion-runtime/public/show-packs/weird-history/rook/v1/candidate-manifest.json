@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "1.0",
+  "candidateId": "weird-history-rook-v1",
+  "showPackId": "weird-history-editorial-v1",
+  "displayName": "Rook editorial presenter",
+  "status": "candidate-needs-human-review",
+  "provider": "chatgpt-built-in-imagegen",
+  "generatedAt": "2026-07-17T17:00:00.000Z",
+  "rights": {
+    "sourceType": "generated",
+    "provider": "ChatGPT Images",
+    "usageNotes": "Original StoryStage Show Pack candidate; do not promote to an approved production asset before explicit human visual review."
+  },
+  "style": {
+    "medium": "tactile editorial cut-paper illustration with ink contours and screenprint grain",
+    "palette": ["#f4f1e8", "#161a1d", "#f04438", "#4d8c88"],
+    "identityLock": "Angular swept-back dark hair, cream rolled-sleeve shirt, vermilion neck scarf, charcoal high-waist trousers, practical dark shoes."
+  },
+  "files": [
+    {"role": "identity-sheet", "file": "identity-sheet.png", "contentHash": "13c11517c519bf7615ebae1ff5e1c7b5f4dbd99375a0b84b205ea1116461528b", "mediaType": "image/png", "width": 1536, "height": 1024, "alpha": false},
+    {"role": "neutral-pose", "file": "neutral-pose.png", "contentHash": "dbfcd957da466367e5a07fe4ccc0ad1e2a26c3ea86b9d1791c9fed639f6095da", "mediaType": "image/png", "width": 1024, "height": 1536, "alpha": true},
+    {"role": "talk-pose", "file": "talk-pose.png", "contentHash": "3997a7596c54e5d31c32b0e8391539d8ca47a6fcd8e9ec8b57425eeec944fa6c", "mediaType": "image/png", "width": 1024, "height": 1536, "alpha": true},
+    {"role": "reaction-pose", "file": "reaction-pose.png", "contentHash": "82836c092dc924e5e0c2d75445a774965d851c56cef9f48e5d60e3eedec70433", "mediaType": "image/png", "width": 1024, "height": 1536, "alpha": true}
+  ],
+  "validation": {
+    "transparentCorners": true,
+    "brightGreenEdgePixels": 0,
+    "normalization": "passed",
+    "rigValidation": "passed",
+    "identityConsistency": "needs-human-review",
+    "movingDiagnostic": "created-needs-human-review",
+    "prompts": "PROMPTS.md",
+    "rigManifest": "prepared/rig-manifest-rook-v1.json",
+    "rigValidationReport": "prepared/rig-validation-rook-v1.json",
+    "movingDiagnosticFile": "prepared/rig-diagnostic-rook-v1.mp4",
+    "movingDiagnosticContentHash": "a3e868d31b222e723dfbefc48349cd3549318dd3e4b3806c5b9a207487e40f29"
+  }
+}
