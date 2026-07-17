@@ -500,6 +500,10 @@ function VoiceTrackReview({build, capabilities, host, productionBundleContentHas
   const planSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
   const durationDifference = track ? Math.abs(track.durationInSeconds - planSeconds) : 0;
   const coverageAligned = Boolean(track && durationDifference <= Math.max(2, planSeconds * .1));
+  const approvedNeedsRights = Boolean(track?.approvalStatus === "approved" && !track.rights);
+  const needsRightsApproval = Boolean(track?.approvalStatus === "imported" || approvedNeedsRights);
+  const approvedNeedsReplacement = Boolean(track?.approvalStatus === "approved" && track.rights && !coverageAligned);
+  const clearedDraftRights = finalizedMediaRights(rightsDraft);
 
   const importTrack = async () => {
     if (!productionBundleContentHash) return;
@@ -521,10 +525,10 @@ function VoiceTrackReview({build, capabilities, host, productionBundleContentHas
 
   return <article className="voice-master-card" id="finish-voice-master" tabIndex={-1}>
     <header><div><p className="eyebrow">Local voice master</p><h3>{track ? track.sourceFileName : "No recording bound"}</h3><p>{track ? `${track.codec.replaceAll("-", " ")} · ${track.sampleRate / 1000} kHz · ${track.channels === 1 ? "mono" : "stereo"} · ${track.durationInSeconds.toFixed(2)}s` : "Import one uncompressed PCM/float WAV. The desktop copies and hashes it into private local storage."}</p></div><span className={track?.approvalStatus === "approved" ? "is-approved" : ""}>{track?.approvalStatus ?? "required"}</span></header>
-    {track ? <><audio aria-label="Imported voice master" controls data-finish-active={track.approvalStatus === "imported" && !listenedThrough ? "true" : undefined} data-finish-owner="finish-voice-action" key={track.contentHash} onEnded={() => setListenedThrough(true)} preload="metadata" src={voiceTrackMediaUrl(track.contentHash)} tabIndex={0} /><div className={coverageAligned ? "voice-coverage is-aligned" : "voice-coverage"}><strong>{coverageAligned ? "Runtime aligned" : "Runtime needs review"}</strong><span>Voice {track.durationInSeconds.toFixed(1)}s · plan {planSeconds.toFixed(1)}s · Δ {durationDifference.toFixed(1)}s</span></div></> : null}
-    {track?.approvalStatus === "imported" ? <MediaRightsEditor draft={rightsDraft} finishActive={listenedThrough && !finalizedMediaRights(rightsDraft)} finishOwner="finish-voice-action" label="Voice master" onChange={setRightsDraft} /> : null}
+    {track ? <><audio aria-label="Imported voice master" controls data-finish-active={needsRightsApproval && !listenedThrough ? "true" : undefined} data-finish-owner="finish-voice-action" key={track.contentHash} onEnded={() => setListenedThrough(true)} preload="metadata" src={voiceTrackMediaUrl(track.contentHash)} tabIndex={0} /><div className={coverageAligned ? "voice-coverage is-aligned" : "voice-coverage"}><strong>{coverageAligned ? "Runtime aligned" : "Runtime needs review"}</strong><span>Voice {track.durationInSeconds.toFixed(1)}s · plan {planSeconds.toFixed(1)}s · Δ {durationDifference.toFixed(1)}s</span></div></> : null}
+    {needsRightsApproval ? <MediaRightsEditor draft={rightsDraft} finishActive={listenedThrough && !clearedDraftRights} finishOwner="finish-voice-action" label="Voice master" onChange={setRightsDraft} /> : null}
     {error ? <p className="voice-error" role="alert">{error}</p> : null}
-    <footer><button data-finish-active={!track ? "true" : undefined} data-finish-owner="finish-voice-action" disabled={!capabilities.localAudioImport || !productionBundleContentHash || busy} onClick={() => void importTrack()}><Upload size={13} />{busy ? "Working…" : track ? "Replace WAV" : "Import WAV"}</button>{track?.approvalStatus === "imported" ? <button className="approve-voice" data-finish-active={listenedThrough && Boolean(finalizedMediaRights(rightsDraft)) ? "true" : undefined} data-finish-owner="finish-voice-action" disabled={!listenedThrough || !productionBundleContentHash || !finalizedMediaRights(rightsDraft) || busy} onClick={() => void approveTrack()}><Check size={13} />{!listenedThrough ? "Listen through to approve" : finalizedMediaRights(rightsDraft) ? "Approve listened take" : "Confirm rights to approve"}</button> : track?.approvalStatus === "approved" ? <small><ShieldCheck size={13} />Approved bytes and rights are render-bound</small> : null}</footer>
+    <footer><button data-finish-active={!track || approvedNeedsReplacement ? "true" : undefined} data-finish-owner="finish-voice-action" disabled={!capabilities.localAudioImport || !productionBundleContentHash || busy} onClick={() => void importTrack()}><Upload size={13} />{busy ? "Working…" : track ? "Replace WAV" : "Import WAV"}</button>{needsRightsApproval ? <button className="approve-voice" data-finish-active={listenedThrough && Boolean(clearedDraftRights) ? "true" : undefined} data-finish-owner="finish-voice-action" disabled={!listenedThrough || !productionBundleContentHash || !clearedDraftRights || busy} onClick={() => void approveTrack()}><Check size={13} />{!listenedThrough ? approvedNeedsRights ? "Listen through to confirm rights" : "Listen through to approve" : clearedDraftRights ? approvedNeedsRights ? "Re-confirm approved voice rights" : "Approve listened take" : "Confirm rights to approve"}</button> : track?.approvalStatus === "approved" ? <small><ShieldCheck size={13} />{coverageAligned ? "Approved bytes and rights are render-bound" : "Approved bytes need a new timing-aligned take"}</small> : null}</footer>
   </article>;
 }
 
@@ -1101,14 +1105,16 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   const customEffectsReady = session.soundEffectAssets.every((asset) => asset.approvalStatus === "approved" && (!usedSoundEffectHashes.has(asset.contentHash) || Boolean(asset.rights)));
   const mixReady = session.audioMix.reviewed && session.audioMix.musicDecision !== "pending" && (session.audioMix.musicDecision !== "approved-master" || Boolean(session.musicTrack?.approvalStatus === "approved" && session.musicTrack.rights)) && customEffectsReady;
   const preflightReady = capabilities.localRendering && Boolean(productionBundleContentHash) && fullRenderBlockers.length === 0;
+  const voiceTarget: FinishNavigationTarget = session.voiceTrack?.approvalStatus === "approved" && session.voiceTrack.rights && !voiceCoverageAligned && !timingReady ? {tab: "audio", targetId: "finish-timing-action"} : {tab: "audio", targetId: "finish-voice-action"};
+  const voiceAction = !session.voiceTrack ? "Import voice" : session.voiceTrack.approvalStatus === "approved" && !session.voiceTrack.rights ? "Confirm voice rights" : session.voiceTrack.approvalStatus === "approved" && !voiceCoverageAligned ? timingReady ? "Replace voice WAV" : "Adjust spoken timing" : "Finish voice approval";
   const targetForFullRenderBlocker = (): FinishNavigationTarget => {
     const blocker = fullRenderBlockers[0];
     if (!blocker) return {tab: "direction", targetId: "finish-direction"};
     if (["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)) return {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-rook-action" : "finish-assets-action"};
     if (blocker.id === "spoken-timing") return {tab: "audio", targetId: "finish-timing-action"};
-    if (blocker.id === "voice-master") return {tab: "audio", targetId: "finish-voice-action"};
+    if (blocker.id === "voice-master") return voiceTarget;
     if (blocker.id === "custom-sfx") return {tab: "audio", targetId: "finish-sfx-action"};
-    if (blocker.id === "rights-clearance" && !voiceReady) return {tab: "audio", targetId: "finish-voice-action"};
+    if (blocker.id === "rights-clearance" && !voiceReady) return voiceTarget;
     if (blocker.id === "rights-clearance" && !customEffectsReady) return {tab: "audio", targetId: "finish-sfx-action"};
     return {tab: "audio", targetId: "finish-mix-action"};
   };
@@ -1118,7 +1124,7 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   const pictureLabel = session.productionId === rookPilot001.id ? "Review and approve Rook picture" : "Review and approve picture";
   const finishSteps: Array<{id: string; title: string; detail: string; ready: boolean; target?: FinishNavigationTarget; action?: string}> = [
     {id: "picture", title: pictureLabel, detail: pictureReady ? `${approvedAssets} immutable art versions cover every final shot.` : `${Math.max(missingApprovals, fullRenderBlockers.filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)).length)} picture gates still need human review.`, ready: Boolean(delivery) || pictureReady, target: {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-rook-action" : "finish-assets-action"}, action: session.productionId === rookPilot001.id ? "Review Rook" : "Review artwork"},
-    {id: "voice", title: "Approve the final voice", detail: voiceReady ? spokenShotIds.size === 0 ? "This cut has no spoken performance." : `${session.voiceTrack?.sourceFileName} is listened-through, rights-cleared, hash-bound, and aligned to picture.` : !session.voiceTrack ? "Import the final WAV, listen through, document rights, and approve the exact take." : session.voiceTrack.approvalStatus !== "approved" ? "Listen through and approve the imported take with rights evidence." : "The approved take must be aligned to the final frame duration and carry rights evidence.", ready: Boolean(delivery) || voiceReady, target: {tab: "audio", targetId: "finish-voice-action"}, action: session.voiceTrack ? "Finish voice approval" : "Import voice"},
+    {id: "voice", title: "Approve the final voice", detail: voiceReady ? spokenShotIds.size === 0 ? "This cut has no spoken performance." : `${session.voiceTrack?.sourceFileName} is listened-through, rights-cleared, hash-bound, and aligned to picture.` : !session.voiceTrack ? "Import the final WAV, listen through, document rights, and approve the exact take." : session.voiceTrack.approvalStatus !== "approved" ? "Listen through and approve the imported take with rights evidence." : "The approved take must be aligned to the final frame duration and carry rights evidence.", ready: Boolean(delivery) || voiceReady, target: voiceTarget, action: voiceAction},
     {id: "timing", title: "Lock every spoken beat", detail: spokenShotIds.size === 0 ? "No spoken timing locks are required." : `${lockedSpokenTimings}/${spokenShotIds.size} spoken cues have editor-reviewed frame timing.`, ready: Boolean(delivery) || timingReady, target: {tab: "audio", targetId: "finish-timing-action"}, action: "Review timing"},
     {id: "mix", title: "Approve the final mix", detail: mixReady ? `Voice ${session.audioMix.voiceGain.toFixed(2)}x, music ${session.audioMix.musicDecision}, transition SFX ${session.audioMix.transitionSfx}.` : "Choose the music and SFX treatment, clear any used audio, then record the mix review.", ready: Boolean(delivery) || mixReady, target: customEffectsReady ? {tab: "audio", targetId: "finish-mix-action"} : {tab: "audio", targetId: "finish-sfx-action"}, action: customEffectsReady ? "Review mix" : "Review sound effects"},
     {id: "preflight", title: "Pass final preflight", detail: preflightReady ? `${build.renderPlan.durationInFrames} frozen frames are ready for the isolated desktop renderer.` : !capabilities.localRendering ? "Open this production in the desktop app to finish and render." : `${fullRenderBlockers.length} final-output gates remain on the saved production snapshot.`, ready: Boolean(delivery) || preflightReady, target: targetForFullRenderBlocker(), action: "Resolve blockers"},
@@ -1151,7 +1157,7 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   });
   const readyCount = evidenceItems.filter((item) => item.ready).length;
   const evidenceTarget = (item: (typeof evidenceItems)[number]): FinishNavigationTarget => {
-    if (item.id === "voice") return {tab: "audio", targetId: "finish-voice-action"};
+    if (item.id === "voice") return voiceTarget;
     if (item.id === "timing") return {tab: "audio", targetId: "finish-timing-action"};
     if (item.id === "mix") return {tab: "audio", targetId: "finish-mix-action"};
     if (item.id === "custom-sfx") return {tab: "audio", targetId: "finish-sfx-action"};
@@ -1207,6 +1213,8 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const [focusRoutingError, setFocusRoutingError] = useState<string | null>(null);
   const activeRenderJobIdRef = useRef<string | null>(null);
   const activeRenderScopeRef = useRef<ProductionRenderScope | null>(null);
+  const renderStartPendingRef = useRef(false);
+  const preCorrelationRenderEventsRef = useRef(new Map<string, RenderJobEvent>());
   const currentProductionRef = useRef({productionId: session.productionId, revision: session.revision, productionBundleContentHash: lastSavedHash});
   const [selectedShotId, setSelectedShotId] = useState(build.renderPlan.shots[0]!.id);
   const selectedShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
@@ -1223,6 +1231,19 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const anyRenderActive = Boolean(renderJob && !["completed", "failed"].includes(renderJob.status));
   currentProductionRef.current = {productionId: session.productionId, revision: session.revision, productionBundleContentHash: lastSavedHash};
 
+  const acceptActiveRenderEvent = useCallback((event: RenderJobEvent) => {
+    if (event.jobId !== activeRenderJobIdRef.current) return;
+    setRenderJob(event);
+    if (event.status === "completed" && event.delivery && activeRenderScopeRef.current === "full-production") {
+      const current = currentProductionRef.current;
+      if (event.delivery.productionId === current.productionId && event.delivery.revision === current.revision && event.delivery.productionBundleContentHash === current.productionBundleContentHash) setDelivery(event.delivery);
+    }
+    if (["completed", "failed"].includes(event.status)) {
+      activeRenderJobIdRef.current = null;
+      activeRenderScopeRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     if (!capabilities.manualImageExchange) return;
     const sequence = ++saveSequence.current;
@@ -1235,17 +1256,18 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   }, [build, capabilities.manualImageExchange, host, session]);
 
   useEffect(() => host.subscribeToRenderJobs((event) => {
-    if (event.jobId !== activeRenderJobIdRef.current) return;
-    setRenderJob(event);
-    if (event.status === "completed" && event.delivery && activeRenderScopeRef.current === "full-production") {
-      const current = currentProductionRef.current;
-      if (event.delivery.productionId === current.productionId && event.delivery.revision === current.revision && event.delivery.productionBundleContentHash === current.productionBundleContentHash) setDelivery(event.delivery);
+    if (event.jobId === activeRenderJobIdRef.current) {
+      acceptActiveRenderEvent(event);
+      return;
     }
-    if (["completed", "failed"].includes(event.status)) {
-      activeRenderJobIdRef.current = null;
-      activeRenderScopeRef.current = null;
+    if (!renderStartPendingRef.current) return;
+    const buffered = preCorrelationRenderEventsRef.current;
+    if (!buffered.has(event.jobId) && buffered.size >= 8) {
+      const oldestJobId = buffered.keys().next().value;
+      if (oldestJobId) buffered.delete(oldestJobId);
     }
-  }), [host]);
+    buffered.set(event.jobId, event);
+  }), [acceptActiveRenderEvent, host]);
   useEffect(() => {
     if (!lastSavedHash) {setDelivery(null); return;}
     let current = true;
@@ -1296,12 +1318,20 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
     setRenderScope(scope);
     setRenderJobScope(scope);
     setRenderJob({jobId: "render-start", status: "queued", progress: null, message: scope === "full-production" ? "Starting full production render" : "Starting approved production slice"});
+    renderStartPendingRef.current = true;
+    preCorrelationRenderEventsRef.current.clear();
     try {
       const result = await host.startProductionRender({productionId: session.productionId, revision: session.revision, scope});
       activeRenderJobIdRef.current = result.jobId;
       activeRenderScopeRef.current = scope;
-      setRenderJob({jobId: result.jobId, status: "queued", progress: null, message: scope === "full-production" ? "Full production render queued" : "Approved production slice queued"});
+      renderStartPendingRef.current = false;
+      const bufferedEvent = preCorrelationRenderEventsRef.current.get(result.jobId) ?? null;
+      preCorrelationRenderEventsRef.current.clear();
+      if (bufferedEvent) acceptActiveRenderEvent(bufferedEvent);
+      else setRenderJob({jobId: result.jobId, status: "queued", progress: null, message: scope === "full-production" ? "Full production render queued" : "Approved production slice queued"});
     } catch (error) {
+      renderStartPendingRef.current = false;
+      preCorrelationRenderEventsRef.current.clear();
       activeRenderJobIdRef.current = null;
       activeRenderScopeRef.current = null;
       setRenderJob({jobId: "render-start", status: "failed", progress: null, message: error instanceof Error ? error.message : "Production render could not start.", error: {code: "RENDER_START_FAILED", message: error instanceof Error ? error.message : "Production render could not start."}});

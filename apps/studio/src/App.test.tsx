@@ -89,6 +89,10 @@ function createGateReadyRookBundle() {
   return finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides, approvedAssetVersions, audioMix, soundEffectAssets: [], soundEffectCues: [], voiceTrack, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
 }
 
+function refinalizeWithVoice(bundle: ReturnType<typeof createGateReadyRookBundle>, voiceTrack: NonNullable<ReturnType<typeof createGateReadyRookBundle>["voiceTrack"]>) {
+  return finalizeProductionBundle({schemaVersion: "1.0", production: bundle.production, overrides: bundle.overrides, approvedAssetVersions: bundle.approvedAssetVersions ?? [], ...(bundle.audioMix ? {audioMix: bundle.audioMix} : {}), ...(bundle.musicTrack ? {musicTrack: bundle.musicTrack} : {}), soundEffectAssets: bundle.soundEffectAssets ?? [], soundEffectCues: bundle.soundEffectCues ?? [], voiceTrack, resolvedPlan: bundle.resolvedPlan, renderPlan: bundle.renderPlan, metrics: bundle.metrics, estimate: bundle.estimate}, bundle.savedAt);
+}
+
 describe("StoryStage studio", () => {
   it("opens a real production setup from the home screen", async () => {
     const user = userEvent.setup();
@@ -331,6 +335,35 @@ describe("StoryStage studio", () => {
     expect(screen.getByRole("button", {name: "Final render running"})).toBeDisabled();
   });
 
+  it("replays a terminal render failure emitted before the start call returns its job ID", async () => {
+    const bundle = createGateReadyRookBundle();
+    let emitRenderJob: Parameters<StoryStageDesktopBridge["subscribeToRenderJobs"]>[0] | null = null;
+    let attempt = 0;
+    const startProductionRender = vi.fn(async () => {
+      attempt += 1;
+      if (attempt === 1) emitRenderJob?.({jobId: "early-worker-failure", status: "failed", progress: null, message: "Worker could not start", error: {code: "WORKER_START_FAILED", message: "Worker could not start"}});
+      return {jobId: attempt === 1 ? "early-worker-failure" : "retry-after-early-failure"};
+    });
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [{productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash}]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
+      startProductionRender,
+      subscribeToRenderJobs: vi.fn((listener) => {emitRenderJob = listener; return () => undefined;}),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", {name: new RegExp(bundle.production.title)}));
+    await waitFor(() => expect(screen.getByText(`Saved ${bundle.contentHash.slice(0, 8)}`)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    await user.click(screen.getByRole("button", {name: "Render & publish delivery"}));
+
+    expect(await screen.findAllByText("Worker could not start")).not.toHaveLength(0);
+    await user.click(screen.getByRole("button", {name: "Retry final render"}));
+    expect(startProductionRender).toHaveBeenLastCalledWith({productionId: bundle.production.productionId, revision: bundle.production.revision, scope: "full-production"});
+    expect(screen.getByRole("button", {name: "Final render running"})).toBeDisabled();
+  });
+
   it("blocks final delivery during an engineering render and then plays its completed output", async () => {
     const bundle = createGateReadyRookBundle();
     let emitRenderJob: Parameters<StoryStageDesktopBridge["subscribeToRenderJobs"]>[0] | null = null;
@@ -453,7 +486,7 @@ describe("StoryStage studio", () => {
     let boundTrack = importedTrack;
     const bridge = makeDesktopBridge({
       importVoiceTrack: vi.fn(async (request) => {boundTrack = {...importedTrack, relativeFile: `voice/${request.productionId}/r${request.revision}/${"a".repeat(64)}.wav`}; return {status: "imported" as const, track: boundTrack};}),
-      approveVoiceTrack: vi.fn(async () => ({ok: true as const, track: {...boundTrack, approvalStatus: "approved" as const, approvedAt: "2026-07-17T12:05:00.000Z"}})),
+      approveVoiceTrack: vi.fn(async (request) => ({ok: true as const, track: {...boundTrack, approvalStatus: "approved" as const, approvedAt: "2026-07-17T12:05:00.000Z", rights: request.rights}})),
     });
     window.storyStage = bridge;
     const user = await createDefaultProduction();
@@ -478,6 +511,53 @@ describe("StoryStage studio", () => {
       listenedThrough: true,
       rights: expect.objectContaining({clearanceStatus: "cleared", evidenceReference: "Recorded and owned by the operator"}),
     }));
+  });
+
+  it("routes a legacy approved voice without rights through listen and re-confirmation", async () => {
+    const ready = createGateReadyRookBundle();
+    const legacyVoice = {...ready.voiceTrack!};
+    delete legacyVoice.rights;
+    const bundle = refinalizeWithVoice(ready, legacyVoice);
+    const approveVoiceTrack = vi.fn(async (request: Parameters<StoryStageDesktopBridge["approveVoiceTrack"]>[0]) => ({ok: true as const, track: {...legacyVoice, rights: request.rights}}));
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [{productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash}]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
+      approveVoiceTrack,
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", {name: new RegExp(bundle.production.title)}));
+    await waitFor(() => expect(screen.getByText(`Saved ${bundle.contentHash.slice(0, 8)}`)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    await user.click(screen.getByRole("button", {name: "Confirm voice rights"}));
+
+    const player = await screen.findByLabelText("Imported voice master");
+    await waitFor(() => expect(player).toHaveFocus());
+    fireEvent.ended(player);
+    await user.type(screen.getByLabelText("Voice master rights evidence"), "Legacy recording ownership ledger");
+    await user.click(screen.getByLabelText("Voice master rights cleared"));
+    await user.click(screen.getByRole("button", {name: "Re-confirm approved voice rights"}));
+    expect(approveVoiceTrack).toHaveBeenCalledWith(expect.objectContaining({voiceTrackContentHash: legacyVoice.contentHash, listenedThrough: true, rights: expect.objectContaining({evidenceReference: "Legacy recording ownership ledger"})}));
+  });
+
+  it("routes a timing-locked misaligned approved voice to the replace WAV control", async () => {
+    const ready = createGateReadyRookBundle();
+    const bundle = refinalizeWithVoice(ready, {...ready.voiceTrack!, durationInSeconds: ready.voiceTrack!.durationInSeconds + 30});
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [{productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash}]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", {name: new RegExp(bundle.production.title)}));
+    await waitFor(() => expect(screen.getByText(`Saved ${bundle.contentHash.slice(0, 8)}`)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    await user.click(screen.getByRole("button", {name: "Replace voice WAV"}));
+
+    await waitFor(() => expect(screen.getByRole("button", {name: "Replace WAV"})).toHaveFocus());
+    expect(screen.queryByText(/could not open the exact finish control/i)).not.toBeInTheDocument();
   });
 
   it("imports, auditions, approves, and selects an exact local music master", async () => {
