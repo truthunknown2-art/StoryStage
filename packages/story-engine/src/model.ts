@@ -2,8 +2,8 @@ import {z} from "zod";
 
 export const STORY_ENGINE_COMPILER_VERSION = "0.2.0";
 
-const identifierSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
-const hashSchema = z.string().regex(/^[a-f0-9]{64}$/);
+export const identifierSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
+export const hashSchema = z.string().regex(/^[a-f0-9]{64}$/);
 const safeRelativePathSchema = z.string().min(1).refine((value) => !value.includes("\\") && !value.includes(":") && !value.startsWith("/") && !value.split("/").includes(".."), "Path must be a safe forward-slash relative path.");
 
 export const projectTypeSchema = z.enum(["kids", "explainer"]);
@@ -342,7 +342,7 @@ export const generationJobDraftSchema = z.object({
   production: z.object({id: identifierSchema, revision: z.number().int().positive(), title: z.string().min(1)}).strict(),
   showPack: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
   briefs: z.array(generationBriefSchema),
-  expectedOutputLayout: z.object({manifest: z.literal("candidate-bundle.json"), files: z.literal("candidates/<brief-id>/<candidate-id>.png")}).strict(),
+  expectedOutputLayout: z.object({manifest: z.literal("candidate-bundle.json"), files: z.literal("candidates/<brief-id>/<candidate-set-id>/<file-role>")}).strict(),
 }).strict().superRefine((job, context) => {
   const briefIds = new Set<string>();
   const requirementIds = new Set<string>();
@@ -389,7 +389,7 @@ export const generationExchangeStateSchema = z.object({
 }).strict();
 
 export const rightsRecordSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict();
-export const candidateBundleAssetSchema = z.object({candidateId: identifierSchema, briefId: identifierSchema, fileRole: z.string().min(1), relativeFile: safeRelativePathSchema, contentHash: hashSchema, mediaType: z.enum(["image/png", "image/jpeg", "image/webp"]), width: z.number().int().positive(), height: z.number().int().positive(), rights: rightsRecordSchema}).strict();
+export const candidateBundleAssetSchema = z.object({candidateId: identifierSchema, candidateSetId: identifierSchema, briefId: identifierSchema, fileRole: z.string().min(1), relativeFile: safeRelativePathSchema, contentHash: hashSchema, mediaType: z.enum(["image/png", "image/jpeg", "image/webp"]), width: z.number().int().positive(), height: z.number().int().positive(), rights: rightsRecordSchema}).strict();
 export const candidateBundleSchema = z.object({
   schemaVersion: z.literal("1.0"),
   exchangeMode: z.literal("manual-chatgpt-images"),

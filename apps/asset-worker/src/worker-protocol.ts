@@ -1,4 +1,4 @@
-import {CandidateStagingError, stageCandidateBundle, stageLooseCandidateFiles} from "@storystage/asset-pipeline";
+import {CandidateStagingError, stageCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "@storystage/asset-pipeline";
 import {
   assetWorkerCommandSchema,
   assetWorkerMessageSchema,
@@ -17,6 +17,11 @@ export async function runAssetWorkerCommand(rawCommand: unknown, emit: (message:
   }
 
   try {
+    if (parsed.data.type === "verify-staged-candidates") {
+      const verified = await verifyStagedCandidates({candidates: JSON.parse(parsed.data.serializedStagedCandidates), trustedStagingRoot: parsed.data.trustedStagingRoot, stagingRoot: parsed.data.stagingRoot});
+      emit(assetWorkerMessageSchema.parse({type: "verified", requestId: parsed.data.requestId, serializedStagedCandidates: JSON.stringify(verified)}));
+      return;
+    }
     if (parsed.data.type === "stage-loose-candidates") {
       const staged = await stageLooseCandidateFiles({files: parsed.data.files, trustedStagingRoot: parsed.data.trustedStagingRoot, stagingRoot: parsed.data.stagingRoot});
       emit(assetWorkerMessageSchema.parse({type: "loose-staged", requestId: parsed.data.requestId, serializedLooseCandidates: JSON.stringify(staged)}));

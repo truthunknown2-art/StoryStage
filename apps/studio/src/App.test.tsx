@@ -23,6 +23,25 @@ async function createDefaultProduction() {
   return user;
 }
 
+function makeDesktopBridge(overrides: Partial<StoryStageDesktopBridge> = {}): StoryStageDesktopBridge {
+  return {
+    getCapabilities: vi.fn(async () => ({localRendering: true, openRenderedFile: true, manualImageExchange: true})),
+    exportGenerationJob: vi.fn(async () => ({ok: true as const, jobId: "job-one", briefCount: 2})),
+    importLooseCandidateFiles: vi.fn(async () => ({status: "cancelled" as const})),
+    finalizeLooseCandidateMapping: vi.fn(async () => ({status: "cancelled" as const})),
+    stageCandidateBundle: vi.fn(async () => ({status: "cancelled" as const})),
+    saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: "production-one", revision: 1, contentHash: "a".repeat(64)})),
+    listProductionBundles: vi.fn(async () => ({productions: []})),
+    loadProductionBundle: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
+    listGenerationExchanges: vi.fn(async () => ({exchanges: []})),
+    getGenerationExchange: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
+    startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
+    subscribeToRenderJobs: vi.fn(() => () => undefined),
+    openRenderedFile: vi.fn(async () => ({ok: true as const})),
+    ...overrides,
+  };
+}
+
 describe("StoryStage studio", () => {
   it("opens a real production setup from the home screen", async () => {
     const user = userEvent.setup();
@@ -114,13 +133,18 @@ describe("StoryStage studio", () => {
   });
 
   it("maps loose ChatGPT downloads into a locally-created candidate bundle", async () => {
-    const candidate = {candidateId: "loose-one", originalName: "mara-download.png", briefId: null, fileRole: null, mediaType: "image/png" as const, width: 1024, height: 1024, stagingState: "staged-byte-verified" as const, checks: {dimensions: true, mediaType: true, alphaOrMatte: true, registration: false} as const};
+    const candidate = {candidateId: "loose-one", candidateSetId: null, originalName: "mara-download.png", briefId: null, fileRole: null, mediaType: "image/png" as const, width: 1024, height: 1024, stagingState: "staged-byte-verified" as const, checks: {dimensions: true, mediaType: true, alphaOrMatte: true, registration: false} as const};
     const bridge: StoryStageDesktopBridge = {
       getCapabilities: vi.fn(async () => ({localRendering: true, openRenderedFile: true, manualImageExchange: true})),
       exportGenerationJob: vi.fn(async () => ({ok: true as const, jobId: "job-one", briefCount: 5})),
-      importLooseCandidateFiles: vi.fn(async () => ({status: "mapping-required" as const, importId: "import-one", candidates: [candidate], expectedRoles: [{briefId: "brief-one", requirementId: "requirement-one", entityName: "MARA", fileRole: "identity-sheet.png"}]})),
-      finalizeLooseCandidateMapping: vi.fn(async () => ({status: "staged" as const, importId: "import-one", stagedCount: 1, needsManualMaskCount: 0, missingRoleCount: 0, candidates: [{...candidate, briefId: "brief-one", fileRole: "identity-sheet.png"}]})),
+      importLooseCandidateFiles: vi.fn(async () => ({status: "mapping-required" as const, importId: "import-one", candidates: [candidate], expectedRoles: [{briefId: "brief-one", requirementId: "requirement-one", candidateSetId: "brief-one-set-1", candidateSetNumber: 1, entityName: "MARA", fileRole: "identity-sheet.png"}]})),
+      finalizeLooseCandidateMapping: vi.fn(async () => ({status: "staged" as const, importId: "import-one", stagedCount: 1, needsManualMaskCount: 0, missingRoleCount: 0, candidates: [{...candidate, candidateSetId: "brief-one-set-1", briefId: "brief-one", fileRole: "identity-sheet.png"}]})),
       stageCandidateBundle: vi.fn(async () => ({status: "cancelled" as const})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: "production-one", revision: 1, contentHash: "a".repeat(64)})),
+      listProductionBundles: vi.fn(async () => ({productions: []})),
+      loadProductionBundle: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
+      listGenerationExchanges: vi.fn(async () => ({exchanges: []})),
+      getGenerationExchange: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
       startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),
       openRenderedFile: vi.fn(async () => ({ok: true as const})),
@@ -138,5 +162,21 @@ describe("StoryStage studio", () => {
 
     expect(screen.getByRole("heading", {name: /Staged files are not prepared or approved assets/})).toBeInTheDocument();
     expect(screen.getByText(/identity-sheet.png/)).toBeInTheDocument();
+  });
+
+  it("lists and resumes a durable generation exchange after reopening a production", async () => {
+    const summary = {exchangeJobId: "job-resumable", productionId: "production-the-punctual-box", revision: 1, title: "The Punctual Box", status: "awaiting-results" as const, briefCount: 3, importId: null, updatedAt: "2026-07-17T00:00:00.000Z"};
+    window.storyStage = makeDesktopBridge({
+      listGenerationExchanges: vi.fn(async () => ({exchanges: [summary]})),
+      getGenerationExchange: vi.fn(async () => ({ok: true as const, summary, looseMapping: null, stagedCandidates: []})),
+    });
+    const user = await createDefaultProduction();
+    await user.click(screen.getByRole("button", {name: /Assets/}));
+
+    expect(await screen.findByRole("heading", {name: "Resume an image exchange"})).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: /The Punctual Box.*awaiting results/i}));
+
+    expect(screen.getByText(/Resumed awaiting results exchange job-resumable/)).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: /Import generated results/})).toBeEnabled();
   });
 });

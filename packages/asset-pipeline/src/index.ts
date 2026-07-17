@@ -56,6 +56,12 @@ export type StageLooseCandidateFilesInput = {
   limits?: CandidateStagingLimits;
 };
 
+export type VerifyStagedCandidatesInput = {
+  candidates: StagedCandidate[] | unknown;
+  trustedStagingRoot: string;
+  stagingRoot: string;
+};
+
 export class CandidateStagingError extends Error {
   public constructor(
     public readonly code:
@@ -402,4 +408,32 @@ export async function stageLooseCandidateFiles(input: StageLooseCandidateFilesIn
     staged.push({candidate: stagedCandidate, originalName: candidate.originalName, mediaType: candidate.detected.mediaType, width: candidate.detected.width, height: candidate.detected.height});
   }
   return staged;
+}
+
+export async function verifyStagedCandidates(input: VerifyStagedCandidatesInput): Promise<StagedCandidate[]> {
+  const candidates = stagedCandidateSchema.array().min(1).parse(input.candidates);
+  const stagingRoot = await ensureTrustedStagingRoot(input.trustedStagingRoot, input.stagingRoot);
+  for (const candidate of candidates) {
+    const pathParts = candidate.relativeFile.split("/");
+    const absoluteFile = resolve(stagingRoot, ...pathParts);
+    if (!isWithin(stagingRoot, absoluteFile)) throw new CandidateStagingError("untrusted-staging-root", `Staged candidate escaped its trusted import root: ${candidate.candidateId}`);
+    let currentPath = stagingRoot;
+    for (const pathPart of pathParts) {
+      currentPath = join(currentPath, pathPart);
+      const info = await lstat(currentPath);
+      if (info.isSymbolicLink()) throw new CandidateStagingError("symlink-rejected", `Staged candidate path contains a symbolic link: ${candidate.candidateId}`);
+    }
+    const info = await lstat(absoluteFile);
+    if (!info.isFile()) throw new CandidateStagingError("unsafe-source", `Staged candidate is no longer a regular file: ${candidate.candidateId}`);
+    const canonicalFile = await realpath(absoluteFile);
+    if (!isWithin(stagingRoot, canonicalFile)) throw new CandidateStagingError("untrusted-staging-root", `Staged candidate resolves outside its trusted import root: ${candidate.candidateId}`);
+    const bytes = await readFile(canonicalFile);
+    const currentHash = sha256(bytes);
+    if (currentHash !== candidate.sourceContentHash || currentHash !== candidate.stagedContentHash) throw new CandidateStagingError("hash-mismatch", `Staged candidate bytes changed after import: ${candidate.candidateId}`);
+    const detected = detectImage(bytes);
+    if (candidate.checks.alphaOrMatte !== detected.hasAlpha || (candidate.stagingState === "staged-byte-verified") !== detected.hasAlpha) {
+      throw new CandidateStagingError("media-mismatch", `Staged candidate alpha state changed after import: ${candidate.candidateId}`);
+    }
+  }
+  return candidates;
 }

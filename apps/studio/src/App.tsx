@@ -3,8 +3,10 @@ import {
   candidateBundleSchema,
   createProductionDraft,
   generationJobDraftSchema,
+  finalizeProductionBundle,
   getShowPack,
   productionPolicies,
+  productionBundleSchema,
   sampleWorkshopScript,
   showPacks,
   type AnimaticBuild,
@@ -41,9 +43,9 @@ import {
   Upload,
   WandSparkles,
 } from "lucide-react";
-import {useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {createHostAdapter, type HostAdapter} from "./host";
-import type {DesktopCapabilities, ImportLooseCandidateFilesResult, StagedCandidateSummary} from "@storystage/contracts";
+import type {DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, ProductionBundleSummary, StagedCandidateSummary} from "@storystage/contracts";
 
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
@@ -115,7 +117,7 @@ function Brand() {
   );
 }
 
-function HomeScreen({onNew}: {onNew: () => void}) {
+function HomeScreen({onNew, recentProductions, onResume}: {onNew: () => void; recentProductions: ProductionBundleSummary[]; onResume: (production: ProductionBundleSummary) => void}) {
   return (
     <div className="home-shell">
       <aside className="home-sidebar">
@@ -156,6 +158,7 @@ function HomeScreen({onNew}: {onNew: () => void}) {
           <div><p className="eyebrow">Infrastructure baseline</p><h3>SS-001 Walking Skeleton</h3><p>The secure desktop shell and deterministic renderer remain preserved as engineering infrastructure—not as the visual quality target.</p></div>
           <span className="accepted-badge"><Check size={14} />Accepted</span>
         </section>
+        {recentProductions.length > 0 ? <section className="recent-productions"><header><div><p className="eyebrow">Private local projects</p><h2>Resume production</h2></div><span>{recentProductions.length} saved</span></header><div>{recentProductions.map((production) => <button key={`${production.productionId}:${production.revision}`} onClick={() => onResume(production)}><strong>{production.title}</strong><span>{production.projectType === "kids" ? "Kids Adventure" : "Frankly Weird History"} · revision {production.revision}</span><small>Saved {new Date(production.savedAt).toLocaleString()}</small></button>)}</div></section> : null}
       </main>
     </div>
   );
@@ -309,7 +312,7 @@ function createGenerationJob(session: ProductionSession, build: AnimaticBuild): 
     production: {id: session.productionId, revision: session.revision, title: session.title},
     showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash},
     briefs: build.resolvedPlan.generationBriefs,
-    expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-id>.png"},
+    expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-set-id>/<file-role>"},
   });
 }
 
@@ -333,7 +336,35 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
   const [looseMapping, setLooseMapping] = useState<LooseMappingState | null>(null);
   const [looseAssignments, setLooseAssignments] = useState<Record<string, string>>({});
   const [importError, setImportError] = useState<string | null>(null);
+  const [exchangeSummaries, setExchangeSummaries] = useState<GenerationExchangeSummary[]>([]);
   const generationJobDraft = useMemo(() => createGenerationJob(session, build), [build, session]);
+
+  const refreshExchanges = useCallback(async () => {
+    if (!capabilities.manualImageExchange) return;
+    const result = await host.listGenerationExchanges({productionId: session.productionId});
+    setExchangeSummaries(result.exchanges);
+  }, [capabilities.manualImageExchange, host, session.productionId]);
+
+  useEffect(() => {
+    void refreshExchanges();
+  }, [refreshExchanges]);
+
+  const resumeExchange = async (exchange: GenerationExchangeSummary) => {
+    const result = await host.getGenerationExchange({exchangeJobId: exchange.exchangeJobId});
+    if (!result.ok) {
+      setImportError(result.error.message);
+      return;
+    }
+    setExchangeJobId(result.summary.exchangeJobId);
+    setLooseMapping(result.looseMapping);
+    setLooseAssignments(result.looseMapping ? Object.fromEntries(result.looseMapping.candidates.map((candidate) => [candidate.candidateId, ""])) : {});
+    setStagedCandidates(result.stagedCandidates);
+    setImportedCount(result.stagedCandidates.length);
+    setManualMaskCount(result.stagedCandidates.filter((candidate) => !candidate.checks.alphaOrMatte).length);
+    setMissingRoleCount(0);
+    setImportError(null);
+    setExportStatus(`Resumed ${result.summary.status.replaceAll("-", " ")} exchange ${result.summary.exchangeJobId}.`);
+  };
 
   const exportBriefs = async () => {
     const payload = generationJobDraft;
@@ -355,6 +386,7 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
     setStagedCandidates([]);
     setReviewingExport(false);
     setExportStatus(`Private generation job exported for ${result.briefCount} briefs. Its folder is open.`);
+    await refreshExchanges();
   };
 
   const importBundle = async (file: File | undefined) => {
@@ -409,7 +441,7 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
     const assignments = Object.entries(looseAssignments).flatMap(([candidateId, roleIndex]) => {
       if (!roleIndex) return [];
       const role = looseMapping.expectedRoles[Number(roleIndex) - 1];
-      return role ? [{candidateId, briefId: role.briefId, fileRole: role.fileRole}] : [];
+      return role ? [{candidateId, candidateSetId: role.candidateSetId, briefId: role.briefId, fileRole: role.fileRole}] : [];
     });
     if (assignments.length === 0) return;
     const result = await host.finalizeLooseCandidateMapping({importId: looseMapping.importId, assignments});
@@ -423,6 +455,7 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
     setStagedCandidates(result.candidates);
     setLooseMapping(null);
     setImportError(null);
+    await refreshExchanges();
   };
 
   return (
@@ -435,6 +468,12 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
           : <label><Upload size={16} /><span><strong>Validate candidate manifest</strong><small>Browser preview only{" / "}no file staging</small></span><input aria-label="Import candidate bundle" type="file" accept="application/json,.json" onChange={(event) => void importBundle(event.target.files?.[0])} /></label>}
         {capabilities.manualImageExchange ? <button disabled={!exchangeJobId} onClick={() => void importLooseFiles()}><ImagePlus size={16} /><span><strong>Import loose image files</strong><small>Map downloads to expected roles</small></span></button> : null}
       </div>
+      {exchangeSummaries.length > 0 ? <section className="exchange-history" aria-label="Saved generation exchanges">
+        <header><div><p className="eyebrow">Durable local handoffs</p><h2>Resume an image exchange</h2></div><span>{exchangeSummaries.length} saved</span></header>
+        <div>{exchangeSummaries.map((exchange) => <button className={exchange.exchangeJobId === exchangeJobId ? "is-active" : ""} key={exchange.exchangeJobId} onClick={() => void resumeExchange(exchange)}>
+          <span><strong>{exchange.title}</strong><small>{exchange.exchangeJobId} · revision {exchange.revision}</small></span><b>{exchange.status.replaceAll("-", " ")}</b>
+        </button>)}</div>
+      </section> : null}
       {reviewingExport ? <section className="export-review" aria-label="Generation export review">
         <header><div><p className="eyebrow">Human approval gate</p><h2>Exactly what will leave StoryStage</h2></div><span>{generationJobDraft.briefs.length} briefs</span></header>
         <p>The JSON contains the production title, minimum source excerpts, Show Pack and style hashes, reference-asset hashes, prompts, and expected file roles. It contains no ChatGPT credentials, cookies, local paths, or candidate images.</p>
@@ -452,7 +491,7 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
           <span><strong>{candidate.originalName}</strong><small>{candidate.width}×{candidate.height}{" / "}{candidate.mediaType.replace("image/", "")}{" / "}{candidate.stagingState.replaceAll("-", " ")}</small></span>
           <select aria-label={`Role for ${candidate.originalName}`} value={looseAssignments[candidate.candidateId] ?? ""} onChange={(event) => setLooseAssignments({...looseAssignments, [candidate.candidateId]: event.target.value})}>
             <option value="">Leave unused</option>
-            {looseMapping.expectedRoles.map((role, index) => <option key={`${role.briefId}:${role.fileRole}`} value={String(index + 1)}>{role.entityName} — {role.fileRole}</option>)}
+            {looseMapping.expectedRoles.map((role, index) => <option key={`${role.briefId}:${role.candidateSetId}:${role.fileRole}`} value={String(index + 1)}>{role.entityName} · set {role.candidateSetNumber} — {role.fileRole}</option>)}
           </select>
         </label>)}</div>
         <footer><button className="quiet-button" onClick={() => setLooseMapping(null)}>Cancel</button><button className="create-button" disabled={!Object.values(looseAssignments).some(Boolean)} onClick={() => void finalizeLooseMapping()}><PackageCheck size={15} />Create local candidate bundle</button></footer>
@@ -460,7 +499,7 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
       {exportStatus ? <p className="exchange-status"><Check size={14} />{exportStatus}</p> : null}
       {importedCount > 0 ? <p className="exchange-status"><PackageCheck size={14} />{capabilities.manualImageExchange ? `Staged ${importedCount} byte-verified candidates${manualMaskCount > 0 ? `; ${manualMaskCount} need a manual mask` : ""}${missingRoleCount > 0 ? `; ${missingRoleCount} expected roles are still missing` : ""}. Preparation and approval remain separate gates.` : `Manifest contains ${importedCount} candidates. Open the desktop app to verify and stage the actual image bytes.`}</p> : null}
       {importError ? <p className="exchange-error" role="alert"><CircleAlert size={14} />{importError}</p> : null}
-      {stagedCandidates.length > 0 ? <section className="validation-report"><header><div><p className="eyebrow">Import validation</p><h2>Staged files are not prepared or approved assets</h2></div><span>Preparation required</span></header><div>{stagedCandidates.map((candidate) => <article key={candidate.candidateId}><PackageCheck size={15} /><div><strong>{candidate.originalName}</strong><small>{candidate.fileRole ? `${candidate.fileRole} / ` : ""}{candidate.width}×{candidate.height} / {candidate.stagingState.replaceAll("-", " ")}</small></div><span>{candidate.checks.alphaOrMatte ? "Alpha present / unregistered" : "Mask needed / unregistered"}</span></article>)}</div></section> : null}
+      {stagedCandidates.length > 0 ? <section className="validation-report"><header><div><p className="eyebrow">Import validation</p><h2>Staged files are not prepared or approved assets</h2></div><span>Preparation required</span></header><div>{stagedCandidates.map((candidate) => <article key={candidate.candidateId}><PackageCheck size={15} /><div><strong>{candidate.originalName}</strong><small>{candidate.candidateSetId ? `${candidate.candidateSetId} / ` : ""}{candidate.fileRole ? `${candidate.fileRole} / ` : ""}{candidate.width}×{candidate.height} / {candidate.stagingState.replaceAll("-", " ")}</small></div><span>{candidate.checks.alphaOrMatte ? "Alpha present / unregistered" : "Mask needed / unregistered"}</span></article>)}</div></section> : null}
       <section className="request-list"><header><div><p className="eyebrow">Missing asset ledger</p><h2>{build.resolvedPlan.generationBriefs.length} generation briefs</h2></div><span>Approval required</span></header>
         {build.resolvedPlan.generationBriefs.map((request) => {
           return <article className="request-card" key={request.id}><span className="request-kind">{request.outputRole.replaceAll("-", " ")}</span><div><h3>{request.entity.name}</h3><p>{request.creativeRequirements[0]}</p></div><dl><div><dt>Candidates</dt><dd>{request.candidateCount}</dd></div><div><dt>Quality</dt><dd>{request.imageQuality}</dd></div><div><dt>Layers</dt><dd>{request.backgroundLayerTarget}</dd></div><div><dt>Pose pack</dt><dd>{request.posePack}</dd></div></dl><span className="request-state">{request.status}</span></article>;
@@ -479,6 +518,12 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const pack = getShowPack(session.showPackId);
   const averageShot = build.metrics.averageShotSeconds;
   const routed = ["insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"].reduce((sum, treatment) => sum + (build.metrics.treatmentDistribution[treatment] ?? 0), 0);
+
+  useEffect(() => {
+    if (!capabilities.manualImageExchange) return;
+    const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: draftFromSession(session), overrides: session.overrides, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, new Date().toISOString());
+    void host.saveProductionBundle({serializedBundle: JSON.stringify(bundle)});
+  }, [build, capabilities.manualImageExchange, host, session]);
 
   const updateOverride = (patch: Partial<ShotOverride>) => {
     const nextOverride = {...currentOverride, shotId: selectedShot.id, ...patch};
@@ -523,6 +568,7 @@ export function App() {
   const [session, setSession] = useState<ProductionSession | null>(null);
   const [host] = useState(() => createHostAdapter(window.storyStage));
   const [capabilities, setCapabilities] = useState<DesktopCapabilities>({localRendering: false, openRenderedFile: false, manualImageExchange: false});
+  const [recentProductions, setRecentProductions] = useState<ProductionBundleSummary[]>([]);
 
   useEffect(() => {
     window.scrollTo({top: 0, left: 0, behavior: "auto"});
@@ -530,9 +576,24 @@ export function App() {
 
   useEffect(() => {
     void host.getCapabilities().then(setCapabilities);
+    void host.listProductionBundles().then((result) => setRecentProductions(result.productions));
   }, [host]);
 
+  const resumeProduction = async (production: ProductionBundleSummary) => {
+    const result = await host.loadProductionBundle({productionId: production.productionId, revision: production.revision});
+    if (!result.ok) return;
+    const bundle = productionBundleSchema.parse(JSON.parse(result.serializedBundle));
+    setSession({...bundle.production, overrides: bundle.overrides});
+    setScreen("workspace");
+  };
+
+  const returnHome = async () => {
+    const result = await host.listProductionBundles();
+    setRecentProductions(result.productions);
+    setScreen("home");
+  };
+
   if (screen === "new-production") return <NewProductionScreen onBack={() => setScreen("home")} onCreate={(created) => {setSession(created); setScreen("workspace");}} />;
-  if (screen === "workspace" && session) return <Workspace session={session} setSession={setSession} onExit={() => setScreen("home")} host={host} capabilities={capabilities} />;
-  return <HomeScreen onNew={() => setScreen("new-production")} />;
+  if (screen === "workspace" && session) return <Workspace session={session} setSession={setSession} onExit={() => void returnHome()} host={host} capabilities={capabilities} />;
+  return <HomeScreen onNew={() => setScreen("new-production")} recentProductions={recentProductions} onResume={(production) => void resumeProduction(production)} />;
 }

@@ -3,7 +3,7 @@ import {mkdtemp, mkdir, readFile, symlink, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {describe, expect, it} from "vitest";
-import {CandidateStagingError, stageCandidateBundle, stageLooseCandidateFiles} from "./index";
+import {CandidateStagingError, stageCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "./index";
 
 const rgbaPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+Avz9WQAAAABJRU5ErkJggg==", "base64");
 
@@ -26,6 +26,7 @@ function bundle(contentHash = hash(rgbaPng), overrides: Record<string, unknown> 
     },
     assets: [{
       candidateId: "candidate-one",
+      candidateSetId: "candidate-set-one",
       briefId: "brief-one",
       fileRole: "candidate.png",
       relativeFile: "incoming/friendly-name.png",
@@ -130,5 +131,14 @@ describe("secure candidate staging", () => {
     }
     await expect(stageCandidateBundle({bundle: bundle(), sourceRoot, trustedStagingRoot, stagingRoot: join(linkedRoot, "import-one")}))
       .rejects.toMatchObject({code: "symlink-rejected"} satisfies Partial<CandidateStagingError>);
+  });
+
+  it("rechecks staged bytes before a later trust transition", async () => {
+    const {sourceRoot, trustedStagingRoot, stagingRoot} = await fixture();
+    const [staged] = await stageCandidateBundle({bundle: bundle(), sourceRoot, trustedStagingRoot, stagingRoot});
+    await expect(verifyStagedCandidates({candidates: [staged], trustedStagingRoot, stagingRoot})).resolves.toEqual([staged]);
+    await writeFile(join(stagingRoot, staged!.relativeFile), Buffer.from("changed"));
+    await expect(verifyStagedCandidates({candidates: [staged], trustedStagingRoot, stagingRoot}))
+      .rejects.toMatchObject({code: "hash-mismatch"} satisfies Partial<CandidateStagingError>);
   });
 });

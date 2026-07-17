@@ -8,6 +8,7 @@ ProductionDraft
   -> entity ledger + timing
   -> profile-driven CreativeEpisodePlan
   -> visual requirements + approved-asset resolution
+  -> durable content-addressed production bundle
   -> manual ChatGPT Images generation job (local outbox/inbox)
   -> byte-verified private staging
   -> candidate preparation + human approval
@@ -18,7 +19,7 @@ ProductionDraft
 
 ## Schema ownership
 
-- `packages/story-engine`: sole owner of real production drafts, scripts, entity ledgers, directing profiles, Show Packs, semantic actions, visual requirements, generation exchange, resolved plans, metrics, and frozen render plans.
+- `packages/story-engine`: sole owner of real production drafts, scripts, entity ledgers, directing profiles, Show Packs, semantic actions, visual requirements, generation exchange, candidate-set/import records, durable production bundles, resolved plans, metrics, and frozen render plans.
 - `packages/asset-pipeline`: trusted Node-side candidate staging. It validates the provider-neutral bundle, rejects unsafe paths and symlinks, sniffs actual image bytes, verifies dimensions and SHA-256 hashes, enforces byte limits, and chooses the private output path.
 - `packages/contracts`: IPC channels, desktop capabilities, render-job state, and strict worker command/event envelopes only. It contains no production-domain model.
 - `packages/fixtures`: isolated SS-001 presentation fixture and legacy composition schema used only for workstation/regression proof. It is not accepted by the New Production workflow.
@@ -43,6 +44,6 @@ The first provider is `manual-chatgpt-images`. StoryStage exports a schema-valid
 
 ## Security and failure model
 
-Electron uses context isolation, disabled Node integration in the renderer, sandboxing, web security, denied new windows, and restricted navigation. IPC and worker envelopes are strict Zod objects. Electron main owns opaque exchange IDs, the `userData` exchange root, immutable writes, durable lifecycle state, restart rehydration, stale-job checks, and native folder selection. It delegates untrusted inspection/staging to `apps/asset-worker`, which calls `packages/asset-pipeline` under a timeout and capped heap. The pipeline enforces file count/size/type/pixel limits, rejects traversal, UNC paths, and symlink/junction ancestors, canonicalizes the main-owned destination beneath a trusted root, computes hashes and dimensions from bytes, and rejects active or unrecognized formats such as SVG. A staged file remains unregistered and unapproved. Full image decode/metadata normalization remains a Gate 4 task.
+Electron uses context isolation, disabled Node integration in the renderer, sandboxing, web security, denied new windows, and restricted navigation. IPC and worker envelopes are strict Zod objects. Electron main owns opaque exchange IDs, the `userData` production/exchange roots, content-addressed snapshots, immutable writes, durable lifecycle state, restart rehydration, stale-job checks, and native folder selection. It delegates untrusted inspection/staging and later byte reverification to `apps/asset-worker`, which calls `packages/asset-pipeline` under a timeout and capped heap. The pipeline enforces file count/size/type/pixel limits, rejects traversal, UNC paths, and symlink/junction ancestors, canonicalizes the main-owned destination beneath a trusted root, computes hashes and dimensions from bytes, and rejects active or unrecognized formats such as SVG. Candidate-set validation prevents unrelated partial files from masquerading as one coherent kit, while persisted import/validation records preserve the evidence for later preparation and approval. A staged file remains unregistered and unapproved. Full image decode/metadata normalization remains a Gate 4 task.
 
 The render state machine is `idle -> queued -> bundling -> rendering -> encoding -> completed`, with typed failure from active states. Worker crashes, invalid messages, timeouts, rejected commands, and missing outputs become visible failures.

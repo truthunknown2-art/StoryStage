@@ -4,22 +4,29 @@ import {
   analyzeStory,
   applyApprovedAssetVersion,
   buildAnimaticSync,
+  canTransitionGenerationExchange,
   candidateBundleSchema,
   compileAnimation,
   createEstimatedTiming,
   createProductionDraft,
   directEpisode,
   finalizeGenerationJob,
+  finalizeImportRecord,
+  finalizeProductionBundle,
   generationBriefSchema,
   generationJobDraftSchema,
   getProductionPolicy,
   getShowPack,
   measureDirectedPlan,
   parseScript,
+  hashCanonical,
   rehashShowPack,
   sampleWorkshopScript,
   shotOverrideSchema,
   tryBuildAnimaticSync,
+  validateCandidateSets,
+  verifyImportRecordHash,
+  verifyProductionBundleHash,
   verifyRenderPlanHash,
   verifyGenerationJobHash,
   verifyShowPackHash,
@@ -175,7 +182,7 @@ describe("StoryStage story engine", () => {
   it("finalizes immutable generation jobs with a verifiable content hash", () => {
     const build = buildAnimaticSync({draft: makeDraft("kids")});
     const pack = getShowPack("kids-adventure-v1");
-    const draft = generationJobDraftSchema.parse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", production: {id: build.draft.productionId, revision: build.draft.revision, title: build.draft.title}, showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash}, briefs: build.resolvedPlan.generationBriefs, expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-id>.png"}});
+    const draft = generationJobDraftSchema.parse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", production: {id: build.draft.productionId, revision: build.draft.revision, title: build.draft.title}, showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash}, briefs: build.resolvedPlan.generationBriefs, expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-set-id>/<file-role>"}});
     const job = finalizeGenerationJob(draft, {exchangeJobId: "job-one", createdAt: "2026-07-17T00:00:00.000Z"});
     expect(verifyGenerationJobHash(job)).toBe(true);
     expect(verifyGenerationJobHash({...job, createdAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
@@ -184,8 +191,49 @@ describe("StoryStage story engine", () => {
     expect(generationJobDraftSchema.safeParse({...draft, briefs: draft.briefs.length > 0 ? [draft.briefs[0]!, draft.briefs[0]!] : []}).success).toBe(false);
   });
 
+  it("persists a hash-bound production bundle that still derives from its resolved plan", () => {
+    const build = buildFor("kids", "studio", "production-bundle");
+    const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z");
+
+    expect(verifyProductionBundleHash(bundle)).toBe(true);
+    expect(verifyProductionBundleHash({...bundle, savedAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
+    expect(() => finalizeProductionBundle({schemaVersion: "1.0", production: {...build.draft, productionId: "other-production"}, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z")).toThrow(/identity/i);
+  });
+
+  it("validates complete candidate kits by set and preserves the import evidence", () => {
+    const build = buildFor("explainer", "studio", "production-import-record");
+    const pack = getShowPack(build.draft.showPackId);
+    const jobDraft = generationJobDraftSchema.parse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", production: {id: build.draft.productionId, revision: build.draft.revision, title: build.draft.title}, showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash}, briefs: build.resolvedPlan.generationBriefs, expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-set-id>/<file-role>"}});
+    const job = finalizeGenerationJob(jobDraft, {exchangeJobId: "job-import-record", createdAt: "2026-07-17T00:00:00.000Z"});
+    const brief = job.briefs[0]!;
+    const candidateSetId = `set-${brief.id}-1`;
+    const rights = {sourceType: "generated" as const, provider: "chatgpt-images", usageNotes: "Original generated candidate"};
+    const assets = brief.expectedFiles.map((fileRole, index) => ({candidateId: `candidate-${index + 1}`, candidateSetId, briefId: brief.id, fileRole, relativeFile: `candidates/${brief.id}/${candidateSetId}/${fileRole}`, contentHash: hashCanonical({fileRole, index}), mediaType: "image/png" as const, width: 1024, height: 1024, rights}));
+    const candidateBundle = candidateBundleSchema.parse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", exchangeJobId: job.exchangeJobId, generationJobContentHash: job.contentHash, production: {id: job.production.id, revision: job.production.revision}, showPack: job.showPack, providerMetadata: {provider: "chatgpt-images", generatedAt: "2026-07-17T00:05:00.000Z", conversationReference: null}, assets});
+    const validation = validateCandidateSets(job, candidateBundle);
+
+    expect(validation.candidateSets[0]).toMatchObject({candidateSetId, complete: true, missingRoles: []});
+    expect(validation.missingRoleCount).toBe(job.briefs.reduce((sum, entry) => sum + entry.candidateCount * entry.expectedFiles.length, 0) - brief.expectedFiles.length);
+    expect(() => validateCandidateSets(job, {...candidateBundle, assets: [{...candidateBundle.assets[0]!, fileRole: "unexpected-role.png"}]})).toThrow(/unexpected role/i);
+
+    const stagedAssets = candidateBundle.assets.map((asset) => ({candidateId: asset.candidateId, candidateSetId: asset.candidateSetId, briefId: asset.briefId, requirementId: brief.requirementId, fileRole: asset.fileRole, originalName: asset.fileRole, mediaType: asset.mediaType, width: asset.width, height: asset.height, rights: asset.rights, stagedCandidate: {candidateId: asset.candidateId, sourceContentHash: asset.contentHash, stagedContentHash: asset.contentHash, relativeFile: `candidates/${asset.candidateId}.png`, stagingState: "staged-byte-verified" as const, checks: {dimensions: true as const, mediaType: true as const, alphaOrMatte: true, registration: false as const}}}));
+    const record = finalizeImportRecord({schemaVersion: "1.0", importId: "import-record-one", sourceMode: "structured-bundle", exchangeJobId: job.exchangeJobId, generationJobContentHash: job.contentHash, production: {id: job.production.id, revision: job.production.revision}, manifestContentHash: hashCanonical(candidateBundle), candidateBundle, assets: stagedAssets, candidateSets: validation.candidateSets, findings: validation.findings}, "2026-07-17T00:06:00.000Z");
+    expect(verifyImportRecordHash(record)).toBe(true);
+    expect(verifyImportRecordHash({...record, sourceMode: "loose-files"})).toBe(false);
+  });
+
+  it("enforces generation exchange lifecycle transitions", () => {
+    expect(canTransitionGenerationExchange("awaiting-results", "files-imported")).toBe(true);
+    expect(canTransitionGenerationExchange("awaiting-results", "staged")).toBe(true);
+    expect(canTransitionGenerationExchange("files-imported", "staged")).toBe(true);
+    expect(canTransitionGenerationExchange("staged", "needs-review")).toBe(true);
+    expect(canTransitionGenerationExchange("needs-review", "approved")).toBe(true);
+    expect(canTransitionGenerationExchange("awaiting-results", "approved")).toBe(false);
+    expect(canTransitionGenerationExchange("approved", "staged")).toBe(false);
+  });
+
   it("rejects candidate manifests that attempt path traversal", () => {
-    const parsed = candidateBundleSchema.safeParse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", exchangeJobId: "job-one", generationJobContentHash: "a".repeat(64), production: {id: "production-one", revision: 1}, showPack: {id: "kids-adventure-v1", version: "1.0.0", contentHash: "c".repeat(64)}, providerMetadata: {provider: "chatgpt-images", generatedAt: "2026-07-17T00:00:00.000Z", conversationReference: null}, assets: [{candidateId: "candidate-one", briefId: "brief-one", fileRole: "candidate.png", relativeFile: "../outside.png", contentHash: "b".repeat(64), mediaType: "image/png", width: 1024, height: 1024, rights: {sourceType: "generated", provider: "chatgpt-images", usageNotes: "Original generated candidate"}}]});
+    const parsed = candidateBundleSchema.safeParse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", exchangeJobId: "job-one", generationJobContentHash: "a".repeat(64), production: {id: "production-one", revision: 1}, showPack: {id: "kids-adventure-v1", version: "1.0.0", contentHash: "c".repeat(64)}, providerMetadata: {provider: "chatgpt-images", generatedAt: "2026-07-17T00:00:00.000Z", conversationReference: null}, assets: [{candidateId: "candidate-one", candidateSetId: "candidate-set-one", briefId: "brief-one", fileRole: "candidate.png", relativeFile: "../outside.png", contentHash: "b".repeat(64), mediaType: "image/png", width: 1024, height: 1024, rights: {sourceType: "generated", provider: "chatgpt-images", usageNotes: "Original generated candidate"}}]});
     expect(parsed.success).toBe(false);
   });
 

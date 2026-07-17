@@ -304,6 +304,28 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .request-card dd { color: #8f9b96; font-size: 8px; margin-top: 3px; text-transform: capitalize; }
 .request-state { border: 1px solid #3a4442; border-radius: 999px; color: #7b8783; font-size: 7px; padding: 4px 6px; text-align: center; text-transform: uppercase; }
 
+.recent-productions { background: #111718; border: 1px solid #2c3535; border-radius: 12px; margin-top: 18px; overflow: hidden; }
+.recent-productions > header, .exchange-history > header { align-items: center; border-bottom: 1px solid #2a3233; display: flex; justify-content: space-between; padding: 15px 17px; }
+.recent-productions h2, .exchange-history h2 { color: #d7dfdb; font-size: 14px; margin-top: 4px; }
+.recent-productions > header > span, .exchange-history > header > span { color: #7fc69c; font-size: 8px; text-transform: uppercase; }
+.recent-productions > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.recent-productions button { background: transparent; border: 0; border-right: 1px solid #283031; color: inherit; display: grid; gap: 4px; padding: 14px 17px; text-align: left; }
+.recent-productions button:last-child { border-right: 0; }
+.recent-productions button:hover { background: #17201e; }
+.recent-productions strong { color: #bec8c3; font-size: 10px; }
+.recent-productions button span { color: #74817b; font-size: 8px; }
+.recent-productions small { color: #56625d; font-size: 7px; }
+
+.exchange-history { background: #111718; border: 1px solid #34413d; border-radius: 10px; overflow: hidden; }
+.exchange-history > div { display: grid; }
+.exchange-history button { align-items: center; background: transparent; border: 0; border-bottom: 1px solid #27302e; color: inherit; display: flex; justify-content: space-between; padding: 10px 15px; text-align: left; }
+.exchange-history button:last-child { border-bottom: 0; }
+.exchange-history button:hover, .exchange-history button.is-active { background: #17211d; }
+.exchange-history strong, .exchange-history small { display: block; }
+.exchange-history strong { color: #b7c2bc; font-size: 9px; }
+.exchange-history small { color: #5f6c66; font-size: 7px; margin-top: 3px; }
+.exchange-history b { border: 1px solid #40544a; border-radius: 999px; color: #8ac7a3; font-size: 7px; font-weight: 500; padding: 4px 7px; text-transform: uppercase; }
+
 @media (max-width: 1280px) {
   .home-main { padding-left: 34px; padding-right: 34px; }
   .home-intro { gap: 28px; grid-template-columns: .7fr 1.3fr; }

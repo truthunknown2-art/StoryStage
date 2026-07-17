@@ -13,9 +13,10 @@
   "assets": [
     {
       "candidateId": "candidate-replace-me",
+      "candidateSetId": "candidate-set-replace-me",
       "briefId": "brief-requirement-replace-me",
       "fileRole": "candidate.png",
-      "relativeFile": "candidates/brief-requirement-replace-me/candidate-replace-me.png",
+      "relativeFile": "candidates/brief-requirement-replace-me/candidate-set-replace-me/candidate.png",
       "contentHash": "0000000000000000000000000000000000000000000000000000000000000000",
       "mediaType": "image/png",
       "width": 1024,

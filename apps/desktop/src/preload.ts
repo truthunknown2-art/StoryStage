@@ -8,7 +8,16 @@ import {
   finalizeLooseCandidateMappingResultSchema,
   importLooseCandidateFilesRequestSchema,
   importLooseCandidateFilesResultSchema,
+  getGenerationExchangeRequestSchema,
+  getGenerationExchangeResultSchema,
+  listGenerationExchangesRequestSchema,
+  listGenerationExchangesResultSchema,
+  listProductionBundlesResultSchema,
+  loadProductionBundleRequestSchema,
+  loadProductionBundleResultSchema,
   openRenderedFileResultSchema,
+  saveProductionBundleRequestSchema,
+  saveProductionBundleResultSchema,
   renderJobEventSchema,
   startRenderRequestSchema,
   startRenderResponseSchema,
@@ -17,7 +26,11 @@ import {
   type ExportGenerationJobRequest,
   type FinalizeLooseCandidateMappingRequest,
   type ImportLooseCandidateFilesRequest,
+  type GetGenerationExchangeRequest,
+  type ListGenerationExchangesRequest,
+  type LoadProductionBundleRequest,
   type RenderJobEvent,
+  type SaveProductionBundleRequest,
   type StartRenderRequest,
   type StoryStageDesktopBridge,
   type StageCandidateBundleRequest,
@@ -40,6 +53,23 @@ const bridge: StoryStageDesktopBridge = {
   stageCandidateBundle: async (request: StageCandidateBundleRequest) => {
     const payload = stageCandidateBundleRequestSchema.parse(request);
     return stageCandidateBundleResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.stageCandidateBundle, payload));
+  },
+  saveProductionBundle: async (request: SaveProductionBundleRequest) => {
+    const payload = saveProductionBundleRequestSchema.parse(request);
+    return saveProductionBundleResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.saveProductionBundle, payload));
+  },
+  listProductionBundles: async () => listProductionBundlesResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.listProductionBundles)),
+  loadProductionBundle: async (request: LoadProductionBundleRequest) => {
+    const payload = loadProductionBundleRequestSchema.parse(request);
+    return loadProductionBundleResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.loadProductionBundle, payload));
+  },
+  listGenerationExchanges: async (request: ListGenerationExchangesRequest) => {
+    const payload = listGenerationExchangesRequestSchema.parse(request);
+    return listGenerationExchangesResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.listGenerationExchanges, payload));
+  },
+  getGenerationExchange: async (request: GetGenerationExchangeRequest) => {
+    const payload = getGenerationExchangeRequestSchema.parse(request);
+    return getGenerationExchangeResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.getGenerationExchange, payload));
   },
   startSampleRender: async (request: StartRenderRequest) => {
     const payload = startRenderRequestSchema.parse(request);
