@@ -25,6 +25,7 @@ import {
   measureDirectedPlan,
   parseScript,
   hashCanonical,
+  inspectPcmWav,
   rehashShowPack,
   sampleWorkshopScript,
   shotOverrideSchema,
@@ -54,6 +55,15 @@ const makeDraft = (projectType: ProjectType, options: {productionId?: string; ti
 
 const buildFor = (projectType: ProjectType, preset: "draft" | "studio" | "premium" = "studio", productionId = `production-${projectType}-${preset}`) => buildAnimaticSync({draft: makeDraft(projectType, {preset, productionId})});
 
+function makePcmWav(sampleRate = 48_000, frames = 4_800): Uint8Array {
+  const dataBytes = frames * 2;
+  const bytes = new Uint8Array(44 + dataBytes);
+  const view = new DataView(bytes.buffer);
+  const writeAscii = (offset: number, value: string) => [...value].forEach((character, index) => {bytes[offset + index] = character.charCodeAt(0);});
+  writeAscii(0, "RIFF"); view.setUint32(4, 36 + dataBytes, true); writeAscii(8, "WAVE"); writeAscii(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true); writeAscii(36, "data"); view.setUint32(40, dataBytes, true);
+  return bytes;
+}
+
 function directWithProfile(profile: DirectingProfile) {
   const base = getShowPack("kids-adventure-v1");
   const showPack = rehashShowPack({...base, profile} as ShowPack);
@@ -64,6 +74,13 @@ function directWithProfile(profile: DirectingProfile) {
 }
 
 describe("StoryStage story engine", () => {
+  it("inspects bounded uncompressed WAV voice recordings", () => {
+    const bytes = makePcmWav();
+    expect(inspectPcmWav(bytes)).toEqual({codec: "pcm-wav", sampleRate: 48_000, channels: 1, bitsPerSample: 16, dataBytes: 9_600, durationInSeconds: .1});
+    new DataView(bytes.buffer).setUint32(28, 1, true);
+    expect(() => inspectPcmWav(bytes)).toThrow(/alignment/i);
+  });
+
   it("creates an entity ledger with scene presence and unknown action props", () => {
     const script = `INT. CAVE - NIGHT\n\nMARA: This should be fine.\n\n[Mara lifts the dragon compass from a stone shelf.]`;
     const document = parseScript(script, "Compass", "production-compass");

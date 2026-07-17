@@ -13,6 +13,7 @@ export type ProductionCompositionProps = {
   plan: FrameAccurateRenderPlan;
   playbackAssets: Record<string, PlaybackAsset>;
   sliceDurationInFrames: number;
+  voiceTrackDataUrl?: string;
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
@@ -81,12 +82,12 @@ const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record
   </AbsoluteFill>;
 };
 
-export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames}) => {
+export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl}) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
   const captions: Caption[] = plan.shots.filter((shot) => shot.caption && shot.startFrame < duration).map((shot) => ({text: shot.caption!, startMs: shot.startFrame / plan.fps * 1000, endMs: Math.min(duration, shot.startFrame + shot.durationInFrames) / plan.fps * 1000, timestampMs: null, confidence: null}));
   return <AbsoluteFill style={{background: "#111718"}}>
     {plan.shots.filter((shot) => shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={Math.min(shot.durationInFrames, duration - shot.startFrame)} key={shot.id}><TransitionedShot projectType={plan.projectType} shot={shot}><ShotScene plan={plan} playbackAssets={playbackAssets} shot={shot} /></TransitionedShot></Sequence>)}
-    <Audio loop src={staticFile("audio/paper-flip.wav")} volume={0.025} />
+    {voiceTrackDataUrl ? <Audio src={voiceTrackDataUrl} volume={1} /> : <Audio loop src={staticFile("audio/paper-flip.wav")} volume={0.025} />}
     {plan.shots.filter((shot) => shot.startFrame > 0 && shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={18} key={`sfx-${shot.id}`}><Audio src={staticFile("audio/paper-flip.wav")} volume={0.2} /></Sequence>)}
     <Captions captions={captions} />
   </AbsoluteFill>;

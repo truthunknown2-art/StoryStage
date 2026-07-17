@@ -3,6 +3,7 @@ import {
   canTransitionRenderJob,
   assetWorkerCommandSchema,
   exportGenerationJobRequestSchema,
+  importVoiceTrackRequestSchema,
   prepareGenerationImportRequestSchema,
   renderJobEventSchema,
   renderWorkerMessageSchema,
@@ -20,6 +21,12 @@ describe("StoryStage contracts", () => {
     expect(stageCandidateBundleRequestSchema.safeParse({exchangeJobId: "job-one", sourcePath: "C:/elsewhere"}).success).toBe(false);
     expect(exportGenerationJobRequestSchema.safeParse({serializedJob: "x".repeat(2_000_001), productionBundleContentHash: "a".repeat(64)}).success).toBe(false);
     expect(prepareGenerationImportRequestSchema.safeParse({exchangeJobId: "job-one", stagingRoot: "C:/elsewhere"}).success).toBe(false);
+  });
+
+  it("keeps voice import requests path-free and snapshot-bound", () => {
+    const valid = {productionId: "production-one", revision: 1, productionBundleContentHash: "a".repeat(64)};
+    expect(importVoiceTrackRequestSchema.safeParse(valid).success).toBe(true);
+    expect(importVoiceTrackRequestSchema.safeParse({...valid, sourcePath: "C:/untrusted/voice.wav"}).success).toBe(false);
   });
 
   it("validates render-worker messages at the process boundary", () => {

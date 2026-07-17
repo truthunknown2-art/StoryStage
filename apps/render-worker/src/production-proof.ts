@@ -76,6 +76,17 @@ function pngChunk(typeName: string, data: Buffer): Buffer {
   return Buffer.concat([length, type, data, checksum]);
 }
 
+function makeVoiceProofWav(sampleFrames: number, sampleRate = 48_000): Buffer {
+  const dataBytes = sampleFrames * 2;
+  const bytes = Buffer.alloc(44 + dataBytes);
+  bytes.write("RIFF", 0, "ascii"); bytes.writeUInt32LE(36 + dataBytes, 4); bytes.write("WAVE", 8, "ascii"); bytes.write("fmt ", 12, "ascii"); bytes.writeUInt32LE(16, 16); bytes.writeUInt16LE(1, 20); bytes.writeUInt16LE(1, 22); bytes.writeUInt32LE(sampleRate, 24); bytes.writeUInt32LE(sampleRate * 2, 28); bytes.writeUInt16LE(2, 32); bytes.writeUInt16LE(16, 34); bytes.write("data", 36, "ascii"); bytes.writeUInt32LE(dataBytes, 40);
+  for (let frame = 0; frame < sampleFrames; frame += 1) {
+    const envelope = .25 + .75 * Math.abs(Math.sin(frame / sampleRate * Math.PI * 1.7));
+    bytes.writeInt16LE(Math.round(Math.sin(frame / sampleRate * Math.PI * 2 * 190) * 2_400 * envelope), 44 + frame * 2);
+  }
+  return bytes;
+}
+
 type Color = [number, number, number, number];
 type Pose = "identity" | "neutral" | "talk" | "reaction";
 
@@ -338,7 +349,12 @@ async function main() {
     decisions: selectedReview.decisions.map((decision) => decision.candidateSetId === selectedSet.candidateSetId ? {...decision, status: "approved" as const, notes: "Approved after contact-sheet comparison and moving rig diagnostic.", decidedAt: approvedAt, approvedAssetVersion} : decision),
   }, approvedAt);
   const revisionTwoDraft = buildApprovedProductionRevisionDraft({sourceBundle, approvedAssetVersions: [approvedAssetVersion]});
-  const approvedBundle = finalizeProductionBundle(revisionTwoDraft, approvedAt);
+  const voiceBytes = makeVoiceProofWav(Math.round(revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps * 48_000));
+  const voiceContentHash = sha256(voiceBytes);
+  const voiceRelativeFile = `voice/${revisionTwoDraft.production.productionId}/r${revisionTwoDraft.production.revision}/${voiceContentHash}.wav`;
+  await mkdir(resolve(assetsRoot, ...voiceRelativeFile.split("/").slice(0, -1)), {recursive: true});
+  await writeFile(resolve(assetsRoot, ...voiceRelativeFile.split("/")), voiceBytes, {flag: "wx"});
+  const approvedBundle = finalizeProductionBundle({...revisionTwoDraft, voiceTrack: {id: `voice-${voiceContentHash.slice(0, 20)}`, contentHash: voiceContentHash, relativeFile: voiceRelativeFile, sourceFileName: "engineering-voice-proof.wav", codec: "pcm-wav", durationInSeconds: revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt}}, approvedAt);
   let approvedBundleFile = "";
   const approvedState = generationExchangeStateSchema.parse({schemaVersion: "1.0", exchangeJobId: generationJob.exchangeJobId, generationJobContentHash: generationJob.contentHash, production: {id: generationJob.production.id, revision: generationJob.production.revision}, status: "approved", importId, supersededBy: null, updatedAt: approvedAt});
   const approvedStateFile = resolve(privateRoot, "jobs/outbox", generationJob.exchangeJobId, "state-approved.json");
@@ -402,9 +418,10 @@ async function main() {
     selectedRigDiagnosticContentHash: rig.diagnostic.contentHash,
     approvedAssetVersion,
     approvedProductionBundleContentHash: approvedBundle.contentHash,
+    approvedVoiceTrackContentHash: approvedBundle.voiceTrack?.contentHash,
     frameComparisons,
     decodedFrameHashesMatch: true,
-    workflowOperations: ["finalize source production", "finalize manual generation job", "stage manifest-bound candidate bytes", "commit exact import evidence", "Sharp normalize and contact sheet", "render selected-rig diagnostic", "persist selected review", "promote immutable approved asset", "persist approved review", "build next production revision", "render exact saved revision twice", "compare decoded frames"],
+    workflowOperations: ["finalize source production", "finalize manual generation job", "stage manifest-bound candidate bytes", "commit exact import evidence", "Sharp normalize and contact sheet", "render selected-rig diagnostic", "persist selected review", "promote immutable approved asset", "persist approved review", "bind approved WAV voice master", "build next production revision", "render exact saved revision twice", "compare decoded frames"],
     evidenceFiles,
     note: "The artwork is intentionally crude engineering fixture art, not the visual-quality target. This report proves workflow integrity and deterministic playback through the same concrete operations used by the desktop application.",
   };

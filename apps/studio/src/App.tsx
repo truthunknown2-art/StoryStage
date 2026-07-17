@@ -19,6 +19,8 @@ import {
   type ProductionDraft,
   type ProjectType,
   type ShotOverride,
+  type VoiceTrack,
+  voiceTrackSchema,
 } from "@storystage/story-engine";
 import {
   Aperture,
@@ -63,6 +65,7 @@ type WorkspaceTab = "direction" | "assets" | "audio" | "preflight";
 type ProductionSession = ProductionDraft & {
   overrides: ShotOverride[];
   approvedAssetVersions: ApprovedAssetVersion[];
+  voiceTrack: VoiceTrack | null;
 };
 
 const projectOptions: Array<{
@@ -106,9 +109,10 @@ const defaultRouting = (type: ProjectType): AssetRoutingPolicy => ({
   proposed3D: "never",
 });
 
-const draftFromSession = ({overrides, approvedAssetVersions, ...draft}: ProductionSession): ProductionDraft => {
+const draftFromSession = ({overrides, approvedAssetVersions, voiceTrack, ...draft}: ProductionSession): ProductionDraft => {
   void overrides;
   void approvedAssetVersions;
+  void voiceTrack;
   return draft;
 };
 
@@ -216,7 +220,7 @@ function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: 
     try {
       const draft = createProductionDraft({productionId: `production-${Date.now().toString(36)}`, title, projectType: type, showPackId: pack.id, preset, script, assetRoutingPolicy: routing});
       buildAnimaticSync({draft});
-      onCreate({...draft, overrides: [], approvedAssetVersions: []});
+      onCreate({...draft, overrides: [], approvedAssetVersions: [], voiceTrack: null});
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The production could not be created.");
     }
@@ -413,7 +417,44 @@ function AudioCueEditor({build, shot, locked, onOverride}: {build: AnimaticBuild
   </article>;
 }
 
-function AudioTimingWorkspace({build, overrides, selectedShotId, onSelect, onOverride}: {build: AnimaticBuild; overrides: ShotOverride[]; selectedShotId: string; onSelect: (id: string) => void; onOverride: (shotId: string, patch: Partial<ShotOverride>) => void}) {
+const voiceTrackMediaUrl = (contentHash: string) => `storystage-media://voice/${encodeURIComponent(contentHash)}`;
+
+function VoiceTrackReview({build, capabilities, host, productionBundleContentHash, session, onTrack}: {build: AnimaticBuild; capabilities: DesktopCapabilities; host: HostAdapter; productionBundleContentHash: string | null; session: ProductionSession; onTrack: (track: VoiceTrack) => void}) {
+  const [listenedThrough, setListenedThrough] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const track = session.voiceTrack;
+  useEffect(() => {setListenedThrough(false); setError(null);}, [track?.contentHash]);
+  const planSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
+  const durationDifference = track ? Math.abs(track.durationInSeconds - planSeconds) : 0;
+  const coverageAligned = Boolean(track && durationDifference <= Math.max(2, planSeconds * .1));
+
+  const importTrack = async () => {
+    if (!productionBundleContentHash) return;
+    setBusy(true); setError(null);
+    const result = await host.importVoiceTrack({productionId: session.productionId, revision: session.revision, productionBundleContentHash});
+    setBusy(false);
+    if (result.status === "imported") onTrack(voiceTrackSchema.parse(result.track));
+    if (result.status === "failed") setError(result.error.message);
+  };
+  const approveTrack = async () => {
+    if (!track || !productionBundleContentHash || !listenedThrough) return;
+    setBusy(true); setError(null);
+    const result = await host.approveVoiceTrack({productionId: session.productionId, revision: session.revision, productionBundleContentHash, voiceTrackContentHash: track.contentHash, listenedThrough: true});
+    setBusy(false);
+    if (result.ok) onTrack(voiceTrackSchema.parse(result.track));
+    else setError(result.error.message);
+  };
+
+  return <article className="voice-master-card">
+    <header><div><p className="eyebrow">Local voice master</p><h3>{track ? track.sourceFileName : "No recording bound"}</h3><p>{track ? `${track.codec.replaceAll("-", " ")} · ${track.sampleRate / 1000} kHz · ${track.channels === 1 ? "mono" : "stereo"} · ${track.durationInSeconds.toFixed(2)}s` : "Import one uncompressed PCM/float WAV. The desktop copies and hashes it into private local storage."}</p></div><span className={track?.approvalStatus === "approved" ? "is-approved" : ""}>{track?.approvalStatus ?? "required"}</span></header>
+    {track ? <><audio aria-label="Imported voice master" controls key={track.contentHash} onEnded={() => setListenedThrough(true)} preload="metadata" src={voiceTrackMediaUrl(track.contentHash)} /><div className={coverageAligned ? "voice-coverage is-aligned" : "voice-coverage"}><strong>{coverageAligned ? "Runtime aligned" : "Runtime needs review"}</strong><span>Voice {track.durationInSeconds.toFixed(1)}s · plan {planSeconds.toFixed(1)}s · Δ {durationDifference.toFixed(1)}s</span></div></> : null}
+    {error ? <p className="voice-error" role="alert">{error}</p> : null}
+    <footer><button disabled={!capabilities.localAudioImport || !productionBundleContentHash || busy} onClick={() => void importTrack()}><Upload size={13} />{busy ? "Working…" : track ? "Replace WAV" : "Import WAV"}</button>{track?.approvalStatus === "imported" ? <button className="approve-voice" disabled={!listenedThrough || !productionBundleContentHash || busy} onClick={() => void approveTrack()}><Check size={13} />{listenedThrough ? "Approve listened take" : "Listen through to approve"}</button> : track?.approvalStatus === "approved" ? <small><ShieldCheck size={13} />Approved bytes are render-bound</small> : null}</footer>
+  </article>;
+}
+
+function AudioTimingWorkspace({build, capabilities, host, overrides, productionBundleContentHash, session, selectedShotId, onSelect, onOverride, onVoiceTrack}: {build: AnimaticBuild; capabilities: DesktopCapabilities; host: HostAdapter; overrides: ShotOverride[]; productionBundleContentHash: string | null; session: ProductionSession; selectedShotId: string; onSelect: (id: string) => void; onOverride: (shotId: string, patch: Partial<ShotOverride>) => void; onVoiceTrack: (track: VoiceTrack) => void}) {
   const sourceSpokenIds = new Set(build.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
   const cues = build.renderPlan.shots.filter((shot) => sourceSpokenIds.has(shot.id) || Boolean(shot.caption));
   const selected = cues.find((shot) => shot.id === selectedShotId) ?? cues[0];
@@ -426,6 +467,7 @@ function AudioTimingWorkspace({build, overrides, selectedShotId, onSelect, onOve
 
   return <section className="audio-workspace" aria-label="Narration timing workspace">
     <header><div><p className="eyebrow">Frame-accurate spoken edit</p><h2>Narration & caption timing</h2><p>Retiming a cue shifts every downstream shot boundary and the deterministic render plan. Lock only timing you have actually reviewed.</p></div><div className="audio-lock-score"><strong>{cues.filter((shot) => lockedIds.has(shot.id)).length}/{cues.length}</strong><span>spoken cues locked</span></div></header>
+    <VoiceTrackReview build={build} capabilities={capabilities} host={host} onTrack={onVoiceTrack} productionBundleContentHash={productionBundleContentHash} session={session} />
     <div className="audio-workspace-grid">
       <div className="audio-cue-list">{cues.map((shot) => <button aria-label={`Select timing cue ${shot.number}`} className={shot.id === selected?.id ? "is-active" : ""} key={shot.id} onClick={() => onSelect(shot.id)}>
         <span className="cue-time">{formatTimecode(shot.startFrame, build.renderPlan.fps)}</span><div><strong>{shot.number} · {speakerFor(shot)}</strong><p>{shot.caption ?? "Caption intentionally removed"}</p></div><span className={lockedIds.has(shot.id) ? "cue-status is-locked" : "cue-status"}>{lockedIds.has(shot.id) ? "locked" : "estimate"}</span>
@@ -811,12 +853,15 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
   const approvedAssets = session.approvedAssetVersions.length;
   const spokenShotIds = new Set(build.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
   const lockedSpokenTimings = session.overrides.filter((override) => override.timingLocked && spokenShotIds.has(override.shotId)).length;
+  const planSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
+  const voiceCoverageAligned = Boolean(session.voiceTrack && Math.abs(session.voiceTrack.durationInSeconds - planSeconds) <= Math.max(2, planSeconds * .1));
   const items = [
     {id: "plan", ready: true, warning: false, title: "Script and direction compiled", detail: `${build.creativePlan.scenes.length} natural scenes · ${build.renderPlan.shots.length} shots · ${build.renderPlan.durationInFrames} exact frames`, action: "direction" as const},
     {id: "snapshot", ready: Boolean(productionBundleContentHash), warning: !capabilities.manualImageExchange, title: "Production snapshot saved", detail: productionBundleContentHash ? `Content ${productionBundleContentHash.slice(0, 12)}… is acknowledged by the desktop host.` : capabilities.manualImageExchange ? "The current production revision is still saving." : "Durable local snapshots require the desktop app.", action: "direction" as const},
     {id: "assets", ready: missingApprovals === 0, warning: false, title: "Generated asset approvals complete", detail: missingApprovals === 0 ? `${approvedAssets} immutable approved asset versions are bound to this revision.` : `${missingApprovals} asset approvals still required; ${approvedAssets} immutable versions are currently bound.`, action: "assets" as const},
     {id: "sources", ready: deferredSources === 0, warning: deferredSources > 0, title: "Deferred source acquisitions cleared", detail: deferredSources === 0 ? "No licensed, archive, or generation requirement is deferred." : `${deferredSources} requirements still need an approved source or an explicit production decision.`, action: "assets" as const},
     {id: "timing", ready: spokenShotIds.size === 0 || lockedSpokenTimings === spokenShotIds.size, warning: false, title: "Spoken timing reviewed and locked", detail: spokenShotIds.size === 0 ? "This production has no derived spoken cues." : `${lockedSpokenTimings}/${spokenShotIds.size} narration or dialogue cues have editor-locked frame timing.`, action: "audio" as const},
+    {id: "voice", ready: session.voiceTrack?.approvalStatus === "approved" && voiceCoverageAligned, warning: Boolean(session.voiceTrack && !voiceCoverageAligned), title: "Approved voice master bound", detail: !session.voiceTrack ? "Import, listen through, and approve a local WAV voice master." : session.voiceTrack.approvalStatus !== "approved" ? `${session.voiceTrack.sourceFileName} is imported but not yet listened-through and approved.` : voiceCoverageAligned ? `${session.voiceTrack.sourceFileName} is approved, hash-bound, and runtime-aligned.` : `Approved voice is ${session.voiceTrack.durationInSeconds.toFixed(1)}s while the plan is ${planSeconds.toFixed(1)}s; retime before final render.`, action: "audio" as const},
     {id: "renderer", ready: capabilities.localRendering, warning: false, title: "Desktop renderer available", detail: capabilities.localRendering ? "The isolated render worker is available for approved local evidence." : "Desktop renderer unavailable in this host.", action: "direction" as const},
     {id: "slice", ready: capabilities.localRendering && Boolean(productionBundleContentHash) && approvedAssets > 0, warning: false, title: "Approved engineering slice can render", detail: approvedAssets > 0 ? "At least one approved asset is available for the current 24-second engineering render path." : "Approve at least one prepared asset before the engineering render action unlocks.", action: "assets" as const},
   ];
@@ -830,7 +875,7 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
         <div><h3>{item.title}</h3><p>{item.detail}</p></div>
         {!item.ready ? <button onClick={() => onNavigate(item.action)}>{item.action === "assets" ? "Open assets" : item.action === "audio" ? "Open timing" : "Open direction"}</button> : <small>Verified</small>}
       </article>)}</div>
-      <footer><CircleAlert size={16} /><p><strong>Finished-episode gate remains closed.</strong> Editor-locked timing is only one dependency; approved voice recordings, lip sync, music/SFX decisions, final profile artwork, and full-length approved-pixel playback still require implemented evidence before StoryStage can claim a publishable episode.</p></footer>
+      <footer><CircleAlert size={16} /><p><strong>Finished-episode gate remains closed.</strong> Timing and an approved voice master are only part of the chain; lip sync, music/SFX decisions, final profile artwork, and full-length approved-pixel playback still require implemented evidence before StoryStage can claim a publishable episode.</p></footer>
     </section>
   );
 }
@@ -853,7 +898,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
     if (!capabilities.manualImageExchange) return;
     const sequence = ++saveSequence.current;
     setLastSavedHash(null);
-    const draft = productionBundleDraftSchema.parse({schemaVersion: "1.0", production: draftFromSession(session), overrides: session.overrides, approvedAssetVersions: session.approvedAssetVersions, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate});
+    const draft = productionBundleDraftSchema.parse({schemaVersion: "1.0", production: draftFromSession(session), overrides: session.overrides, approvedAssetVersions: session.approvedAssetVersions, ...(session.voiceTrack ? {voiceTrack: session.voiceTrack} : {}), resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate});
     saveQueue.current = saveQueue.current.then(async () => {
       const result = await host.saveProductionBundle({serializedDraft: JSON.stringify(draft)});
       if (result.ok && sequence === saveSequence.current) setLastSavedHash(result.contentHash);
@@ -882,6 +927,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const applyApprovedAsset = (approved: ApprovedAssetVersion) => {
     setSession({...session, revision: session.revision + 1, approvedAssetVersions: [...session.approvedAssetVersions.filter((asset) => asset.requirementId !== approved.requirementId), approved]});
   };
+  const applyVoiceTrack = (voiceTrack: VoiceTrack) => setSession({...session, voiceTrack});
 
   return (
     <div className="workspace-shell">
@@ -914,7 +960,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               {currentOverride ? <p className="override-state"><Check size={13} />Override compiled into the current render plan.</p> : <p className="override-help">Change a field to create a semantic override. No JSON editing required.</p>}
             </aside>
           </div>
-        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} productionBundleContentHash={lastSavedHash} /> : tab === "audio" ? <AudioTimingWorkspace build={build} onOverride={updateShotOverride} onSelect={setSelectedShotId} overrides={session.overrides} selectedShotId={selectedShot.id} /> : <ProductionPreflight session={session} build={build} capabilities={capabilities} productionBundleContentHash={lastSavedHash} onNavigate={setTab} />}
+        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} productionBundleContentHash={lastSavedHash} /> : tab === "audio" ? <AudioTimingWorkspace build={build} capabilities={capabilities} host={host} onOverride={updateShotOverride} onSelect={setSelectedShotId} onVoiceTrack={applyVoiceTrack} overrides={session.overrides} productionBundleContentHash={lastSavedHash} selectedShotId={selectedShot.id} session={session} /> : <ProductionPreflight session={session} build={build} capabilities={capabilities} productionBundleContentHash={lastSavedHash} onNavigate={setTab} />}
       </main>
     </div>
   );
@@ -924,7 +970,7 @@ export function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const [session, setSession] = useState<ProductionSession | null>(null);
   const [host] = useState(() => createHostAdapter(window.storyStage));
-  const [capabilities, setCapabilities] = useState<DesktopCapabilities>({localRendering: false, openRenderedFile: false, manualImageExchange: false});
+  const [capabilities, setCapabilities] = useState<DesktopCapabilities>({localRendering: false, openRenderedFile: false, manualImageExchange: false, localAudioImport: false});
   const [recentProductions, setRecentProductions] = useState<ProductionBundleSummary[]>([]);
 
   useEffect(() => {
@@ -940,7 +986,7 @@ export function App() {
     const result = await host.loadProductionBundle({productionId: production.productionId, revision: production.revision});
     if (!result.ok) return;
     const bundle = productionBundleSchema.parse(JSON.parse(result.serializedBundle));
-    setSession({...bundle.production, overrides: bundle.overrides, approvedAssetVersions: bundle.approvedAssetVersions ?? []});
+    setSession({...bundle.production, overrides: bundle.overrides, approvedAssetVersions: bundle.approvedAssetVersions ?? [], voiceTrack: bundle.voiceTrack ?? null});
     setScreen("workspace");
   };
 

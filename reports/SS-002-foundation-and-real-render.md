@@ -14,7 +14,7 @@ This milestone responds to Pro's rejection of `49a7608` after its earlier reject
 - C - exact generation binding: jobs carry the production bundle hash and authoritative generation briefs. Rehydration compares the semantic brief payload while deliberately normalizing the valid `draft` to `exported` lifecycle transition; a restart regression test covers the finalized job.
 - D - artifact-backed lifecycle and approval recovery: restart validates required loose sessions, staged bytes, preparation/contact sheets, reviews, approved local versions, rejection decisions, and supersession targets. Selected-rig construction and promotion rediscover and fully verify existing manifests, validations, videos, and diagnostic reports, reusing their original stable timestamps. Immutable files are published from complete temporary files through atomic hard links. The later approval transaction remains ordered review -> production revision -> approved state and is idempotently reconciled at startup.
 - E - later reverification without a TOCTOU reread: staging returns verified byte buffers and detected metadata, and those exact buffers are passed to Sharp. Approval and rendering independently reopen and rehash prepared/approved evidence and check containment, symlinks, codec, dimensions, alpha, validation, and diagnostic hashes.
-- F - real path: generation job -> manifest-bound staging -> exact three-file evidence -> Sharp normalization -> contact sheet -> selected set -> manifest -> validation -> moving diagnostic -> selected review -> immutable promotion -> approved review -> approval transaction -> new revision -> exact recompile -> two approved Remotion renders -> decoded-frame comparison.
+- F - real path: generation job -> manifest-bound staging -> exact three-file evidence -> Sharp normalization -> contact sheet -> selected set -> manifest -> validation -> moving diagnostic -> selected review -> immutable promotion -> approved review -> approval transaction -> new revision -> approved hash-bound WAV master -> exact recompile -> two approved Remotion renders with AAC -> decoded-frame comparison.
 
 ## Proof output
 
@@ -32,23 +32,24 @@ Observed output:
 - 6.08 seconds for the deliberately minimal one-line production
 - 181 probed video frames
 - stereo AAC at 48 kHz
-- approved production bundle hash `9a2661f5287df6252f1970f503d1979cd7b9c898a96f88ea2aaf2d33e7964a3a`
+- approved production bundle hash `035214ddc17a805e7dabf01c846989a8771ac97ba1b57e6c1f6347671c9c34d9`
+- approved WAV voice-track hash `ca9a7fb71d288d7f5e56fca76eb5cff8b254fa872cd2e5d6faf57da41092212c`
 - approved manifest hash `742dcc10ea4f51e584eaadca08c7e531cba467a0b955f45fdd447e1165c76f58`
-- diagnostic report hash `4d5c922ab564f4c1cddef8dd8d89d68ef366f0592b1787db3ca354d807a03fcc`
+- diagnostic report hash `85954d2e221ff870d4d49c5a3ea4e4df5443b61f6d54ca3c1fcda014b8f3d738`
 - exact decoded frames 0, 45, 90, 135, and 179 have matching SHA-256 hashes across both renders
 
 Visual inspection confirms actual approved character pixels, pose/mouth/arm changes, plan-driven shot cuts, deterministic transition entrance treatment, camera scaling/movement, and fallback visual treatment. The proof fixture is intentionally crude and must not be evaluated as final art. A two-pass proof after the transition implementation retained exact decoded-frame matches at all five sampled indices.
 
 ## Automated evidence
 
-- `pnpm verify`: privacy check, lint, all package typechecks, and 92 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
+- `pnpm verify`: privacy check, lint, all package typechecks, and 95 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
 - `pnpm build`: all nine code packages plus the Vite studio bundle
 - story-engine: production derivation, job/evidence hashes, lifecycle, approval/recompile, diagnostic binding, profile behavior
 - asset-pipeline: real transparent character-kit preparation, contact sheet, rig validation, opaque-mask stop, tamper rejection
 - asset-pipeline: 11 real filesystem replay tests after selected manifest, validation, diagnostic video/report, promoted files, manifest, validation, diagnostic video/report, and immediately before both review-persistence boundaries
 - desktop: approval transaction crash/retry tests at review persistence, production persistence, and approved-state persistence
 - render-worker: strict sample, production, and rig-diagnostic command routing
-- studio: host boundary, resume/review state, StrictMode-safe render subscription, exact-frame timeline/inspector synchronization, real transition override editing, spoken-text/frame retiming and explicit timing locks, in-app completed-render playback and seeking, recoverable root renderer failure instead of a blank window, and evidence-backed preflight routing
+- studio: host boundary, resume/review state, StrictMode-safe render subscription, exact-frame timeline/inspector synchronization, real transition override editing, spoken-text/frame retiming and explicit timing locks, local voice audition/listen-through approval flow, in-app completed-render playback and seeking, recoverable root renderer failure instead of a blank window, and evidence-backed preflight routing
 - desktop build: the asset pipeline is bundled into Electron instead of leaking workspace TypeScript imports; a build-time scan fails on any unresolved `@storystage/*` runtime import
 
 ## Live UI evidence
@@ -62,5 +63,5 @@ Screenshots are intentionally private engineering artifacts under `artifacts/SS-
 - Real original ChatGPT-generated kids and history art has not yet completed the manual round trip; the subscription prompt queue and private exported history job are ready for it.
 - The current character implementation is honest 2D pose-swap, not a skeletal or Blender rig.
 - Completed 24-second approved MP4s can now play and seek inside the editor, and transition overrides visibly reach deterministic Remotion frames, but unrendered live Remotion preview, asset-aware visual-treatment rerouting, and full-length approved playback are not complete.
-- Spoken text, frame retiming, and explicit editor timing locks are implemented; recorded voice binding/approval, lip sync, music selection, licensed archive/stock ingestion, and automatic Blender routing are not.
+- Spoken text, frame retiming, explicit editor timing locks, and local WAV import/audition/approval/render binding are implemented. A real user voice master has not yet been supplied; the proof uses a deterministic engineering tone. Lip sync, music selection, licensed archive/stock ingestion, and automatic Blender routing are not implemented.
 - The two polished 25-40 second profile outputs required by Gate 9 remain open.

@@ -6,7 +6,7 @@ import {getVideoMetadata, renderMedia, renderStill, selectComposition} from "@re
 import type {RenderJobEvent} from "@storystage/contracts";
 import {sampleEpisodePlan} from "@storystage/fixtures";
 import {STORY_STAGE_COMPOSITION_ID, STORY_STAGE_PRODUCTION_COMPOSITION_ID, STORY_STAGE_RIG_DIAGNOSTIC_COMPOSITION_ID} from "@storystage/remotion-runtime/manifest";
-import {assetRigManifestSchema, productionBundleSchema, rigDiagnosticReportSchema, rigValidationReportSchema, verifyAssetRigManifestHash, verifyProductionBundleHash, verifyRigDiagnosticReportHash, verifyRigValidationReportHash, type ApprovedAssetVersion, type RigAssetBinding} from "@storystage/story-engine";
+import {assetRigManifestSchema, inspectPcmWav, productionBundleSchema, rigDiagnosticReportSchema, rigValidationReportSchema, verifyAssetRigManifestHash, verifyProductionBundleHash, verifyRigDiagnosticReportHash, verifyRigValidationReportHash, type ApprovedAssetVersion, type RigAssetBinding, type VoiceTrack} from "@storystage/story-engine";
 import type {PlaybackAsset, ProductionCompositionProps, RigDiagnosticCompositionProps} from "@storystage/remotion-runtime";
 
 export type RenderSampleOptions = {
@@ -68,6 +68,14 @@ async function imageDataUrl(versionRoot: string, binding: RigAssetBinding, requi
   return `data:image/png;base64,${bytes.toString("base64")}`;
 }
 
+async function approvedVoiceDataUrl(assetsRoot: string, track: VoiceTrack): Promise<string> {
+  const bytes = await trustedFile(assetsRoot, resolve(assetsRoot, ...track.relativeFile.split("/")), 256 * 1024 * 1024);
+  if (createHash("sha256").update(bytes).digest("hex") !== track.contentHash) throw new Error("Approved voice bytes failed their content hash.");
+  const metadata = inspectPcmWav(bytes);
+  if (metadata.codec !== track.codec || metadata.sampleRate !== track.sampleRate || metadata.channels !== track.channels || metadata.bitsPerSample !== track.bitsPerSample || metadata.durationInSeconds !== track.durationInSeconds) throw new Error("Approved voice metadata no longer matches its production binding.");
+  return `data:audio/wav;base64,${bytes.toString("base64")}`;
+}
+
 async function playbackAsset(assetsRoot: string, approved: ApprovedAssetVersion): Promise<PlaybackAsset> {
   const manifestFile = resolve(assetsRoot, ...approved.relativeFile.split("/"));
   const manifestBytes = await trustedFile(assetsRoot, manifestFile, 2_000_000);
@@ -120,7 +128,8 @@ export async function renderProduction(options: RenderProductionOptions): Promis
   const approvedVersions = productionBundle.approvedAssetVersions ?? [];
   if (approvedVersions.length === 0) throw new Error("A production render requires at least one human-approved asset version.");
   const playbackEntries = await Promise.all(approvedVersions.map(async (approved) => [approved.assetId, await playbackAsset(options.assetsRoot, approved)] as const));
-  const inputProps: ProductionCompositionProps = {plan: productionBundle.renderPlan, playbackAssets: Object.fromEntries(playbackEntries), sliceDurationInFrames: Math.min(productionBundle.renderPlan.durationInFrames, productionBundle.renderPlan.fps * 24)};
+  const voiceTrackDataUrl = productionBundle.voiceTrack?.approvalStatus === "approved" ? await approvedVoiceDataUrl(options.assetsRoot, productionBundle.voiceTrack) : undefined;
+  const inputProps: ProductionCompositionProps = {plan: productionBundle.renderPlan, playbackAssets: Object.fromEntries(playbackEntries), sliceDurationInFrames: Math.min(productionBundle.renderPlan.durationInFrames, productionBundle.renderPlan.fps * 24), ...(voiceTrackDataUrl ? {voiceTrackDataUrl} : {})};
   const outputPath = resolve(options.outputRoot, `${options.jobId}.mp4`);
   await mkdir(options.outputRoot, {recursive: true});
   const serveUrl = await bundle({entryPoint: resolve(options.workspaceRoot, "packages/remotion-runtime/src/remotion-entry.ts"), publicDir: resolve(options.workspaceRoot, "packages/remotion-runtime/public"), onProgress: (progress) => emit(options.onEvent, {jobId: options.jobId, status: "bundling", progress: Math.min(.18, progress / 100 * .18), message: "Bundling the plan-driven production slice"})});

@@ -1,4 +1,4 @@
-import {cleanup, render, screen, within} from "@testing-library/react";
+import {cleanup, fireEvent, render, screen, waitFor, within} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {StoryStageDesktopBridge} from "@storystage/contracts";
@@ -25,7 +25,7 @@ async function createDefaultProduction() {
 
 function makeDesktopBridge(overrides: Partial<StoryStageDesktopBridge> = {}): StoryStageDesktopBridge {
   return {
-    getCapabilities: vi.fn(async () => ({localRendering: true, openRenderedFile: true, manualImageExchange: true})),
+    getCapabilities: vi.fn(async () => ({localRendering: true, openRenderedFile: true, manualImageExchange: true, localAudioImport: true})),
     exportGenerationJob: vi.fn(async () => ({ok: true as const, jobId: "job-one", briefCount: 2})),
     importLooseCandidateFiles: vi.fn(async () => ({status: "cancelled" as const})),
     finalizeLooseCandidateMapping: vi.fn(async () => ({status: "cancelled" as const})),
@@ -37,6 +37,8 @@ function makeDesktopBridge(overrides: Partial<StoryStageDesktopBridge> = {}): St
     getGenerationExchange: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
     prepareGenerationImport: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
     reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
+    importVoiceTrack: vi.fn(async () => ({status: "cancelled" as const})),
+    approveVoiceTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
     startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
     startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
     subscribeToRenderJobs: vi.fn(() => () => undefined),
@@ -182,7 +184,33 @@ describe("StoryStage studio", () => {
 
     await user.click(screen.getByRole("button", {name: "Preflight"}));
     expect(screen.getByText(/1\/\d+ narration or dialogue cues have editor-locked frame timing/)).toBeInTheDocument();
-    expect(screen.getByText(/approved voice recordings/)).toBeInTheDocument();
+    expect(screen.getByText(/approved voice master/)).toBeInTheDocument();
+  });
+
+  it("imports, auditions, and approves an exact local WAV voice master", async () => {
+    const importedTrack = {id: "voice-aaaaaaaaaaaaaaaaaaaa", contentHash: "a".repeat(64), relativeFile: `voice/production-placeholder/r1/${"a".repeat(64)}.wav`, sourceFileName: "narration-take-03.wav", codec: "pcm-wav" as const, durationInSeconds: 54, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 16 as const, importedAt: "2026-07-17T12:00:00.000Z", approvalStatus: "imported" as const, approvedAt: null};
+    let boundTrack = importedTrack;
+    const bridge = makeDesktopBridge({
+      importVoiceTrack: vi.fn(async (request) => {boundTrack = {...importedTrack, relativeFile: `voice/${request.productionId}/r${request.revision}/${"a".repeat(64)}.wav`}; return {status: "imported" as const, track: boundTrack};}),
+      approveVoiceTrack: vi.fn(async () => ({ok: true as const, track: {...boundTrack, approvalStatus: "approved" as const, approvedAt: "2026-07-17T12:05:00.000Z"}})),
+    });
+    window.storyStage = bridge;
+    const user = await createDefaultProduction();
+    await user.click(screen.getByRole("button", {name: "Audio"}));
+    const importButton = screen.getByRole("button", {name: "Import WAV"});
+    await waitFor(() => expect(importButton).toBeEnabled());
+    await user.click(importButton);
+
+    const player = await screen.findByLabelText("Imported voice master");
+    expect(player).toHaveAttribute("src", `storystage-media://voice/${"a".repeat(64)}`);
+    expect(screen.getByRole("button", {name: "Listen through to approve"})).toBeDisabled();
+    fireEvent.ended(player);
+    const approve = screen.getByRole("button", {name: "Approve listened take"});
+    await waitFor(() => expect(approve).toBeEnabled());
+    await user.click(approve);
+
+    expect(await screen.findByText("Approved bytes are render-bound")).toBeInTheDocument();
+    expect(bridge.approveVoiceTrack).toHaveBeenCalledWith(expect.objectContaining({voiceTrackContentHash: "a".repeat(64), listenedThrough: true}));
   });
 
   it("exposes an honest manual ChatGPT Images exchange with downloadable briefs", async () => {
@@ -226,7 +254,7 @@ describe("StoryStage studio", () => {
   it("maps loose ChatGPT downloads into a locally-created candidate bundle", async () => {
     const candidate = {candidateId: "loose-one", candidateSetId: null, originalName: "mara-download.png", briefId: null, fileRole: null, mediaType: "image/png" as const, width: 1024, height: 1024, stagingState: "staged-byte-verified" as const, checks: {dimensions: true, mediaType: true, alphaOrMatte: true, registration: false} as const};
     const bridge: StoryStageDesktopBridge = {
-      getCapabilities: vi.fn(async () => ({localRendering: true, openRenderedFile: true, manualImageExchange: true})),
+      getCapabilities: vi.fn(async () => ({localRendering: true, openRenderedFile: true, manualImageExchange: true, localAudioImport: true})),
       exportGenerationJob: vi.fn(async () => ({ok: true as const, jobId: "job-one", briefCount: 5})),
       importLooseCandidateFiles: vi.fn(async () => ({status: "mapping-required" as const, importId: "import-one", candidates: [candidate], expectedRoles: [{briefId: "brief-one", requirementId: "requirement-one", candidateSetId: "brief-one-set-1", candidateSetNumber: 1, entityName: "MARA", fileRole: "identity-sheet.png"}]})),
       finalizeLooseCandidateMapping: vi.fn(async () => ({status: "staged" as const, importId: "import-one", stagedCount: 1, needsManualMaskCount: 0, missingRoleCount: 0, candidates: [{...candidate, candidateSetId: "brief-one-set-1", briefId: "brief-one", fileRole: "identity-sheet.png"}]})),
@@ -238,6 +266,8 @@ describe("StoryStage studio", () => {
       getGenerationExchange: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
       prepareGenerationImport: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
       reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
+      importVoiceTrack: vi.fn(async () => ({status: "cancelled" as const})),
+      approveVoiceTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
       startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
       startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),

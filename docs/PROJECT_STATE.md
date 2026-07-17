@@ -26,6 +26,7 @@ Pro's narrow re-audit of follow-up commit `1c0d6a2` accepted Gate 4, marked D re
 - Direction review now has a functional frame playhead, play/pause transport, exact shot-boundary jumps, and synchronized shot inspector. It remains an explicitly labeled planning timeline until approved artwork exists.
 - Per-shot transition overrides now compile through the resolved plan into semantic hard-cut or foreground-wipe actions and deterministic Remotion entrance treatment. Hard cut, brief dissolve, camera carry, and foreground wipe visibly affect rendered frames without changing the authoritative frame schedule. Visual-treatment editing remains locked because it still requires asset-aware rerouting rather than a cosmetic plan mutation.
 - A dedicated spoken-timing workspace derives narration/dialogue cues from the parsed script, identifies speakers, edits rendered caption text, retimes shots in exact frames, shifts every downstream boundary deterministically, and records explicit editor timing locks. Preflight counts only reviewed locks; the UI clearly does not treat them as recorded or approved voice performances.
+- The desktop now imports bounded uncompressed WAV voice masters through a native picker, validates RIFF chunks and PCM/float metadata, publishes immutable private bytes, binds their SHA-256 and runtime metadata to the production, streams them into an in-app audition player, and requires a listen-through before main-process approval. The isolated render worker independently reopens and verifies an approved track before Remotion encodes it into AAC.
 - Completed approved renders now stream back into the sandboxed studio through a narrow, validated `storystage-media` route. The in-app H.264 player has native playback plus exact-frame and shot-boundary review controls; it exposes only verified completed MP4s from registered render roots.
 - A root renderer error boundary replaces blank-window failures with a local recovery screen, preserves saved production data, and offers an explicit reload action with optional technical detail.
 - The former disabled Preflight placeholder is now an evidence-backed readiness view. It distinguishes compiled/saved/renderer checks, required asset approvals, deferred sources, engineering-slice eligibility, and the still-closed finished-episode gate.
@@ -41,6 +42,7 @@ Current proof evidence is under `artifacts/SS-002/`:
 - 1920x1080 at 30 fps
 - 181 probed video frames per render
 - stereo AAC stream
+- approved hash-bound WAV engineering voice master encoded through the production composition
 - five exact-index decoded frame pairs with matching SHA-256 hashes
 - four-second moving diagnostic and content-bound report
 - exact production bundle, approved manifest, and diagnostic hashes
@@ -54,12 +56,12 @@ The proof art is deliberately simple local engineering art. It proves the execut
 - Gate 4 durable generation/import foundation and executable manual image exchange: accepted by Pro at follow-up commit `1c0d6a2`; A-F and the executable approved-frame slice are resolved within that audit scope.
 - Gate 5 original ChatGPT production art for both profiles: the credential-free subscription prompt queue and import path are implemented and live-verified; actual generated images still need a real authenticated manual generation/import pass.
 - Gate 6 preparation and validation: implemented for 2D pose-swap characters, background layers, and props; skeletal/part rigging and Blender routing remain pending.
-- Gate 7 semantic Remotion animation: initial plan-driven 24-second slice implemented and proven; full episode coverage and visual polish remain pending.
-- Gate 8 review/override: shot overrides including real rendered transition direction and spoken cue retiming, asset selection/approval, a functional frame-accurate cut timeline, an editor-lockable narration/caption timing workspace, in-app playback of completed approved H.264 slices with synchronized shot/frame review, and evidence-backed production preflight exist; recorded voice binding, asset-aware visual-treatment rerouting, unrendered live Remotion preview, full-length playback, and broader inspector coverage remain incomplete.
+- Gate 7 semantic Remotion animation: initial plan-driven 24-second slice with an approved local voice master implemented and proven; full episode coverage, lip sync, mix treatment, and visual polish remain pending.
+- Gate 8 review/override: shot overrides including real rendered transition direction and spoken cue retiming, asset selection/approval, a functional frame-accurate cut timeline, an editor-lockable narration/caption timing workspace, local WAV import/audition/approval, in-app playback of completed approved H.264 slices with synchronized shot/frame review, and evidence-backed production preflight exist; asset-aware visual-treatment rerouting, unrendered live Remotion preview, full-length playback, and broader inspector coverage remain incomplete.
 - Gate 9 profile-distinct production outputs: pending.
 
 ## Product truth
 
-StoryStage is not yet the complete script-to-finished-episode product. It does not yet automatically create final ChatGPT art, record or import approved voice acting, select music, acquire licensed stock/archive media, or route Blender scenes. The manual subscription-backed image workflow is intentional: no API key, browser cookie, password, or ChatGPT session is stored by the app.
+StoryStage is not yet the complete script-to-finished-episode product. It does not yet automatically create final ChatGPT art, record voice acting inside the app, select music, acquire licensed stock/archive media, or route Blender scenes. It can now import, audition, approve, bind, and render an external local WAV voice master. The manual subscription-backed image workflow is intentional: no API key, browser cookie, password, or ChatGPT session is stored by the app.
 
 A narrow MVP still requires one polished 2-3 minute episode in one approved Show Pack with recurring approved original assets, real voice timing, basic lip sync, captions, SFX/music, appropriate factual or generated visuals, editable locks, provenance, and reproducible 1080p output.

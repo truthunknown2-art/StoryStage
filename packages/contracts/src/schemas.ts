@@ -10,6 +10,7 @@ export const desktopCapabilitiesSchema = z.object({
   localRendering: z.boolean(),
   openRenderedFile: z.boolean(),
   manualImageExchange: z.boolean(),
+  localAudioImport: z.boolean(),
 }).strict();
 
 const productionIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
@@ -124,6 +125,32 @@ export const reviewCandidateSetRequestSchema = z.object({exchangeJobId: producti
 export const reviewCandidateSetResultSchema = z.discriminatedUnion("status", [
   z.object({status: z.literal("reviewed"), exchangeStatus: z.enum(["needs-review", "approved", "rejected"]), decisions: z.array(candidateSetReviewSummarySchema), approvedAssetVersion: approvedAssetVersionBridgeSchema.nullable()}).strict(),
   z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
+
+export const voiceTrackBridgeSchema = z.object({
+  id: productionIdSchema,
+  contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  relativeFile: z.string().min(1),
+  sourceFileName: z.string().min(1).max(260),
+  codec: z.enum(["pcm-wav", "ieee-float-wav"]),
+  durationInSeconds: z.number().positive().max(14_400),
+  sampleRate: z.number().int().min(8_000).max(192_000),
+  channels: z.union([z.literal(1), z.literal(2)]),
+  bitsPerSample: z.union([z.literal(16), z.literal(24), z.literal(32)]),
+  importedAt: z.string().datetime(),
+  approvalStatus: z.enum(["imported", "approved"]),
+  approvedAt: z.string().datetime().nullable(),
+}).strict();
+export const importVoiceTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict();
+export const importVoiceTrackResultSchema = z.discriminatedUnion("status", [
+  z.object({status: z.literal("imported"), track: voiceTrackBridgeSchema}).strict(),
+  z.object({status: z.literal("cancelled")}).strict(),
+  z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
+export const approveVoiceTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), voiceTrackContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true)}).strict();
+export const approveVoiceTrackResultSchema = z.discriminatedUnion("ok", [
+  z.object({ok: z.literal(true), track: voiceTrackBridgeSchema}).strict(),
+  z.object({ok: z.literal(false), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
 ]);
 
 export const saveProductionBundleRequestSchema = z.object({serializedDraft: z.string().min(2).max(10_000_000)}).strict();
@@ -302,6 +329,8 @@ export const IPC_CHANNELS = {
   getGenerationExchange: "storystage:get-generation-exchange",
   prepareGenerationImport: "storystage:prepare-generation-import",
   reviewCandidateSet: "storystage:review-candidate-set",
+  importVoiceTrack: "storystage:import-voice-track",
+  approveVoiceTrack: "storystage:approve-voice-track",
   renderEvent: "storystage:render-event",
   renderStart: "storystage:render-start",
   productionRenderStart: "storystage:production-render-start",
@@ -341,6 +370,11 @@ export type ApprovedAssetVersionBridge = z.infer<typeof approvedAssetVersionBrid
 export type CandidateSetReviewSummary = z.infer<typeof candidateSetReviewSummarySchema>;
 export type ReviewCandidateSetRequest = z.infer<typeof reviewCandidateSetRequestSchema>;
 export type ReviewCandidateSetResult = z.infer<typeof reviewCandidateSetResultSchema>;
+export type VoiceTrackBridge = z.infer<typeof voiceTrackBridgeSchema>;
+export type ImportVoiceTrackRequest = z.infer<typeof importVoiceTrackRequestSchema>;
+export type ImportVoiceTrackResult = z.infer<typeof importVoiceTrackResultSchema>;
+export type ApproveVoiceTrackRequest = z.infer<typeof approveVoiceTrackRequestSchema>;
+export type ApproveVoiceTrackResult = z.infer<typeof approveVoiceTrackResultSchema>;
 export type RenderJobEvent = z.infer<typeof renderJobEventSchema>;
 export type RenderJobState = z.infer<typeof renderJobStateSchema>;
 export type RenderJobStatus = RenderJobState["status"];
@@ -364,6 +398,8 @@ export type StoryStageDesktopBridge = {
   getGenerationExchange: (request: GetGenerationExchangeRequest) => Promise<GetGenerationExchangeResult>;
   prepareGenerationImport: (request: PrepareGenerationImportRequest) => Promise<PrepareGenerationImportResult>;
   reviewCandidateSet: (request: ReviewCandidateSetRequest) => Promise<ReviewCandidateSetResult>;
+  importVoiceTrack: (request: ImportVoiceTrackRequest) => Promise<ImportVoiceTrackResult>;
+  approveVoiceTrack: (request: ApproveVoiceTrackRequest) => Promise<ApproveVoiceTrackResult>;
   startSampleRender: (request: StartRenderRequest) => Promise<StartRenderResponse>;
   startProductionRender: (request: StartProductionRenderRequest) => Promise<StartRenderResponse>;
   subscribeToRenderJobs: (listener: (event: RenderJobEvent) => void) => () => void;

@@ -1,4 +1,6 @@
 import type {
+  ApproveVoiceTrackRequest,
+  ApproveVoiceTrackResult,
   DesktopCapabilities,
   ExportGenerationJobRequest,
   ExportGenerationJobResult,
@@ -6,6 +8,8 @@ import type {
   FinalizeLooseCandidateMappingResult,
   ImportLooseCandidateFilesRequest,
   ImportLooseCandidateFilesResult,
+  ImportVoiceTrackRequest,
+  ImportVoiceTrackResult,
   GetGenerationExchangeRequest,
   GetGenerationExchangeResult,
   ListGenerationExchangesRequest,
@@ -42,6 +46,8 @@ export interface HostAdapter {
   getGenerationExchange(request: GetGenerationExchangeRequest): Promise<GetGenerationExchangeResult>;
   prepareGenerationImport(request: PrepareGenerationImportRequest): Promise<PrepareGenerationImportResult>;
   reviewCandidateSet(request: ReviewCandidateSetRequest): Promise<ReviewCandidateSetResult>;
+  importVoiceTrack(request: ImportVoiceTrackRequest): Promise<ImportVoiceTrackResult>;
+  approveVoiceTrack(request: ApproveVoiceTrackRequest): Promise<ApproveVoiceTrackResult>;
   startSampleRender(request: StartRenderRequest): Promise<StartRenderResponse>;
   startProductionRender(request: StartProductionRenderRequest): Promise<StartRenderResponse>;
   subscribeToRenderJobs(listener: (event: RenderJobEvent) => void): () => void;
@@ -49,7 +55,7 @@ export interface HostAdapter {
 }
 
 export class BrowserHostAdapter implements HostAdapter {
-  getCapabilities = async () => ({localRendering: false, openRenderedFile: false, manualImageExchange: false});
+  getCapabilities = async () => ({localRendering: false, openRenderedFile: false, manualImageExchange: false, localAudioImport: false});
   exportGenerationJob = async (_request: ExportGenerationJobRequest): Promise<ExportGenerationJobResult> => {
     void _request;
     return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Private job export requires the desktop app."}};
@@ -91,6 +97,14 @@ export class BrowserHostAdapter implements HostAdapter {
     void _request;
     return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Asset review requires the desktop app."}};
   };
+  importVoiceTrack = async (_request: ImportVoiceTrackRequest): Promise<ImportVoiceTrackResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Voice recording import requires the desktop app."}};
+  };
+  approveVoiceTrack = async (_request: ApproveVoiceTrackRequest): Promise<ApproveVoiceTrackResult> => {
+    void _request;
+    return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Voice recording approval requires the desktop app."}};
+  };
   startSampleRender = async (_request: StartRenderRequest): Promise<StartRenderResponse> => {
     void _request;
     throw new Error("Local rendering is available in the desktop app");
@@ -117,6 +131,8 @@ export class DesktopHostAdapter implements HostAdapter {
   getGenerationExchange = (request: GetGenerationExchangeRequest) => this.bridge.getGenerationExchange(request);
   prepareGenerationImport = (request: PrepareGenerationImportRequest) => this.bridge.prepareGenerationImport(request);
   reviewCandidateSet = (request: ReviewCandidateSetRequest) => this.bridge.reviewCandidateSet(request);
+  importVoiceTrack = (request: ImportVoiceTrackRequest) => this.bridge.importVoiceTrack(request);
+  approveVoiceTrack = (request: ApproveVoiceTrackRequest) => this.bridge.approveVoiceTrack(request);
   startSampleRender = (request: StartRenderRequest) => this.bridge.startSampleRender(request);
   startProductionRender = (request: StartProductionRenderRequest) => this.bridge.startProductionRender(request);
   subscribeToRenderJobs = (listener: (event: RenderJobEvent) => void) => this.bridge.subscribeToRenderJobs(listener);

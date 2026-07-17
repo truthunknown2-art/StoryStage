@@ -433,6 +433,22 @@ export const preparedCandidateSchema = z.object({
 });
 export const assetApprovalSchema = z.object({candidateId: identifierSchema, status: z.enum(["pending", "approved", "rejected"]), approvedBy: z.literal("user").nullable(), approvedAt: z.string().datetime().nullable(), notes: z.string()}).strict();
 export const approvedAssetVersionSchema = z.object({assetId: identifierSchema, version: z.string().min(1), requirementId: identifierSchema, contentHash: hashSchema, relativeFile: safeRelativePathSchema, provenance: rightsRecordSchema, approvedAt: z.string().datetime()}).strict();
+export const voiceTrackSchema = z.object({
+  id: identifierSchema,
+  contentHash: hashSchema,
+  relativeFile: safeRelativePathSchema,
+  sourceFileName: z.string().min(1).max(260),
+  codec: z.enum(["pcm-wav", "ieee-float-wav"]),
+  durationInSeconds: z.number().positive().max(14_400),
+  sampleRate: z.number().int().min(8_000).max(192_000),
+  channels: z.union([z.literal(1), z.literal(2)]),
+  bitsPerSample: z.union([z.literal(16), z.literal(24), z.literal(32)]),
+  importedAt: z.string().datetime(),
+  approvalStatus: z.enum(["imported", "approved"]),
+  approvedAt: z.string().datetime().nullable(),
+}).strict().superRefine((track, context) => {
+  if ((track.approvalStatus === "approved") !== Boolean(track.approvedAt)) context.addIssue({code: "custom", path: ["approvedAt"], message: "Approved voice tracks require an approval timestamp; imported tracks must not have one."});
+});
 
 export const resolvedEntitySchema = z.object({
   entityId: identifierSchema,
@@ -597,6 +613,7 @@ export type StagedCandidate = z.infer<typeof stagedCandidateSchema>;
 export type PreparedCandidate = z.infer<typeof preparedCandidateSchema>;
 export type AssetApproval = z.infer<typeof assetApprovalSchema>;
 export type ApprovedAssetVersion = z.infer<typeof approvedAssetVersionSchema>;
+export type VoiceTrack = z.infer<typeof voiceTrackSchema>;
 export type ResolvedProductionPlan = z.infer<typeof resolvedProductionPlanSchema>;
 export type ShotOverride = z.infer<typeof shotOverrideSchema>;
 export type FrameAccurateRenderPlan = z.infer<typeof frameAccurateRenderPlanSchema>;

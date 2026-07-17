@@ -239,6 +239,25 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .audio-lock-score { align-items: flex-end; display: flex; flex-direction: column; }
 .audio-lock-score strong { color: #d3a9dc; font-size: 24px; }
 .audio-lock-score span { color: #75687a; font-size: 7px; text-transform: uppercase; }
+.voice-master-card { background: #111718; border: 1px solid #39323d; border-radius: 9px; display: grid; gap: 12px; padding: 15px 17px; }
+.voice-master-card > header { align-items: flex-start; display: flex; justify-content: space-between; }
+.voice-master-card h3 { color: #d7d0db; font-size: 13px; margin: 4px 0; }
+.voice-master-card > header p:last-child { color: #6f6773; font-size: 8px; }
+.voice-master-card > header > span { border: 1px solid #594138; border-radius: 999px; color: #c09278; font-size: 7px; padding: 5px 7px; text-transform: uppercase; }
+.voice-master-card > header > span.is-approved { border-color: #40604b; color: #8acda4; }
+.voice-master-card audio { height: 38px; width: 100%; }
+.voice-coverage { align-items: center; background: #211916; border: 1px solid #4d352d; border-radius: 6px; display: flex; justify-content: space-between; padding: 8px 10px; }
+.voice-coverage.is-aligned { background: #162019; border-color: #304a39; }
+.voice-coverage strong { color: #d38b76; font-size: 8px; }
+.voice-coverage.is-aligned strong { color: #82c89d; }
+.voice-coverage span { color: #786d68; font-family: "DM Mono", "Consolas", monospace; font-size: 7px; }
+.voice-error { background: #2a1816; border: 1px solid #56342d; border-radius: 5px; color: #ee8d7c; font-size: 8px; padding: 8px; }
+.voice-master-card > footer { align-items: center; display: flex; gap: 8px; justify-content: flex-end; }
+.voice-master-card > footer button, .voice-master-card > footer small { align-items: center; border-radius: 5px; display: inline-flex; font-size: 8px; gap: 6px; padding: 8px 10px; }
+.voice-master-card > footer button { background: #171d1e; border: 1px solid #394043; color: #949b98; }
+.voice-master-card > footer button.approve-voice { background: #263b30; border-color: #466451; color: #9ad8b0; }
+.voice-master-card > footer button:disabled { cursor: not-allowed; opacity: .4; }
+.voice-master-card > footer small { color: #81c59c; }
 .audio-workspace-grid { display: grid; gap: 14px; grid-template-columns: minmax(300px, .85fr) minmax(420px, 1.15fr); min-height: 430px; }
 .audio-cue-list { background: #101516; border: 1px solid #2b3234; border-radius: 9px; max-height: 560px; overflow: auto; padding: 7px; }
 .audio-cue-list > button { align-items: center; background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; display: grid; gap: 10px; grid-template-columns: 62px minmax(0, 1fr) auto; padding: 10px; text-align: left; width: 100%; }
