@@ -1,7 +1,7 @@
 # SS-003 Rook pilot production gate
 
 Date: 2026-07-17
-Status: engineering-complete candidate; waiting on Pro follow-up acceptance, then Rook visual approval and final voice/editorial approval
+Status: **ACCEPTED — engineering-complete opening slice approved by ChatGPT Pro at `6bcd590`; waiting on Rook visual approval and final voice/editorial approval**
 
 ## Product decision
 
@@ -38,6 +38,7 @@ Pro rejected the first `6c285e0` engineering-complete label while confirming tha
 - Candidate listing is production/revision-scoped and returns the durable decision. Rejected and approved source revisions remain visibly final after reload and expose no incompatible review controls.
 - Pro's next pass accepted the first three corrections but found that the approved target revision remained host-reviewable and opposite requests were not serialized. Review operations are now queued by production, source revision, and candidate. Main resolves the durable decision across the source/target lineage, recovers an approved record if a crash left the target before the record, reports the approved target as terminal, and rejects a direct target-revision rejection. Concurrency tests prove both orderings: approval first cannot be contradicted; rejection first creates no orphan approved target.
 - Pro's following pass found that later timing/audio/mix work changes the current target-revision hash even though immutable snapshots are retained. Lineage verification now separately reopens the original source and exact hash-bound approval target snapshots, while allowing the current target pointer to advance only when it still retains the identical approved Rook asset version. A regression test changes the revision-2 mix and content hash, proves approval remains valid, and proves removing the exact Rook version fails the lineage check.
+- Pro's final narrow re-audit accepted `6bcd590c7840e5bad16e6a50725d99de0f8227da`, confirmed that the H1-to-H2 lineage blocker is resolved, and found no remaining code blocker in the audited SS-003 opening slice.
 
 ## Human gates that remain honestly open
 

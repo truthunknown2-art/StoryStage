@@ -8,6 +8,8 @@ SS-001 remains accepted workstation infrastructure: browser studio, secure Elect
 
 `SS-002: Two-Profile Script-to-Animatic + Generated Asset Seam` is active.
 
+The SS-003 Rook pilot opening slice is engineering-complete and was accepted by Pro at `6bcd590`. It provides a fixed 26.33-second history production, a complete public Rook candidate, and a trusted terminal review/promotion path. The remaining Rook visual, final voice, timing, and mix decisions are real human gates rather than hidden implementation claims.
+
 Pro's narrow re-audit of follow-up commit `1c0d6a2` accepted Gate 4, marked D resolved, found no remaining code-level blocker in scope, and called the result an honest durable foundation for continued product work. That acceptance covers the import, preparation, selection, promotion, approval-recovery, and approved-frame foundation; it does not claim product completion or final visual quality.
 
 - Production bundles are finalized by Electron main, saved through per-production/revision queues, and rejected unless the complete stored render plan canonically equals a fresh compile of the included resolved plan.
