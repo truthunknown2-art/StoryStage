@@ -39,9 +39,12 @@ import {
   Layers3,
   Library,
   ListChecks,
+  Lock,
+  Mic2,
   PackageCheck,
   PlayCircle,
   Plus,
+  RotateCcw,
   ScanSearch,
   ShieldCheck,
   Sparkles,
@@ -55,7 +58,7 @@ import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeS
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
 type Screen = "home" | "new-production" | "workspace";
-type WorkspaceTab = "direction" | "assets" | "preflight";
+type WorkspaceTab = "direction" | "assets" | "audio" | "preflight";
 
 type ProductionSession = ProductionDraft & {
   overrides: ShotOverride[];
@@ -378,6 +381,59 @@ function CutTimeline({build, selectedShotId, onSelect}: {build: AnimaticBuild; s
       <footer><span>Frame {frame + 1} / {renderPlan.durationInFrames}</span><strong>{selectedShot.number} · {selectedShot.title}</strong><span>{selectedShot.transition.replaceAll("-", " ")}</span></footer>
     </section>
   );
+}
+
+type RenderShot = AnimaticBuild["renderPlan"]["shots"][number];
+
+function AudioCueEditor({build, shot, locked, onOverride}: {build: AnimaticBuild; shot: RenderShot; locked: boolean; onOverride: (shotId: string, patch: Partial<ShotOverride>) => void}) {
+  const [captionDraft, setCaptionDraft] = useState(shot.caption ?? "");
+  const [durationDraft, setDurationDraft] = useState((shot.durationInFrames / build.renderPlan.fps).toFixed(2));
+  const creativeShot = build.creativePlan.shots.find((candidate) => candidate.id === shot.id)!;
+
+  useEffect(() => setCaptionDraft(shot.caption ?? ""), [shot.caption]);
+  useEffect(() => setDurationDraft((shot.durationInFrames / build.renderPlan.fps).toFixed(2)), [build.renderPlan.fps, shot.durationInFrames]);
+
+  const normalizedDuration = () => {
+    const seconds = Number(durationDraft);
+    if (!Number.isFinite(seconds)) return shot.durationInFrames;
+    return Math.max(12, Math.min(1800, Math.round(seconds * build.renderPlan.fps)));
+  };
+  const editedCaption = () => captionDraft.trim() || null;
+  const commitDraft = (timingLocked?: true) => onOverride(shot.id, {caption: editedCaption(), durationInFrames: normalizedDuration(), timingLocked});
+  const reset = () => onOverride(shot.id, {caption: undefined, durationInFrames: undefined, timingLocked: undefined});
+
+  return <article className="audio-cue-editor">
+    <header><div><p className="eyebrow">Selected spoken beat</p><h3>{shot.number} · {shot.title}</h3><p>Source: {creativeShot.sourceExcerpt}</p></div><span className={locked ? "is-locked" : ""}>{locked ? "Timing locked" : "Estimated timing"}</span></header>
+    <label>Spoken line / caption<textarea aria-label={`Spoken text for shot ${shot.number}`} onBlur={() => commitDraft()} onChange={(event) => setCaptionDraft(event.target.value)} value={captionDraft} /></label>
+    <div className="audio-timing-controls">
+      <label>Duration (seconds)<input aria-label={`Duration for shot ${shot.number}`} min="0.4" max="60" onBlur={() => commitDraft()} onChange={(event) => setDurationDraft(event.target.value)} step="0.01" type="number" value={durationDraft} /></label>
+      <dl><div><dt>In</dt><dd>{formatTimecode(shot.startFrame, build.renderPlan.fps)}</dd></div><div><dt>Out</dt><dd>{formatTimecode(shot.startFrame + shot.durationInFrames, build.renderPlan.fps)}</dd></div><div><dt>Frames</dt><dd>{shot.durationInFrames}</dd></div></dl>
+    </div>
+    <footer><button className="reset-cue" onClick={reset}><RotateCcw size={13} />Use script estimate</button><button className="lock-cue" onClick={() => commitDraft(locked ? undefined : true)}><Lock size={13} />{locked ? "Unlock timing" : "Lock this timing"}</button></footer>
+  </article>;
+}
+
+function AudioTimingWorkspace({build, overrides, selectedShotId, onSelect, onOverride}: {build: AnimaticBuild; overrides: ShotOverride[]; selectedShotId: string; onSelect: (id: string) => void; onOverride: (shotId: string, patch: Partial<ShotOverride>) => void}) {
+  const sourceSpokenIds = new Set(build.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
+  const cues = build.renderPlan.shots.filter((shot) => sourceSpokenIds.has(shot.id) || Boolean(shot.caption));
+  const selected = cues.find((shot) => shot.id === selectedShotId) ?? cues[0];
+  const lockedIds = new Set(overrides.filter((override) => override.timingLocked).map((override) => override.shotId));
+  const speakerFor = (shot: RenderShot) => {
+    const creative = build.creativePlan.shots.find((candidate) => candidate.id === shot.id);
+    const source = creative?.sourceElementIds.map((id) => build.scriptDocument.elements.find((element) => element.id === id)).find((element) => element?.type === "dialogue");
+    return source?.type === "dialogue" ? source.speaker : "Editorial caption";
+  };
+
+  return <section className="audio-workspace" aria-label="Narration timing workspace">
+    <header><div><p className="eyebrow">Frame-accurate spoken edit</p><h2>Narration & caption timing</h2><p>Retiming a cue shifts every downstream shot boundary and the deterministic render plan. Lock only timing you have actually reviewed.</p></div><div className="audio-lock-score"><strong>{cues.filter((shot) => lockedIds.has(shot.id)).length}/{cues.length}</strong><span>spoken cues locked</span></div></header>
+    <div className="audio-workspace-grid">
+      <div className="audio-cue-list">{cues.map((shot) => <button aria-label={`Select timing cue ${shot.number}`} className={shot.id === selected?.id ? "is-active" : ""} key={shot.id} onClick={() => onSelect(shot.id)}>
+        <span className="cue-time">{formatTimecode(shot.startFrame, build.renderPlan.fps)}</span><div><strong>{shot.number} · {speakerFor(shot)}</strong><p>{shot.caption ?? "Caption intentionally removed"}</p></div><span className={lockedIds.has(shot.id) ? "cue-status is-locked" : "cue-status"}>{lockedIds.has(shot.id) ? "locked" : "estimate"}</span>
+      </button>)}</div>
+      {selected ? <AudioCueEditor build={build} key={selected.id} locked={lockedIds.has(selected.id)} onOverride={onOverride} shot={selected} /> : <div className="audio-empty"><Mic2 size={20} /><p>No spoken cues were derived from this script.</p></div>}
+    </div>
+    <footer><CircleAlert size={15} /><p>This workspace locks editorial text and frame timing. It does not pretend a voice recording, performance approval, music license, or final mix exists.</p></footer>
+  </section>;
 }
 
 function ApprovedRenderReview({build, job, onSelect, onReveal}: {build: AnimaticBuild; job: Extract<RenderJobEvent, {status: "completed"}>; onSelect: (id: string) => void; onReveal: () => void}) {
@@ -753,11 +809,14 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
   const missingApprovals = build.resolvedPlan.generationBriefs.length;
   const deferredSources = build.resolvedPlan.requirements.filter((requirement) => requirement.status === "deferred").length;
   const approvedAssets = session.approvedAssetVersions.length;
+  const spokenShotIds = new Set(build.creativePlan.shots.filter((shot) => Boolean(shot.caption)).map((shot) => shot.id));
+  const lockedSpokenTimings = session.overrides.filter((override) => override.timingLocked && spokenShotIds.has(override.shotId)).length;
   const items = [
     {id: "plan", ready: true, warning: false, title: "Script and direction compiled", detail: `${build.creativePlan.scenes.length} natural scenes · ${build.renderPlan.shots.length} shots · ${build.renderPlan.durationInFrames} exact frames`, action: "direction" as const},
     {id: "snapshot", ready: Boolean(productionBundleContentHash), warning: !capabilities.manualImageExchange, title: "Production snapshot saved", detail: productionBundleContentHash ? `Content ${productionBundleContentHash.slice(0, 12)}… is acknowledged by the desktop host.` : capabilities.manualImageExchange ? "The current production revision is still saving." : "Durable local snapshots require the desktop app.", action: "direction" as const},
     {id: "assets", ready: missingApprovals === 0, warning: false, title: "Generated asset approvals complete", detail: missingApprovals === 0 ? `${approvedAssets} immutable approved asset versions are bound to this revision.` : `${missingApprovals} asset approvals still required; ${approvedAssets} immutable versions are currently bound.`, action: "assets" as const},
     {id: "sources", ready: deferredSources === 0, warning: deferredSources > 0, title: "Deferred source acquisitions cleared", detail: deferredSources === 0 ? "No licensed, archive, or generation requirement is deferred." : `${deferredSources} requirements still need an approved source or an explicit production decision.`, action: "assets" as const},
+    {id: "timing", ready: spokenShotIds.size === 0 || lockedSpokenTimings === spokenShotIds.size, warning: false, title: "Spoken timing reviewed and locked", detail: spokenShotIds.size === 0 ? "This production has no derived spoken cues." : `${lockedSpokenTimings}/${spokenShotIds.size} narration or dialogue cues have editor-locked frame timing.`, action: "audio" as const},
     {id: "renderer", ready: capabilities.localRendering, warning: false, title: "Desktop renderer available", detail: capabilities.localRendering ? "The isolated render worker is available for approved local evidence." : "Desktop renderer unavailable in this host.", action: "direction" as const},
     {id: "slice", ready: capabilities.localRendering && Boolean(productionBundleContentHash) && approvedAssets > 0, warning: false, title: "Approved engineering slice can render", detail: approvedAssets > 0 ? "At least one approved asset is available for the current 24-second engineering render path." : "Approve at least one prepared asset before the engineering render action unlocks.", action: "assets" as const},
   ];
@@ -769,9 +828,9 @@ function ProductionPreflight({session, build, capabilities, productionBundleCont
       <div className="preflight-items">{items.map((item) => <article className={item.ready ? "is-ready" : item.warning ? "is-warning" : "is-blocked"} key={item.id}>
         <span className="preflight-state">{item.ready ? <Check size={15} /> : <CircleAlert size={15} />}</span>
         <div><h3>{item.title}</h3><p>{item.detail}</p></div>
-        {!item.ready ? <button onClick={() => onNavigate(item.action)}>{item.action === "assets" ? "Open assets" : "Open direction"}</button> : <small>Verified</small>}
+        {!item.ready ? <button onClick={() => onNavigate(item.action)}>{item.action === "assets" ? "Open assets" : item.action === "audio" ? "Open timing" : "Open direction"}</button> : <small>Verified</small>}
       </article>)}</div>
-      <footer><CircleAlert size={16} /><p><strong>Finished-episode gate remains closed.</strong> Voice timing, lip sync, music/SFX decisions, final profile artwork, and full-length approved-pixel playback still require implemented evidence before StoryStage can claim a publishable episode.</p></footer>
+      <footer><CircleAlert size={16} /><p><strong>Finished-episode gate remains closed.</strong> Editor-locked timing is only one dependency; approved voice recordings, lip sync, music/SFX decisions, final profile artwork, and full-length approved-pixel playback still require implemented evidence before StoryStage can claim a publishable episode.</p></footer>
     </section>
   );
 }
@@ -787,7 +846,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const selectedShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
   const currentOverride = session.overrides.find((override) => override.shotId === selectedShot.id);
   const pack = getShowPack(session.showPackId);
-  const averageShot = build.metrics.averageShotSeconds;
+  const averageShot = build.renderPlan.durationInFrames / build.renderPlan.shots.length / build.renderPlan.fps;
   const routed = ["insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"].reduce((sum, treatment) => sum + (build.metrics.treatmentDistribution[treatment] ?? 0), 0);
 
   useEffect(() => {
@@ -812,10 +871,13 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
     }
   };
 
-  const updateOverride = (patch: Partial<ShotOverride>) => {
-    const nextOverride = {...currentOverride, shotId: selectedShot.id, ...patch};
-    setSession({...session, overrides: [...session.overrides.filter((override) => override.shotId !== selectedShot.id), nextOverride]});
+  const updateShotOverride = (shotId: string, patch: Partial<ShotOverride>) => {
+    const existing = session.overrides.find((override) => override.shotId === shotId);
+    const nextOverride = Object.fromEntries(Object.entries({...existing, shotId, ...patch}).filter(([, value]) => value !== undefined)) as ShotOverride;
+    const remaining = session.overrides.filter((override) => override.shotId !== shotId);
+    setSession({...session, overrides: Object.keys(nextOverride).length === 1 ? remaining : [...remaining, nextOverride]});
   };
+  const updateOverride = (patch: Partial<ShotOverride>) => updateShotOverride(selectedShot.id, patch);
 
   const applyApprovedAsset = (approved: ApprovedAssetVersion) => {
     setSession({...session, revision: session.revision + 1, approvedAssetVersions: [...session.approvedAssetVersions.filter((asset) => asset.requirementId !== approved.requirementId), approved]});
@@ -827,11 +889,12 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
       <aside className="workspace-nav">
         <button className={tab === "direction" ? "is-active" : ""} onClick={() => setTab("direction")}><Aperture size={18} /><span>Direction</span></button>
         <button className={tab === "assets" ? "is-active" : ""} onClick={() => setTab("assets")}><Layers3 size={18} /><span>Assets</span><b>{build.resolvedPlan.generationBriefs.length}</b></button>
+        <button className={tab === "audio" ? "is-active" : ""} onClick={() => setTab("audio")}><Mic2 size={18} /><span>Audio</span></button>
         <div className="nav-spacer" />
         <button className={tab === "preflight" ? "is-active" : ""} onClick={() => setTab("preflight")}><ListChecks size={18} /><span>Preflight</span></button>
       </aside>
       <main className="workspace-main">
-        <header className="workspace-heading"><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : tab === "assets" ? "Generated-asset exchange" : "Production readiness"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
+        <header className="workspace-heading"><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : tab === "assets" ? "Generated-asset exchange" : tab === "audio" ? "Spoken editorial timing" : "Production readiness"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
           <CutTimeline build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
@@ -851,7 +914,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               {currentOverride ? <p className="override-state"><Check size={13} />Override compiled into the current render plan.</p> : <p className="override-help">Change a field to create a semantic override. No JSON editing required.</p>}
             </aside>
           </div>
-        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} productionBundleContentHash={lastSavedHash} /> : <ProductionPreflight session={session} build={build} capabilities={capabilities} productionBundleContentHash={lastSavedHash} onNavigate={setTab} />}
+        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} productionBundleContentHash={lastSavedHash} /> : tab === "audio" ? <AudioTimingWorkspace build={build} onOverride={updateShotOverride} onSelect={setSelectedShotId} overrides={session.overrides} selectedShotId={selectedShot.id} /> : <ProductionPreflight session={session} build={build} capabilities={capabilities} productionBundleContentHash={lastSavedHash} onNavigate={setTab} />}
       </main>
     </div>
   );

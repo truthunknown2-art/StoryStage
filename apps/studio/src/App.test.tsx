@@ -161,6 +161,30 @@ describe("StoryStage studio", () => {
     expect(screen.getAllByText("gesture").some((element) => element.tagName === "B")).toBe(true);
   });
 
+  it("edits and locks frame-accurate spoken timing instead of faking a voice track", async () => {
+    const user = await createDefaultProduction();
+    await user.click(screen.getByRole("button", {name: "Audio"}));
+
+    expect(screen.getByRole("heading", {name: "Narration & caption timing"})).toBeInTheDocument();
+    expect(screen.getAllByRole("button", {name: /Select timing cue/}).length).toBeGreaterThan(0);
+    const text = screen.getByLabelText(/Spoken text for shot/);
+    const duration = screen.getByLabelText(/Duration for shot/);
+    await user.clear(text);
+    await user.type(text, "A cleaner locked narration read.");
+    await user.clear(duration);
+    await user.type(duration, "7.2");
+    await user.click(screen.getByRole("button", {name: "Lock this timing"}));
+
+    expect(screen.getByRole("button", {name: "Unlock timing"})).toBeInTheDocument();
+    expect(screen.getByDisplayValue("A cleaner locked narration read.")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Duration for shot/)).toHaveValue(7.2);
+    expect(screen.getByText("Timing locked")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    expect(screen.getByText(/1\/\d+ narration or dialogue cues have editor-locked frame timing/)).toBeInTheDocument();
+    expect(screen.getByText(/approved voice recordings/)).toBeInTheDocument();
+  });
+
   it("exposes an honest manual ChatGPT Images exchange with downloadable briefs", async () => {
     const user = await createDefaultProduction();
     const createObjectURL = vi.fn(() => "blob:story-stage-brief");

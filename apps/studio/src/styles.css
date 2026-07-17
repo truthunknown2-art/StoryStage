@@ -232,6 +232,44 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .approved-render-review > footer { align-items: center; color: #65726c; display: flex; font-size: 7px; justify-content: space-between; }
 .approved-render-review > footer span { color: #95a49d; font-family: "DM Mono", "Consolas", monospace; }
 .approved-render-review > footer p { text-align: right; }
+.audio-workspace { display: grid; gap: 14px; margin-top: 24px; }
+.audio-workspace > header { align-items: center; background: linear-gradient(120deg, rgba(67,44,76,.38), #111718 62%); border: 1px solid #3a3340; border-radius: 11px; display: flex; justify-content: space-between; padding: 19px 20px; }
+.audio-workspace > header h2 { color: #e1dce5; font-size: 18px; margin: 4px 0; }
+.audio-workspace > header p:last-child { color: #776f7c; font-size: 9px; line-height: 1.5; max-width: 680px; }
+.audio-lock-score { align-items: flex-end; display: flex; flex-direction: column; }
+.audio-lock-score strong { color: #d3a9dc; font-size: 24px; }
+.audio-lock-score span { color: #75687a; font-size: 7px; text-transform: uppercase; }
+.audio-workspace-grid { display: grid; gap: 14px; grid-template-columns: minmax(300px, .85fr) minmax(420px, 1.15fr); min-height: 430px; }
+.audio-cue-list { background: #101516; border: 1px solid #2b3234; border-radius: 9px; max-height: 560px; overflow: auto; padding: 7px; }
+.audio-cue-list > button { align-items: center; background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; display: grid; gap: 10px; grid-template-columns: 62px minmax(0, 1fr) auto; padding: 10px; text-align: left; width: 100%; }
+.audio-cue-list > button:hover { background: #151b1c; }
+.audio-cue-list > button.is-active { background: #1d1920; border-color: #46384b; }
+.cue-time { color: #786f7b; font-family: "DM Mono", "Consolas", monospace; font-size: 8px; }
+.audio-cue-list strong { color: #b9b1bd; display: block; font-size: 9px; }
+.audio-cue-list p { color: #625d66; font-size: 8px; line-height: 1.4; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cue-status { border: 1px solid #493a31; border-radius: 999px; color: #b4876e; font-size: 6px; padding: 4px 6px; text-transform: uppercase; }
+.cue-status.is-locked { border-color: #365542; color: #7fc49b; }
+.audio-cue-editor { align-content: start; background: #121718; border: 1px solid #2f3538; border-radius: 9px; display: grid; gap: 16px; padding: 18px; }
+.audio-cue-editor > header { align-items: flex-start; border-bottom: 1px solid #2b3133; display: flex; justify-content: space-between; padding-bottom: 14px; }
+.audio-cue-editor h3 { color: #d8d1dc; font-size: 14px; margin: 4px 0; }
+.audio-cue-editor > header p:last-child { color: #665f6a; font-size: 8px; line-height: 1.4; max-width: 430px; }
+.audio-cue-editor > header > span { border: 1px solid #543f34; border-radius: 999px; color: #bf8e73; font-size: 7px; padding: 5px 7px; text-transform: uppercase; }
+.audio-cue-editor > header > span.is-locked { border-color: #3d604b; color: #89cda4; }
+.audio-cue-editor > label, .audio-timing-controls > label { color: #746c78; display: grid; font-size: 8px; gap: 6px; text-transform: uppercase; }
+.audio-cue-editor textarea, .audio-cue-editor input { background: #0d1213; border: 1px solid #34353a; border-radius: 6px; color: #d2cbd6; font: inherit; padding: 10px; }
+.audio-cue-editor textarea { font-size: 13px; line-height: 1.55; min-height: 130px; resize: vertical; text-transform: none; }
+.audio-cue-editor input { font-family: "DM Mono", "Consolas", monospace; font-size: 11px; height: 38px; width: 130px; }
+.audio-timing-controls { align-items: end; display: flex; justify-content: space-between; }
+.audio-timing-controls dl { display: flex; gap: 8px; }
+.audio-timing-controls dl div { background: #0f1415; border: 1px solid #2a3032; border-radius: 5px; min-width: 72px; padding: 8px; }
+.audio-timing-controls dt { color: #5d5860; font-size: 7px; text-transform: uppercase; }
+.audio-timing-controls dd { color: #a49ca8; font-family: "DM Mono", "Consolas", monospace; font-size: 8px; margin-top: 4px; }
+.audio-cue-editor > footer { border-top: 1px solid #2b3133; display: flex; justify-content: space-between; padding-top: 14px; }
+.audio-cue-editor > footer button { align-items: center; border-radius: 5px; display: inline-flex; font-size: 8px; gap: 6px; padding: 8px 10px; }
+.reset-cue { background: #151a1b; border: 1px solid #343a3c; color: #858d89; }
+.lock-cue { background: #263b30; border: 1px solid #466451; color: #9ad8b0; }
+.audio-workspace > footer { align-items: center; background: #171419; border: 1px solid #3b323e; border-radius: 7px; color: #b184b8; display: flex; font-size: 8px; gap: 9px; line-height: 1.5; padding: 11px 13px; }
+.audio-empty { align-items: center; background: #111617; border: 1px dashed #343a3c; border-radius: 9px; color: #706978; display: flex; gap: 9px; justify-content: center; }
 .workspace-grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) 270px; margin-top: 18px; }
 .direction-board { display: grid; gap: 15px; min-width: 0; }
 .board-disclaimer { align-items: center; background: #141a1b; border: 1px dashed #33403e; border-radius: 8px; color: #7dbf99; display: grid; gap: 10px; grid-template-columns: auto 1fr; padding: 11px 13px; }

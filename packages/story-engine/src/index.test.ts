@@ -291,6 +291,24 @@ describe("StoryStage story engine", () => {
     expect(wiped.actions.some((action) => action.detail.type === "foregroundWipe")).toBe(true);
   });
 
+  it("retimes narration and captions without breaking exact shot boundaries", () => {
+    const base = buildFor("explainer");
+    const shotIndex = base.renderPlan.shots.findIndex((shot) => Boolean(shot.caption));
+    const shot = base.renderPlan.shots[shotIndex]!;
+    const nextShot = base.renderPlan.shots[shotIndex + 1]!;
+    const addedFrames = 24;
+    const rebuilt = buildAnimaticSync({draft: base.draft, overrides: [{shotId: shot.id, caption: "A sharper editorial read.", durationInFrames: shot.durationInFrames + addedFrames, timingLocked: true}]});
+    const retimed = rebuilt.renderPlan.shots[shotIndex]!;
+
+    expect(retimed.caption).toBe("A sharper editorial read.");
+    expect(retimed.durationInFrames).toBe(shot.durationInFrames + addedFrames);
+    expect(rebuilt.renderPlan.shots[shotIndex + 1]!.startFrame).toBe(nextShot.startFrame + addedFrames);
+    expect(rebuilt.renderPlan.durationInFrames).toBe(base.renderPlan.durationInFrames + addedFrames);
+    expect(retimed.actions.every((action) => action.startFrame >= retimed.startFrame && action.endFrame <= retimed.startFrame + retimed.durationInFrames)).toBe(true);
+    expect(retimed.actions.some((action) => ["talk", "holdPose"].includes(action.detail.type) && action.endFrame === retimed.startFrame + retimed.durationInFrames)).toBe(true);
+    expect(shotOverrideSchema.safeParse({shotId: shot.id, caption: null, durationInFrames: 12, timingLocked: true}).success).toBe(true);
+  });
+
   it("resolves only dependent shots when an immutable candidate is approved", () => {
     const build = buildFor("explainer");
     const requirement = build.resolvedPlan.requirements.find((candidate) => candidate.entityId === "character-mara" && candidate.role === "character")!;

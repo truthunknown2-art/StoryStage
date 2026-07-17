@@ -22,19 +22,22 @@ export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRen
     const override = overrideByShot.get(shot.id);
     if (override?.gesture && !showPack.allowedGestures.includes(override.gesture)) throw new Error(`Gesture ${override.gesture} is not allowed by ${showPack.id}.`);
 
+    const durationInFrames = override?.durationInFrames ?? shot.durationInFrames;
     const startFrame = cursor;
-    cursor += shot.durationInFrames;
+    cursor += durationInFrames;
     const focusCharacterId = shot.focusCharacterName ? entityIdByName.get(shot.focusCharacterName.toLowerCase()) ?? null : null;
     const actions = shot.actions.map((action) => {
-      const localStart = Math.min(action.startOffsetFrames, Math.max(0, shot.durationInFrames - 1));
-      const duration = Math.max(1, Math.min(action.durationInFrames, shot.durationInFrames - localStart));
+      const localStart = Math.min(action.startOffsetFrames, Math.max(0, durationInFrames - 1));
+      const fillsOriginalShot = action.startOffsetFrames + action.durationInFrames >= shot.durationInFrames;
+      const requestedDuration = fillsOriginalShot ? durationInFrames - localStart : action.durationInFrames;
+      const duration = Math.max(1, Math.min(requestedDuration, durationInFrames - localStart));
       return {id: action.id, actorId: action.actorName ? entityIdByName.get(action.actorName.toLowerCase()) ?? null : null, targetId: action.targetName ? entityIdByName.get(action.targetName.toLowerCase()) ?? null : null, label: action.label, startFrame: startFrame + localStart, endFrame: startFrame + localStart + duration, detail: action.detail};
     });
 
     if (override?.gesture) {
       const existingIndex = actions.findIndex((action) => action.detail.type === "gesture");
       const existing = existingIndex >= 0 ? actions[existingIndex]! : null;
-      const gestureAction = {id: `${shot.id}-override-gesture`, actorId: existing?.actorId ?? focusCharacterId, targetId: existing?.targetId ?? null, label: `Gesture override: ${override.gesture}`, startFrame: existing?.startFrame ?? startFrame, endFrame: existing?.endFrame ?? startFrame + shot.durationInFrames, detail: {type: "gesture" as const, gestureId: override.gesture, intensity: override.gestureIntensity ?? 0.75}};
+      const gestureAction = {id: `${shot.id}-override-gesture`, actorId: existing?.actorId ?? focusCharacterId, targetId: existing?.targetId ?? null, label: `Gesture override: ${override.gesture}`, startFrame: existing?.startFrame ?? startFrame, endFrame: existing?.endFrame ?? startFrame + durationInFrames, detail: {type: "gesture" as const, gestureId: override.gesture, intensity: override.gestureIntensity ?? 0.75}};
       if (existingIndex >= 0) actions.splice(existingIndex, 1, gestureAction);
       else actions.push(gestureAction);
     }
@@ -42,7 +45,7 @@ export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRen
     const framing = override?.framing ?? shot.framing;
     if (override?.cameraAction) {
       const existingIndex = actions.findIndex((action) => ["cameraPush", "pan", "reframe"].includes(action.detail.type));
-      const cameraAction = {id: `${shot.id}-override-camera`, actorId: null, targetId: focusCharacterId, label: `Camera override: ${override.cameraAction}`, startFrame, endFrame: startFrame + shot.durationInFrames, detail: cameraActionDetail(override.cameraAction, framing)};
+      const cameraAction = {id: `${shot.id}-override-camera`, actorId: null, targetId: focusCharacterId, label: `Camera override: ${override.cameraAction}`, startFrame, endFrame: startFrame + durationInFrames, detail: cameraActionDetail(override.cameraAction, framing)};
       if (existingIndex >= 0) actions.splice(existingIndex, 1, cameraAction);
       else actions.push(cameraAction);
     }
@@ -51,12 +54,13 @@ export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRen
       const transitionActionTypes = new Set(["hardCut", "foregroundWipe"]);
       for (let index = actions.length - 1; index >= 0; index -= 1) if (transitionActionTypes.has(actions[index]!.detail.type)) actions.splice(index, 1);
       if (override.transition === "hard-cut") actions.push({id: `${shot.id}-override-hard-cut`, actorId: null, targetId: focusCharacterId, label: "Transition override: hard cut", startFrame, endFrame: startFrame + 1, detail: {type: "hardCut" as const}});
-      if (override.transition === "foreground-wipe") actions.push({id: `${shot.id}-override-foreground-wipe`, actorId: null, targetId: focusCharacterId, label: "Transition override: foreground wipe", startFrame, endFrame: startFrame + Math.min(12, shot.durationInFrames), detail: {type: "foregroundWipe" as const, layer: "environment" as const}});
+      if (override.transition === "foreground-wipe") actions.push({id: `${shot.id}-override-foreground-wipe`, actorId: null, targetId: focusCharacterId, label: "Transition override: foreground wipe", startFrame, endFrame: startFrame + Math.min(12, durationInFrames), detail: {type: "foregroundWipe" as const, layer: "environment" as const}});
     }
 
     const visualBindings = shot.visualRequirementIds.map((id) => visualByRequirementId.get(id)).filter((visual): visual is NonNullable<typeof visual> => Boolean(visual));
     const background = visualBindings.find((visual) => visual.role === "background");
-    return {id: shot.id, sceneId: shot.sceneId, number: shot.number, title: shot.title, framing, treatment: shot.treatment, transition: override?.transition ?? shot.transition, locationAssetId: background?.assetId ?? placeholder.id, focusCharacterId, visualBindings, startFrame, durationInFrames: shot.durationInFrames, actions, caption: shot.caption};
+    const caption = override && Object.prototype.hasOwnProperty.call(override, "caption") ? override.caption ?? null : shot.caption;
+    return {id: shot.id, sceneId: shot.sceneId, number: shot.number, title: shot.title, framing, treatment: shot.treatment, transition: override?.transition ?? shot.transition, locationAssetId: background?.assetId ?? placeholder.id, focusCharacterId, visualBindings, startFrame, durationInFrames, actions, caption};
   });
 
   const payload = {
