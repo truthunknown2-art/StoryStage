@@ -13,6 +13,7 @@ import {
   type AnimaticBuild,
   type ApprovedAssetVersion,
   type AssetRoutingPolicy,
+  type GenerationBrief,
   type GenerationJobDraft,
   type ProductionPreset,
   type ProductionDraft,
@@ -29,6 +30,7 @@ import {
   CircleAlert,
   CirclePause,
   Clapperboard,
+  Copy,
   Download,
   FileText,
   Film,
@@ -443,6 +445,36 @@ function downloadBriefs(session: ProductionSession, payload: GenerationJobDraft)
   URL.revokeObjectURL(url);
 }
 
+const promptRoleDirection = (brief: GenerationBrief, fileRole: string) => {
+  if (fileRole === "identity-sheet.png") return "Create a canonical full-body identity sheet with front, three-quarter, and profile views plus a compact expression row. Keep the entire figure visible and proportions unambiguous.";
+  if (fileRole === "neutral-pose.png") return "Create one isolated full-body neutral performance pose, facing three-quarter toward camera, with every limb readable and nothing cropped.";
+  if (fileRole === "talk-pose.png") return "Create one isolated full-body speaking pose with a clearly open talking mouth and a readable explanatory hand gesture. Preserve the exact canonical identity.";
+  if (fileRole === "reaction-pose.png") return "Create one isolated full-body reaction pose with a strong readable expression and silhouette. Preserve the exact canonical identity.";
+  if (fileRole === "clean-plate.png") return "Create a complete 16:9 environment clean plate with no characters, captions, logos, or foreground occluders. It must work as the opaque base layer.";
+  if (fileRole === "midground.png") return "Create only the 16:9 midground layer for the same clean-plate camera and perspective. Isolate the layer on transparency, or on the exact controlled matte if transparency is unavailable.";
+  if (fileRole === "foreground-occluders.png") return "Create only the 16:9 foreground occluder layer for the same clean-plate camera and perspective. Keep the center performance area usable and isolate the layer on transparency or the exact controlled matte.";
+  if (["reconstruction", "diagram", "editorial-illustration"].includes(brief.outputRole)) return "Create one complete 16:9 editorial frame with a deliberate focal point and useful negative space for later captions. Do not embed labels or text; StoryStage adds sourced context and reconstruction labels during editing.";
+  return "Create one clean isolated production asset on transparency, or on the exact controlled matte if transparency is unavailable. Keep the full object visible and easy to cut out.";
+};
+
+function buildChatGptAssetPrompt(session: ProductionSession, brief: GenerationBrief, candidateSetNumber: number, fileRole: string) {
+  return [
+    `Create ONE original image asset for the StoryStage production "${session.title}".`,
+    `Entity: ${brief.entity.name} (${brief.outputRole.replaceAll("-", " ")}).`,
+    `Candidate set: ${candidateSetNumber} of ${brief.candidateCount}. File role: ${fileRole}.`,
+    `Story context: ${brief.sourceExcerpts.join(" ")}`,
+    `Style bible: ${brief.styleBible.principles.join("; ")}.`,
+    `Creative requirements: ${brief.creativeRequirements.join(" ")}`,
+    `Continuity lock: ${brief.continuityRequirements.join(" ")} Keep this candidate-set identity, palette, proportions, camera logic, and rendering style consistent with every other file in the same set.`,
+    promptRoleDirection(brief, fileRole),
+    `Background rule: use true transparency where requested; if that is unavailable, use only the flat matte ${brief.controlledMatte} with no shadows or spill.`,
+    `Hard prohibitions: ${brief.prohibitedChanges.join(" ")} Do not imitate any named channel, copyrighted character, living artist, or supplied reference-channel artwork.`,
+    "Return only the generated image, with no explanation, labels, filename text, border, signature, or watermark.",
+  ].join("\n\n");
+}
+
+const suggestedAssetFilename = (brief: GenerationBrief, candidateSetNumber: number, fileRole: string) => `${brief.entity.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "asset"}-set-${candidateSetNumber}-${fileRole}`;
+
 function AssetExchange({session, build, host, capabilities, onApprovedAsset, productionBundleContentHash}: {session: ProductionSession; build: AnimaticBuild; host: HostAdapter; capabilities: DesktopCapabilities; onApprovedAsset: (approved: ApprovedAssetVersion) => void; productionBundleContentHash: string | null}) {
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [reviewingExport, setReviewingExport] = useState(false);
@@ -459,6 +491,8 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
   const [preparing, setPreparing] = useState(false);
   const [assetReviews, setAssetReviews] = useState<CandidateSetReviewSummary[]>([]);
   const [reviewingSetId, setReviewingSetId] = useState<string | null>(null);
+  const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
+  const [generationPromptsReady, setGenerationPromptsReady] = useState(false);
   const generationJobDraft = useMemo(() => createGenerationJob(session, build, productionBundleContentHash ?? "0".repeat(64)), [build, productionBundleContentHash, session]);
 
   const refreshExchanges = useCallback(async () => {
@@ -478,6 +512,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
       return;
     }
     setExchangeJobId(result.summary.exchangeJobId);
+    setGenerationPromptsReady(true);
     setLooseMapping(result.looseMapping);
     setLooseAssignments(result.looseMapping ? Object.fromEntries(result.looseMapping.candidates.map((candidate) => [candidate.candidateId, ""])) : {});
     setStagedCandidates(result.stagedCandidates);
@@ -494,6 +529,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
     const payload = generationJobDraft;
     if (!capabilities.manualImageExchange) {
       downloadBriefs(session, payload);
+      setGenerationPromptsReady(true);
       setExportStatus(`Generation job exported for ${payload.briefs.length} briefs.`);
       setReviewingExport(false);
       return;
@@ -507,6 +543,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
     }
     setImportError(null);
     setExchangeJobId(result.jobId);
+    setGenerationPromptsReady(true);
     setLooseMapping(null);
     setStagedCandidates([]);
     setPreparation(null);
@@ -624,6 +661,18 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
     await refreshExchanges();
   };
 
+  const copyGenerationPrompt = async (brief: GenerationBrief, candidateSetNumber: number, fileRole: string) => {
+    const promptId = `${brief.id}:${candidateSetNumber}:${fileRole}`;
+    try {
+      await navigator.clipboard.writeText(buildChatGptAssetPrompt(session, brief, candidateSetNumber, fileRole));
+      setCopiedPromptId(promptId);
+      setImportError(null);
+    } catch {
+      setCopiedPromptId(null);
+      setImportError("StoryStage could not copy the prompt. Clipboard permission is required only for this user-triggered action.");
+    }
+  };
+
   return (
     <div className="asset-exchange">
       <section className="provider-banner"><div className="provider-icon"><ImagePlus size={23} /></div><div><p className="eyebrow">Provider-neutral exchange</p><h2>Manual ChatGPT Images</h2><p>Export an approved brief, generate original candidates in ChatGPT, then import the result bundle. No API call or paid generation is hidden here.</p></div><span className="manual-badge">Manual round trip</span></section>
@@ -650,6 +699,17 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
           <dl><div><dt>References</dt><dd>{brief.referenceAssets.length || "None"}</dd></div><div><dt>Style rules</dt><dd>{brief.styleBible.principles.join("; ")}</dd></div><div><dt>Expected</dt><dd>{brief.expectedFiles.join(", ")}</dd></div></dl>
         </article>)}</div>
         <footer><button className="quiet-button" onClick={() => setReviewingExport(false)}>Cancel</button><button className="create-button" onClick={() => void exportBriefs()}><ShieldCheck size={15} />Approve and export generation job</button></footer>
+      </section> : null}
+      {generationPromptsReady ? <section className="prompt-queue" aria-label="ChatGPT image prompt queue">
+        <header><div><p className="eyebrow">Subscription workflow</p><h2>ChatGPT image prompt queue</h2><p>Use one ChatGPT conversation per candidate set. Generate and download each file, then import the loose images and map them to these same roles.</p></div><span>{generationJobDraft.briefs.reduce((sum, brief) => sum + brief.candidateCount * brief.expectedFiles.length, 0)} images</span></header>
+        <div>{generationJobDraft.briefs.map((brief) => <details key={brief.id} open={generationJobDraft.briefs.length === 1}>
+          <summary><span><strong>{brief.entity.name}</strong><small>{brief.outputRole.replaceAll("-", " ")} · {brief.candidateCount} coherent sets</small></span><b>{brief.candidateCount * brief.expectedFiles.length} prompts</b></summary>
+          <div className="prompt-items">{Array.from({length: brief.candidateCount}, (_, index) => index + 1).flatMap((candidateSetNumber) => brief.expectedFiles.map((fileRole) => {
+            const promptId = `${brief.id}:${candidateSetNumber}:${fileRole}`;
+            return <article key={promptId}><span><strong>Set {candidateSetNumber} · {fileRole}</strong><small>{suggestedAssetFilename(brief, candidateSetNumber, fileRole)}</small></span><button aria-label={`Copy prompt for ${brief.entity.name} set ${candidateSetNumber} ${fileRole}`} onClick={() => void copyGenerationPrompt(brief, candidateSetNumber, fileRole)}>{copiedPromptId === promptId ? <Check size={14} /> : <Copy size={14} />}{copiedPromptId === promptId ? "Copied" : "Copy prompt"}</button></article>;
+          }))}</div>
+        </details>)}</div>
+        <footer><ShieldCheck size={14} /><p>StoryStage never reads your ChatGPT session. Only prompts you explicitly copy and images you explicitly import cross the boundary.</p></footer>
       </section> : null}
       {looseMapping ? <section className="mapping-panel" aria-label="Loose candidate role mapping">
         <header><div><p className="eyebrow">Loose-file fallback</p><h2>Map downloaded images to production roles</h2></div><span>{looseMapping.candidates.length} files</span></header>

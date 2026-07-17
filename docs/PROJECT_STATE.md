@@ -27,6 +27,7 @@ Pro's narrow re-audit of follow-up commit `1c0d6a2` accepted Gate 4, marked D re
 - Completed approved renders now stream back into the sandboxed studio through a narrow, validated `storystage-media` route. The in-app H.264 player has native playback plus exact-frame and shot-boundary review controls; it exposes only verified completed MP4s from registered render roots.
 - A root renderer error boundary replaces blank-window failures with a local recovery screen, preserves saved production data, and offers an explicit reload action with optional technical detail.
 - The former disabled Preflight placeholder is now an evidence-backed readiness view. It distinguishes compiled/saved/renderer checks, required asset approvals, deferred sources, engineering-slice eligibility, and the still-closed finished-episode gate.
+- Exported manual image jobs now become a resumable ChatGPT subscription prompt queue. Each candidate-set file has a role-specific, continuity-locked prompt and suggested filename; prompts leave StoryStage only through an explicit copy action, and the app never reads or stores the ChatGPT session.
 
 ## Real proof
 
@@ -49,7 +50,7 @@ The proof art is deliberately simple local engineering art. It proves the execut
 - Gate 1 reference cut measurements: complete.
 - Gates 2-3 production draft, New Production UI, two-profile planning, metrics, and semantic overrides: accepted by Pro against commit `1c60d93`.
 - Gate 4 durable generation/import foundation and executable manual image exchange: accepted by Pro at follow-up commit `1c0d6a2`; A-F and the executable approved-frame slice are resolved within that audit scope.
-- Gate 5 original ChatGPT production art for both profiles: pending a real authenticated manual generation round trip.
+- Gate 5 original ChatGPT production art for both profiles: the credential-free subscription prompt queue and import path are implemented and live-verified; actual generated images still need a real authenticated manual generation/import pass.
 - Gate 6 preparation and validation: implemented for 2D pose-swap characters, background layers, and props; skeletal/part rigging and Blender routing remain pending.
 - Gate 7 semantic Remotion animation: initial plan-driven 24-second slice implemented and proven; full episode coverage and visual polish remain pending.
 - Gate 8 review/override: shot overrides, asset selection/approval, a functional frame-accurate cut timeline, in-app playback of completed approved H.264 slices with synchronized shot/frame review, and evidence-backed production preflight exist; unrendered live Remotion preview, full-length playback, and broader inspector coverage remain incomplete.

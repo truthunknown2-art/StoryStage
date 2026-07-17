@@ -338,6 +338,29 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .review-briefs dd { color: #89958f; font-size: 8px; }
 .export-review footer { align-items: center; display: flex; gap: 9px; justify-content: flex-end; }
 .export-review footer .create-button { font-size: 9px; padding: 9px 12px; }
+.prompt-queue { background: #111718; border: 1px solid #2e3a36; border-radius: 10px; overflow: hidden; }
+.prompt-queue > header { align-items: center; background: linear-gradient(120deg, #17221d, #111718); border-bottom: 1px solid #2d3935; display: flex; justify-content: space-between; padding: 16px 18px; }
+.prompt-queue > header h2 { color: #d8e1dc; font-size: 14px; margin: 4px 0; }
+.prompt-queue > header p:last-child { color: #66736d; font-size: 8px; max-width: 650px; }
+.prompt-queue > header > span { border: 1px solid #405749; border-radius: 999px; color: #91cfa8; font-size: 8px; padding: 6px 8px; }
+.prompt-queue details { border-bottom: 1px solid #28322f; }
+.prompt-queue details:last-child { border-bottom: 0; }
+.prompt-queue summary { align-items: center; cursor: pointer; display: flex; justify-content: space-between; list-style: none; padding: 13px 16px; }
+.prompt-queue summary::-webkit-details-marker { display: none; }
+.prompt-queue summary strong, .prompt-queue summary small { display: block; }
+.prompt-queue summary strong { color: #b8c5be; font-size: 10px; }
+.prompt-queue summary small { color: #627069; font-size: 7px; margin-top: 3px; }
+.prompt-queue summary b { color: #789486; font-size: 7px; text-transform: uppercase; }
+.prompt-items { background: #0d1213; border-top: 1px solid #26302d; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.prompt-items article { align-items: center; border-bottom: 1px solid #242c2a; display: flex; justify-content: space-between; min-width: 0; padding: 10px 13px; }
+.prompt-items article:nth-child(odd) { border-right: 1px solid #242c2a; }
+.prompt-items article > span { min-width: 0; }
+.prompt-items strong, .prompt-items small { display: block; }
+.prompt-items strong { color: #9faea6; font-size: 8px; }
+.prompt-items small { color: #56635d; font-family: "DM Mono", "Consolas", monospace; font-size: 6px; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prompt-items button { align-items: center; background: #19231f; border: 1px solid #33463c; border-radius: 5px; color: #88c59f; display: flex; flex: none; font-size: 7px; gap: 5px; margin-left: 10px; padding: 6px 8px; }
+.prompt-queue > footer { align-items: center; background: #142019; border-top: 1px solid #2d4235; color: #7fc799; display: flex; gap: 8px; padding: 10px 15px; }
+.prompt-queue > footer p { color: #688073; font-size: 7px; }
 .mapping-panel, .validation-report { background: #111718; border: 1px solid #34413d; border-radius: 10px; display: grid; gap: 12px; padding: 16px; }
 .mapping-panel > header, .validation-report > header { align-items: flex-start; display: flex; justify-content: space-between; }
 .mapping-panel h2, .validation-report h2 { color: #d5ddd9; font-size: 14px; margin-top: 4px; }

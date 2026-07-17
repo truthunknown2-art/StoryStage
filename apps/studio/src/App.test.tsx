@@ -165,6 +165,8 @@ describe("StoryStage studio", () => {
     const revokeObjectURL = vi.fn();
     Object.defineProperty(URL, "createObjectURL", {configurable: true, value: createObjectURL});
     Object.defineProperty(URL, "revokeObjectURL", {configurable: true, value: revokeObjectURL});
+    const writeText = vi.fn(async (_text: string) => {void _text;});
+    Object.defineProperty(navigator, "clipboard", {configurable: true, value: {writeText}});
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);
 
     await user.click(screen.getByRole("button", {name: /Assets/}));
@@ -181,6 +183,18 @@ describe("StoryStage studio", () => {
     expect(createObjectURL).toHaveBeenCalledOnce();
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:story-stage-brief");
     expect(screen.getByText(/Generation job exported for/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: "ChatGPT image prompt queue"})).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", {name: /Copy prompt for/})[0]!);
+    expect(writeText).toHaveBeenCalledOnce();
+    expect(writeText.mock.calls[0]![0]).toContain("Create ONE original image asset");
+    expect(writeText.mock.calls[0]![0]).toContain("Return only the generated image");
+    expect(screen.getByText("Copied")).toBeInTheDocument();
+
+    await user.click(screen.getByText("RECONSTRUCTION", {selector: ".prompt-queue summary strong"}));
+    await user.click(screen.getByRole("button", {name: "Copy prompt for RECONSTRUCTION set 1 candidate.png"}));
+    expect(writeText.mock.calls[1]![0]).toContain("complete 16:9 editorial frame");
+    expect(writeText.mock.calls[1]![0]).toContain("Do not embed labels or text");
   });
 
   it("maps loose ChatGPT downloads into a locally-created candidate bundle", async () => {
@@ -214,8 +228,9 @@ describe("StoryStage studio", () => {
     await user.selectOptions(screen.getByLabelText("Role for mara-download.png"), "1");
     await user.click(screen.getByRole("button", {name: /Create local candidate bundle/}));
 
-    expect(screen.getByRole("heading", {name: /Staged files are not prepared or approved assets/})).toBeInTheDocument();
-    expect(screen.getByText(/identity-sheet.png/)).toBeInTheDocument();
+    const validationReport = screen.getByRole("heading", {name: /Staged files are not prepared or approved assets/}).closest("section");
+    expect(validationReport).not.toBeNull();
+    expect(within(validationReport!).getByText(/identity-sheet.png/)).toBeInTheDocument();
   });
 
   it("lists and resumes a durable generation exchange after reopening a production", async () => {
