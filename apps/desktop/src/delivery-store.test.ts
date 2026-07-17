@@ -9,13 +9,14 @@ import {publishDeliveryBundle, readVerifiedDeliveryBundle, type DeliveryPublishC
 const roots: string[] = [];
 afterEach(async () => Promise.all(roots.splice(0).map((root) => rm(root, {recursive: true, force: true}))));
 
-async function createDeliveryInput(root: string) {
+async function createDeliveryInput(root: string, voiceRights: "none" | "cleared" | null = null) {
   const fixture = createRookPilot001Fixture();
   const initial = buildAnimaticSync(fixture);
   const approvedAt = "2026-07-18T00:00:00.000Z";
   const approved: ApprovedAssetVersion[] = initial.resolvedPlan.requirements.map((requirement, index) => ({assetId: `approved-delivery-asset-${index + 1}`, version: `v${index + 1}`, requirementId: requirement.id, contentHash: createHash("sha256").update(requirement.id).digest("hex"), relativeFile: `approved-delivery-asset-${index + 1}/v${index + 1}/manifest.json`, provenance: {sourceType: "generated", provider: "StoryStage delivery test", usageNotes: "Original test fixture."}, approvedAt}));
   const build = buildAnimaticSync({draft: fixture.draft, overrides: fixture.overrides, approvedAssetVersions: approved});
-  const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides: fixture.overrides, approvedAssetVersions: approved, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
+  const voiceTrack = voiceRights ? {id: "voice-delivery-rights-test", contentHash: "e".repeat(64), relativeFile: `voice/${fixture.draft.productionId}/r1/${"e".repeat(64)}.wav`, sourceFileName: "narration.wav", codec: "pcm-wav" as const, durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 16 as const, importedAt: approvedAt, approvalStatus: "approved" as const, approvedAt, ...(voiceRights === "cleared" ? {rights: {sourceType: "user-owned" as const, provider: "Operator", usageNotes: "Original narration recording.", clearanceStatus: "cleared" as const, evidenceReference: "Operator recording ledger"}} : {})} : undefined;
+  const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides: fixture.overrides, approvedAssetVersions: approved, ...(voiceTrack ? {voiceTrack} : {}), resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
   const masterBytes = Buffer.from("delivery master bytes");
   const receipt = finalizeRenderReceipt({schemaVersion: "1.0", renderId: "render-delivery-test", production: {id: bundle.production.productionId, revision: bundle.production.revision, bundleContentHash: bundle.contentHash, renderPlanContentHash: deliveryRenderPlanContentHash(bundle.renderPlan)}, scope: "full-production", master: {relativeFile: "source.mp4", sha256: createHash("sha256").update(masterBytes).digest("hex"), byteLength: masterBytes.length, codec: "h264", width: 1920, height: 1080, fps: 30, frameCount: bundle.renderPlan.durationInFrames, durationInSeconds: bundle.renderPlan.durationInFrames / 30, audio: null}, toolchain: {storyStageVersion: "0.1.0", storyStageCommit: "test", compilerVersion: bundle.renderPlan.compilerVersion, remotionVersion: "4.0.490", ffmpegVersion: "test", platform: "win32", architecture: "x64"}, completedAt: "2026-07-18T00:01:00.000Z"});
   const inputs = join(root, "inputs"); await mkdir(inputs);
@@ -47,5 +48,15 @@ describe("atomic verified delivery publication", () => {
       expect(recovered.manifest.contentHash).toHaveLength(64);
       expect((await readVerifiedDeliveryBundle(recovered.directory)).directory).toBe(recovered.directory);
     }
+  });
+
+  it("fails closed for consumed approved audio without rights and publishes cleared audio", async () => {
+    const blockedRoot = await mkdtemp(join(tmpdir(), "storystage-delivery-rights-blocked-")); roots.push(blockedRoot);
+    await expect(publishDeliveryBundle(await createDeliveryInput(blockedRoot, "none"))).rejects.toThrow(/lacks content-bound cleared rights/);
+
+    const clearedRoot = await mkdtemp(join(tmpdir(), "storystage-delivery-rights-cleared-")); roots.push(clearedRoot);
+    const delivery = await publishDeliveryBundle(await createDeliveryInput(clearedRoot, "cleared"));
+    const provenance = JSON.parse(await readFile(join(delivery.directory, "provenance-rights.json"), "utf8")) as {entries: Array<{mediaKind: string; contentHash: string; rights: {clearanceStatus: string}}>};
+    expect(provenance.entries).toContainEqual(expect.objectContaining({mediaKind: "voice", contentHash: "e".repeat(64), rights: expect.objectContaining({clearanceStatus: "cleared"})}));
   });
 });
