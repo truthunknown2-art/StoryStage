@@ -1,18 +1,18 @@
 # SS-002 durable foundation and real asset-to-frame proof
 
 Date: 2026-07-17
-Status: locally verified; fresh Pro audit pending
+Status: locally verified after replay-safety follow-up; fresh Pro re-audit pending
 
 ## Scope
 
-This milestone responds to Pro's rejection of `49a7608` after its earlier rejection of `e85e351`. It closes the restart, evidence-binding, crash-recovery, TOCTOU, and proof-harness defects and then consumes the corrected foundation through actual prepared pixels, a moving selected-rig diagnostic, immutable approval, a new production revision, and two real Remotion MP4 renders.
+This milestone responds to Pro's rejection of `49a7608` after its earlier rejection of `e85e351`. Pro's audit of `14baf87` accepted the executable vertical slice and marked A-C, E, and F resolved, but found that crashes before selected/approved review persistence could collide with regenerated timestamp-bound immutable files. The follow-up makes both selected-rig construction and asset promotion replay-safe and covers the real filesystem checkpoints Pro named.
 
 ## Blocker mapping
 
 - A - exact bundle derivation: the full stored render plan must canonically equal a fresh compile; main finalizes persistence metadata; per-revision saves serialize; the UI tracks the last acknowledged hash.
 - B - atomic import evidence: separate bundle/record/report schemas cross-check brief, set, role, codec, dimensions, rights, source hash, and staged hash. A temporary evidence directory is atomically renamed. Five tests cover failure after every write, after commit, retry, and conflict.
 - C - exact generation binding: jobs carry the production bundle hash and authoritative generation briefs. Rehydration compares the semantic brief payload while deliberately normalizing the valid `draft` to `exported` lifecycle transition; a restart regression test covers the finalized job.
-- D - artifact-backed lifecycle and approval recovery: restart validates required loose sessions, staged bytes, preparation/contact sheets, reviews, approved local versions, rejection decisions, and supersession targets. The approval transaction is ordered review -> production revision -> approved state, is idempotently reconciled at startup, and has crash/retry tests after every checkpoint.
+- D - artifact-backed lifecycle and approval recovery: restart validates required loose sessions, staged bytes, preparation/contact sheets, reviews, approved local versions, rejection decisions, and supersession targets. Selected-rig construction and promotion rediscover and fully verify existing manifests, validations, videos, and diagnostic reports, reusing their original stable timestamps. Immutable files are published from complete temporary files through atomic hard links. The later approval transaction remains ordered review -> production revision -> approved state and is idempotently reconciled at startup.
 - E - later reverification without a TOCTOU reread: staging returns verified byte buffers and detected metadata, and those exact buffers are passed to Sharp. Approval and rendering independently reopen and rehash prepared/approved evidence and check containment, symlinks, codec, dimensions, alpha, validation, and diagnostic hashes.
 - F - real path: generation job -> manifest-bound staging -> exact three-file evidence -> Sharp normalization -> contact sheet -> selected set -> manifest -> validation -> moving diagnostic -> selected review -> immutable promotion -> approved review -> approval transaction -> new revision -> exact recompile -> two approved Remotion renders -> decoded-frame comparison.
 
@@ -41,10 +41,11 @@ Visual inspection confirms actual approved character pixels, pose/mouth/arm chan
 
 ## Automated evidence
 
-- `pnpm verify`: privacy check, lint, all package typechecks, and 74 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
+- `pnpm verify`: privacy check, lint, all package typechecks, and 85 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
 - `pnpm build`: all nine code packages plus the Vite studio bundle
 - story-engine: production derivation, job/evidence hashes, lifecycle, approval/recompile, diagnostic binding, profile behavior
 - asset-pipeline: real transparent character-kit preparation, contact sheet, rig validation, opaque-mask stop, tamper rejection
+- asset-pipeline: 11 real filesystem replay tests after selected manifest, validation, diagnostic video/report, promoted files, manifest, validation, diagnostic video/report, and immediately before both review-persistence boundaries
 - desktop: approval transaction crash/retry tests at review persistence, production persistence, and approved-state persistence
 - render-worker: strict sample, production, and rig-diagnostic command routing
 - studio: host boundary, resume/review state, and StrictMode-safe render subscription

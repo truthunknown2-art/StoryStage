@@ -8,7 +8,7 @@ SS-001 remains accepted workstation infrastructure: browser studio, secure Elect
 
 `SS-002: Two-Profile Script-to-Animatic + Generated Asset Seam` is active.
 
-Pro rejected commit `49a7608` as a durable foundation while accepting parts of its architectural direction. The current local milestone addresses every cited blocker and consumes the corrected foundation in an executable asset-to-frame path:
+Pro's audit of commit `14baf87` accepted the executable vertical slice and marked A-C, E, and F resolved. It rejected Gate 4 on one remaining durability issue: selected-rig construction and promotion could regenerate timestamp-bound immutable records after a crash before review persistence. The local follow-up now addresses that exact issue:
 
 - Production bundles are finalized by Electron main, saved through per-production/revision queues, and rejected unless the complete stored render plan canonically equals a fresh compile of the included resolved plan.
 - Generation exports are bound to the exact acknowledged production-bundle content hash and authoritative generation briefs. Restart comparison normalizes only the valid brief lifecycle status change from draft to exported.
@@ -18,6 +18,8 @@ Pro rejected commit `49a7608` as a durable foundation while accepting parts of i
 - Coherent contact sheets are compared before rigging. Only the selected set receives a role-specific manifest, technical validation, and a four-second moving diagnostic.
 - Final human approval binds the exact prepared bytes, manifest, validation report, watched diagnostic MP4, provenance, and immutable local asset version.
 - Approval is an idempotently recoverable review -> production revision -> approved-state transaction. Startup reconciliation completes any crash-stranded approval, and tests cover all three checkpoints.
+- Selected-rig construction and promotion are independently replay-safe before that transaction begins. Retries verify and reuse existing manifests, validation reports, diagnostic videos/reports, stable timestamps, and the resulting `ApprovedAssetVersion`.
+- Immutable artifact publication uses complete temporary files plus atomic hard links, so a process exit cannot leave a partially written final filename.
 - Approval creates a new production revision through the same shared operation used by the desktop and proof runner, then recompiles the complete frame-accurate plan.
 - The SS-002 Remotion composition consumes the saved plan and approved local pixels. The render worker independently rechecks containment, symlinks, PNG codec/dimensions/alpha, hashes, validation, diagnostic evidence, and production-bundle derivation.
 
@@ -41,7 +43,7 @@ The proof art is deliberately simple local engineering art. It proves the execut
 
 - Gate 1 reference cut measurements: complete.
 - Gates 2-3 production draft, New Production UI, two-profile planning, metrics, and semantic overrides: accepted by Pro against commit `1c60d93`.
-- Gate 4 durable generation/import foundation and executable manual image exchange: locally implemented and verified against Pro's `49a7608` blocker list; fresh Pro acceptance pending.
+- Gate 4 durable generation/import foundation and executable manual image exchange: locally implemented after Pro accepted A-C, E, F and identified the final pre-review replay trap; fresh Pro acceptance of the replay-safety follow-up is pending.
 - Gate 5 original ChatGPT production art for both profiles: pending a real authenticated manual generation round trip.
 - Gate 6 preparation and validation: implemented for 2D pose-swap characters, background layers, and props; skeletal/part rigging and Blender routing remain pending.
 - Gate 7 semantic Remotion animation: initial plan-driven 24-second slice implemented and proven; full episode coverage and visual polish remain pending.
