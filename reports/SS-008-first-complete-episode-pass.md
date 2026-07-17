@@ -1,7 +1,7 @@
 # SS-008 first complete episode pass
 
 Date: 2026-07-17
-Status: **IMPLEMENTED - awaiting ChatGPT Pro audit**
+Status: **IMPLEMENTED - Pro blocker correction awaiting re-audit**
 
 ## Outcome
 
@@ -14,7 +14,8 @@ StoryStage now remembers the work through durable evidence rather than making th
 - The Production desk distinguishes **watchable**, **technically ready**, and **publishable**. Only zero full-production blockers earns technically ready, and only a current verified delivery earns publishable.
 - New first cuts still open in Direction instead of skipping the immediate creative result.
 - The live preview repeats the same three confidence states next to the real composition and reports the exact remaining full-render gate count.
-- Playback validation reports the first exact shot with unlocked spoken timing, caption pacing above the explicit 4.25 words-per-second review threshold, or a placed SFX cue whose referenced asset is missing approval or content-bound rights.
+- Playback validation reports the first exact shot with unlocked spoken timing, a caption containing at least eight words above the explicit 4.25 words-per-second review threshold, or a placed SFX cue whose referenced asset is missing approval or content-bound rights.
+- Invalid SFX cues are collapsed to unique affected shots and ordered by the frozen render plan. Cue insertion order cannot move the reported first issue later in the episode.
 - Clicking a validation cue selects its shot and seeks the authoritative Remotion Player to that shot's first frame. Audio-owned issues also expose a direct **Open Audio** route.
 - No missing SFX is invented when no cue exists. Caption density is a visible review heuristic, not a new final-render gate.
 

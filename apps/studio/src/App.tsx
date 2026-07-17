@@ -514,10 +514,12 @@ function LiveProductionPreview({build, delivered, onNavigate, onSelect, selected
     const asset = session.soundEffectAssets.find((candidate) => candidate.contentHash === cue.assetContentHash);
     return !asset || asset.approvalStatus !== "approved" || !asset.rights;
   });
+  const invalidSfxShotIds = new Set(invalidSfxCues.map((cue) => cue.shotId));
+  const invalidSfxShots = build.renderPlan.shots.filter((shot) => invalidSfxShotIds.has(shot.id));
   const validationIssues = [
     ...(unlockedSpokenShots[0] ? [{id: "spoken-timing", label: `${unlockedSpokenShots.length} unlocked spoken beat${unlockedSpokenShots.length === 1 ? "" : "s"}`, detail: "Review the first exact timing cue.", shotId: unlockedSpokenShots[0].id}] : []),
     ...(denseCaptionShots[0] ? [{id: "caption-pace", label: `${denseCaptionShots.length} dense caption${denseCaptionShots.length === 1 ? "" : "s"}`, detail: "Above 4.25 words per second; inspect the first shot.", shotId: denseCaptionShots[0].id}] : []),
-    ...(invalidSfxCues[0] ? [{id: "sfx-evidence", label: `${invalidSfxCues.length} SFX evidence issue${invalidSfxCues.length === 1 ? "" : "s"}`, detail: "A placed cue lacks approved, rights-bound audio.", shotId: invalidSfxCues[0].shotId}] : []),
+    ...(invalidSfxShots[0] ? [{id: "sfx-evidence", label: `${invalidSfxShots.length} shot${invalidSfxShots.length === 1 ? "" : "s"} with SFX evidence issues`, detail: "A placed cue lacks approved, rights-bound audio.", shotId: invalidSfxShots[0].id}] : []),
   ];
 
   useEffect(() => {

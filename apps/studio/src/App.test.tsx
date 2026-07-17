@@ -106,7 +106,11 @@ function createPlaybackValidationBundle() {
   const build = buildAnimaticSync({draft: base.production, overrides, approvedAssetVersions: base.approvedAssetVersions});
   const contentHash = "9".repeat(64);
   const soundEffectAssets = [{id: "sfx-validation", contentHash, relativeFile: `sfx/${base.production.productionId}/${contentHash}.wav`, sourceFileName: "validation-hit.wav", codec: "pcm-wav" as const, durationInSeconds: 1, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 24 as const, importedAt: base.savedAt, approvalStatus: "approved" as const, approvedAt: base.savedAt}];
-  const soundEffectCues = [{id: "sfx-cue-validation", assetContentHash: contentHash, shotId: captionShot.id, offsetInFrames: 0, gain: .5, label: "Validation hit"}];
+  const laterShot = build.renderPlan.shots.at(-1)!;
+  const soundEffectCues = [
+    {id: "sfx-cue-validation-later", assetContentHash: contentHash, shotId: laterShot.id, offsetInFrames: 0, gain: .5, label: "Later validation hit"},
+    {id: "sfx-cue-validation-earlier", assetContentHash: contentHash, shotId: captionShot.id, offsetInFrames: 0, gain: .5, label: "Earlier validation hit"},
+  ];
   const voiceTrack = {...base.voiceTrack!, durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps};
   return finalizeProductionBundle({schemaVersion: "1.0", production: base.production, overrides, approvedAssetVersions: base.approvedAssetVersions, audioMix: base.audioMix, soundEffectAssets, soundEffectCues, voiceTrack, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, base.savedAt);
 }
@@ -386,7 +390,7 @@ describe("StoryStage studio", () => {
     const validation = within(screen.getByRole("region", {name: "Live production preview"})).getByRole("region", {name: "Playback validation"});
     expect(within(validation).queryByRole("button", {name: /unlocked spoken beat/})).not.toBeInTheDocument();
     const captionIssue = within(validation).getByRole("button", {name: /dense caption/});
-    const sfxIssue = within(validation).getByRole("button", {name: /SFX evidence issue/});
+    const sfxIssue = within(validation).getByRole("button", {name: /shots with SFX evidence issues/});
     const validationShotNumber = bundle.renderPlan.shots.find((shot) => shot.caption?.startsWith("This deliberately dense caption"))!.number;
     expect(captionIssue).toHaveTextContent(validationShotNumber);
     expect(sfxIssue).toHaveTextContent(validationShotNumber);

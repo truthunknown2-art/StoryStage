@@ -13,7 +13,7 @@ Make one real episode easy to carry from first cut to verified delivery without 
 - The Production desk labels the next useful action and distinguishes a watchable cut, a gate-complete cut ready to render, and a verified publishable delivery.
 - Opening a saved production resumes into Assets, Audio, or Finish according to the first incomplete production gate; a new first cut still opens in Direction.
 - Direction exposes a compact confidence overlay: Watchable, Technically ready, and Publishable. No state is inferred from button history or optimistic UI state.
-- Playback validation identifies the exact first affected shot for unlocked spoken timing, overly dense caption pacing, and invalid referenced SFX evidence. Each issue can seek/select its owning shot or route to Audio.
+- Playback validation identifies the exact first affected shot for unlocked spoken timing, captions with at least eight words above 4.25 words per second, and invalid referenced SFX evidence. Each issue can seek/select its owning shot or route to Audio.
 - Validation warnings do not invent mandatory SFX, factual, or style requirements. They report only evidence already present in the frozen plan and saved production state.
 - Verified delivery remains the only Publishable state. Full-render readiness remains the only Technically ready state.
 - Automated tests cover resume routing for picture, audio, finish, and delivered states plus shot-addressable validation and confidence truth.
