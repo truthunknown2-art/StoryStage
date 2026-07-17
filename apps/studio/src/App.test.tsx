@@ -71,6 +71,16 @@ function createApprovedRookTargetBundle() {
   return finalizeProductionBundle({schemaVersion: "1.0", production: draft, overrides: fixture.overrides, approvedAssetVersions: [approved], audioMix, soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T20:30:00.000Z");
 }
 
+function createPictureBlockedRookBundle() {
+  const fixture = createRookPilot001Fixture();
+  const build = buildAnimaticSync(fixture);
+  return finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides: fixture.overrides, approvedAssetVersions: [], soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T20:00:00.000Z");
+}
+
+function bundleSummary(bundle: ReturnType<typeof createPictureBlockedRookBundle>) {
+  return {productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash};
+}
+
 function createGateReadyRookBundle() {
   const fixture = createRookPilot001Fixture();
   const source = buildAnimaticSync(fixture);
@@ -87,6 +97,18 @@ function createGateReadyRookBundle() {
   const voiceTrack = {id: "voice-finish-ready", contentHash: "f".repeat(64), relativeFile: `voice/${fixture.draft.productionId}/r${fixture.draft.revision}/${"f".repeat(64)}.wav`, sourceFileName: "final-rook-narration.wav", codec: "pcm-wav" as const, durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 24 as const, importedAt: approvedAt, approvalStatus: "approved" as const, approvedAt, rights: {sourceType: "user-owned" as const, provider: "Operator", usageNotes: "Original narration recording.", clearanceStatus: "cleared" as const, evidenceReference: "Operator recording ledger 2026-07-17"}};
   expect(getFullProductionRenderBlockers({approvedAssetVersions, audioMix, overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: [], soundEffectCues: [], voiceTrack})).toEqual([]);
   return finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides, approvedAssetVersions, audioMix, soundEffectAssets: [], soundEffectCues: [], voiceTrack, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
+}
+
+function createPlaybackValidationBundle() {
+  const base = createGateReadyRookBundle();
+  const captionShot = base.renderPlan.shots.find((shot) => Boolean(shot.caption))!;
+  const overrides = [...base.overrides.filter((override) => override.shotId !== captionShot.id), {shotId: captionShot.id, caption: "This deliberately dense caption contains far too many words for one brief visual beat", durationInFrames: 12, timingLocked: true as const}];
+  const build = buildAnimaticSync({draft: base.production, overrides, approvedAssetVersions: base.approvedAssetVersions});
+  const contentHash = "9".repeat(64);
+  const soundEffectAssets = [{id: "sfx-validation", contentHash, relativeFile: `sfx/${base.production.productionId}/${contentHash}.wav`, sourceFileName: "validation-hit.wav", codec: "pcm-wav" as const, durationInSeconds: 1, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 24 as const, importedAt: base.savedAt, approvalStatus: "approved" as const, approvedAt: base.savedAt}];
+  const soundEffectCues = [{id: "sfx-cue-validation", assetContentHash: contentHash, shotId: captionShot.id, offsetInFrames: 0, gain: .5, label: "Validation hit"}];
+  const voiceTrack = {...base.voiceTrack!, durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps};
+  return finalizeProductionBundle({schemaVersion: "1.0", production: base.production, overrides, approvedAssetVersions: base.approvedAssetVersions, audioMix: base.audioMix, soundEffectAssets, soundEffectCues, voiceTrack, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, base.savedAt);
 }
 
 function refinalizeWithVoice(bundle: ReturnType<typeof createGateReadyRookBundle>, voiceTrack: NonNullable<ReturnType<typeof createGateReadyRookBundle>["voiceTrack"]>) {
@@ -109,6 +131,69 @@ describe("StoryStage studio", () => {
     expect(screen.getByRole("heading", {name: "Production type"})).toBeInTheDocument();
     expect((screen.getByLabelText("Screenplay") as HTMLTextAreaElement).value).toContain("INT. WORKSHOP");
     expect(screen.queryByText(/intensity/i)).not.toBeInTheDocument();
+  });
+
+  it("labels a picture-blocked project and resumes directly into Assets", async () => {
+    const bundle = createPictureBlockedRookBundle();
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [bundleSummary(bundle)]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(await screen.findByText("Continue: review picture")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: new RegExp(bundle.production.title)}));
+    expect(await screen.findByRole("heading", {name: "Manual ChatGPT Images"})).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: /Assets/})).toHaveClass("is-active");
+  });
+
+  it("labels a picture-complete project and resumes directly into Audio", async () => {
+    const bundle = createApprovedRookTargetBundle();
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [bundleSummary(bundle)]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(await screen.findByText("Continue: add final voice")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: new RegExp(bundle.production.title)}));
+    expect(await screen.findByRole("heading", {name: "Narration & caption timing"})).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: /Audio/})).toHaveClass("is-active");
+  });
+
+  it("labels a gate-complete project as technically ready and resumes into Finish", async () => {
+    const bundle = createGateReadyRookBundle();
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [bundleSummary(bundle)]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(await screen.findByText("Continue: render and deliver")).toBeInTheDocument();
+    expect(screen.getByText("technically ready")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: new RegExp(bundle.production.title)}));
+    expect(await screen.findByRole("heading", {name: "Finish episode"})).toBeInTheDocument();
+  });
+
+  it("calls only a verified delivery publishable and resumes it into Finish", async () => {
+    const bundle = createGateReadyRookBundle();
+    const manifestHash = "d".repeat(64);
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [bundleSummary(bundle)]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
+      getVerifiedDelivery: vi.fn(async () => ({delivery: {deliveryManifestContentHash: manifestHash, productionId: bundle.production.productionId, revision: bundle.production.revision, productionBundleContentHash: bundle.contentHash, rightsStatus: "cleared" as const, captionCueCount: 11, master: {width: 1920 as const, height: 1080 as const, fps: 30 as const, frameCount: bundle.renderPlan.durationInFrames, durationInSeconds: bundle.renderPlan.durationInFrames / bundle.renderPlan.fps}}})),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(await screen.findByText("Open delivered episode")).toBeInTheDocument();
+    expect(screen.getByText("publishable")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: new RegExp(bundle.production.title)}));
+    expect(await screen.findByRole("heading", {name: "Episode delivered"})).toBeInTheDocument();
   });
 
   it("loads the fixed Rook Pilot 001 production template", async () => {
@@ -269,6 +354,46 @@ describe("StoryStage studio", () => {
     expect(screen.getByRole("button", {name: /Assets/})).toHaveClass("is-active");
   });
 
+  it("shows evidence-backed confidence and seeks the first playback validation cue", async () => {
+    const user = await createDefaultProduction();
+    const preview = screen.getByRole("region", {name: "Live production preview"});
+    const confidence = within(preview).getByRole("region", {name: "Production confidence"});
+    expect(within(confidence).getByText("Watchable, not publishable yet")).toBeInTheDocument();
+    expect(within(confidence).getByText("Watchable").closest("li")).toHaveClass("is-ready");
+    expect(within(confidence).getByText("Technically ready").closest("li")).not.toHaveClass("is-ready");
+    expect(within(confidence).getByText("Publishable").closest("li")).not.toHaveClass("is-ready");
+
+    const validation = within(preview).getByRole("region", {name: "Playback validation"});
+    const timingIssue = within(validation).getByRole("button", {name: /unlocked spoken beat/});
+    await user.click(timingIssue);
+    expect(screen.getByRole("heading", {name: "1.02"})).toBeInTheDocument();
+    await user.click(within(validation).getByRole("button", {name: "Open Audio"}));
+    expect(screen.getByRole("button", {name: /Audio/})).toHaveClass("is-active");
+  });
+
+  it("reports dense caption pace and invalid referenced SFX at their exact shot", async () => {
+    const bundle = createPlaybackValidationBundle();
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [bundleSummary(bundle)]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", {name: new RegExp(bundle.production.title)}));
+    await user.click(screen.getByRole("button", {name: /Direction/}));
+
+    const validation = within(screen.getByRole("region", {name: "Live production preview"})).getByRole("region", {name: "Playback validation"});
+    expect(within(validation).queryByRole("button", {name: /unlocked spoken beat/})).not.toBeInTheDocument();
+    const captionIssue = within(validation).getByRole("button", {name: /dense caption/});
+    const sfxIssue = within(validation).getByRole("button", {name: /SFX evidence issue/});
+    const validationShotNumber = bundle.renderPlan.shots.find((shot) => shot.caption?.startsWith("This deliberately dense caption"))!.number;
+    expect(captionIssue).toHaveTextContent(validationShotNumber);
+    expect(sfxIssue).toHaveTextContent(validationShotNumber);
+    await user.click(captionIssue);
+    expect(screen.getByRole("heading", {name: validationShotNumber})).toBeInTheDocument();
+  });
+
   it("creates a profile-distinct Kids first cut without pretending placeholder art is approved", async () => {
     const user = await openProductionSetup();
     await user.click(screen.getByRole("button", {name: /Kids Adventure/}));
@@ -291,6 +416,7 @@ describe("StoryStage studio", () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(await screen.findByRole("button", {name: new RegExp(bundle.production.title)}));
+    await user.click(screen.getByRole("button", {name: /Direction/}));
 
     const preview = await screen.findByRole("region", {name: "Live production preview"});
     await waitFor(() => expect(preview.querySelector('img[src^="storystage-media://asset/"]')).not.toBeNull());

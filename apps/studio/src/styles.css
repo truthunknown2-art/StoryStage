@@ -264,6 +264,28 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .first-cut-upgrade li.is-ready { background: #142019; border-color: #31513e; }
 .first-cut-upgrade li.is-ready > span { background: #76c793; border-color: #76c793; color: #102016; }
 .first-cut-upgrade li.is-ready strong, .first-cut-upgrade li.is-ready small { color: #79bd93; }
+.production-confidence { background: #0d1312; border-bottom: 1px solid #293330; display: grid; gap: 9px; padding: 11px 15px; }
+.production-confidence > header { align-items: center; display: flex; justify-content: space-between; }
+.production-confidence > header strong { color: #d7dfda; display: block; font-size: 9px; margin-top: 3px; }
+.production-confidence > header > span { color: #58645e; font-size: 6px; letter-spacing: .08em; text-transform: uppercase; }
+.production-confidence ol { display: grid; gap: 6px; grid-template-columns: repeat(3, minmax(0, 1fr)); list-style: none; margin: 0; padding: 0; }
+.production-confidence li { align-items: center; background: #111817; border: 1px solid #2b3431; border-radius: 6px; color: #6b746f; display: flex; gap: 8px; padding: 8px 9px; }
+.production-confidence li.is-ready { background: #142019; border-color: #31513e; color: #77c491; }
+.production-confidence li strong, .production-confidence li small { display: block; }
+.production-confidence li strong { color: #aeb8b3; font-size: 7px; }
+.production-confidence li.is-ready strong { color: #8bcaa2; }
+.production-confidence li small { color: #59645f; font-size: 6px; margin-top: 2px; }
+.playback-validation { background: #101616; border-bottom: 1px solid #293330; display: grid; gap: 8px; padding: 11px 15px; }
+.playback-validation > header { align-items: center; display: flex; justify-content: space-between; }
+.playback-validation > header strong { color: #bdc7c2; display: block; font-size: 8px; margin-top: 3px; }
+.playback-validation > header button { align-items: center; background: transparent; border: 1px solid #3b4944; border-radius: 5px; color: #8dab9a; display: flex; font-size: 7px; gap: 5px; padding: 6px 8px; }
+.playback-validation > div { display: grid; gap: 5px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.playback-validation > div > button { align-items: center; background: #191817; border: 1px solid #4a4030; border-radius: 6px; color: #d2a956; display: grid; gap: 7px; grid-template-columns: auto 1fr auto; padding: 8px; text-align: left; }
+.playback-validation button span strong, .playback-validation button span small { display: block; }
+.playback-validation button span strong { color: #c9b588; font-size: 7px; }
+.playback-validation button span small { color: #706b5e; font-size: 6px; margin-top: 2px; }
+.playback-validation button b { color: #a98d58; font-size: 7px; }
+.playback-validation > p { align-items: center; color: #6fa786; display: flex; font-size: 7px; gap: 6px; margin: 0; }
 .live-production-preview .cut-timeline { border: 0; border-radius: 0; margin-top: 0; }
 .cut-timeline { background: linear-gradient(135deg, rgba(43,63,54,.2), transparent 45%), #111718; border: 1px solid #2c3734; border-radius: 10px; display: grid; gap: 12px; margin-top: 14px; padding: 14px 15px 12px; }
 .cut-timeline > header { align-items: center; display: flex; justify-content: space-between; }
@@ -655,6 +677,11 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .recent-productions strong { color: #bec8c3; font-size: 10px; }
 .recent-productions button span { color: #74817b; font-size: 8px; }
 .recent-productions small { color: #56625d; font-size: 7px; }
+.recent-productions button footer { align-items: center; border-top: 1px solid #28302e; display: flex; justify-content: space-between; margin-top: 7px; padding-top: 8px; }
+.recent-productions button footer b { color: #d2b76e; font-size: 7px; }
+.recent-productions button footer em { border: 1px solid #47504c; border-radius: 999px; color: #818c86; font-size: 6px; font-style: normal; letter-spacing: .05em; padding: 3px 5px; text-transform: uppercase; }
+.recent-productions button footer em.is-technically-ready { border-color: #6d5931; color: #d4b260; }
+.recent-productions button footer em.is-publishable { border-color: #3d6b4d; color: #7dca98; }
 
 .exchange-history { background: #111718; border: 1px solid #34413d; border-radius: 10px; overflow: hidden; }
 .exchange-history > div { display: grid; }

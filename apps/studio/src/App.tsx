@@ -81,6 +81,7 @@ type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapp
 type Screen = "home" | "new-production" | "workspace";
 type WorkspaceTab = "direction" | "assets" | "audio" | "finish";
 type FinishNavigationTarget = {tab: Exclude<WorkspaceTab, "finish">; targetId: string};
+type CompletionGuidance = {action: string; publishable: boolean; status: "watchable" | "technically-ready" | "publishable"; tab: Extract<WorkspaceTab, "assets" | "audio" | "finish">};
 
 type ProductionSession = ProductionDraft & {
   overrides: ShotOverride[];
@@ -165,6 +166,22 @@ const formatDuration = (frames: number, fps: number) => {
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 };
 
+const productionSummaryKey = (production: Pick<ProductionBundleSummary, "productionId" | "revision">) => `${production.productionId}:${production.revision}`;
+
+function completionGuidance(blockers: ReturnType<typeof getFullProductionRenderBlockers>, publishable = false): CompletionGuidance {
+  if (publishable) return {action: "Open delivered episode", publishable: true, status: "publishable", tab: "finish"};
+  const ids = new Set<string>(blockers.map((blocker) => blocker.id));
+  if (["approved-art", "source-acquisition", "visual-bindings"].some((id) => ids.has(id))) return {action: "Continue: review picture", publishable: false, status: "watchable", tab: "assets"};
+  if (ids.has("voice-master")) return {action: "Continue: add final voice", publishable: false, status: "watchable", tab: "audio"};
+  if (ids.has("spoken-timing")) return {action: "Continue: lock timing", publishable: false, status: "watchable", tab: "audio"};
+  if (["audio-mix", "custom-sfx", "rights-clearance"].some((id) => ids.has(id))) return {action: "Continue: review audio", publishable: false, status: "watchable", tab: "audio"};
+  return {action: "Continue: render and deliver", publishable: false, status: "technically-ready", tab: "finish"};
+}
+
+function productionBundleBlockers(bundle: ProductionBundle) {
+  return getFullProductionRenderBlockers({approvedAssetVersions: bundle.approvedAssetVersions ?? [], audioMix: bundle.audioMix, musicTrack: bundle.musicTrack, overrides: bundle.overrides, renderPlan: bundle.renderPlan, resolvedPlan: bundle.resolvedPlan, soundEffectAssets: bundle.soundEffectAssets, soundEffectCues: bundle.soundEffectCues, voiceTrack: bundle.voiceTrack});
+}
+
 function Brand() {
   return (
     <div className="brand-lockup">
@@ -174,7 +191,7 @@ function Brand() {
   );
 }
 
-function HomeScreen({onNew, recentProductions, onResume}: {onNew: () => void; recentProductions: ProductionBundleSummary[]; onResume: (production: ProductionBundleSummary) => void}) {
+function HomeScreen({guidance, onNew, recentProductions, onResume}: {guidance: Record<string, CompletionGuidance>; onNew: () => void; recentProductions: ProductionBundleSummary[]; onResume: (production: ProductionBundleSummary) => void}) {
   return (
     <div className="home-shell">
       <aside className="home-sidebar">
@@ -215,7 +232,10 @@ function HomeScreen({onNew, recentProductions, onResume}: {onNew: () => void; re
           <div><p className="eyebrow">Infrastructure baseline</p><h3>SS-001 Walking Skeleton</h3><p>The secure desktop shell and deterministic renderer remain preserved as engineering infrastructure—not as the visual quality target.</p></div>
           <span className="accepted-badge"><Check size={14} />Accepted</span>
         </section>
-        {recentProductions.length > 0 ? <section className="recent-productions"><header><div><p className="eyebrow">Private local projects</p><h2>Resume production</h2></div><span>{recentProductions.length} saved</span></header><div>{recentProductions.map((production) => <button key={`${production.productionId}:${production.revision}`} onClick={() => onResume(production)}><strong>{production.title}</strong><span>{production.projectType === "kids" ? "Kids Adventure" : "Frankly Weird History"} · revision {production.revision}</span><small>Saved {new Date(production.savedAt).toLocaleString()}</small></button>)}</div></section> : null}
+        {recentProductions.length > 0 ? <section className="recent-productions"><header><div><p className="eyebrow">Private local projects</p><h2>Continue where you left off</h2></div><span>{recentProductions.length} saved</span></header><div>{recentProductions.map((production) => {
+          const next = guidance[productionSummaryKey(production)];
+          return <button key={productionSummaryKey(production)} onClick={() => onResume(production)}><strong>{production.title}</strong><span>{production.projectType === "kids" ? "Kids Adventure" : "Frankly Weird History"} · revision {production.revision}</span><small>Saved {new Date(production.savedAt).toLocaleString()}</small><footer><b>{next?.action ?? "Inspecting next step…"}</b>{next ? <em className={`is-${next.status}`}>{next.status.replaceAll("-", " ")}</em> : null}</footer></button>;
+        })}</div></section> : null}
       </main>
     </div>
   );
@@ -483,6 +503,22 @@ function LiveProductionPreview({build, delivered, onNavigate, onSelect, selected
     {id: "delivery", label: "Delivery", ready: delivered, target: "finish" as const, action: "Open Finish"},
   ];
   const nextUpgrade = upgradeSteps.find((step) => !step.ready) ?? upgradeSteps.at(-1)!;
+  const technicallyReady = fullRenderBlockers.length === 0;
+  const unlockedSpokenShots = spokenShots.filter((shot) => !session.overrides.some((override) => override.shotId === shot.id && override.timingLocked));
+  const denseCaptionShots = build.renderPlan.shots.filter((shot) => {
+    const words = shot.caption?.trim().split(/\s+/).filter(Boolean).length ?? 0;
+    const seconds = shot.durationInFrames / build.renderPlan.fps;
+    return words >= 8 && words / seconds > 4.25;
+  });
+  const invalidSfxCues = session.soundEffectCues.filter((cue) => {
+    const asset = session.soundEffectAssets.find((candidate) => candidate.contentHash === cue.assetContentHash);
+    return !asset || asset.approvalStatus !== "approved" || !asset.rights;
+  });
+  const validationIssues = [
+    ...(unlockedSpokenShots[0] ? [{id: "spoken-timing", label: `${unlockedSpokenShots.length} unlocked spoken beat${unlockedSpokenShots.length === 1 ? "" : "s"}`, detail: "Review the first exact timing cue.", shotId: unlockedSpokenShots[0].id}] : []),
+    ...(denseCaptionShots[0] ? [{id: "caption-pace", label: `${denseCaptionShots.length} dense caption${denseCaptionShots.length === 1 ? "" : "s"}`, detail: "Above 4.25 words per second; inspect the first shot.", shotId: denseCaptionShots[0].id}] : []),
+    ...(invalidSfxCues[0] ? [{id: "sfx-evidence", label: `${invalidSfxCues.length} SFX evidence issue${invalidSfxCues.length === 1 ? "" : "s"}`, detail: "A placed cue lacks approved, rights-bound audio.", shotId: invalidSfxCues[0].shotId}] : []),
+  ];
 
   useEffect(() => {
     const player = playerRef.current;
@@ -518,6 +554,12 @@ function LiveProductionPreview({build, delivered, onNavigate, onSelect, selected
     playerRef.current?.seekTo(nextFrame);
     setFrame(nextFrame);
   };
+  const inspectValidationShot = (shotId: string) => {
+    const shot = build.renderPlan.shots.find((candidate) => candidate.id === shotId);
+    if (!shot) return;
+    onSelect(shot.id);
+    seekTo(shot.startFrame);
+  };
   const togglePlayback = () => {
     const player = playerRef.current;
     if (!player) return;
@@ -543,6 +585,17 @@ function LiveProductionPreview({build, delivered, onNavigate, onSelect, selected
     <section className="first-cut-upgrade" aria-label="First cut upgrade path">
       <header><div><p className="eyebrow">First cut upgrade path</p><strong>{delivered ? "Episode delivered" : `Next: ${nextUpgrade.action}`}</strong><span>{delivered ? "The watchable cut has a verified final delivery." : "This preview is useful now. Each upgrade replaces one honest draft condition."}</span></div><button onClick={() => onNavigate(nextUpgrade.target)}>{nextUpgrade.action}<ArrowRight size={14} /></button></header>
       <ol>{upgradeSteps.map((step, index) => <li className={step.ready ? "is-ready" : step.id === nextUpgrade.id ? "is-next" : ""} key={step.id}><span>{step.ready ? <Check size={11} /> : index + 1}</span><strong>{step.label}</strong><small>{step.ready ? "Ready" : step.id === nextUpgrade.id ? "Next" : "Later"}</small></li>)}</ol>
+    </section>
+    <section className="production-confidence" aria-label="Production confidence">
+      <header><div><p className="eyebrow">Production confidence</p><strong>{delivered ? "Publishable delivery verified" : technicallyReady ? "Ready for final render" : "Watchable, not publishable yet"}</strong></div><span>Evidence, not optimism</span></header>
+      <ol><li className="is-ready"><Check size={11} /><span><strong>Watchable</strong><small>Real composition</small></span></li><li className={technicallyReady ? "is-ready" : ""}>{technicallyReady ? <Check size={11} /> : <CircleAlert size={11} />}<span><strong>Technically ready</strong><small>{technicallyReady ? "All render gates pass" : `${fullRenderBlockers.length} render gates remain`}</small></span></li><li className={delivered ? "is-ready" : ""}>{delivered ? <Check size={11} /> : <Lock size={11} />}<span><strong>Publishable</strong><small>{delivered ? "Verified delivery" : "Delivery required"}</small></span></li></ol>
+    </section>
+    <section className="playback-validation" aria-label="Playback validation">
+      <header><div><p className="eyebrow">Playback validation</p><strong>{validationIssues.length === 0 ? "No shot-level review cues" : `${validationIssues.length} focused review cue${validationIssues.length === 1 ? "" : "s"}`}</strong></div>{validationIssues.some((issue) => issue.id !== "caption-pace") ? <button onClick={() => onNavigate("audio")}>Open Audio<ArrowRight size={13} /></button> : null}</header>
+      {validationIssues.length > 0 ? <div>{validationIssues.map((issue) => {
+        const shot = build.renderPlan.shots.find((candidate) => candidate.id === issue.shotId);
+        return <button key={issue.id} onClick={() => inspectValidationShot(issue.shotId)}><ScanSearch size={14} /><span><strong>{issue.label}</strong><small>{issue.detail}</small></span><b>{shot?.number ?? issue.shotId}</b></button>;
+      })}</div> : <p><Check size={13} />No unlocked spoken beats, dense caption pacing, or invalid referenced SFX evidence was found.</p>}
     </section>
     <CutTimeline build={build} frame={frame} muted={muted} onFrameChange={seekTo} onRequestFullscreen={() => playerRef.current?.requestFullscreen()} onSelect={onSelect} onToggleMute={toggleMute} onTogglePlayback={togglePlayback} playing={playing} selectedShotId={selectedShotId} />
   </section>;
@@ -1299,7 +1352,7 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   );
 }
 
-function Workspace({session, setSession, onExit, host, capabilities}: {session: ProductionSession; setSession: (next: ProductionSession) => void; onExit: () => void; host: HostAdapter; capabilities: DesktopCapabilities}) {
+function Workspace({capabilities, host, initialTab, onExit, session, setSession}: {capabilities: DesktopCapabilities; host: HostAdapter; initialTab: WorkspaceTab; onExit: () => void; session: ProductionSession; setSession: (next: ProductionSession) => void}) {
   const build = useMemo(() => buildAnimaticSync({draft: draftFromSession(session), overrides: session.overrides, approvedAssetVersions: session.approvedAssetVersions}), [session]);
   const saveQueue = useRef<Promise<void>>(Promise.resolve());
   const saveSequence = useRef(0);
@@ -1308,7 +1361,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const [delivery, setDelivery] = useState<VerifiedDeliverySummary | null>(null);
   const [renderScope, setRenderScope] = useState<ProductionRenderScope>("engineering-slice");
   const [renderJobScope, setRenderJobScope] = useState<ProductionRenderScope>("engineering-slice");
-  const [tab, setTab] = useState<WorkspaceTab>("direction");
+  const [tab, setTab] = useState<WorkspaceTab>(initialTab);
   const [focusRequest, setFocusRequest] = useState<{target: FinishNavigationTarget; nonce: number} | null>(null);
   const [focusRoutingError, setFocusRoutingError] = useState<string | null>(null);
   const activeRenderJobIdRef = useRef<string | null>(null);
@@ -1517,6 +1570,25 @@ export function App() {
   const [host] = useState(() => createHostAdapter(window.storyStage));
   const [capabilities, setCapabilities] = useState<DesktopCapabilities>({localRendering: false, openRenderedFile: false, manualImageExchange: false, localAudioImport: false});
   const [recentProductions, setRecentProductions] = useState<ProductionBundleSummary[]>([]);
+  const [recentGuidance, setRecentGuidance] = useState<Record<string, CompletionGuidance>>({});
+  const [workspaceStartTab, setWorkspaceStartTab] = useState<WorkspaceTab>("direction");
+
+  const refreshProductions = useCallback(async () => {
+    const result = await host.listProductionBundles();
+    setRecentProductions(result.productions);
+    const inspected = await Promise.all(result.productions.map(async (production) => {
+      try {
+        const loaded = await host.loadProductionBundle({productionId: production.productionId, revision: production.revision});
+        if (!loaded.ok) return null;
+        const bundle = productionBundleSchema.parse(JSON.parse(loaded.serializedBundle));
+        const verified = await host.getVerifiedDelivery({productionId: bundle.production.productionId, revision: bundle.production.revision, productionBundleContentHash: bundle.contentHash});
+        return [productionSummaryKey(production), completionGuidance(productionBundleBlockers(bundle), Boolean(verified.delivery))] as const;
+      } catch {
+        return null;
+      }
+    }));
+    setRecentGuidance(Object.fromEntries(inspected.filter((entry): entry is NonNullable<typeof entry> => entry !== null)));
+  }, [host]);
 
   useEffect(() => {
     window.scrollTo({top: 0, left: 0, behavior: "auto"});
@@ -1524,24 +1596,24 @@ export function App() {
 
   useEffect(() => {
     void host.getCapabilities().then(setCapabilities);
-    void host.listProductionBundles().then((result) => setRecentProductions(result.productions));
-  }, [host]);
+    void refreshProductions();
+  }, [host, refreshProductions]);
 
   const resumeProduction = async (production: ProductionBundleSummary) => {
     const result = await host.loadProductionBundle({productionId: production.productionId, revision: production.revision});
     if (!result.ok) return;
     const bundle = productionBundleSchema.parse(JSON.parse(result.serializedBundle));
     setSession(productionSessionFromBundle(bundle));
+    setWorkspaceStartTab(completionGuidance(productionBundleBlockers(bundle)).tab);
     setScreen("workspace");
   };
 
   const returnHome = async () => {
-    const result = await host.listProductionBundles();
-    setRecentProductions(result.productions);
+    await refreshProductions();
     setScreen("home");
   };
 
-  if (screen === "new-production") return <NewProductionScreen onBack={() => setScreen("home")} onCreate={(created) => {setSession(created); setScreen("workspace");}} />;
-  if (screen === "workspace" && session) return <Workspace session={session} setSession={setSession} onExit={() => void returnHome()} host={host} capabilities={capabilities} />;
-  return <HomeScreen onNew={() => setScreen("new-production")} recentProductions={recentProductions} onResume={(production) => void resumeProduction(production)} />;
+  if (screen === "new-production") return <NewProductionScreen onBack={() => setScreen("home")} onCreate={(created) => {setSession(created); setWorkspaceStartTab("direction"); setScreen("workspace");}} />;
+  if (screen === "workspace" && session) return <Workspace capabilities={capabilities} host={host} initialTab={workspaceStartTab} onExit={() => void returnHome()} session={session} setSession={setSession} />;
+  return <HomeScreen guidance={recentGuidance} onNew={() => setScreen("new-production")} recentProductions={recentProductions} onResume={(production) => void resumeProduction(production)} />;
 }
