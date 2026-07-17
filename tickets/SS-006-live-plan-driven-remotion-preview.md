@@ -1,7 +1,7 @@
 # SS-006 live plan-driven Remotion preview
 
 Date: 2026-07-17
-Status: **ACTIVE**
+Status: **ACCEPTED by ChatGPT Pro at `ca9ad8e`**
 
 ## Product objective
 

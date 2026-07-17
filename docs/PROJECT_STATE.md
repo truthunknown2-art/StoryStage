@@ -12,7 +12,9 @@ SS-001 remains accepted workstation infrastructure: browser studio, secure Elect
 
 `SS-005: Human Gate Completion Path` was accepted by Pro at `0e5cd3e`. The Studio now presents one ordered Finish Episode route through picture approval, voice listen-through and clearance, spoken timing locks, mix review, exact preflight, full rendering, and verified delivery. Every unresolved step can focus its owning control; the final action requests the exact full-production scope, preserves terminal events emitted before job correlation, and shows real job and delivery state rather than simulating completion.
 
-`SS-006: Live Plan-Driven Remotion Preview` is active. The next slice embeds the final-production composition in Direction, makes its frame clock authoritative for the timeline and inspector, uses verified private playback media in desktop mode, and visibly watermarks all candidate or placeholder material without relaxing render or delivery gates.
+`SS-006: Live Plan-Driven Remotion Preview` was accepted by Pro at `ca9ad8e`. Direction embeds the final-production composition, its Player clock is authoritative for the timeline and inspector, desktop preview art is reopened through verified private media, and all candidate or placeholder material is visibly watermarked without relaxing render or delivery gates.
+
+`SS-007: Paste Script → First Watchable Cut` is active. It turns the existing creation form and live composition into an intentional one-click first-cut experience, flags silent/candidate/placeholder media honestly, and provides a direct upgrade route from the watchable draft into picture, voice/timing, mix, and Finish.
 
 The SS-003 Rook pilot opening slice is engineering-complete and was accepted by Pro at `6bcd590`. It provides a fixed 26.33-second history production, a complete public Rook candidate, and a trusted terminal review/promotion path. The remaining Rook visual, final voice, timing, and mix decisions are real human gates rather than hidden implementation claims.
 
