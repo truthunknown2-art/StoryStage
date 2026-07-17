@@ -127,6 +127,25 @@ describe("StoryStage studio", () => {
     expect(screen.getByRole("heading", {name: "Manual ChatGPT Images"})).toBeInTheDocument();
   });
 
+  it("plays a completed approved render inside the direction workspace", async () => {
+    const bridge = makeDesktopBridge({
+      subscribeToRenderJobs: vi.fn((listener) => {
+        listener({jobId: "render-approved-one", status: "completed", progress: null, message: "Approved production slice complete", outputPath: "C:/private/render-approved-one.mp4"});
+        return () => undefined;
+      }),
+    });
+    window.storyStage = bridge;
+    await createDefaultProduction();
+
+    const player = await screen.findByLabelText("Approved render player");
+    expect(player).toHaveAttribute("src", "storystage-media://render/render-approved-one");
+    expect(screen.getByText(/actual H\.264 output/)).toBeInTheDocument();
+
+    await userEvent.setup().click(screen.getByRole("button", {name: /Seek rendered shot 1\.04/}));
+    expect(screen.getByRole("slider", {name: "Approved render playhead"})).not.toHaveValue("0");
+    expect(screen.getByRole("heading", {name: "1.04"})).toBeInTheDocument();
+  });
+
   it("compiles inspector choices into semantic shot overrides", async () => {
     const user = await createDefaultProduction();
 

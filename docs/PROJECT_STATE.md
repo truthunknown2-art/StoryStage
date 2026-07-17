@@ -24,6 +24,7 @@ Pro's narrow re-audit of follow-up commit `1c0d6a2` accepted Gate 4, marked D re
 - The SS-002 Remotion composition consumes the saved plan and approved local pixels. The render worker independently rechecks containment, symlinks, PNG codec/dimensions/alpha, hashes, validation, diagnostic evidence, and production-bundle derivation.
 - The Electron bundle now includes every workspace TypeScript package it executes. A build-time check rejects unresolved `@storystage/*` runtime imports, covering the launch crash found during the live desktop pass.
 - Direction review now has a functional frame playhead, play/pause transport, exact shot-boundary jumps, and synchronized shot inspector. It remains an explicitly labeled planning timeline until approved artwork exists.
+- Completed approved renders now stream back into the sandboxed studio through a narrow, validated `storystage-media` route. The in-app H.264 player has native playback plus exact-frame and shot-boundary review controls; it exposes only verified completed MP4s from registered render roots.
 - A root renderer error boundary replaces blank-window failures with a local recovery screen, preserves saved production data, and offers an explicit reload action with optional technical detail.
 - The former disabled Preflight placeholder is now an evidence-backed readiness view. It distinguishes compiled/saved/renderer checks, required asset approvals, deferred sources, engineering-slice eligibility, and the still-closed finished-episode gate.
 
@@ -51,7 +52,7 @@ The proof art is deliberately simple local engineering art. It proves the execut
 - Gate 5 original ChatGPT production art for both profiles: pending a real authenticated manual generation round trip.
 - Gate 6 preparation and validation: implemented for 2D pose-swap characters, background layers, and props; skeletal/part rigging and Blender routing remain pending.
 - Gate 7 semantic Remotion animation: initial plan-driven 24-second slice implemented and proven; full episode coverage and visual polish remain pending.
-- Gate 8 review/override: shot overrides, asset selection/approval, a functional frame-accurate cut timeline with synchronized inspector, and evidence-backed production preflight exist; approved-pixel live Remotion playback and broader inspector coverage remain incomplete.
+- Gate 8 review/override: shot overrides, asset selection/approval, a functional frame-accurate cut timeline, in-app playback of completed approved H.264 slices with synchronized shot/frame review, and evidence-backed production preflight exist; unrendered live Remotion preview, full-length playback, and broader inspector coverage remain incomplete.
 - Gate 9 profile-distinct production outputs: pending.
 
 ## Product truth

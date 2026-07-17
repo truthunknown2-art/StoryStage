@@ -41,19 +41,19 @@ Visual inspection confirms actual approved character pixels, pose/mouth/arm chan
 
 ## Automated evidence
 
-- `pnpm verify`: privacy check, lint, all package typechecks, and 88 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
+- `pnpm verify`: privacy check, lint, all package typechecks, and 89 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
 - `pnpm build`: all nine code packages plus the Vite studio bundle
 - story-engine: production derivation, job/evidence hashes, lifecycle, approval/recompile, diagnostic binding, profile behavior
 - asset-pipeline: real transparent character-kit preparation, contact sheet, rig validation, opaque-mask stop, tamper rejection
 - asset-pipeline: 11 real filesystem replay tests after selected manifest, validation, diagnostic video/report, promoted files, manifest, validation, diagnostic video/report, and immediately before both review-persistence boundaries
 - desktop: approval transaction crash/retry tests at review persistence, production persistence, and approved-state persistence
 - render-worker: strict sample, production, and rig-diagnostic command routing
-- studio: host boundary, resume/review state, StrictMode-safe render subscription, exact-frame timeline/inspector synchronization, recoverable root renderer failure instead of a blank window, and evidence-backed preflight routing
+- studio: host boundary, resume/review state, StrictMode-safe render subscription, exact-frame timeline/inspector synchronization, in-app completed-render playback and seeking, recoverable root renderer failure instead of a blank window, and evidence-backed preflight routing
 - desktop build: the asset pipeline is bundled into Electron instead of leaking workspace TypeScript imports; a build-time scan fails on any unresolved `@storystage/*` runtime import
 
 ## Live UI evidence
 
-The desktop smoke pass first exposed and then verified a real launch blocker: `@storystage/asset-pipeline` was externalized, causing Electron to execute workspace TypeScript and fail on an extensionless story-engine import. The asset pipeline is now bundled and StoryStage launches to the production desk. New Production opens the real setup, creates the default Frankly Weird History production, and produces 25 shots from two natural scenes. The new cut-timing panel visibly exposes all 25 proportional shot boundaries; jumping to shot 1.04 moves the playhead to frame 203 and synchronizes the inspector to 1.04. Live playback advanced the playhead from frame 203 to 221, and Pause held that position. The viewport-height editor shell keeps all three navigation actions visible while the shot canvas scrolls independently. Preflight reports 3/6 engineering checks ready, routes each blocker to its owning view, and explicitly keeps the finished-episode gate closed. The Assets view exposes the five production-bound generation briefs.
+The desktop smoke pass first exposed and then verified a real launch blocker: `@storystage/asset-pipeline` was externalized, causing Electron to execute workspace TypeScript and fail on an extensionless story-engine import. The asset pipeline is now bundled and StoryStage launches to the production desk. New Production opens the real setup, creates the default Frankly Weird History production, and produces 25 shots from two natural scenes. The new cut-timing panel visibly exposes all 25 proportional shot boundaries; jumping to shot 1.04 moves the playhead to frame 203 and synchronizes the inspector to 1.04. Live playback advanced the playhead from frame 203 to 221, and Pause held that position. The viewport-height editor shell keeps all three navigation actions visible while the shot canvas scrolls independently. Preflight reports 3/6 engineering checks ready, routes each blocker to its owning view, and explicitly keeps the finished-episode gate closed. The Assets view exposes the five production-bound generation briefs. The restarted Electron main process successfully installs the restricted completed-render media scheme; the player contract and shot/frame seeking are automated, while true live playback awaits the first approved real-art render rather than a fabricated UI state.
 
 Screenshots are intentionally private engineering artifacts under `artifacts/SS-002/ui/` and remain ignored by Git.
 
@@ -61,6 +61,6 @@ Screenshots are intentionally private engineering artifacts under `artifacts/SS-
 
 - Real original ChatGPT-generated kids and history art has not yet completed the manual round trip.
 - The current character implementation is honest 2D pose-swap, not a skeletal or Blender rig.
-- The cut timeline is functional planning review, but approved-pixel live Remotion playback inside the editor is not complete.
+- Completed 24-second approved MP4s can now play and seek inside the editor, but unrendered live Remotion preview and full-length approved playback are not complete.
 - Final voice timing, lip sync, music selection, licensed archive/stock ingestion, and automatic Blender routing are not implemented.
 - The two polished 25-40 second profile outputs required by Gate 9 remain open.

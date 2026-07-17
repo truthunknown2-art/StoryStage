@@ -213,6 +213,25 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .cut-timeline > footer { align-items: center; color: #5d6a64; display: grid; font-size: 7px; gap: 10px; grid-template-columns: 1fr auto 1fr; text-transform: uppercase; }
 .cut-timeline > footer strong { color: #91a099; font-size: 8px; font-weight: 700; text-transform: none; }
 .cut-timeline > footer span:last-child { text-align: right; }
+.approved-render-review { background: #101617; border: 1px solid #35433e; border-radius: 10px; display: grid; gap: 11px; margin-top: 14px; padding: 15px; }
+.approved-render-review > header { align-items: center; display: flex; justify-content: space-between; }
+.approved-render-review > header h2 { color: #dce5e0; font-size: 14px; margin: 3px 0; }
+.approved-render-review > header p:last-child { color: #6c7873; font-size: 8px; }
+.approved-render-review > header button { align-items: center; background: #1c2b24; border: 1px solid #3b5848; border-radius: 6px; color: #92d2ab; display: flex; font-size: 8px; gap: 6px; padding: 8px 10px; }
+.approved-player-shell { background: #090c0d; border: 1px solid #28322f; border-radius: 8px; overflow: hidden; }
+.approved-player-shell video { aspect-ratio: 16 / 9; background: #050707; display: block; max-height: 540px; object-fit: contain; width: 100%; }
+.approved-player-meta { align-items: center; border-top: 1px solid #26302d; display: grid; gap: 12px; grid-template-columns: auto auto 1fr; padding: 9px 11px; }
+.approved-player-meta span { color: #7dc79a; font-size: 7px; font-weight: 800; text-transform: uppercase; }
+.approved-player-meta time { color: #82918a; font-family: "DM Mono", "Consolas", monospace; font-size: 8px; }
+.approved-player-meta strong { color: #aab6b0; font-size: 8px; overflow: hidden; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.approved-review-track { display: flex; gap: 2px; height: 25px; overflow: hidden; }
+.approved-review-track button { align-items: flex-end; background: #202b27; border: 0; border-bottom: 2px solid transparent; border-radius: 3px; color: #708078; display: flex; flex-basis: 0; min-width: 7px; overflow: hidden; padding: 0 3px 3px; }
+.approved-review-track button.is-active { background: #2d4538; border-bottom-color: #9be0b7; color: #b5e2c5; }
+.approved-review-track span { font-size: 6px; font-weight: 800; }
+.approved-render-review > input[type="range"] { accent-color: #91d8ac; cursor: ew-resize; height: 13px; margin: -5px 0; width: 100%; }
+.approved-render-review > footer { align-items: center; color: #65726c; display: flex; font-size: 7px; justify-content: space-between; }
+.approved-render-review > footer span { color: #95a49d; font-family: "DM Mono", "Consolas", monospace; }
+.approved-render-review > footer p { text-align: right; }
 .workspace-grid { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr) 270px; margin-top: 18px; }
 .direction-board { display: grid; gap: 15px; min-width: 0; }
 .board-disclaimer { align-items: center; background: #141a1b; border: 1px dashed #33403e; border-radius: 8px; color: #7dbf99; display: grid; gap: 10px; grid-template-columns: auto 1fr; padding: 11px 13px; }

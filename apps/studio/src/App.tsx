@@ -377,6 +377,50 @@ function CutTimeline({build, selectedShotId, onSelect}: {build: AnimaticBuild; s
   );
 }
 
+function ApprovedRenderReview({build, job, onSelect, onReveal}: {build: AnimaticBuild; job: Extract<RenderJobEvent, {status: "completed"}>; onSelect: (id: string) => void; onReveal: () => void}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const {renderPlan} = build;
+  const durationInFrames = Math.min(renderPlan.durationInFrames, renderPlan.fps * 24);
+  const reviewShots = renderPlan.shots.filter((shot) => shot.startFrame < durationInFrames);
+  const [frame, setFrame] = useState(0);
+  const activeShot = reviewShots.find((shot) => frame >= shot.startFrame && frame < Math.min(durationInFrames, shot.startFrame + shot.durationInFrames)) ?? reviewShots[0]!;
+
+  useEffect(() => setFrame(0), [job.jobId]);
+
+  const movePlayhead = (nextFrame: number, seekVideo: boolean) => {
+    const clamped = Math.max(0, Math.min(durationInFrames - 1, nextFrame));
+    setFrame(clamped);
+    const shot = reviewShots.find((candidate) => clamped >= candidate.startFrame && clamped < candidate.startFrame + candidate.durationInFrames);
+    if (shot) onSelect(shot.id);
+    if (seekVideo && videoRef.current) videoRef.current.currentTime = clamped / renderPlan.fps;
+  };
+
+  return (
+    <section className="approved-render-review" aria-label="Approved render review">
+      <header><div><p className="eyebrow">Approved-pixel playback</p><h2>Rendered production review</h2><p>This is the actual H.264 output from the verified saved revision—not a storyboard placeholder.</p></div><button onClick={onReveal}><Film size={15} />Show MP4</button></header>
+      <div className="approved-player-shell">
+        <video
+          aria-label="Approved render player"
+          controls
+          key={job.jobId}
+          onEnded={() => movePlayhead(durationInFrames - 1, false)}
+          onSeeked={(event) => movePlayhead(Math.floor(event.currentTarget.currentTime * renderPlan.fps), false)}
+          onTimeUpdate={(event) => movePlayhead(Math.floor(event.currentTarget.currentTime * renderPlan.fps), false)}
+          preload="metadata"
+          ref={videoRef}
+          src={`${renderedMediaUrl(job.jobId)}`}
+        />
+        <div className="approved-player-meta"><span>Verified local MP4</span><time>{formatTimecode(frame, renderPlan.fps)} / {formatTimecode(durationInFrames - 1, renderPlan.fps)}</time><strong>{activeShot.number} · {activeShot.title}</strong></div>
+      </div>
+      <div className="approved-review-track" aria-label="Rendered shot boundaries">{reviewShots.map((shot) => <button aria-label={`Seek rendered shot ${shot.number} ${shot.title}`} className={shot.id === activeShot.id ? "is-active" : ""} key={shot.id} onClick={() => movePlayhead(shot.startFrame, true)} style={{flexGrow: Math.min(shot.durationInFrames, durationInFrames - shot.startFrame)}} title={`${shot.number} · ${shot.title}`}><span>{shot.number}</span></button>)}</div>
+      <input aria-label="Approved render playhead" max={durationInFrames - 1} min={0} onChange={(event) => movePlayhead(Number(event.target.value), true)} step={1} type="range" value={frame} />
+      <footer><span>Frame {frame + 1} / {durationInFrames}</span><p>Native review playback follows the exact 24-second engineering slice. Re-render after changing direction or approved assets.</p></footer>
+    </section>
+  );
+}
+
+const renderedMediaUrl = (jobId: string) => `storystage-media://render/${encodeURIComponent(jobId)}`;
+
 function createGenerationJob(session: ProductionSession, build: AnimaticBuild, productionBundleContentHash: string): GenerationJobDraft {
   const pack = getShowPack(session.showPackId);
   return generationJobDraftSchema.parse({
@@ -730,6 +774,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
           <CutTimeline build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
+          {renderJob?.status === "completed" ? <ApprovedRenderReview build={build} job={renderJob} onReveal={() => void host.openRenderedFile(renderJob.jobId)} onSelect={setSelectedShotId} /> : null}
           <div className="workspace-grid">
             <DirectionBoard build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
             <aside className="shot-inspector">

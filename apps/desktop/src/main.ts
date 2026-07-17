@@ -2,7 +2,7 @@ import {createHash, randomUUID} from "node:crypto";
 import {access, lstat, mkdir, readFile, readdir, realpath, rename, writeFile} from "node:fs/promises";
 import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:path";
 import {pathToFileURL} from "node:url";
-import {app, BrowserWindow, dialog, ipcMain, shell, utilityProcess, type OpenDialogOptions} from "electron";
+import {app, BrowserWindow, dialog, ipcMain, net, protocol, shell, utilityProcess, type OpenDialogOptions} from "electron";
 import {commitApprovalWorkflow} from "@storystage/asset-pipeline/approval-recovery";
 import {buildApprovedProductionRevisionDraft, buildSelectedCandidateRigArtifacts, persistAssetReviewRecordSnapshot, promotePreparedCandidateSet} from "@storystage/asset-pipeline/approved-asset-workflow";
 import {commitImportEvidenceDirectory} from "@storystage/asset-pipeline/import-evidence-store";
@@ -122,6 +122,12 @@ const looseImportRegistry = new Map<string, {
 }>();
 const workspaceRoot = app.isPackaged ? app.getAppPath() : resolve(__dirname, "../../..");
 const terminalStatuses = new Set<RenderJobEvent["status"]>(["completed", "failed"]);
+const renderedMediaScheme = "storystage-media";
+
+protocol.registerSchemesAsPrivileged([{
+  scheme: renderedMediaScheme,
+  privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true},
+}]);
 
 function isWithinPath(root: string, candidate: string): boolean {
   const pathFromRoot = relative(root, candidate);
@@ -1057,6 +1063,24 @@ async function createWindow() {
   else await mainWindow.loadURL(process.env.STORYSTAGE_DEV_URL ?? "http://127.0.0.1:5173");
 }
 
+function installRenderedMediaProtocol() {
+  protocol.handle(renderedMediaScheme, async (request) => {
+    try {
+      const requestedUrl = new URL(request.url);
+      if (requestedUrl.hostname !== "render" || requestedUrl.search || requestedUrl.hash) throw new Error("Unsupported media request.");
+      const jobId = startRenderResponseSchema.shape.jobId.parse(decodeURIComponent(requestedUrl.pathname.slice(1)));
+      const record = jobRegistry.get(jobId);
+      if (!record || record.event.status !== "completed") throw new Error("Render output is unavailable.");
+      const [canonicalRoot, canonicalOutput] = await Promise.all([realpath(record.allowedOutputRoot), realpath(record.event.outputPath)]);
+      const outputInfo = await lstat(canonicalOutput);
+      if (!isWithinPath(canonicalRoot, canonicalOutput) || outputInfo.isSymbolicLink() || !outputInfo.isFile() || outputInfo.size === 0 || !canonicalOutput.toLowerCase().endsWith(".mp4")) throw new Error("Render output failed media validation.");
+      return net.fetch(pathToFileURL(canonicalOutput).toString(), {headers: request.headers});
+    } catch {
+      return new Response("Rendered media not found.", {status: 404, headers: {"content-type": "text/plain; charset=utf-8"}});
+    }
+  });
+}
+
 ipcMain.handle(IPC_CHANNELS.capabilities, () => desktopCapabilitiesSchema.parse({localRendering: true, openRenderedFile: true, manualImageExchange: true}));
 
 ipcMain.handle(IPC_CHANNELS.saveProductionBundle, async (_event, rawRequest: unknown) => {
@@ -1503,6 +1527,7 @@ ipcMain.handle(IPC_CHANNELS.openRenderedFile, async (_event, rawJobId: unknown) 
 });
 
 app.whenReady().then(async () => {
+  installRenderedMediaProtocol();
   await rehydrateProductionBundleRegistry();
   await rehydrateGenerationExchangeRegistry();
   await rehydrateLooseImportRegistry();
