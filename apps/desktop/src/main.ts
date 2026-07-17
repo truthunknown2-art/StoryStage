@@ -1310,6 +1310,26 @@ function installRenderedMediaProtocol() {
     try {
       const requestedUrl = new URL(request.url);
       if (requestedUrl.search || requestedUrl.hash) throw new Error("Unsupported media request.");
+      if (requestedUrl.hostname === "asset") {
+        const pathParts = requestedUrl.pathname.slice(1).split("/").map((part) => decodeURIComponent(part));
+        if (pathParts.length !== 3) throw new Error("Approved asset request is malformed.");
+        const [assetId, manifestContentHash, role] = pathParts;
+        if (!assetId || !/^[a-z0-9][a-z0-9-]*$/.test(assetId) || !manifestContentHash || !/^[a-f0-9]{64}$/.test(manifestContentHash) || !role) throw new Error("Approved asset identity is invalid.");
+        const approved = [...productionBundleRegistry.values()].flatMap(({bundle}) => bundle.approvedAssetVersions ?? []).find((candidate) => candidate.assetId === assetId && candidate.contentHash === manifestContentHash);
+        if (!approved || !(await verifyApprovedAssetVersionOnDisk(approved))) throw new Error("Approved asset is unavailable or failed integrity verification.");
+        const assetsRoot = join(app.getPath("userData"), ".storystage-local", "assets");
+        const manifestFile = resolve(assetsRoot, ...approved.relativeFile.split("/"));
+        const versionRoot = dirname(manifestFile);
+        const manifest = assetRigManifestSchema.parse(await readBoundJsonFile(manifestFile, 2_000_000));
+        const binding = manifest.type === "character-rig"
+          ? role === "neutral" || role === "talk" || role === "reaction" ? manifest.poses[role] : null
+          : manifest.type === "background-layers"
+            ? manifest.layers.find((layer) => layer.role === role)?.asset ?? null
+            : role === "cutout" ? manifest.cutout : null;
+        if (!binding) throw new Error("Approved asset role is unavailable.");
+        const bytes = await readVerifiedPrivateBytes(versionRoot, binding.relativeFile, binding.contentHash, 50 * 1024 * 1024);
+        return new Response(new Uint8Array(bytes), {status: 200, headers: {"cache-control": "no-store", "content-type": "image/png", "x-content-type-options": "nosniff"}});
+      }
       if (["voice", "music", "sfx"].includes(requestedUrl.hostname)) {
         const contentHash = decodeURIComponent(requestedUrl.pathname.slice(1));
         if (!/^[a-f0-9]{64}$/.test(contentHash)) throw new Error("Audio asset hash is invalid.");

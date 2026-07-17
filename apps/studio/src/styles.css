@@ -234,12 +234,26 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .metric > span { color: #5e6a66; font-size: 8px; text-transform: uppercase; }
 .metric strong { color: #dce4e0; font-size: 18px; margin-top: 4px; }
 .metric small { color: #65716d; font-size: 8px; margin-top: 3px; }
+.live-production-preview { background: radial-gradient(circle at 10% 0, rgba(125,191,153,.08), transparent 34%), #0d1213; border: 1px solid #34413d; border-radius: 12px; display: grid; gap: 0; margin-top: 14px; overflow: hidden; }
+.live-production-preview > header { align-items: center; border-bottom: 1px solid #293330; display: flex; justify-content: space-between; padding: 15px 17px; }
+.live-production-preview > header h2 { color: #e0e7e3; font-size: 15px; margin: 3px 0 4px; }
+.live-production-preview > header p:last-child { color: #68756f; font-size: 8px; }
+.live-production-preview > header > span { border: 1px solid; border-radius: 999px; font-size: 7px; font-weight: 800; letter-spacing: .06em; padding: 6px 8px; text-transform: uppercase; }
+.live-production-preview > header > span.is-approved { background: #17271e; border-color: #3c6049; color: #8bd0a5; }
+.live-production-preview > header > span.is-watermarked { background: #2a2116; border-color: #6d552c; color: #e3bd68; }
+.production-player-shell { background: #080b0c; border-bottom: 1px solid #293330; margin: 0 auto; max-width: 1120px; position: relative; width: 100%; }
+.production-player-shell > div:first-child { background: #090c0d; }
+.preview-truth-strip { align-items: center; background: rgba(10,14,15,.94); border-top: 1px solid #222b29; bottom: 0; color: #68756f; display: flex; font-size: 7px; gap: 15px; justify-content: flex-end; left: 0; padding: 7px 10px; position: absolute; right: 0; text-transform: uppercase; z-index: 5; }
+.preview-truth-strip span:first-child { align-items: center; color: #8fc8a5; display: flex; gap: 6px; margin-right: auto; }
+.preview-truth-strip strong { color: #e0b760; font-weight: 700; }
+.live-production-preview .cut-timeline { border: 0; border-radius: 0; margin-top: 0; }
 .cut-timeline { background: linear-gradient(135deg, rgba(43,63,54,.2), transparent 45%), #111718; border: 1px solid #2c3734; border-radius: 10px; display: grid; gap: 12px; margin-top: 14px; padding: 14px 15px 12px; }
 .cut-timeline > header { align-items: center; display: flex; justify-content: space-between; }
 .cut-timeline h2 { color: #d8e1dc; font-size: 13px; margin: 3px 0; }
 .cut-timeline > header span { color: #68756f; font-size: 8px; }
 .timeline-transport { align-items: center; display: flex; gap: 12px; }
 .timeline-transport button { align-items: center; background: #203229; border: 1px solid #41634f; border-radius: 6px; color: #9bd8b2; display: inline-flex; font-size: 9px; font-weight: 700; gap: 6px; height: 32px; padding: 0 10px; }
+.timeline-transport button.icon-transport { justify-content: center; padding: 0; width: 32px; }
 .timeline-transport time { color: #9aa6a0; font-family: "DM Mono", "Consolas", monospace; font-size: 9px; }
 .cut-track { display: flex; gap: 2px; height: 32px; overflow: hidden; }
 .cut-segment { align-items: flex-end; background: linear-gradient(135deg, #263731, #18201f); border: 0; border-bottom: 2px solid transparent; border-radius: 3px; color: rgba(255,255,255,.65); display: flex; flex-basis: 0; min-width: 7px; overflow: hidden; padding: 0 3px 4px; }

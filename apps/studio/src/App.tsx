@@ -36,6 +36,8 @@ import {
   type SoundEffectCue,
   voiceTrackSchema,
 } from "@storystage/story-engine";
+import {Player, type CallbackListener, type PlayerRef} from "@remotion/player";
+import {ProductionComposition, type PlaybackAsset} from "@storystage/remotion-runtime";
 import {
   Aperture,
   ArrowLeft,
@@ -56,6 +58,7 @@ import {
   Library,
   ListChecks,
   Lock,
+  Maximize2,
   Mic2,
   PackageCheck,
   PlayCircle,
@@ -65,6 +68,8 @@ import {
   ShieldCheck,
   Sparkles,
   Upload,
+  Volume2,
+  VolumeX,
   WandSparkles,
 } from "lucide-react";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
@@ -388,48 +393,22 @@ function formatTimecode(frame: number, fps: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}:${String(frameWithinSecond).padStart(2, "0")}`;
 }
 
-function CutTimeline({build, selectedShotId, onSelect}: {build: AnimaticBuild; selectedShotId: string; onSelect: (id: string) => void}) {
+function CutTimeline({build, frame, muted, onFrameChange, onRequestFullscreen, onSelect, onToggleMute, onTogglePlayback, playing, selectedShotId}: {build: AnimaticBuild; frame: number; muted: boolean; onFrameChange: (frame: number) => void; onRequestFullscreen: () => void; onSelect: (id: string) => void; onToggleMute: () => void; onTogglePlayback: () => void; playing: boolean; selectedShotId: string}) {
   const {renderPlan} = build;
   const selectedShot = renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? renderPlan.shots[0]!;
-  const [frame, setFrame] = useState(selectedShot.startFrame);
-  const [playing, setPlaying] = useState(false);
-
-  useEffect(() => {
-    setFrame((current) => current >= selectedShot.startFrame && current < selectedShot.startFrame + selectedShot.durationInFrames ? current : selectedShot.startFrame);
-  }, [selectedShot.durationInFrames, selectedShot.startFrame]);
-
-  useEffect(() => {
-    if (!playing) return;
-    const frameStep = Math.max(1, Math.round(renderPlan.fps / 10));
-    const timer = window.setInterval(() => {
-      setFrame((current) => {
-        const next = Math.min(renderPlan.durationInFrames - 1, current + frameStep);
-        const activeShot = renderPlan.shots.find((shot) => next >= shot.startFrame && next < shot.startFrame + shot.durationInFrames);
-        if (activeShot && activeShot.id !== selectedShotId) onSelect(activeShot.id);
-        if (next === renderPlan.durationInFrames - 1) setPlaying(false);
-        return next;
-      });
-    }, 100);
-    return () => window.clearInterval(timer);
-  }, [onSelect, playing, renderPlan.durationInFrames, renderPlan.fps, renderPlan.shots, selectedShotId]);
 
   const movePlayhead = (nextFrame: number) => {
     const clamped = Math.max(0, Math.min(renderPlan.durationInFrames - 1, nextFrame));
-    setFrame(clamped);
+    onFrameChange(clamped);
     const activeShot = renderPlan.shots.find((shot) => clamped >= shot.startFrame && clamped < shot.startFrame + shot.durationInFrames);
     if (activeShot) onSelect(activeShot.id);
-  };
-
-  const togglePlayback = () => {
-    if (!playing && frame >= renderPlan.durationInFrames - 1) movePlayhead(0);
-    setPlaying((current) => !current);
   };
 
   return (
     <section className="cut-timeline" aria-label="Cut timing">
       <header>
-        <div><p className="eyebrow">Cut timing</p><h2>Playable direction timeline</h2><span>Drag the playhead or jump to a shot. The inspector follows exact compiled frame boundaries.</span></div>
-        <div className="timeline-transport"><button aria-label={playing ? "Pause direction timeline" : "Play direction timeline"} onClick={togglePlayback}>{playing ? <CirclePause size={17} /> : <PlayCircle size={17} />}{playing ? "Pause" : "Play"}</button><time>{formatTimecode(frame, renderPlan.fps)} / {formatTimecode(renderPlan.durationInFrames - 1, renderPlan.fps)}</time></div>
+        <div><p className="eyebrow">Production timeline</p><h2>Remotion preview clock</h2><span>Every control seeks the composition used by final rendering. The inspector follows exact compiled frame boundaries.</span></div>
+        <div className="timeline-transport"><button aria-label={playing ? "Pause direction timeline" : "Play direction timeline"} onClick={onTogglePlayback}>{playing ? <CirclePause size={17} /> : <PlayCircle size={17} />}{playing ? "Pause" : "Play"}</button><button aria-label={muted ? "Unmute production preview" : "Mute production preview"} className="icon-transport" onClick={onToggleMute}>{muted ? <VolumeX size={15} /> : <Volume2 size={15} />}</button><button aria-label="Open production preview fullscreen" className="icon-transport" onClick={onRequestFullscreen}><Maximize2 size={15} /></button><time>{formatTimecode(frame, renderPlan.fps)} / {formatTimecode(renderPlan.durationInFrames - 1, renderPlan.fps)}</time></div>
       </header>
       <div className="cut-track" aria-label="Shot boundaries">
         {renderPlan.shots.map((shot) => <button
@@ -446,6 +425,104 @@ function CutTimeline({build, selectedShotId, onSelect}: {build: AnimaticBuild; s
       <footer><span>Frame {frame + 1} / {renderPlan.durationInFrames}</span><strong>{selectedShot.number} · {selectedShot.title}</strong><span>{selectedShot.transition.replaceAll("-", " ")}</span></footer>
     </section>
   );
+}
+
+const approvedVisualMediaUrl = (assetId: string, contentHash: string, role: string) => `storystage-media://asset/${encodeURIComponent(assetId)}/${encodeURIComponent(contentHash)}/${encodeURIComponent(role)}`;
+
+function previewPlaybackAssets(session: ProductionSession, build: AnimaticBuild): {assets: Record<string, PlaybackAsset>; watermark?: string; approvedCount: number; candidateCount: number} {
+  const assets: Record<string, PlaybackAsset> = {};
+  for (const approved of session.approvedAssetVersions) {
+    const manifestEntry = build.renderPlan.assets.find((asset) => asset.id === approved.assetId && asset.contentHash === approved.contentHash);
+    if (!manifestEntry) continue;
+    const url = (role: string) => approvedVisualMediaUrl(approved.assetId, approved.contentHash, role);
+    assets[approved.assetId] = manifestEntry.kind === "character-rig"
+      ? {type: "character-rig", assetId: approved.assetId, neutral: url("neutral"), talk: url("talk"), reaction: url("reaction")}
+      : manifestEntry.kind === "location"
+        ? {type: "background-layers", assetId: approved.assetId, far: url("far"), midground: url("midground"), foreground: url("foreground")}
+        : {type: "prop", assetId: approved.assetId, cutout: url("cutout")};
+  }
+
+  let candidateCount = 0;
+  const approvedAssetIds = new Set(session.approvedAssetVersions.map((approved) => approved.assetId));
+  const usesRookCandidate = session.showPackId === "weird-history-editorial-v1" && build.renderPlan.shots.some((shot) => shot.visualBindings.some((binding) => binding.assetId === "history-rig-guide" && !approvedAssetIds.has(binding.assetId)));
+  if (usesRookCandidate && !assets["history-rig-guide"]) {
+    assets["history-rig-guide"] = {type: "character-rig", assetId: "history-rig-guide", neutral: "/show-packs/weird-history/rook/v1/prepared/rook-v1-neutral.png", talk: "/show-packs/weird-history/rook/v1/prepared/rook-v1-talk.png", reaction: "/show-packs/weird-history/rook/v1/prepared/rook-v1-reaction.png"};
+    candidateCount = 1;
+  }
+  const nonPrivateBindingCount = build.renderPlan.shots.flatMap((shot) => shot.visualBindings).filter((binding) => !approvedAssetIds.has(binding.assetId)).length;
+  const watermark = candidateCount > 0 ? "UNAPPROVED CANDIDATE · PREVIEW ONLY" : nonPrivateBindingCount > 0 ? "PLACEHOLDER PREVIEW · NOT APPROVED" : undefined;
+  return {assets, ...(watermark ? {watermark} : {}), approvedCount: session.approvedAssetVersions.length, candidateCount};
+}
+
+function LiveProductionPreview({build, onSelect, selectedShotId, session}: {build: AnimaticBuild; onSelect: (id: string) => void; selectedShotId: string; session: ProductionSession}) {
+  const playerRef = useRef<PlayerRef>(null);
+  const playback = useMemo(() => previewPlaybackAssets(session, build), [build, session]);
+  const [frame, setFrame] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const selectedShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
+  const voiceTrackDataUrl = session.voiceTrack?.approvalStatus === "approved" ? voiceTrackMediaUrl(session.voiceTrack.contentHash) : undefined;
+  const musicTrackDataUrl = session.musicTrack?.approvalStatus === "approved" ? musicTrackMediaUrl(session.musicTrack.contentHash) : undefined;
+  const soundEffectDataUrls = Object.fromEntries(session.soundEffectAssets.filter((asset) => asset.approvalStatus === "approved").map((asset) => [asset.contentHash, soundEffectMediaUrl(asset.contentHash)]));
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    const onFrame: CallbackListener<"frameupdate"> = ({detail}) => {
+      setFrame(detail.frame);
+      const activeShot = build.renderPlan.shots.find((shot) => detail.frame >= shot.startFrame && detail.frame < shot.startFrame + shot.durationInFrames);
+      if (activeShot && activeShot.id !== selectedShotId) onSelect(activeShot.id);
+    };
+    const onPlay: CallbackListener<"play"> = () => setPlaying(true);
+    const onPause: CallbackListener<"pause"> = () => setPlaying(false);
+    const onEnded: CallbackListener<"ended"> = () => setPlaying(false);
+    player.addEventListener("frameupdate", onFrame);
+    player.addEventListener("play", onPlay);
+    player.addEventListener("pause", onPause);
+    player.addEventListener("ended", onEnded);
+    return () => {
+      player.removeEventListener("frameupdate", onFrame);
+      player.removeEventListener("play", onPlay);
+      player.removeEventListener("pause", onPause);
+      player.removeEventListener("ended", onEnded);
+    };
+  }, [build.renderPlan.shots, onSelect, selectedShotId]);
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player || (frame >= selectedShot.startFrame && frame < selectedShot.startFrame + selectedShot.durationInFrames)) return;
+    player.seekTo(selectedShot.startFrame);
+    setFrame(selectedShot.startFrame);
+  }, [frame, selectedShot.durationInFrames, selectedShot.startFrame]);
+
+  const seekTo = (nextFrame: number) => {
+    playerRef.current?.seekTo(nextFrame);
+    setFrame(nextFrame);
+  };
+  const togglePlayback = () => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (player.isPlaying()) player.pause();
+    else {
+      if (frame >= build.renderPlan.durationInFrames - 1) seekTo(0);
+      player.play();
+    }
+  };
+  const toggleMute = () => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (player.isMuted()) {player.unmute(); setMuted(false);}
+    else {player.mute(); setMuted(true);}
+  };
+
+  return <section className="live-production-preview" aria-label="Live production preview">
+    <header><div><p className="eyebrow">Live production preview</p><h2>Final composition, before export</h2><p>Camera, captions, pose swaps, sound, and transitions come from the current frozen plan.</p></div><span className={playback.watermark ? "is-watermarked" : "is-approved"}>{playback.watermark ? "Review media" : "Approved media"}</span></header>
+    <div className="production-player-shell">
+      <Player acknowledgeRemotionLicense allowFullscreen clickToPlay={false} component={ProductionComposition} compositionHeight={build.renderPlan.height} compositionWidth={build.renderPlan.width} controls={false} durationInFrames={build.renderPlan.durationInFrames} fps={build.renderPlan.fps} inputProps={{plan: build.renderPlan, playbackAssets: playback.assets, sliceDurationInFrames: build.renderPlan.durationInFrames, ...(voiceTrackDataUrl ? {voiceTrackDataUrl} : {}), ...(musicTrackDataUrl ? {musicTrackDataUrl} : {}), soundEffectDataUrls, soundEffectCues: session.soundEffectCues, audioMix: session.audioMix, ...(playback.watermark ? {previewWatermark: playback.watermark} : {})}} ref={playerRef} style={{aspectRatio: `${build.renderPlan.width} / ${build.renderPlan.height}`, width: "100%"}} />
+      <div className="preview-truth-strip"><span><Film size={13} />Same composition as final render</span><span>{playback.approvedCount} approved asset{playback.approvedCount === 1 ? "" : "s"}</span>{playback.candidateCount > 0 ? <strong>Candidate art is watermarked</strong> : null}</div>
+    </div>
+    <CutTimeline build={build} frame={frame} muted={muted} onFrameChange={seekTo} onRequestFullscreen={() => playerRef.current?.requestFullscreen()} onSelect={onSelect} onToggleMute={toggleMute} onTogglePlayback={togglePlayback} playing={playing} selectedShotId={selectedShotId} />
+  </section>;
 }
 
 type RenderShot = AnimaticBuild["renderPlan"]["shots"][number];
@@ -1387,7 +1464,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
         {currentDelivery ? <section className="verified-delivery-banner" aria-label="Verified delivery"><ShieldCheck size={20} /><div><small>Verified delivery</small><strong>1080p master · {currentDelivery.master.frameCount} frames · {currentDelivery.captionCueCount} caption cues · rights cleared</strong><span>Production {currentDelivery.revision} · {currentDelivery.productionBundleContentHash.slice(0, 10)} · manifest {currentDelivery.deliveryManifestContentHash.slice(0, 10)}</span></div><button onClick={() => void host.openDeliveryMaster(currentDelivery.deliveryManifestContentHash)}>Open master</button><button onClick={() => void host.revealDeliveryBundle(currentDelivery.deliveryManifestContentHash)}>Reveal bundle</button></section> : null}
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
-          <CutTimeline build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
+          <LiveProductionPreview build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} session={session} />
           {renderJob?.status === "completed" ? <ApprovedRenderReview build={build} job={renderJob} onReveal={() => void host.openRenderedFile(renderJob.jobId)} onSelect={setSelectedShotId} scope={renderJobScope} /> : null}
           <div className="workspace-grid">
             <DirectionBoard build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />

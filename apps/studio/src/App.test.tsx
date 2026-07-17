@@ -121,6 +121,9 @@ describe("StoryStage studio", () => {
     await user.click(screen.getByRole("button", {name: "Create production"}));
     const shotButtons = screen.getAllByRole("button", {name: /Select shot/});
     expect(shotButtons).toHaveLength(11);
+    const preview = screen.getByRole("region", {name: "Live production preview"});
+    expect(within(preview).getByText("UNAPPROVED CANDIDATE · PREVIEW ONLY")).toBeInTheDocument();
+    expect(preview.querySelector('img[src*="rook-v1-neutral.png"]')).not.toBeNull();
     for (const button of shotButtons) expect(button).not.toHaveAccessibleName(/insert|licensed media|diagram|generated illustration/i);
     expect(screen.getAllByText("kinetic type").length).toBeGreaterThan(0);
   });
@@ -219,6 +222,10 @@ describe("StoryStage studio", () => {
     await createDefaultProduction();
 
     expect(screen.getByRole("heading", {name: "The Punctual Box"})).toBeInTheDocument();
+    const preview = screen.getByRole("region", {name: "Live production preview"});
+    expect(within(preview).getByRole("heading", {name: "Final composition, before export"})).toBeInTheDocument();
+    expect(within(preview).getByText("UNAPPROVED CANDIDATE · PREVIEW ONLY")).toBeInTheDocument();
+    expect(preview.querySelector('img[src*="rook-v1-neutral.png"]')).not.toBeNull();
     expect(screen.getByText(/weird-history-director-v1/)).toBeInTheDocument();
     expect(screen.getByText("Planned shots")).toBeInTheDocument();
     expect(screen.getByText("Average shot")).toBeInTheDocument();
@@ -240,6 +247,23 @@ describe("StoryStage studio", () => {
     expect(screen.getByRole("button", {name: "Pause direction timeline"})).toBeInTheDocument();
     await user.click(screen.getByRole("button", {name: "Pause direction timeline"}));
     expect(screen.getByRole("button", {name: "Play direction timeline"})).toBeInTheDocument();
+  });
+
+  it("routes approved composition pixels through the verified private media protocol without a preview watermark", async () => {
+    const bundle = createGateReadyRookBundle();
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [{productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash}]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", {name: new RegExp(bundle.production.title)}));
+
+    const preview = await screen.findByRole("region", {name: "Live production preview"});
+    await waitFor(() => expect(preview.querySelector('img[src^="storystage-media://asset/"]')).not.toBeNull());
+    expect(within(preview).getByText("Approved media")).toBeInTheDocument();
+    expect(within(preview).queryByText(/PREVIEW ONLY|NOT APPROVED/)).not.toBeInTheDocument();
   });
 
   it("turns preflight into an evidence-backed readiness view instead of a disabled placeholder", async () => {

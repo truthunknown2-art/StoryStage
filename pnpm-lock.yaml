@@ -134,9 +134,15 @@ importers:
 
   apps/studio:
     dependencies:
+      '@remotion/player':
+        specifier: 4.0.490
+        version: 4.0.490(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@storystage/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@storystage/remotion-runtime':
+        specifier: workspace:*
+        version: link:../../packages/remotion-runtime
       '@storystage/story-engine':
         specifier: workspace:*
         version: link:../../packages/story-engine

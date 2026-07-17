@@ -118,6 +118,6 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({pla
     })}
     {audioMix?.transitionSfx === "paper-flip" ? plan.shots.filter((shot) => shot.startFrame > 0 && shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={18} key={`sfx-${shot.id}`}><Audio src={staticFile("audio/paper-flip.wav")} volume={() => audioMix.transitionSfxGain} /></Sequence>) : null}
     <Captions captions={captions} />
-    {previewWatermark ? <div style={{background: "rgba(16,20,20,.86)", bottom: 28, color: "#f4f1e8", fontFamily: "Arial, sans-serif", fontSize: 22, fontWeight: 900, left: 28, letterSpacing: 2, padding: "12px 16px", position: "absolute", textTransform: "uppercase"}}>{previewWatermark}</div> : null}
+    {previewWatermark ? <><div style={{border: "6px solid rgba(240,198,104,.68)", inset: 18, pointerEvents: "none", position: "absolute"}} /><div style={{background: "rgba(16,20,20,.9)", color: "#f0c668", fontFamily: "Arial, sans-serif", fontSize: 22, fontWeight: 900, letterSpacing: 2, padding: "12px 16px", position: "absolute", right: 28, textTransform: "uppercase", top: 28}}>{previewWatermark}</div></> : null}
   </AbsoluteFill>;
 };
