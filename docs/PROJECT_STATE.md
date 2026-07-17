@@ -22,6 +22,8 @@ Pro's audit of commit `14baf87` accepted the executable vertical slice and marke
 - Immutable artifact publication uses complete temporary files plus atomic hard links, so a process exit cannot leave a partially written final filename.
 - Approval creates a new production revision through the same shared operation used by the desktop and proof runner, then recompiles the complete frame-accurate plan.
 - The SS-002 Remotion composition consumes the saved plan and approved local pixels. The render worker independently rechecks containment, symlinks, PNG codec/dimensions/alpha, hashes, validation, diagnostic evidence, and production-bundle derivation.
+- The Electron bundle now includes every workspace TypeScript package it executes. A build-time check rejects unresolved `@storystage/*` runtime imports, covering the launch crash found during the live desktop pass.
+- Direction review now has a functional frame playhead, play/pause transport, exact shot-boundary jumps, and synchronized shot inspector. It remains an explicitly labeled planning timeline until approved artwork exists.
 
 ## Real proof
 
@@ -47,7 +49,7 @@ The proof art is deliberately simple local engineering art. It proves the execut
 - Gate 5 original ChatGPT production art for both profiles: pending a real authenticated manual generation round trip.
 - Gate 6 preparation and validation: implemented for 2D pose-swap characters, background layers, and props; skeletal/part rigging and Blender routing remain pending.
 - Gate 7 semantic Remotion animation: initial plan-driven 24-second slice implemented and proven; full episode coverage and visual polish remain pending.
-- Gate 8 review/override: shot overrides and asset selection/approval exist; live player/timeline/inspector coverage remains incomplete.
+- Gate 8 review/override: shot overrides, asset selection/approval, and a functional frame-accurate cut timeline with synchronized inspector exist; approved-pixel live Remotion playback and broader inspector coverage remain incomplete.
 - Gate 9 profile-distinct production outputs: pending.
 
 ## Product truth

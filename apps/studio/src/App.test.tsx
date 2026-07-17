@@ -98,6 +98,22 @@ describe("StoryStage studio", () => {
     expect(screen.getAllByRole("button", {name: /Select shot/}).length).toBeGreaterThan(10);
   });
 
+  it("uses a functional frame playhead to synchronize the timeline and inspector", async () => {
+    const user = await createDefaultProduction();
+
+    expect(screen.getByRole("slider", {name: "Production playhead"})).toHaveValue("0");
+    await user.click(screen.getByRole("button", {name: /Jump to shot 1\.04/}));
+
+    expect(screen.getByRole("slider", {name: "Production playhead"})).not.toHaveValue("0");
+    expect(screen.getByRole("heading", {name: "1.04"})).toBeInTheDocument();
+    expect(screen.getByText(/1\.04 · Keyword: lamp/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", {name: "Play direction timeline"}));
+    expect(screen.getByRole("button", {name: "Pause direction timeline"})).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: "Pause direction timeline"}));
+    expect(screen.getByRole("button", {name: "Play direction timeline"})).toBeInTheDocument();
+  });
+
   it("compiles inspector choices into semantic shot overrides", async () => {
     const user = await createDefaultProduction();
 

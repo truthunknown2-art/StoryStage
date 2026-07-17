@@ -28,7 +28,7 @@ SS-001 remains workstation infrastructure. Its sample is not a product-quality t
 - Gate 5: pending a real authenticated ChatGPT generation/import pass for both profiles. The deterministic SS-002 proof fixture is not production art.
 - Gate 6: first 2D pose-swap character, layered background, and prop paths are implemented. True part/skeletal rigging, richer face states, and Blender routing remain open.
 - Gate 7: an initial exact-plan Remotion path is implemented and proven with approved local pixels, pose changes, cuts, camera movement, captions, guide audio, and SFX. The minimal workflow proof is 6.08 seconds; the renderer supports longer slices.
-- Gate 8: shot overrides and asset review exist; full live-player timeline and all inspector interactions remain open.
+- Gate 8: shot overrides, asset review, and a functional frame-accurate cut timeline with play/pause, scrubbing, shot jumps, and synchronized inspector exist. Approved-pixel live Remotion playback and the remaining inspector interactions are still open.
 - Gate 9: pending polished kids and history outputs.
 
 ## Binding comparison thresholds

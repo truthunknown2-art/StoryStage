@@ -41,18 +41,19 @@ Visual inspection confirms actual approved character pixels, pose/mouth/arm chan
 
 ## Automated evidence
 
-- `pnpm verify`: privacy check, lint, all package typechecks, and 85 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
+- `pnpm verify`: privacy check, lint, all package typechecks, and 86 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
 - `pnpm build`: all nine code packages plus the Vite studio bundle
 - story-engine: production derivation, job/evidence hashes, lifecycle, approval/recompile, diagnostic binding, profile behavior
 - asset-pipeline: real transparent character-kit preparation, contact sheet, rig validation, opaque-mask stop, tamper rejection
 - asset-pipeline: 11 real filesystem replay tests after selected manifest, validation, diagnostic video/report, promoted files, manifest, validation, diagnostic video/report, and immediately before both review-persistence boundaries
 - desktop: approval transaction crash/retry tests at review persistence, production persistence, and approved-state persistence
 - render-worker: strict sample, production, and rig-diagnostic command routing
-- studio: host boundary, resume/review state, and StrictMode-safe render subscription
+- studio: host boundary, resume/review state, StrictMode-safe render subscription, and exact-frame timeline/inspector synchronization
+- desktop build: the asset pipeline is bundled into Electron instead of leaking workspace TypeScript imports; a build-time scan fails on any unresolved `@storystage/*` runtime import
 
 ## Live UI evidence
 
-The browser-mode smoke pass completed the default Frankly Weird History setup and produced a 25-shot plan from two natural scenes. Selecting shot 1.04 updated the inspector to that exact shot and its insert framing. The Assets view exposed five generated-art briefs, and the generation-export review disclosed the exact source excerpts, references, style rules, and expected output roles before approval. The desktop-only render action remained disabled in browser mode, and the page emitted no console errors.
+The desktop smoke pass first exposed and then verified a real launch blocker: `@storystage/asset-pipeline` was externalized, causing Electron to execute workspace TypeScript and fail on an extensionless story-engine import. The asset pipeline is now bundled and StoryStage launches to the production desk. New Production opens the real setup, creates the default Frankly Weird History production, and produces 25 shots from two natural scenes. The new cut-timing panel visibly exposes all 25 proportional shot boundaries; jumping to shot 1.04 moves the playhead to frame 203 and synchronizes the inspector to 1.04. Live playback advanced the playhead from frame 203 to 221, and Pause held that position. The Assets view exposes the five production-bound generation briefs.
 
 Screenshots are intentionally private engineering artifacts under `artifacts/SS-002/ui/` and remain ignored by Git.
 
@@ -60,6 +61,6 @@ Screenshots are intentionally private engineering artifacts under `artifacts/SS-
 
 - Real original ChatGPT-generated kids and history art has not yet completed the manual round trip.
 - The current character implementation is honest 2D pose-swap, not a skeletal or Blender rig.
-- Full live Remotion player/timeline review is not complete.
+- The cut timeline is functional planning review, but approved-pixel live Remotion playback inside the editor is not complete.
 - Final voice timing, lip sync, music selection, licensed archive/stock ingestion, and automatic Blender routing are not implemented.
 - The two polished 25-40 second profile outputs required by Gate 9 remain open.

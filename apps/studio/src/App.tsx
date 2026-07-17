@@ -27,6 +27,7 @@ import {
   Check,
   ChevronRight,
   CircleAlert,
+  CirclePause,
   Clapperboard,
   Download,
   FileText,
@@ -308,6 +309,74 @@ function DirectionBoard({build, selectedShotId, onSelect}: {build: AnimaticBuild
   );
 }
 
+function formatTimecode(frame: number, fps: number) {
+  const wholeSeconds = Math.floor(frame / fps);
+  const minutes = Math.floor(wholeSeconds / 60);
+  const seconds = wholeSeconds % 60;
+  const frameWithinSecond = Math.floor(frame % fps);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}:${String(frameWithinSecond).padStart(2, "0")}`;
+}
+
+function CutTimeline({build, selectedShotId, onSelect}: {build: AnimaticBuild; selectedShotId: string; onSelect: (id: string) => void}) {
+  const {renderPlan} = build;
+  const selectedShot = renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? renderPlan.shots[0]!;
+  const [frame, setFrame] = useState(selectedShot.startFrame);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    setFrame((current) => current >= selectedShot.startFrame && current < selectedShot.startFrame + selectedShot.durationInFrames ? current : selectedShot.startFrame);
+  }, [selectedShot.durationInFrames, selectedShot.startFrame]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const frameStep = Math.max(1, Math.round(renderPlan.fps / 10));
+    const timer = window.setInterval(() => {
+      setFrame((current) => {
+        const next = Math.min(renderPlan.durationInFrames - 1, current + frameStep);
+        const activeShot = renderPlan.shots.find((shot) => next >= shot.startFrame && next < shot.startFrame + shot.durationInFrames);
+        if (activeShot && activeShot.id !== selectedShotId) onSelect(activeShot.id);
+        if (next === renderPlan.durationInFrames - 1) setPlaying(false);
+        return next;
+      });
+    }, 100);
+    return () => window.clearInterval(timer);
+  }, [onSelect, playing, renderPlan.durationInFrames, renderPlan.fps, renderPlan.shots, selectedShotId]);
+
+  const movePlayhead = (nextFrame: number) => {
+    const clamped = Math.max(0, Math.min(renderPlan.durationInFrames - 1, nextFrame));
+    setFrame(clamped);
+    const activeShot = renderPlan.shots.find((shot) => clamped >= shot.startFrame && clamped < shot.startFrame + shot.durationInFrames);
+    if (activeShot) onSelect(activeShot.id);
+  };
+
+  const togglePlayback = () => {
+    if (!playing && frame >= renderPlan.durationInFrames - 1) movePlayhead(0);
+    setPlaying((current) => !current);
+  };
+
+  return (
+    <section className="cut-timeline" aria-label="Cut timing">
+      <header>
+        <div><p className="eyebrow">Cut timing</p><h2>Playable direction timeline</h2><span>Drag the playhead or jump to a shot. The inspector follows exact compiled frame boundaries.</span></div>
+        <div className="timeline-transport"><button aria-label={playing ? "Pause direction timeline" : "Play direction timeline"} onClick={togglePlayback}>{playing ? <CirclePause size={17} /> : <PlayCircle size={17} />}{playing ? "Pause" : "Play"}</button><time>{formatTimecode(frame, renderPlan.fps)} / {formatTimecode(renderPlan.durationInFrames - 1, renderPlan.fps)}</time></div>
+      </header>
+      <div className="cut-track" aria-label="Shot boundaries">
+        {renderPlan.shots.map((shot) => <button
+          aria-label={`Jump to shot ${shot.number} ${shot.title}`}
+          aria-pressed={shot.id === selectedShotId}
+          className={`cut-segment treatment-${shot.treatment} ${shot.id === selectedShotId ? "is-active" : ""}`}
+          key={shot.id}
+          onClick={() => movePlayhead(shot.startFrame)}
+          style={{flexGrow: shot.durationInFrames}}
+          title={`${shot.number} · ${shot.title} · ${(shot.durationInFrames / renderPlan.fps).toFixed(1)}s`}
+        ><span>{shot.number}</span></button>)}
+      </div>
+      <input aria-label="Production playhead" max={renderPlan.durationInFrames - 1} min={0} onChange={(event) => movePlayhead(Number(event.target.value))} step={1} type="range" value={frame} />
+      <footer><span>Frame {frame + 1} / {renderPlan.durationInFrames}</span><strong>{selectedShot.number} · {selectedShot.title}</strong><span>{selectedShot.transition.replaceAll("-", " ")}</span></footer>
+    </section>
+  );
+}
+
 function createGenerationJob(session: ProductionSession, build: AnimaticBuild, productionBundleContentHash: string): GenerationJobDraft {
   const pack = getShowPack(session.showPackId);
   return generationJobDraftSchema.parse({
@@ -561,7 +630,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
           <div className="prepared-set-heading"><div><small>{candidateSet.outputRole.replaceAll("-", " ")}</small><h3>{candidateSet.entityName}</h3><span>{candidateSet.candidateSetId}</span></div><b>{assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? candidateSet.status.replaceAll("-", " ")}</b></div>
           {candidateSet.contactSheetDataUrl ? <img src={candidateSet.contactSheetDataUrl} alt={`${candidateSet.entityName} prepared candidate contact sheet`} /> : <div className="contact-sheet-empty"><CircleAlert size={20} />No reviewable contact sheet</div>}
           {candidateSet.rig ? <div className="rig-diagnostic"><span>Moving diagnostic / 4 seconds</span><video aria-label={`${candidateSet.entityName} moving rig diagnostic`} autoPlay controls loop muted playsInline src={candidateSet.rig.diagnosticVideoDataUrl} /></div> : null}
-          <div className="prepared-role-list">{candidateSet.preparedCandidates.map((candidate) => <span key={candidate.candidateId}><strong>{candidate.fileRole}</strong><small>{candidate.width}x{candidate.height} Â· {candidate.assetClass.replaceAll("-", " ")}</small></span>)}</div>
+          <div className="prepared-role-list">{candidateSet.preparedCandidates.map((candidate) => <span key={candidate.candidateId}><strong>{candidate.fileRole}</strong><small>{candidate.width}x{candidate.height} · {candidate.assetClass.replaceAll("-", " ")}</small></span>)}</div>
           {candidateSet.failures.map((failure) => <p className="prepared-failure" key={failure.candidateId}><CircleAlert size={14} /><span><strong>{failure.fileRole}</strong>{failure.message}</span></p>)}
           <footer><span>{candidateSet.rig ? `${candidateSet.rig.type.replaceAll("-", " ")} / ${candidateSet.rig.validationStatus}` : "Compare before rigging"}</span><div><button disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "")} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, "reject")}>Reject</button><button className="approve-set" disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "") || (assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" && !candidateSet.rig)} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "approve" : "select")}>{reviewingSetId === candidateSet.candidateSetId ? "Building proof..." : assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "Final approve" : "Select for rig"}</button></div></footer>
         </article>)}</div>
@@ -633,6 +702,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
         <header className="workspace-heading"><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : "Generated-asset exchange"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
+          <CutTimeline build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
           <div className="workspace-grid">
             <DirectionBoard build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
             <aside className="shot-inspector">
