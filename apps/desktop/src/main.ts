@@ -3,6 +3,7 @@ import {access, link, lstat, mkdir, readFile, readdir, realpath, rename, unlink,
 import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:path";
 import {pathToFileURL} from "node:url";
 import {productionDraftPayload} from "./production-draft-payload";
+import {assertApprovedPublicReviewLineage} from "./public-review-lineage";
 import {app, BrowserWindow, dialog, ipcMain, net, protocol, shell, utilityProcess, type OpenDialogOptions} from "electron";
 import {commitApprovalWorkflow} from "@storystage/asset-pipeline/approval-recovery";
 import {buildApprovedProductionRevisionDraft, buildSelectedCandidateRigArtifacts, persistAssetReviewRecordSnapshot, promotePreparedCandidateSet} from "@storystage/asset-pipeline/approved-asset-workflow";
@@ -199,6 +200,7 @@ async function resolvePublicShowPackReviewForBundle(bundle: ProductionBundle, ca
   const nextAsset = next ? publicCandidateAssetInBundle(next, candidate.candidateId) : null;
   if (exact) {
     if (exact.decision === "rejected" && (currentAsset || nextAsset)) throw new Error("The durable Rook decision contradicts an approved production lineage.");
+    if (exact.decision === "approved") await verifyApprovedPublicReviewLineageOnDisk(exact);
     return exact;
   }
 
@@ -208,7 +210,8 @@ async function resolvePublicShowPackReviewForBundle(bundle: ProductionBundle, ca
     if (!source || !verifyProductionBundleHash(source)) throw new Error("The approved Rook target lost its authoritative source revision.");
     const sourceReview = await readPublicShowPackReview(bundle.production.productionId, sourceRevision, candidate.candidateId);
     if (sourceReview) {
-      if (sourceReview.decision !== "approved" || sourceReview.targetProductionRevision !== bundle.production.revision || sourceReview.targetProductionBundleContentHash !== bundle.contentHash) throw new Error("The Rook source review contradicts its approved target revision.");
+      if (sourceReview.decision !== "approved" || sourceReview.targetProductionRevision !== bundle.production.revision) throw new Error("The Rook source review contradicts its approved target revision.");
+      await verifyApprovedPublicReviewLineageOnDisk(sourceReview);
       return sourceReview;
     }
     const recovered = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: bundle.production.productionId, sourceProductionRevision: sourceRevision, sourceProductionBundleContentHash: source.contentHash, decision: "approved", acknowledgements: completedPublicReviewAcknowledgements, decidedAt: currentAsset.approvedAt, approvedAssetVersion: currentAsset, targetProductionRevision: bundle.production.revision, targetProductionBundleContentHash: bundle.contentHash});
@@ -457,6 +460,30 @@ async function persistProductionBundle(bundle: ProductionBundle): Promise<string
   await rename(temporaryFile, currentFile);
   productionBundleRegistry.set(productionBundleKey(bundle.production.productionId, bundle.production.revision), {bundle, bundleFile});
   return bundleFile;
+}
+
+async function readProductionBundleSnapshot(productionId: string, revision: number, contentHash: string): Promise<ProductionBundle | null> {
+  if (!/^[a-f0-9]{64}$/.test(contentHash)) throw new Error("Production snapshot hash is invalid.");
+  const file = join(app.getPath("userData"), ".storystage-local", "productions", productionId, `r${revision}`, "snapshots", `${contentHash}.json`);
+  try {
+    const info = await lstat(file);
+    if (info.isSymbolicLink() || !info.isFile() || info.size > 10_000_000) throw new Error("The production snapshot is unsafe.");
+    const bundle = productionBundleSchema.parse(JSON.parse(await readFile(file, "utf8")));
+    if (!verifyProductionBundleHash(bundle) || bundle.contentHash !== contentHash || bundle.production.productionId !== productionId || bundle.production.revision !== revision) throw new Error("The production snapshot failed its immutable identity.");
+    return bundle;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+async function verifyApprovedPublicReviewLineageOnDisk(review: PublicShowPackReviewRecord): Promise<void> {
+  if (review.decision !== "approved" || !review.targetProductionRevision || !review.targetProductionBundleContentHash) throw new Error("The Rook review is not an approved lineage binding.");
+  const originalSource = await readProductionBundleSnapshot(review.productionId, review.sourceProductionRevision, review.sourceProductionBundleContentHash);
+  const originalTarget = await readProductionBundleSnapshot(review.productionId, review.targetProductionRevision, review.targetProductionBundleContentHash);
+  const currentTarget = productionBundleRegistry.get(productionBundleKey(review.productionId, review.targetProductionRevision))?.bundle ?? null;
+  if (!originalSource || !originalTarget || !currentTarget) throw new Error("The approved Rook lineage lost an immutable source or target snapshot.");
+  assertApprovedPublicReviewLineage({review, originalTarget, currentTarget});
 }
 
 function verifyAuthoritativeBriefData(draft: GenerationJobDraft, showPack: ShowPack): void {
@@ -1306,8 +1333,7 @@ ipcMain.handle(IPC_CHANNELS.listPublicShowPackCandidates, async (_event, rawRequ
     const review = await resolvePublicShowPackReviewForBundle(stored.bundle, candidate);
     if (review?.decision === "approved") {
       if (!review.approvedAssetVersion || !(await verifyApprovedAssetVersionOnDisk(review.approvedAssetVersion))) throw new Error("The approved Rook review lost its private immutable asset.");
-      const target = productionBundleRegistry.get(productionBundleKey(request.productionId, review.targetProductionRevision!));
-      if (!target || !verifyProductionBundleHash(target.bundle) || target.bundle.contentHash !== review.targetProductionBundleContentHash) throw new Error("The approved Rook review lost its exact target production revision.");
+      await verifyApprovedPublicReviewLineageOnDisk(review);
     }
     const sourceByRole = new Map(candidate.files.map((file) => [file.role, file]));
     const preparedByRole = new Map(candidate.preparedFiles.map((file) => [file.role, file]));

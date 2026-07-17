@@ -20,7 +20,7 @@ After auditing `442cc9f`, Pro recommended a fixed 25-40 second Frankly Weird His
 
 ## Automated evidence
 
-- `pnpm verify`: privacy verification, ESLint, all package typechecks, and 123 tests passed.
+- `pnpm verify`: privacy verification, ESLint, all package typechecks, and 124 tests passed.
 - `pnpm build`: render worker, asset worker, Electron main/preload, and Studio production bundle passed.
 - `pnpm render:rook-preview`: four representative watermarked frames rendered from the fixed pilot.
 - Promotion tests use the actual packaged Rook release, prove exact immutable replay, and reject tampered evidence.
@@ -37,6 +37,7 @@ Pro rejected the first `6c285e0` engineering-complete label while confirming tha
 - Studio no longer fabricates revision `N + 1` after approval. It loads main's returned target revision, verifies the exact target content hash, replaces the complete session, and resaves an identical draft. Production-draft extraction now retains audio mix, voice, music, SFX assets, and SFX cues so main deduplicates the exact snapshot.
 - Candidate listing is production/revision-scoped and returns the durable decision. Rejected and approved source revisions remain visibly final after reload and expose no incompatible review controls.
 - Pro's next pass accepted the first three corrections but found that the approved target revision remained host-reviewable and opposite requests were not serialized. Review operations are now queued by production, source revision, and candidate. Main resolves the durable decision across the source/target lineage, recovers an approved record if a crash left the target before the record, reports the approved target as terminal, and rejects a direct target-revision rejection. Concurrency tests prove both orderings: approval first cannot be contradicted; rejection first creates no orphan approved target.
+- Pro's following pass found that later timing/audio/mix work changes the current target-revision hash even though immutable snapshots are retained. Lineage verification now separately reopens the original source and exact hash-bound approval target snapshots, while allowing the current target pointer to advance only when it still retains the identical approved Rook asset version. A regression test changes the revision-2 mix and content hash, proves approval remains valid, and proves removing the exact Rook version fails the lineage check.
 
 ## Human gates that remain honestly open
 
