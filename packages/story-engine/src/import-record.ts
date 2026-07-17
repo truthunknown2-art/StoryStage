@@ -51,7 +51,34 @@ const importRecordFields = {
   assets: z.array(stagedImportAssetSchema).min(1),
   candidateSets: z.array(candidateSetValidationSchema).min(1),
   findings: z.array(importValidationFindingSchema),
+  missingRoleCount: z.number().int().nonnegative().optional(),
 };
+
+export const importValidationAssetSchema = z.object({
+  candidateId: identifierSchema,
+  mediaType: z.enum(["image/png", "image/jpeg", "image/webp"]),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  rights: rightsRecordSchema,
+  sourceContentHash: hashSchema,
+  stagedContentHash: hashSchema,
+}).strict();
+
+const importValidationReportFields = {
+  schemaVersion: z.literal("1.0"),
+  importId: identifierSchema,
+  exchangeJobId: identifierSchema,
+  generationJobContentHash: hashSchema,
+  manifestContentHash: hashSchema,
+  importRecordContentHash: hashSchema,
+  assets: z.array(importValidationAssetSchema).min(1),
+  candidateSets: z.array(candidateSetValidationSchema).min(1),
+  findings: z.array(importValidationFindingSchema),
+  missingRoleCount: z.number().int().nonnegative(),
+};
+
+export const importValidationReportDraftSchema = z.object(importValidationReportFields).strict();
+export const importValidationReportSchema = z.object({...importValidationReportFields, createdAt: z.string().datetime(), contentHash: hashSchema}).strict();
 
 const validateImportRecord = (record: z.infer<z.ZodObject<typeof importRecordFields>>, context: z.RefinementCtx) => {
   if (record.candidateBundle.exchangeJobId !== record.exchangeJobId || record.candidateBundle.generationJobContentHash !== record.generationJobContentHash) {
@@ -103,6 +130,7 @@ export const importRecordSchema = z.object({...importRecordFields,
 export type ImportRecordDraft = z.infer<typeof importRecordDraftSchema>;
 export type ImportRecord = z.infer<typeof importRecordSchema>;
 export type StagedImportAsset = z.infer<typeof stagedImportAssetSchema>;
+export type ImportValidationReport = z.infer<typeof importValidationReportSchema>;
 
 export function finalizeImportRecord(draftInput: ImportRecordDraft, createdAt: string): ImportRecord {
   const draft = importRecordDraftSchema.parse(draftInput);
@@ -113,4 +141,26 @@ export function finalizeImportRecord(draftInput: ImportRecordDraft, createdAt: s
 export function verifyImportRecordHash(record: ImportRecord): boolean {
   const unhashed = Object.fromEntries(Object.entries(record).filter(([key]) => key !== "contentHash"));
   return hashCanonical(unhashed) === record.contentHash;
+}
+
+export function createImportValidationReport(recordInput: ImportRecord, createdAt: string): ImportValidationReport {
+  const record = importRecordSchema.parse(recordInput);
+  if (!verifyImportRecordHash(record)) throw new Error("Import record hash is invalid.");
+  const draft = importValidationReportDraftSchema.parse({schemaVersion: "1.0", importId: record.importId, exchangeJobId: record.exchangeJobId, generationJobContentHash: record.generationJobContentHash, manifestContentHash: record.manifestContentHash, importRecordContentHash: record.contentHash, assets: record.assets.map((asset) => ({candidateId: asset.candidateId, mediaType: asset.mediaType, width: asset.width, height: asset.height, rights: asset.rights, sourceContentHash: asset.stagedCandidate.sourceContentHash, stagedContentHash: asset.stagedCandidate.stagedContentHash})), candidateSets: record.candidateSets, findings: record.findings, missingRoleCount: record.missingRoleCount ?? record.candidateSets.reduce((sum, set) => sum + set.missingRoles.length, 0)});
+  const unhashed = {...draft, createdAt};
+  return importValidationReportSchema.parse({...unhashed, contentHash: hashCanonical(unhashed)});
+}
+
+export function verifyImportValidationReportHash(report: ImportValidationReport): boolean {
+  const {contentHash, ...unhashed} = report;
+  return hashCanonical(unhashed) === contentHash;
+}
+
+export function verifyImportEvidence(recordInput: ImportRecord, reportInput: ImportValidationReport): boolean {
+  const record = importRecordSchema.parse(recordInput);
+  const report = importValidationReportSchema.parse(reportInput);
+  if (!verifyImportRecordHash(record) || !verifyImportValidationReportHash(report)) return false;
+  if (record.importId !== report.importId || record.exchangeJobId !== report.exchangeJobId || record.generationJobContentHash !== report.generationJobContentHash || record.manifestContentHash !== report.manifestContentHash || record.contentHash !== report.importRecordContentHash) return false;
+  const expectedAssets = record.assets.map((asset) => ({candidateId: asset.candidateId, mediaType: asset.mediaType, width: asset.width, height: asset.height, rights: asset.rights, sourceContentHash: asset.stagedCandidate.sourceContentHash, stagedContentHash: asset.stagedCandidate.stagedContentHash}));
+  return hashCanonical(expectedAssets) === hashCanonical(report.assets) && hashCanonical(record.candidateSets) === hashCanonical(report.candidateSets) && hashCanonical(record.findings) === hashCanonical(report.findings) && (record.missingRoleCount ?? report.missingRoleCount) === report.missingRoleCount;
 }

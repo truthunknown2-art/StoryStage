@@ -1,43 +1,55 @@
 # StoryStage
 
-StoryStage is a directable animation production studio. It converts a structured, inspectable episode plan into deterministic Remotion previews and local renders instead of asking a model to improvise an entire video in one opaque pass.
+StoryStage is a directable local animation-production studio. It turns a pasted script into an inspectable profile-driven plan, manages a human-approved manual ChatGPT Images exchange, prepares and versions local assets, and compiles approved production meaning into deterministic Remotion frames.
 
-SS-001 is the walking skeleton: a polished studio shell, a 12-second cutout-animation sample, a secure Electron boundary, and a real local MP4 render pipeline.
+SS-001 is the workstation regression skeleton. SS-002 is the active real asset-to-frame production path. The project is not yet a finished automatic episode factory; see `docs/PROJECT_STATE.md` for the blunt status.
 
 ## Requirements
 
 - Node.js 20.19 or newer
 - pnpm 11
+- Windows for the current Electron operator path
 
-## Run it
+## Run
 
 ```powershell
 pnpm install
 pnpm dev
 ```
 
-`pnpm dev` starts the Vite interface at <http://127.0.0.1:5173> and opens the same interface in Electron.
+`pnpm dev` builds the isolated workers, starts Vite at <http://127.0.0.1:5173>, and opens the Electron studio.
+
+Useful commands:
 
 ```powershell
 pnpm dev:web
+pnpm build
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm verify
 pnpm render:sample
 pnpm render:determinism
 pnpm render:audio
-pnpm verify
-pnpm build
+pnpm render:production-proof
 ```
 
-The sample is written to `artifacts/SS-001/sample.mp4`. The determinism command renders two passes, extracts exact frame indices 0, 180, and 330 from each, compares SHA-256 hashes, records the extraction commands, captures the toolchain environment, and verifies the sample's audio stream. `pnpm render:audio` can rerun the audio-stream and `volumedetect` proof independently.
+`pnpm render:production-proof` creates an ignored private engineering fixture under `artifacts/SS-002/`, renders its four-second selected-rig diagnostic, finalizes an immutable approved asset and new production bundle, renders a real 24-second 1080p H.264 MP4, extracts exact frame indices, probes video/audio streams, and writes `proof-report.json`.
+
+The generated proof art is deliberately primitive. It proves that approved pixels traverse the real path; it is not a visual target.
 
 ## Workspace
 
-- `apps/studio` — pure React/Vite interface and Remotion Player
-- `apps/desktop` — sandboxed Electron main/preload boundary and worker supervision
-- `apps/render-worker` — independently invokable Remotion renderer and evidence tooling
-- `packages/contracts` — Zod schemas, job states, and process protocols
-- `packages/fixtures` — schema-valid sample productions and episode plan
-- `packages/remotion-runtime` — deterministic composition and frame-driven animation
-- `docs` — product, UI, quality, state, architecture, and ADRs
-- `tickets` / `reports` — implementation instructions and permanent evidence
+- `apps/studio` - unprivileged React/Vite production UI
+- `apps/desktop` - sandboxed Electron main/preload, persistence, promotion, and worker supervision
+- `apps/render-worker` - evidence-verifying Remotion renderer and proof tooling
+- `apps/asset-worker` - isolated staging, reverification, and preparation worker
+- `packages/story-engine` - production domain, directing, evidence, manifests, approval, and exact plans
+- `packages/asset-pipeline` - byte staging and Sharp image preparation
+- `packages/contracts` - strict IPC and worker envelopes
+- `packages/fixtures` - isolated SS-001 regression data
+- `packages/remotion-runtime` - SS-001 regression plus SS-002 production compositions
+- `docs` - product truth, architecture, image bridge, quality, and decisions
+- `tickets` / `reports` - implementation scope and permanent evidence
 
-Read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) before changing a package or process boundary.
+Read `docs/ARCHITECTURE.md` before changing a package or process boundary.

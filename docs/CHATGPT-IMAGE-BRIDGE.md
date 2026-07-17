@@ -2,57 +2,60 @@
 
 ## Decision
 
-StoryStage's first image provider is `manual-chatgpt-images`. The user's existing ChatGPT subscription is used through an authenticated ChatGPT/Codex task, not through a hidden API call and not by automating browser credentials.
+StoryStage's first image provider is `manual-chatgpt-images`. The user's existing ChatGPT subscription is used through an authenticated ChatGPT/Codex task, not through a hidden API call and not by automating credentials.
 
-The standalone StoryStage app does **not** sign in to ChatGPT, store cookies, reuse an auth cache, or claim unattended image generation. OpenAI API support may be added later as a separate opt-in adapter with separate billing and explicit credential setup.
+The standalone app does not sign in to ChatGPT, store cookies, reuse auth caches, or pretend a subscription is an API credential. A future OpenAI API adapter would be separate, opt-in, explicitly billed, and separately configured.
 
 ## Local exchange
 
 ```text
-StoryStage production
-  -> .storystage-local/jobs/outbox/<production-id>/r<revision>/<job-id>/generation-job.json
-  -> ChatGPT/Codex image-generation task
-  -> native folder import of candidate-bundle.json + candidates/, or loose image files
-  -> byte-verified private staging
-  -> .storystage-local/jobs/inbox/<production-id>/r<revision>/<import-id>/
-     candidate-bundle.json + import-record.json + validation-report.json + candidates/
-  -> deterministic preparation and registration
-  -> human review and identity lock
-  -> immutable approved asset + provenance record
+saved ProductionBundle content hash
+  -> exact generation-job.json under the private outbox
+  -> manual ChatGPT image generation
+  -> candidate-bundle.json + candidates, or loose downloaded files
+  -> isolated byte staging
+  -> evidence/{candidate-bundle, import-record, validation-report}.json
+  -> prepared canonical PNGs + contact sheets
+  -> coherent-set selection
+  -> manifest + validation + moving diagnostic MP4
+  -> final user approval
+  -> immutable local asset version + provenance
+  -> new saved production revision
+  -> real Remotion render
 ```
 
-The current desktop UI shows an exact disclosure review before export, assigns a main-owned opaque exchange ID, writes an immutable hash-verified job plus durable lifecycle state under Electron `userData`, and opens its folder. The production bundle itself is also content-addressed and saved locally, so the home screen can reopen a production and its asset screen can list/resume prior exchanges. On restart, Electron rehydrates only productions and jobs whose canonical hash, folder identity, production revision, deterministic render derivation, and authoritative Show Pack still verify. Import uses a native folder picker; the renderer never submits a path. Electron main rejects stale identities, then a timed utility process with a capped heap invokes the trusted `packages/asset-pipeline` boundary to validate each candidate's byte hash, actual codec, dimensions/pixel limits, alpha state, size, safe source path, and main-owned staging destination. UNC locations, source symlinks, and staging symlink/junction ancestors are rejected. Candidate bundles must match the exact exchange-job hash, production revision, brief roles, and Show Pack hash.
+Electron main assigns the exchange ID, verifies the acknowledged production snapshot, requires exact canonical equality with its generation briefs, finalizes the immutable job, and opens the private job folder. No ChatGPT credential, cookie, token, local browser state, or arbitrary renderer path enters the job.
 
-Two honest return paths are supported: a strict `candidate-bundle.json` folder produced by this Codex/ChatGPT workflow, or loose downloaded PNG/JPEG/WebP files. Every returned file belongs to a named candidate set, so a character identity sheet, rig parts, face pack, and pose pack can be judged as one coherent kit rather than unrelated winners. Loose files are staged first, then the user maps each opaque candidate to a candidate-set/brief/file role (or leaves it unused); StoryStage writes the matching local candidate manifest itself. Both paths persist the exact manifest, hash-bound import record, and validation report. Staged bytes are reopened and re-hashed in the isolated asset worker before the next trust transition. Neither path approves an asset for render.
+Two return paths are supported:
 
-## Repository boundary
+- a strict provider-neutral `candidate-bundle.json` directory;
+- loose PNG/JPEG/WebP downloads mapped by the user to candidate set, brief, and role.
 
-The public repository may contain:
+Both paths copy bytes into a main-owned private root through the isolated asset worker. The worker sniffs real codecs, checks dimensions/pixel and byte limits, rejects unsafe paths/symlinks/UNC sources, computes SHA-256 hashes, and records alpha state. Import evidence is cross-file checked and committed atomically.
 
-- provider-neutral schemas and validators;
-- prompt and generation-brief templates;
-- sanitized fixtures with fake identifiers;
-- content hashes and non-secret provenance metadata;
-- original lab assets intentionally approved for publication.
+Preparation reopens every staged file, verifies bytes and declared metadata again, decodes through Sharp, normalizes orientation, strips metadata, trims/pads to a role-specific canvas, calculates registration, enforces transparency rules, writes actual PNG derivatives, and creates contact sheets. Opaque moving cutouts stop for manual masking; they are never relabeled as alpha-ready.
 
-The public repository must never contain:
+The user compares coherent candidate sets before rigging. Selecting a set builds only that set's manifest, technical report, and four-second moving diagnostic. Final approval remains disabled until the diagnostic exists. Approval copies the exact reviewed PNGs, manifest, validation, diagnostic MP4, diagnostic report, and provenance to an immutable local asset version.
 
-- ChatGPT or OpenAI passwords, cookies, bearer tokens, API keys, or auth caches;
-- `.env` files or credential exports;
-- raw private candidate bundles;
-- unpublished identity sheets or user-owned source material;
-- local job state or application session data.
+## Private repository boundary
 
-These local paths and common credential formats are blocked by `.gitignore`. Before every push, the staged diff is checked for secret-shaped values and accidentally tracked local artifacts.
+The repository may contain provider-neutral schemas, validators, sanitized fixtures, fake identifiers, hashes, non-secret provenance, and intentionally public original lab assets.
+
+It must never contain ChatGPT/OpenAI passwords, cookies, bearer tokens, API keys, auth caches, `.env` credentials, raw private candidates, unpublished identity sheets, user-owned source media, private jobs, or Electron session state. Privacy verification runs before pushes.
+
+`artifacts/SS-002/private/` is a deterministic engineering fixture generated locally by the proof command. It contains no user account data and is ignored by Git.
 
 ## Operator workflow
 
-1. Paste a script and choose the project type, Show Pack, directing profile, and production policy.
-2. Review the entity ledger and generation briefs.
-3. Review the exact prompts, excerpts, reference hashes, and file roles that will be shared, then approve an immutable local job pack.
-4. Ask the authenticated StoryStage Codex task to process the next pack with ChatGPT Images.
-5. Import the returned candidate bundle, or select loose downloaded images and map them to candidate-set roles. An interrupted mapping or staged import can be resumed after restart.
-6. Review staged candidates, perform preparation and registration, then approve identity, mask, pivots, layers, and usage rights.
-7. Render only from immutable approved local assets.
+1. Paste a script; choose Kids Adventure or Frankly Weird History, a Show Pack, and production policy.
+2. Review the parsed scenes, entities, direction plan, and missing asset ledger.
+3. Wait for the current production revision to save and display its acknowledged hash.
+4. Review exactly what will be disclosed, then export the exact bundle-bound generation job.
+5. Generate original candidates in the authenticated ChatGPT task.
+6. Import a structured result folder or loose downloaded files and map their roles.
+7. Prepare candidates and compare contact sheets.
+8. Select one coherent set; wait for its moving diagnostic; watch it.
+9. Final-approve or reject the set.
+10. Let StoryStage create the new revision and render only from its immutable approved assets.
 
-This is deliberately a short human-approved round trip. A future supported subscription-backed integration can replace the operator step without changing the provider-neutral job contract.
+This is deliberately a short, human-approved subscription workflow. It does not make image creation unattended, but it also does not compromise the user's account.

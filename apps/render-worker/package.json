@@ -13,7 +13,8 @@
     "render:determinism": "tsx src/cli.ts determinism",
     "render:audio": "tsx src/cli.ts audio",
     "test": "vitest run src/worker-protocol.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "render:production-proof": "tsx src/production-proof.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.490",
@@ -21,6 +22,7 @@
     "@storystage/contracts": "workspace:*",
     "@storystage/fixtures": "workspace:*",
     "@storystage/remotion-runtime": "workspace:*",
+    "@storystage/story-engine": "workspace:*",
     "ffmpeg-static": "5.3.0",
     "ffprobe-static": "3.1.0"
   },

@@ -97,7 +97,7 @@ function makeGenerationBrief(showPack: ShowPack, creativePlan: CreativeEpisodePl
       creativeRequirements: [`Create an original ${output.replaceAll("-", " ")} for ${entity?.name ?? requirement.role}.`, ...showPack.profile.qualityRules],
     continuityRequirements: [`Match style bible ${showPack.styleBible.id} at ${showPack.styleBible.contentHash}.`, "Preserve approved identity and proportions across every returned file."],
     prohibitedChanges: ["Do not copy supplied reference-channel characters or branded art.", "Do not add text, signatures, watermarks, or unrequested props."],
-    expectedFiles: output === "character-canonical-sheet" ? ["identity-sheet.png", "expression-set.png", "pose-set.png", "separated-parts.png"] : output === "background-master" ? ["clean-plate.png", "foreground-occluders.png"] : ["candidate.png"],
+    expectedFiles: output === "character-canonical-sheet" ? ["identity-sheet.png", "neutral-pose.png", "talk-pose.png", "reaction-pose.png"] : output === "background-master" ? ["clean-plate.png", "midground.png", "foreground-occluders.png"] : ["candidate.png"],
     consumingSceneIds: requirement.consumingSceneIds,
     consumingShotIds: requirement.consumingShotIds,
     approvalRequired: true,

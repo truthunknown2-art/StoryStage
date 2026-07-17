@@ -1,8 +1,9 @@
-import {randomUUID} from "node:crypto";
-import {access, lstat, mkdir, readFile, readdir, realpath, rename, writeFile} from "node:fs/promises";
-import {basename, isAbsolute, join, relative, resolve, sep} from "node:path";
+import {createHash, randomUUID} from "node:crypto";
+import {access, lstat, mkdir, readFile, readdir, realpath, rename, unlink, writeFile} from "node:fs/promises";
+import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:path";
 import {pathToFileURL} from "node:url";
 import {app, BrowserWindow, dialog, ipcMain, shell, utilityProcess, type OpenDialogOptions} from "electron";
+import {commitImportEvidenceDirectory} from "./import-evidence-store";
 import {
   IPC_CHANNELS,
   assetWorkerCommandSchema,
@@ -23,6 +24,11 @@ import {
   loadProductionBundleRequestSchema,
   loadProductionBundleResultSchema,
   openRenderedFileResultSchema,
+  prepareGenerationImportRequestSchema,
+  prepareGenerationImportResultSchema,
+  preparationReviewSchema,
+  reviewCandidateSetRequestSchema,
+  reviewCandidateSetResultSchema,
   productionBundleSummarySchema,
   stagedCandidateSummarySchema,
   renderJobEventSchema,
@@ -32,17 +38,24 @@ import {
   saveProductionBundleResultSchema,
   startRenderRequestSchema,
   startRenderResponseSchema,
+  startProductionRenderRequestSchema,
   stageCandidateBundleRequestSchema,
   stageCandidateBundleResultSchema,
   workerLooseStagedCandidateSchema,
   type RenderJobEvent,
   type WorkerLooseStagedCandidate,
   type ProductionBundleSummary,
+  type PreparationReview,
 } from "@storystage/contracts";
 import {
+  assetRigManifestSchema,
+  assetReviewRecordSchema,
   canTransitionGenerationExchange,
   candidateBundleSchema,
   finalizeImportRecord,
+  createImportValidationReport,
+  finalizeAssetReviewRecord,
+  finalizeProductionBundle,
   finalizeGenerationJob,
   generationExchangeStateSchema,
   generationJobSchema,
@@ -50,18 +63,40 @@ import {
   getShowPack,
   hashCanonical,
   importRecordSchema,
+  importValidationReportSchema,
+  preparationReportSchema,
+  prepareCandidateSetsRequestSchema,
+  rigValidationReportSchema,
+  rigDiagnosticReportSchema,
   stagedCandidateSchema,
   productionBundleSchema,
+  productionBundleDraftSchema,
   verifyProductionBundleHash,
   verifyImportRecordHash,
+  verifyImportEvidence,
   verifyGenerationJobHash,
   verifyShowPackHash,
+  verifyPreparationReportHash,
+  verifyAssetRigManifestHash,
+  verifyAssetReviewRecordHash,
+  verifyRigValidationReportHash,
+  verifyRigDiagnosticReportHash,
   validateCandidateSets,
+  createAssetRigManifest,
+  validateAssetRigManifest,
+  finalizeRigDiagnosticReport,
   type CandidateBundle,
+  type ApprovedAssetVersion,
+  type AssetReviewRecord,
+  type AssetRigManifest,
+  type AssetRigManifestDraft,
+  type RigDiagnosticReport,
+  type RigValidationReport,
   type GenerationExchangeState,
   type GenerationJob,
   type GenerationJobDraft,
   type ImportRecord,
+  type PreparationReport,
   type ProductionBundle,
   type ShowPack,
   type StagedCandidate,
@@ -70,6 +105,7 @@ import {
 type JobRecord = {
   event: RenderJobEvent;
   phaseProgress: Partial<Record<"bundling" | "rendering", number>>;
+  allowedOutputRoot: string;
 };
 
 let mainWindow: BrowserWindow | null = null;
@@ -78,6 +114,7 @@ const jobRegistry = new Map<string, JobRecord>();
 type GenerationExchangeRecord = {job: GenerationJob; jobFile: string; stateFile: string; state: GenerationExchangeState};
 const generationExchangeRegistry = new Map<string, GenerationExchangeRecord>();
 const productionBundleRegistry = new Map<string, {bundle: ProductionBundle; bundleFile: string}>();
+const productionSaveQueues = new Map<string, Promise<ProductionBundle>>();
 const looseImportRegistry = new Map<string, {
   exchange: GenerationExchangeRecord;
   trustedStagingRoot: string;
@@ -154,6 +191,8 @@ async function rehydrateGenerationExchangeRegistry(): Promise<void> {
           if (productionDirectory.name !== job.production.id || revisionDirectory.name !== `r${job.production.revision}` || jobDirectory.name !== job.exchangeJobId) continue;
           const authoritativeShowPack = getShowPack(job.showPack.id);
           if (!verifyShowPackHash(authoritativeShowPack) || authoritativeShowPack.version !== job.showPack.version || authoritativeShowPack.contentHash !== job.showPack.contentHash) continue;
+          const storedProduction = productionBundleRegistry.get(productionBundleKey(job.production.id, job.production.revision));
+          if (!storedProduction || !verifyGenerationDraftAgainstProduction(job, storedProduction.bundle)) continue;
 
           const stateFile = join(jobDirectory.path, "exchange-state.json");
           let state = makeExchangeState(job, "awaiting-results", null);
@@ -171,6 +210,7 @@ async function rehydrateGenerationExchangeRegistry(): Promise<void> {
             if ((error as NodeJS.ErrnoException).code !== "ENOENT") continue;
           }
           const record: GenerationExchangeRecord = {job, jobFile, stateFile, state};
+          if (!await validateRehydratedExchangeArtifacts(record)) continue;
           generationExchangeRegistry.set(job.exchangeJobId, record);
           if (!stateWasRecovered) await persistExchangeState(record, state);
         } catch {
@@ -178,6 +218,9 @@ async function rehydrateGenerationExchangeRegistry(): Promise<void> {
         }
       }
     }
+  }
+  for (const [jobId, record] of generationExchangeRegistry) {
+    if (record.state.status === "superseded" && (!record.state.supersededBy || !generationExchangeRegistry.has(record.state.supersededBy))) generationExchangeRegistry.delete(jobId);
   }
 }
 
@@ -251,6 +294,18 @@ function verifyAuthoritativeBriefData(draft: GenerationJobDraft, showPack: ShowP
   }
 }
 
+function verifyGenerationDraftAgainstProduction(draft: GenerationJobDraft, bundle: ProductionBundle): boolean {
+  return verifyProductionBundleHash(bundle)
+    && draft.productionBundleContentHash === bundle.contentHash
+    && draft.production.id === bundle.production.productionId
+    && draft.production.revision === bundle.production.revision
+    && draft.production.title === bundle.production.title
+    && draft.showPack.id === bundle.resolvedPlan.showPack.id
+    && draft.showPack.version === bundle.resolvedPlan.showPack.version
+    && draft.showPack.contentHash === bundle.resolvedPlan.showPack.contentHash
+    && hashCanonical(draft.briefs) === hashCanonical(bundle.resolvedPlan.generationBriefs);
+}
+
 function createImportRecord(options: {exchange: GenerationExchangeRecord; importId: string; sourceMode: "structured-bundle" | "loose-files"; bundle: CandidateBundle; staged: StagedCandidate[]; originalNameById: Map<string, string>}): {record: ImportRecord; missingRoleCount: number} {
   const {candidateSets, findings, missingRoleCount} = validateCandidateSets(options.exchange.job, options.bundle);
   const briefById = new Map(options.exchange.job.briefs.map((brief) => [brief.id, brief]));
@@ -264,15 +319,21 @@ function createImportRecord(options: {exchange: GenerationExchangeRecord; import
     return {candidateId: stagedCandidate.candidateId, candidateSetId: asset.candidateSetId, briefId: asset.briefId, requirementId: brief.requirementId, fileRole: asset.fileRole, originalName: options.originalNameById.get(stagedCandidate.candidateId) ?? basename(asset.relativeFile), mediaType: asset.mediaType, width: asset.width, height: asset.height, rights: asset.rights, stagedCandidate};
   });
   findings.unshift({severity: "info", code: "BYTE_STAGING_COMPLETE", candidateId: null, message: `${assets.length} candidates were byte-verified; ${missingRoleCount} expected roles remain missing.`});
-  return {record: finalizeImportRecord({schemaVersion: "1.0", importId: options.importId, sourceMode: options.sourceMode, exchangeJobId: options.exchange.job.exchangeJobId, generationJobContentHash: options.exchange.job.contentHash, production: {id: options.exchange.job.production.id, revision: options.exchange.job.production.revision}, manifestContentHash: hashCanonical(options.bundle), candidateBundle: options.bundle, assets, candidateSets, findings}, new Date().toISOString()), missingRoleCount};
+  return {record: finalizeImportRecord({schemaVersion: "1.0", importId: options.importId, sourceMode: options.sourceMode, exchangeJobId: options.exchange.job.exchangeJobId, generationJobContentHash: options.exchange.job.contentHash, production: {id: options.exchange.job.production.id, revision: options.exchange.job.production.revision}, manifestContentHash: hashCanonical(options.bundle), candidateBundle: options.bundle, assets, candidateSets, findings, missingRoleCount}, new Date().toISOString()), missingRoleCount};
 }
 
 async function persistImportRecord(stagingRoot: string, record: ImportRecord): Promise<void> {
-  const reportBase = {schemaVersion: "1.0", importId: record.importId, importRecordContentHash: record.contentHash, candidateSets: record.candidateSets, findings: record.findings};
-  const validationReport = {...reportBase, contentHash: hashCanonical(reportBase)};
-  await writeFile(join(stagingRoot, "candidate-bundle.json"), `${JSON.stringify(record.candidateBundle, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
-  await writeFile(join(stagingRoot, "import-record.json"), `${JSON.stringify(record, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
-  await writeFile(join(stagingRoot, "validation-report.json"), `${JSON.stringify(validationReport, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
+  const validationReport = createImportValidationReport(record, new Date().toISOString());
+  await commitImportEvidenceDirectory({
+    stagingRoot,
+    expectedContentHash: record.contentHash,
+    files: {
+      candidateBundle: `${JSON.stringify(record.candidateBundle, null, 2)}\n`,
+      importRecord: `${JSON.stringify(record, null, 2)}\n`,
+      validationReport: `${JSON.stringify(validationReport, null, 2)}\n`,
+    },
+    readCommittedContentHash: async (evidenceRoot) => (await readImportEvidenceAt(evidenceRoot)).record.contentHash,
+  });
 }
 
 function expectedRolesForJob(job: GenerationJob) {
@@ -289,40 +350,364 @@ async function persistLooseImportSession(importId: string, exchange: GenerationE
   await writeFile(join(stagingRoot, "loose-import-session.json"), `${JSON.stringify(session, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
 }
 
+async function readVerifiedLooseImportSession(exchange: GenerationExchangeRecord): Promise<{exchange: GenerationExchangeRecord; trustedStagingRoot: string; stagingRoot: string; candidates: WorkerLooseStagedCandidate[]} | null> {
+  if (exchange.state.status !== "files-imported" || !exchange.state.importId) return null;
+  try {
+    const trustedStagingRoot = join(app.getPath("userData"), ".storystage-local");
+    const stagingRoot = join(trustedStagingRoot, "jobs", "inbox", exchange.job.production.id, `r${exchange.job.production.revision}`, exchange.state.importId);
+    const sessionFile = join(stagingRoot, "loose-import-session.json");
+    const sessionInfo = await lstat(sessionFile);
+    if (sessionInfo.isSymbolicLink() || !sessionInfo.isFile() || sessionInfo.size > 2_000_000) return null;
+    const raw = JSON.parse(await readFile(sessionFile, "utf8")) as Record<string, unknown>;
+    const {contentHash, ...sessionBase} = raw;
+    if (typeof contentHash !== "string" || hashCanonical(sessionBase) !== contentHash) return null;
+    if (raw.importId !== exchange.state.importId || raw.exchangeJobId !== exchange.job.exchangeJobId || raw.generationJobContentHash !== exchange.job.contentHash) return null;
+    const candidates = workerLooseStagedCandidateSchema.array().parse(raw.candidates);
+    await verifyStagedCandidatesInWorker(candidates.map((entry) => entry.candidate), trustedStagingRoot, stagingRoot);
+    return {exchange, trustedStagingRoot, stagingRoot, candidates};
+  } catch {
+    return null;
+  }
+}
+
 async function rehydrateLooseImportRegistry(): Promise<void> {
   looseImportRegistry.clear();
-  const trustedStagingRoot = join(app.getPath("userData"), ".storystage-local");
   for (const exchange of generationExchangeRegistry.values()) {
-    if (exchange.state.status !== "files-imported" || !exchange.state.importId) continue;
-    try {
-      const stagingRoot = join(trustedStagingRoot, "jobs", "inbox", exchange.job.production.id, `r${exchange.job.production.revision}`, exchange.state.importId);
-      const sessionFile = join(stagingRoot, "loose-import-session.json");
-      const sessionInfo = await lstat(sessionFile);
-      if (sessionInfo.isSymbolicLink() || !sessionInfo.isFile() || sessionInfo.size > 2_000_000) continue;
-      const raw = JSON.parse(await readFile(sessionFile, "utf8")) as Record<string, unknown>;
-      const {contentHash, ...sessionBase} = raw;
-      if (typeof contentHash !== "string" || hashCanonical(sessionBase) !== contentHash) continue;
-      if (raw.importId !== exchange.state.importId || raw.exchangeJobId !== exchange.job.exchangeJobId || raw.generationJobContentHash !== exchange.job.contentHash) continue;
-      const candidates = workerLooseStagedCandidateSchema.array().parse(raw.candidates);
-      looseImportRegistry.set(exchange.state.importId, {exchange, trustedStagingRoot, stagingRoot, candidates});
-    } catch {
-      // A corrupt loose session remains quarantined and cannot be resumed.
-    }
+    const recovered = await readVerifiedLooseImportSession(exchange);
+    if (recovered && exchange.state.importId) looseImportRegistry.set(exchange.state.importId, recovered);
   }
+}
+
+async function readImportEvidenceAt(evidenceRoot: string): Promise<{record: ImportRecord; missingRoleCount: number}> {
+  const [bundleRaw, recordRaw, reportRaw] = await Promise.all([
+    readBoundJsonFile(join(evidenceRoot, "candidate-bundle.json"), 2_000_000),
+    readBoundJsonFile(join(evidenceRoot, "import-record.json"), 10_000_000),
+    readBoundJsonFile(join(evidenceRoot, "validation-report.json"), 10_000_000),
+  ]);
+  const bundle = candidateBundleSchema.parse(bundleRaw);
+  const record = importRecordSchema.parse(recordRaw);
+  const validationReport = importValidationReportSchema.parse(reportRaw);
+  if (hashCanonical(bundle) !== record.manifestContentHash || hashCanonical(bundle) !== hashCanonical(record.candidateBundle) || !verifyImportEvidence(record, validationReport)) throw new Error("The import evidence transaction failed cross-file integrity checks.");
+  return {record, missingRoleCount: validationReport.missingRoleCount};
 }
 
 async function readImportRecord(exchange: GenerationExchangeRecord): Promise<ImportRecord | null> {
   if (!exchange.state.importId) return null;
-  const recordFile = join(app.getPath("userData"), ".storystage-local", "jobs", "inbox", exchange.job.production.id, `r${exchange.job.production.revision}`, exchange.state.importId, "import-record.json");
   try {
-    const info = await lstat(recordFile);
-    if (info.isSymbolicLink() || !info.isFile() || info.size > 10_000_000) return null;
-    const record = importRecordSchema.parse(JSON.parse(await readFile(recordFile, "utf8")));
+    const stagingRoot = importStagingRoot(exchange);
+    let record: ImportRecord;
+    try {
+      record = (await readImportEvidenceAt(join(stagingRoot, "evidence"))).record;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      record = (await readImportEvidenceAt(stagingRoot)).record;
+    }
     if (!verifyImportRecordHash(record) || record.exchangeJobId !== exchange.job.exchangeJobId || record.generationJobContentHash !== exchange.job.contentHash || record.importId !== exchange.state.importId) return null;
     return record;
   } catch {
     return null;
   }
+}
+
+function importStagingRoot(exchange: GenerationExchangeRecord): string {
+  if (!exchange.state.importId) throw new Error("The exchange has no durable import identity.");
+  return join(app.getPath("userData"), ".storystage-local", "jobs", "inbox", exchange.job.production.id, `r${exchange.job.production.revision}`, exchange.state.importId);
+}
+
+async function readBoundJsonFile(file: string, maxBytes: number): Promise<unknown> {
+  const info = await lstat(file);
+  if (info.isSymbolicLink() || !info.isFile() || info.size > maxBytes) throw new Error(`Private evidence file is unavailable or unsafe: ${basename(file)}`);
+  return JSON.parse(await readFile(file, "utf8"));
+}
+
+async function readVerifiedPrivateBytes(root: string, relativeFile: string, expectedHash: string, maxBytes: number): Promise<Buffer> {
+  const pathParts = relativeFile.split("/");
+  const absoluteFile = resolve(root, ...pathParts);
+  if (!isWithinPath(root, absoluteFile)) throw new Error("Private evidence path escaped its trusted import root.");
+  let currentPath = root;
+  for (const pathPart of pathParts) {
+    currentPath = join(currentPath, pathPart);
+    const info = await lstat(currentPath);
+    if (info.isSymbolicLink()) throw new Error("Private evidence path contains a symbolic link.");
+  }
+  const info = await lstat(absoluteFile);
+  if (!info.isFile() || info.size > maxBytes) throw new Error("Private evidence file exceeds its safe review envelope.");
+  const bytes = await readFile(absoluteFile);
+  if (createHash("sha256").update(bytes).digest("hex") !== expectedHash) throw new Error("Prepared image bytes changed after review evidence was created.");
+  return bytes;
+}
+
+async function readRigDiagnosticEvidence(root: string, candidateSetId: string, manifest: AssetRigManifest, validation: RigValidationReport): Promise<{report: RigDiagnosticReport; videoBytes: Buffer}> {
+  const reportRelativeFile = `prepared/rig-diagnostic-${candidateSetId}.json`;
+  const expectedVideoRelativeFile = `prepared/rig-diagnostic-${candidateSetId}.mp4`;
+  const report = rigDiagnosticReportSchema.parse(await readBoundJsonFile(join(root, ...reportRelativeFile.split("/")), 2_000_000));
+  if (!verifyRigDiagnosticReportHash(report)
+    || report.candidateSetId !== candidateSetId
+    || report.manifestContentHash !== manifest.contentHash
+    || report.validationReportContentHash !== validation.contentHash
+    || report.videoRelativeFile !== expectedVideoRelativeFile) throw new Error("Rig diagnostic evidence failed its immutable bindings.");
+  const videoBytes = await readVerifiedPrivateBytes(root, report.videoRelativeFile, report.videoContentHash, 18 * 1024 * 1024);
+  return {report, videoBytes};
+}
+
+async function preparationReviewFromReport(exchange: GenerationExchangeRecord, report: PreparationReport): Promise<PreparationReview> {
+  if (!exchange.state.importId || report.importId !== exchange.state.importId || report.exchangeJobId !== exchange.job.exchangeJobId || !verifyPreparationReportHash(report)) {
+    throw new Error("Preparation evidence is stale or failed its integrity checks.");
+  }
+  const stagingRoot = importStagingRoot(exchange);
+  const briefById = new Map(exchange.job.briefs.map((brief) => [brief.id, brief]));
+  const candidateSets = await Promise.all(report.candidateSets.map(async (candidateSet) => {
+    const brief = briefById.get(candidateSet.briefId);
+    if (!brief || brief.requirementId !== candidateSet.requirementId || brief.outputRole !== candidateSet.outputRole) throw new Error("Preparation evidence does not match its authoritative generation brief.");
+    let contactSheetDataUrl: string | null = null;
+    if (candidateSet.contactSheet) {
+      const contactBytes = await readVerifiedPrivateBytes(stagingRoot, candidateSet.contactSheet.relativeFile, candidateSet.contactSheet.contentHash, 3_000_000);
+      contactSheetDataUrl = `data:image/png;base64,${contactBytes.toString("base64")}`;
+    }
+    const preparedCandidates = await Promise.all(candidateSet.preparedCandidates.map(async (candidate) => {
+      await readVerifiedPrivateBytes(stagingRoot, candidate.relativeFile, candidate.preparedContentHash, 50 * 1024 * 1024);
+      return {candidateId: candidate.candidateId, fileRole: candidate.fileRole, assetClass: candidate.assetClass, width: candidate.width, height: candidate.height};
+    }));
+    let rig: {type: "character-rig" | "background-layers" | "prop"; validationStatus: "passed" | "failed"; diagnosticVideoDataUrl: string} | null = null;
+    if (candidateSet.status === "ready-for-review") {
+      try {
+        const manifest = assetRigManifestSchema.parse(await readBoundJsonFile(join(stagingRoot, "prepared", `rig-manifest-${candidateSet.candidateSetId}.json`), 2_000_000));
+        const validation = rigValidationReportSchema.parse(await readBoundJsonFile(join(stagingRoot, "prepared", `rig-validation-${candidateSet.candidateSetId}.json`), 2_000_000));
+        if (!verifyAssetRigManifestHash(manifest) || !verifyRigValidationReportHash(validation) || manifest.candidateSetId !== candidateSet.candidateSetId || validation.manifestContentHash !== manifest.contentHash) throw new Error("Rig evidence failed its integrity checks.");
+        const diagnostic = await readRigDiagnosticEvidence(stagingRoot, candidateSet.candidateSetId, manifest, validation);
+        rig = {type: manifest.type, validationStatus: validation.status, diagnosticVideoDataUrl: `data:video/mp4;base64,${diagnostic.videoBytes.toString("base64")}`};
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      }
+    }
+    return {
+      candidateSetId: candidateSet.candidateSetId,
+      briefId: candidateSet.briefId,
+      requirementId: candidateSet.requirementId,
+      entityName: brief.entity.name,
+      outputRole: candidateSet.outputRole,
+      status: candidateSet.status,
+      preparedCandidates,
+      failures: candidateSet.failures.map((failure) => ({candidateId: failure.candidateId, fileRole: failure.fileRole, status: failure.status, code: failure.code, message: failure.message})),
+      contactSheetDataUrl,
+      rig,
+    };
+  }));
+  return preparationReviewSchema.parse({importId: report.importId, preparedAt: report.preparedAt, candidateSets});
+}
+
+async function readPreparationReview(exchange: GenerationExchangeRecord): Promise<PreparationReview | null> {
+  if (!exchange.state.importId) return null;
+  try {
+    const report = preparationReportSchema.parse(await readBoundJsonFile(join(importStagingRoot(exchange), "preparation-report.json"), 8_000_000));
+    return await preparationReviewFromReport(exchange, report);
+  } catch {
+    return null;
+  }
+}
+
+async function readPreparationReport(exchange: GenerationExchangeRecord): Promise<PreparationReport | null> {
+  if (!exchange.state.importId) return null;
+  try {
+    const report = preparationReportSchema.parse(await readBoundJsonFile(join(importStagingRoot(exchange), "preparation-report.json"), 8_000_000));
+    if (!verifyPreparationReportHash(report) || report.importId !== exchange.state.importId || report.exchangeJobId !== exchange.job.exchangeJobId) return null;
+    return report;
+  } catch {
+    return null;
+  }
+}
+
+async function readAssetReviewRecord(exchange: GenerationExchangeRecord, preparationContentHash: string): Promise<AssetReviewRecord | null> {
+  if (!exchange.state.importId) return null;
+  try {
+    const reviewsRoot = join(importStagingRoot(exchange), "reviews");
+    const pointer = await readBoundJsonFile(join(reviewsRoot, "current.json"), 100_000) as {contentHash?: unknown};
+    if (typeof pointer.contentHash !== "string" || !/^[a-f0-9]{64}$/.test(pointer.contentHash)) return null;
+    const record = assetReviewRecordSchema.parse(await readBoundJsonFile(join(reviewsRoot, `${pointer.contentHash}.json`), 4_000_000));
+    if (!verifyAssetReviewRecordHash(record) || record.contentHash !== pointer.contentHash || record.exchangeJobId !== exchange.job.exchangeJobId || record.importId !== exchange.state.importId || record.preparationReportContentHash !== preparationContentHash) return null;
+    return record;
+  } catch {
+    return null;
+  }
+}
+
+async function persistAssetReviewRecord(exchange: GenerationExchangeRecord, record: AssetReviewRecord): Promise<void> {
+  const reviewsRoot = join(importStagingRoot(exchange), "reviews");
+  await mkdir(reviewsRoot, {recursive: true});
+  const snapshotFile = join(reviewsRoot, `${record.contentHash}.json`);
+  try {
+    await writeFile(snapshotFile, `${JSON.stringify(record, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+  }
+  const currentFile = join(reviewsRoot, "current.json");
+  const temporaryFile = `${currentFile}.${randomUUID()}.tmp`;
+  await writeFile(temporaryFile, `${JSON.stringify({schemaVersion: "1.0", contentHash: record.contentHash, updatedAt: record.updatedAt}, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
+  await rename(temporaryFile, currentFile);
+}
+
+function rebaseRigManifest(manifest: AssetRigManifest): AssetRigManifest {
+  const rebaseBinding = <T extends {candidateId: string; relativeFile: string}>(binding: T): T => ({...binding, relativeFile: `files/${binding.candidateId}.png`});
+  let draft: AssetRigManifestDraft;
+  if (manifest.type === "character-rig") {
+    const {contentHash: _contentHash, ...identity} = manifest;
+    void _contentHash;
+    draft = {...identity, identityReference: rebaseBinding(manifest.identityReference), poses: {neutral: rebaseBinding(manifest.poses.neutral), talk: rebaseBinding(manifest.poses.talk), reaction: rebaseBinding(manifest.poses.reaction)}};
+  } else if (manifest.type === "background-layers") {
+    const {contentHash: _contentHash, ...identity} = manifest;
+    void _contentHash;
+    draft = {...identity, layers: manifest.layers.map((layer) => ({...layer, asset: rebaseBinding(layer.asset)})) as typeof manifest.layers};
+  } else {
+    const {contentHash: _contentHash, ...identity} = manifest;
+    void _contentHash;
+    draft = {...identity, cutout: rebaseBinding(manifest.cutout)};
+  }
+  return assetRigManifestSchema.parse({...draft, contentHash: hashCanonical(draft)});
+}
+
+async function writeImmutablePrivateFile(file: string, bytes: Uint8Array, expectedByteHash?: string): Promise<void> {
+  await mkdir(dirname(file), {recursive: true});
+  try {
+    await writeFile(file, bytes, {flag: "wx", mode: 0o600});
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    const existing = await readFile(file);
+    const expected = expectedByteHash ?? createHash("sha256").update(bytes).digest("hex");
+    if (createHash("sha256").update(existing).digest("hex") !== expected) throw new Error("An immutable local asset version already exists with different bytes.");
+  }
+}
+
+async function buildSelectedCandidateRig(exchange: GenerationExchangeRecord, report: PreparationReport, candidateSetId: string, createdAt: string): Promise<void> {
+  const candidateSet = report.candidateSets.find((candidate) => candidate.candidateSetId === candidateSetId);
+  const brief = exchange.job.briefs.find((candidate) => candidate.id === candidateSet?.briefId);
+  if (!candidateSet || candidateSet.status !== "ready-for-review" || !brief) throw new Error("Only a prepared coherent candidate set can be selected for rigging.");
+  const stagingRoot = importStagingRoot(exchange);
+  const preparedRoot = join(importStagingRoot(exchange), "prepared");
+  const manifestFile = join(preparedRoot, `rig-manifest-${candidateSetId}.json`);
+  const validationFile = join(preparedRoot, `rig-validation-${candidateSetId}.json`);
+  let manifest: AssetRigManifest;
+  try {
+    manifest = assetRigManifestSchema.parse(await readBoundJsonFile(manifestFile, 2_000_000));
+    if (!verifyAssetRigManifestHash(manifest) || manifest.candidateSetId !== candidateSetId || manifest.briefId !== brief.id || manifest.requirementId !== brief.requirementId) throw new Error("Existing selected-rig evidence is stale or mismatched.");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    manifest = createAssetRigManifest(brief, candidateSetId, candidateSet.preparedCandidates, createdAt);
+    await writeImmutablePrivateFile(manifestFile, Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, "utf8"));
+  }
+  let validation: RigValidationReport;
+  try {
+    validation = rigValidationReportSchema.parse(await readBoundJsonFile(validationFile, 2_000_000));
+    if (!verifyRigValidationReportHash(validation) || validation.manifestContentHash !== manifest.contentHash || validation.candidateSetId !== candidateSetId) throw new Error("Existing selected-rig validation is stale or mismatched.");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    validation = validateAssetRigManifest(manifest, createdAt);
+    await writeImmutablePrivateFile(validationFile, Buffer.from(`${JSON.stringify(validation, null, 2)}\n`, "utf8"));
+  }
+  if (validation.status !== "passed") throw new Error("The selected candidate set failed technical rig validation.");
+  try {
+    await readRigDiagnosticEvidence(stagingRoot, candidateSetId, manifest, validation);
+    return;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+
+  const videoRelativeFile = `prepared/rig-diagnostic-${candidateSetId}.mp4`;
+  const finalVideoFile = join(stagingRoot, ...videoRelativeFile.split("/"));
+  let videoBytes: Buffer;
+  try {
+    const existingInfo = await lstat(finalVideoFile);
+    if (existingInfo.isSymbolicLink() || !existingInfo.isFile() || existingInfo.size > 18 * 1024 * 1024) throw new Error("Existing rig diagnostic video is unavailable or unsafe.");
+    videoBytes = await readFile(finalVideoFile);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    const temporaryVideoFile = join(preparedRoot, `.rig-diagnostic-${candidateSetId}-${randomUUID()}.tmp.mp4`);
+    try {
+      await renderRigDiagnosticInWorker(stagingRoot, manifestFile, temporaryVideoFile, brief.entity.name);
+      videoBytes = await readFile(temporaryVideoFile);
+      await writeImmutablePrivateFile(finalVideoFile, videoBytes);
+    } finally {
+      await unlink(temporaryVideoFile).catch(() => undefined);
+    }
+  }
+  const videoContentHash = createHash("sha256").update(videoBytes).digest("hex");
+  const diagnostic = finalizeRigDiagnosticReport({schemaVersion: "1.0", candidateSetId, manifestContentHash: manifest.contentHash, validationReportContentHash: validation.contentHash, videoContentHash, videoRelativeFile, fps: 30, frameCount: 120, width: 1280, height: 720, sourceDiagnosticContentHash: null}, createdAt);
+  await writeImmutablePrivateFile(join(preparedRoot, `rig-diagnostic-${candidateSetId}.json`), Buffer.from(`${JSON.stringify(diagnostic, null, 2)}\n`, "utf8"));
+}
+
+async function promoteCandidateSet(exchange: GenerationExchangeRecord, report: PreparationReport, importRecord: ImportRecord, candidateSetId: string, approvedAt: string): Promise<ApprovedAssetVersion> {
+  const candidateSet = report.candidateSets.find((candidate) => candidate.candidateSetId === candidateSetId);
+  if (!candidateSet || candidateSet.status !== "ready-for-review") throw new Error("Only a complete, review-ready candidate set can be approved.");
+  const stagingRoot = importStagingRoot(exchange);
+  const originalManifest = assetRigManifestSchema.parse(await readBoundJsonFile(join(stagingRoot, "prepared", `rig-manifest-${candidateSetId}.json`), 2_000_000));
+  const originalValidation = rigValidationReportSchema.parse(await readBoundJsonFile(join(stagingRoot, "prepared", `rig-validation-${candidateSetId}.json`), 2_000_000));
+  if (!verifyAssetRigManifestHash(originalManifest) || !verifyRigValidationReportHash(originalValidation) || originalValidation.status !== "passed" || originalValidation.manifestContentHash !== originalManifest.contentHash) throw new Error("Candidate rig validation is missing, failed, or stale.");
+  const selectedDiagnostic = await readRigDiagnosticEvidence(stagingRoot, candidateSetId, originalManifest, originalValidation);
+  const manifest = rebaseRigManifest(originalManifest);
+  const validation = validateAssetRigManifest(manifest, approvedAt);
+  if (validation.status !== "passed") throw new Error("Promoted rig failed validation after local-library rebasing.");
+  const diagnostic = finalizeRigDiagnosticReport({schemaVersion: "1.0", candidateSetId, manifestContentHash: manifest.contentHash, validationReportContentHash: validation.contentHash, videoContentHash: selectedDiagnostic.report.videoContentHash, videoRelativeFile: "rig-diagnostic.mp4", fps: 30, frameCount: 120, width: 1280, height: 720, sourceDiagnosticContentHash: selectedDiagnostic.report.contentHash}, approvedAt);
+  const assetId = `approved-${candidateSet.requirementId}`;
+  const version = `sha256-${manifest.contentHash.slice(0, 16)}`;
+  const assetsRoot = join(app.getPath("userData"), ".storystage-local", "assets");
+  const versionRoot = join(assetsRoot, assetId, version);
+  for (const candidate of candidateSet.preparedCandidates) {
+    const bytes = await readVerifiedPrivateBytes(stagingRoot, candidate.relativeFile, candidate.preparedContentHash, 50 * 1024 * 1024);
+    await writeImmutablePrivateFile(join(versionRoot, "files", `${candidate.candidateId}.png`), bytes, candidate.preparedContentHash);
+  }
+  await writeImmutablePrivateFile(join(versionRoot, "manifest.json"), Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, "utf8"));
+  await writeImmutablePrivateFile(join(versionRoot, "rig-validation.json"), Buffer.from(`${JSON.stringify(validation, null, 2)}\n`, "utf8"));
+  await writeImmutablePrivateFile(join(versionRoot, "rig-diagnostic.mp4"), selectedDiagnostic.videoBytes, selectedDiagnostic.report.videoContentHash);
+  await writeImmutablePrivateFile(join(versionRoot, "rig-diagnostic.json"), Buffer.from(`${JSON.stringify(diagnostic, null, 2)}\n`, "utf8"));
+  const importedAssets = importRecord.assets.filter((asset) => asset.candidateSetId === candidateSetId);
+  const provenance = importedAssets[0]?.rights;
+  if (!provenance || importedAssets.some((asset) => hashCanonical(asset.rights) !== hashCanonical(provenance))) throw new Error("Candidate set provenance is missing or inconsistent.");
+  return {assetId, version, requirementId: candidateSet.requirementId, contentHash: manifest.contentHash, relativeFile: `${assetId}/${version}/manifest.json`, provenance, approvedAt};
+}
+
+async function verifyApprovedAssetVersionOnDisk(approved: ApprovedAssetVersion): Promise<boolean> {
+  try {
+    const assetsRoot = join(app.getPath("userData"), ".storystage-local", "assets");
+    const manifestFile = resolve(assetsRoot, ...approved.relativeFile.split("/"));
+    if (!isWithinPath(assetsRoot, manifestFile)) return false;
+    const versionRoot = dirname(manifestFile);
+    const manifest = assetRigManifestSchema.parse(await readBoundJsonFile(manifestFile, 2_000_000));
+    if (!verifyAssetRigManifestHash(manifest) || manifest.contentHash !== approved.contentHash) return false;
+    const bindings = manifest.type === "character-rig" ? [manifest.identityReference, ...Object.values(manifest.poses)] : manifest.type === "background-layers" ? manifest.layers.map((layer) => layer.asset) : [manifest.cutout];
+    for (const binding of bindings) await readVerifiedPrivateBytes(versionRoot, binding.relativeFile, binding.contentHash, 50 * 1024 * 1024);
+    const validation = rigValidationReportSchema.parse(await readBoundJsonFile(join(versionRoot, "rig-validation.json"), 2_000_000));
+    if (!verifyRigValidationReportHash(validation) || validation.status !== "passed" || validation.manifestContentHash !== manifest.contentHash) return false;
+    const diagnostic = rigDiagnosticReportSchema.parse(await readBoundJsonFile(join(versionRoot, "rig-diagnostic.json"), 2_000_000));
+    if (!verifyRigDiagnosticReportHash(diagnostic) || diagnostic.candidateSetId !== manifest.candidateSetId || diagnostic.manifestContentHash !== manifest.contentHash || diagnostic.validationReportContentHash !== validation.contentHash || diagnostic.videoRelativeFile !== "rig-diagnostic.mp4") return false;
+    await readVerifiedPrivateBytes(versionRoot, diagnostic.videoRelativeFile, diagnostic.videoContentHash, 18 * 1024 * 1024);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function validateRehydratedExchangeArtifacts(exchange: GenerationExchangeRecord): Promise<boolean> {
+  if (exchange.state.status === "awaiting-results" || exchange.state.status === "superseded") return true;
+  if (exchange.state.status === "files-imported") return (await readVerifiedLooseImportSession(exchange)) !== null;
+  const importRecord = await readImportRecord(exchange);
+  if (!importRecord) return false;
+  const trustedStagingRoot = join(app.getPath("userData"), ".storystage-local");
+  await verifyStagedCandidatesInWorker(importRecord.assets.map((asset) => asset.stagedCandidate), trustedStagingRoot, importStagingRoot(exchange));
+  if (exchange.state.status === "staged") return true;
+  const preparationReport = await readPreparationReport(exchange);
+  const preparationReview = await readPreparationReview(exchange);
+  if (!preparationReport || !preparationReview || preparationReview.candidateSets.some((candidateSet) => candidateSet.status !== "ready-for-review")) return false;
+  if (exchange.state.status === "needs-review") return true;
+  const reviewRecord = await readAssetReviewRecord(exchange, preparationReport.contentHash);
+  if (!reviewRecord) return false;
+  if (exchange.state.status === "approved") {
+    const approved = reviewRecord.decisions.filter((decision) => decision.status === "approved" && decision.approvedAssetVersion).map((decision) => decision.approvedAssetVersion!);
+    if (!exchange.job.briefs.every((brief) => approved.some((asset) => asset.requirementId === brief.requirementId))) return false;
+    return (await Promise.all(approved.map(verifyApprovedAssetVersionOnDisk))).every(Boolean);
+  }
+  return exchange.job.briefs.some((brief) => {
+    const candidateSetIds = preparationReport.candidateSets.filter((candidateSet) => candidateSet.briefId === brief.id).map((candidateSet) => candidateSet.candidateSetId);
+    return candidateSetIds.length > 0 && candidateSetIds.every((candidateSetId) => reviewRecord.decisions.some((decision) => decision.candidateSetId === candidateSetId && decision.status === "rejected"));
+  });
 }
 
 const emitJob = (event: RenderJobEvent) => {
@@ -338,9 +723,9 @@ const failedEvent = (jobId: string, code: string, message: string): RenderJobEve
   error: {code, message},
 });
 
-function registerJob(jobId: string) {
+function registerJob(jobId: string, allowedOutputRoot: string) {
   const event = renderJobEventSchema.parse({jobId, status: "queued", progress: null, message: "Render queued"});
-  jobRegistry.set(jobId, {event, phaseProgress: {}});
+  jobRegistry.set(jobId, {event, phaseProgress: {}, allowedOutputRoot});
   activeJobId = jobId;
   emitJob(event);
 }
@@ -375,7 +760,8 @@ function failJob(jobId: string, code: string, message: string) {
   }
 }
 
-function startRenderWorker(jobId: string, simulateFailure: boolean) {
+type ProductionRenderCommandInput = {trustedProductionRoot: string; bundleFile: string; assetsRoot: string; outputRoot: string; bundleContentHash: string};
+function startRenderWorker(jobId: string, simulateFailure: boolean, production?: ProductionRenderCommandInput) {
   const workerEntry = app.isPackaged
     ? resolve(process.resourcesPath, "render-worker/render-worker.cjs")
     : resolve(workspaceRoot, "apps/render-worker/dist/render-worker.cjs");
@@ -394,7 +780,7 @@ function startRenderWorker(jobId: string, simulateFailure: boolean) {
 
   worker.on("spawn", () => {
     transitionJob({jobId, status: "bundling", progress: 0, message: "Starting render worker"});
-    worker.postMessage(renderWorkerCommandSchema.parse({type: "start", workspaceRoot, request: {jobId, simulateFailure}}));
+    worker.postMessage(renderWorkerCommandSchema.parse(production ? {type: "start-production", workspaceRoot, trustedProductionRoot: production.trustedProductionRoot, bundleFile: production.bundleFile, assetsRoot: production.assetsRoot, outputRoot: production.outputRoot, request: {jobId, bundleContentHash: production.bundleContentHash}} : {type: "start", workspaceRoot, request: {jobId, simulateFailure}}));
   });
 
   worker.on("message", (rawMessage: unknown) => {
@@ -419,7 +805,7 @@ function startRenderWorker(jobId: string, simulateFailure: boolean) {
         try {
           const [canonicalOutput, canonicalRoot] = await Promise.all([
             realpath(event.outputPath),
-            realpath(resolve(workspaceRoot, "artifacts/SS-001")),
+            realpath(record.allowedOutputRoot),
           ]);
           if (!canonicalOutput.startsWith(`${canonicalRoot}${sep}`)) throw new Error("Output escaped the allowed artifact directory.");
           if (!transitionJob({...event, outputPath: canonicalOutput})) failJob(jobId, "INVALID_TRANSITION", "The worker completed from an invalid job state.");
@@ -448,6 +834,61 @@ function startRenderWorker(jobId: string, simulateFailure: boolean) {
     if (!stopped) failJob(jobId, "WORKER_EXITED", `The render worker exited unexpectedly with code ${code}.`);
     stopped = true;
     clearTimeout(timeout);
+  });
+}
+
+function renderRigDiagnosticInWorker(importRoot: string, manifestFile: string, outputFile: string, entityName: string): Promise<void> {
+  return new Promise((resolveDiagnostic, rejectDiagnostic) => {
+    const workerEntry = app.isPackaged
+      ? resolve(process.resourcesPath, "render-worker/render-worker.cjs")
+      : resolve(workspaceRoot, "apps/render-worker/dist/render-worker.cjs");
+    const jobId = `diagnostic-${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+    const worker = utilityProcess.fork(workerEntry, [], {
+      cwd: workspaceRoot,
+      serviceName: "StoryStage Rig Diagnostic Worker",
+      stdio: "ignore",
+      env: {
+        NODE_OPTIONS: "--max-old-space-size=512",
+        ...(process.env.SystemRoot ? {SystemRoot: process.env.SystemRoot} : {}),
+        ...(process.env.TEMP ? {TEMP: process.env.TEMP} : {}),
+        ...(process.env.TMP ? {TMP: process.env.TMP} : {}),
+      },
+    });
+    let settled = false;
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      worker.kill();
+      callback();
+    };
+    const timeout = setTimeout(() => finish(() => rejectDiagnostic(new Error("Rig diagnostic rendering exceeded the three-minute safety timeout."))), 180_000);
+    worker.on("spawn", () => worker.postMessage(renderWorkerCommandSchema.parse({type: "start-rig-diagnostic", workspaceRoot, importRoot, manifestFile, outputFile, request: {jobId, entityName}})));
+    worker.on("message", (rawMessage: unknown) => {
+      const parsed = renderWorkerMessageSchema.safeParse(rawMessage);
+      if (!parsed.success || parsed.data.payload.jobId !== jobId) {
+        finish(() => rejectDiagnostic(new Error("The rig diagnostic worker returned an invalid or mismatched message.")));
+        return;
+      }
+      const event = parsed.data.payload;
+      if (event.status === "failed") {
+        finish(() => rejectDiagnostic(new Error(`${event.error.code}: ${event.error.message}`)));
+        return;
+      }
+      if (event.status !== "completed") return;
+      void (async () => {
+        try {
+          const [canonicalRoot, canonicalOutput, canonicalReportedOutput] = await Promise.all([realpath(importRoot), realpath(outputFile), realpath(event.outputPath)]);
+          const info = await lstat(canonicalOutput);
+          if (canonicalOutput !== canonicalReportedOutput || !isWithinPath(canonicalRoot, canonicalOutput) || info.isSymbolicLink() || !info.isFile() || info.size > 18 * 1024 * 1024) throw new Error("The rig diagnostic worker returned an unsafe or oversized MP4.");
+          finish(resolveDiagnostic);
+        } catch (error) {
+          finish(() => rejectDiagnostic(error instanceof Error ? error : new Error("The rig diagnostic output could not be verified.")));
+        }
+      })();
+    });
+    worker.on("error", (_type, location) => finish(() => rejectDiagnostic(new Error(`The rig diagnostic worker crashed at ${location || "an unknown location"}.`))));
+    worker.on("exit", (code) => {if (!settled) finish(() => rejectDiagnostic(new Error(`The rig diagnostic worker exited unexpectedly with code ${code}.`)));});
   });
 }
 
@@ -613,6 +1054,38 @@ function verifyStagedCandidatesInWorker(candidates: StagedCandidate[], trustedSt
   });
 }
 
+function prepareCandidateSetsInWorker(request: unknown, trustedStagingRoot: string, stagingRoot: string): Promise<PreparationReport> {
+  return new Promise((resolvePreparation, rejectPreparation) => {
+    const workerEntry = app.isPackaged ? resolve(process.resourcesPath, "asset-worker/asset-worker.cjs") : resolve(workspaceRoot, "apps/asset-worker/dist/asset-worker.cjs");
+    const requestId = `prepare-${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+    const worker = utilityProcess.fork(workerEntry, [], {
+      cwd: workspaceRoot,
+      serviceName: "StoryStage Asset Preparation Worker",
+      stdio: "ignore",
+      env: {NODE_OPTIONS: "--max-old-space-size=512", ...(process.env.SystemRoot ? {SystemRoot: process.env.SystemRoot} : {}), ...(process.env.TEMP ? {TEMP: process.env.TEMP} : {}), ...(process.env.TMP ? {TMP: process.env.TMP} : {})},
+    });
+    let settled = false;
+    const finish = (callback: () => void) => {if (settled) return; settled = true; clearTimeout(timeout); worker.kill(); callback();};
+    const timeout = setTimeout(() => finish(() => rejectPreparation(new Error("Asset preparation exceeded the two-minute safety timeout."))), 120_000);
+    worker.on("spawn", () => worker.postMessage(assetWorkerCommandSchema.parse({type: "prepare-candidate-sets", requestId, trustedStagingRoot, stagingRoot, serializedRequest: JSON.stringify(request)})));
+    worker.on("message", (rawMessage: unknown) => {
+      const message = assetWorkerMessageSchema.safeParse(rawMessage);
+      if (!message.success || message.data.requestId !== requestId) {finish(() => rejectPreparation(new Error("The asset worker returned an invalid or mismatched preparation message."))); return;}
+      if (message.data.type === "failed") {const workerError = message.data.error; finish(() => rejectPreparation(new Error(`${workerError.code}: ${workerError.message}`))); return;}
+      if (message.data.type !== "prepared") {finish(() => rejectPreparation(new Error("The asset worker returned the wrong result type for preparation."))); return;}
+      try {
+        const report = preparationReportSchema.parse(JSON.parse(message.data.serializedPreparationReport));
+        if (!verifyPreparationReportHash(report)) throw new Error("Preparation report hash mismatch.");
+        finish(() => resolvePreparation(report));
+      } catch {
+        finish(() => rejectPreparation(new Error("The asset worker returned invalid preparation evidence.")));
+      }
+    });
+    worker.on("error", (_type, location) => finish(() => rejectPreparation(new Error(`The preparation worker crashed at ${location || "an unknown location"}.`))));
+    worker.on("exit", (code) => {if (!settled) finish(() => rejectPreparation(new Error(`The preparation worker exited unexpectedly with code ${code}.`)));});
+  });
+}
+
 async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1600,
@@ -653,12 +1126,23 @@ ipcMain.handle(IPC_CHANNELS.capabilities, () => desktopCapabilitiesSchema.parse(
 ipcMain.handle(IPC_CHANNELS.saveProductionBundle, async (_event, rawRequest: unknown) => {
   try {
     const request = saveProductionBundleRequestSchema.parse(rawRequest);
-    const bundle = productionBundleSchema.parse(JSON.parse(request.serializedBundle));
-    if (!verifyProductionBundleHash(bundle)) throw new Error("Production bundle content hash is invalid.");
-    const showPack = getShowPack(bundle.production.showPackId);
-    if (!verifyShowPackHash(showPack) || bundle.resolvedPlan.showPack.contentHash !== showPack.contentHash) throw new Error("Production bundle references a stale or non-authoritative Show Pack.");
-    await persistProductionBundle(bundle);
-    return saveProductionBundleResultSchema.parse({ok: true, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash});
+    const draft = productionBundleDraftSchema.parse(JSON.parse(request.serializedDraft));
+    const key = productionBundleKey(draft.production.productionId, draft.production.revision);
+    const priorSave = productionSaveQueues.get(key);
+    const currentSave = (priorSave ? priorSave.then(() => undefined, () => undefined) : Promise.resolve()).then(async () => {
+      const showPack = getShowPack(draft.production.showPackId);
+      if (!verifyShowPackHash(showPack) || draft.resolvedPlan.showPack.contentHash !== showPack.contentHash) throw new Error("Production bundle references a stale or non-authoritative Show Pack.");
+      const bundle = finalizeProductionBundle(draft, new Date().toISOString());
+      await persistProductionBundle(bundle);
+      return bundle;
+    });
+    productionSaveQueues.set(key, currentSave);
+    try {
+      const bundle = await currentSave;
+      return saveProductionBundleResultSchema.parse({ok: true, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash});
+    } finally {
+      if (productionSaveQueues.get(key) === currentSave) productionSaveQueues.delete(key);
+    }
   } catch (error) {
     return saveProductionBundleResultSchema.parse({ok: false, error: {code: "INVALID_PRODUCTION_BUNDLE", message: error instanceof Error ? error.message : "Production bundle could not be persisted."}});
   }
@@ -689,6 +1173,10 @@ ipcMain.handle(IPC_CHANNELS.getGenerationExchange, async (_event, rawRequest: un
     if (!exchange) throw new Error("The requested exchange is unavailable or failed integrity checks.");
     let looseMapping = null;
     let stagedCandidates: Array<ReturnType<typeof stagedCandidateSummarySchema.parse>> = [];
+    let preparation: PreparationReview | null = null;
+    let assetReviews: AssetReviewRecord["decisions"] = [];
+    let missingRoleCount = 0;
+    let findings: ImportRecord["findings"] = [];
     if (exchange.state.status === "files-imported") {
       const looseImport = exchange.state.importId ? looseImportRegistry.get(exchange.state.importId) : undefined;
       if (!looseImport) throw new Error("The loose import session could not be resumed safely.");
@@ -698,9 +1186,14 @@ ipcMain.handle(IPC_CHANNELS.getGenerationExchange, async (_event, rawRequest: un
     if (["staged", "needs-review", "approved", "rejected"].includes(exchange.state.status)) {
       const record = await readImportRecord(exchange);
       if (!record) throw new Error("The durable import record is unavailable or failed integrity checks.");
+      missingRoleCount = record.missingRoleCount ?? record.candidateSets.reduce((sum, candidateSet) => sum + candidateSet.missingRoles.length, 0);
+      findings = record.findings;
       stagedCandidates = record.assets.map((asset) => stagedCandidateSummarySchema.parse({candidateId: asset.candidateId, candidateSetId: asset.candidateSetId, originalName: asset.originalName, briefId: asset.briefId, fileRole: asset.fileRole, mediaType: asset.mediaType, width: asset.width, height: asset.height, stagingState: asset.stagedCandidate.stagingState, checks: asset.stagedCandidate.checks}));
+      preparation = await readPreparationReview(exchange);
+      const preparationReport = await readPreparationReport(exchange);
+      if (preparationReport) assetReviews = (await readAssetReviewRecord(exchange, preparationReport.contentHash))?.decisions ?? [];
     }
-    return getGenerationExchangeResultSchema.parse({ok: true, summary: summarizeExchange(exchange), looseMapping, stagedCandidates});
+    return getGenerationExchangeResultSchema.parse({ok: true, summary: summarizeExchange(exchange), looseMapping, stagedCandidates, preparation, assetReviews, missingRoleCount, findings});
   } catch (error) {
     return getGenerationExchangeResultSchema.parse({ok: false, error: {code: "EXCHANGE_UNAVAILABLE", message: error instanceof Error ? error.message : "Generation exchange could not be loaded."}});
   }
@@ -710,6 +1203,9 @@ ipcMain.handle(IPC_CHANNELS.exportGenerationJob, async (_event, rawRequest: unkn
   try {
     const request = exportGenerationJobRequestSchema.parse(rawRequest);
     const draft = generationJobDraftSchema.parse(JSON.parse(request.serializedJob));
+    if (draft.productionBundleContentHash !== request.productionBundleContentHash) throw new Error("Generation export request does not match its declared production snapshot.");
+    const storedProduction = productionBundleRegistry.get(productionBundleKey(draft.production.id, draft.production.revision));
+    if (!storedProduction || storedProduction.bundle.contentHash !== request.productionBundleContentHash || !verifyGenerationDraftAgainstProduction(draft, storedProduction.bundle)) throw new Error("Generation export must exactly match the acknowledged authoritative production snapshot.");
     const authoritativeShowPack = getShowPack(draft.showPack.id);
     if (authoritativeShowPack.version !== draft.showPack.version || authoritativeShowPack.contentHash !== draft.showPack.contentHash || !verifyShowPackHash(authoritativeShowPack)) {
       throw new Error("The generation draft references a stale or non-authoritative Show Pack.");
@@ -921,15 +1417,127 @@ ipcMain.handle(IPC_CHANNELS.stageCandidateBundle, async (_event, rawRequest: unk
   }
 });
 
+ipcMain.handle(IPC_CHANNELS.prepareGenerationImport, async (_event, rawRequest: unknown) => {
+  try {
+    const request = prepareGenerationImportRequestSchema.parse(rawRequest);
+    const exchange = generationExchangeRegistry.get(request.exchangeJobId);
+    if (!exchange) throw new Error("This generation exchange is unknown or failed durable integrity checks.");
+    if (!["staged", "needs-review"].includes(exchange.state.status)) throw new Error(`This exchange cannot prepare assets from ${exchange.state.status}.`);
+
+    const existingReview = await readPreparationReview(exchange);
+    if (existingReview) {
+      const fullyReady = existingReview.candidateSets.every((candidateSet) => candidateSet.status === "ready-for-review");
+      if (fullyReady && exchange.state.status === "staged") await transitionExchangeState(exchange, "needs-review", exchange.state.importId);
+      return prepareGenerationImportResultSchema.parse({status: "prepared", review: existingReview});
+    }
+
+    if (exchange.state.status !== "staged") throw new Error("Review evidence is missing for an exchange already marked as needing review.");
+    const record = await readImportRecord(exchange);
+    if (!record || !exchange.state.importId) throw new Error("The durable import record is unavailable or failed integrity checks.");
+    for (const brief of exchange.job.briefs) {
+      const sets = record.candidateSets.filter((candidateSet) => candidateSet.briefId === brief.id);
+      if (sets.length !== brief.candidateCount || sets.some((candidateSet) => !candidateSet.complete)) throw new Error(`${brief.entity.name} does not have ${brief.candidateCount} complete coherent candidate set${brief.candidateCount === 1 ? "" : "s"}. Finish the required file roles before preparation.`);
+    }
+    const briefById = new Map(exchange.job.briefs.map((brief) => [brief.id, brief]));
+    const preparationRequest = prepareCandidateSetsRequestSchema.parse({
+      importId: record.importId,
+      importRecordContentHash: record.contentHash,
+      exchangeJobId: exchange.job.exchangeJobId,
+      candidates: record.assets.map((asset) => {
+        const brief = briefById.get(asset.briefId);
+        if (!brief || brief.requirementId !== asset.requirementId) throw new Error(`Imported candidate ${asset.candidateId} no longer matches an authoritative brief.`);
+        return {candidateSetId: asset.candidateSetId, briefId: asset.briefId, requirementId: asset.requirementId, fileRole: asset.fileRole, expectedMediaType: asset.mediaType, expectedWidth: asset.width, expectedHeight: asset.height, outputRole: brief.outputRole, stagedCandidate: asset.stagedCandidate};
+      }),
+    });
+    const trustedStagingRoot = join(app.getPath("userData"), ".storystage-local");
+    const stagingRoot = importStagingRoot(exchange);
+    const report = await prepareCandidateSetsInWorker(preparationRequest, trustedStagingRoot, stagingRoot);
+    if (report.importRecordContentHash !== record.contentHash || report.importId !== record.importId || report.exchangeJobId !== exchange.job.exchangeJobId) throw new Error("The preparation report is not bound to the active import record.");
+
+    await writeFile(join(stagingRoot, "preparation-report.json"), `${JSON.stringify(report, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
+    const review = await preparationReviewFromReport(exchange, report);
+    const fullyReady = review.candidateSets.every((candidateSet) => candidateSet.status === "ready-for-review");
+    if (fullyReady) await transitionExchangeState(exchange, "needs-review", record.importId);
+    return prepareGenerationImportResultSchema.parse({status: "prepared", review});
+  } catch (error) {
+    return prepareGenerationImportResultSchema.parse({status: "failed", error: {code: "ASSET_PREPARATION_FAILED", message: error instanceof Error ? error.message : "Imported candidates could not be prepared."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.reviewCandidateSet, async (_event, rawRequest: unknown) => {
+  try {
+    const request = reviewCandidateSetRequestSchema.parse(rawRequest);
+    const exchange = generationExchangeRegistry.get(request.exchangeJobId);
+    if (!exchange) throw new Error("This generation exchange is unknown or failed durable integrity checks.");
+    if (exchange.state.status !== "needs-review") throw new Error(`Candidate review cannot change an exchange in ${exchange.state.status}.`);
+    const report = await readPreparationReport(exchange);
+    const importRecord = await readImportRecord(exchange);
+    if (!report || !importRecord || !exchange.state.importId) throw new Error("The preparation or import evidence is unavailable.");
+    const candidateSet = report.candidateSets.find((candidate) => candidate.candidateSetId === request.candidateSetId);
+    if (!candidateSet || candidateSet.status !== "ready-for-review") throw new Error("The selected candidate set is not ready for human review.");
+    const existing = await readAssetReviewRecord(exchange, report.contentHash);
+    const decidedAt = new Date().toISOString();
+    const existingDecision = existing?.decisions.find((decision) => decision.candidateSetId === candidateSet.candidateSetId);
+    if (request.decision === "approve" && existingDecision?.status !== "selected") throw new Error("Select and technically validate this coherent set before final approval.");
+    if (request.decision === "select") await buildSelectedCandidateRig(exchange, report, candidateSet.candidateSetId, decidedAt);
+    const approvedAssetVersion = request.decision === "approve" ? await promoteCandidateSet(exchange, report, importRecord, candidateSet.candidateSetId, decidedAt) : null;
+    let decisions = (existing?.decisions ?? []).filter((decision) => decision.candidateSetId !== candidateSet.candidateSetId);
+    if (request.decision === "select") {
+      const siblingIds = new Set(report.candidateSets.filter((set) => set.briefId === candidateSet.briefId && set.candidateSetId !== candidateSet.candidateSetId).map((set) => set.candidateSetId));
+      decisions = decisions.filter((decision) => !siblingIds.has(decision.candidateSetId));
+      decisions.push(...report.candidateSets.filter((set) => siblingIds.has(set.candidateSetId)).map((set) => ({candidateSetId: set.candidateSetId, briefId: set.briefId, requirementId: set.requirementId, status: "rejected" as const, notes: "Not selected after coherent-kit comparison.", decidedAt, approvedAssetVersion: null})));
+    }
+    decisions.push({candidateSetId: candidateSet.candidateSetId, briefId: candidateSet.briefId, requirementId: candidateSet.requirementId, status: request.decision === "select" ? "selected" : request.decision === "approve" ? "approved" : "rejected", notes: request.notes, decidedAt, approvedAssetVersion});
+    const reviewRecord = finalizeAssetReviewRecord({schemaVersion: "1.0", exchangeJobId: exchange.job.exchangeJobId, importId: exchange.state.importId, preparationReportContentHash: report.contentHash, decisions}, decidedAt);
+    await persistAssetReviewRecord(exchange, reviewRecord);
+
+    const allRequirementsApproved = exchange.job.briefs.every((brief) => reviewRecord.decisions.some((decision) => decision.requirementId === brief.requirementId && decision.status === "approved"));
+    const selectedBriefSets = report.candidateSets.filter((set) => set.briefId === candidateSet.briefId);
+    const selectedBriefRejected = selectedBriefSets.every((set) => reviewRecord.decisions.some((decision) => decision.candidateSetId === set.candidateSetId && decision.status === "rejected"));
+    let exchangeStatus: "needs-review" | "approved" | "rejected" = "needs-review";
+    if (allRequirementsApproved) {
+      await transitionExchangeState(exchange, "approved", exchange.state.importId);
+      exchangeStatus = "approved";
+    } else if (selectedBriefRejected) {
+      await transitionExchangeState(exchange, "rejected", exchange.state.importId);
+      exchangeStatus = "rejected";
+    }
+    return reviewCandidateSetResultSchema.parse({status: "reviewed", exchangeStatus, decisions: reviewRecord.decisions, approvedAssetVersion});
+  } catch (error) {
+    return reviewCandidateSetResultSchema.parse({status: "failed", error: {code: "ASSET_REVIEW_FAILED", message: error instanceof Error ? error.message : "Candidate review could not be recorded."}});
+  }
+});
+
 ipcMain.handle(IPC_CHANNELS.renderStart, (_event, payload: unknown) => {
   const request = startRenderRequestSchema.parse(payload);
   if (activeJobId) throw new Error("A render is already running.");
   const jobId = randomUUID();
-  registerJob(jobId);
+  const outputRoot = resolve(workspaceRoot, "artifacts/SS-001");
+  registerJob(jobId, outputRoot);
   try {
     startRenderWorker(jobId, request.simulateFailure);
   } catch {
     failJob(jobId, "WORKER_START_FAILED", "The render worker could not be started.");
+  }
+  return startRenderResponseSchema.parse({jobId});
+});
+
+ipcMain.handle(IPC_CHANNELS.productionRenderStart, async (_event, payload: unknown) => {
+  const request = startProductionRenderRequestSchema.parse(payload);
+  if (activeJobId) throw new Error("A render is already running.");
+  const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+  if (!stored || !verifyProductionBundleHash(stored.bundle) || (stored.bundle.approvedAssetVersions ?? []).length === 0) throw new Error("The selected production has no verified approved assets to render.");
+  const approvedVersions = stored.bundle.approvedAssetVersions ?? [];
+  if (!(await Promise.all(approvedVersions.map(verifyApprovedAssetVersionOnDisk))).every(Boolean)) throw new Error("An approved asset or its watched diagnostic changed after final approval. Rendering is blocked.");
+  const jobId = randomUUID();
+  const localRoot = join(app.getPath("userData"), ".storystage-local");
+  const outputRoot = join(localRoot, "renders", request.productionId, `r${request.revision}`);
+  await mkdir(outputRoot, {recursive: true});
+  registerJob(jobId, outputRoot);
+  try {
+    startRenderWorker(jobId, false, {trustedProductionRoot: join(localRoot, "productions"), bundleFile: stored.bundleFile, assetsRoot: join(localRoot, "assets"), outputRoot, bundleContentHash: stored.bundle.contentHash});
+  } catch {
+    failJob(jobId, "WORKER_START_FAILED", "The production render worker could not be started.");
   }
   return startRenderResponseSchema.parse({jobId});
 });

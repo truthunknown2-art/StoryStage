@@ -1,8 +1,9 @@
 import {z} from "zod";
 import {hashCanonical} from "./canonical-hash";
-import {compileAnimation} from "./animation-compiler";
+import {compileAnimation, verifyRenderPlanHash} from "./animation-compiler";
 import {
   directedPlanMetricsSchema,
+  approvedAssetVersionSchema,
   frameAccurateRenderPlanSchema,
   hashSchema,
   productionDraftSchema,
@@ -19,6 +20,7 @@ const productionBundleFields = {
   renderPlan: frameAccurateRenderPlanSchema,
   metrics: directedPlanMetricsSchema,
   estimate: productionEstimateSchema,
+  approvedAssetVersions: z.array(approvedAssetVersionSchema).optional(),
 };
 
 const validateProductionBundle = (bundle: z.infer<z.ZodObject<typeof productionBundleFields>>, context: z.RefinementCtx) => {
@@ -27,12 +29,18 @@ const validateProductionBundle = (bundle: z.infer<z.ZodObject<typeof productionB
   if (bundle.resolvedPlan.creativePlan.productionId !== identity || bundle.renderPlan.productionId !== identity) context.addIssue({code: "custom", message: "Production bundle plans must share the production identity."});
   if (bundle.resolvedPlan.creativePlan.planRevision !== revision || bundle.renderPlan.planRevision !== revision) context.addIssue({code: "custom", message: "Production bundle plans must share the production revision."});
   if (bundle.resolvedPlan.showPack.id !== bundle.production.showPackId || bundle.renderPlan.showPack.id !== bundle.production.showPackId || bundle.resolvedPlan.showPack.contentHash !== bundle.renderPlan.showPack.contentHash) context.addIssue({code: "custom", message: "Production bundle plans must share the authoritative Show Pack identity and hash."});
-  if (compileAnimation(bundle.resolvedPlan).contentHash !== bundle.renderPlan.contentHash) context.addIssue({code: "custom", message: "Production bundle render plan must derive from the included resolved plan."});
+  const compiledRenderPlan = compileAnimation(bundle.resolvedPlan);
+  if (!verifyRenderPlanHash(bundle.renderPlan) || hashCanonical(compiledRenderPlan) !== hashCanonical(bundle.renderPlan)) context.addIssue({code: "custom", message: "Production bundle render plan must exactly derive from the included resolved plan."});
   const creativePlan = bundle.resolvedPlan.creativePlan;
   const aspectMatches = bundle.production.format.aspectRatio === "16:9" ? creativePlan.width * 9 === creativePlan.height * 16 : creativePlan.width * 16 === creativePlan.height * 9;
   if (creativePlan.title !== bundle.production.title || creativePlan.projectType !== bundle.production.projectType || creativePlan.fps !== bundle.production.format.fps || !aspectMatches) context.addIssue({code: "custom", message: "Production bundle draft must match the included creative plan."});
   if (hashCanonical(bundle.overrides) !== hashCanonical(bundle.resolvedPlan.overrides)) context.addIssue({code: "custom", message: "Production bundle overrides must match the resolved plan."});
   if (hashCanonical(bundle.metrics) !== hashCanonical(bundle.renderPlan.metrics)) context.addIssue({code: "custom", message: "Production bundle metrics must match the frozen render plan."});
+  for (const [index, approved] of (bundle.approvedAssetVersions ?? []).entries()) {
+    const requirement = bundle.resolvedPlan.requirements.find((candidate) => candidate.id === approved.requirementId);
+    const asset = bundle.resolvedPlan.approvedAssets.find((candidate) => candidate.id === approved.assetId && candidate.contentHash === approved.contentHash);
+    if (!requirement || requirement.status !== "resolved" || !asset || bundle.resolvedPlan.generationBriefs.some((brief) => brief.requirementId === approved.requirementId)) context.addIssue({code: "custom", path: ["approvedAssetVersions", index], message: "Approved asset versions must be applied to the included resolved plan."});
+  }
   const expectedEstimate = {
     shotCount: bundle.renderPlan.shots.length,
     durationSeconds: bundle.renderPlan.durationInFrames / bundle.renderPlan.fps,

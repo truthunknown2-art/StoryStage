@@ -13,9 +13,11 @@ export const desktopCapabilitiesSchema = z.object({
 }).strict();
 
 const productionIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
+export const startProductionRenderRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive()}).strict();
 
 export const exportGenerationJobRequestSchema = z.object({
   serializedJob: z.string().min(2).max(2_000_000),
+  productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/),
 }).strict();
 
 export const exportGenerationJobResultSchema = z.discriminatedUnion("ok", [
@@ -75,7 +77,56 @@ export const finalizeLooseCandidateMappingRequestSchema = z.object({
 }).strict();
 export const finalizeLooseCandidateMappingResultSchema = stageCandidateBundleResultSchema;
 
-export const saveProductionBundleRequestSchema = z.object({serializedBundle: z.string().min(2).max(10_000_000)}).strict();
+export const preparedCandidateSummarySchema = z.object({
+  candidateId: productionIdSchema,
+  fileRole: z.string().min(1),
+  assetClass: z.enum(["reference-sheet", "character-pose", "background-plate", "background-layer", "prop-cutout", "editorial-visual"]),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+}).strict();
+
+export const candidateSetPreparationSummarySchema = z.object({
+  candidateSetId: productionIdSchema,
+  briefId: productionIdSchema,
+  requirementId: productionIdSchema,
+  entityName: z.string().min(1),
+  outputRole: z.enum(["character-canonical-sheet", "character-parts", "background-master", "background-layers", "prop-cutout", "editorial-illustration", "diagram", "reconstruction"]),
+  status: z.enum(["ready-for-review", "needs-attention"]),
+  preparedCandidates: z.array(preparedCandidateSummarySchema),
+  failures: z.array(z.object({candidateId: productionIdSchema, fileRole: z.string().min(1), status: z.enum(["needs-manual-mask", "failed"]), code: z.string().min(1), message: z.string().min(1)}).strict()),
+  contactSheetDataUrl: z.string().startsWith("data:image/png;base64,").max(4_000_000).nullable(),
+  rig: z.object({type: z.enum(["character-rig", "background-layers", "prop"]), validationStatus: z.enum(["passed", "failed"]), diagnosticVideoDataUrl: z.string().startsWith("data:video/mp4;base64,").max(24_000_000)}).strict().nullable(),
+}).strict();
+
+export const preparationReviewSchema = z.object({
+  importId: productionIdSchema,
+  preparedAt: z.string().datetime(),
+  candidateSets: z.array(candidateSetPreparationSummarySchema).min(1),
+}).strict();
+
+export const prepareGenerationImportRequestSchema = z.object({exchangeJobId: productionIdSchema}).strict();
+export const prepareGenerationImportResultSchema = z.discriminatedUnion("status", [
+  z.object({status: z.literal("prepared"), review: preparationReviewSchema}).strict(),
+  z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
+
+export const approvedAssetVersionBridgeSchema = z.object({
+  assetId: productionIdSchema,
+  version: z.string().min(1),
+  requirementId: productionIdSchema,
+  contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  relativeFile: z.string().min(1),
+  provenance: z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict(),
+  approvedAt: z.string().datetime(),
+}).strict();
+export const candidateSetReviewSummarySchema = z.object({candidateSetId: productionIdSchema, briefId: productionIdSchema, requirementId: productionIdSchema, status: z.enum(["selected", "approved", "rejected"]), notes: z.string(), decidedAt: z.string().datetime(), approvedAssetVersion: approvedAssetVersionBridgeSchema.nullable()}).strict();
+export const reviewCandidateSetRequestSchema = z.object({exchangeJobId: productionIdSchema, candidateSetId: productionIdSchema, decision: z.enum(["select", "approve", "reject"]), notes: z.string().max(2_000)}).strict();
+export const reviewCandidateSetResultSchema = z.discriminatedUnion("status", [
+  z.object({status: z.literal("reviewed"), exchangeStatus: z.enum(["needs-review", "approved", "rejected"]), decisions: z.array(candidateSetReviewSummarySchema), approvedAssetVersion: approvedAssetVersionBridgeSchema.nullable()}).strict(),
+  z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
+
+export const saveProductionBundleRequestSchema = z.object({serializedDraft: z.string().min(2).max(10_000_000)}).strict();
 export const saveProductionBundleResultSchema = z.discriminatedUnion("ok", [
   z.object({ok: z.literal(true), productionId: productionIdSchema, revision: z.number().int().positive(), contentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict(),
   z.object({ok: z.literal(false), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
@@ -93,7 +144,7 @@ export const listGenerationExchangesRequestSchema = z.object({productionId: prod
 export const listGenerationExchangesResultSchema = z.object({exchanges: z.array(generationExchangeSummarySchema)}).strict();
 export const getGenerationExchangeRequestSchema = z.object({exchangeJobId: productionIdSchema}).strict();
 export const getGenerationExchangeResultSchema = z.discriminatedUnion("ok", [
-  z.object({ok: z.literal(true), summary: generationExchangeSummarySchema, looseMapping: z.object({status: z.literal("mapping-required"), importId: productionIdSchema, candidates: z.array(stagedCandidateSummarySchema).min(1), expectedRoles: z.array(z.object({briefId: productionIdSchema, requirementId: productionIdSchema, candidateSetId: productionIdSchema, candidateSetNumber: z.number().int().positive(), entityName: z.string().min(1), fileRole: z.string().min(1)}).strict()).min(1)}).strict().nullable(), stagedCandidates: z.array(stagedCandidateSummarySchema)}).strict(),
+  z.object({ok: z.literal(true), summary: generationExchangeSummarySchema, looseMapping: z.object({status: z.literal("mapping-required"), importId: productionIdSchema, candidates: z.array(stagedCandidateSummarySchema).min(1), expectedRoles: z.array(z.object({briefId: productionIdSchema, requirementId: productionIdSchema, candidateSetId: productionIdSchema, candidateSetNumber: z.number().int().positive(), entityName: z.string().min(1), fileRole: z.string().min(1)}).strict()).min(1)}).strict().nullable(), stagedCandidates: z.array(stagedCandidateSummarySchema), preparation: preparationReviewSchema.nullable(), assetReviews: z.array(candidateSetReviewSummarySchema), missingRoleCount: z.number().int().nonnegative(), findings: z.array(z.object({severity: z.enum(["info", "warning", "error"]), code: z.string().min(1), candidateId: productionIdSchema.nullable(), message: z.string().min(1)}).strict())}).strict(),
   z.object({ok: z.literal(false), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
 ]);
 
@@ -146,6 +197,23 @@ export const renderWorkerCommandSchema = z.discriminatedUnion("type", [
     workspaceRoot: z.string().min(1),
     request: startRenderRequestSchema.extend({jobId: z.string().min(1)}),
   }).strict(),
+  z.object({
+    type: z.literal("start-production"),
+    workspaceRoot: z.string().min(1),
+    trustedProductionRoot: z.string().min(1),
+    bundleFile: z.string().min(1),
+    assetsRoot: z.string().min(1),
+    outputRoot: z.string().min(1),
+    request: z.object({jobId: z.string().min(1), bundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict(),
+  }).strict(),
+  z.object({
+    type: z.literal("start-rig-diagnostic"),
+    workspaceRoot: z.string().min(1),
+    importRoot: z.string().min(1),
+    manifestFile: z.string().min(1),
+    outputFile: z.string().min(1),
+    request: z.object({jobId: z.string().min(1), entityName: z.string().min(1)}).strict(),
+  }).strict(),
 ]);
 
 export const renderWorkerMessageSchema = z.discriminatedUnion("type", [
@@ -175,12 +243,20 @@ export const assetWorkerCommandSchema = z.discriminatedUnion("type", [
     stagingRoot: z.string().min(1),
     serializedStagedCandidates: z.string().min(2).max(2_000_000),
   }).strict(),
+  z.object({
+    type: z.literal("prepare-candidate-sets"),
+    requestId: z.string().min(1),
+    trustedStagingRoot: z.string().min(1),
+    stagingRoot: z.string().min(1),
+    serializedRequest: z.string().min(2).max(4_000_000),
+  }).strict(),
 ]);
 
 export const assetWorkerMessageSchema = z.discriminatedUnion("type", [
   z.object({type: z.literal("staged"), requestId: z.string().min(1), serializedStagedCandidates: z.string().min(2).max(2_000_000)}).strict(),
   z.object({type: z.literal("loose-staged"), requestId: z.string().min(1), serializedLooseCandidates: z.string().min(2).max(2_000_000)}).strict(),
   z.object({type: z.literal("verified"), requestId: z.string().min(1), serializedStagedCandidates: z.string().min(2).max(2_000_000)}).strict(),
+  z.object({type: z.literal("prepared"), requestId: z.string().min(1), serializedPreparationReport: z.string().min(2).max(8_000_000)}).strict(),
   z.object({type: z.literal("failed"), requestId: z.string().min(1), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
 ]);
 
@@ -224,13 +300,17 @@ export const IPC_CHANNELS = {
   loadProductionBundle: "storystage:load-production-bundle",
   listGenerationExchanges: "storystage:list-generation-exchanges",
   getGenerationExchange: "storystage:get-generation-exchange",
+  prepareGenerationImport: "storystage:prepare-generation-import",
+  reviewCandidateSet: "storystage:review-candidate-set",
   renderEvent: "storystage:render-event",
   renderStart: "storystage:render-start",
+  productionRenderStart: "storystage:production-render-start",
   openRenderedFile: "storystage:open-rendered-file",
 } as const;
 
 export type StartRenderRequest = z.input<typeof startRenderRequestSchema>;
 export type StartRenderResponse = z.infer<typeof startRenderResponseSchema>;
+export type StartProductionRenderRequest = z.infer<typeof startProductionRenderRequestSchema>;
 export type DesktopCapabilities = z.infer<typeof desktopCapabilitiesSchema>;
 export type ExportGenerationJobRequest = z.infer<typeof exportGenerationJobRequestSchema>;
 export type ExportGenerationJobResult = z.infer<typeof exportGenerationJobResultSchema>;
@@ -252,6 +332,15 @@ export type ImportLooseCandidateFilesRequest = z.infer<typeof importLooseCandida
 export type ImportLooseCandidateFilesResult = z.infer<typeof importLooseCandidateFilesResultSchema>;
 export type FinalizeLooseCandidateMappingRequest = z.infer<typeof finalizeLooseCandidateMappingRequestSchema>;
 export type FinalizeLooseCandidateMappingResult = z.infer<typeof finalizeLooseCandidateMappingResultSchema>;
+export type PreparedCandidateSummary = z.infer<typeof preparedCandidateSummarySchema>;
+export type CandidateSetPreparationSummary = z.infer<typeof candidateSetPreparationSummarySchema>;
+export type PreparationReview = z.infer<typeof preparationReviewSchema>;
+export type PrepareGenerationImportRequest = z.infer<typeof prepareGenerationImportRequestSchema>;
+export type PrepareGenerationImportResult = z.infer<typeof prepareGenerationImportResultSchema>;
+export type ApprovedAssetVersionBridge = z.infer<typeof approvedAssetVersionBridgeSchema>;
+export type CandidateSetReviewSummary = z.infer<typeof candidateSetReviewSummarySchema>;
+export type ReviewCandidateSetRequest = z.infer<typeof reviewCandidateSetRequestSchema>;
+export type ReviewCandidateSetResult = z.infer<typeof reviewCandidateSetResultSchema>;
 export type RenderJobEvent = z.infer<typeof renderJobEventSchema>;
 export type RenderJobState = z.infer<typeof renderJobStateSchema>;
 export type RenderJobStatus = RenderJobState["status"];
@@ -273,7 +362,10 @@ export type StoryStageDesktopBridge = {
   loadProductionBundle: (request: LoadProductionBundleRequest) => Promise<LoadProductionBundleResult>;
   listGenerationExchanges: (request: ListGenerationExchangesRequest) => Promise<ListGenerationExchangesResult>;
   getGenerationExchange: (request: GetGenerationExchangeRequest) => Promise<GetGenerationExchangeResult>;
+  prepareGenerationImport: (request: PrepareGenerationImportRequest) => Promise<PrepareGenerationImportResult>;
+  reviewCandidateSet: (request: ReviewCandidateSetRequest) => Promise<ReviewCandidateSetResult>;
   startSampleRender: (request: StartRenderRequest) => Promise<StartRenderResponse>;
+  startProductionRender: (request: StartProductionRenderRequest) => Promise<StartRenderResponse>;
   subscribeToRenderJobs: (listener: (event: RenderJobEvent) => void) => () => void;
   openRenderedFile: (jobId: string) => Promise<OpenRenderedFileResult>;
 };

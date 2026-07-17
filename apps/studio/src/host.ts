@@ -14,11 +14,16 @@ import type {
   LoadProductionBundleRequest,
   LoadProductionBundleResult,
   OpenRenderedFileResult,
+  PrepareGenerationImportRequest,
+  PrepareGenerationImportResult,
+  ReviewCandidateSetRequest,
+  ReviewCandidateSetResult,
   RenderJobEvent,
   SaveProductionBundleRequest,
   SaveProductionBundleResult,
   StartRenderRequest,
   StartRenderResponse,
+  StartProductionRenderRequest,
   StoryStageDesktopBridge,
   StageCandidateBundleRequest,
   StageCandidateBundleResult,
@@ -35,7 +40,10 @@ export interface HostAdapter {
   loadProductionBundle(request: LoadProductionBundleRequest): Promise<LoadProductionBundleResult>;
   listGenerationExchanges(request: ListGenerationExchangesRequest): Promise<ListGenerationExchangesResult>;
   getGenerationExchange(request: GetGenerationExchangeRequest): Promise<GetGenerationExchangeResult>;
+  prepareGenerationImport(request: PrepareGenerationImportRequest): Promise<PrepareGenerationImportResult>;
+  reviewCandidateSet(request: ReviewCandidateSetRequest): Promise<ReviewCandidateSetResult>;
   startSampleRender(request: StartRenderRequest): Promise<StartRenderResponse>;
+  startProductionRender(request: StartProductionRenderRequest): Promise<StartRenderResponse>;
   subscribeToRenderJobs(listener: (event: RenderJobEvent) => void): () => void;
   openRenderedFile(jobId: string): Promise<OpenRenderedFileResult>;
 }
@@ -75,9 +83,21 @@ export class BrowserHostAdapter implements HostAdapter {
     void _request;
     return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Exchange recovery requires the desktop app."}};
   };
+  prepareGenerationImport = async (_request: PrepareGenerationImportRequest): Promise<PrepareGenerationImportResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Image preparation requires the desktop app."}};
+  };
+  reviewCandidateSet = async (_request: ReviewCandidateSetRequest): Promise<ReviewCandidateSetResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Asset review requires the desktop app."}};
+  };
   startSampleRender = async (_request: StartRenderRequest): Promise<StartRenderResponse> => {
     void _request;
     throw new Error("Local rendering is available in the desktop app");
+  };
+  startProductionRender = async (_request: StartProductionRenderRequest): Promise<StartRenderResponse> => {
+    void _request;
+    throw new Error("Production rendering is available in the desktop app");
   };
   subscribeToRenderJobs = () => () => undefined;
   openRenderedFile = async (): Promise<OpenRenderedFileResult> => ({ok: false, error: {code: "DESKTOP_REQUIRED", message: "Opening rendered files requires the desktop app."}});
@@ -95,7 +115,10 @@ export class DesktopHostAdapter implements HostAdapter {
   loadProductionBundle = (request: LoadProductionBundleRequest) => this.bridge.loadProductionBundle(request);
   listGenerationExchanges = (request: ListGenerationExchangesRequest) => this.bridge.listGenerationExchanges(request);
   getGenerationExchange = (request: GetGenerationExchangeRequest) => this.bridge.getGenerationExchange(request);
+  prepareGenerationImport = (request: PrepareGenerationImportRequest) => this.bridge.prepareGenerationImport(request);
+  reviewCandidateSet = (request: ReviewCandidateSetRequest) => this.bridge.reviewCandidateSet(request);
   startSampleRender = (request: StartRenderRequest) => this.bridge.startSampleRender(request);
+  startProductionRender = (request: StartProductionRenderRequest) => this.bridge.startProductionRender(request);
   subscribeToRenderJobs = (listener: (event: RenderJobEvent) => void) => this.bridge.subscribeToRenderJobs(listener);
   openRenderedFile = (jobId: string) => this.bridge.openRenderedFile(jobId);
 }

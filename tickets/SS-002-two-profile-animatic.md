@@ -4,28 +4,32 @@ Status: in progress
 
 ## Objective
 
-Create a real New Production workflow that turns a pasted script into a profile-driven plan for either Kids Adventure or Frankly Weird History, exports missing-asset briefs for ChatGPT Images, imports and prepares original candidates, supports meaningful directing overrides, and renders visibly different 25-40 second animatics.
+Turn a pasted script into a profile-driven plan for either Kids Adventure or Frankly Weird History, export exact missing-asset briefs for manual ChatGPT Images generation, import and prepare original candidates, support meaningful directing overrides, and render visibly different production animatics.
 
-SS-001 infrastructure remains valid. Its visual sample is not evidence of product quality.
+SS-001 remains workstation infrastructure. Its sample is not a product-quality target.
 
 ## Gates
 
-1. Reference measurements: commit only cut data, classifications, statistics, and profile comparison.
-2. New Production: project type, Show Pack, script, asset strategy, production preset, and functioning create action.
-3. Profile planning: deterministic two-profile engine and automated comparison thresholds.
-4. Asset exchange: Export Generation Brief, Import Candidate Bundle, Prepare, Review, Approve. Initial provider is `manual-chatgpt-images`; no fake Generate action.
-5. Original art: generate candidates through this orchestration chat, import selected files, and record provenance.
-6. Preparation and rig validation: matte, alpha, crop, padding, registration, pivots, hashes, contact sheet, motion test.
-7. Semantic animation: character actions and camera/editorial actions compile to exact frames without shot-specific React logic.
-8. Review and override: framing, camera action, gesture, background, and candidate changes recompile preview and final render.
-9. Outputs: original kids and history MP4s with different cadence, mix, performance, text, inserts, camera, and audio cue plans.
+1. Reference measurements.
+2. New Production.
+3. Profile planning.
+4. Durable manual image exchange.
+5. Original profile-specific art.
+6. Preparation, set selection, manifests, diagnostic, and final approval.
+7. Semantic frame-accurate animation.
+8. Live review and overrides.
+9. Profile-distinct production outputs.
 
-## Gate status
+## Current status
 
 - Gate 1: complete.
-- Gates 2-3: functional UI, sole story-engine ownership, measured two-profile grammar, entity ledger, visual bindings, computed hashes, and semantic overrides are locally verified; not yet accepted by Pro.
-- Gate 4: shared runtime/skill schemas, concrete style-bible principles, pre-export disclosure, immutable opaque job IDs, durable restart-safe private lifecycle, authoritative Show Pack checks, stale/mismatch rejection, structured-bundle and loose-file role-mapped import, magic-byte/hash/dimension/path/UNC/symlink/junction validation, trusted-root containment, and timed/capped utility-process staging are locally verified. Staged candidates are explicitly unregistered and unapproved. Full decode/normalization, preparation, visual identity review, lineage, and final approval remain open.
-- Gates 5-9: pending.
+- Gates 2-3: accepted by Pro at commit `1c60d93`.
+- Gate 4: locally implemented through exact production binding, atomic evidence, restart artifact validation, staged-byte reverification, real preparation, contact sheets, set selection, diagnostic video, final approval, revision rebuild, and real render. Fresh Pro acceptance is pending.
+- Gate 5: pending a real authenticated ChatGPT generation/import pass for both profiles. The deterministic SS-002 proof fixture is not production art.
+- Gate 6: first 2D pose-swap character, layered background, and prop paths are implemented. True part/skeletal rigging, richer face states, and Blender routing remain open.
+- Gate 7: an initial 24-second exact-plan Remotion path is implemented and proven with approved local pixels, pose changes, cuts, camera movement, captions, guide audio, and SFX.
+- Gate 8: shot overrides and asset review exist; full live-player timeline and all inspector interactions remain open.
+- Gate 9: pending polished kids and history outputs.
 
 ## Binding comparison thresholds
 
@@ -36,18 +40,18 @@ SS-001 infrastructure remains valid. Its visual sample is not evidence of produc
 
 ## Acceptance
 
-- New Production creates a real active-session production; it never opens the old fixture.
-- Presets change at least five visible downstream parameters and plan estimates.
+- New Production creates the real workflow, never the SS-001 fixture.
+- Presets alter at least five downstream outcomes.
 - Script parsing extracts scenes, characters, locations, props, and narration.
-- Missing entities create generation briefs.
-- Original generated assets enter through a candidate bundle with provenance and hashes.
-- At least one generated character per profile is genuinely rigged.
-- All demonstrated controls perform downstream work.
-- An override reaches semantic plan, resolved plan, render plan, preview, and MP4.
-- Both renders are offline and reproducible.
-- No reference media or copied brand art is committed.
-- No temporary geometric art is presented as a final visual gate.
+- Generation briefs bind exactly to one saved production revision.
+- Original assets enter through byte-verified evidence with provenance and hashes.
+- Contact-sheet comparison precedes rigging.
+- Final approval binds a watched moving diagnostic and immutable local asset version.
+- Approval produces a new revision and exact deterministic recompile.
+- Overrides reach the semantic plan, resolved plan, render plan, live preview, and MP4.
+- Both profile renders are offline, reproducible, visually distinct, and production quality.
+- No reference media, copied brand art, private account data, or temporary proof art is presented as a final gate.
 
-## Out of scope
+## Out of scope for this ticket
 
-Live paid provider calls, final voices, phoneme alignment, professional music selection, licensed-stock integration, Blender rendering, After Effects, long-form persistence, cloud rendering, and final channel branding.
+Cloud rendering, accounts, billing, teams, and final channel branding. Voice, music, licensed media, and Blender integration are part of the ultimate product but require their own implemented provider/workflow gates rather than fake buttons.

@@ -35,7 +35,10 @@ function makeDesktopBridge(overrides: Partial<StoryStageDesktopBridge> = {}): St
     loadProductionBundle: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
     listGenerationExchanges: vi.fn(async () => ({exchanges: []})),
     getGenerationExchange: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
+    prepareGenerationImport: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
+    reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
     startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
+    startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
     subscribeToRenderJobs: vi.fn(() => () => undefined),
     openRenderedFile: vi.fn(async () => ({ok: true as const})),
     ...overrides,
@@ -145,7 +148,10 @@ describe("StoryStage studio", () => {
       loadProductionBundle: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
       listGenerationExchanges: vi.fn(async () => ({exchanges: []})),
       getGenerationExchange: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
+      prepareGenerationImport: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
+      reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
       startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
+      startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),
       openRenderedFile: vi.fn(async () => ({ok: true as const})),
     };
@@ -168,7 +174,7 @@ describe("StoryStage studio", () => {
     const summary = {exchangeJobId: "job-resumable", productionId: "production-the-punctual-box", revision: 1, title: "The Punctual Box", status: "awaiting-results" as const, briefCount: 3, importId: null, updatedAt: "2026-07-17T00:00:00.000Z"};
     window.storyStage = makeDesktopBridge({
       listGenerationExchanges: vi.fn(async () => ({exchanges: [summary]})),
-      getGenerationExchange: vi.fn(async () => ({ok: true as const, summary, looseMapping: null, stagedCandidates: []})),
+      getGenerationExchange: vi.fn(async () => ({ok: true as const, summary, looseMapping: null, stagedCandidates: [], preparation: null, assetReviews: [], missingRoleCount: 0, findings: []})),
     });
     const user = await createDefaultProduction();
     await user.click(screen.getByRole("button", {name: /Assets/}));

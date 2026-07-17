@@ -2,8 +2,17 @@ import {createHash} from "node:crypto";
 import {mkdtemp, mkdir, readFile, symlink, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+import sharp from "sharp";
 import {describe, expect, it} from "vitest";
-import {CandidateStagingError, stageCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "./index";
+import {
+  createAssetRigManifest,
+  generationBriefSchema,
+  validateAssetRigManifest,
+  verifyAssetRigManifestHash,
+  verifyPreparationReportHash,
+  verifyRigValidationReportHash,
+} from "@storystage/story-engine";
+import {CandidateStagingError, prepareCandidateSets, stageCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "./index";
 
 const rgbaPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+Avz9WQAAAABJRU5ErkJggg==", "base64");
 
@@ -49,6 +58,45 @@ async function fixture() {
   await writeFile(join(sourceRoot, "incoming", "friendly-name.png"), rgbaPng);
   return {root, sourceRoot, trustedStagingRoot, stagingRoot};
 }
+
+async function transparentFixture(width = 120, height = 160): Promise<Buffer> {
+  return sharp({create: {width, height, channels: 4, background: {r: 0, g: 0, b: 0, alpha: 0}}})
+    .composite([{input: {create: {width: Math.round(width * 0.5), height: Math.round(height * 0.72), channels: 4, background: {r: 242, g: 91, b: 79, alpha: 1}}}, left: Math.round(width * 0.25), top: Math.round(height * 0.2)}])
+    .png()
+    .toBuffer();
+}
+
+async function opaqueFixture(width = 120, height = 160): Promise<Buffer> {
+  return sharp({create: {width, height, channels: 3, background: {r: 242, g: 91, b: 79}}}).png().toBuffer();
+}
+
+const characterBrief = generationBriefSchema.parse({
+  schemaVersion: "1.0",
+  id: "brief-character",
+  exchangeMode: "manual-chatgpt-images",
+  productionId: "production-one",
+  requirementId: "requirement-character",
+  showPack: {id: "kids-adventure-v1", version: "1.0.0", contentHash: "a".repeat(64)},
+  styleBible: {id: "style-kids", version: "1.0.0", principles: ["Readable silhouettes"], contentHash: "b".repeat(64)},
+  identityLock: null,
+  entity: {id: "character-mara", name: "Mara", kind: "character"},
+  outputRole: "character-parts",
+  candidateCount: 1,
+  imageQuality: "high",
+  backgroundLayerTarget: 3,
+  posePack: "basic",
+  controlledMatte: "#00FF00",
+  referenceAssets: [],
+  sourceExcerpts: ["Mara opens the punctual box."],
+  creativeRequirements: ["Full-body pose swap kit"],
+  continuityRequirements: ["Preserve face and costume"],
+  prohibitedChanges: ["Do not redesign the character"],
+  expectedFiles: ["identity-sheet.png", "neutral-pose.png", "talk-pose.png", "reaction-pose.png"],
+  consumingSceneIds: ["scene-one"],
+  consumingShotIds: ["shot-one"],
+  approvalRequired: true,
+  status: "draft",
+});
 
 describe("secure candidate staging", () => {
   it("verifies real bytes and chooses a deterministic private staging path", async () => {
@@ -140,5 +188,84 @@ describe("secure candidate staging", () => {
     await writeFile(join(stagingRoot, staged!.relativeFile), Buffer.from("changed"));
     await expect(verifyStagedCandidates({candidates: [staged], trustedStagingRoot, stagingRoot}))
       .rejects.toMatchObject({code: "hash-mismatch"} satisfies Partial<CandidateStagingError>);
+  });
+});
+
+describe("candidate preparation and rig validation", () => {
+  it("normalizes a transparent pose kit, creates review evidence, and validates a pose-swap rig", async () => {
+    const {root, trustedStagingRoot, stagingRoot} = await fixture();
+    const sourceFiles = await Promise.all(characterBrief.expectedFiles.map(async (fileRole, index) => {
+      const sourceFile = join(root, `${fileRole}-${index}.png`);
+      await writeFile(sourceFile, fileRole === "identity-sheet.png" ? await opaqueFixture() : await transparentFixture());
+      return {candidateId: `character-candidate-${index + 1}`, sourceFile};
+    }));
+    const staged = await stageLooseCandidateFiles({files: sourceFiles, trustedStagingRoot, stagingRoot});
+    const request = {
+      importId: "import-one",
+      importRecordContentHash: "c".repeat(64),
+      exchangeJobId: "job-one",
+      candidates: staged.map((entry, index) => ({
+        candidateSetId: "set-character-one",
+        briefId: characterBrief.id,
+        requirementId: characterBrief.requirementId,
+        fileRole: characterBrief.expectedFiles[index]!,
+        expectedMediaType: entry.mediaType,
+        expectedWidth: entry.width,
+        expectedHeight: entry.height,
+        outputRole: characterBrief.outputRole,
+        stagedCandidate: entry.candidate,
+      })),
+    };
+
+    const report = await prepareCandidateSets({request, trustedStagingRoot, stagingRoot});
+    expect(verifyPreparationReportHash(report)).toBe(true);
+    expect(report.candidateSets).toHaveLength(1);
+    expect(report.candidateSets[0]).toMatchObject({status: "ready-for-review", failures: []});
+    expect(report.candidateSets[0]!.preparedCandidates).toHaveLength(4);
+    expect(report.candidateSets[0]!.contactSheet).toMatchObject({width: 680, height: 440});
+
+    for (const candidate of report.candidateSets[0]!.preparedCandidates) {
+      const bytes = await readFile(join(stagingRoot, candidate.relativeFile));
+      expect(hash(bytes)).toBe(candidate.preparedContentHash);
+      expect(await sharp(bytes).metadata()).toMatchObject({format: "png", width: 1600, height: 1800});
+      expect(candidate.registration.groundY).toBeLessThan(candidate.height);
+    }
+    const contactSheet = report.candidateSets[0]!.contactSheet!;
+    expect(hash(await readFile(join(stagingRoot, contactSheet.relativeFile)))).toBe(contactSheet.contentHash);
+
+    const manifest = createAssetRigManifest(characterBrief, "set-character-one", report.candidateSets[0]!.preparedCandidates, "2026-07-17T00:00:00.000Z");
+    const validation = validateAssetRigManifest(manifest, "2026-07-17T00:01:00.000Z");
+    expect(manifest).toMatchObject({type: "character-rig", animationMode: "pose-swap-2d"});
+    expect(verifyAssetRigManifestHash(manifest)).toBe(true);
+    expect(validation.status).toBe("passed");
+    expect(verifyRigValidationReportHash(validation)).toBe(true);
+  });
+
+  it("refuses to pretend an opaque cutout has a usable matte", async () => {
+    const {root, trustedStagingRoot, stagingRoot} = await fixture();
+    const sourceFile = join(root, "opaque-prop.png");
+    await writeFile(sourceFile, await opaqueFixture());
+    const [staged] = await stageLooseCandidateFiles({files: [{candidateId: "opaque-prop", sourceFile}], trustedStagingRoot, stagingRoot});
+    const report = await prepareCandidateSets({
+      request: {
+        importId: "import-one",
+        importRecordContentHash: "d".repeat(64),
+        exchangeJobId: "job-one",
+        candidates: [{candidateSetId: "set-prop-one", briefId: "brief-prop", requirementId: "requirement-prop", fileRole: "candidate.png", expectedMediaType: staged!.mediaType, expectedWidth: staged!.width, expectedHeight: staged!.height, outputRole: "prop-cutout", stagedCandidate: staged!.candidate}],
+      },
+      trustedStagingRoot,
+      stagingRoot,
+    });
+    expect(report.candidateSets[0]).toMatchObject({status: "needs-attention", preparedCandidates: [], contactSheet: null});
+    expect(report.candidateSets[0]!.failures[0]).toMatchObject({status: "needs-manual-mask", code: "MANUAL_MASK_REQUIRED"});
+  });
+
+  it("detects report and manifest tampering", async () => {
+    const {root, trustedStagingRoot, stagingRoot} = await fixture();
+    const sourceFile = join(root, "prop.png");
+    await writeFile(sourceFile, await transparentFixture());
+    const [staged] = await stageLooseCandidateFiles({files: [{candidateId: "prop-candidate", sourceFile}], trustedStagingRoot, stagingRoot});
+    const report = await prepareCandidateSets({request: {importId: "import-one", importRecordContentHash: "e".repeat(64), exchangeJobId: "job-one", candidates: [{candidateSetId: "set-prop-one", briefId: "brief-prop", requirementId: "requirement-prop", fileRole: "candidate.png", expectedMediaType: staged!.mediaType, expectedWidth: staged!.width, expectedHeight: staged!.height, outputRole: "prop-cutout", stagedCandidate: staged!.candidate}]}, trustedStagingRoot, stagingRoot});
+    expect(verifyPreparationReportHash({...report, preparedAt: "2026-07-17T00:00:00.000Z"})).toBe(false);
   });
 });

@@ -1,15 +1,17 @@
+/* eslint-disable @remotion/warn-native-media-tag -- native media is intentional in the Electron review UI, outside a Remotion composition. */
 import {
   buildAnimaticSync,
   candidateBundleSchema,
   createProductionDraft,
   generationJobDraftSchema,
-  finalizeProductionBundle,
   getShowPack,
   productionPolicies,
   productionBundleSchema,
+  productionBundleDraftSchema,
   sampleWorkshopScript,
   showPacks,
   type AnimaticBuild,
+  type ApprovedAssetVersion,
   type AssetRoutingPolicy,
   type GenerationJobDraft,
   type ProductionPreset,
@@ -43,9 +45,9 @@ import {
   Upload,
   WandSparkles,
 } from "lucide-react";
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {createHostAdapter, type HostAdapter} from "./host";
-import type {DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, ProductionBundleSummary, StagedCandidateSummary} from "@storystage/contracts";
+import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, RenderJobEvent, StagedCandidateSummary} from "@storystage/contracts";
 
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
@@ -54,6 +56,7 @@ type WorkspaceTab = "direction" | "assets";
 
 type ProductionSession = ProductionDraft & {
   overrides: ShotOverride[];
+  approvedAssetVersions: ApprovedAssetVersion[];
 };
 
 const projectOptions: Array<{
@@ -96,8 +99,9 @@ const defaultRouting = (type: ProjectType): AssetRoutingPolicy => ({
   proposed3D: "never",
 });
 
-const draftFromSession = ({overrides, ...draft}: ProductionSession): ProductionDraft => {
+const draftFromSession = ({overrides, approvedAssetVersions, ...draft}: ProductionSession): ProductionDraft => {
   void overrides;
+  void approvedAssetVersions;
   return draft;
 };
 
@@ -205,7 +209,7 @@ function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: 
     try {
       const draft = createProductionDraft({productionId: `production-${Date.now().toString(36)}`, title, projectType: type, showPackId: pack.id, preset, script, assetRoutingPolicy: routing});
       buildAnimaticSync({draft});
-      onCreate({...draft, overrides: []});
+      onCreate({...draft, overrides: [], approvedAssetVersions: []});
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "The production could not be created.");
     }
@@ -304,12 +308,13 @@ function DirectionBoard({build, selectedShotId, onSelect}: {build: AnimaticBuild
   );
 }
 
-function createGenerationJob(session: ProductionSession, build: AnimaticBuild): GenerationJobDraft {
+function createGenerationJob(session: ProductionSession, build: AnimaticBuild, productionBundleContentHash: string): GenerationJobDraft {
   const pack = getShowPack(session.showPackId);
   return generationJobDraftSchema.parse({
     schemaVersion: "1.0",
     exchangeMode: "manual-chatgpt-images",
     production: {id: session.productionId, revision: session.revision, title: session.title},
+    productionBundleContentHash,
     showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash},
     briefs: build.resolvedPlan.generationBriefs,
     expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-set-id>/<file-role>"},
@@ -325,7 +330,7 @@ function downloadBriefs(session: ProductionSession, payload: GenerationJobDraft)
   URL.revokeObjectURL(url);
 }
 
-function AssetExchange({session, build, host, capabilities}: {session: ProductionSession; build: AnimaticBuild; host: HostAdapter; capabilities: DesktopCapabilities}) {
+function AssetExchange({session, build, host, capabilities, onApprovedAsset, productionBundleContentHash}: {session: ProductionSession; build: AnimaticBuild; host: HostAdapter; capabilities: DesktopCapabilities; onApprovedAsset: (approved: ApprovedAssetVersion) => void; productionBundleContentHash: string | null}) {
   const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [reviewingExport, setReviewingExport] = useState(false);
   const [exchangeJobId, setExchangeJobId] = useState<string | null>(null);
@@ -337,7 +342,11 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
   const [looseAssignments, setLooseAssignments] = useState<Record<string, string>>({});
   const [importError, setImportError] = useState<string | null>(null);
   const [exchangeSummaries, setExchangeSummaries] = useState<GenerationExchangeSummary[]>([]);
-  const generationJobDraft = useMemo(() => createGenerationJob(session, build), [build, session]);
+  const [preparation, setPreparation] = useState<PreparationReview | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [assetReviews, setAssetReviews] = useState<CandidateSetReviewSummary[]>([]);
+  const [reviewingSetId, setReviewingSetId] = useState<string | null>(null);
+  const generationJobDraft = useMemo(() => createGenerationJob(session, build, productionBundleContentHash ?? "0".repeat(64)), [build, productionBundleContentHash, session]);
 
   const refreshExchanges = useCallback(async () => {
     if (!capabilities.manualImageExchange) return;
@@ -359,9 +368,11 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
     setLooseMapping(result.looseMapping);
     setLooseAssignments(result.looseMapping ? Object.fromEntries(result.looseMapping.candidates.map((candidate) => [candidate.candidateId, ""])) : {});
     setStagedCandidates(result.stagedCandidates);
+    setPreparation(result.preparation);
+    setAssetReviews(result.assetReviews);
     setImportedCount(result.stagedCandidates.length);
     setManualMaskCount(result.stagedCandidates.filter((candidate) => !candidate.checks.alphaOrMatte).length);
-    setMissingRoleCount(0);
+    setMissingRoleCount(result.missingRoleCount);
     setImportError(null);
     setExportStatus(`Resumed ${result.summary.status.replaceAll("-", " ")} exchange ${result.summary.exchangeJobId}.`);
   };
@@ -374,7 +385,8 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
       setReviewingExport(false);
       return;
     }
-    const result = await host.exportGenerationJob({serializedJob: JSON.stringify(payload)});
+    if (!productionBundleContentHash) return;
+    const result = await host.exportGenerationJob({serializedJob: JSON.stringify(payload), productionBundleContentHash});
     if (!result.ok) {
       setExportStatus(null);
       setImportError(result.error.message);
@@ -384,8 +396,31 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
     setExchangeJobId(result.jobId);
     setLooseMapping(null);
     setStagedCandidates([]);
+    setPreparation(null);
+    setAssetReviews([]);
     setReviewingExport(false);
     setExportStatus(`Private generation job exported for ${result.briefCount} briefs. Its folder is open.`);
+    await refreshExchanges();
+  };
+
+  const reviewCandidateSet = async (candidateSetId: string, decision: "select" | "approve" | "reject") => {
+    if (!exchangeJobId) return;
+    setReviewingSetId(candidateSetId);
+    const result = await host.reviewCandidateSet({exchangeJobId, candidateSetId, decision, notes: decision === "select" ? "Selected after coherent contact-sheet comparison." : decision === "approve" ? "Finally approved after visual and technical rig review." : "Rejected during visual review."});
+    setReviewingSetId(null);
+    if (result.status === "failed") {
+      setImportError(result.error.message);
+      return;
+    }
+    setAssetReviews(result.decisions);
+    if (result.approvedAssetVersion) onApprovedAsset(result.approvedAssetVersion);
+    const refreshed = await host.getGenerationExchange({exchangeJobId});
+    if (refreshed.ok) {
+      setPreparation(refreshed.preparation);
+      setAssetReviews(refreshed.assetReviews);
+    }
+    setExportStatus(`Candidate review recorded. Exchange is now ${result.exchangeStatus.replaceAll("-", " ")}.`);
+    setImportError(null);
     await refreshExchanges();
   };
 
@@ -419,6 +454,7 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
     setManualMaskCount(result.needsManualMaskCount);
     setMissingRoleCount(result.missingRoleCount);
     setStagedCandidates(result.candidates);
+    setPreparation(null);
     setImportError(null);
   };
 
@@ -432,6 +468,7 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
       return;
     }
     setLooseMapping(result);
+    setPreparation(null);
     setLooseAssignments(Object.fromEntries(result.candidates.map((candidate) => [candidate.candidateId, ""])));
     setImportError(null);
   };
@@ -453,8 +490,24 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
     setManualMaskCount(result.needsManualMaskCount);
     setMissingRoleCount(result.missingRoleCount);
     setStagedCandidates(result.candidates);
+    setPreparation(null);
     setLooseMapping(null);
     setImportError(null);
+    await refreshExchanges();
+  };
+
+  const prepareImport = async () => {
+    if (!exchangeJobId) return;
+    setPreparing(true);
+    const result = await host.prepareGenerationImport({exchangeJobId});
+    setPreparing(false);
+    if (result.status === "failed") {
+      setImportError(result.error.message);
+      return;
+    }
+    setPreparation(result.review);
+    setImportError(null);
+    setExportStatus(`Prepared ${result.review.candidateSets.length} coherent candidate sets for visual review.`);
     await refreshExchanges();
   };
 
@@ -462,11 +515,12 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
     <div className="asset-exchange">
       <section className="provider-banner"><div className="provider-icon"><ImagePlus size={23} /></div><div><p className="eyebrow">Provider-neutral exchange</p><h2>Manual ChatGPT Images</h2><p>Export an approved brief, generate original candidates in ChatGPT, then import the result bundle. No API call or paid generation is hidden here.</p></div><span className="manual-badge">Manual round trip</span></section>
       <div className={`exchange-actions ${capabilities.manualImageExchange ? "is-desktop" : ""}`}>
-        <button onClick={() => setReviewingExport(true)}><Download size={16} /><span><strong>Review generation export</strong><small>{capabilities.manualImageExchange ? "Nothing leaves before approval" : "JSON + expected output contract"}</small></span></button>
+        <button disabled={capabilities.manualImageExchange && !productionBundleContentHash} onClick={() => setReviewingExport(true)}><Download size={16} /><span><strong>Review generation export</strong><small>{capabilities.manualImageExchange ? productionBundleContentHash ? "Bound to the acknowledged production snapshot" : "Waiting for the production snapshot to save" : "JSON + expected output contract"}</small></span></button>
         {capabilities.manualImageExchange
           ? <button disabled={!exchangeJobId} onClick={() => void stageDesktopBundle()}><Upload size={16} /><span><strong>Import generated results</strong><small>{exchangeJobId ? "Secure native folder selection" : "Export a job first"}</small></span></button>
           : <label><Upload size={16} /><span><strong>Validate candidate manifest</strong><small>Browser preview only{" / "}no file staging</small></span><input aria-label="Import candidate bundle" type="file" accept="application/json,.json" onChange={(event) => void importBundle(event.target.files?.[0])} /></label>}
         {capabilities.manualImageExchange ? <button disabled={!exchangeJobId} onClick={() => void importLooseFiles()}><ImagePlus size={16} /><span><strong>Import loose image files</strong><small>Map downloads to expected roles</small></span></button> : null}
+        {capabilities.manualImageExchange ? <button disabled={!exchangeJobId || stagedCandidates.length === 0 || preparing} onClick={() => void prepareImport()}><WandSparkles size={16} /><span><strong>{preparing ? "Preparing image assets..." : "Prepare staged candidates"}</strong><small>Decode, normalize, register, and contact-sheet</small></span></button> : null}
       </div>
       {exchangeSummaries.length > 0 ? <section className="exchange-history" aria-label="Saved generation exchanges">
         <header><div><p className="eyebrow">Durable local handoffs</p><h2>Resume an image exchange</h2></div><span>{exchangeSummaries.length} saved</span></header>
@@ -500,6 +554,18 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
       {importedCount > 0 ? <p className="exchange-status"><PackageCheck size={14} />{capabilities.manualImageExchange ? `Staged ${importedCount} byte-verified candidates${manualMaskCount > 0 ? `; ${manualMaskCount} need a manual mask` : ""}${missingRoleCount > 0 ? `; ${missingRoleCount} expected roles are still missing` : ""}. Preparation and approval remain separate gates.` : `Manifest contains ${importedCount} candidates. Open the desktop app to verify and stage the actual image bytes.`}</p> : null}
       {importError ? <p className="exchange-error" role="alert"><CircleAlert size={14} />{importError}</p> : null}
       {stagedCandidates.length > 0 ? <section className="validation-report"><header><div><p className="eyebrow">Import validation</p><h2>Staged files are not prepared or approved assets</h2></div><span>Preparation required</span></header><div>{stagedCandidates.map((candidate) => <article key={candidate.candidateId}><PackageCheck size={15} /><div><strong>{candidate.originalName}</strong><small>{candidate.candidateSetId ? `${candidate.candidateSetId} / ` : ""}{candidate.fileRole ? `${candidate.fileRole} / ` : ""}{candidate.width}×{candidate.height} / {candidate.stagingState.replaceAll("-", " ")}</small></div><span>{candidate.checks.alphaOrMatte ? "Alpha present / unregistered" : "Mask needed / unregistered"}</span></article>)}</div></section> : null}
+      {preparation ? <section className="preparation-review" aria-label="Prepared candidate review">
+        <header><div><p className="eyebrow">Prepared visual evidence</p><h2>Review the pixels, not just the paperwork</h2></div><span>{preparation.candidateSets.filter((candidateSet) => candidateSet.status === "ready-for-review").length}/{preparation.candidateSets.length} review-ready</span></header>
+        <p>Compare coherent contact sheets first. Selecting a set then builds a moving rig diagnostic from its normalized local PNGs; final approval stays locked until that MP4 exists.</p>
+        <div className="prepared-set-grid">{preparation.candidateSets.map((candidateSet) => <article className={candidateSet.status === "ready-for-review" ? "is-ready" : "needs-attention"} key={candidateSet.candidateSetId}>
+          <div className="prepared-set-heading"><div><small>{candidateSet.outputRole.replaceAll("-", " ")}</small><h3>{candidateSet.entityName}</h3><span>{candidateSet.candidateSetId}</span></div><b>{assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? candidateSet.status.replaceAll("-", " ")}</b></div>
+          {candidateSet.contactSheetDataUrl ? <img src={candidateSet.contactSheetDataUrl} alt={`${candidateSet.entityName} prepared candidate contact sheet`} /> : <div className="contact-sheet-empty"><CircleAlert size={20} />No reviewable contact sheet</div>}
+          {candidateSet.rig ? <div className="rig-diagnostic"><span>Moving diagnostic / 4 seconds</span><video aria-label={`${candidateSet.entityName} moving rig diagnostic`} autoPlay controls loop muted playsInline src={candidateSet.rig.diagnosticVideoDataUrl} /></div> : null}
+          <div className="prepared-role-list">{candidateSet.preparedCandidates.map((candidate) => <span key={candidate.candidateId}><strong>{candidate.fileRole}</strong><small>{candidate.width}x{candidate.height} Â· {candidate.assetClass.replaceAll("-", " ")}</small></span>)}</div>
+          {candidateSet.failures.map((failure) => <p className="prepared-failure" key={failure.candidateId}><CircleAlert size={14} /><span><strong>{failure.fileRole}</strong>{failure.message}</span></p>)}
+          <footer><span>{candidateSet.rig ? `${candidateSet.rig.type.replaceAll("-", " ")} / ${candidateSet.rig.validationStatus}` : "Compare before rigging"}</span><div><button disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "")} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, "reject")}>Reject</button><button className="approve-set" disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "") || (assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" && !candidateSet.rig)} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "approve" : "select")}>{reviewingSetId === candidateSet.candidateSetId ? "Building proof..." : assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "Final approve" : "Select for rig"}</button></div></footer>
+        </article>)}</div>
+      </section> : null}
       <section className="request-list"><header><div><p className="eyebrow">Missing asset ledger</p><h2>{build.resolvedPlan.generationBriefs.length} generation briefs</h2></div><span>Approval required</span></header>
         {build.resolvedPlan.generationBriefs.map((request) => {
           return <article className="request-card" key={request.id}><span className="request-kind">{request.outputRole.replaceAll("-", " ")}</span><div><h3>{request.entity.name}</h3><p>{request.creativeRequirements[0]}</p></div><dl><div><dt>Candidates</dt><dd>{request.candidateCount}</dd></div><div><dt>Quality</dt><dd>{request.imageQuality}</dd></div><div><dt>Layers</dt><dd>{request.backgroundLayerTarget}</dd></div><div><dt>Pose pack</dt><dd>{request.posePack}</dd></div></dl><span className="request-state">{request.status}</span></article>;
@@ -510,7 +576,11 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
 }
 
 function Workspace({session, setSession, onExit, host, capabilities}: {session: ProductionSession; setSession: (next: ProductionSession) => void; onExit: () => void; host: HostAdapter; capabilities: DesktopCapabilities}) {
-  const build = useMemo(() => buildAnimaticSync({draft: draftFromSession(session), overrides: session.overrides}), [session]);
+  const build = useMemo(() => buildAnimaticSync({draft: draftFromSession(session), overrides: session.overrides, approvedAssetVersions: session.approvedAssetVersions}), [session]);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const saveSequence = useRef(0);
+  const [lastSavedHash, setLastSavedHash] = useState<string | null>(null);
+  const [renderJob, setRenderJob] = useState<RenderJobEvent | null>(null);
   const [tab, setTab] = useState<WorkspaceTab>("direction");
   const [selectedShotId, setSelectedShotId] = useState(build.renderPlan.shots[0]!.id);
   const selectedShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
@@ -521,18 +591,38 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
 
   useEffect(() => {
     if (!capabilities.manualImageExchange) return;
-    const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: draftFromSession(session), overrides: session.overrides, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, new Date().toISOString());
-    void host.saveProductionBundle({serializedBundle: JSON.stringify(bundle)});
+    const sequence = ++saveSequence.current;
+    setLastSavedHash(null);
+    const draft = productionBundleDraftSchema.parse({schemaVersion: "1.0", production: draftFromSession(session), overrides: session.overrides, approvedAssetVersions: session.approvedAssetVersions, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate});
+    saveQueue.current = saveQueue.current.then(async () => {
+      const result = await host.saveProductionBundle({serializedDraft: JSON.stringify(draft)});
+      if (result.ok && sequence === saveSequence.current) setLastSavedHash(result.contentHash);
+    });
   }, [build, capabilities.manualImageExchange, host, session]);
+
+  useEffect(() => host.subscribeToRenderJobs(setRenderJob), [host]);
+
+  const renderApprovedSlice = async () => {
+    try {
+      const result = await host.startProductionRender({productionId: session.productionId, revision: session.revision});
+      setRenderJob({jobId: result.jobId, status: "queued", progress: null, message: "Approved production slice queued"});
+    } catch (error) {
+      setRenderJob({jobId: "render-start", status: "failed", progress: null, message: error instanceof Error ? error.message : "Production render could not start.", error: {code: "RENDER_START_FAILED", message: error instanceof Error ? error.message : "Production render could not start."}});
+    }
+  };
 
   const updateOverride = (patch: Partial<ShotOverride>) => {
     const nextOverride = {...currentOverride, shotId: selectedShot.id, ...patch};
     setSession({...session, overrides: [...session.overrides.filter((override) => override.shotId !== selectedShot.id), nextOverride]});
   };
 
+  const applyApprovedAsset = (approved: ApprovedAssetVersion) => {
+    setSession({...session, revision: session.revision + 1, approvedAssetVersions: [...session.approvedAssetVersions.filter((asset) => asset.requirementId !== approved.requirementId), approved]});
+  };
+
   return (
     <div className="workspace-shell">
-      <header className="workspace-topbar"><Brand /><button className="quiet-button" onClick={onExit}><ArrowLeft size={14} />Productions</button><div className="production-crumb"><span>{pack.displayName}</span><ChevronRight size={13} /><strong>{session.title}</strong></div><span className="saved-state"><Check size={13} />Active session</span></header>
+      <header className="workspace-topbar"><Brand /><button className="quiet-button" onClick={onExit}><ArrowLeft size={14} />Productions</button><div className="production-crumb"><span>{pack.displayName}</span><ChevronRight size={13} /><strong>{session.title}</strong></div><span className="saved-state"><Check size={13} />{lastSavedHash ? `Saved ${lastSavedHash.slice(0, 8)}` : "Saving"}</span><button className="render-slice-button" disabled={!lastSavedHash || session.approvedAssetVersions.length === 0 || Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onClick={() => void renderApprovedSlice()}><PlayCircle size={15} />{renderJob && !["completed", "failed"].includes(renderJob.status) ? renderJob.message : "Render approved 24s slice"}</button>{renderJob?.status === "completed" ? <button className="quiet-button" onClick={() => void host.openRenderedFile(renderJob.jobId)}>Open MP4</button> : null}</header>
       <aside className="workspace-nav">
         <button className={tab === "direction" ? "is-active" : ""} onClick={() => setTab("direction")}><Aperture size={18} /><span>Direction</span></button>
         <button className={tab === "assets" ? "is-active" : ""} onClick={() => setTab("assets")}><Layers3 size={18} /><span>Assets</span><b>{build.resolvedPlan.generationBriefs.length}</b></button>
@@ -557,7 +647,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               {currentOverride ? <p className="override-state"><Check size={13} />Override compiled into the current render plan.</p> : <p className="override-help">Change a field to create a semantic override. No JSON editing required.</p>}
             </aside>
           </div>
-        </> : <AssetExchange session={session} build={build} host={host} capabilities={capabilities} />}
+        </> : <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} productionBundleContentHash={lastSavedHash} />}
       </main>
     </div>
   );
@@ -583,7 +673,7 @@ export function App() {
     const result = await host.loadProductionBundle({productionId: production.productionId, revision: production.revision});
     if (!result.ok) return;
     const bundle = productionBundleSchema.parse(JSON.parse(result.serializedBundle));
-    setSession({...bundle.production, overrides: bundle.overrides});
+    setSession({...bundle.production, overrides: bundle.overrides, approvedAssetVersions: bundle.approvedAssetVersions ?? []});
     setScreen("workspace");
   };
 

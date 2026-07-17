@@ -3,6 +3,7 @@ import {
   canTransitionRenderJob,
   assetWorkerCommandSchema,
   exportGenerationJobRequestSchema,
+  prepareGenerationImportRequestSchema,
   renderJobEventSchema,
   renderWorkerMessageSchema,
   startRenderRequestSchema,
@@ -15,9 +16,10 @@ describe("StoryStage contracts", () => {
   });
 
   it("keeps image exchange requests path-free and bounded", () => {
-    expect(exportGenerationJobRequestSchema.safeParse({serializedJob: "{}", outputPath: "C:/elsewhere"}).success).toBe(false);
+    expect(exportGenerationJobRequestSchema.safeParse({serializedJob: "{}", productionBundleContentHash: "a".repeat(64), outputPath: "C:/elsewhere"}).success).toBe(false);
     expect(stageCandidateBundleRequestSchema.safeParse({exchangeJobId: "job-one", sourcePath: "C:/elsewhere"}).success).toBe(false);
-    expect(exportGenerationJobRequestSchema.safeParse({serializedJob: "x".repeat(2_000_001)}).success).toBe(false);
+    expect(exportGenerationJobRequestSchema.safeParse({serializedJob: "x".repeat(2_000_001), productionBundleContentHash: "a".repeat(64)}).success).toBe(false);
+    expect(prepareGenerationImportRequestSchema.safeParse({exchangeJobId: "job-one", stagingRoot: "C:/elsewhere"}).success).toBe(false);
   });
 
   it("validates render-worker messages at the process boundary", () => {
@@ -31,6 +33,7 @@ describe("StoryStage contracts", () => {
   it("keeps the asset worker envelope strict and bounded", () => {
     expect(assetWorkerCommandSchema.safeParse({type: "stage-candidate-bundle", requestId: "request-one", sourceRoot: "C:/trusted-source", trustedStagingRoot: "C:/private-root", stagingRoot: "C:/private-root/import-one", serializedBundle: "{}"}).success).toBe(true);
     expect(assetWorkerCommandSchema.safeParse({type: "stage-candidate-bundle", requestId: "request-one", sourceRoot: "C:/trusted-source", trustedStagingRoot: "C:/private-root", stagingRoot: "C:/private-root/import-one", serializedBundle: "{}", executable: "powershell.exe"}).success).toBe(false);
+    expect(assetWorkerCommandSchema.safeParse({type: "prepare-candidate-sets", requestId: "request-two", trustedStagingRoot: "C:/private-root", stagingRoot: "C:/private-root/import-one", serializedRequest: "{}"}).success).toBe(true);
   });
 
   it("rejects incomplete failed job events", () => {

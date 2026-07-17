@@ -4,6 +4,7 @@ packages:
 allowBuilds:
   esbuild: true
   ffmpeg-static: true
+  sharp: true
 minimumReleaseAgeExclude:
   - '@remotion/bundler@4.0.490'
   - '@remotion/canvas-capture@4.0.490'

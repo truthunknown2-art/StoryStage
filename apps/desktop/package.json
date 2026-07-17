@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsup --config tsup.config.ts",
     "start": "electron dist/main.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run src/import-evidence-store.test.ts"
   },
   "dependencies": {
     "@storystage/contracts": "workspace:*",
@@ -16,6 +17,7 @@
   "devDependencies": {
     "@types/node": "24.10.1",
     "tsup": "8.5.1",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
   }
 }

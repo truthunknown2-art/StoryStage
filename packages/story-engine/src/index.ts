@@ -1,5 +1,7 @@
 export * from "./animation-compiler";
+export * from "./asset-preparation";
 export * from "./asset-approval";
+export * from "./asset-review";
 export * from "./asset-resolver";
 export * from "./canonical-hash";
 export * from "./candidate-set-validation";
@@ -11,6 +13,7 @@ export * from "./metrics";
 export * from "./pipeline";
 export * from "./production-policy";
 export * from "./production-bundle";
+export * from "./rig-manifests";
 export * from "./sample-script";
 export * from "./script-parser";
 export * from "./show-pack";

@@ -20,7 +20,10 @@ describe("host adapters", () => {
       loadProductionBundle: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
       listGenerationExchanges: vi.fn(async () => ({exchanges: []})),
       getGenerationExchange: vi.fn(async () => ({ok: false as const, error: {code: "NOT_FOUND", message: "Not found"}})),
+      prepareGenerationImport: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
+      reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
       startSampleRender: vi.fn(async () => ({jobId: "job-1"})),
+      startProductionRender: vi.fn(async () => ({jobId: "production-job-1"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),
       openRenderedFile: vi.fn(async () => ({ok: true as const})),
     };

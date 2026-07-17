@@ -16,11 +16,16 @@ import {
   loadProductionBundleRequestSchema,
   loadProductionBundleResultSchema,
   openRenderedFileResultSchema,
+  prepareGenerationImportRequestSchema,
+  prepareGenerationImportResultSchema,
+  reviewCandidateSetRequestSchema,
+  reviewCandidateSetResultSchema,
   saveProductionBundleRequestSchema,
   saveProductionBundleResultSchema,
   renderJobEventSchema,
   startRenderRequestSchema,
   startRenderResponseSchema,
+  startProductionRenderRequestSchema,
   stageCandidateBundleRequestSchema,
   stageCandidateBundleResultSchema,
   type ExportGenerationJobRequest,
@@ -29,9 +34,12 @@ import {
   type GetGenerationExchangeRequest,
   type ListGenerationExchangesRequest,
   type LoadProductionBundleRequest,
+  type PrepareGenerationImportRequest,
+  type ReviewCandidateSetRequest,
   type RenderJobEvent,
   type SaveProductionBundleRequest,
   type StartRenderRequest,
+  type StartProductionRenderRequest,
   type StoryStageDesktopBridge,
   type StageCandidateBundleRequest,
 } from "@storystage/contracts";
@@ -71,9 +79,21 @@ const bridge: StoryStageDesktopBridge = {
     const payload = getGenerationExchangeRequestSchema.parse(request);
     return getGenerationExchangeResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.getGenerationExchange, payload));
   },
+  prepareGenerationImport: async (request: PrepareGenerationImportRequest) => {
+    const payload = prepareGenerationImportRequestSchema.parse(request);
+    return prepareGenerationImportResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.prepareGenerationImport, payload));
+  },
+  reviewCandidateSet: async (request: ReviewCandidateSetRequest) => {
+    const payload = reviewCandidateSetRequestSchema.parse(request);
+    return reviewCandidateSetResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.reviewCandidateSet, payload));
+  },
   startSampleRender: async (request: StartRenderRequest) => {
     const payload = startRenderRequestSchema.parse(request);
     return startRenderResponseSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.renderStart, payload));
+  },
+  startProductionRender: async (request: StartProductionRenderRequest) => {
+    const payload = startProductionRenderRequestSchema.parse(request);
+    return startRenderResponseSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.productionRenderStart, payload));
   },
   subscribeToRenderJobs: (listener: (event: RenderJobEvent) => void) => {
     const handler = (_event: Electron.IpcRendererEvent, payload: unknown) => {

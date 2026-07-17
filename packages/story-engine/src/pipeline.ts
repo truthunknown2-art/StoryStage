@@ -1,4 +1,5 @@
 import {compileAnimation} from "./animation-compiler";
+import {applyApprovedAssetVersion} from "./asset-approval";
 import {resolveAssets} from "./asset-resolver";
 import {directEpisode} from "./director";
 import {measureDirectedPlan} from "./metrics";
@@ -6,6 +7,7 @@ import {
   productionDraftSchema,
   productionEstimateSchema,
   type AssetRoutingPolicy,
+  type ApprovedAssetVersion,
   type CreativeEpisodePlan,
   type DirectedPlanMetrics,
   type FrameAccurateRenderPlan,
@@ -23,7 +25,7 @@ import {getProductionPolicy} from "./production-policy";
 import {getShowPack} from "./show-pack";
 import {createEstimatedTiming, EstimatedTextTimingProvider, type DialogueTimingProvider} from "./timing";
 
-export type BuildAnimaticInput = {draft: ProductionDraft; overrides?: ShotOverride[]; timingProvider?: DialogueTimingProvider};
+export type BuildAnimaticInput = {draft: ProductionDraft; overrides?: ShotOverride[]; approvedAssetVersions?: ApprovedAssetVersion[]; timingProvider?: DialogueTimingProvider};
 export type CreateProductionDraftInput = Omit<ProductionDraft, "schemaVersion" | "revision" | "assetRoutingPolicy" | "format"> & {revision?: number; assetRoutingPolicy?: AssetRoutingPolicy; format?: ProductionDraft["format"]};
 
 export type AnimaticBuild = {
@@ -58,7 +60,8 @@ function buildFromStages(input: BuildAnimaticInput, draft: ProductionDraft, scri
   const showPack = getShowPack(draft.showPackId);
   const productionPolicy = getProductionPolicy(draft.preset);
   const creativePlan = directEpisode(scriptDocument, storyAnalysis, timing, {draft, productionPolicy, showPack});
-  const resolvedPlan = resolveAssets(creativePlan, showPack, input.overrides ?? []);
+  const baseResolvedPlan = resolveAssets(creativePlan, showPack, input.overrides ?? []);
+  const resolvedPlan = (input.approvedAssetVersions ?? []).reduce((plan, approved) => applyApprovedAssetVersion(plan, approved), baseResolvedPlan);
   const renderPlan = compileAnimation(resolvedPlan);
   const metrics = measureDirectedPlan(creativePlan);
   const estimate = productionEstimateSchema.parse({shotCount: renderPlan.shots.length, durationSeconds: renderPlan.durationInFrames / renderPlan.fps, newRequirementCount: resolvedPlan.generationBriefs.length, deferredRequirementCount: resolvedPlan.requirements.filter((requirement) => requirement.status === "deferred").length, estimatedCandidateImages: resolvedPlan.generationBriefs.reduce((sum, brief) => sum + brief.candidateCount, 0), outputWidth: renderPlan.width, outputHeight: renderPlan.height});

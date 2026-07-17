@@ -1,10 +1,21 @@
 import {createHash} from "node:crypto";
 import {lstat, mkdir, readFile, realpath, writeFile} from "node:fs/promises";
 import {basename, isAbsolute, join, relative, resolve} from "node:path";
+import sharp from "sharp";
 import {
   candidateBundleSchema,
+  candidateSetContactSheetSchema,
+  finalizePreparationReport,
+  prepareCandidateSetsRequestSchema,
+  preparedCandidateSchema,
   stagedCandidateSchema,
   type CandidateBundle,
+  type CandidatePreparationInput,
+  type CandidateSetContactSheet,
+  type CandidateSetPreparation,
+  type PreparationReport,
+  type PrepareCandidateSetsRequest,
+  type PreparedCandidate,
   type StagedCandidate,
 } from "@storystage/story-engine";
 
@@ -58,6 +69,12 @@ export type StageLooseCandidateFilesInput = {
 
 export type VerifyStagedCandidatesInput = {
   candidates: StagedCandidate[] | unknown;
+  trustedStagingRoot: string;
+  stagingRoot: string;
+};
+
+export type PrepareCandidateSetsInput = {
+  request: PrepareCandidateSetsRequest | unknown;
   trustedStagingRoot: string;
   stagingRoot: string;
 };
@@ -436,4 +453,134 @@ export async function verifyStagedCandidates(input: VerifyStagedCandidatesInput)
     }
   }
   return candidates;
+}
+
+type PreparationSpec = {
+  assetClass: PreparedCandidate["assetClass"];
+  width: number;
+  height: number;
+  requiresTransparency: boolean;
+  trimAndGround: boolean;
+  fit: "contain" | "cover";
+  anchorX: number;
+  anchorY: number;
+};
+
+function preparationSpec(input: CandidatePreparationInput): PreparationSpec {
+  if (input.outputRole === "character-canonical-sheet" || input.outputRole === "character-parts") {
+    if (input.fileRole === "identity-sheet.png") return {assetClass: "reference-sheet", width: 1600, height: 1800, requiresTransparency: false, trimAndGround: false, fit: "contain", anchorX: 0.5, anchorY: 0.98};
+    return {assetClass: "character-pose", width: 1600, height: 1800, requiresTransparency: true, trimAndGround: true, fit: "contain", anchorX: 0.5, anchorY: 0.98};
+  }
+  if (input.outputRole === "background-master" || input.outputRole === "background-layers") {
+    const isPlate = input.fileRole === "clean-plate.png";
+    return {assetClass: isPlate ? "background-plate" : "background-layer", width: 1920, height: 1080, requiresTransparency: !isPlate, trimAndGround: false, fit: isPlate ? "cover" : "contain", anchorX: 0.5, anchorY: 0.5};
+  }
+  if (input.outputRole === "prop-cutout") return {assetClass: "prop-cutout", width: 1024, height: 1024, requiresTransparency: true, trimAndGround: true, fit: "contain", anchorX: 0.5, anchorY: 0.96};
+  return {assetClass: "editorial-visual", width: 1920, height: 1080, requiresTransparency: false, trimAndGround: false, fit: "contain", anchorX: 0.5, anchorY: 0.5};
+}
+
+function containedDimensions(sourceWidth: number, sourceHeight: number, targetWidth: number, targetHeight: number, fit: "contain" | "cover"): {width: number; height: number} {
+  const scale = fit === "cover" ? Math.max(targetWidth / sourceWidth, targetHeight / sourceHeight) : Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight);
+  return {width: Math.max(1, Math.round(sourceWidth * scale)), height: Math.max(1, Math.round(sourceHeight * scale))};
+}
+
+async function normalizeCandidate(input: CandidatePreparationInput, stagingRoot: string): Promise<{candidate: PreparedCandidate; bytes: Buffer}> {
+  const spec = preparationSpec(input);
+  const sourceFile = resolve(stagingRoot, ...input.stagedCandidate.relativeFile.split("/"));
+  const sourceBytes = await readFile(sourceFile);
+  const detected = detectImage(sourceBytes);
+  if (detected.mediaType !== input.expectedMediaType || detected.width !== input.expectedWidth || detected.height !== input.expectedHeight) throw new CandidateStagingError("media-mismatch", `${input.fileRole} no longer matches its imported codec or dimensions.`);
+  const oriented = await sharp(sourceBytes, {limitInputPixels: DEFAULT_MAX_PIXELS, sequentialRead: true}).rotate().toBuffer();
+  const stats = await sharp(oriented, {limitInputPixels: DEFAULT_MAX_PIXELS}).stats();
+  if (spec.requiresTransparency && stats.isOpaque) throw new CandidateStagingError("media-mismatch", `${input.fileRole} needs a real transparent background or reviewed matte before preparation.`);
+
+  let output: Buffer;
+  let contentBounds: PreparedCandidate["contentBounds"];
+  let groundY: number;
+  if (spec.trimAndGround) {
+    const trimmed = await sharp(oriented, {limitInputPixels: DEFAULT_MAX_PIXELS}).trim({background: {r: 0, g: 0, b: 0, alpha: 0}, threshold: 6}).ensureAlpha().png().toBuffer({resolveWithObject: true});
+    const maxWidth = Math.round(spec.width * 0.84);
+    const maxHeight = Math.round(spec.height * 0.9);
+    const dimensions = containedDimensions(trimmed.info.width, trimmed.info.height, maxWidth, maxHeight, "contain");
+    const left = Math.floor((spec.width - dimensions.width) / 2);
+    const bottomPadding = Math.max(1, Math.round(spec.height * (1 - spec.anchorY)));
+    const top = Math.max(0, spec.height - bottomPadding - dimensions.height);
+    const right = spec.width - left - dimensions.width;
+    const bottom = spec.height - top - dimensions.height;
+    output = await sharp(trimmed.data).resize(dimensions.width, dimensions.height, {fit: "fill"}).extend({top, bottom, left, right, background: {r: 0, g: 0, b: 0, alpha: 0}}).ensureAlpha().png({compressionLevel: 9, adaptiveFiltering: true}).toBuffer();
+    contentBounds = {left, top, width: dimensions.width, height: dimensions.height};
+    groundY = top + dimensions.height - 1;
+  } else {
+    const metadata = await sharp(oriented, {limitInputPixels: DEFAULT_MAX_PIXELS}).metadata();
+    if (!metadata.width || !metadata.height) throw new CandidateStagingError("unsupported-media", `Could not decode dimensions for ${input.fileRole}.`);
+    const dimensions = containedDimensions(metadata.width, metadata.height, spec.width, spec.height, spec.fit);
+    output = await sharp(oriented, {limitInputPixels: DEFAULT_MAX_PIXELS}).resize(spec.width, spec.height, {fit: spec.fit, position: "centre", background: {r: 0, g: 0, b: 0, alpha: 0}}).ensureAlpha().png({compressionLevel: 9, adaptiveFiltering: true}).toBuffer();
+    const visibleWidth = spec.fit === "cover" ? spec.width : Math.min(spec.width, dimensions.width);
+    const visibleHeight = spec.fit === "cover" ? spec.height : Math.min(spec.height, dimensions.height);
+    contentBounds = {left: Math.floor((spec.width - visibleWidth) / 2), top: Math.floor((spec.height - visibleHeight) / 2), width: visibleWidth, height: visibleHeight};
+    groundY = Math.min(spec.height - 1, contentBounds.top + contentBounds.height - 1);
+  }
+
+  const relativeFile = `prepared/${input.stagedCandidate.candidateId}.png`;
+  const destination = resolve(stagingRoot, ...relativeFile.split("/"));
+  try {
+    await writeFile(destination, output, {flag: "wx", mode: 0o600});
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") throw new CandidateStagingError("output-collision", `Prepared candidate already exists: ${input.stagedCandidate.candidateId}`);
+    throw error;
+  }
+  const candidate = preparedCandidateSchema.parse({schemaVersion: "1.0", candidateId: input.stagedCandidate.candidateId, candidateSetId: input.candidateSetId, briefId: input.briefId, requirementId: input.requirementId, fileRole: input.fileRole, assetClass: spec.assetClass, sourceContentHash: input.stagedCandidate.sourceContentHash, preparedContentHash: sha256(output), relativeFile, mediaType: "image/png", width: spec.width, height: spec.height, contentBounds, registration: {anchorX: spec.anchorX, anchorY: spec.anchorY, pivotX: Math.round(spec.width * spec.anchorX), pivotY: groundY, groundY}, processor: {id: "sharp", version: sharp.versions.sharp}, preparationState: "prepared", checks: {dimensions: true, mediaType: true, alphaOrMatte: true, registration: true, metadataStripped: true}});
+  return {candidate, bytes: output};
+}
+
+async function createContactSheet(candidateSetId: string, entries: Array<{candidate: PreparedCandidate; bytes: Buffer}>, stagingRoot: string): Promise<CandidateSetContactSheet | null> {
+  if (entries.length === 0) return null;
+  const cellWidth = 340;
+  const cellHeight = 220;
+  const columns = 2;
+  const rows = Math.ceil(entries.length / columns);
+  const width = columns * cellWidth;
+  const height = rows * cellHeight;
+  const cells: CandidateSetContactSheet["cells"] = [];
+  const overlays: Array<{input: Buffer; left: number; top: number}> = [];
+  for (const [index, entry] of entries.entries()) {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const left = column * cellWidth + 10;
+    const top = row * cellHeight + 10;
+    const thumbnail = await sharp(entry.bytes).resize(320, 180, {fit: "contain", background: {r: 17, g: 23, b: 23, alpha: 1}}).png().toBuffer();
+    overlays.push({input: thumbnail, left, top});
+    cells.push({candidateId: entry.candidate.candidateId, fileRole: entry.candidate.fileRole, left, top, width: 320, height: 180});
+  }
+  const bytes = await sharp({create: {width, height, channels: 4, background: {r: 13, g: 19, b: 19, alpha: 1}}}).composite(overlays).png({compressionLevel: 9}).toBuffer();
+  const relativeFile = `prepared/contact-sheet-${candidateSetId}.png`;
+  await writeFile(resolve(stagingRoot, ...relativeFile.split("/")), bytes, {flag: "wx", mode: 0o600});
+  return candidateSetContactSheetSchema.parse({candidateSetId, relativeFile, contentHash: sha256(bytes), width, height, cells});
+}
+
+export async function prepareCandidateSets(input: PrepareCandidateSetsInput): Promise<PreparationReport> {
+  const request = prepareCandidateSetsRequestSchema.parse(input.request);
+  const stagingRoot = await ensureTrustedStagingRoot(input.trustedStagingRoot, input.stagingRoot);
+  await verifyStagedCandidates({candidates: request.candidates.map((candidate) => candidate.stagedCandidate), trustedStagingRoot: input.trustedStagingRoot, stagingRoot});
+  await mkdir(resolve(stagingRoot, "prepared"), {recursive: true});
+  const grouped = new Map<string, CandidatePreparationInput[]>();
+  for (const candidate of request.candidates) grouped.set(candidate.candidateSetId, [...(grouped.get(candidate.candidateSetId) ?? []), candidate]);
+  const candidateSets: CandidateSetPreparation[] = [];
+  for (const [candidateSetId, candidates] of grouped) {
+    const first = candidates[0]!;
+    if (candidates.some((candidate) => candidate.briefId !== first.briefId || candidate.requirementId !== first.requirementId || candidate.outputRole !== first.outputRole)) throw new CandidateStagingError("invalid-bundle", `Candidate set ${candidateSetId} mixes unrelated production requirements.`);
+    const preparedEntries: Array<{candidate: PreparedCandidate; bytes: Buffer}> = [];
+    const failures: CandidateSetPreparation["failures"] = [];
+    for (const candidate of candidates) {
+      try {
+        preparedEntries.push(await normalizeCandidate(candidate, stagingRoot));
+      } catch (error) {
+        const needsMask = error instanceof CandidateStagingError && error.code === "media-mismatch" && /transparent background|matte/i.test(error.message);
+        failures.push({candidateId: candidate.stagedCandidate.candidateId, candidateSetId, briefId: candidate.briefId, fileRole: candidate.fileRole, status: needsMask ? "needs-manual-mask" : "failed", code: needsMask ? "MANUAL_MASK_REQUIRED" : error instanceof CandidateStagingError ? error.code.toUpperCase().replaceAll("-", "_") : "PREPARATION_FAILED", message: error instanceof Error ? error.message : "Candidate preparation failed."});
+      }
+    }
+    const contactSheet = await createContactSheet(candidateSetId, preparedEntries, stagingRoot);
+    candidateSets.push({candidateSetId, briefId: first.briefId, requirementId: first.requirementId, outputRole: first.outputRole, status: failures.length === 0 && preparedEntries.length > 0 ? "ready-for-review" : "needs-attention", preparedCandidates: preparedEntries.map((entry) => entry.candidate), failures, contactSheet});
+  }
+  return finalizePreparationReport({schemaVersion: "1.0", importId: request.importId, importRecordContentHash: request.importRecordContentHash, exchangeJobId: request.exchangeJobId, processor: {id: "sharp", version: sharp.versions.sharp}, candidateSets}, new Date().toISOString());
 }

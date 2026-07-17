@@ -11,10 +11,14 @@ import {
   createProductionDraft,
   directEpisode,
   finalizeGenerationJob,
+  finalizeAssetReviewRecord,
+  createImportValidationReport,
   finalizeImportRecord,
+  finalizeRigDiagnosticReport,
   finalizeProductionBundle,
   generationBriefSchema,
   generationJobDraftSchema,
+  generationExchangeStateSchema,
   getProductionPolicy,
   getShowPack,
   measureDirectedPlan,
@@ -29,6 +33,9 @@ import {
   verifyProductionBundleHash,
   verifyRenderPlanHash,
   verifyGenerationJobHash,
+  verifyAssetReviewRecordHash,
+  verifyImportEvidence,
+  verifyRigDiagnosticReportHash,
   verifyShowPackHash,
   type DirectingProfile,
   type ProjectType,
@@ -182,7 +189,7 @@ describe("StoryStage story engine", () => {
   it("finalizes immutable generation jobs with a verifiable content hash", () => {
     const build = buildAnimaticSync({draft: makeDraft("kids")});
     const pack = getShowPack("kids-adventure-v1");
-    const draft = generationJobDraftSchema.parse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", production: {id: build.draft.productionId, revision: build.draft.revision, title: build.draft.title}, showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash}, briefs: build.resolvedPlan.generationBriefs, expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-set-id>/<file-role>"}});
+    const draft = generationJobDraftSchema.parse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", production: {id: build.draft.productionId, revision: build.draft.revision, title: build.draft.title}, productionBundleContentHash: "d".repeat(64), showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash}, briefs: build.resolvedPlan.generationBriefs, expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-set-id>/<file-role>"}});
     const job = finalizeGenerationJob(draft, {exchangeJobId: "job-one", createdAt: "2026-07-17T00:00:00.000Z"});
     expect(verifyGenerationJobHash(job)).toBe(true);
     expect(verifyGenerationJobHash({...job, createdAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
@@ -198,12 +205,13 @@ describe("StoryStage story engine", () => {
     expect(verifyProductionBundleHash(bundle)).toBe(true);
     expect(verifyProductionBundleHash({...bundle, savedAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
     expect(() => finalizeProductionBundle({schemaVersion: "1.0", production: {...build.draft, productionId: "other-production"}, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z")).toThrow(/identity/i);
+    expect(() => finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: {...build.renderPlan, shots: build.renderPlan.shots.map((shot, index) => index === 0 ? {...shot, title: "Divergent shot with retained hash"} : shot)}, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z")).toThrow(/exactly derive|content hash/i);
   });
 
   it("validates complete candidate kits by set and preserves the import evidence", () => {
     const build = buildFor("explainer", "studio", "production-import-record");
     const pack = getShowPack(build.draft.showPackId);
-    const jobDraft = generationJobDraftSchema.parse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", production: {id: build.draft.productionId, revision: build.draft.revision, title: build.draft.title}, showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash}, briefs: build.resolvedPlan.generationBriefs, expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-set-id>/<file-role>"}});
+    const jobDraft = generationJobDraftSchema.parse({schemaVersion: "1.0", exchangeMode: "manual-chatgpt-images", production: {id: build.draft.productionId, revision: build.draft.revision, title: build.draft.title}, productionBundleContentHash: "e".repeat(64), showPack: {id: pack.id, version: pack.version, contentHash: pack.contentHash}, briefs: build.resolvedPlan.generationBriefs, expectedOutputLayout: {manifest: "candidate-bundle.json", files: "candidates/<brief-id>/<candidate-set-id>/<file-role>"}});
     const job = finalizeGenerationJob(jobDraft, {exchangeJobId: "job-import-record", createdAt: "2026-07-17T00:00:00.000Z"});
     const brief = job.briefs[0]!;
     const candidateSetId = `set-${brief.id}-1`;
@@ -220,6 +228,10 @@ describe("StoryStage story engine", () => {
     const record = finalizeImportRecord({schemaVersion: "1.0", importId: "import-record-one", sourceMode: "structured-bundle", exchangeJobId: job.exchangeJobId, generationJobContentHash: job.contentHash, production: {id: job.production.id, revision: job.production.revision}, manifestContentHash: hashCanonical(candidateBundle), candidateBundle, assets: stagedAssets, candidateSets: validation.candidateSets, findings: validation.findings}, "2026-07-17T00:06:00.000Z");
     expect(verifyImportRecordHash(record)).toBe(true);
     expect(verifyImportRecordHash({...record, sourceMode: "loose-files"})).toBe(false);
+    const report = createImportValidationReport(record, "2026-07-17T00:07:00.000Z");
+    expect(verifyImportEvidence(record, report)).toBe(true);
+    expect(verifyImportEvidence(record, {...report, assets: report.assets.map((asset, index) => index === 0 ? {...asset, width: asset.width + 1} : asset)})).toBe(false);
+    expect(verifyImportEvidence(record, {...report, assets: report.assets.map((asset, index) => index === 0 ? {...asset, stagedContentHash: "f".repeat(64)} : asset)})).toBe(false);
   });
 
   it("enforces generation exchange lifecycle transitions", () => {
@@ -230,6 +242,16 @@ describe("StoryStage story engine", () => {
     expect(canTransitionGenerationExchange("needs-review", "approved")).toBe(true);
     expect(canTransitionGenerationExchange("awaiting-results", "approved")).toBe(false);
     expect(canTransitionGenerationExchange("approved", "staged")).toBe(false);
+    expect(generationExchangeStateSchema.safeParse({schemaVersion: "1.0", exchangeJobId: "job-one", generationJobContentHash: "a".repeat(64), production: {id: "production-one", revision: 1}, status: "awaiting-results", importId: "import-one", updatedAt: "2026-07-17T00:00:00.000Z"}).success).toBe(false);
+    expect(generationExchangeStateSchema.safeParse({schemaVersion: "1.0", exchangeJobId: "job-one", generationJobContentHash: "a".repeat(64), production: {id: "production-one", revision: 1}, status: "approved", importId: null, updatedAt: "2026-07-17T00:00:00.000Z"}).success).toBe(false);
+  });
+
+  it("binds moving rig diagnostics to one manifest, validation report, and MP4", () => {
+    const diagnostic = finalizeRigDiagnosticReport({schemaVersion: "1.0", candidateSetId: "set-character-one", manifestContentHash: "a".repeat(64), validationReportContentHash: "b".repeat(64), videoContentHash: "c".repeat(64), videoRelativeFile: "prepared/rig-diagnostic-set-character-one.mp4", fps: 30, frameCount: 120, width: 1280, height: 720, sourceDiagnosticContentHash: null}, "2026-07-17T00:00:00.000Z");
+
+    expect(verifyRigDiagnosticReportHash(diagnostic)).toBe(true);
+    expect(verifyRigDiagnosticReportHash({...diagnostic, videoContentHash: "d".repeat(64)})).toBe(false);
+    expect(verifyRigDiagnosticReportHash({...diagnostic, manifestContentHash: "e".repeat(64)})).toBe(false);
   });
 
   it("rejects candidate manifests that attempt path traversal", () => {
@@ -260,6 +282,24 @@ describe("StoryStage story engine", () => {
     expect(render.assets.some((asset) => asset.id === "approved-mara-v1" && asset.contentHash === approvedHash)).toBe(true);
     expect(render.shots.filter((shot) => dependent.has(shot.id)).every((shot) => shot.visualBindings.some((binding) => binding.assetId === "approved-mara-v1"))).toBe(true);
     expect(render.shots.filter((shot) => !dependent.has(shot.id)).every((shot) => shot.visualBindings.every((binding) => binding.assetId !== "approved-mara-v1"))).toBe(true);
+  });
+
+  it("rebuilds and persists a production from approved asset versions", () => {
+    const initial = buildFor("explainer", "studio", "production-approved-rebuild");
+    const requirement = initial.resolvedPlan.requirements.find((candidate) => candidate.entityId === "character-mara" && candidate.role === "character")!;
+    const approvedAssetVersion = {assetId: "approved-character-mara", version: "sha256-1234567890abcdef", requirementId: requirement.id, contentHash: "c".repeat(64), relativeFile: "approved-character-mara/sha256-1234567890abcdef/manifest.json", provenance: {sourceType: "generated" as const, provider: "chatgpt-images", usageNotes: "User-approved coherent pose kit"}, approvedAt: "2026-07-17T00:00:00.000Z"};
+    const rebuilt = buildAnimaticSync({draft: initial.draft, approvedAssetVersions: [approvedAssetVersion]});
+    const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: rebuilt.draft, overrides: [], approvedAssetVersions: [approvedAssetVersion], resolvedPlan: rebuilt.resolvedPlan, renderPlan: rebuilt.renderPlan, metrics: rebuilt.metrics, estimate: rebuilt.estimate}, "2026-07-17T00:01:00.000Z");
+
+    expect(rebuilt.resolvedPlan.requirements.find((candidate) => candidate.id === requirement.id)?.status).toBe("resolved");
+    expect(rebuilt.resolvedPlan.generationBriefs.some((brief) => brief.requirementId === requirement.id)).toBe(false);
+    expect(rebuilt.renderPlan.assets.some((asset) => asset.id === approvedAssetVersion.assetId)).toBe(true);
+    expect(bundle.approvedAssetVersions).toEqual([approvedAssetVersion]);
+    expect(verifyProductionBundleHash(bundle)).toBe(true);
+
+    const review = finalizeAssetReviewRecord({schemaVersion: "1.0", exchangeJobId: "job-review", importId: "import-review", preparationReportContentHash: "d".repeat(64), decisions: [{candidateSetId: "set-character-one", briefId: "brief-character", requirementId: requirement.id, status: "approved", notes: "Identity and poses approved.", decidedAt: "2026-07-17T00:00:00.000Z", approvedAssetVersion}]}, "2026-07-17T00:00:00.000Z");
+    expect(verifyAssetReviewRecordHash(review)).toBe(true);
+    expect(verifyAssetReviewRecordHash({...review, updatedAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
   });
 
   it("computes and verifies Show Pack and frozen-plan hashes", () => {

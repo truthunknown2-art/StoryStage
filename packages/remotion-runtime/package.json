@@ -16,6 +16,7 @@
     "@remotion/media": "4.0.490",
     "@storystage/contracts": "workspace:*",
     "@storystage/fixtures": "workspace:*",
+    "@storystage/story-engine": "workspace:*",
     "react": "19.2.3",
     "remotion": "4.0.490"
   },

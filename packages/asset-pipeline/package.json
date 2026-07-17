@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@storystage/story-engine": "workspace:*"
+    "@storystage/story-engine": "workspace:*",
+    "sharp": "0.34.5"
   },
   "devDependencies": {
     "@types/node": "24.10.1",

@@ -5,6 +5,6 @@ export default defineConfig({
   entry: ["src/render-worker.ts"],
   external: ["@remotion/bundler", "@remotion/renderer"],
   format: ["cjs"],
-  noExternal: ["@storystage/contracts", "@storystage/fixtures", "zod"],
+  noExternal: ["@storystage/contracts", "@storystage/fixtures", "@storystage/story-engine", "@noble/hashes", "zod"],
   outDir: "dist",
 });

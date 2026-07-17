@@ -340,6 +340,7 @@ export const generationJobDraftSchema = z.object({
   schemaVersion: z.literal("1.0"),
   exchangeMode: z.literal("manual-chatgpt-images"),
   production: z.object({id: identifierSchema, revision: z.number().int().positive(), title: z.string().min(1)}).strict(),
+  productionBundleContentHash: hashSchema,
   showPack: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
   briefs: z.array(generationBriefSchema),
   expectedOutputLayout: z.object({manifest: z.literal("candidate-bundle.json"), files: z.literal("candidates/<brief-id>/<candidate-set-id>/<file-role>")}).strict(),
@@ -385,8 +386,14 @@ export const generationExchangeStateSchema = z.object({
   production: z.object({id: identifierSchema, revision: z.number().int().positive()}).strict(),
   status: generationExchangeStatusSchema,
   importId: identifierSchema.nullable(),
+  supersededBy: identifierSchema.nullable().default(null),
   updatedAt: z.string().datetime(),
-}).strict();
+}).strict().superRefine((state, context) => {
+  if (state.status === "awaiting-results" && state.importId !== null) context.addIssue({code: "custom", path: ["importId"], message: "An awaiting exchange cannot claim imported artifacts."});
+  if (["files-imported", "staged", "needs-review", "approved", "rejected"].includes(state.status) && state.importId === null) context.addIssue({code: "custom", path: ["importId"], message: `${state.status} requires a durable import identity.`});
+  if (state.status === "superseded" && !state.supersededBy) context.addIssue({code: "custom", path: ["supersededBy"], message: "A superseded exchange must identify its replacement."});
+  if (state.status !== "superseded" && state.supersededBy !== null) context.addIssue({code: "custom", path: ["supersededBy"], message: "Only a superseded exchange may identify a replacement."});
+});
 
 export const rightsRecordSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict();
 export const candidateBundleAssetSchema = z.object({candidateId: identifierSchema, candidateSetId: identifierSchema, briefId: identifierSchema, fileRole: z.string().min(1), relativeFile: safeRelativePathSchema, contentHash: hashSchema, mediaType: z.enum(["image/png", "image/jpeg", "image/webp"]), width: z.number().int().positive(), height: z.number().int().positive(), rights: rightsRecordSchema}).strict();
@@ -401,7 +408,29 @@ export const candidateBundleSchema = z.object({
   assets: z.array(candidateBundleAssetSchema).min(1),
 }).strict();
 export const stagedCandidateSchema = z.object({candidateId: identifierSchema, sourceContentHash: hashSchema, stagedContentHash: hashSchema, relativeFile: safeRelativePathSchema, stagingState: z.enum(["staged-byte-verified", "staged-needs-mask"]), checks: z.object({dimensions: z.literal(true), mediaType: z.literal(true), alphaOrMatte: z.boolean(), registration: z.literal(false)}).strict()}).strict();
-export const preparedCandidateSchema = z.object({candidateId: identifierSchema, sourceContentHash: hashSchema, preparedContentHash: hashSchema, relativeFile: safeRelativePathSchema, preparationState: z.literal("prepared"), checks: z.object({dimensions: z.literal(true), mediaType: z.literal(true), alphaOrMatte: z.literal(true), registration: z.literal(true)}).strict()}).strict();
+export const preparedCandidateSchema = z.object({
+  schemaVersion: z.literal("1.0"),
+  candidateId: identifierSchema,
+  candidateSetId: identifierSchema,
+  briefId: identifierSchema,
+  requirementId: identifierSchema,
+  fileRole: z.string().min(1),
+  assetClass: z.enum(["reference-sheet", "character-pose", "background-plate", "background-layer", "prop-cutout", "editorial-visual"]),
+  sourceContentHash: hashSchema,
+  preparedContentHash: hashSchema,
+  relativeFile: safeRelativePathSchema,
+  mediaType: z.literal("image/png"),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  contentBounds: z.object({left: z.number().int().nonnegative(), top: z.number().int().nonnegative(), width: z.number().int().positive(), height: z.number().int().positive()}).strict(),
+  registration: z.object({anchorX: z.number().min(0).max(1), anchorY: z.number().min(0).max(1), pivotX: z.number().int().nonnegative(), pivotY: z.number().int().nonnegative(), groundY: z.number().int().nonnegative()}).strict(),
+  processor: z.object({id: z.literal("sharp"), version: z.string().min(1)}).strict(),
+  preparationState: z.literal("prepared"),
+  checks: z.object({dimensions: z.literal(true), mediaType: z.literal(true), alphaOrMatte: z.literal(true), registration: z.literal(true), metadataStripped: z.literal(true)}).strict(),
+}).strict().superRefine((candidate, context) => {
+  if (candidate.contentBounds.left + candidate.contentBounds.width > candidate.width || candidate.contentBounds.top + candidate.contentBounds.height > candidate.height) context.addIssue({code: "custom", path: ["contentBounds"], message: "Prepared candidate content bounds must stay inside its canvas."});
+  if (candidate.registration.pivotX >= candidate.width || candidate.registration.pivotY >= candidate.height || candidate.registration.groundY >= candidate.height) context.addIssue({code: "custom", path: ["registration"], message: "Prepared candidate registration must stay inside its canvas."});
+});
 export const assetApprovalSchema = z.object({candidateId: identifierSchema, status: z.enum(["pending", "approved", "rejected"]), approvedBy: z.literal("user").nullable(), approvedAt: z.string().datetime().nullable(), notes: z.string()}).strict();
 export const approvedAssetVersionSchema = z.object({assetId: identifierSchema, version: z.string().min(1), requirementId: identifierSchema, contentHash: hashSchema, relativeFile: safeRelativePathSchema, provenance: rightsRecordSchema, approvedAt: z.string().datetime()}).strict();
 
