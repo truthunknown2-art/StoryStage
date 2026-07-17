@@ -1,4 +1,4 @@
-import {CandidateStagingError, stageCandidateBundle} from "@storystage/asset-pipeline";
+import {CandidateStagingError, stageCandidateBundle, stageLooseCandidateFiles} from "@storystage/asset-pipeline";
 import {
   assetWorkerCommandSchema,
   assetWorkerMessageSchema,
@@ -17,23 +17,29 @@ export async function runAssetWorkerCommand(rawCommand: unknown, emit: (message:
   }
 
   try {
-    const prepared = await stageCandidateBundle({
+    if (parsed.data.type === "stage-loose-candidates") {
+      const staged = await stageLooseCandidateFiles({files: parsed.data.files, trustedStagingRoot: parsed.data.trustedStagingRoot, stagingRoot: parsed.data.stagingRoot});
+      emit(assetWorkerMessageSchema.parse({type: "loose-staged", requestId: parsed.data.requestId, serializedLooseCandidates: JSON.stringify(staged)}));
+      return;
+    }
+    const staged = await stageCandidateBundle({
       bundle: JSON.parse(parsed.data.serializedBundle),
       sourceRoot: parsed.data.sourceRoot,
+      trustedStagingRoot: parsed.data.trustedStagingRoot,
       stagingRoot: parsed.data.stagingRoot,
     });
     emit(assetWorkerMessageSchema.parse({
-      type: "prepared",
+      type: "staged",
       requestId: parsed.data.requestId,
-      serializedPreparedCandidates: JSON.stringify(prepared),
+      serializedStagedCandidates: JSON.stringify(staged),
     }));
   } catch (error) {
     emit(assetWorkerMessageSchema.parse({
       type: "failed",
       requestId: parsed.data.requestId,
       error: {
-        code: error instanceof CandidateStagingError ? error.code.toUpperCase().replaceAll("-", "_") : "ASSET_PREPARATION_FAILED",
-        message: error instanceof Error ? error.message : "Candidate preparation failed.",
+        code: error instanceof CandidateStagingError ? error.code.toUpperCase().replaceAll("-", "_") : "ASSET_STAGING_FAILED",
+        message: error instanceof Error ? error.message : "Candidate staging failed.",
       },
     }));
   }

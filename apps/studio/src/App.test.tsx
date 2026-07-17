@@ -1,11 +1,13 @@
 import {cleanup, render, screen, within} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {afterEach, describe, expect, it, vi} from "vitest";
+import type {StoryStageDesktopBridge} from "@storystage/contracts";
 import {App} from "./App";
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  delete window.storyStage;
 });
 
 async function openProductionSetup() {
@@ -109,5 +111,32 @@ describe("StoryStage studio", () => {
     expect(createObjectURL).toHaveBeenCalledOnce();
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:story-stage-brief");
     expect(screen.getByText(/Generation job exported for/)).toBeInTheDocument();
+  });
+
+  it("maps loose ChatGPT downloads into a locally-created candidate bundle", async () => {
+    const candidate = {candidateId: "loose-one", originalName: "mara-download.png", briefId: null, fileRole: null, mediaType: "image/png" as const, width: 1024, height: 1024, stagingState: "staged-byte-verified" as const, checks: {dimensions: true, mediaType: true, alphaOrMatte: true, registration: false} as const};
+    const bridge: StoryStageDesktopBridge = {
+      getCapabilities: vi.fn(async () => ({localRendering: true, openRenderedFile: true, manualImageExchange: true})),
+      exportGenerationJob: vi.fn(async () => ({ok: true as const, jobId: "job-one", briefCount: 5})),
+      importLooseCandidateFiles: vi.fn(async () => ({status: "mapping-required" as const, importId: "import-one", candidates: [candidate], expectedRoles: [{briefId: "brief-one", requirementId: "requirement-one", entityName: "MARA", fileRole: "identity-sheet.png"}]})),
+      finalizeLooseCandidateMapping: vi.fn(async () => ({status: "staged" as const, importId: "import-one", stagedCount: 1, needsManualMaskCount: 0, missingRoleCount: 0, candidates: [{...candidate, briefId: "brief-one", fileRole: "identity-sheet.png"}]})),
+      stageCandidateBundle: vi.fn(async () => ({status: "cancelled" as const})),
+      startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
+      subscribeToRenderJobs: vi.fn(() => () => undefined),
+      openRenderedFile: vi.fn(async () => ({ok: true as const})),
+    };
+    window.storyStage = bridge;
+    const user = await createDefaultProduction();
+    await user.click(screen.getByRole("button", {name: /Assets/}));
+    await user.click(screen.getByRole("button", {name: /Review generation export/}));
+    await user.click(screen.getByRole("button", {name: /Approve and export generation job/}));
+    await user.click(screen.getByRole("button", {name: /Import loose image files/}));
+
+    expect(screen.getByRole("heading", {name: /Map downloaded images/})).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText("Role for mara-download.png"), "1");
+    await user.click(screen.getByRole("button", {name: /Create local candidate bundle/}));
+
+    expect(screen.getByRole("heading", {name: /Staged files are not prepared or approved assets/})).toBeInTheDocument();
+    expect(screen.getByText(/identity-sheet.png/)).toBeInTheDocument();
   });
 });

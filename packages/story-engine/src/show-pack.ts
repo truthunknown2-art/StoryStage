@@ -25,8 +25,7 @@ type ShowPackInput = Omit<ShowPack, "contentHash" | "hashStatus" | "styleBible">
 };
 
 function createShowPack(input: ShowPackInput): ShowPack {
-  const {principles, ...styleIdentity} = input.styleBible;
-  const styleBible = {...styleIdentity, contentHash: hashCanonical({...styleIdentity, principles})};
+  const styleBible = {...input.styleBible, contentHash: hashCanonical(input.styleBible)};
   const packWithoutHash = {...input, styleBible};
   return showPackSchema.parse({...packWithoutHash, contentHash: hashCanonical(packWithoutHash), hashStatus: "verified-metadata"});
 }

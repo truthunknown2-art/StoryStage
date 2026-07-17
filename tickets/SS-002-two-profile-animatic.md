@@ -24,7 +24,7 @@ SS-001 infrastructure remains valid. Its visual sample is not evidence of produc
 
 - Gate 1: complete.
 - Gates 2-3: functional UI, sole story-engine ownership, measured two-profile grammar, entity ledger, visual bindings, computed hashes, and semantic overrides are locally verified; not yet accepted by Pro.
-- Gate 4: shared runtime/skill schemas, pre-export disclosure, immutable opaque job IDs, private user-data outbox, stale/mismatch rejection, magic-byte/hash/dimension/path/symlink validation, and timed/capped utility-process staging are locally verified. Loose image role mapping, full decode/normalization, detailed validation review, and final approval remain open.
+- Gate 4: shared runtime/skill schemas, concrete style-bible principles, pre-export disclosure, immutable opaque job IDs, durable restart-safe private lifecycle, authoritative Show Pack checks, stale/mismatch rejection, structured-bundle and loose-file role-mapped import, magic-byte/hash/dimension/path/UNC/symlink/junction validation, trusted-root containment, and timed/capped utility-process staging are locally verified. Staged candidates are explicitly unregistered and unapproved. Full decode/normalization, preparation, visual identity review, lineage, and final approval remain open.
 - Gates 5-9: pending.
 
 ## Binding comparison thresholds

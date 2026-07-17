@@ -223,6 +223,10 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .intent-card p { color: #6d7974; font-size: 8px; line-height: 1.35; margin-top: 4px; }
 .shot-inspector > label { color: #66726e; display: grid; font-size: 8px; gap: 5px; }
 .shot-inspector select { background: #0f1415; border: 1px solid #30393a; border-radius: 6px; color: #a7b2ad; font-size: 9px; height: 34px; padding: 0 8px; text-transform: capitalize; width: 100%; }
+.locked-field { background: #101516; border: 1px solid #283132; border-radius: 6px; display: grid; gap: 3px; padding: 8px; }
+.locked-field > span { color: #66726e; font-size: 8px; }
+.locked-field strong { color: #9da8a3; font-size: 9px; text-transform: capitalize; }
+.locked-field small { color: #52605a; font-size: 7px; line-height: 1.35; }
 .compiled-actions { border-top: 1px solid #293132; display: grid; gap: 5px; padding-top: 11px; }
 .compiled-actions > span { color: #5e6a66; font-size: 7px; text-transform: uppercase; }
 .compiled-actions > div { align-items: center; display: flex; justify-content: space-between; }
@@ -239,6 +243,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .provider-banner > div:nth-child(2) > p:last-child { color: #718079; font-size: 10px; line-height: 1.45; }
 .manual-badge { border: 1px solid #4a6657; border-radius: 999px; color: #8cc9a5; font-size: 8px; padding: 6px 8px; text-transform: uppercase; }
 .exchange-actions { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.exchange-actions.is-desktop { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .exchange-actions button, .exchange-actions label { align-items: center; background: #121718; border: 1px solid #2c3535; border-radius: 8px; color: #82cda1; display: grid; gap: 11px; grid-template-columns: auto 1fr; padding: 14px; text-align: left; }
 .exchange-actions button:disabled { color: #4d5a55; cursor: not-allowed; opacity: .62; }
 .exchange-actions label { cursor: pointer; }
@@ -265,6 +270,25 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .review-briefs dd { color: #89958f; font-size: 8px; }
 .export-review footer { align-items: center; display: flex; gap: 9px; justify-content: flex-end; }
 .export-review footer .create-button { font-size: 9px; padding: 9px 12px; }
+.mapping-panel, .validation-report { background: #111718; border: 1px solid #34413d; border-radius: 10px; display: grid; gap: 12px; padding: 16px; }
+.mapping-panel > header, .validation-report > header { align-items: flex-start; display: flex; justify-content: space-between; }
+.mapping-panel h2, .validation-report h2 { color: #d5ddd9; font-size: 14px; margin-top: 4px; }
+.mapping-panel > header > span, .validation-report > header > span { border: 1px solid #40544a; border-radius: 999px; color: #8ac7a3; font-size: 7px; padding: 5px 7px; text-transform: uppercase; }
+.mapping-panel > p { color: #6d7a74; font-size: 8px; line-height: 1.45; }
+.mapping-rows { display: grid; gap: 6px; }
+.mapping-rows label { align-items: center; background: #0e1414; border: 1px solid #27302e; border-radius: 7px; display: grid; gap: 14px; grid-template-columns: minmax(180px, .8fr) 1.2fr; padding: 10px; }
+.mapping-rows strong, .mapping-rows small { display: block; }
+.mapping-rows strong { color: #aeb9b4; font-size: 9px; }
+.mapping-rows small { color: #5e6b65; font-size: 7px; margin-top: 3px; text-transform: uppercase; }
+.mapping-rows select { background: #121919; border: 1px solid #35413e; border-radius: 6px; color: #9ca9a3; font-size: 8px; height: 32px; padding: 0 8px; }
+.mapping-panel footer { align-items: center; display: flex; gap: 8px; justify-content: flex-end; }
+.mapping-panel footer .create-button { font-size: 9px; padding: 9px 11px; }
+.validation-report > div { display: grid; gap: 5px; }
+.validation-report article { align-items: center; background: #0e1414; border: 1px solid #27302e; border-radius: 7px; color: #82cda1; display: grid; gap: 9px; grid-template-columns: auto 1fr auto; padding: 9px 10px; }
+.validation-report strong, .validation-report small { display: block; }
+.validation-report strong { color: #aeb9b4; font-size: 9px; }
+.validation-report small { color: #5f6c66; font-size: 7px; margin-top: 3px; text-transform: uppercase; }
+.validation-report article > span { color: #829089; font-size: 7px; text-transform: uppercase; }
 .request-list { background: #111617; border: 1px solid #283031; border-radius: 10px; overflow: hidden; }
 .request-list > header { align-items: center; border-bottom: 1px solid #2a3233; display: flex; justify-content: space-between; padding: 16px; }
 .request-list h2 { color: #d2dad6; font-size: 14px; margin-top: 4px; }
@@ -287,4 +311,5 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   .setup-section { grid-template-columns: 36px 185px minmax(0, 1fr); }
   .create-footer { margin-left: 245px; }
   .shot-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .exchange-actions.is-desktop { grid-template-columns: 1fr 1fr; }
 }

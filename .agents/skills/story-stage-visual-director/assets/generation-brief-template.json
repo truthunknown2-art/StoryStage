@@ -5,7 +5,7 @@
   "productionId": "production-replace-me",
   "requirementId": "requirement-replace-me",
   "showPack": {"id": "replace-me", "version": "1.0.0", "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"},
-  "styleBible": {"id": "style-replace-me", "version": "1.0.0", "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"},
+  "styleBible": {"id": "style-replace-me", "version": "1.0.0", "principles": ["REPLACE WITH A CONCRETE VISUAL RULE."], "contentHash": "0000000000000000000000000000000000000000000000000000000000000000"},
   "identityLock": null,
   "entity": {"id": "character-replace-me", "name": "REPLACE ME", "kind": "character"},
   "outputRole": "character-canonical-sheet",

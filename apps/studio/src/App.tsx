@@ -43,7 +43,9 @@ import {
 } from "lucide-react";
 import {useEffect, useMemo, useState} from "react";
 import {createHostAdapter, type HostAdapter} from "./host";
-import type {DesktopCapabilities} from "@storystage/contracts";
+import type {DesktopCapabilities, ImportLooseCandidateFilesResult, StagedCandidateSummary} from "@storystage/contracts";
+
+type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
 type Screen = "home" | "new-production" | "workspace";
 type WorkspaceTab = "direction" | "assets";
@@ -81,9 +83,8 @@ const projectOptions: Array<{
   },
 ];
 
-const treatments = ["environment", "character-performance", "reaction", "insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"] as const;
 const framings = ["wide", "medium", "close-up", "insert"] as const;
-const cameraActions = ["hardCut", "cameraPush", "pan", "reframe", "foregroundWipe"] as const;
+const cameraActions = ["cameraPush", "pan", "reframe"] as const;
 
 const defaultRouting = (type: ProjectType): AssetRoutingPolicy => ({
   reuseApprovedFirst: true,
@@ -328,6 +329,9 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
   const [importedCount, setImportedCount] = useState(0);
   const [manualMaskCount, setManualMaskCount] = useState(0);
   const [missingRoleCount, setMissingRoleCount] = useState(0);
+  const [stagedCandidates, setStagedCandidates] = useState<StagedCandidateSummary[]>([]);
+  const [looseMapping, setLooseMapping] = useState<LooseMappingState | null>(null);
+  const [looseAssignments, setLooseAssignments] = useState<Record<string, string>>({});
   const [importError, setImportError] = useState<string | null>(null);
   const generationJobDraft = useMemo(() => createGenerationJob(session, build), [build, session]);
 
@@ -347,6 +351,8 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
     }
     setImportError(null);
     setExchangeJobId(result.jobId);
+    setLooseMapping(null);
+    setStagedCandidates([]);
     setReviewingExport(false);
     setExportStatus(`Private generation job exported for ${result.briefCount} briefs. Its folder is open.`);
   };
@@ -358,6 +364,7 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
       setImportedCount(parsed.assets.length);
       setManualMaskCount(0);
       setMissingRoleCount(0);
+      setStagedCandidates([]);
       setImportError(null);
     } catch (error) {
       setImportedCount(0);
@@ -376,20 +383,57 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
       setImportError(result.error.message);
       return;
     }
-    setImportedCount(result.preparedCount);
+    setImportedCount(result.stagedCount);
     setManualMaskCount(result.needsManualMaskCount);
     setMissingRoleCount(result.missingRoleCount);
+    setStagedCandidates(result.candidates);
+    setImportError(null);
+  };
+
+  const importLooseFiles = async () => {
+    if (!exchangeJobId) return;
+    const result = await host.importLooseCandidateFiles({exchangeJobId});
+    if (result.status === "cancelled") return;
+    if (result.status === "failed") {
+      setLooseMapping(null);
+      setImportError(result.error.message);
+      return;
+    }
+    setLooseMapping(result);
+    setLooseAssignments(Object.fromEntries(result.candidates.map((candidate) => [candidate.candidateId, ""])));
+    setImportError(null);
+  };
+
+  const finalizeLooseMapping = async () => {
+    if (!looseMapping) return;
+    const assignments = Object.entries(looseAssignments).flatMap(([candidateId, roleIndex]) => {
+      if (!roleIndex) return [];
+      const role = looseMapping.expectedRoles[Number(roleIndex) - 1];
+      return role ? [{candidateId, briefId: role.briefId, fileRole: role.fileRole}] : [];
+    });
+    if (assignments.length === 0) return;
+    const result = await host.finalizeLooseCandidateMapping({importId: looseMapping.importId, assignments});
+    if (result.status !== "staged") {
+      if (result.status === "failed") setImportError(result.error.message);
+      return;
+    }
+    setImportedCount(result.stagedCount);
+    setManualMaskCount(result.needsManualMaskCount);
+    setMissingRoleCount(result.missingRoleCount);
+    setStagedCandidates(result.candidates);
+    setLooseMapping(null);
     setImportError(null);
   };
 
   return (
     <div className="asset-exchange">
       <section className="provider-banner"><div className="provider-icon"><ImagePlus size={23} /></div><div><p className="eyebrow">Provider-neutral exchange</p><h2>Manual ChatGPT Images</h2><p>Export an approved brief, generate original candidates in ChatGPT, then import the result bundle. No API call or paid generation is hidden here.</p></div><span className="manual-badge">Manual round trip</span></section>
-      <div className="exchange-actions">
+      <div className={`exchange-actions ${capabilities.manualImageExchange ? "is-desktop" : ""}`}>
         <button onClick={() => setReviewingExport(true)}><Download size={16} /><span><strong>Review generation export</strong><small>{capabilities.manualImageExchange ? "Nothing leaves before approval" : "JSON + expected output contract"}</small></span></button>
         {capabilities.manualImageExchange
           ? <button disabled={!exchangeJobId} onClick={() => void stageDesktopBundle()}><Upload size={16} /><span><strong>Import generated results</strong><small>{exchangeJobId ? "Secure native folder selection" : "Export a job first"}</small></span></button>
           : <label><Upload size={16} /><span><strong>Validate candidate manifest</strong><small>Browser preview only{" / "}no file staging</small></span><input aria-label="Import candidate bundle" type="file" accept="application/json,.json" onChange={(event) => void importBundle(event.target.files?.[0])} /></label>}
+        {capabilities.manualImageExchange ? <button disabled={!exchangeJobId} onClick={() => void importLooseFiles()}><ImagePlus size={16} /><span><strong>Import loose image files</strong><small>Map downloads to expected roles</small></span></button> : null}
       </div>
       {reviewingExport ? <section className="export-review" aria-label="Generation export review">
         <header><div><p className="eyebrow">Human approval gate</p><h2>Exactly what will leave StoryStage</h2></div><span>{generationJobDraft.briefs.length} briefs</span></header>
@@ -397,13 +441,26 @@ function AssetExchange({session, build, host, capabilities}: {session: Productio
         <div className="review-briefs">{generationJobDraft.briefs.map((brief) => <article key={brief.id}>
           <div><strong>{brief.entity.name}</strong><small>{brief.outputRole.replaceAll("-", " ")}{" / "}{brief.candidateCount} candidates</small></div>
           <p>{brief.sourceExcerpts.join(" ")}</p>
-          <dl><div><dt>References</dt><dd>{brief.referenceAssets.length || "None"}</dd></div><div><dt>Expected</dt><dd>{brief.expectedFiles.join(", ")}</dd></div></dl>
+          <dl><div><dt>References</dt><dd>{brief.referenceAssets.length || "None"}</dd></div><div><dt>Style rules</dt><dd>{brief.styleBible.principles.join("; ")}</dd></div><div><dt>Expected</dt><dd>{brief.expectedFiles.join(", ")}</dd></div></dl>
         </article>)}</div>
         <footer><button className="quiet-button" onClick={() => setReviewingExport(false)}>Cancel</button><button className="create-button" onClick={() => void exportBriefs()}><ShieldCheck size={15} />Approve and export generation job</button></footer>
       </section> : null}
+      {looseMapping ? <section className="mapping-panel" aria-label="Loose candidate role mapping">
+        <header><div><p className="eyebrow">Loose-file fallback</p><h2>Map downloaded images to production roles</h2></div><span>{looseMapping.candidates.length} files</span></header>
+        <p>Choose what each image actually represents. Leaving a file unused is safe; duplicate role assignments are rejected.</p>
+        <div className="mapping-rows">{looseMapping.candidates.map((candidate) => <label key={candidate.candidateId}>
+          <span><strong>{candidate.originalName}</strong><small>{candidate.width}×{candidate.height}{" / "}{candidate.mediaType.replace("image/", "")}{" / "}{candidate.stagingState.replaceAll("-", " ")}</small></span>
+          <select aria-label={`Role for ${candidate.originalName}`} value={looseAssignments[candidate.candidateId] ?? ""} onChange={(event) => setLooseAssignments({...looseAssignments, [candidate.candidateId]: event.target.value})}>
+            <option value="">Leave unused</option>
+            {looseMapping.expectedRoles.map((role, index) => <option key={`${role.briefId}:${role.fileRole}`} value={String(index + 1)}>{role.entityName} — {role.fileRole}</option>)}
+          </select>
+        </label>)}</div>
+        <footer><button className="quiet-button" onClick={() => setLooseMapping(null)}>Cancel</button><button className="create-button" disabled={!Object.values(looseAssignments).some(Boolean)} onClick={() => void finalizeLooseMapping()}><PackageCheck size={15} />Create local candidate bundle</button></footer>
+      </section> : null}
       {exportStatus ? <p className="exchange-status"><Check size={14} />{exportStatus}</p> : null}
-      {importedCount > 0 ? <p className="exchange-status"><PackageCheck size={14} />{capabilities.manualImageExchange ? `Prepared ${importedCount} byte-verified candidates${manualMaskCount > 0 ? `; ${manualMaskCount} need a manual mask` : ""}${missingRoleCount > 0 ? `; ${missingRoleCount} expected roles are still missing` : ""}. Approval is the next gate.` : `Manifest contains ${importedCount} candidates. Open the desktop app to verify and stage the actual image bytes.`}</p> : null}
+      {importedCount > 0 ? <p className="exchange-status"><PackageCheck size={14} />{capabilities.manualImageExchange ? `Staged ${importedCount} byte-verified candidates${manualMaskCount > 0 ? `; ${manualMaskCount} need a manual mask` : ""}${missingRoleCount > 0 ? `; ${missingRoleCount} expected roles are still missing` : ""}. Preparation and approval remain separate gates.` : `Manifest contains ${importedCount} candidates. Open the desktop app to verify and stage the actual image bytes.`}</p> : null}
       {importError ? <p className="exchange-error" role="alert"><CircleAlert size={14} />{importError}</p> : null}
+      {stagedCandidates.length > 0 ? <section className="validation-report"><header><div><p className="eyebrow">Import validation</p><h2>Staged files are not prepared or approved assets</h2></div><span>Preparation required</span></header><div>{stagedCandidates.map((candidate) => <article key={candidate.candidateId}><PackageCheck size={15} /><div><strong>{candidate.originalName}</strong><small>{candidate.fileRole ? `${candidate.fileRole} / ` : ""}{candidate.width}×{candidate.height} / {candidate.stagingState.replaceAll("-", " ")}</small></div><span>{candidate.checks.alphaOrMatte ? "Alpha present / unregistered" : "Mask needed / unregistered"}</span></article>)}</div></section> : null}
       <section className="request-list"><header><div><p className="eyebrow">Missing asset ledger</p><h2>{build.resolvedPlan.generationBriefs.length} generation briefs</h2></div><span>Approval required</span></header>
         {build.resolvedPlan.generationBriefs.map((request) => {
           return <article className="request-card" key={request.id}><span className="request-kind">{request.outputRole.replaceAll("-", " ")}</span><div><h3>{request.entity.name}</h3><p>{request.creativeRequirements[0]}</p></div><dl><div><dt>Candidates</dt><dd>{request.candidateCount}</dd></div><div><dt>Quality</dt><dd>{request.imageQuality}</dd></div><div><dt>Layers</dt><dd>{request.backgroundLayerTarget}</dd></div><div><dt>Pose pack</dt><dd>{request.posePack}</dd></div></dl><span className="request-state">{request.status}</span></article>;
@@ -447,10 +504,10 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               <header><div><p className="eyebrow">Shot inspector</p><h2>{selectedShot.number}</h2></div><span>{selectedShot.treatment.replaceAll("-", " ")}</span></header>
               <div className="intent-card"><WandSparkles size={19} /><div><small>Selected intent</small><strong>{selectedShot.title}</strong><p>{selectedShot.caption ?? selectedShot.actions[0]!.label}</p></div></div>
               <label>Framing<select aria-label="Shot framing" value={currentOverride?.framing ?? selectedShot.framing} onChange={(event) => updateOverride({framing: event.target.value as ShotOverride["framing"]})}>{framings.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
-              <label>Visual treatment<select aria-label="Visual treatment" value={currentOverride?.treatment ?? selectedShot.treatment} onChange={(event) => updateOverride({treatment: event.target.value as ShotOverride["treatment"]})}>{treatments.map((value) => <option key={value} value={value}>{value.replaceAll("-", " ")}</option>)}</select></label>
+              <div className="locked-field"><span>Visual treatment</span><strong>{selectedShot.treatment.replaceAll("-", " ")}</strong><small>Profile-directed; editable treatment routing arrives with Gate 8.</small></div>
               <label>Camera action<select aria-label="Camera action" value={currentOverride?.cameraAction ?? ""} onChange={(event) => updateOverride({cameraAction: event.target.value ? event.target.value as ShotOverride["cameraAction"] : undefined})}><option value="">Profile default</option>{cameraActions.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
               <label>Performance gesture<select aria-label="Performance gesture" value={currentOverride?.gesture ?? ""} onChange={(event) => updateOverride({gesture: event.target.value ? event.target.value as ShotOverride["gesture"] : undefined})}><option value="">Profile default</option>{pack.allowedGestures.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
-              <label>Background<select aria-label="Background asset" value={currentOverride?.locationAssetId ?? selectedShot.locationAssetId} onChange={(event) => updateOverride({locationAssetId: event.target.value})}>{pack.assets.filter((asset) => asset.kind === "location").map((asset) => <option key={asset.id} value={asset.id}>{asset.displayName}</option>)}</select></label>
+              <div className="locked-field"><span>Resolved background</span><strong>{pack.assets.find((asset) => asset.id === selectedShot.locationAssetId)?.displayName ?? selectedShot.locationAssetId}</strong><small>Change the approved visual requirement, not the frozen render binding.</small></div>
               <div className="compiled-actions"><span>Compiled actions</span>{selectedShot.actions.map((action) => <div key={action.id}><b>{action.detail.type}</b><small>{action.endFrame - action.startFrame} fr</small></div>)}</div>
               {currentOverride ? <p className="override-state"><Check size={13} />Override compiled into the current render plan.</p> : <p className="override-help">Change a field to create a semantic override. No JSON editing required.</p>}
             </aside>

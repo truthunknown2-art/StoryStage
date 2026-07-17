@@ -132,7 +132,8 @@ export const actionDetailSchema = z.discriminatedUnion("type", [
   z.object({type: z.literal("enter"), direction: z.enum(["left", "right", "foreground", "background"])}).strict(),
   z.object({type: z.literal("exit"), direction: z.enum(["left", "right", "foreground", "background"])}).strict(),
   z.object({type: z.literal("lookAt")}).strict(),
-  z.object({type: z.literal("holdPose"), poseId: identifierSchema}).strict(),
+    z.object({type: z.literal("holdPose"), poseId: identifierSchema}).strict(),
+    z.object({type: z.literal("poseChange"), poseId: identifierSchema}).strict(),
   z.object({type: z.literal("hardCut")}).strict(),
   z.object({type: z.literal("cameraPush"), fromScale: z.number().positive(), toScale: z.number().positive(), easingId: identifierSchema}).strict(),
   z.object({type: z.literal("reframe"), framing: shotFramingSchema, easingId: identifierSchema}).strict(),
@@ -162,6 +163,7 @@ export const visualRequirementSchema = z.object({
   shotId: identifierSchema,
   role: visualRequirementRoleSchema,
   entityId: identifierSchema.nullable(),
+  reusableConceptKey: identifierSchema.nullable(),
   sourceIntent: visualSourceIntentSchema,
   required: z.boolean(),
   description: z.string().min(1),
@@ -178,6 +180,7 @@ export const creativeShotSchema = z.object({
   locationName: z.string().min(1),
   focusCharacterName: z.string().min(1).nullable(),
   sourceElementIds: z.array(identifierSchema).min(1),
+  sourceExcerpt: z.string().min(1),
   visualRequirementIds: z.array(identifierSchema).min(1),
   durationInFrames: z.number().int().positive(),
   actions: z.array(semanticActionDraftSchema).min(1),
@@ -285,7 +288,7 @@ export const showPackSchema = z.object({
   contentHash: hashSchema,
   hashStatus: z.literal("verified-metadata"),
   projectType: projectTypeSchema,
-  styleBible: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
+  styleBible: z.object({id: identifierSchema, version: z.string().min(1), principles: z.array(z.string().min(1)).min(1), contentHash: hashSchema}).strict(),
   profile: directingProfileSchema,
   assetFactory: assetFactoryPolicySchema,
   assets: z.array(assetManifestEntrySchema).min(1),
@@ -312,7 +315,7 @@ export const generationBriefSchema = z.object({
   productionId: identifierSchema,
   requirementId: identifierSchema,
   showPack: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
-  styleBible: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
+  styleBible: z.object({id: identifierSchema, version: z.string().min(1), principles: z.array(z.string().min(1)).min(1), contentHash: hashSchema}).strict(),
   identityLock: z.object({id: identifierSchema, contentHash: hashSchema}).strict().nullable(),
   entity: z.object({id: identifierSchema.nullable(), name: z.string().min(1), kind: z.enum(["character", "location", "prop", "visual"])}).strict(),
   outputRole: z.enum(["character-canonical-sheet", "character-parts", "background-master", "background-layers", "prop-cutout", "editorial-illustration", "diagram", "reconstruction"]),
@@ -340,12 +343,49 @@ export const generationJobDraftSchema = z.object({
   showPack: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
   briefs: z.array(generationBriefSchema),
   expectedOutputLayout: z.object({manifest: z.literal("candidate-bundle.json"), files: z.literal("candidates/<brief-id>/<candidate-id>.png")}).strict(),
-}).strict();
+}).strict().superRefine((job, context) => {
+  const briefIds = new Set<string>();
+  const requirementIds = new Set<string>();
+  for (const [index, brief] of job.briefs.entries()) {
+    if (brief.productionId !== job.production.id) context.addIssue({code: "custom", path: ["briefs", index, "productionId"], message: "Brief production must match the job production."});
+    if (brief.exchangeMode !== job.exchangeMode) context.addIssue({code: "custom", path: ["briefs", index, "exchangeMode"], message: "Brief exchange mode must match the job exchange mode."});
+    if (brief.showPack.id !== job.showPack.id || brief.showPack.version !== job.showPack.version || brief.showPack.contentHash !== job.showPack.contentHash) context.addIssue({code: "custom", path: ["briefs", index, "showPack"], message: "Brief Show Pack must match the job Show Pack."});
+    if (brief.status !== "draft") context.addIssue({code: "custom", path: ["briefs", index, "status"], message: "Only draft briefs can be finalized into a generation job."});
+    if (briefIds.has(brief.id)) context.addIssue({code: "custom", path: ["briefs", index, "id"], message: "Generation brief IDs must be unique."});
+    if (requirementIds.has(brief.requirementId)) context.addIssue({code: "custom", path: ["briefs", index, "requirementId"], message: "Generation requirement IDs must be unique."});
+    briefIds.add(brief.id);
+    requirementIds.add(brief.requirementId);
+  }
+});
 
-export const generationJobSchema = generationJobDraftSchema.extend({
+export const generationJobSchema = z.object({...generationJobDraftSchema.shape,
   exchangeJobId: identifierSchema,
   createdAt: z.string().datetime(),
   contentHash: hashSchema,
+}).strict().superRefine((job, context) => {
+  const briefIds = new Set<string>();
+  const requirementIds = new Set<string>();
+  for (const [index, brief] of job.briefs.entries()) {
+    if (brief.productionId !== job.production.id) context.addIssue({code: "custom", path: ["briefs", index, "productionId"], message: "Brief production must match the job production."});
+    if (brief.exchangeMode !== job.exchangeMode) context.addIssue({code: "custom", path: ["briefs", index, "exchangeMode"], message: "Brief exchange mode must match the job exchange mode."});
+    if (brief.showPack.id !== job.showPack.id || brief.showPack.version !== job.showPack.version || brief.showPack.contentHash !== job.showPack.contentHash) context.addIssue({code: "custom", path: ["briefs", index, "showPack"], message: "Brief Show Pack must match the job Show Pack."});
+    if (brief.status !== "exported") context.addIssue({code: "custom", path: ["briefs", index, "status"], message: "Finalized generation-job briefs must be exported."});
+    if (briefIds.has(brief.id)) context.addIssue({code: "custom", path: ["briefs", index, "id"], message: "Generation brief IDs must be unique."});
+    if (requirementIds.has(brief.requirementId)) context.addIssue({code: "custom", path: ["briefs", index, "requirementId"], message: "Generation requirement IDs must be unique."});
+    briefIds.add(brief.id);
+    requirementIds.add(brief.requirementId);
+  }
+});
+
+export const generationExchangeStatusSchema = z.enum(["awaiting-results", "files-imported", "staged", "needs-review", "approved", "rejected", "superseded"]);
+export const generationExchangeStateSchema = z.object({
+  schemaVersion: z.literal("1.0"),
+  exchangeJobId: identifierSchema,
+  generationJobContentHash: hashSchema,
+  production: z.object({id: identifierSchema, revision: z.number().int().positive()}).strict(),
+  status: generationExchangeStatusSchema,
+  importId: identifierSchema.nullable(),
+  updatedAt: z.string().datetime(),
 }).strict();
 
 export const rightsRecordSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict();
@@ -360,7 +400,8 @@ export const candidateBundleSchema = z.object({
   providerMetadata: z.object({provider: z.literal("chatgpt-images"), generatedAt: z.string().datetime(), conversationReference: z.string().min(1).nullable()}).strict(),
   assets: z.array(candidateBundleAssetSchema).min(1),
 }).strict();
-export const preparedCandidateSchema = z.object({candidateId: identifierSchema, sourceContentHash: hashSchema, preparedContentHash: hashSchema, relativeFile: safeRelativePathSchema, preparationState: z.enum(["pending", "prepared", "needs-manual-mask", "rejected"]), checks: z.object({dimensions: z.boolean(), mediaType: z.boolean(), alphaOrMatte: z.boolean(), registration: z.boolean()}).strict()}).strict();
+export const stagedCandidateSchema = z.object({candidateId: identifierSchema, sourceContentHash: hashSchema, stagedContentHash: hashSchema, relativeFile: safeRelativePathSchema, stagingState: z.enum(["staged-byte-verified", "staged-needs-mask"]), checks: z.object({dimensions: z.literal(true), mediaType: z.literal(true), alphaOrMatte: z.boolean(), registration: z.literal(false)}).strict()}).strict();
+export const preparedCandidateSchema = z.object({candidateId: identifierSchema, sourceContentHash: hashSchema, preparedContentHash: hashSchema, relativeFile: safeRelativePathSchema, preparationState: z.literal("prepared"), checks: z.object({dimensions: z.literal(true), mediaType: z.literal(true), alphaOrMatte: z.literal(true), registration: z.literal(true)}).strict()}).strict();
 export const assetApprovalSchema = z.object({candidateId: identifierSchema, status: z.enum(["pending", "approved", "rejected"]), approvedBy: z.literal("user").nullable(), approvedAt: z.string().datetime().nullable(), notes: z.string()}).strict();
 export const approvedAssetVersionSchema = z.object({assetId: identifierSchema, version: z.string().min(1), requirementId: identifierSchema, contentHash: hashSchema, relativeFile: safeRelativePathSchema, provenance: rightsRecordSchema, approvedAt: z.string().datetime()}).strict();
 
@@ -373,16 +414,14 @@ export const resolvedEntitySchema = z.object({
   matchConfidence: z.number().min(0).max(1),
 }).strict();
 
-export const resolvedVisualSchema = z.object({requirementId: identifierSchema, assetId: identifierSchema, assetVersion: z.string().min(1), contentHash: hashSchema, resolutionStatus: z.enum(["approved", "placeholder", "unresolved"])}).strict();
+export const resolvedVisualSchema = z.object({requirementId: identifierSchema, role: visualRequirementRoleSchema, assetId: identifierSchema, assetVersion: z.string().min(1), contentHash: hashSchema, resolutionStatus: z.enum(["approved", "placeholder", "unresolved"])}).strict();
 
 export const shotOverrideSchema = z.object({
   shotId: identifierSchema,
   framing: shotFramingSchema.optional(),
   gesture: gestureSchema.optional(),
   gestureIntensity: z.number().min(0).max(1).optional(),
-  treatment: shotTreatmentSchema.optional(),
-  cameraAction: z.enum(["hardCut", "cameraPush", "pan", "reframe", "foregroundWipe"]).optional(),
-  locationAssetId: identifierSchema.optional(),
+  cameraAction: z.enum(["cameraPush", "pan", "reframe"]).optional(),
 }).strict();
 
 export const resolvedProductionPlanSchema = z.object({
@@ -438,6 +477,7 @@ export const directedPlanMetricsSchema = z.object({
   textEventsPerMinute: z.number().nonnegative(),
   textWordsPerMinute: z.number().nonnegative(),
   performanceEventsPerMinute: z.number().nonnegative(),
+  poseChangesPerMinute: z.number().nonnegative(),
   reactionsPerMinute: z.number().nonnegative(),
   assetSourceDistribution: z.record(z.string(), z.number().min(0).max(1)),
   maximumStaticFrames: z.number().int().positive(),
@@ -480,9 +520,16 @@ export const frameAccurateRenderPlanSchema = z.object({
 }).strict().superRefine((plan, context) => {
   const finalFrame = Math.max(...plan.shots.map((shot) => shot.startFrame + shot.durationInFrames));
   if (finalFrame !== plan.durationInFrames) context.addIssue({code: "custom", message: "Duration must equal the final shot boundary."});
-  for (const shot of plan.shots) for (const action of shot.actions) {
-    const shotEnd = shot.startFrame + shot.durationInFrames;
-    if (action.endFrame <= action.startFrame || action.startFrame < shot.startFrame || action.endFrame > shotEnd) context.addIssue({code: "custom", message: `Action ${action.id} has an invalid frame range.`});
+  for (const shot of plan.shots) {
+    const background = shot.visualBindings.find((binding) => binding.role === "background");
+    if (background && background.assetId !== shot.locationAssetId) context.addIssue({code: "custom", message: `Shot ${shot.id} background binding must match its location asset.`});
+    const compatibleRoles: Partial<Record<typeof shot.treatment, string[]>> = {insert: ["insert", "prop"], diagram: ["diagram"], "kinetic-type": ["diagram"], "licensed-media": ["evidence"], "generated-illustration": ["reconstruction", "insert"]};
+    const requiredRoles = compatibleRoles[shot.treatment];
+    if (requiredRoles && !shot.visualBindings.some((binding) => requiredRoles.includes(binding.role))) context.addIssue({code: "custom", message: `Shot ${shot.id} treatment lacks a compatible visual binding.`});
+    for (const action of shot.actions) {
+      const shotEnd = shot.startFrame + shot.durationInFrames;
+      if (action.endFrame <= action.startFrame || action.startFrame < shot.startFrame || action.endFrame > shotEnd) context.addIssue({code: "custom", message: `Action ${action.id} has an invalid frame range.`});
+    }
   }
 });
 
@@ -510,8 +557,10 @@ export type AssetRequirement = z.infer<typeof assetRequirementSchema>;
 export type GenerationBrief = z.infer<typeof generationBriefSchema>;
 export type GenerationJobDraft = z.infer<typeof generationJobDraftSchema>;
 export type GenerationJob = z.infer<typeof generationJobSchema>;
+export type GenerationExchangeState = z.infer<typeof generationExchangeStateSchema>;
 export type ResolvedVisual = z.infer<typeof resolvedVisualSchema>;
 export type CandidateBundle = z.infer<typeof candidateBundleSchema>;
+export type StagedCandidate = z.infer<typeof stagedCandidateSchema>;
 export type PreparedCandidate = z.infer<typeof preparedCandidateSchema>;
 export type AssetApproval = z.infer<typeof assetApprovalSchema>;
 export type ApprovedAssetVersion = z.infer<typeof approvedAssetVersionSchema>;

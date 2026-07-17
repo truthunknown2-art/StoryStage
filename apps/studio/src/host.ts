@@ -2,6 +2,10 @@ import type {
   DesktopCapabilities,
   ExportGenerationJobRequest,
   ExportGenerationJobResult,
+  FinalizeLooseCandidateMappingRequest,
+  FinalizeLooseCandidateMappingResult,
+  ImportLooseCandidateFilesRequest,
+  ImportLooseCandidateFilesResult,
   OpenRenderedFileResult,
   RenderJobEvent,
   StartRenderRequest,
@@ -14,6 +18,8 @@ import type {
 export interface HostAdapter {
   getCapabilities(): Promise<DesktopCapabilities>;
   exportGenerationJob(request: ExportGenerationJobRequest): Promise<ExportGenerationJobResult>;
+  importLooseCandidateFiles(request: ImportLooseCandidateFilesRequest): Promise<ImportLooseCandidateFilesResult>;
+  finalizeLooseCandidateMapping(request: FinalizeLooseCandidateMappingRequest): Promise<FinalizeLooseCandidateMappingResult>;
   stageCandidateBundle(request: StageCandidateBundleRequest): Promise<StageCandidateBundleResult>;
   startSampleRender(request: StartRenderRequest): Promise<StartRenderResponse>;
   subscribeToRenderJobs(listener: (event: RenderJobEvent) => void): () => void;
@@ -25,6 +31,14 @@ export class BrowserHostAdapter implements HostAdapter {
   exportGenerationJob = async (_request: ExportGenerationJobRequest): Promise<ExportGenerationJobResult> => {
     void _request;
     return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Private job export requires the desktop app."}};
+  };
+  importLooseCandidateFiles = async (_request: ImportLooseCandidateFilesRequest): Promise<ImportLooseCandidateFilesResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Loose candidate import requires the desktop app."}};
+  };
+  finalizeLooseCandidateMapping = async (_request: FinalizeLooseCandidateMappingRequest): Promise<FinalizeLooseCandidateMappingResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Loose candidate mapping requires the desktop app."}};
   };
   stageCandidateBundle = async (_request: StageCandidateBundleRequest): Promise<StageCandidateBundleResult> => {
     void _request;
@@ -42,6 +56,8 @@ export class DesktopHostAdapter implements HostAdapter {
   constructor(private readonly bridge: StoryStageDesktopBridge) {}
   getCapabilities = () => this.bridge.getCapabilities();
   exportGenerationJob = (request: ExportGenerationJobRequest) => this.bridge.exportGenerationJob(request);
+  importLooseCandidateFiles = (request: ImportLooseCandidateFilesRequest) => this.bridge.importLooseCandidateFiles(request);
+  finalizeLooseCandidateMapping = (request: FinalizeLooseCandidateMappingRequest) => this.bridge.finalizeLooseCandidateMapping(request);
   stageCandidateBundle = (request: StageCandidateBundleRequest) => this.bridge.stageCandidateBundle(request);
   startSampleRender = (request: StartRenderRequest) => this.bridge.startSampleRender(request);
   subscribeToRenderJobs = (listener: (event: RenderJobEvent) => void) => this.bridge.subscribeToRenderJobs(listener);

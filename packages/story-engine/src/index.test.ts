@@ -18,6 +18,7 @@ import {
   parseScript,
   rehashShowPack,
   sampleWorkshopScript,
+  shotOverrideSchema,
   tryBuildAnimaticSync,
   verifyRenderPlanHash,
   verifyGenerationJobHash,
@@ -114,6 +115,20 @@ describe("StoryStage story engine", () => {
     expect(transition.transitionDistribution["hard-cut"]).toBeGreaterThan(baseline.transitionDistribution["hard-cut"] ?? 0);
   });
 
+  it("enforces camera, pose-change, and text event quotas independently", () => {
+    const base = getShowPack("kids-adventure-v1").profile;
+    const cameraOpen = measureDirectedPlan(directWithProfile({...base, cameraPolicy: {moves: [{type: "cameraPush", weight: 1}]}}));
+    const cameraCapped = measureDirectedPlan(directWithProfile({...base, cameraPolicy: {moves: [{type: "cameraPush", weight: 1, maximumPerMinute: 0.1}]}}));
+    const lowPose = measureDirectedPlan(directWithProfile({...base, performancePolicy: {...base.performancePolicy, poseChangesPerMinute: 1}}));
+    const highPose = measureDirectedPlan(directWithProfile({...base, performancePolicy: {...base.performancePolicy, poseChangesPerMinute: 20}}));
+    const lowText = measureDirectedPlan(directWithProfile({...base, textPolicy: {...base.textPolicy, targetEventsPerMinute: 1}}));
+    const highText = measureDirectedPlan(directWithProfile({...base, textPolicy: {...base.textPolicy, targetEventsPerMinute: 20}}));
+
+    expect(cameraCapped.cameraActionsPerMinute).toBeLessThan(cameraOpen.cameraActionsPerMinute);
+    expect(highPose.poseChangesPerMinute).toBeGreaterThan(lowPose.poseChangesPerMinute);
+    expect(highText.textEventsPerMinute).toBeGreaterThan(lowText.textEventsPerMinute);
+  });
+
   it("binds narration-only explainers to the approved presenter role", () => {
     const script = `INT. ARCHIVE - NIGHT\n\nNARRATOR: The ledger had been wrong for one hundred years.`;
     const build = buildAnimaticSync({draft: makeDraft("explainer", {productionId: "production-narrator", script})});
@@ -164,6 +179,9 @@ describe("StoryStage story engine", () => {
     const job = finalizeGenerationJob(draft, {exchangeJobId: "job-one", createdAt: "2026-07-17T00:00:00.000Z"});
     expect(verifyGenerationJobHash(job)).toBe(true);
     expect(verifyGenerationJobHash({...job, createdAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
+    expect(job.briefs[0]?.styleBible.principles.length).toBeGreaterThan(0);
+    expect(generationJobDraftSchema.safeParse({...draft, production: {...draft.production, id: "different-production"}}).success).toBe(false);
+    expect(generationJobDraftSchema.safeParse({...draft, briefs: draft.briefs.length > 0 ? [draft.briefs[0]!, draft.briefs[0]!] : []}).success).toBe(false);
   });
 
   it("rejects candidate manifests that attempt path traversal", () => {
@@ -176,6 +194,10 @@ describe("StoryStage story engine", () => {
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.length > 0)).toBe(true);
     expect(build.renderPlan.shots.some((shot) => shot.visualBindings.some((binding) => binding.resolutionStatus !== "approved"))).toBe(true);
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.every((binding) => binding.contentHash.length === 64))).toBe(true);
+    expect(build.renderPlan.shots.every((shot) => shot.visualBindings.find((binding) => binding.role === "background")?.assetId === shot.locationAssetId)).toBe(true);
+    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, treatment: "diagram"}).success).toBe(false);
+    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, locationAssetId: "other-background"}).success).toBe(false);
+    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, cameraAction: "hardCut"}).success).toBe(false);
   });
 
   it("resolves only dependent shots when an immutable candidate is approved", () => {
@@ -215,5 +237,24 @@ describe("StoryStage story engine", () => {
     expect(draftBrief.backgroundLayerTarget).not.toBe(premiumBrief.backgroundLayerTarget);
     expect(draftBrief.posePack).not.toBe(premiumBrief.posePack);
     expect(draft.estimate.estimatedCandidateImages).not.toBe(premium.estimate.estimatedCandidateImages);
+  });
+
+  it("routes approved matches into replacement generation when reuse is disabled", () => {
+    const reusable = makeDraft("kids");
+    const replacement = createProductionDraft({...reusable, assetRoutingPolicy: {...reusable.assetRoutingPolicy, reuseApprovedFirst: false}});
+    const reusedBuild = buildAnimaticSync({draft: reusable});
+    const replacementBuild = buildAnimaticSync({draft: replacement});
+    expect(replacementBuild.resolvedPlan.generationBriefs.length).toBeGreaterThan(reusedBuild.resolvedPlan.generationBriefs.length);
+    expect(replacementBuild.resolvedPlan.warnings.some((warning) => warning.includes("replacement generation"))).toBe(true);
+    expect(replacementBuild.estimate.estimatedCandidateImages).toBeGreaterThan(reusedBuild.estimate.estimatedCandidateImages);
+  });
+
+  it("keeps unrelated non-entity visuals at shot scope", () => {
+    const build = buildFor("explainer");
+    const shotScoped = build.creativePlan.visualRequirements.filter((visual) => visual.entityId === null && visual.reusableConceptKey === null);
+    expect(shotScoped.length).toBeGreaterThan(1);
+    for (const visual of shotScoped) {
+      expect(build.resolvedPlan.requirements.some((requirement) => requirement.id === `requirement-${visual.role}-shot-${visual.shotId}-${visual.id}`)).toBe(true);
+    }
   });
 });

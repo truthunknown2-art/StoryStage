@@ -29,8 +29,8 @@ describe("StoryStage contracts", () => {
   });
 
   it("keeps the asset worker envelope strict and bounded", () => {
-    expect(assetWorkerCommandSchema.safeParse({type: "prepare-candidate-bundle", requestId: "request-one", sourceRoot: "C:/trusted-source", stagingRoot: "C:/trusted-staging", serializedBundle: "{}"}).success).toBe(true);
-    expect(assetWorkerCommandSchema.safeParse({type: "prepare-candidate-bundle", requestId: "request-one", sourceRoot: "C:/trusted-source", stagingRoot: "C:/trusted-staging", serializedBundle: "{}", executable: "powershell.exe"}).success).toBe(false);
+    expect(assetWorkerCommandSchema.safeParse({type: "stage-candidate-bundle", requestId: "request-one", sourceRoot: "C:/trusted-source", trustedStagingRoot: "C:/private-root", stagingRoot: "C:/private-root/import-one", serializedBundle: "{}"}).success).toBe(true);
+    expect(assetWorkerCommandSchema.safeParse({type: "stage-candidate-bundle", requestId: "request-one", sourceRoot: "C:/trusted-source", trustedStagingRoot: "C:/private-root", stagingRoot: "C:/private-root/import-one", serializedBundle: "{}", executable: "powershell.exe"}).success).toBe(false);
   });
 
   it("rejects incomplete failed job events", () => {

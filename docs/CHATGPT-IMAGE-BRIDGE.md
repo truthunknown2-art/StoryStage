@@ -13,12 +13,15 @@ StoryStage production
   -> .storystage-local/jobs/outbox/<job-id>/generation-brief.json
   -> ChatGPT/Codex image-generation task
   -> .storystage-local/jobs/inbox/<job-id>/candidate-bundle.json + candidates/
-  -> deterministic preparation and validation
+  -> byte-verified private staging
+  -> deterministic preparation and registration
   -> human review and identity lock
   -> immutable approved asset + provenance record
 ```
 
-The current desktop UI shows an exact disclosure review before export, assigns a main-owned opaque exchange ID, writes an immutable hash-verified job under Electron `userData`, and opens its folder. Import uses a native folder picker; the renderer never submits a path. Electron main rejects stale identities, then a timed utility process with a capped heap invokes the trusted `packages/asset-pipeline` boundary to validate each candidate's byte hash, actual codec, dimensions/pixel limits, alpha state, size, safe source path, and staging destination. Candidate bundles must match the exact exchange-job hash, production revision, brief roles, and Show Pack hash.
+The current desktop UI shows an exact disclosure review before export, assigns a main-owned opaque exchange ID, writes an immutable hash-verified job plus durable lifecycle state under Electron `userData`, and opens its folder. On restart, Electron rehydrates only jobs whose canonical hash, folder identity, production revision, and authoritative Show Pack still verify. Import uses a native folder picker; the renderer never submits a path. Electron main rejects stale identities, then a timed utility process with a capped heap invokes the trusted `packages/asset-pipeline` boundary to validate each candidate's byte hash, actual codec, dimensions/pixel limits, alpha state, size, safe source path, and main-owned staging destination. UNC locations, source symlinks, and staging symlink/junction ancestors are rejected. Candidate bundles must match the exact exchange-job hash, production revision, brief roles, and Show Pack hash.
+
+Two honest return paths are supported: a strict `candidate-bundle.json` folder produced by this Codex/ChatGPT workflow, or loose downloaded PNG/JPEG/WebP files. Loose files are staged first, then the user maps each opaque candidate to an expected brief/file role (or leaves it unused); StoryStage writes the matching local candidate manifest itself. Neither path approves an asset for render.
 
 ## Repository boundary
 
@@ -46,8 +49,8 @@ These local paths and common credential formats are blocked by `.gitignore`. Bef
 2. Review the entity ledger and generation briefs.
 3. Review the exact prompts, excerpts, reference hashes, and file roles that will be shared, then approve an immutable local job pack.
 4. Ask the authenticated StoryStage Codex task to process the next pack with ChatGPT Images.
-5. Import the returned candidate bundle.
-6. Review prepared candidates; approve identity, mask, registration, pivots, layers, and usage rights.
+5. Import the returned candidate bundle, or select loose downloaded images and map them to expected roles.
+6. Review staged candidates, perform preparation and registration, then approve identity, mask, pivots, layers, and usage rights.
 7. Render only from immutable approved local assets.
 
 This is deliberately a short human-approved round trip. A future supported subscription-backed integration can replace the operator step without changing the provider-neutral job contract.

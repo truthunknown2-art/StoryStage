@@ -6,8 +6,7 @@ const cameraActionDetail = (type: NonNullable<ResolvedProductionPlan["overrides"
   if (type === "cameraPush") return {type, fromScale: 1, toScale: 1.1, easingId: "ease-standard"};
   if (type === "pan") return {type, fromX: -0.05, toX: 0.05, easingId: "ease-standard"};
   if (type === "reframe") return {type, framing, easingId: "ease-standard"};
-  if (type === "foregroundWipe") return {type, layer: "environment"};
-  return {type: "hardCut"};
+  return {type: "reframe", framing, easingId: "ease-standard"};
 };
 
 export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRenderPlan {
@@ -15,14 +14,12 @@ export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRen
   const overrideByShot = new Map(plan.overrides.map((override) => [override.shotId, override]));
   const entityIdByName = new Map([...plan.characters, ...plan.locations, ...plan.props].map((entity) => [entity.entityName.toLowerCase(), entity.entityId]));
   const assets = [...showPack.assets, ...plan.approvedAssets];
-  const assetIds = new Set(assets.map((asset) => asset.id));
   const visualByRequirementId = new Map(plan.resolvedVisuals.map((visual) => [visual.requirementId, visual]));
   const placeholder = showPack.assets.find((asset) => asset.kind === "placeholder")!;
 
   let cursor = 0;
   const shots = creativePlan.shots.map((shot) => {
     const override = overrideByShot.get(shot.id);
-    if (override?.locationAssetId && !assetIds.has(override.locationAssetId)) throw new Error(`Override for ${shot.id} references an unknown local asset.`);
     if (override?.gesture && !showPack.allowedGestures.includes(override.gesture)) throw new Error(`Gesture ${override.gesture} is not allowed by ${showPack.id}.`);
 
     const startFrame = cursor;
@@ -44,15 +41,15 @@ export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRen
 
     const framing = override?.framing ?? shot.framing;
     if (override?.cameraAction) {
-      const existingIndex = actions.findIndex((action) => ["hardCut", "cameraPush", "pan", "reframe", "foregroundWipe"].includes(action.detail.type));
+      const existingIndex = actions.findIndex((action) => ["cameraPush", "pan", "reframe"].includes(action.detail.type));
       const cameraAction = {id: `${shot.id}-override-camera`, actorId: null, targetId: focusCharacterId, label: `Camera override: ${override.cameraAction}`, startFrame, endFrame: startFrame + shot.durationInFrames, detail: cameraActionDetail(override.cameraAction, framing)};
       if (existingIndex >= 0) actions.splice(existingIndex, 1, cameraAction);
       else actions.push(cameraAction);
     }
 
     const visualBindings = shot.visualRequirementIds.map((id) => visualByRequirementId.get(id)).filter((visual): visual is NonNullable<typeof visual> => Boolean(visual));
-    const background = visualBindings.find((visual) => creativePlan.visualRequirements.find((requirement) => requirement.id === visual.requirementId)?.role === "background");
-    return {id: shot.id, sceneId: shot.sceneId, number: shot.number, title: shot.title, framing, treatment: override?.treatment ?? shot.treatment, transition: shot.transition, locationAssetId: override?.locationAssetId ?? background?.assetId ?? placeholder.id, focusCharacterId, visualBindings, startFrame, durationInFrames: shot.durationInFrames, actions, caption: shot.caption};
+    const background = visualBindings.find((visual) => visual.role === "background");
+    return {id: shot.id, sceneId: shot.sceneId, number: shot.number, title: shot.title, framing, treatment: shot.treatment, transition: shot.transition, locationAssetId: background?.assetId ?? placeholder.id, focusCharacterId, visualBindings, startFrame, durationInFrames: shot.durationInFrames, actions, caption: shot.caption};
   });
 
   const payload = {

@@ -91,14 +91,7 @@ function makeGenerationBrief(showPack: ShowPack, creativePlan: CreativeEpisodePl
       referenceAssets: references,
       sourceExcerpts: creativePlan.shots
         .filter((shot) => requirement.consumingShotIds.includes(shot.id))
-        .map((shot) => {
-          if (shot.caption) return shot.caption;
-          const actionText = shot.actions
-            .filter((action) => !["hardCut", "cameraPush", "reframe", "pan", "foregroundWipe"].includes(action.detail.type))
-            .map((action) => action.label)
-            .join(" ");
-          return actionText || shot.title;
-        })
+        .map((shot) => shot.sourceExcerpt)
         .filter((excerpt, index, excerpts) => excerpt.length > 0 && excerpts.indexOf(excerpt) === index)
         .slice(0, 3),
       creativeRequirements: [`Create an original ${output.replaceAll("-", " ")} for ${entity?.name ?? requirement.role}.`, ...showPack.profile.qualityRules],
@@ -112,23 +105,36 @@ function makeGenerationBrief(showPack: ShowPack, creativePlan: CreativeEpisodePl
   });
 }
 
+function visualGroupKey(visual: VisualRequirement): string {
+  if (visual.entityId) return `${visual.role}-entity-${visual.entityId}`;
+  if (visual.reusableConceptKey) return `${visual.role}-concept-${visual.reusableConceptKey}`;
+  return `${visual.role}-shot-${visual.shotId}-${visual.id}`;
+}
+
 export function resolveAssets(creativePlan: CreativeEpisodePlan, showPack: ShowPack, overrides: ShotOverride[] = []): ResolvedProductionPlan {
   const placeholder = showPack.assets.find((asset) => asset.kind === "placeholder");
   if (!placeholder) throw new Error(`Show pack ${showPack.id} is missing a placeholder asset.`);
   const allEntities = [...creativePlan.analysis.characters, ...creativePlan.analysis.locations, ...creativePlan.analysis.props];
   const entityById = new Map(allEntities.map((entity) => [entity.id, entity]));
-  const matchByEntityId = new Map(allEntities.map((entity) => [entity.id, matchEntity(showPack, entity, placeholder)]));
+  const matchByEntityId = new Map(allEntities.map((entity) => {
+    const approvedMatch = matchEntity(showPack, entity, placeholder);
+    return [entity.id, !creativePlan.assetRoutingPolicy.reuseApprovedFirst && approvedMatch.resolved
+      ? {asset: placeholder, strategy: "placeholder" as const, confidence: 0, resolved: false}
+      : approvedMatch] as const;
+  }));
   const warnings = [...creativePlan.analysis.warnings];
 
   const toResolvedEntity = (entity: StoryEntity) => {
     const match = matchByEntityId.get(entity.id)!;
-    if (!match.resolved) warnings.push(`${entity.kind} ${entity.name} has no approved compatible asset; using ${placeholder.displayName}.`);
+    if (!match.resolved) warnings.push(creativePlan.assetRoutingPolicy.reuseApprovedFirst
+      ? `${entity.kind} ${entity.name} has no approved compatible asset; using ${placeholder.displayName}.`
+      : `${entity.kind} ${entity.name} is routed to replacement generation because approved-asset reuse is disabled.`);
     return {entityId: entity.id, entityName: entity.name, assetId: match.asset.id, resolved: match.resolved, matchStrategy: match.strategy, matchConfidence: match.confidence};
   };
 
   const grouped = new Map<string, VisualRequirement[]>();
   for (const visual of creativePlan.visualRequirements) {
-    const key = visual.entityId ? `${visual.role}-${visual.entityId}` : `${visual.role}-${visual.sourceIntent}`;
+    const key = visualGroupKey(visual);
     grouped.set(key, [...(grouped.get(key) ?? []), visual]);
   }
 
@@ -155,15 +161,13 @@ export function resolveAssets(creativePlan: CreativeEpisodePlan, showPack: ShowP
     generationBriefs.push(makeGenerationBrief(showPack, creativePlan, requirement, requirement.entityId ? entityById.get(requirement.entityId) : undefined));
   }
 
-  const requirementByVisualId = new Map<string, AssetRequirement>();
-  for (const requirement of requirements) {
-    for (const visual of creativePlan.visualRequirements.filter((candidate) => requirement.consumingShotIds.includes(candidate.shotId) && candidate.role === requirement.role && candidate.entityId === requirement.entityId)) requirementByVisualId.set(visual.id, requirement);
-  }
+  const requirementByGroupKey = new Map(requirements.map((requirement) => [requirement.id.replace(/^requirement-/, ""), requirement]));
+  const requirementByVisualId = new Map(creativePlan.visualRequirements.map((visual) => [visual.id, requirementByGroupKey.get(visualGroupKey(visual))!]));
   const resolvedVisuals: ResolvedVisual[] = creativePlan.visualRequirements.map((visual) => {
     const entity = visual.entityId ? entityById.get(visual.entityId) : undefined;
     const match = matchRequirement(showPack, visual, entity, entity ? matchByEntityId.get(entity.id) : undefined, placeholder);
     const requirement = requirementByVisualId.get(visual.id);
-    return {requirementId: visual.id, assetId: match.asset.id, assetVersion: match.asset.version, contentHash: match.asset.contentHash, resolutionStatus: match.resolved ? "approved" : requirement?.status === "deferred" ? "unresolved" : "placeholder"};
+    return {requirementId: visual.id, role: visual.role, assetId: match.asset.id, assetVersion: match.asset.version, contentHash: match.asset.contentHash, resolutionStatus: match.resolved ? "approved" : requirement?.status === "deferred" ? "unresolved" : "placeholder"};
   });
 
   return resolvedProductionPlanSchema.parse({

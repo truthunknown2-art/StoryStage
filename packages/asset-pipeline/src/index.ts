@@ -1,11 +1,11 @@
 import {createHash} from "node:crypto";
 import {lstat, mkdir, readFile, realpath, writeFile} from "node:fs/promises";
-import {isAbsolute, join, relative, resolve} from "node:path";
+import {basename, isAbsolute, join, relative, resolve} from "node:path";
 import {
   candidateBundleSchema,
-  preparedCandidateSchema,
+  stagedCandidateSchema,
   type CandidateBundle,
-  type PreparedCandidate,
+  type StagedCandidate,
 } from "@storystage/story-engine";
 
 const DEFAULT_MAX_FILES = 32;
@@ -35,6 +35,23 @@ export type CandidateStagingLimits = {
 export type StageCandidateBundleInput = {
   bundle: CandidateBundle | unknown;
   sourceRoot: string;
+  trustedStagingRoot: string;
+  stagingRoot: string;
+  limits?: CandidateStagingLimits;
+};
+
+export type LooseCandidateFile = {candidateId: string; sourceFile: string};
+export type LooseStagedCandidate = {
+  candidate: StagedCandidate;
+  originalName: string;
+  mediaType: SupportedMediaType;
+  width: number;
+  height: number;
+};
+
+export type StageLooseCandidateFilesInput = {
+  files: LooseCandidateFile[];
+  trustedStagingRoot: string;
   stagingRoot: string;
   limits?: CandidateStagingLimits;
 };
@@ -45,6 +62,7 @@ export class CandidateStagingError extends Error {
       | "invalid-bundle"
       | "duplicate-candidate"
       | "unsafe-source"
+      | "network-share-rejected"
       | "symlink-rejected"
       | "file-count-limit"
       | "file-too-large"
@@ -54,6 +72,7 @@ export class CandidateStagingError extends Error {
       | "media-mismatch"
       | "dimension-mismatch"
       | "hash-mismatch"
+      | "untrusted-staging-root"
       | "output-collision",
     message: string,
   ) {
@@ -73,6 +92,9 @@ function isWithin(root: string, candidate: string): boolean {
 
 async function resolveSafeSource(sourceRoot: string, relativeFile: string): Promise<string> {
   const absoluteRoot = resolve(sourceRoot);
+  if (absoluteRoot.startsWith("\\\\")) {
+    throw new CandidateStagingError("network-share-rejected", "Network candidate folders are disabled for this release.");
+  }
   const rootInfo = await lstat(absoluteRoot);
   if (rootInfo.isSymbolicLink()) {
     throw new CandidateStagingError("symlink-rejected", "The selected candidate source folder cannot be a symbolic link.");
@@ -98,6 +120,53 @@ async function resolveSafeSource(sourceRoot: string, relativeFile: string): Prom
     throw new CandidateStagingError("unsafe-source", `Candidate source resolves outside the selected folder: ${relativeFile}`);
   }
   return realSource;
+}
+
+async function ensureTrustedStagingRoot(trustedStagingRoot: string, stagingRoot: string): Promise<string> {
+  const trustedRoot = resolve(trustedStagingRoot);
+  const targetRoot = resolve(stagingRoot);
+  if (trustedRoot.startsWith("\\\\") || targetRoot.startsWith("\\\\")) {
+    throw new CandidateStagingError("network-share-rejected", "Private candidate staging must use a local filesystem root.");
+  }
+  if (!isWithin(trustedRoot, targetRoot)) {
+    throw new CandidateStagingError("untrusted-staging-root", "The candidate staging folder is outside the main-process trusted root.");
+  }
+
+  await mkdir(trustedRoot, {recursive: true});
+  const trustedInfo = await lstat(trustedRoot);
+  if (trustedInfo.isSymbolicLink() || !trustedInfo.isDirectory()) {
+    throw new CandidateStagingError("symlink-rejected", "The trusted candidate root must be a real local directory.");
+  }
+  const canonicalTrustedRoot = await realpath(trustedRoot);
+  const pathParts = relative(trustedRoot, targetRoot).split(/[\\/]+/).filter(Boolean);
+  let currentPath = trustedRoot;
+  for (const pathPart of pathParts) {
+    currentPath = join(currentPath, pathPart);
+    try {
+      const pathInfo = await lstat(currentPath);
+      if (pathInfo.isSymbolicLink()) {
+        throw new CandidateStagingError("symlink-rejected", "The private candidate path contains a symbolic link or junction.");
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") break;
+      throw error;
+    }
+  }
+
+  await mkdir(targetRoot, {recursive: true});
+  currentPath = trustedRoot;
+  for (const pathPart of pathParts) {
+    currentPath = join(currentPath, pathPart);
+    const pathInfo = await lstat(currentPath);
+    if (pathInfo.isSymbolicLink() || !pathInfo.isDirectory()) {
+      throw new CandidateStagingError("symlink-rejected", "The private candidate path must contain only real directories.");
+    }
+  }
+  const canonicalTargetRoot = await realpath(targetRoot);
+  if (!isWithin(canonicalTrustedRoot, canonicalTargetRoot)) {
+    throw new CandidateStagingError("untrusted-staging-root", "The candidate staging folder resolves outside the trusted root.");
+  }
+  return canonicalTargetRoot;
 }
 
 function detectPng(bytes: Uint8Array): DetectedImage | null {
@@ -177,7 +246,7 @@ function detectImage(bytes: Uint8Array): DetectedImage {
   return detected;
 }
 
-export async function stageCandidateBundle(input: StageCandidateBundleInput): Promise<PreparedCandidate[]> {
+export async function stageCandidateBundle(input: StageCandidateBundleInput): Promise<StagedCandidate[]> {
   const parsedBundle = candidateBundleSchema.safeParse(input.bundle);
   if (!parsedBundle.success) {
     throw new CandidateStagingError("invalid-bundle", parsedBundle.error.issues.map((issue) => issue.message).join("; "));
@@ -233,19 +302,15 @@ export async function stageCandidateBundle(input: StageCandidateBundleInput): Pr
     validated.push({candidateId: asset.candidateId, bytes, detected, hash});
   }
 
-  await mkdir(input.stagingRoot, {recursive: true});
-  const stagingInfo = await lstat(resolve(input.stagingRoot));
-  if (stagingInfo.isSymbolicLink()) {
-    throw new CandidateStagingError("symlink-rejected", "The private staging folder cannot be a symbolic link.");
-  }
-  const candidateOutputRoot = resolve(input.stagingRoot, "candidates");
+  const stagingRoot = await ensureTrustedStagingRoot(input.trustedStagingRoot, input.stagingRoot);
+  const candidateOutputRoot = resolve(stagingRoot, "candidates");
   await mkdir(candidateOutputRoot, {recursive: true});
 
-  const prepared: PreparedCandidate[] = [];
+  const staged: StagedCandidate[] = [];
   for (const candidate of validated) {
     const relativeFile = `candidates/${candidate.candidateId}.${candidate.detected.extension}`;
-    const destination = resolve(input.stagingRoot, ...relativeFile.split("/"));
-    if (!isWithin(resolve(input.stagingRoot), destination)) {
+    const destination = resolve(stagingRoot, ...relativeFile.split("/"));
+    if (!isWithin(stagingRoot, destination)) {
       throw new CandidateStagingError("unsafe-source", `Derived staging path escaped its root: ${candidate.candidateId}`);
     }
     try {
@@ -257,19 +322,84 @@ export async function stageCandidateBundle(input: StageCandidateBundleInput): Pr
       throw error;
     }
 
-    prepared.push(preparedCandidateSchema.parse({
+    staged.push(stagedCandidateSchema.parse({
       candidateId: candidate.candidateId,
       sourceContentHash: candidate.hash,
-      preparedContentHash: candidate.hash,
+      stagedContentHash: candidate.hash,
       relativeFile,
-      preparationState: candidate.detected.hasAlpha ? "prepared" : "needs-manual-mask",
+      stagingState: candidate.detected.hasAlpha ? "staged-byte-verified" : "staged-needs-mask",
       checks: {
         dimensions: true,
         mediaType: true,
         alphaOrMatte: candidate.detected.hasAlpha,
-        registration: true,
+        registration: false,
       },
     }));
   }
-  return prepared;
+  return staged;
+}
+
+export async function stageLooseCandidateFiles(input: StageLooseCandidateFilesInput): Promise<LooseStagedCandidate[]> {
+  const limits = {
+    maxFiles: input.limits?.maxFiles ?? DEFAULT_MAX_FILES,
+    maxFileBytes: input.limits?.maxFileBytes ?? DEFAULT_MAX_FILE_BYTES,
+    maxTotalBytes: input.limits?.maxTotalBytes ?? DEFAULT_MAX_TOTAL_BYTES,
+    maxDimension: input.limits?.maxDimension ?? DEFAULT_MAX_DIMENSION,
+    maxPixels: input.limits?.maxPixels ?? DEFAULT_MAX_PIXELS,
+  };
+  if (input.files.length === 0 || input.files.length > limits.maxFiles) {
+    throw new CandidateStagingError("file-count-limit", `Select between 1 and ${limits.maxFiles} candidate files.`);
+  }
+
+  const candidateIds = new Set<string>();
+  const validated: Array<{candidateId: string; originalName: string; bytes: Uint8Array; detected: DetectedImage; hash: string}> = [];
+  let totalBytes = 0;
+  for (const file of input.files) {
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(file.candidateId) || candidateIds.has(file.candidateId)) {
+      throw new CandidateStagingError("duplicate-candidate", `Loose candidate identity is invalid or repeated: ${file.candidateId}`);
+    }
+    candidateIds.add(file.candidateId);
+    const absoluteSource = resolve(file.sourceFile);
+    if (absoluteSource.startsWith("\\\\")) {
+      throw new CandidateStagingError("network-share-rejected", "Network candidate files are disabled for this release.");
+    }
+    const sourceInfo = await lstat(absoluteSource);
+    if (sourceInfo.isSymbolicLink()) throw new CandidateStagingError("symlink-rejected", `Loose candidate is a symbolic link: ${basename(absoluteSource)}`);
+    if (!sourceInfo.isFile()) throw new CandidateStagingError("unsafe-source", `Loose candidate is not a regular file: ${basename(absoluteSource)}`);
+    if (sourceInfo.size > limits.maxFileBytes) throw new CandidateStagingError("file-too-large", `Loose candidate exceeds the per-file byte limit: ${basename(absoluteSource)}`);
+    totalBytes += sourceInfo.size;
+    if (totalBytes > limits.maxTotalBytes) throw new CandidateStagingError("bundle-too-large", "Loose candidates exceed the total byte limit.");
+
+    const bytes = await readFile(absoluteSource);
+    const detected = detectImage(bytes);
+    if (detected.width > limits.maxDimension || detected.height > limits.maxDimension || detected.width * detected.height > limits.maxPixels) {
+      throw new CandidateStagingError("dimension-limit", `Loose candidate dimensions exceed the safe decode limits: ${basename(absoluteSource)}`);
+    }
+    validated.push({candidateId: file.candidateId, originalName: basename(absoluteSource), bytes, detected, hash: sha256(bytes)});
+  }
+
+  const stagingRoot = await ensureTrustedStagingRoot(input.trustedStagingRoot, input.stagingRoot);
+  await mkdir(resolve(stagingRoot, "candidates"), {recursive: true});
+
+  const staged: LooseStagedCandidate[] = [];
+  for (const candidate of validated) {
+    const relativeFile = `candidates/${candidate.candidateId}.${candidate.detected.extension}`;
+    const destination = resolve(stagingRoot, ...relativeFile.split("/"));
+    try {
+      await writeFile(destination, candidate.bytes, {flag: "wx"});
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "EEXIST") throw new CandidateStagingError("output-collision", `A staged candidate already exists: ${candidate.candidateId}`);
+      throw error;
+    }
+    const stagedCandidate = stagedCandidateSchema.parse({
+      candidateId: candidate.candidateId,
+      sourceContentHash: candidate.hash,
+      stagedContentHash: candidate.hash,
+      relativeFile,
+      stagingState: candidate.detected.hasAlpha ? "staged-byte-verified" : "staged-needs-mask",
+      checks: {dimensions: true, mediaType: true, alphaOrMatte: candidate.detected.hasAlpha, registration: false},
+    });
+    staged.push({candidate: stagedCandidate, originalName: candidate.originalName, mediaType: candidate.detected.mediaType, width: candidate.detected.width, height: candidate.detected.height});
+  }
+  return staged;
 }

@@ -31,17 +31,48 @@ export const stageCandidateBundleRequestSchema = z.object({
   exchangeJobId: productionIdSchema,
 }).strict();
 
+export const stagedCandidateSummarySchema = z.object({
+  candidateId: productionIdSchema,
+  originalName: z.string().min(1),
+  briefId: productionIdSchema.nullable(),
+  fileRole: z.string().min(1).nullable(),
+  mediaType: z.enum(["image/png", "image/jpeg", "image/webp"]),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+  stagingState: z.enum(["staged-byte-verified", "staged-needs-mask"]),
+  checks: z.object({dimensions: z.literal(true), mediaType: z.literal(true), alphaOrMatte: z.boolean(), registration: z.literal(false)}).strict(),
+}).strict();
+
 export const stageCandidateBundleResultSchema = z.discriminatedUnion("status", [
   z.object({
-    status: z.literal("prepared"),
+    status: z.literal("staged"),
     importId: productionIdSchema,
-    preparedCount: z.number().int().nonnegative(),
+    stagedCount: z.number().int().nonnegative(),
     needsManualMaskCount: z.number().int().nonnegative(),
     missingRoleCount: z.number().int().nonnegative(),
+    candidates: z.array(stagedCandidateSummarySchema),
   }).strict(),
   z.object({status: z.literal("cancelled")}).strict(),
   z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
 ]);
+
+export const importLooseCandidateFilesRequestSchema = z.object({exchangeJobId: productionIdSchema}).strict();
+export const importLooseCandidateFilesResultSchema = z.discriminatedUnion("status", [
+  z.object({
+    status: z.literal("mapping-required"),
+    importId: productionIdSchema,
+    candidates: z.array(stagedCandidateSummarySchema).min(1),
+    expectedRoles: z.array(z.object({briefId: productionIdSchema, requirementId: productionIdSchema, entityName: z.string().min(1), fileRole: z.string().min(1)}).strict()).min(1),
+  }).strict(),
+  z.object({status: z.literal("cancelled")}).strict(),
+  z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
+
+export const finalizeLooseCandidateMappingRequestSchema = z.object({
+  importId: productionIdSchema,
+  assignments: z.array(z.object({candidateId: productionIdSchema, briefId: productionIdSchema, fileRole: z.string().min(1)}).strict()).min(1),
+}).strict();
+export const finalizeLooseCandidateMappingResultSchema = stageCandidateBundleResultSchema;
 
 const activeJobFields = {
   jobId: z.string().min(1),
@@ -98,18 +129,44 @@ export const renderWorkerMessageSchema = z.discriminatedUnion("type", [
   z.object({type: z.literal("event"), payload: renderJobEventSchema}).strict(),
 ]);
 
-export const assetWorkerCommandSchema = z.object({
-  type: z.literal("prepare-candidate-bundle"),
-  requestId: z.string().min(1),
-  sourceRoot: z.string().min(1),
-  stagingRoot: z.string().min(1),
-  serializedBundle: z.string().min(2).max(2_000_000),
-}).strict();
+export const assetWorkerCommandSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("stage-candidate-bundle"),
+    requestId: z.string().min(1),
+    sourceRoot: z.string().min(1),
+    trustedStagingRoot: z.string().min(1),
+    stagingRoot: z.string().min(1),
+    serializedBundle: z.string().min(2).max(2_000_000),
+  }).strict(),
+  z.object({
+    type: z.literal("stage-loose-candidates"),
+    requestId: z.string().min(1),
+    trustedStagingRoot: z.string().min(1),
+    stagingRoot: z.string().min(1),
+    files: z.array(z.object({candidateId: z.string().regex(/^[a-z0-9][a-z0-9-]*$/), sourceFile: z.string().min(1)}).strict()).min(1).max(32),
+  }).strict(),
+]);
 
 export const assetWorkerMessageSchema = z.discriminatedUnion("type", [
-  z.object({type: z.literal("prepared"), requestId: z.string().min(1), serializedPreparedCandidates: z.string().min(2).max(2_000_000)}).strict(),
+  z.object({type: z.literal("staged"), requestId: z.string().min(1), serializedStagedCandidates: z.string().min(2).max(2_000_000)}).strict(),
+  z.object({type: z.literal("loose-staged"), requestId: z.string().min(1), serializedLooseCandidates: z.string().min(2).max(2_000_000)}).strict(),
   z.object({type: z.literal("failed"), requestId: z.string().min(1), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
 ]);
+
+export const workerLooseStagedCandidateSchema = z.object({
+  candidate: z.object({
+    candidateId: z.string().regex(/^[a-z0-9][a-z0-9-]*$/),
+    sourceContentHash: z.string().regex(/^[a-f0-9]{64}$/),
+    stagedContentHash: z.string().regex(/^[a-f0-9]{64}$/),
+    relativeFile: z.string().min(1),
+    stagingState: z.enum(["staged-byte-verified", "staged-needs-mask"]),
+    checks: z.object({dimensions: z.literal(true), mediaType: z.literal(true), alphaOrMatte: z.boolean(), registration: z.literal(false)}).strict(),
+  }).strict(),
+  originalName: z.string().min(1),
+  mediaType: z.enum(["image/png", "image/jpeg", "image/webp"]),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+}).strict();
 
 const allowedTransitions = {
   idle: ["queued"],
@@ -128,6 +185,8 @@ export function canTransitionRenderJob(from: RenderJobStatus, to: RenderJobStatu
 export const IPC_CHANNELS = {
   capabilities: "storystage:capabilities",
   exportGenerationJob: "storystage:export-generation-job",
+  importLooseCandidateFiles: "storystage:import-loose-candidate-files",
+  finalizeLooseCandidateMapping: "storystage:finalize-loose-candidate-mapping",
   stageCandidateBundle: "storystage:stage-candidate-bundle",
   renderEvent: "storystage:render-event",
   renderStart: "storystage:render-start",
@@ -141,6 +200,11 @@ export type ExportGenerationJobRequest = z.infer<typeof exportGenerationJobReque
 export type ExportGenerationJobResult = z.infer<typeof exportGenerationJobResultSchema>;
 export type StageCandidateBundleRequest = z.infer<typeof stageCandidateBundleRequestSchema>;
 export type StageCandidateBundleResult = z.infer<typeof stageCandidateBundleResultSchema>;
+export type StagedCandidateSummary = z.infer<typeof stagedCandidateSummarySchema>;
+export type ImportLooseCandidateFilesRequest = z.infer<typeof importLooseCandidateFilesRequestSchema>;
+export type ImportLooseCandidateFilesResult = z.infer<typeof importLooseCandidateFilesResultSchema>;
+export type FinalizeLooseCandidateMappingRequest = z.infer<typeof finalizeLooseCandidateMappingRequestSchema>;
+export type FinalizeLooseCandidateMappingResult = z.infer<typeof finalizeLooseCandidateMappingResultSchema>;
 export type RenderJobEvent = z.infer<typeof renderJobEventSchema>;
 export type RenderJobState = z.infer<typeof renderJobStateSchema>;
 export type RenderJobStatus = RenderJobState["status"];
@@ -149,10 +213,13 @@ export type RenderWorkerCommand = z.infer<typeof renderWorkerCommandSchema>;
 export type RenderWorkerMessage = z.infer<typeof renderWorkerMessageSchema>;
 export type AssetWorkerCommand = z.infer<typeof assetWorkerCommandSchema>;
 export type AssetWorkerMessage = z.infer<typeof assetWorkerMessageSchema>;
+export type WorkerLooseStagedCandidate = z.infer<typeof workerLooseStagedCandidateSchema>;
 
 export type StoryStageDesktopBridge = {
   getCapabilities: () => Promise<DesktopCapabilities>;
   exportGenerationJob: (request: ExportGenerationJobRequest) => Promise<ExportGenerationJobResult>;
+  importLooseCandidateFiles: (request: ImportLooseCandidateFilesRequest) => Promise<ImportLooseCandidateFilesResult>;
+  finalizeLooseCandidateMapping: (request: FinalizeLooseCandidateMappingRequest) => Promise<FinalizeLooseCandidateMappingResult>;
   stageCandidateBundle: (request: StageCandidateBundleRequest) => Promise<StageCandidateBundleResult>;
   startSampleRender: (request: StartRenderRequest) => Promise<StartRenderResponse>;
   subscribeToRenderJobs: (listener: (event: RenderJobEvent) => void) => () => void;

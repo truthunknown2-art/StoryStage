@@ -29,6 +29,7 @@ export function measureDirectedPlan(plan: MeasurablePlan): DirectedPlanMetrics {
     textEventsPerMinute: (captions.length + actionTypes.filter((type) => type === "kineticType").length) / minutes,
     textWordsPerMinute: captions.reduce((sum, caption) => sum + caption.split(/\s+/).filter(Boolean).length, 0) / minutes,
     performanceEventsPerMinute: actionTypes.filter((type) => ["gesture", "react", "enter", "beatAccent"].includes(type)).length / minutes,
+    poseChangesPerMinute: actionTypes.filter((type) => type === "poseChange").length / minutes,
     reactionsPerMinute: actionTypes.filter((type) => type === "react").length / minutes,
     assetSourceDistribution: distribution(sources),
     maximumStaticFrames: Math.max(...plan.shots.map((shot) => shot.durationInFrames)),

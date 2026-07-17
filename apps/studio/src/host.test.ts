@@ -12,14 +12,16 @@ describe("host adapters", () => {
     const bridge = {
       getCapabilities: vi.fn(async () => ({localRendering: true, openRenderedFile: true, manualImageExchange: true})),
       exportGenerationJob: vi.fn(async () => ({ok: true as const, jobId: "job-one", briefCount: 2})),
-      stageCandidateBundle: vi.fn(async () => ({status: "prepared" as const, importId: "import-one", preparedCount: 2, needsManualMaskCount: 1, missingRoleCount: 1})),
+      importLooseCandidateFiles: vi.fn(async () => ({status: "cancelled" as const})),
+      finalizeLooseCandidateMapping: vi.fn(async () => ({status: "cancelled" as const})),
+      stageCandidateBundle: vi.fn(async () => ({status: "staged" as const, importId: "import-one", stagedCount: 2, needsManualMaskCount: 1, missingRoleCount: 1, candidates: []})),
       startSampleRender: vi.fn(async () => ({jobId: "job-1"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),
       openRenderedFile: vi.fn(async () => ({ok: true as const})),
     };
     const host = new DesktopHostAdapter(bridge);
     expect(await host.startSampleRender({})).toEqual({jobId: "job-1"});
-    expect(await host.stageCandidateBundle({exchangeJobId: "job-one"})).toMatchObject({status: "prepared", preparedCount: 2});
+    expect(await host.stageCandidateBundle({exchangeJobId: "job-one"})).toMatchObject({status: "staged", stagedCount: 2});
     expect(bridge.startSampleRender).toHaveBeenCalledWith({});
   });
 });

@@ -4,6 +4,10 @@ import {
   desktopCapabilitiesSchema,
   exportGenerationJobRequestSchema,
   exportGenerationJobResultSchema,
+  finalizeLooseCandidateMappingRequestSchema,
+  finalizeLooseCandidateMappingResultSchema,
+  importLooseCandidateFilesRequestSchema,
+  importLooseCandidateFilesResultSchema,
   openRenderedFileResultSchema,
   renderJobEventSchema,
   startRenderRequestSchema,
@@ -11,6 +15,8 @@ import {
   stageCandidateBundleRequestSchema,
   stageCandidateBundleResultSchema,
   type ExportGenerationJobRequest,
+  type FinalizeLooseCandidateMappingRequest,
+  type ImportLooseCandidateFilesRequest,
   type RenderJobEvent,
   type StartRenderRequest,
   type StoryStageDesktopBridge,
@@ -22,6 +28,14 @@ const bridge: StoryStageDesktopBridge = {
   exportGenerationJob: async (request: ExportGenerationJobRequest) => {
     const payload = exportGenerationJobRequestSchema.parse(request);
     return exportGenerationJobResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.exportGenerationJob, payload));
+  },
+  importLooseCandidateFiles: async (request: ImportLooseCandidateFilesRequest) => {
+    const payload = importLooseCandidateFilesRequestSchema.parse(request);
+    return importLooseCandidateFilesResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.importLooseCandidateFiles, payload));
+  },
+  finalizeLooseCandidateMapping: async (request: FinalizeLooseCandidateMappingRequest) => {
+    const payload = finalizeLooseCandidateMappingRequestSchema.parse(request);
+    return finalizeLooseCandidateMappingResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.finalizeLooseCandidateMapping, payload));
   },
   stageCandidateBundle: async (request: StageCandidateBundleRequest) => {
     const payload = stageCandidateBundleRequestSchema.parse(request);

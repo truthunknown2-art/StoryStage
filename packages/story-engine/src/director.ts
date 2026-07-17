@@ -69,6 +69,46 @@ function sourceIntentFor(treatment: CreativeShot["treatment"], routing: AssetRou
   return "approved-recurring";
 }
 
+function evenlySelectedIndices(length: number, count: number): Set<number> {
+  if (count <= 0 || length <= 0) return new Set();
+  const boundedCount = Math.min(length, count);
+  return new Set(Array.from({length: boundedCount}, (_, index) => Math.min(length - 1, Math.floor(((index + 0.5) * length) / boundedCount))));
+}
+
+function applyProfileQuotas(inputShots: CreativeShot[], profile: DirectingProfile, fps: number): CreativeShot[] {
+  const totalFrames = inputShots.reduce((sum, shot) => sum + shot.durationInFrames, 0);
+  const minutes = totalFrames / fps / 60;
+  const cameraCaps = new Map(profile.cameraPolicy.moves
+    .filter((move) => move.maximumPerMinute !== undefined)
+    .map((move) => [move.type, Math.floor(move.maximumPerMinute! * minutes)]));
+  const cameraCounts = new Map<string, number>();
+  const cameraLimited = inputShots.map((shot) => ({...shot, actions: shot.actions.filter((action) => {
+    const cap = cameraCaps.get(action.detail.type as DirectingProfile["cameraPolicy"]["moves"][number]["type"]);
+    if (cap === undefined) return true;
+    const used = cameraCounts.get(action.detail.type) ?? 0;
+    cameraCounts.set(action.detail.type, used + 1);
+    return used < cap;
+  })}));
+
+  const poseShotIndices = evenlySelectedIndices(cameraLimited.length, Math.round(profile.performancePolicy.poseChangesPerMinute * minutes));
+  const withPoses = cameraLimited.map((shot, index) => !poseShotIndices.has(index) ? shot : {...shot, actions: [...shot.actions, {
+    id: `${shot.id}-profile-pose-change`,
+    actorName: shot.focusCharacterName,
+    targetName: null,
+    label: "Profile pose change",
+    startOffsetFrames: Math.min(Math.floor(shot.durationInFrames * 0.52), shot.durationInFrames - 1),
+    durationInFrames: Math.max(1, Math.floor(shot.durationInFrames * 0.4)),
+    detail: {type: "poseChange" as const, poseId: `pose-profile-${index + 1}`},
+  }]});
+
+  const kineticEvents = withPoses.flatMap((shot) => shot.actions).filter((action) => action.detail.type === "kineticType").length;
+  const desiredTextEvents = Math.round(profile.textPolicy.targetEventsPerMinute * minutes);
+  const captionIndices = withPoses.flatMap((shot, index) => shot.caption ? [index] : []);
+  const retainedCaptionOrdinals = evenlySelectedIndices(captionIndices.length, Math.max(0, desiredTextEvents - kineticEvents));
+  const retainedCaptionIndices = new Set(captionIndices.filter((_shotIndex, ordinal) => retainedCaptionOrdinals.has(ordinal)));
+  return withPoses.map((shot, index) => shot.caption && !retainedCaptionIndices.has(index) ? {...shot, caption: null} : shot);
+}
+
 export type DirectEpisodeOptions = {draft: ProductionDraft; productionPolicy: ProductionPolicy; showPack: ShowPack};
 
 export function directEpisode(document: ScriptDocument, analysis: StoryAnalysis, timing: DialogueTimingResult, {draft, productionPolicy, showPack}: DirectEpisodeOptions): CreativeEpisodePlan {
@@ -85,16 +125,16 @@ export function directEpisode(document: ScriptDocument, analysis: StoryAnalysis,
   const addRequirements = (shotId: string, sceneId: string, treatment: CreativeShot["treatment"], locationName: string, focusName: string | null, sourceElementIds: string[]) => {
     const requirements: VisualRequirement[] = [];
     const location = entityByName.get(locationName.toLowerCase());
-    requirements.push({id: `${shotId}-background`, sceneId, shotId, role: "background", entityId: location?.id ?? null, sourceIntent: "approved-recurring", required: true, description: `Background for ${locationName}`});
+    requirements.push({id: `${shotId}-background`, sceneId, shotId, role: "background", entityId: location?.id ?? null, reusableConceptKey: null, sourceIntent: "approved-recurring", required: true, description: `Background for ${locationName}`});
     if (focusName) {
       const character = entityByName.get(focusName.toLowerCase());
-      requirements.push({id: `${shotId}-character`, sceneId, shotId, role: "character", entityId: character?.id ?? null, sourceIntent: "approved-recurring", required: true, description: `On-screen performance for ${focusName}`});
+      requirements.push({id: `${shotId}-character`, sceneId, shotId, role: "character", entityId: character?.id ?? null, reusableConceptKey: null, sourceIntent: "approved-recurring", required: true, description: `On-screen performance for ${focusName}`});
     }
     const prop = analysis.props.find((candidate) => candidate.sourceElementIds.some((id) => sourceElementIds.includes(id)));
-    if (treatment === "insert" || prop) requirements.push({id: `${shotId}-insert`, sceneId, shotId, role: prop ? "prop" : "insert", entityId: prop?.id ?? null, sourceIntent: prop ? "approved-recurring" : "generated", required: true, description: prop ? `Readable prop view of ${prop.name}` : "Editorial insert visual"});
-    if (treatment === "diagram" || treatment === "kinetic-type") requirements.push({id: `${shotId}-diagram`, sceneId, shotId, role: "diagram", entityId: null, sourceIntent: "user-owned", required: true, description: treatment === "kinetic-type" ? "Profile-authored kinetic typography" : "Profile-authored explanatory diagram"});
-    if (treatment === "licensed-media") requirements.push({id: `${shotId}-evidence`, sceneId, shotId, role: "evidence", entityId: null, sourceIntent: sourceIntentFor(treatment, assetRoutingPolicy), required: true, description: "Authenticated contextual evidence or licensed source"});
-    if (treatment === "generated-illustration") requirements.push({id: `${shotId}-reconstruction`, sceneId, shotId, role: assetRoutingPolicy.allowGeneratedHistoricalReconstruction ? "reconstruction" : "insert", entityId: null, sourceIntent: "generated", required: true, description: "Original generated illustration with reconstruction labeling when factual"});
+    if (treatment === "insert" || prop) requirements.push({id: `${shotId}-insert`, sceneId, shotId, role: prop ? "prop" : "insert", entityId: prop?.id ?? null, reusableConceptKey: null, sourceIntent: prop ? "approved-recurring" : "generated", required: true, description: prop ? `Readable prop view of ${prop.name}` : "Editorial insert visual"});
+    if (treatment === "diagram" || treatment === "kinetic-type") requirements.push({id: `${shotId}-diagram`, sceneId, shotId, role: "diagram", entityId: null, reusableConceptKey: null, sourceIntent: "user-owned", required: true, description: treatment === "kinetic-type" ? "Profile-authored kinetic typography" : "Profile-authored explanatory diagram"});
+    if (treatment === "licensed-media") requirements.push({id: `${shotId}-evidence`, sceneId, shotId, role: "evidence", entityId: null, reusableConceptKey: null, sourceIntent: sourceIntentFor(treatment, assetRoutingPolicy), required: true, description: "Authenticated contextual evidence or licensed source"});
+    if (treatment === "generated-illustration") requirements.push({id: `${shotId}-reconstruction`, sceneId, shotId, role: assetRoutingPolicy.allowGeneratedHistoricalReconstruction ? "reconstruction" : "insert", entityId: null, reusableConceptKey: null, sourceIntent: "generated", required: true, description: "Original generated illustration with reconstruction labeling when factual"});
     visualRequirements.push(...requirements);
     return requirements;
   };
@@ -123,7 +163,7 @@ export function directEpisode(document: ScriptDocument, analysis: StoryAnalysis,
     ];
     if (primaryCharacter) establishActions.push({id: `${establishId}-enter`, actorName: primaryCharacter, targetName: null, label: "Enter the scene", startOffsetFrames: Math.min(4, establishDuration - 1), durationInFrames: Math.max(1, establishDuration - Math.min(4, establishDuration - 1)), detail: {type: "enter", direction: globalShotOrdinal % 2 ? "left" : "right"}});
     appendCameraAction(establishActions, establishId, primaryCharacter, establishDuration, globalShotOrdinal);
-    sceneShots.push({id: establishId, sceneId: heading.id, number: `${heading.ordinal}.01`, title: `Establish ${heading.location.toLowerCase()}`, framing: "wide", treatment: "environment", transition: heading.ordinal === 1 ? "camera-carry" : weightedPick(transitionEntries(profile), globalShotOrdinal), locationName: heading.location, focusCharacterName: primaryCharacter, sourceElementIds: [heading.id], visualRequirementIds: establishRequirements.map((requirement) => requirement.id), durationInFrames: establishDuration, actions: establishActions, caption: null});
+    sceneShots.push({id: establishId, sceneId: heading.id, number: `${heading.ordinal}.01`, title: `Establish ${heading.location.toLowerCase()}`, framing: "wide", treatment: "environment", transition: heading.ordinal === 1 ? "camera-carry" : weightedPick(transitionEntries(profile), globalShotOrdinal), locationName: heading.location, focusCharacterName: primaryCharacter, sourceElementIds: [heading.id], sourceExcerpt: `${heading.location} - ${heading.timeOfDay}`, visualRequirementIds: establishRequirements.map((requirement) => requirement.id), durationInFrames: establishDuration, actions: establishActions, caption: null});
 
     for (const [contentIndex, element] of content.entries()) {
       if (element.type === "dialogue") {
@@ -150,7 +190,7 @@ export function directEpisode(document: ScriptDocument, analysis: StoryAnalysis,
           if (insertRequirement) actions.push({id: `${shotId}-insert-action`, actorName: null, targetName: insertRequirement.entityId ? analysis.props.find((prop) => prop.id === insertRequirement.entityId)?.name ?? null : null, label: insertRequirement.description, startOffsetFrames: 0, durationInFrames: duration, detail: {type: "insert", visualRequirementId: insertRequirement.id}});
           if (transition === "hard-cut" && globalShotOrdinal > 1) actions.push({id: `${shotId}-cut`, actorName: null, targetName: focus, label: "Profile hard cut", startOffsetFrames: 0, durationInFrames: 1, detail: {type: "hardCut"}});
           appendCameraAction(actions, shotId, focus, duration, globalShotOrdinal);
-          sceneShots.push({id: shotId, sceneId: heading.id, number: `${heading.ordinal}.${String(sceneShots.length + 1).padStart(2, "0")}`, title: treatment === "kinetic-type" ? `Keyword: ${beat.split(/\s+/).at(-1) ?? beat}` : element.narration ? "Narration visual beat" : `${element.speaker.toLowerCase()} speaks`, framing, treatment, transition, locationName: heading.location, focusCharacterName: focus, sourceElementIds: [element.id], visualRequirementIds: requirements.map((requirement) => requirement.id), durationInFrames: duration, actions, caption: beat});
+          sceneShots.push({id: shotId, sceneId: heading.id, number: `${heading.ordinal}.${String(sceneShots.length + 1).padStart(2, "0")}`, title: treatment === "kinetic-type" ? `Keyword: ${beat.split(/\s+/).at(-1) ?? beat}` : element.narration ? "Narration visual beat" : `${element.speaker.toLowerCase()} speaks`, framing, treatment, transition, locationName: heading.location, focusCharacterName: focus, sourceElementIds: [element.id], sourceExcerpt: beat, visualRequirementIds: requirements.map((requirement) => requirement.id), durationInFrames: duration, actions, caption: beat});
         }
         continue;
       }
@@ -165,7 +205,7 @@ export function directEpisode(document: ScriptDocument, analysis: StoryAnalysis,
         const propRequirement = requirements.find((requirement) => requirement.entityId === prop?.id);
         const actions: CreativeShot["actions"] = [{id: `${shotId}-action`, actorName: actor, targetName: prop?.name ?? null, label: element.text, startOffsetFrames: 0, durationInFrames: duration, detail: propRequirement ? {type: "insert", visualRequirementId: propRequirement.id} : {type: "gesture", gestureId: "explain", intensity: 0.65}}];
         appendCameraAction(actions, shotId, prop?.name ?? actor, duration, globalShotOrdinal);
-        sceneShots.push({id: shotId, sceneId: heading.id, number: `${heading.ordinal}.${String(sceneShots.length + 1).padStart(2, "0")}`, title: prop ? `Insert: ${prop.name.toLowerCase()}` : "Physical story beat", framing: prop ? "insert" : weightedPick(framingEntries(profile), globalShotOrdinal), treatment, transition: weightedPick(transitionEntries(profile), globalShotOrdinal), locationName: heading.location, focusCharacterName: actor, sourceElementIds: [element.id], visualRequirementIds: requirements.map((requirement) => requirement.id), durationInFrames: duration, actions, caption: null});
+        sceneShots.push({id: shotId, sceneId: heading.id, number: `${heading.ordinal}.${String(sceneShots.length + 1).padStart(2, "0")}`, title: prop ? `Insert: ${prop.name.toLowerCase()}` : "Physical story beat", framing: prop ? "insert" : weightedPick(framingEntries(profile), globalShotOrdinal), treatment, transition: weightedPick(transitionEntries(profile), globalShotOrdinal), locationName: heading.location, focusCharacterName: actor, sourceElementIds: [element.id], sourceExcerpt: element.text, visualRequirementIds: requirements.map((requirement) => requirement.id), durationInFrames: duration, actions, caption: null});
       }
     }
 
@@ -174,5 +214,6 @@ export function directEpisode(document: ScriptDocument, analysis: StoryAnalysis,
   }
 
   const width = draft.format.aspectRatio === "16:9" ? Math.round(productionPolicy.outputHeight * 16 / 9) : Math.round(productionPolicy.outputHeight * 9 / 16);
-  return creativeEpisodePlanSchema.parse({schemaVersion: "1.2", id: `creative-${document.productionId}-r${draft.revision}`, productionId: document.productionId, planRevision: draft.revision, compilerVersion: STORY_ENGINE_COMPILER_VERSION, title: document.title, fps: timing.fps, width, height: productionPolicy.outputHeight, projectType: showPack.projectType, productionPolicy, assetRoutingPolicy, showPackId: showPack.id, directingProfileId: profile.id, analysis, scenes, shots, visualRequirements});
+  const quotaDirectedShots = applyProfileQuotas(shots, profile, timing.fps);
+  return creativeEpisodePlanSchema.parse({schemaVersion: "1.2", id: `creative-${document.productionId}-r${draft.revision}`, productionId: document.productionId, planRevision: draft.revision, compilerVersion: STORY_ENGINE_COMPILER_VERSION, title: document.title, fps: timing.fps, width, height: productionPolicy.outputHeight, projectType: showPack.projectType, productionPolicy, assetRoutingPolicy, showPackId: showPack.id, directingProfileId: profile.id, analysis, scenes, shots: quotaDirectedShots, visualRequirements});
 }
