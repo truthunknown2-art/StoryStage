@@ -3,12 +3,14 @@ import type {Caption} from "@remotion/captions";
 import type {AudioMix, FrameAccurateRenderPlan, SoundEffectCue} from "@storystage/story-engine";
 import {AbsoluteFill, Easing, Img, interpolate, Sequence, staticFile, useCurrentFrame} from "remotion";
 import {Captions} from "./Captions";
+import {HistoryDiagram} from "./HistoryDiagram";
 import {HistoryEditorialStage} from "./HistoryEditorialStage";
+import {HistoryEditorialVisual} from "./HistoryEditorialVisual";
 import {HistoryKineticType} from "./HistoryKineticType";
 
 export type CharacterPlaybackAsset = {type: "character-rig"; assetId: string; neutral: string; talk: string; reaction: string};
 export type BackgroundPlaybackAsset = {type: "background-layers"; assetId: string; far: string; midground: string; foreground: string};
-export type PropPlaybackAsset = {type: "prop"; assetId: string; cutout: string};
+export type PropPlaybackAsset = {type: "prop"; assetId: string; assetClass: "prop" | "editorial-visual" | "diagram" | "reconstruction"; cutout: string};
 export type PlaybackAsset = CharacterPlaybackAsset | BackgroundPlaybackAsset | PropPlaybackAsset;
 
 export type ProductionCompositionProps = {
@@ -88,16 +90,23 @@ const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record
   const background = backgroundBinding ? playbackAssets[backgroundBinding.assetId] : undefined;
   const characters = shot.visualBindings.map((binding) => playbackAssets[binding.assetId]).filter((asset): asset is CharacterPlaybackAsset => asset?.type === "character-rig");
   const props = shot.visualBindings.map((binding) => playbackAssets[binding.assetId]).filter((asset): asset is PropPlaybackAsset => asset?.type === "prop");
+  const editorialVisual = props.find((asset) => asset.assetClass !== "prop");
+  const floatingProps = props.filter((asset) => asset.assetClass === "prop");
   const palette = fallbackPalette(plan.projectType);
   const historyMode = plan.directingProfile.visualMode === "weird-history-editorial";
   const kineticType = historyMode && shot.treatment === "kinetic-type" && shot.actions.some((action) => action.detail.type === "kineticType");
+  const diagram = historyMode && shot.treatment === "diagram";
+  const reconstruction = historyMode && shot.treatment === "generated-illustration";
+  const showCharacters = !historyMode || ["environment", "character-performance", "reaction", "kinetic-type"].includes(shot.treatment);
   const ordinal = Number(shot.number.split(".").at(-1) ?? 1);
   const singleCharacterSide = kineticType || ordinal % 2 === 1 ? "left" : "right";
   return <AbsoluteFill style={{background: palette.ink, overflow: "hidden"}}>
     {background?.type === "background-layers" ? <ShotBackground asset={background} projectType={plan.projectType} shot={shot} /> : historyMode ? <HistoryEditorialStage shot={shot} /> : <ShotBackground projectType={plan.projectType} shot={shot} />}
+    {reconstruction ? <HistoryEditorialVisual asset={editorialVisual} shot={shot} /> : null}
+    {diagram ? <HistoryDiagram shot={shot} /> : null}
     {kineticType ? <HistoryKineticType reservePresenter={characters.length > 0} shot={shot} /> : null}
-    {characters.slice(0, 2).map((asset, index) => <CharacterPerformance asset={asset} key={asset.assetId} projectType={plan.projectType} shot={shot} side={index === 0 ? singleCharacterSide : singleCharacterSide === "left" ? "right" : "left"} />)}
-    {props.slice(0, 1).map((asset) => <Img key={asset.assetId} src={asset.cutout} style={{bottom: 90, filter: "drop-shadow(12px 16px 10px rgba(0,0,0,.3))", height: "38%", objectFit: "contain", position: "absolute", right: characters.length > 0 ? "32%" : "10%", rotate: `${interpolate(frame, [0, shot.durationInFrames], [-3, 3], {extrapolateRight: "clamp"})}deg`, translate: `0 ${Math.sin(frame / 6) * 8}px`, width: "28%"}} />)}
+    {showCharacters ? characters.slice(0, 2).map((asset, index) => <CharacterPerformance asset={asset} key={asset.assetId} projectType={plan.projectType} shot={shot} side={index === 0 ? singleCharacterSide : singleCharacterSide === "left" ? "right" : "left"} />) : null}
+    {floatingProps.slice(0, 1).map((asset) => <Img key={asset.assetId} src={asset.cutout} style={{bottom: 90, filter: "drop-shadow(12px 16px 10px rgba(0,0,0,.3))", height: "38%", objectFit: "contain", position: "absolute", right: characters.length > 0 ? "32%" : "10%", rotate: `${interpolate(frame, [0, shot.durationInFrames], [-3, 3], {extrapolateRight: "clamp"})}deg`, translate: `0 ${Math.sin(frame / 6) * 8}px`, width: "28%"}} />)}
     {characters.length === 0 && props.length === 0 && !historyMode ? <div style={{alignItems: "center", display: "flex", height: "100%", justifyContent: "center", padding: "100px"}}><div style={{color: palette.ink, fontFamily: "Georgia, serif", fontSize: 92, fontWeight: 800, lineHeight: .95, maxWidth: 1200, opacity: .86, textAlign: "center"}}>{shot.title}</div></div> : null}
     {historyMode ? <div style={{color: "rgba(23,27,29,.62)", fontFamily: "Arial, sans-serif", fontSize: 18, fontWeight: 900, left: 70, letterSpacing: 5, position: "absolute", textTransform: "uppercase", top: 48}}>Frankly Weird History</div> : null}
   </AbsoluteFill>;

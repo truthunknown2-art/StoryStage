@@ -16,7 +16,9 @@ SS-001 remains accepted workstation infrastructure: browser studio, secure Elect
 
 `SS-007: Paste Script to First Watchable Cut` was accepted by Pro at `c3c40e3`. A valid script and directing profile now create a real frame-zero Remotion cut in one click. Candidate picture and silent audio stay explicit, and the preview's Picture, Voice, Timing, Mix, and Delivery path uses the same picture evidence gates as final production.
 
-`SS-008: First Complete Episode Pass (Human-in-the-loop)` is active. It turns durable production evidence into a Continue workflow, adds shot-addressable playback validation, and states whether the current cut is watchable, technically ready, or actually publishable.
+`SS-008: First Complete Episode Pass (Human-in-the-loop)` was accepted by Pro at `fabbd2d`. Durable production evidence now drives the Continue workflow, shot-addressable playback validation, and the distinction between watchable, technically ready, and actually publishable.
+
+`SS-009: Frankly Weird History Publishable Pilot 001` is active. Pro confirmed the existing 26.33-second Rook pilot as the real content target. The first production-content pass replaces the repetitive 18% editorial route with an explicit 11-shot map: three script-specific labeled reconstructions, two code-authored diagrams, two kinetic-type beats, three presenter anchors, and one establishing shot. Rook, script, generated visuals, final narration, timing, mix, and delivery remain honest human gates.
 
 The SS-003 Rook pilot opening slice is engineering-complete and was accepted by Pro at `6bcd590`. It provides a fixed 26.33-second history production, a complete public Rook candidate, and a trusted terminal review/promotion path. The remaining Rook visual, final voice, timing, and mix decisions are real human gates rather than hidden implementation claims.
 

@@ -71,6 +71,20 @@ function createApprovedRookTargetBundle() {
   return finalizeProductionBundle({schemaVersion: "1.0", production: draft, overrides: fixture.overrides, approvedAssetVersions: [approved], audioMix, soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T20:30:00.000Z");
 }
 
+function createPictureCompleteRookBundle() {
+  const fixture = createRookPilot001Fixture();
+  const source = buildAnimaticSync(fixture);
+  const approvedAt = "2026-07-17T20:35:00.000Z";
+  const approvedAssetVersions: ApprovedAssetVersion[] = source.resolvedPlan.requirements.map((requirement, index) => {
+    const contentHash = (index + 1).toString(16).padStart(64, "0");
+    const assetId = `approved-picture-${index + 1}`;
+    return {assetId, version: contentHash.slice(0, 12), requirementId: requirement.id, contentHash, relativeFile: `${assetId}/${contentHash}/manifest.json`, provenance: {sourceType: "generated", provider: "ChatGPT Images", usageNotes: "Human-reviewed picture-flow test art."}, approvedAt};
+  });
+  const draft = {...fixture.draft, revision: 2};
+  const build = buildAnimaticSync({draft, overrides: fixture.overrides, approvedAssetVersions});
+  return finalizeProductionBundle({schemaVersion: "1.0", production: draft, overrides: fixture.overrides, approvedAssetVersions, soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
+}
+
 function createPictureBlockedRookBundle() {
   const fixture = createRookPilot001Fixture();
   const build = buildAnimaticSync(fixture);
@@ -102,7 +116,8 @@ function createGateReadyRookBundle() {
 function createPlaybackValidationBundle() {
   const base = createGateReadyRookBundle();
   const captionShot = base.renderPlan.shots.find((shot) => Boolean(shot.caption))!;
-  const overrides = [...base.overrides.filter((override) => override.shotId !== captionShot.id), {shotId: captionShot.id, caption: "This deliberately dense caption contains far too many words for one brief visual beat", durationInFrames: 12, timingLocked: true as const}];
+  const captionShotOverride = base.overrides.find((override) => override.shotId === captionShot.id);
+  const overrides = [...base.overrides.filter((override) => override.shotId !== captionShot.id), {...captionShotOverride, shotId: captionShot.id, caption: "This deliberately dense caption contains far too many words for one brief visual beat", durationInFrames: 12, timingLocked: true as const}];
   const build = buildAnimaticSync({draft: base.production, overrides, approvedAssetVersions: base.approvedAssetVersions});
   const contentHash = "9".repeat(64);
   const soundEffectAssets = [{id: "sfx-validation", contentHash, relativeFile: `sfx/${base.production.productionId}/${contentHash}.wav`, sourceFileName: "validation-hit.wav", codec: "pcm-wav" as const, durationInSeconds: 1, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 24 as const, importedAt: base.savedAt, approvalStatus: "approved" as const, approvedAt: base.savedAt}];
@@ -153,7 +168,7 @@ describe("StoryStage studio", () => {
   });
 
   it("labels a picture-complete project and resumes directly into Audio", async () => {
-    const bundle = createApprovedRookTargetBundle();
+    const bundle = createPictureCompleteRookBundle();
     window.storyStage = makeDesktopBridge({
       listProductionBundles: vi.fn(async () => ({productions: [bundleSummary(bundle)]})),
       loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
@@ -214,7 +229,8 @@ describe("StoryStage studio", () => {
     const preview = screen.getByRole("region", {name: "Live production preview"});
     expect(within(preview).getByText("UNAPPROVED CANDIDATE · PREVIEW ONLY")).toBeInTheDocument();
     expect(preview.querySelector('img[src*="rook-v1-neutral.png"]')).not.toBeNull();
-    for (const button of shotButtons) expect(button).not.toHaveAccessibleName(/insert|licensed media|diagram|generated illustration/i);
+    expect(screen.getAllByText("generated illustration").length).toBeGreaterThanOrEqual(3);
+    expect(screen.getAllByText("diagram").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText("kinetic type").length).toBeGreaterThan(0);
   });
 
@@ -248,11 +264,11 @@ describe("StoryStage studio", () => {
     expect(screen.getByText("Approved and bound")).toBeInTheDocument();
 
     const pictureBlockers = getFullProductionRenderBlockers({approvedAssetVersions: target.approvedAssetVersions ?? [], audioMix: target.audioMix, overrides: target.overrides, renderPlan: target.renderPlan, resolvedPlan: target.resolvedPlan, soundEffectAssets: target.soundEffectAssets, soundEffectCues: target.soundEffectCues, voiceTrack: target.voiceTrack}).filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id));
-    expect(pictureBlockers).toEqual([]);
+    expect(pictureBlockers.map((blocker) => blocker.id)).toEqual(["source-acquisition", "visual-bindings"]);
     await user.click(screen.getByRole("button", {name: /Direction/}));
     const upgradePath = within(screen.getByRole("region", {name: "Live production preview"})).getByRole("region", {name: "First cut upgrade path"});
-    expect(within(upgradePath).getByText("Next: Add voice")).toBeInTheDocument();
-    expect(within(upgradePath).getByText("Picture").closest("li")).toHaveTextContent("Ready");
+    expect(within(upgradePath).getByText("Next: Review picture")).toBeInTheDocument();
+    expect(within(upgradePath).getByText("Picture").closest("li")).toHaveTextContent("Next");
   });
 
   it("shows a durable rejected Rook decision without offering incompatible actions", async () => {

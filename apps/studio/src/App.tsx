@@ -213,7 +213,7 @@ function HomeScreen({guidance, onNew, recentProductions, onResume}: {guidance: R
         </header>
         <section className="home-intro">
           <div className="intro-copy">
-            <span className="status-chip"><Sparkles size={13} />SS-003 Rook pilot in progress</span>
+            <span className="status-chip"><Sparkles size={13} />SS-009 Rook pilot production</span>
             <h2>Two production grammars.<br />One deterministic pipeline.</h2>
             <p>Start with a script and a real production policy. StoryStage extracts the cast and locations, directs profile-specific shots, identifies missing art, and freezes approved decisions for render.</p>
             <button className="secondary-action" onClick={onNew}>Paste a script and make a first cut <ArrowRight size={16} /></button>
@@ -343,7 +343,7 @@ function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: 
         <section className="setup-section" aria-labelledby="script-heading">
           <div className="section-number">03</div><div className="section-title"><h2 id="script-heading">Script</h2><p>Paste screenplay-style text. Analysis updates before creation.</p></div>
           <div className="script-layout">
-            <div className="script-editor"><button className="pilot-template-button" onClick={loadRookPilot}><Clapperboard size={15} /><span><strong>Load Rook Pilot 001</strong><small>26-second gate-complete history short template</small></span></button><label>Episode title<input aria-label="Episode title" value={title} onChange={(event) => setTitle(event.target.value)} /></label><label>Screenplay<textarea aria-label="Screenplay" value={script} onChange={(event) => setScript(event.target.value)} /></label></div>
+            <div className="script-editor"><button className="pilot-template-button" onClick={loadRookPilot}><Clapperboard size={15} /><span><strong>Load Rook Pilot 001</strong><small>26-second fixed pilot · 3 reconstruction briefs</small></span></button><label>Episode title<input aria-label="Episode title" value={title} onChange={(event) => setTitle(event.target.value)} /></label><label>Screenplay<textarea aria-label="Screenplay" value={script} onChange={(event) => setScript(event.target.value)} /></label></div>
             <aside className="analysis-preview">
               <div className="analysis-title"><FileText size={18} /><div><strong>Live analysis</strong><small>{preview ? "Script is structurally valid" : "Waiting for valid scene headings"}</small></div></div>
               {preview ? <>
@@ -455,11 +455,12 @@ function previewPlaybackAssets(session: ProductionSession, build: AnimaticBuild)
     const manifestEntry = build.renderPlan.assets.find((asset) => asset.id === approved.assetId && asset.contentHash === approved.contentHash);
     if (!manifestEntry) continue;
     const url = (role: string) => approvedVisualMediaUrl(approved.assetId, approved.contentHash, role);
+    const assetClass = manifestEntry.tags.includes("reconstruction") ? "reconstruction" : manifestEntry.tags.includes("diagram") ? "diagram" : manifestEntry.kind === "prop" ? "prop" : "editorial-visual";
     assets[approved.assetId] = manifestEntry.kind === "character-rig"
       ? {type: "character-rig", assetId: approved.assetId, neutral: url("neutral"), talk: url("talk"), reaction: url("reaction")}
       : manifestEntry.kind === "location"
         ? {type: "background-layers", assetId: approved.assetId, far: url("far"), midground: url("midground"), foreground: url("foreground")}
-        : {type: "prop", assetId: approved.assetId, cutout: url("cutout")};
+        : {type: "prop", assetId: approved.assetId, assetClass, cutout: url("cutout")};
   }
 
   let candidateCount = 0;
@@ -1260,12 +1261,13 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   const customEffectsReady = session.soundEffectAssets.every((asset) => asset.approvalStatus === "approved" && (!usedSoundEffectHashes.has(asset.contentHash) || Boolean(asset.rights)));
   const mixReady = session.audioMix.reviewed && session.audioMix.musicDecision !== "pending" && (session.audioMix.musicDecision !== "approved-master" || Boolean(session.musicTrack?.approvalStatus === "approved" && session.musicTrack.rights)) && customEffectsReady;
   const preflightReady = capabilities.localRendering && Boolean(productionBundleContentHash) && fullRenderBlockers.length === 0;
+  const rookNeedsReview = session.productionId === rookPilot001.id && !session.approvedAssetVersions.some((approved) => approved.assetId.startsWith("approved-weird-history-rook-v1-"));
   const voiceTarget: FinishNavigationTarget = session.voiceTrack?.approvalStatus === "approved" && session.voiceTrack.rights && !voiceCoverageAligned && !timingReady ? {tab: "audio", targetId: "finish-timing-action"} : {tab: "audio", targetId: "finish-voice-action"};
   const voiceAction = !session.voiceTrack ? "Import voice" : session.voiceTrack.approvalStatus === "approved" && !session.voiceTrack.rights ? "Confirm voice rights" : session.voiceTrack.approvalStatus === "approved" && !voiceCoverageAligned ? timingReady ? "Replace voice WAV" : "Adjust spoken timing" : "Finish voice approval";
   const targetForFullRenderBlocker = (): FinishNavigationTarget => {
     const blocker = fullRenderBlockers[0];
     if (!blocker) return {tab: "direction", targetId: "finish-direction"};
-    if (["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)) return {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-rook-action" : "finish-assets-action"};
+    if (["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)) return {tab: "assets", targetId: rookNeedsReview ? "finish-rook-action" : "finish-assets-action"};
     if (blocker.id === "spoken-timing") return {tab: "audio", targetId: "finish-timing-action"};
     if (blocker.id === "voice-master") return voiceTarget;
     if (blocker.id === "custom-sfx") return {tab: "audio", targetId: "finish-sfx-action"};
@@ -1276,9 +1278,9 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   const finalRenderJob = renderJobScope === "full-production" ? renderJob : null;
   const renderActive = Boolean(finalRenderJob && !["completed", "failed"].includes(finalRenderJob.status));
   const otherRenderActive = anyRenderActive && !renderActive;
-  const pictureLabel = session.productionId === rookPilot001.id ? "Review and approve Rook picture" : "Review and approve picture";
+  const pictureLabel = session.productionId === rookPilot001.id ? "Review Rook and episode picture" : "Review and approve picture";
   const finishSteps: Array<{id: string; title: string; detail: string; ready: boolean; target?: FinishNavigationTarget; action?: string}> = [
-    {id: "picture", title: pictureLabel, detail: pictureReady ? `${approvedAssets} immutable art versions cover every final shot.` : `${Math.max(missingApprovals, fullRenderBlockers.filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)).length)} picture gates still need human review.`, ready: Boolean(delivery) || pictureReady, target: {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-rook-action" : "finish-assets-action"}, action: session.productionId === rookPilot001.id ? "Review Rook" : "Review artwork"},
+    {id: "picture", title: pictureLabel, detail: pictureReady ? `${approvedAssets} immutable art versions cover every final shot.` : `${Math.max(missingApprovals, fullRenderBlockers.filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)).length)} picture gates still need human review.`, ready: Boolean(delivery) || pictureReady, target: {tab: "assets", targetId: rookNeedsReview ? "finish-rook-action" : "finish-assets-action"}, action: rookNeedsReview ? "Review Rook" : "Review artwork"},
     {id: "voice", title: "Approve the final voice", detail: voiceReady ? spokenShotIds.size === 0 ? "This cut has no spoken performance." : `${session.voiceTrack?.sourceFileName} is listened-through, rights-cleared, hash-bound, and aligned to picture.` : !session.voiceTrack ? "Import the final WAV, listen through, document rights, and approve the exact take." : session.voiceTrack.approvalStatus !== "approved" ? "Listen through and approve the imported take with rights evidence." : "The approved take must be aligned to the final frame duration and carry rights evidence.", ready: Boolean(delivery) || voiceReady, target: voiceTarget, action: voiceAction},
     {id: "timing", title: "Lock every spoken beat", detail: spokenShotIds.size === 0 ? "No spoken timing locks are required." : `${lockedSpokenTimings}/${spokenShotIds.size} spoken cues have editor-reviewed frame timing.`, ready: Boolean(delivery) || timingReady, target: {tab: "audio", targetId: "finish-timing-action"}, action: "Review timing"},
     {id: "mix", title: "Approve the final mix", detail: mixReady ? `Voice ${session.audioMix.voiceGain.toFixed(2)}x, music ${session.audioMix.musicDecision}, transition SFX ${session.audioMix.transitionSfx}.` : "Choose the music and SFX treatment, clear any used audio, then record the mix review.", ready: Boolean(delivery) || mixReady, target: customEffectsReady ? {tab: "audio", targetId: "finish-mix-action"} : {tab: "audio", targetId: "finish-sfx-action"}, action: customEffectsReady ? "Review mix" : "Review sound effects"},

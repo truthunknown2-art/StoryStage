@@ -100,7 +100,7 @@ async function playbackAsset(assetsRoot: string, approved: ApprovedAssetVersion)
     return {type: "character-rig", assetId: approved.assetId, neutral: await imageDataUrl(versionRoot, manifest.poses.neutral, true), talk: await imageDataUrl(versionRoot, manifest.poses.talk, true), reaction: await imageDataUrl(versionRoot, manifest.poses.reaction, true)};
   }
   if (manifest.type === "background-layers") return {type: "background-layers", assetId: approved.assetId, far: await imageDataUrl(versionRoot, manifest.layers[0].asset, false), midground: await imageDataUrl(versionRoot, manifest.layers[1].asset, true), foreground: await imageDataUrl(versionRoot, manifest.layers[2].asset, true)};
-  return {type: "prop", assetId: approved.assetId, cutout: await imageDataUrl(versionRoot, manifest.cutout, true)};
+  return {type: "prop", assetId: approved.assetId, assetClass: manifest.assetClass, cutout: await imageDataUrl(versionRoot, manifest.cutout, manifest.assetClass === "prop")};
 }
 
 type ProbedStream = {codec_name?: string; codec_type?: string; width?: number; height?: number; avg_frame_rate?: string; nb_frames?: string; duration?: string; channels?: number; sample_rate?: string};
@@ -156,7 +156,7 @@ export async function renderRigDiagnostic(options: RenderRigDiagnosticOptions): 
     asset = {type: "character-rig", assetId: manifest.requirementId, neutral: await imageDataUrl(options.importRoot, manifest.poses.neutral, true), talk: await imageDataUrl(options.importRoot, manifest.poses.talk, true), reaction: await imageDataUrl(options.importRoot, manifest.poses.reaction, true)};
   }
   else if (manifest.type === "background-layers") asset = {type: "background-layers", assetId: manifest.requirementId, far: await imageDataUrl(options.importRoot, manifest.layers[0].asset, false), midground: await imageDataUrl(options.importRoot, manifest.layers[1].asset, true), foreground: await imageDataUrl(options.importRoot, manifest.layers[2].asset, true)};
-  else asset = {type: "prop", assetId: manifest.requirementId, cutout: await imageDataUrl(options.importRoot, manifest.cutout, true)};
+  else asset = {type: "prop", assetId: manifest.requirementId, assetClass: manifest.assetClass, cutout: await imageDataUrl(options.importRoot, manifest.cutout, manifest.assetClass === "prop")};
   const inputProps: RigDiagnosticCompositionProps = {asset, entityName: options.entityName};
   await mkdir(dirname(options.outputFile), {recursive: true});
   const serveUrl = await bundle({entryPoint: resolve(options.workspaceRoot, "packages/remotion-runtime/src/remotion-entry.ts"), publicDir: resolve(options.workspaceRoot, "packages/remotion-runtime/public")});

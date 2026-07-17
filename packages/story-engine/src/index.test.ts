@@ -185,8 +185,12 @@ describe("StoryStage story engine", () => {
     expect(durationSeconds).toBeLessThanOrEqual(40);
     expect(build.renderPlan.shots.length).toBeGreaterThanOrEqual(10);
     expect(build.renderPlan.shots.length).toBeLessThanOrEqual(16);
-    expect(new Set(build.renderPlan.shots.map((shot) => shot.treatment)).size).toBeGreaterThanOrEqual(3);
-    expect(build.renderPlan.shots.every((shot) => ["environment", "character-performance", "reaction", "kinetic-type"].includes(shot.treatment))).toBe(true);
+    expect(build.renderPlan.shots.map((shot) => shot.treatment)).toEqual(["environment", "character-performance", "generated-illustration", "character-performance", "generated-illustration", "kinetic-type", "diagram", "generated-illustration", "diagram", "kinetic-type", "reaction"]);
+    expect(build.renderPlan.shots.slice(1).every((shot) => shot.transition === "hard-cut")).toBe(true);
+    expect(build.renderPlan.shots.every((shot) => Boolean(shot.editorialText))).toBe(true);
+    expect(build.resolvedPlan.generationBriefs).toHaveLength(3);
+    expect(build.resolvedPlan.generationBriefs.every((brief) => brief.outputRole === "reconstruction" && brief.consumingShotIds.length === 1)).toBe(true);
+    expect((build.metrics.treatmentDistribution["generated-illustration"] ?? 0) + (build.metrics.treatmentDistribution.diagram ?? 0) + (build.metrics.treatmentDistribution["kinetic-type"] ?? 0)).toBeGreaterThan(0.6);
     expect(build.renderPlan.shots.filter((shot) => shot.caption).every((shot) => shot.actions.some((action) => action.detail.type === "talk"))).toBe(true);
   });
 

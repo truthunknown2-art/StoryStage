@@ -1,7 +1,7 @@
 # SS-008 first complete episode pass
 
 Date: 2026-07-17
-Status: **IMPLEMENTED - Pro blocker correction awaiting re-audit**
+Status: **ACCEPTED by ChatGPT Pro at `fabbd2d1e85fe9279408df682895170addad20e1`**
 
 ## Outcome
 
@@ -30,3 +30,7 @@ StoryStage now remembers the work through durable evidence rather than making th
 ## Product truth
 
 This slice shortens and clarifies the human completion loop; it does not perform the missing human work. The current first cut still needs real picture approval, voice, timing review, mix decisions, rendering, and verified delivery. StoryStage now resumes at those honest gaps and points to concrete playback evidence instead of pretending the draft is finished.
+
+## Pro verdict
+
+Pro accepted the ordered SFX correction with no remaining blocking evidence. The final regression stores a later-shot cue before an earlier-shot cue and proves validation still reports the earlier unique affected shot from the frozen render-plan order. Pro confirmed `SS-009: Frankly Weird History Publishable Pilot 001` as the next milestone and explicitly approved retaining the existing 26.33-second Rook script rather than padding it with invented content.

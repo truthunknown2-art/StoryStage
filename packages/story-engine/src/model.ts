@@ -533,6 +533,7 @@ export const renderShotSchema = z.object({
   sceneId: identifierSchema,
   number: z.string().min(1),
   title: z.string().min(1),
+  editorialText: z.string().min(1).optional(),
   framing: shotFramingSchema,
   treatment: shotTreatmentSchema,
   transition: transitionStyleSchema,

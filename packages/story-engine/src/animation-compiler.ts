@@ -69,7 +69,7 @@ export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRen
     const visualBindings = shot.visualRequirementIds.map((id) => visualByRequirementId.get(id)).filter((visual): visual is NonNullable<typeof visual> => Boolean(visual));
     const background = visualBindings.find((visual) => visual.role === "background");
     const caption = override && Object.prototype.hasOwnProperty.call(override, "caption") ? override.caption ?? null : shot.caption;
-    return {id: shot.id, sceneId: shot.sceneId, number: shot.number, title: shot.title, framing, treatment: shot.treatment, transition: override?.transition ?? shot.transition, locationAssetId: background?.assetId ?? placeholder.id, focusCharacterId, visualBindings, startFrame, durationInFrames, actions, caption};
+    return {id: shot.id, sceneId: shot.sceneId, number: shot.number, title: shot.title, editorialText: shot.sourceExcerpt, framing, treatment: shot.treatment, transition: override?.transition ?? shot.transition, locationAssetId: background?.assetId ?? placeholder.id, focusCharacterId, visualBindings, startFrame, durationInFrames, actions, caption};
   });
 
   const payload = {

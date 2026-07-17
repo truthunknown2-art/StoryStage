@@ -11,7 +11,7 @@ export {STORY_STAGE_COMPOSITION_ID, STORY_STAGE_PRODUCTION_COMPOSITION_ID, STORY
 const defaultProductionBuild = buildAnimaticSync({draft: createProductionDraft({productionId: "production-remotion-default", title: "The Punctual Box", projectType: "explainer", showPackId: "weird-history-editorial-v1", preset: "studio", script: sampleWorkshopScript})});
 const defaultProductionProps: ProductionCompositionProps = {plan: defaultProductionBuild.renderPlan, playbackAssets: {}, sliceDurationInFrames: Math.min(defaultProductionBuild.renderPlan.durationInFrames, 720)};
 const transparentPixel = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+Avz9WQAAAABJRU5ErkJggg==";
-const defaultDiagnosticProps: RigDiagnosticCompositionProps = {asset: {type: "prop", assetId: "diagnostic-placeholder", cutout: transparentPixel}, entityName: "Selected asset"};
+const defaultDiagnosticProps: RigDiagnosticCompositionProps = {asset: {type: "prop", assetId: "diagnostic-placeholder", assetClass: "prop", cutout: transparentPixel}, entityName: "Selected asset"};
 
 export const StoryStageRoot: React.FC = () => {
   return (

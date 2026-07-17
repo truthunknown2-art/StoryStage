@@ -1,7 +1,7 @@
 # SS-008 first complete episode pass
 
 Date: 2026-07-17
-Status: **ACTIVE**
+Status: **ACCEPTED by ChatGPT Pro at `fabbd2d`**
 
 ## Product objective
 

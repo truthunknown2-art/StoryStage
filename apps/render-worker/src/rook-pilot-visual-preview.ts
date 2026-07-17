@@ -11,7 +11,7 @@ import {buildAnimaticSync, createRookPilot001Fixture, type ApprovedAssetVersion}
 
 const workspaceRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
 const candidateRoot = resolve(workspaceRoot, "packages/remotion-runtime/public/show-packs/weird-history/rook/v1");
-const outputRoot = resolve(workspaceRoot, "artifacts/SS-003/rook-pilot-visual-preview");
+const outputRoot = resolve(workspaceRoot, "artifacts/SS-009/rook-pilot-content-preview");
 const candidateId = "weird-history-rook-v1";
 const candidateContentHash = "6c60b1fa633a4c3c7e9a32cbe475a52277f38b7d5cf2e239b0acee2ada85c691";
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
@@ -44,14 +44,14 @@ async function main(): Promise<void> {
   await mkdir(outputRoot, {recursive: true});
   const serveUrl = await bundle({entryPoint: resolve(workspaceRoot, "packages/remotion-runtime/src/remotion-entry.ts"), publicDir: resolve(workspaceRoot, "packages/remotion-runtime/public")});
   const composition = await selectComposition({serveUrl, id: STORY_STAGE_PRODUCTION_COMPOSITION_ID, inputProps});
-  const desiredTreatments = ["environment", "character-performance", "reaction", "kinetic-type"] as const;
+  const desiredTreatments = ["environment", "character-performance", "generated-illustration", "diagram", "kinetic-type", "reaction"] as const;
   const frames = desiredTreatments.map((treatment) => {
     const shot = build.renderPlan.shots.find((candidateShot) => candidateShot.treatment === treatment);
     if (!shot) throw new Error(`Rook Pilot 001 lost its ${treatment} treatment.`);
     return {frame: shot.startFrame + Math.floor(shot.durationInFrames / 2), shotId: shot.id, treatment};
   });
   for (const item of frames) await renderStill({composition, frame: item.frame, inputProps, output: resolve(outputRoot, `${item.treatment}-${item.shotId}.png`), serveUrl});
-  await writeFile(resolve(outputRoot, "preview-report.json"), `${JSON.stringify({schemaVersion: "1.0", status: "unapproved-candidate-visual-preview", candidateId, candidateContentHash, durationInFrames: build.renderPlan.durationInFrames, durationSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, shotCount: build.renderPlan.shots.length, frames}, null, 2)}\n`, "utf8");
+  await writeFile(resolve(outputRoot, "preview-report.json"), `${JSON.stringify({schemaVersion: "1.0", status: "unapproved-candidate-content-preview", candidateId, candidateContentHash, durationInFrames: build.renderPlan.durationInFrames, durationSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, shotCount: build.renderPlan.shots.length, reconstructionBriefCount: build.resolvedPlan.generationBriefs.filter((brief) => brief.outputRole === "reconstruction").length, treatmentDistribution: build.metrics.treatmentDistribution, frames}, null, 2)}\n`, "utf8");
   process.stdout.write(`Rendered ${frames.length} watermarked Rook Pilot 001 review frames to ${outputRoot}\n`);
 }
 
