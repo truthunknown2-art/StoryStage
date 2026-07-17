@@ -1,11 +1,11 @@
 # SS-002 durable foundation and real asset-to-frame proof
 
 Date: 2026-07-17
-Status: locally verified after replay-safety follow-up; fresh Pro re-audit pending
+Status: accepted by Pro at replay-safety follow-up commit `1c0d6a2`
 
 ## Scope
 
-This milestone responds to Pro's rejection of `49a7608` after its earlier rejection of `e85e351`. Pro's audit of `14baf87` accepted the executable vertical slice and marked A-C, E, and F resolved, but found that crashes before selected/approved review persistence could collide with regenerated timestamp-bound immutable files. The follow-up makes both selected-rig construction and asset promotion replay-safe and covers the real filesystem checkpoints Pro named.
+This milestone responds to Pro's rejection of `49a7608` after its earlier rejection of `e85e351`. Pro's audit of `14baf87` accepted the executable vertical slice and marked A-C, E, and F resolved, but found that crashes before selected/approved review persistence could collide with regenerated timestamp-bound immutable files. Follow-up commit `1c0d6a2` made both selected-rig construction and asset promotion replay-safe and covered the real filesystem checkpoints Pro named. Pro's narrow re-audit then accepted Gate 4, marked D resolved, found no remaining blocker in scope, and accepted this as the durable foundation for continued product work.
 
 ## Blocker mapping
 
@@ -41,19 +41,19 @@ Visual inspection confirms actual approved character pixels, pose/mouth/arm chan
 
 ## Automated evidence
 
-- `pnpm verify`: privacy check, lint, all package typechecks, and 87 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
+- `pnpm verify`: privacy check, lint, all package typechecks, and 88 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
 - `pnpm build`: all nine code packages plus the Vite studio bundle
 - story-engine: production derivation, job/evidence hashes, lifecycle, approval/recompile, diagnostic binding, profile behavior
 - asset-pipeline: real transparent character-kit preparation, contact sheet, rig validation, opaque-mask stop, tamper rejection
 - asset-pipeline: 11 real filesystem replay tests after selected manifest, validation, diagnostic video/report, promoted files, manifest, validation, diagnostic video/report, and immediately before both review-persistence boundaries
 - desktop: approval transaction crash/retry tests at review persistence, production persistence, and approved-state persistence
 - render-worker: strict sample, production, and rig-diagnostic command routing
-- studio: host boundary, resume/review state, StrictMode-safe render subscription, exact-frame timeline/inspector synchronization, and recoverable root renderer failure instead of a blank window
+- studio: host boundary, resume/review state, StrictMode-safe render subscription, exact-frame timeline/inspector synchronization, recoverable root renderer failure instead of a blank window, and evidence-backed preflight routing
 - desktop build: the asset pipeline is bundled into Electron instead of leaking workspace TypeScript imports; a build-time scan fails on any unresolved `@storystage/*` runtime import
 
 ## Live UI evidence
 
-The desktop smoke pass first exposed and then verified a real launch blocker: `@storystage/asset-pipeline` was externalized, causing Electron to execute workspace TypeScript and fail on an extensionless story-engine import. The asset pipeline is now bundled and StoryStage launches to the production desk. New Production opens the real setup, creates the default Frankly Weird History production, and produces 25 shots from two natural scenes. The new cut-timing panel visibly exposes all 25 proportional shot boundaries; jumping to shot 1.04 moves the playhead to frame 203 and synchronizes the inspector to 1.04. Live playback advanced the playhead from frame 203 to 221, and Pause held that position. The Assets view exposes the five production-bound generation briefs.
+The desktop smoke pass first exposed and then verified a real launch blocker: `@storystage/asset-pipeline` was externalized, causing Electron to execute workspace TypeScript and fail on an extensionless story-engine import. The asset pipeline is now bundled and StoryStage launches to the production desk. New Production opens the real setup, creates the default Frankly Weird History production, and produces 25 shots from two natural scenes. The new cut-timing panel visibly exposes all 25 proportional shot boundaries; jumping to shot 1.04 moves the playhead to frame 203 and synchronizes the inspector to 1.04. Live playback advanced the playhead from frame 203 to 221, and Pause held that position. The viewport-height editor shell keeps all three navigation actions visible while the shot canvas scrolls independently. Preflight reports 3/6 engineering checks ready, routes each blocker to its owning view, and explicitly keeps the finished-episode gate closed. The Assets view exposes the five production-bound generation briefs.
 
 Screenshots are intentionally private engineering artifacts under `artifacts/SS-002/ui/` and remain ignored by Git.
 

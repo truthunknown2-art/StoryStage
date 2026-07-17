@@ -8,7 +8,7 @@ SS-001 remains accepted workstation infrastructure: browser studio, secure Elect
 
 `SS-002: Two-Profile Script-to-Animatic + Generated Asset Seam` is active.
 
-Pro's audit of commit `14baf87` accepted the executable vertical slice and marked A-C, E, and F resolved. It rejected Gate 4 on one remaining durability issue: selected-rig construction and promotion could regenerate timestamp-bound immutable records after a crash before review persistence. The local follow-up now addresses that exact issue:
+Pro's narrow re-audit of follow-up commit `1c0d6a2` accepted Gate 4, marked D resolved, found no remaining code-level blocker in scope, and called the result an honest durable foundation for continued product work. That acceptance covers the import, preparation, selection, promotion, approval-recovery, and approved-frame foundation; it does not claim product completion or final visual quality.
 
 - Production bundles are finalized by Electron main, saved through per-production/revision queues, and rejected unless the complete stored render plan canonically equals a fresh compile of the included resolved plan.
 - Generation exports are bound to the exact acknowledged production-bundle content hash and authoritative generation briefs. Restart comparison normalizes only the valid brief lifecycle status change from draft to exported.
@@ -25,6 +25,7 @@ Pro's audit of commit `14baf87` accepted the executable vertical slice and marke
 - The Electron bundle now includes every workspace TypeScript package it executes. A build-time check rejects unresolved `@storystage/*` runtime imports, covering the launch crash found during the live desktop pass.
 - Direction review now has a functional frame playhead, play/pause transport, exact shot-boundary jumps, and synchronized shot inspector. It remains an explicitly labeled planning timeline until approved artwork exists.
 - A root renderer error boundary replaces blank-window failures with a local recovery screen, preserves saved production data, and offers an explicit reload action with optional technical detail.
+- The former disabled Preflight placeholder is now an evidence-backed readiness view. It distinguishes compiled/saved/renderer checks, required asset approvals, deferred sources, engineering-slice eligibility, and the still-closed finished-episode gate.
 
 ## Real proof
 
@@ -46,11 +47,11 @@ The proof art is deliberately simple local engineering art. It proves the execut
 
 - Gate 1 reference cut measurements: complete.
 - Gates 2-3 production draft, New Production UI, two-profile planning, metrics, and semantic overrides: accepted by Pro against commit `1c60d93`.
-- Gate 4 durable generation/import foundation and executable manual image exchange: locally implemented after Pro accepted A-C, E, F and identified the final pre-review replay trap; fresh Pro acceptance of the replay-safety follow-up is pending.
+- Gate 4 durable generation/import foundation and executable manual image exchange: accepted by Pro at follow-up commit `1c0d6a2`; A-F and the executable approved-frame slice are resolved within that audit scope.
 - Gate 5 original ChatGPT production art for both profiles: pending a real authenticated manual generation round trip.
 - Gate 6 preparation and validation: implemented for 2D pose-swap characters, background layers, and props; skeletal/part rigging and Blender routing remain pending.
 - Gate 7 semantic Remotion animation: initial plan-driven 24-second slice implemented and proven; full episode coverage and visual polish remain pending.
-- Gate 8 review/override: shot overrides, asset selection/approval, and a functional frame-accurate cut timeline with synchronized inspector exist; approved-pixel live Remotion playback and broader inspector coverage remain incomplete.
+- Gate 8 review/override: shot overrides, asset selection/approval, a functional frame-accurate cut timeline with synchronized inspector, and evidence-backed production preflight exist; approved-pixel live Remotion playback and broader inspector coverage remain incomplete.
 - Gate 9 profile-distinct production outputs: pending.
 
 ## Product truth

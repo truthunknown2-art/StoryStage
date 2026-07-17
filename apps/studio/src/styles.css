@@ -172,7 +172,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .create-button:disabled { opacity: .35; }
 
 /* Workspace */
-.workspace-shell { display: grid; grid-template-columns: 78px minmax(0, 1fr); grid-template-rows: 64px minmax(0, 1fr); min-height: 100vh; }
+.workspace-shell { display: grid; grid-template-columns: 78px minmax(0, 1fr); grid-template-rows: 64px minmax(0, 1fr); height: 100vh; min-height: 0; overflow: hidden; }
 .workspace-topbar { grid-column: 1 / -1; position: sticky; }
 .workspace-topbar .quiet-button { border-left: 1px solid #2a3233; margin-left: 20px; padding-left: 20px; }
 .production-crumb { align-items: center; color: #5e6965; display: flex; font-size: 10px; gap: 6px; margin-left: 18px; }
@@ -186,7 +186,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .workspace-nav button b { align-items: center; background: #f0c668; border-radius: 50%; color: #171511; display: flex; font-size: 7px; height: 14px; justify-content: center; position: absolute; right: 8px; top: 7px; width: 14px; }
 .workspace-nav button:disabled { opacity: .32; }
 .nav-spacer { flex: 1; }
-.workspace-main { background: #0c1011; grid-column: 2; grid-row: 2; overflow: auto; padding: 30px 34px 48px; }
+.workspace-main { background: #0c1011; grid-column: 2; grid-row: 2; min-height: 0; overflow: auto; padding: 30px 34px 48px; }
 .workspace-heading { align-items: flex-end; display: flex; justify-content: space-between; }
 .workspace-heading h1 { color: #eef3f0; font-size: 29px; letter-spacing: -.045em; margin: 6px 0 4px; }
 .workspace-heading > div > p:last-child { color: #68746f; font-size: 10px; }
@@ -263,6 +263,26 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .compiled-actions small { color: #58635f; font-size: 7px; }
 .override-state { align-items: center; background: #17231d; border: 1px solid #2d4939; border-radius: 6px; color: #82cda1; display: flex; font-size: 8px; gap: 6px; line-height: 1.35; padding: 8px; }
 .override-help { color: #5f6b67; font-size: 8px; line-height: 1.4; }
+
+/* Preflight */
+.preflight-panel { display: grid; gap: 14px; margin-top: 24px; }
+.preflight-panel > header { align-items: center; background: linear-gradient(120deg, #17201d, #111718 65%); border: 1px solid #303c37; border-radius: 11px; display: flex; justify-content: space-between; padding: 19px 20px; }
+.preflight-panel > header h2 { color: #e0e7e3; font-size: 18px; margin: 4px 0; }
+.preflight-panel > header p:last-child { color: #6d7a74; font-size: 9px; }
+.preflight-panel > header > strong { border: 1px solid #47604f; border-radius: 999px; color: #9bd4ae; font-size: 10px; padding: 7px 10px; }
+.preflight-items { background: #111718; border: 1px solid #2b3433; border-radius: 10px; overflow: hidden; }
+.preflight-items article { align-items: center; border-bottom: 1px solid #27302f; display: grid; gap: 13px; grid-template-columns: auto 1fr auto; padding: 14px 16px; }
+.preflight-items article:last-child { border-bottom: 0; }
+.preflight-state { align-items: center; background: #1a2420; border: 1px solid #33453c; border-radius: 50%; color: #89cba3; display: flex; height: 31px; justify-content: center; width: 31px; }
+.preflight-items article.is-blocked .preflight-state { background: #281b18; border-color: #57362f; color: #ee806e; }
+.preflight-items article.is-warning .preflight-state { background: #272218; border-color: #5a4a2c; color: #e5bc67; }
+.preflight-items h3 { color: #bcc7c1; font-size: 10px; }
+.preflight-items p { color: #65716c; font-size: 8px; line-height: 1.45; margin-top: 3px; }
+.preflight-items button { background: #18211e; border: 1px solid #35423d; border-radius: 5px; color: #94a39b; font-size: 8px; padding: 7px 9px; }
+.preflight-items small { color: #79bd94; font-size: 7px; text-transform: uppercase; }
+.preflight-panel > footer { align-items: flex-start; background: #211917; border: 1px solid #4b312b; border-radius: 8px; color: #e47b69; display: grid; gap: 10px; grid-template-columns: auto 1fr; padding: 13px 15px; }
+.preflight-panel > footer p { color: #936c64; font-size: 8px; line-height: 1.55; }
+.preflight-panel > footer strong { color: #e38b7a; }
 
 /* Asset exchange */
 .asset-exchange { display: grid; gap: 15px; margin-top: 24px; }

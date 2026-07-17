@@ -114,6 +114,19 @@ describe("StoryStage studio", () => {
     expect(screen.getByRole("button", {name: "Play direction timeline"})).toBeInTheDocument();
   });
 
+  it("turns preflight into an evidence-backed readiness view instead of a disabled placeholder", async () => {
+    const user = await createDefaultProduction();
+    await user.click(screen.getByRole("button", {name: "Preflight"}));
+
+    expect(screen.getByRole("heading", {name: "Production preflight"})).toBeInTheDocument();
+    expect(screen.getByText(/asset approvals still required/)).toBeInTheDocument();
+    expect(screen.getByText("Desktop renderer unavailable in this host.")).toBeInTheDocument();
+    expect(screen.getByText(/Finished-episode gate remains closed/)).toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", {name: "Open assets"})[0]!);
+    expect(screen.getByRole("heading", {name: "Manual ChatGPT Images"})).toBeInTheDocument();
+  });
+
   it("compiles inspector choices into semantic shot overrides", async () => {
     const user = await createDefaultProduction();
 

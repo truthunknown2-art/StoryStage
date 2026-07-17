@@ -53,7 +53,7 @@ import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeS
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
 
 type Screen = "home" | "new-production" | "workspace";
-type WorkspaceTab = "direction" | "assets";
+type WorkspaceTab = "direction" | "assets" | "preflight";
 
 type ProductionSession = ProductionDraft & {
   overrides: ShotOverride[];
@@ -644,6 +644,33 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, pro
   );
 }
 
+function ProductionPreflight({session, build, capabilities, productionBundleContentHash, onNavigate}: {session: ProductionSession; build: AnimaticBuild; capabilities: DesktopCapabilities; productionBundleContentHash: string | null; onNavigate: (tab: WorkspaceTab) => void}) {
+  const missingApprovals = build.resolvedPlan.generationBriefs.length;
+  const deferredSources = build.resolvedPlan.requirements.filter((requirement) => requirement.status === "deferred").length;
+  const approvedAssets = session.approvedAssetVersions.length;
+  const items = [
+    {id: "plan", ready: true, warning: false, title: "Script and direction compiled", detail: `${build.creativePlan.scenes.length} natural scenes · ${build.renderPlan.shots.length} shots · ${build.renderPlan.durationInFrames} exact frames`, action: "direction" as const},
+    {id: "snapshot", ready: Boolean(productionBundleContentHash), warning: !capabilities.manualImageExchange, title: "Production snapshot saved", detail: productionBundleContentHash ? `Content ${productionBundleContentHash.slice(0, 12)}… is acknowledged by the desktop host.` : capabilities.manualImageExchange ? "The current production revision is still saving." : "Durable local snapshots require the desktop app.", action: "direction" as const},
+    {id: "assets", ready: missingApprovals === 0, warning: false, title: "Generated asset approvals complete", detail: missingApprovals === 0 ? `${approvedAssets} immutable approved asset versions are bound to this revision.` : `${missingApprovals} asset approvals still required; ${approvedAssets} immutable versions are currently bound.`, action: "assets" as const},
+    {id: "sources", ready: deferredSources === 0, warning: deferredSources > 0, title: "Deferred source acquisitions cleared", detail: deferredSources === 0 ? "No licensed, archive, or generation requirement is deferred." : `${deferredSources} requirements still need an approved source or an explicit production decision.`, action: "assets" as const},
+    {id: "renderer", ready: capabilities.localRendering, warning: false, title: "Desktop renderer available", detail: capabilities.localRendering ? "The isolated render worker is available for approved local evidence." : "Desktop renderer unavailable in this host.", action: "direction" as const},
+    {id: "slice", ready: capabilities.localRendering && Boolean(productionBundleContentHash) && approvedAssets > 0, warning: false, title: "Approved engineering slice can render", detail: approvedAssets > 0 ? "At least one approved asset is available for the current 24-second engineering render path." : "Approve at least one prepared asset before the engineering render action unlocks.", action: "assets" as const},
+  ];
+  const readyCount = items.filter((item) => item.ready).length;
+
+  return (
+    <section className="preflight-panel" aria-label="Production preflight">
+      <header><div><p className="eyebrow">Honest readiness check</p><h2>Production preflight</h2><p>This separates an engineering render from a genuinely finished episode. No green badge is decorative.</p></div><strong>{readyCount}/{items.length} ready</strong></header>
+      <div className="preflight-items">{items.map((item) => <article className={item.ready ? "is-ready" : item.warning ? "is-warning" : "is-blocked"} key={item.id}>
+        <span className="preflight-state">{item.ready ? <Check size={15} /> : <CircleAlert size={15} />}</span>
+        <div><h3>{item.title}</h3><p>{item.detail}</p></div>
+        {!item.ready ? <button onClick={() => onNavigate(item.action)}>{item.action === "assets" ? "Open assets" : "Open direction"}</button> : <small>Verified</small>}
+      </article>)}</div>
+      <footer><CircleAlert size={16} /><p><strong>Finished-episode gate remains closed.</strong> Voice timing, lip sync, music/SFX decisions, final profile artwork, and full-length approved-pixel playback still require implemented evidence before StoryStage can claim a publishable episode.</p></footer>
+    </section>
+  );
+}
+
 function Workspace({session, setSession, onExit, host, capabilities}: {session: ProductionSession; setSession: (next: ProductionSession) => void; onExit: () => void; host: HostAdapter; capabilities: DesktopCapabilities}) {
   const build = useMemo(() => buildAnimaticSync({draft: draftFromSession(session), overrides: session.overrides, approvedAssetVersions: session.approvedAssetVersions}), [session]);
   const saveQueue = useRef<Promise<void>>(Promise.resolve());
@@ -696,10 +723,10 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
         <button className={tab === "direction" ? "is-active" : ""} onClick={() => setTab("direction")}><Aperture size={18} /><span>Direction</span></button>
         <button className={tab === "assets" ? "is-active" : ""} onClick={() => setTab("assets")}><Layers3 size={18} /><span>Assets</span><b>{build.resolvedPlan.generationBriefs.length}</b></button>
         <div className="nav-spacer" />
-        <button disabled><ListChecks size={18} /><span>Preflight</span></button>
+        <button className={tab === "preflight" ? "is-active" : ""} onClick={() => setTab("preflight")}><ListChecks size={18} /><span>Preflight</span></button>
       </aside>
       <main className="workspace-main">
-        <header className="workspace-heading"><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : "Generated-asset exchange"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
+        <header className="workspace-heading"><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : tab === "assets" ? "Generated-asset exchange" : "Production readiness"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
           <CutTimeline build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
@@ -717,7 +744,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               {currentOverride ? <p className="override-state"><Check size={13} />Override compiled into the current render plan.</p> : <p className="override-help">Change a field to create a semantic override. No JSON editing required.</p>}
             </aside>
           </div>
-        </> : <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} productionBundleContentHash={lastSavedHash} />}
+        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} productionBundleContentHash={lastSavedHash} /> : <ProductionPreflight session={session} build={build} capabilities={capabilities} productionBundleContentHash={lastSavedHash} onNavigate={setTab} />}
       </main>
     </div>
   );
