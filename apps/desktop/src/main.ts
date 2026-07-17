@@ -3,9 +3,10 @@ import {access, lstat, mkdir, readFile, realpath, writeFile} from "node:fs/promi
 import {join, resolve, sep} from "node:path";
 import {pathToFileURL} from "node:url";
 import {app, BrowserWindow, dialog, ipcMain, shell, utilityProcess, type OpenDialogOptions} from "electron";
-import {CandidateStagingError, stageCandidateBundle} from "@storystage/asset-pipeline";
 import {
   IPC_CHANNELS,
+  assetWorkerCommandSchema,
+  assetWorkerMessageSchema,
   canTransitionRenderJob,
   desktopCapabilitiesSchema,
   exportGenerationJobRequestSchema,
@@ -24,7 +25,9 @@ import {
   candidateBundleSchema,
   finalizeGenerationJob,
   generationJobDraftSchema,
+  preparedCandidateSchema,
   type GenerationJob,
+  type PreparedCandidate,
 } from "@storystage/story-engine";
 
 type JobRecord = {
@@ -165,6 +168,71 @@ function startRenderWorker(jobId: string, simulateFailure: boolean) {
   });
 }
 
+function prepareCandidateBundleInWorker(sourceRoot: string, stagingRoot: string, bundle: unknown): Promise<PreparedCandidate[]> {
+  return new Promise((resolvePreparation, rejectPreparation) => {
+    const workerEntry = app.isPackaged
+      ? resolve(process.resourcesPath, "asset-worker/asset-worker.cjs")
+      : resolve(workspaceRoot, "apps/asset-worker/dist/asset-worker.cjs");
+    const requestId = `prepare-${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+    const worker = utilityProcess.fork(workerEntry, [], {
+      cwd: workspaceRoot,
+      serviceName: "StoryStage Asset Preparation Worker",
+      stdio: "ignore",
+      env: {
+        NODE_OPTIONS: "--max-old-space-size=256",
+        ...(process.env.SystemRoot ? {SystemRoot: process.env.SystemRoot} : {}),
+        ...(process.env.TEMP ? {TEMP: process.env.TEMP} : {}),
+        ...(process.env.TMP ? {TMP: process.env.TMP} : {}),
+      },
+    });
+    let settled = false;
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      worker.kill();
+      callback();
+    };
+    const timeout = setTimeout(() => finish(() => rejectPreparation(new Error("Asset preparation exceeded the 30-second safety timeout."))), 30_000);
+
+    worker.on("spawn", () => {
+      worker.postMessage(assetWorkerCommandSchema.parse({
+        type: "prepare-candidate-bundle",
+        requestId,
+        sourceRoot,
+        stagingRoot,
+        serializedBundle: JSON.stringify(bundle),
+      }));
+    });
+    worker.on("message", (rawMessage: unknown) => {
+      const message = assetWorkerMessageSchema.safeParse(rawMessage);
+      if (!message.success) {
+        finish(() => rejectPreparation(new Error("The asset worker returned an invalid message envelope.")));
+        return;
+      }
+      if (message.data.requestId !== requestId) {
+        finish(() => rejectPreparation(new Error("The asset worker returned a mismatched request identity.")));
+        return;
+      }
+      if (message.data.type === "failed") {
+        const failure = message.data;
+        finish(() => rejectPreparation(new Error(`${failure.error.code}: ${failure.error.message}`)));
+        return;
+      }
+      try {
+        const prepared = preparedCandidateSchema.array().parse(JSON.parse(message.data.serializedPreparedCandidates));
+        finish(() => resolvePreparation(prepared));
+      } catch {
+        finish(() => rejectPreparation(new Error("The asset worker returned invalid prepared-candidate data.")));
+      }
+    });
+    worker.on("error", (_type, location) => finish(() => rejectPreparation(new Error(`The asset worker crashed at ${location || "an unknown location"}.`))));
+    worker.on("exit", (code) => {
+      if (!settled) finish(() => rejectPreparation(new Error(`The asset worker exited unexpectedly with code ${code}.`)));
+    });
+  });
+}
+
 async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1600,
@@ -246,7 +314,7 @@ ipcMain.handle(IPC_CHANNELS.stageCandidateBundle, async (_event, rawRequest: unk
     const manifestPath = join(sourceRoot, "candidate-bundle.json");
     const manifestInfo = await lstat(manifestPath);
     if (manifestInfo.isSymbolicLink() || !manifestInfo.isFile() || manifestInfo.size > 2_000_000) {
-      throw new CandidateStagingError("invalid-bundle", "candidate-bundle.json must be a regular file smaller than 2 MB.");
+      throw new Error("candidate-bundle.json must be a regular file smaller than 2 MB.");
     }
     const bundle = candidateBundleSchema.parse(JSON.parse(await readFile(manifestPath, "utf8")));
     if (bundle.exchangeJobId !== exchange.job.exchangeJobId || bundle.generationJobContentHash !== exchange.job.contentHash) {
@@ -278,7 +346,7 @@ ipcMain.handle(IPC_CHANNELS.stageCandidateBundle, async (_event, rawRequest: unk
       `r${exchange.job.production.revision}`,
       importId,
     );
-    const prepared = await stageCandidateBundle({bundle, sourceRoot, stagingRoot});
+    const prepared = await prepareCandidateBundleInWorker(sourceRoot, stagingRoot, bundle);
     return stageCandidateBundleResultSchema.parse({
       status: "prepared",
       importId,
@@ -290,7 +358,7 @@ ipcMain.handle(IPC_CHANNELS.stageCandidateBundle, async (_event, rawRequest: unk
     return stageCandidateBundleResultSchema.parse({
       status: "failed",
       error: {
-        code: error instanceof CandidateStagingError ? error.code.toUpperCase().replaceAll("-", "_") : "CANDIDATE_IMPORT_FAILED",
+        code: "CANDIDATE_IMPORT_FAILED",
         message: error instanceof Error ? error.message : "The candidate bundle could not be staged.",
       },
     });

@@ -1,0 +1,21 @@
+{
+  "name": "@storystage/asset-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup --config tsup.config.ts",
+    "test": "vitest run src/worker-protocol.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@storystage/asset-pipeline": "workspace:*",
+    "@storystage/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  }
+}

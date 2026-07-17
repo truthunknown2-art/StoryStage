@@ -98,6 +98,19 @@ export const renderWorkerMessageSchema = z.discriminatedUnion("type", [
   z.object({type: z.literal("event"), payload: renderJobEventSchema}).strict(),
 ]);
 
+export const assetWorkerCommandSchema = z.object({
+  type: z.literal("prepare-candidate-bundle"),
+  requestId: z.string().min(1),
+  sourceRoot: z.string().min(1),
+  stagingRoot: z.string().min(1),
+  serializedBundle: z.string().min(2).max(2_000_000),
+}).strict();
+
+export const assetWorkerMessageSchema = z.discriminatedUnion("type", [
+  z.object({type: z.literal("prepared"), requestId: z.string().min(1), serializedPreparedCandidates: z.string().min(2).max(2_000_000)}).strict(),
+  z.object({type: z.literal("failed"), requestId: z.string().min(1), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
+
 const allowedTransitions = {
   idle: ["queued"],
   queued: ["bundling", "failed"],
@@ -134,6 +147,8 @@ export type RenderJobStatus = RenderJobState["status"];
 export type OpenRenderedFileResult = z.infer<typeof openRenderedFileResultSchema>;
 export type RenderWorkerCommand = z.infer<typeof renderWorkerCommandSchema>;
 export type RenderWorkerMessage = z.infer<typeof renderWorkerMessageSchema>;
+export type AssetWorkerCommand = z.infer<typeof assetWorkerCommandSchema>;
+export type AssetWorkerMessage = z.infer<typeof assetWorkerMessageSchema>;
 
 export type StoryStageDesktopBridge = {
   getCapabilities: () => Promise<DesktopCapabilities>;

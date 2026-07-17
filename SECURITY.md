@@ -15,6 +15,8 @@ If a credential is ever committed, revoke or rotate it immediately and remove it
 
 The default `manual-chatgpt-images` provider exchanges local JSON manifests and image files. It has no credential fields and performs no network request. Any future API adapter must use an operating-system credential store or process environment, redact secrets from logs, and remain disabled until the user explicitly opts in.
 
+Candidate inspection runs in a one-shot utility process with a capped heap, timeout, strict command envelope, and an allowlisted environment. It does not inherit API keys or unrelated parent-process secrets.
+
 Run `pnpm verify:privacy` before every public push. It fails on local exchange artifacts, candidate manifests, credential-shaped files, common secret formats, and any change that stops anchoring the exchange root outside the repository under Electron `userData`.
 
 ## Renderer boundary

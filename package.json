@@ -9,8 +9,8 @@
     "node": ">=20.19"
   },
   "scripts": {
-    "build": "pnpm --filter @storystage/render-worker build && pnpm --filter @storystage/desktop build && pnpm --filter @storystage/studio build",
-    "build:desktop": "pnpm --filter @storystage/render-worker build && pnpm --filter @storystage/desktop build",
+    "build": "pnpm --filter @storystage/render-worker build && pnpm --filter @storystage/asset-worker build && pnpm --filter @storystage/desktop build && pnpm --filter @storystage/studio build",
+    "build:desktop": "pnpm --filter @storystage/render-worker build && pnpm --filter @storystage/asset-worker build && pnpm --filter @storystage/desktop build",
     "dev": "pnpm build:desktop && concurrently --kill-others-on-fail --names studio,desktop --prefix-colors cyan,magenta \"pnpm --filter @storystage/studio dev\" \"wait-on http://127.0.0.1:5173 && pnpm --filter @storystage/desktop start\"",
     "dev:web": "pnpm --filter @storystage/studio dev",
     "format": "prettier --write .",

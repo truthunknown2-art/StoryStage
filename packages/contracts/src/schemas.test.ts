@@ -1,6 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {
   canTransitionRenderJob,
+  assetWorkerCommandSchema,
   exportGenerationJobRequestSchema,
   renderJobEventSchema,
   renderWorkerMessageSchema,
@@ -25,6 +26,11 @@ describe("StoryStage contracts", () => {
       payload: {jobId: "job-1", status: "rendering", progress: 0.5, message: "Rendering frame 180 of 360"},
     });
     expect(result.type).toBe("event");
+  });
+
+  it("keeps the asset worker envelope strict and bounded", () => {
+    expect(assetWorkerCommandSchema.safeParse({type: "prepare-candidate-bundle", requestId: "request-one", sourceRoot: "C:/trusted-source", stagingRoot: "C:/trusted-staging", serializedBundle: "{}"}).success).toBe(true);
+    expect(assetWorkerCommandSchema.safeParse({type: "prepare-candidate-bundle", requestId: "request-one", sourceRoot: "C:/trusted-source", stagingRoot: "C:/trusted-staging", serializedBundle: "{}", executable: "powershell.exe"}).success).toBe(false);
   });
 
   it("rejects incomplete failed job events", () => {

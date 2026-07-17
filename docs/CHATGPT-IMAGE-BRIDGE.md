@@ -18,7 +18,7 @@ StoryStage production
   -> immutable approved asset + provenance record
 ```
 
-The current desktop UI shows an exact disclosure review before export, assigns a main-owned opaque exchange ID, writes an immutable hash-verified job under Electron `userData`, and opens its folder. Import uses a native folder picker; the renderer never submits a path. The trusted `packages/asset-pipeline` boundary validates each candidate's byte hash, actual codec, dimensions/pixel limits, alpha state, size, safe source path, and staging destination. Candidate bundles must match the exact exchange-job hash, production revision, brief roles, and Show Pack hash.
+The current desktop UI shows an exact disclosure review before export, assigns a main-owned opaque exchange ID, writes an immutable hash-verified job under Electron `userData`, and opens its folder. Import uses a native folder picker; the renderer never submits a path. Electron main rejects stale identities, then a timed utility process with a capped heap invokes the trusted `packages/asset-pipeline` boundary to validate each candidate's byte hash, actual codec, dimensions/pixel limits, alpha state, size, safe source path, and staging destination. Candidate bundles must match the exact exchange-job hash, production revision, brief roles, and Show Pack hash.
 
 ## Repository boundary
 

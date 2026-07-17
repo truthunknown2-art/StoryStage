@@ -54,6 +54,9 @@ const desktopMain = readFileSync(resolve(root, "apps/desktop/src/main.ts"), "utf
 if (!desktopMain.includes('app.getPath("userData")') || !desktopMain.includes('".storystage-local"')) {
   failures.push("apps/desktop/src/main.ts: exchange root is not visibly anchored under Electron userData");
 }
+if (/env:\s*\{\s*\.\.\.process\.env/.test(desktopMain)) {
+  failures.push("apps/desktop/src/main.ts: an isolated worker inherits the complete parent environment");
+}
 const gitignore = readFileSync(resolve(root, ".gitignore"), "utf8");
 for (const required of [".storystage-local/", "private-assets/", "candidate-bundles/", ".env"]) {
   if (!gitignore.includes(required)) failures.push(`.gitignore: missing ${required}`);
