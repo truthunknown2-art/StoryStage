@@ -486,8 +486,8 @@ type MediaRightsDraft = {sourceType: ClearedRightsRecord["sourceType"]; provider
 const defaultMediaRights = (): MediaRightsDraft => ({sourceType: "user-owned", provider: "Operator supplied", usageNotes: "Cleared for this StoryStage production.", evidenceReference: "", confirmed: false});
 const finalizedMediaRights = (draft: MediaRightsDraft): ClearedRightsRecord | null => draft.confirmed && draft.provider.trim() && draft.usageNotes.trim() && draft.evidenceReference.trim() ? {sourceType: draft.sourceType, provider: draft.provider.trim(), usageNotes: draft.usageNotes.trim(), clearanceStatus: "cleared", evidenceReference: draft.evidenceReference.trim()} : null;
 
-function MediaRightsEditor({draft, label, onChange}: {draft: MediaRightsDraft; label: string; onChange: (draft: MediaRightsDraft) => void}) {
-  return <fieldset className="media-rights-editor"><legend>{label} rights</legend><label>Source<select aria-label={`${label} rights source`} onChange={(event) => onChange({...draft, sourceType: event.target.value as MediaRightsDraft["sourceType"]})} value={draft.sourceType}><option value="user-owned">I own/control it</option><option value="licensed">Licensed</option><option value="public-domain">Public domain</option><option value="generated">Generated</option></select></label><label>Provider / owner<input aria-label={`${label} rights provider`} onChange={(event) => onChange({...draft, provider: event.target.value})} value={draft.provider} /></label><label>Usage notes<input aria-label={`${label} rights notes`} onChange={(event) => onChange({...draft, usageNotes: event.target.value})} value={draft.usageNotes} /></label><label>Evidence reference<input aria-label={`${label} rights evidence`} onChange={(event) => onChange({...draft, evidenceReference: event.target.value})} placeholder="License, invoice, source URL, or owned recording note" value={draft.evidenceReference} /></label><label className="rights-confirmation"><input aria-label={`${label} rights cleared`} checked={draft.confirmed} onChange={(event) => onChange({...draft, confirmed: event.target.checked})} type="checkbox" />I confirm this exact file is cleared for this production.</label></fieldset>;
+function MediaRightsEditor({draft, label, onChange, finishOwner, finishActive}: {draft: MediaRightsDraft; label: string; onChange: (draft: MediaRightsDraft) => void; finishOwner?: string; finishActive?: boolean}) {
+  return <fieldset className="media-rights-editor"><legend>{label} rights</legend><label>Source<select aria-label={`${label} rights source`} onChange={(event) => onChange({...draft, sourceType: event.target.value as MediaRightsDraft["sourceType"]})} value={draft.sourceType}><option value="user-owned">I own/control it</option><option value="licensed">Licensed</option><option value="public-domain">Public domain</option><option value="generated">Generated</option></select></label><label>Provider / owner<input aria-label={`${label} rights provider`} onChange={(event) => onChange({...draft, provider: event.target.value})} value={draft.provider} /></label><label>Usage notes<input aria-label={`${label} rights notes`} onChange={(event) => onChange({...draft, usageNotes: event.target.value})} value={draft.usageNotes} /></label><label>Evidence reference<input aria-label={`${label} rights evidence`} data-finish-active={finishActive ? "true" : undefined} data-finish-owner={finishOwner} onChange={(event) => onChange({...draft, evidenceReference: event.target.value})} placeholder="License, invoice, source URL, or owned recording note" value={draft.evidenceReference} /></label><label className="rights-confirmation"><input aria-label={`${label} rights cleared`} checked={draft.confirmed} onChange={(event) => onChange({...draft, confirmed: event.target.checked})} type="checkbox" />I confirm this exact file is cleared for this production.</label></fieldset>;
 }
 
 function VoiceTrackReview({build, capabilities, host, productionBundleContentHash, session, onTrack}: {build: AnimaticBuild; capabilities: DesktopCapabilities; host: HostAdapter; productionBundleContentHash: string | null; session: ProductionSession; onTrack: (track: VoiceTrack) => void}) {
@@ -521,10 +521,10 @@ function VoiceTrackReview({build, capabilities, host, productionBundleContentHas
 
   return <article className="voice-master-card" id="finish-voice-master" tabIndex={-1}>
     <header><div><p className="eyebrow">Local voice master</p><h3>{track ? track.sourceFileName : "No recording bound"}</h3><p>{track ? `${track.codec.replaceAll("-", " ")} · ${track.sampleRate / 1000} kHz · ${track.channels === 1 ? "mono" : "stereo"} · ${track.durationInSeconds.toFixed(2)}s` : "Import one uncompressed PCM/float WAV. The desktop copies and hashes it into private local storage."}</p></div><span className={track?.approvalStatus === "approved" ? "is-approved" : ""}>{track?.approvalStatus ?? "required"}</span></header>
-    {track ? <><audio aria-label="Imported voice master" controls key={track.contentHash} onEnded={() => setListenedThrough(true)} preload="metadata" src={voiceTrackMediaUrl(track.contentHash)} /><div className={coverageAligned ? "voice-coverage is-aligned" : "voice-coverage"}><strong>{coverageAligned ? "Runtime aligned" : "Runtime needs review"}</strong><span>Voice {track.durationInSeconds.toFixed(1)}s · plan {planSeconds.toFixed(1)}s · Δ {durationDifference.toFixed(1)}s</span></div></> : null}
-    {track?.approvalStatus === "imported" ? <MediaRightsEditor draft={rightsDraft} label="Voice master" onChange={setRightsDraft} /> : null}
+    {track ? <><audio aria-label="Imported voice master" controls data-finish-active={track.approvalStatus === "imported" && !listenedThrough ? "true" : undefined} data-finish-owner="finish-voice-action" key={track.contentHash} onEnded={() => setListenedThrough(true)} preload="metadata" src={voiceTrackMediaUrl(track.contentHash)} tabIndex={0} /><div className={coverageAligned ? "voice-coverage is-aligned" : "voice-coverage"}><strong>{coverageAligned ? "Runtime aligned" : "Runtime needs review"}</strong><span>Voice {track.durationInSeconds.toFixed(1)}s · plan {planSeconds.toFixed(1)}s · Δ {durationDifference.toFixed(1)}s</span></div></> : null}
+    {track?.approvalStatus === "imported" ? <MediaRightsEditor draft={rightsDraft} finishActive={listenedThrough && !finalizedMediaRights(rightsDraft)} finishOwner="finish-voice-action" label="Voice master" onChange={setRightsDraft} /> : null}
     {error ? <p className="voice-error" role="alert">{error}</p> : null}
-    <footer><button disabled={!capabilities.localAudioImport || !productionBundleContentHash || busy} onClick={() => void importTrack()}><Upload size={13} />{busy ? "Working…" : track ? "Replace WAV" : "Import WAV"}</button>{track?.approvalStatus === "imported" ? <button className="approve-voice" disabled={!listenedThrough || !productionBundleContentHash || !finalizedMediaRights(rightsDraft) || busy} onClick={() => void approveTrack()}><Check size={13} />{!listenedThrough ? "Listen through to approve" : finalizedMediaRights(rightsDraft) ? "Approve listened take" : "Confirm rights to approve"}</button> : track?.approvalStatus === "approved" ? <small><ShieldCheck size={13} />Approved bytes and rights are render-bound</small> : null}</footer>
+    <footer><button data-finish-active={!track ? "true" : undefined} data-finish-owner="finish-voice-action" disabled={!capabilities.localAudioImport || !productionBundleContentHash || busy} onClick={() => void importTrack()}><Upload size={13} />{busy ? "Working…" : track ? "Replace WAV" : "Import WAV"}</button>{track?.approvalStatus === "imported" ? <button className="approve-voice" data-finish-active={listenedThrough && Boolean(finalizedMediaRights(rightsDraft)) ? "true" : undefined} data-finish-owner="finish-voice-action" disabled={!listenedThrough || !productionBundleContentHash || !finalizedMediaRights(rightsDraft) || busy} onClick={() => void approveTrack()}><Check size={13} />{!listenedThrough ? "Listen through to approve" : finalizedMediaRights(rightsDraft) ? "Approve listened take" : "Confirm rights to approve"}</button> : track?.approvalStatus === "approved" ? <small><ShieldCheck size={13} />Approved bytes and rights are render-bound</small> : null}</footer>
   </article>;
 }
 
@@ -596,6 +596,7 @@ function SoundEffectWorkspace({build, capabilities, host, productionBundleConten
   };
   const updateCue = (id: string, patch: Partial<SoundEffectCue>) => onCues(session.soundEffectCues.map((cue) => cue.id === id ? soundEffectCueSchema.parse({...cue, ...patch}) : cue));
   const removeCue = (id: string) => onCues(session.soundEffectCues.filter((cue) => cue.id !== id));
+  const firstUnapprovedSoundEffect = session.soundEffectAssets.find((asset) => asset.approvalStatus !== "approved");
 
   return <article className="sfx-workspace-card" id="finish-sfx-review" tabIndex={-1}>
     <header><div><p className="eyebrow">Cue-placed local SFX</p><h3>Approved effects library</h3><p>Import reusable WAV effects, listen through, approve the exact bytes, then place cues relative to the selected shot.</p></div><button disabled={!capabilities.localAudioImport || !productionBundleContentHash || busyHash !== null} onClick={() => void importAsset()}><Upload size={13} />{busyHash === "import" ? "Importing…" : "Import SFX WAV"}</button></header>
@@ -603,7 +604,9 @@ function SoundEffectWorkspace({build, capabilities, host, productionBundleConten
     {session.soundEffectAssets.length > 0 ? <div className="sfx-asset-list">{session.soundEffectAssets.map((asset) => {
       const rightsDraft = rightsDrafts[asset.contentHash] ?? defaultMediaRights();
       const rights = finalizedMediaRights(rightsDraft);
-      return <div key={asset.contentHash}><div><strong>{asset.sourceFileName}</strong><small>{asset.durationInSeconds.toFixed(2)}s · {asset.approvalStatus}</small></div><audio aria-label={`Sound effect ${asset.sourceFileName}`} controls onEnded={() => setListenedHashes((current) => new Set(current).add(asset.contentHash))} preload="metadata" src={soundEffectMediaUrl(asset.contentHash)} />{asset.approvalStatus === "imported" ? <><MediaRightsEditor draft={rightsDraft} label={`Sound effect ${asset.sourceFileName}`} onChange={(next) => setRightsDrafts((current) => ({...current, [asset.contentHash]: next}))} /><button disabled={!listenedHashes.has(asset.contentHash) || !rights || !productionBundleContentHash || busyHash !== null} onClick={() => void approveAsset(asset)}>{!listenedHashes.has(asset.contentHash) ? "Listen through" : rights ? "Approve listened SFX" : "Confirm rights to approve"}</button></> : <button onClick={() => placeCue(asset)}>Place on {selectedShot.number}</button>}</div>;
+      const isFinishOwner = firstUnapprovedSoundEffect?.contentHash === asset.contentHash;
+      const listened = listenedHashes.has(asset.contentHash);
+      return <div key={asset.contentHash}><div><strong>{asset.sourceFileName}</strong><small>{asset.durationInSeconds.toFixed(2)}s · {asset.approvalStatus}</small></div><audio aria-label={`Sound effect ${asset.sourceFileName}`} controls data-finish-active={isFinishOwner && !listened ? "true" : undefined} data-finish-owner="finish-sfx-action" onEnded={() => setListenedHashes((current) => new Set(current).add(asset.contentHash))} preload="metadata" src={soundEffectMediaUrl(asset.contentHash)} tabIndex={0} />{asset.approvalStatus === "imported" ? <><MediaRightsEditor draft={rightsDraft} finishActive={isFinishOwner && listened && !rights} finishOwner="finish-sfx-action" label={`Sound effect ${asset.sourceFileName}`} onChange={(next) => setRightsDrafts((current) => ({...current, [asset.contentHash]: next}))} /><button data-finish-active={isFinishOwner && listened && Boolean(rights) ? "true" : undefined} data-finish-owner="finish-sfx-action" disabled={!listened || !rights || !productionBundleContentHash || busyHash !== null} onClick={() => void approveAsset(asset)}>{!listened ? "Listen through" : rights ? "Approve listened SFX" : "Confirm rights to approve"}</button></> : <button onClick={() => placeCue(asset)}>Place on {selectedShot.number}</button>}</div>;
     })}</div> : <p className="sfx-empty">No custom effects imported. The profile transition accent remains a separate mix choice.</p>}
     {session.soundEffectCues.length > 0 ? <div className="sfx-cue-list"><h4>Placed cues</h4>{session.soundEffectCues.map((cue) => {
       const asset = session.soundEffectAssets.find((candidate) => candidate.contentHash === cue.assetContentHash);
@@ -623,13 +626,13 @@ function AudioMixReview({mix, musicTrack, onMix}: {mix: AudioMix; musicTrack: Mu
     <header><div><p className="eyebrow">Profile-aware final mix</p><h3>Voice, music & transition SFX</h3><p>Every audible layer must be an explicit editorial decision. StoryStage never sneaks a guide loop into a render.</p></div><span className={mix.reviewed ? "is-reviewed" : ""}>{mix.reviewed ? "reviewed" : "decision required"}</span></header>
     <div className="audio-mix-controls">
       <label>Voice gain <strong>{mix.voiceGain.toFixed(2)}×</strong><input aria-label="Voice gain" max="2" min="0" onChange={(event) => change({voiceGain: Number(event.target.value)})} step="0.05" type="range" value={mix.voiceGain} /></label>
-      <label>Music decision<select aria-label="Music decision" onChange={(event) => change({musicDecision: event.target.value as AudioMix["musicDecision"]})} value={mix.musicDecision}><option value="pending">Music master still required</option><option value="none">No music — intentional dry mix</option><option disabled={!approvedMusicAvailable} value="approved-master">Use approved music master</option></select></label>
+      <label>Music decision<select aria-label="Music decision" data-finish-active={mix.musicDecision === "pending" ? "true" : undefined} data-finish-owner="finish-mix-action" onChange={(event) => change({musicDecision: event.target.value as AudioMix["musicDecision"]})} value={mix.musicDecision}><option value="pending">Music master still required</option><option value="none">No music — intentional dry mix</option><option disabled={!approvedMusicAvailable} value="approved-master">Use approved music master</option></select></label>
       <label>Music gain <strong>{musicGain.toFixed(2)}×</strong><input aria-label="Music gain" disabled={mix.musicDecision !== "approved-master"} max="1" min="0" onChange={(event) => change({musicGain: Number(event.target.value)})} step="0.01" type="range" value={musicGain} /></label>
       <label className="loop-choice"><input aria-label="Loop music to picture" checked={musicLoop} disabled={mix.musicDecision !== "approved-master"} onChange={(event) => change({musicLoop: event.target.checked})} type="checkbox" />Loop music to picture</label>
       <label>Transition SFX<select aria-label="Transition SFX" onChange={(event) => change({transitionSfx: event.target.value as AudioMix["transitionSfx"]})} value={mix.transitionSfx}><option value="off">Off</option><option value="paper-flip">Project-owned paper flip</option></select></label>
       <label>SFX gain <strong>{mix.transitionSfxGain.toFixed(2)}×</strong><input aria-label="Transition SFX gain" disabled={mix.transitionSfx === "off"} max="1" min="0" onChange={(event) => change({transitionSfxGain: Number(event.target.value)})} step="0.01" type="range" value={mix.transitionSfxGain} /></label>
     </div>
-    <footer><p>{mix.profile === "kids" ? "Kids default: performance-forward, no automatic cut noise." : "History default: restrained paper accents for fast editorial resets."}</p><button disabled={!canReview || mix.reviewed} onClick={() => onMix(audioMixSchema.parse({...mix, musicGain, musicLoop, reviewed: true}))}><ListChecks size={13} />{mix.reviewed ? "Mix decisions reviewed" : canReview ? "Mark mix reviewed" : approvedMusicAvailable ? "Choose music use" : "Resolve music first"}</button></footer>
+    <footer><p>{mix.profile === "kids" ? "Kids default: performance-forward, no automatic cut noise." : "History default: restrained paper accents for fast editorial resets."}</p><button data-finish-active={!mix.reviewed && canReview ? "true" : undefined} data-finish-owner="finish-mix-action" disabled={!canReview || mix.reviewed} onClick={() => onMix(audioMixSchema.parse({...mix, musicGain, musicLoop, reviewed: true}))}><ListChecks size={13} />{mix.reviewed ? "Mix decisions reviewed" : canReview ? "Mark mix reviewed" : approvedMusicAvailable ? "Choose music use" : "Resolve music first"}</button></footer>
   </article>;
 }
 
@@ -638,6 +641,7 @@ function AudioTimingWorkspace({build, capabilities, host, overrides, productionB
   const selected = cues.find((shot) => shot.id === selectedShotId) ?? cues[0];
   const selectedRenderShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
   const lockedIds = new Set(overrides.filter((override) => override.timingLocked).map((override) => override.shotId));
+  const firstUnlockedCueId = cues.find((shot) => !lockedIds.has(shot.id))?.id;
   const speakerFor = (shot: RenderShot) => {
     const creative = build.creativePlan.shots.find((candidate) => candidate.id === shot.id);
     const source = creative?.sourceElementIds.map((id) => build.scriptDocument.elements.find((element) => element.id === id)).find((element) => element?.type === "dialogue");
@@ -651,7 +655,7 @@ function AudioTimingWorkspace({build, capabilities, host, overrides, productionB
     <SoundEffectWorkspace build={build} capabilities={capabilities} host={host} onAssets={onSoundEffectAssets} onCues={onSoundEffectCues} productionBundleContentHash={productionBundleContentHash} selectedShot={selectedRenderShot} session={session} />
     <AudioMixReview mix={session.audioMix} musicTrack={session.musicTrack} onMix={onAudioMix} />
     <div className="audio-workspace-grid" id="finish-timing-editor" tabIndex={-1}>
-      <div className="audio-cue-list">{cues.map((shot) => <button aria-label={`Select timing cue ${shot.number}`} className={shot.id === selected?.id ? "is-active" : ""} key={shot.id} onClick={() => onSelect(shot.id)}>
+      <div className="audio-cue-list">{cues.map((shot) => <button aria-label={`Select timing cue ${shot.number}`} className={shot.id === selected?.id ? "is-active" : ""} data-finish-active={shot.id === firstUnlockedCueId ? "true" : undefined} data-finish-owner="finish-timing-action" key={shot.id} onClick={() => onSelect(shot.id)}>
         <span className="cue-time">{formatTimecode(shot.startFrame, build.renderPlan.fps)}</span><div><strong>{shot.number} · {speakerFor(shot)}</strong><p>{shot.caption ?? "Caption intentionally removed"}</p></div><span className={lockedIds.has(shot.id) ? "cue-status is-locked" : "cue-status"}>{lockedIds.has(shot.id) ? "locked" : "estimate"}</span>
       </button>)}</div>
       {selected ? <AudioCueEditor build={build} key={selected.id} locked={lockedIds.has(selected.id)} onOverride={onOverride} shot={selected} /> : <div className="audio-empty"><Mic2 size={20} /><p>No spoken cues were derived from this script.</p></div>}
@@ -770,7 +774,11 @@ function ShowPackCandidateLibrary({host, onReviewed, productionBundleContentHash
   const byRole = new Map(candidate.files.map((file) => [file.role, file]));
   const identity = byRole.get("identity-sheet")!;
   const poses = (["neutral-pose", "talk-pose", "reaction-pose"] as const).map((role) => ({label: role.replace("-pose", ""), file: byRole.get(role)!}));
+  const reviewAcknowledgementOptions = [
+    ["identitySheet", "Identity sheet"], ["neutralPose", "Neutral pose"], ["talkPose", "Talk pose"], ["reactionPose", "Reaction pose"], ["movingDiagnostic", "Moving diagnostic"], ["identityConsistency", "Identity consistency"], ["matteEdges", "Matte and edges"], ["provenance", "Generation provenance"],
+  ] as const;
   const allAcknowledged = Object.values(acknowledgements).every(Boolean);
+  const firstUncheckedAcknowledgement = reviewAcknowledgementOptions.find(([key]) => !acknowledgements[key])?.[0];
   const alreadyBound = session.approvedAssetVersions.some((asset) => asset.assetId.startsWith(`approved-${candidate.candidateId}-`));
   const reviewFinished = alreadyBound || candidate.review.decision !== "none";
   const durableReviewStatus = candidate.review.decision === "rejected" ? "Rejected for this production revision. No asset was bound." : candidate.review.decision === "approved" ? `Approved and bound to production revision ${candidate.review.targetProductionRevision}.` : null;
@@ -796,10 +804,8 @@ function ShowPackCandidateLibrary({host, onReviewed, productionBundleContentHash
       <aside><strong>Identity-locked pose set</strong><p>{candidate.identityLock}</p><div>{candidate.files.map((file) => <span key={file.role}><Check size={12} />{file.role.replaceAll("-", " ")}<small>{file.width} x {file.height}</small></span>)}</div><div className="candidate-check"><ShieldCheck size={14} /><p>{candidate.verifiedByHost ? "The desktop host verified the source, prepared pixels, prompts, manifest, validation, and moving diagnostic." : "Browser preview only. Open the desktop app for trusted hash verification and review."}</p></div></aside>
     </div>
     <div className="rig-diagnostic"><div><strong>4-second moving rig diagnostic</strong><span>Watch the whole motion test before approval</span></div><video aria-label="Rook moving rig diagnostic" controls muted preload="metadata" src={candidate.diagnosticUrl} /></div>
-    {!reviewFinished ? <div className="candidate-acknowledgements" aria-label="Rook review acknowledgements">{([
-      ["identitySheet", "Identity sheet"], ["neutralPose", "Neutral pose"], ["talkPose", "Talk pose"], ["reactionPose", "Reaction pose"], ["movingDiagnostic", "Moving diagnostic"], ["identityConsistency", "Identity consistency"], ["matteEdges", "Matte and edges"], ["provenance", "Generation provenance"],
-    ] as const).map(([key, label]) => <label key={key}><input type="checkbox" checked={acknowledgements[key]} onChange={(event) => setAcknowledgements({...acknowledgements, [key]: event.target.checked})} />{label}</label>)}</div> : null}
-    <footer><ShieldCheck size={14} /><p>{reviewStatus ?? durableReviewStatus ?? (candidate.canReview ? "Approval creates a private immutable asset and a new production revision. Nothing is auto-approved after playback." : "Desktop review is required to approve or reject this candidate.")}</p>{!reviewFinished ? <div className="candidate-review-actions"><button className="quiet-button" disabled={!candidate.canReview || !productionBundleContentHash || reviewing} onClick={() => void decide("reject")}>Reject candidate</button><button className="create-button" disabled={!candidate.canReview || !productionBundleContentHash || !allAcknowledged || reviewing} onClick={() => void decide("approve")}><ShieldCheck size={14} />{reviewing ? "Recording review..." : "Approve Rook and bind"}</button></div> : null}</footer>
+    {!reviewFinished ? <div className="candidate-acknowledgements" aria-label="Rook review acknowledgements">{reviewAcknowledgementOptions.map(([key, label]) => <label key={key}><input type="checkbox" checked={acknowledgements[key]} data-finish-active={key === firstUncheckedAcknowledgement ? "true" : undefined} data-finish-owner="finish-rook-action" onChange={(event) => setAcknowledgements({...acknowledgements, [key]: event.target.checked})} />{label}</label>)}</div> : null}
+    <footer><ShieldCheck size={14} /><p>{reviewStatus ?? durableReviewStatus ?? (candidate.canReview ? "Approval creates a private immutable asset and a new production revision. Nothing is auto-approved after playback." : "Desktop review is required to approve or reject this candidate.")}</p>{!reviewFinished ? <div className="candidate-review-actions"><button className="quiet-button" disabled={!candidate.canReview || !productionBundleContentHash || reviewing} onClick={() => void decide("reject")}>Reject candidate</button><button className="create-button" data-finish-active={allAcknowledged ? "true" : undefined} data-finish-owner="finish-rook-action" disabled={!candidate.canReview || !productionBundleContentHash || !allAcknowledged || reviewing} onClick={() => void decide("approve")}><ShieldCheck size={14} />{reviewing ? "Recording review..." : "Approve Rook and bind"}</button></div> : null}</footer>
   </section>;
 }
 
@@ -1000,18 +1006,20 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, onS
       setImportError("StoryStage could not copy the prompt. Clipboard permission is required only for this user-triggered action.");
     }
   };
+  const firstPreparedActionId = preparation?.candidateSets.find((candidateSet) => candidateSet.status === "ready-for-review" && !["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? ""))?.candidateSetId;
+  const finishAssetStage = firstPreparedActionId ? "review" : stagedCandidates.length > 0 ? "prepare" : exchangeJobId ? "import" : reviewingExport ? "approve-export" : "review-export";
 
   return (
     <div className="asset-exchange">
       <section className="provider-banner"><div className="provider-icon"><ImagePlus size={23} /></div><div><p className="eyebrow">Provider-neutral exchange</p><h2>Manual ChatGPT Images</h2><p>Export an approved brief, generate original candidates in ChatGPT, then import the result bundle. No API call or paid generation is hidden here.</p></div><span className="manual-badge">Manual round trip</span></section>
       <ShowPackCandidateLibrary host={host} onReviewed={onShowPackReviewed} productionBundleContentHash={productionBundleContentHash} session={session} />
       <div className={`exchange-actions ${capabilities.manualImageExchange ? "is-desktop" : ""}`}>
-        <button disabled={capabilities.manualImageExchange && !productionBundleContentHash} onClick={() => setReviewingExport(true)}><Download size={16} /><span><strong>Review generation export</strong><small>{capabilities.manualImageExchange ? productionBundleContentHash ? "Bound to the acknowledged production snapshot" : "Waiting for the production snapshot to save" : "JSON + expected output contract"}</small></span></button>
+        <button data-finish-active={finishAssetStage === "review-export" && (!capabilities.manualImageExchange || Boolean(productionBundleContentHash)) ? "true" : undefined} data-finish-owner="finish-assets-action" disabled={capabilities.manualImageExchange && !productionBundleContentHash} onClick={() => setReviewingExport(true)}><Download size={16} /><span><strong>Review generation export</strong><small>{capabilities.manualImageExchange ? productionBundleContentHash ? "Bound to the acknowledged production snapshot" : "Waiting for the production snapshot to save" : "JSON + expected output contract"}</small></span></button>
         {capabilities.manualImageExchange
-          ? <button disabled={!exchangeJobId} onClick={() => void stageDesktopBundle()}><Upload size={16} /><span><strong>Import generated results</strong><small>{exchangeJobId ? "Secure native folder selection" : "Export a job first"}</small></span></button>
+          ? <button data-finish-active={finishAssetStage === "import" ? "true" : undefined} data-finish-owner="finish-assets-action" disabled={!exchangeJobId} onClick={() => void stageDesktopBundle()}><Upload size={16} /><span><strong>Import generated results</strong><small>{exchangeJobId ? "Secure native folder selection" : "Export a job first"}</small></span></button>
           : <label><Upload size={16} /><span><strong>Validate candidate manifest</strong><small>Browser preview only{" / "}no file staging</small></span><input aria-label="Import candidate bundle" type="file" accept="application/json,.json" onChange={(event) => void importBundle(event.target.files?.[0])} /></label>}
         {capabilities.manualImageExchange ? <button disabled={!exchangeJobId} onClick={() => void importLooseFiles()}><ImagePlus size={16} /><span><strong>Import loose image files</strong><small>Map downloads to expected roles</small></span></button> : null}
-        {capabilities.manualImageExchange ? <button disabled={!exchangeJobId || stagedCandidates.length === 0 || preparing} onClick={() => void prepareImport()}><WandSparkles size={16} /><span><strong>{preparing ? "Preparing image assets..." : "Prepare staged candidates"}</strong><small>Decode, normalize, register, and contact-sheet</small></span></button> : null}
+        {capabilities.manualImageExchange ? <button data-finish-active={finishAssetStage === "prepare" ? "true" : undefined} data-finish-owner="finish-assets-action" disabled={!exchangeJobId || stagedCandidates.length === 0 || preparing} onClick={() => void prepareImport()}><WandSparkles size={16} /><span><strong>{preparing ? "Preparing image assets..." : "Prepare staged candidates"}</strong><small>Decode, normalize, register, and contact-sheet</small></span></button> : null}
       </div>
       {exchangeSummaries.length > 0 ? <section className="exchange-history" aria-label="Saved generation exchanges">
         <header><div><p className="eyebrow">Durable local handoffs</p><h2>Resume an image exchange</h2></div><span>{exchangeSummaries.length} saved</span></header>
@@ -1027,7 +1035,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, onS
           <p>{brief.sourceExcerpts.join(" ")}</p>
           <dl><div><dt>References</dt><dd>{brief.referenceAssets.length || "None"}</dd></div><div><dt>Style rules</dt><dd>{brief.styleBible.principles.join("; ")}</dd></div><div><dt>Expected</dt><dd>{brief.expectedFiles.join(", ")}</dd></div></dl>
         </article>)}</div>
-        <footer><button className="quiet-button" onClick={() => setReviewingExport(false)}>Cancel</button><button className="create-button" onClick={() => void exportBriefs()}><ShieldCheck size={15} />Approve and export generation job</button></footer>
+        <footer><button className="quiet-button" onClick={() => setReviewingExport(false)}>Cancel</button><button className="create-button" data-finish-active={finishAssetStage === "approve-export" ? "true" : undefined} data-finish-owner="finish-assets-action" onClick={() => void exportBriefs()}><ShieldCheck size={15} />Approve and export generation job</button></footer>
       </section> : null}
       {generationPromptsReady ? <section className="prompt-queue" aria-label="ChatGPT image prompt queue">
         <header><div><p className="eyebrow">Subscription workflow</p><h2>ChatGPT image prompt queue</h2><p>Use one ChatGPT conversation per candidate set. Generate and download each file, then import the loose images and map them to these same roles.</p></div><span>{generationJobDraft.briefs.reduce((sum, brief) => sum + brief.candidateCount * brief.expectedFiles.length, 0)} images</span></header>
@@ -1065,7 +1073,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, onS
           {candidateSet.rig ? <div className="rig-diagnostic"><span>Moving diagnostic / 4 seconds</span><video aria-label={`${candidateSet.entityName} moving rig diagnostic`} autoPlay controls loop muted playsInline src={candidateSet.rig.diagnosticVideoDataUrl} /></div> : null}
           <div className="prepared-role-list">{candidateSet.preparedCandidates.map((candidate) => <span key={candidate.candidateId}><strong>{candidate.fileRole}</strong><small>{candidate.width}x{candidate.height} · {candidate.assetClass.replaceAll("-", " ")}</small></span>)}</div>
           {candidateSet.failures.map((failure) => <p className="prepared-failure" key={failure.candidateId}><CircleAlert size={14} /><span><strong>{failure.fileRole}</strong>{failure.message}</span></p>)}
-          <footer><span>{candidateSet.rig ? `${candidateSet.rig.type.replaceAll("-", " ")} / ${candidateSet.rig.validationStatus}` : "Compare before rigging"}</span><div><button disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "")} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, "reject")}>Reject</button><button className="approve-set" disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "") || (assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" && !candidateSet.rig)} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "approve" : "select")}>{reviewingSetId === candidateSet.candidateSetId ? "Building proof..." : assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "Final approve" : "Select for rig"}</button></div></footer>
+          <footer><span>{candidateSet.rig ? `${candidateSet.rig.type.replaceAll("-", " ")} / ${candidateSet.rig.validationStatus}` : "Compare before rigging"}</span><div><button disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "")} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, "reject")}>Reject</button><button className="approve-set" data-finish-active={candidateSet.candidateSetId === firstPreparedActionId ? "true" : undefined} data-finish-owner="finish-assets-action" disabled={candidateSet.status !== "ready-for-review" || reviewingSetId !== null || ["approved", "rejected"].includes(assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status ?? "") || (assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" && !candidateSet.rig)} onClick={() => void reviewCandidateSet(candidateSet.candidateSetId, assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "approve" : "select")}>{reviewingSetId === candidateSet.candidateSetId ? "Building proof..." : assetReviews.find((review) => review.candidateSetId === candidateSet.candidateSetId)?.status === "selected" ? "Final approve" : "Select for rig"}</button></div></footer>
         </article>)}</div>
       </section> : null}
       <section className="request-list" id="finish-asset-approvals" tabIndex={-1}><header><div><p className="eyebrow">Missing asset ledger</p><h2>{build.resolvedPlan.generationBriefs.length} generation briefs</h2></div><span>Approval required</span></header>
@@ -1077,7 +1085,7 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, onS
   );
 }
 
-function FinishEpisodeWorkspace({session, build, capabilities, productionBundleContentHash, delivery, renderJob, renderJobScope, onNavigate, onRender}: {session: ProductionSession; build: AnimaticBuild; capabilities: DesktopCapabilities; productionBundleContentHash: string | null; delivery: VerifiedDeliverySummary | null; renderJob: RenderJobEvent | null; renderJobScope: ProductionRenderScope; onNavigate: (target: FinishNavigationTarget) => void; onRender: () => void}) {
+function FinishEpisodeWorkspace({session, build, capabilities, productionBundleContentHash, delivery, renderJob, renderJobScope, anyRenderActive, onNavigate, onRender}: {session: ProductionSession; build: AnimaticBuild; capabilities: DesktopCapabilities; productionBundleContentHash: string | null; delivery: VerifiedDeliverySummary | null; renderJob: RenderJobEvent | null; renderJobScope: ProductionRenderScope; anyRenderActive: boolean; onNavigate: (target: FinishNavigationTarget) => void; onRender: () => void}) {
   const missingApprovals = build.resolvedPlan.generationBriefs.length;
   const deferredSources = build.resolvedPlan.requirements.filter((requirement) => requirement.status === "deferred").length;
   const approvedAssets = session.approvedAssetVersions.length;
@@ -1096,24 +1104,25 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   const targetForFullRenderBlocker = (): FinishNavigationTarget => {
     const blocker = fullRenderBlockers[0];
     if (!blocker) return {tab: "direction", targetId: "finish-direction"};
-    if (["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)) return {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-picture-review" : "finish-asset-approvals"};
-    if (blocker.id === "spoken-timing") return {tab: "audio", targetId: "finish-timing-editor"};
-    if (blocker.id === "voice-master") return {tab: "audio", targetId: "finish-voice-master"};
-    if (blocker.id === "custom-sfx") return {tab: "audio", targetId: "finish-sfx-review"};
-    if (blocker.id === "rights-clearance" && !voiceReady) return {tab: "audio", targetId: "finish-voice-master"};
-    if (blocker.id === "rights-clearance" && !customEffectsReady) return {tab: "audio", targetId: "finish-sfx-review"};
-    return {tab: "audio", targetId: "finish-mix-review"};
+    if (["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)) return {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-rook-action" : "finish-assets-action"};
+    if (blocker.id === "spoken-timing") return {tab: "audio", targetId: "finish-timing-action"};
+    if (blocker.id === "voice-master") return {tab: "audio", targetId: "finish-voice-action"};
+    if (blocker.id === "custom-sfx") return {tab: "audio", targetId: "finish-sfx-action"};
+    if (blocker.id === "rights-clearance" && !voiceReady) return {tab: "audio", targetId: "finish-voice-action"};
+    if (blocker.id === "rights-clearance" && !customEffectsReady) return {tab: "audio", targetId: "finish-sfx-action"};
+    return {tab: "audio", targetId: "finish-mix-action"};
   };
   const finalRenderJob = renderJobScope === "full-production" ? renderJob : null;
   const renderActive = Boolean(finalRenderJob && !["completed", "failed"].includes(finalRenderJob.status));
+  const otherRenderActive = anyRenderActive && !renderActive;
   const pictureLabel = session.productionId === rookPilot001.id ? "Review and approve Rook picture" : "Review and approve picture";
   const finishSteps: Array<{id: string; title: string; detail: string; ready: boolean; target?: FinishNavigationTarget; action?: string}> = [
-    {id: "picture", title: pictureLabel, detail: pictureReady ? `${approvedAssets} immutable art versions cover every final shot.` : `${Math.max(missingApprovals, fullRenderBlockers.filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)).length)} picture gates still need human review.`, ready: Boolean(delivery) || pictureReady, target: {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-picture-review" : "finish-asset-approvals"}, action: session.productionId === rookPilot001.id ? "Review Rook" : "Review artwork"},
-    {id: "voice", title: "Approve the final voice", detail: voiceReady ? spokenShotIds.size === 0 ? "This cut has no spoken performance." : `${session.voiceTrack?.sourceFileName} is listened-through, rights-cleared, hash-bound, and aligned to picture.` : !session.voiceTrack ? "Import the final WAV, listen through, document rights, and approve the exact take." : session.voiceTrack.approvalStatus !== "approved" ? "Listen through and approve the imported take with rights evidence." : "The approved take must be aligned to the final frame duration and carry rights evidence.", ready: Boolean(delivery) || voiceReady, target: {tab: "audio", targetId: "finish-voice-master"}, action: session.voiceTrack ? "Finish voice approval" : "Import voice"},
-    {id: "timing", title: "Lock every spoken beat", detail: spokenShotIds.size === 0 ? "No spoken timing locks are required." : `${lockedSpokenTimings}/${spokenShotIds.size} spoken cues have editor-reviewed frame timing.`, ready: Boolean(delivery) || timingReady, target: {tab: "audio", targetId: "finish-timing-editor"}, action: "Review timing"},
-    {id: "mix", title: "Approve the final mix", detail: mixReady ? `Voice ${session.audioMix.voiceGain.toFixed(2)}x, music ${session.audioMix.musicDecision}, transition SFX ${session.audioMix.transitionSfx}.` : "Choose the music and SFX treatment, clear any used audio, then record the mix review.", ready: Boolean(delivery) || mixReady, target: customEffectsReady ? {tab: "audio", targetId: "finish-mix-review"} : {tab: "audio", targetId: "finish-sfx-review"}, action: customEffectsReady ? "Review mix" : "Review sound effects"},
+    {id: "picture", title: pictureLabel, detail: pictureReady ? `${approvedAssets} immutable art versions cover every final shot.` : `${Math.max(missingApprovals, fullRenderBlockers.filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id)).length)} picture gates still need human review.`, ready: Boolean(delivery) || pictureReady, target: {tab: "assets", targetId: session.productionId === rookPilot001.id ? "finish-rook-action" : "finish-assets-action"}, action: session.productionId === rookPilot001.id ? "Review Rook" : "Review artwork"},
+    {id: "voice", title: "Approve the final voice", detail: voiceReady ? spokenShotIds.size === 0 ? "This cut has no spoken performance." : `${session.voiceTrack?.sourceFileName} is listened-through, rights-cleared, hash-bound, and aligned to picture.` : !session.voiceTrack ? "Import the final WAV, listen through, document rights, and approve the exact take." : session.voiceTrack.approvalStatus !== "approved" ? "Listen through and approve the imported take with rights evidence." : "The approved take must be aligned to the final frame duration and carry rights evidence.", ready: Boolean(delivery) || voiceReady, target: {tab: "audio", targetId: "finish-voice-action"}, action: session.voiceTrack ? "Finish voice approval" : "Import voice"},
+    {id: "timing", title: "Lock every spoken beat", detail: spokenShotIds.size === 0 ? "No spoken timing locks are required." : `${lockedSpokenTimings}/${spokenShotIds.size} spoken cues have editor-reviewed frame timing.`, ready: Boolean(delivery) || timingReady, target: {tab: "audio", targetId: "finish-timing-action"}, action: "Review timing"},
+    {id: "mix", title: "Approve the final mix", detail: mixReady ? `Voice ${session.audioMix.voiceGain.toFixed(2)}x, music ${session.audioMix.musicDecision}, transition SFX ${session.audioMix.transitionSfx}.` : "Choose the music and SFX treatment, clear any used audio, then record the mix review.", ready: Boolean(delivery) || mixReady, target: customEffectsReady ? {tab: "audio", targetId: "finish-mix-action"} : {tab: "audio", targetId: "finish-sfx-action"}, action: customEffectsReady ? "Review mix" : "Review sound effects"},
     {id: "preflight", title: "Pass final preflight", detail: preflightReady ? `${build.renderPlan.durationInFrames} frozen frames are ready for the isolated desktop renderer.` : !capabilities.localRendering ? "Open this production in the desktop app to finish and render." : `${fullRenderBlockers.length} final-output gates remain on the saved production snapshot.`, ready: Boolean(delivery) || preflightReady, target: targetForFullRenderBlocker(), action: "Resolve blockers"},
-    {id: "delivery", title: "Render and verify delivery", detail: delivery ? `Verified 1080p master, ${delivery.master.frameCount} frames, ${delivery.captionCueCount} caption cues, and cleared consumed-media rights.` : finalRenderJob?.status === "failed" ? finalRenderJob.error.message : renderActive ? finalRenderJob?.message ?? "Final render in progress." : preflightReady ? "The final render will atomically publish and reopen a seven-file verified delivery." : "This unlocks automatically after final preflight passes.", ready: Boolean(delivery), action: preflightReady ? finalRenderJob?.status === "failed" ? "Retry final render" : "Render & publish delivery" : undefined},
+    {id: "delivery", title: "Render and verify delivery", detail: delivery ? `Verified 1080p master, ${delivery.master.frameCount} frames, ${delivery.captionCueCount} caption cues, and cleared consumed-media rights.` : finalRenderJob?.status === "failed" ? finalRenderJob.error.message : renderActive ? finalRenderJob?.message ?? "Final render in progress." : otherRenderActive ? "An engineering preview render is currently running. Final delivery will unlock when it finishes." : preflightReady ? "The final render will atomically publish and reopen a seven-file verified delivery." : "This unlocks automatically after final preflight passes.", ready: Boolean(delivery), action: preflightReady ? finalRenderJob?.status === "failed" ? "Retry final render" : "Render & publish delivery" : undefined},
   ];
   const completedFinishSteps = finishSteps.filter((step) => step.ready).length;
   const nextFinishStep = finishSteps.find((step) => !step.ready);
@@ -1142,13 +1151,13 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
   });
   const readyCount = evidenceItems.filter((item) => item.ready).length;
   const evidenceTarget = (item: (typeof evidenceItems)[number]): FinishNavigationTarget => {
-    if (item.id === "voice") return {tab: "audio", targetId: "finish-voice-master"};
-    if (item.id === "timing") return {tab: "audio", targetId: "finish-timing-editor"};
-    if (item.id === "mix") return {tab: "audio", targetId: "finish-mix-review"};
-    if (item.id === "custom-sfx") return {tab: "audio", targetId: "finish-sfx-review"};
+    if (item.id === "voice") return {tab: "audio", targetId: "finish-voice-action"};
+    if (item.id === "timing") return {tab: "audio", targetId: "finish-timing-action"};
+    if (item.id === "mix") return {tab: "audio", targetId: "finish-mix-action"};
+    if (item.id === "custom-sfx") return {tab: "audio", targetId: "finish-sfx-action"};
     if (item.id === "full-render") return targetForFullRenderBlocker();
-    if (item.action === "audio") return {tab: "audio", targetId: "finish-voice-master"};
-    if (item.action === "assets") return {tab: "assets", targetId: item.id === "assets" && session.productionId === rookPilot001.id ? "finish-picture-review" : "finish-asset-approvals"};
+    if (item.action === "audio") return {tab: "audio", targetId: "finish-voice-action"};
+    if (item.action === "assets") return {tab: "assets", targetId: item.id === "assets" && session.productionId === rookPilot001.id ? "finish-rook-action" : "finish-assets-action"};
     return {tab: "direction", targetId: "finish-direction"};
   };
 
@@ -1161,7 +1170,7 @@ function FinishEpisodeWorkspace({session, build, capabilities, productionBundleC
 
       {nextFinishStep ? <section className="finish-next-action" aria-label="Next finish action">
         <span>Next</span><div><strong>{nextFinishStep.title}</strong><p>{nextFinishStep.detail}</p></div>
-        {nextFinishStep.id === "delivery" && preflightReady ? <button disabled={renderActive} onClick={onRender}><PlayCircle size={15} />{renderActive ? "Final render running" : nextFinishStep.action}</button> : nextFinishStep.target ? <button onClick={() => onNavigate(nextFinishStep.target!)}><ArrowRight size={15} />{nextFinishStep.action}</button> : null}
+        {nextFinishStep.id === "delivery" && preflightReady ? <button disabled={anyRenderActive} onClick={onRender}><PlayCircle size={15} />{renderActive ? "Final render running" : otherRenderActive ? "Preview render running" : nextFinishStep.action}</button> : nextFinishStep.target ? <button onClick={() => onNavigate(nextFinishStep.target!)}><ArrowRight size={15} />{nextFinishStep.action}</button> : null}
       </section> : null}
 
       <ol className="finish-steps" aria-label="Episode finish steps">{finishSteps.map((step, index) => <li className={step.ready ? "is-ready" : step.id === nextFinishStep?.id ? "is-current" : "is-waiting"} key={step.id}>
@@ -1195,6 +1204,10 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const [renderJobScope, setRenderJobScope] = useState<ProductionRenderScope>("engineering-slice");
   const [tab, setTab] = useState<WorkspaceTab>("direction");
   const [focusRequest, setFocusRequest] = useState<{target: FinishNavigationTarget; nonce: number} | null>(null);
+  const [focusRoutingError, setFocusRoutingError] = useState<string | null>(null);
+  const activeRenderJobIdRef = useRef<string | null>(null);
+  const activeRenderScopeRef = useRef<ProductionRenderScope | null>(null);
+  const currentProductionRef = useRef({productionId: session.productionId, revision: session.revision, productionBundleContentHash: lastSavedHash});
   const [selectedShotId, setSelectedShotId] = useState(build.renderPlan.shots[0]!.id);
   const selectedShot = build.renderPlan.shots.find((shot) => shot.id === selectedShotId) ?? build.renderPlan.shots[0]!;
   const baseSelectedShot = build.creativePlan.shots.find((shot) => shot.id === selectedShot.id) ?? build.creativePlan.shots[0]!;
@@ -1206,6 +1219,9 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   const averageShot = build.renderPlan.durationInFrames / build.renderPlan.shots.length / build.renderPlan.fps;
   const routed = ["insert", "kinetic-type", "diagram", "licensed-media", "generated-illustration"].reduce((sum, treatment) => sum + (build.metrics.treatmentDistribution[treatment] ?? 0), 0);
   const fullRenderBlockers = getFullProductionRenderBlockers({approvedAssetVersions: session.approvedAssetVersions, audioMix: session.audioMix, musicTrack: session.musicTrack ?? undefined, overrides: session.overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: session.soundEffectAssets, soundEffectCues: session.soundEffectCues, voiceTrack: session.voiceTrack ?? undefined});
+  const currentDelivery = delivery && lastSavedHash && delivery.productionId === session.productionId && delivery.revision === session.revision && delivery.productionBundleContentHash === lastSavedHash ? delivery : null;
+  const anyRenderActive = Boolean(renderJob && !["completed", "failed"].includes(renderJob.status));
+  currentProductionRef.current = {productionId: session.productionId, revision: session.revision, productionBundleContentHash: lastSavedHash};
 
   useEffect(() => {
     if (!capabilities.manualImageExchange) return;
@@ -1218,7 +1234,18 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
     });
   }, [build, capabilities.manualImageExchange, host, session]);
 
-  useEffect(() => host.subscribeToRenderJobs((event) => {setRenderJob(event); if (event.status === "completed" && event.delivery) setDelivery(event.delivery);}), [host]);
+  useEffect(() => host.subscribeToRenderJobs((event) => {
+    if (event.jobId !== activeRenderJobIdRef.current) return;
+    setRenderJob(event);
+    if (event.status === "completed" && event.delivery && activeRenderScopeRef.current === "full-production") {
+      const current = currentProductionRef.current;
+      if (event.delivery.productionId === current.productionId && event.delivery.revision === current.revision && event.delivery.productionBundleContentHash === current.productionBundleContentHash) setDelivery(event.delivery);
+    }
+    if (["completed", "failed"].includes(event.status)) {
+      activeRenderJobIdRef.current = null;
+      activeRenderScopeRef.current = null;
+    }
+  }), [host]);
   useEffect(() => {
     if (!lastSavedHash) {setDelivery(null); return;}
     let current = true;
@@ -1228,20 +1255,36 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
 
   useEffect(() => {
     if (!focusRequest || tab !== focusRequest.target.tab) return;
-    let attempts = 0;
-    const interval = window.setInterval(() => {
-      attempts += 1;
-      const target = document.getElementById(focusRequest.target.targetId);
-      if (!target && attempts < 20) return;
-      window.clearInterval(interval);
-      if (!target) return;
-      target.scrollIntoView?.({behavior: "smooth", block: "center"});
-      target.classList.add("finish-focus-pulse");
-      const actionable = target.matches("button, input, select, textarea") ? target : target.querySelector<HTMLElement>("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex='0']");
-      (actionable instanceof HTMLElement ? actionable : target).focus({preventScroll: true});
-      window.setTimeout(() => target.classList.remove("finish-focus-pulse"), 1600);
-    }, 50);
-    return () => window.clearInterval(interval);
+    setFocusRoutingError(null);
+    let pulseTimer: number | null = null;
+    let failureTimer: number | null = null;
+    let observer: MutationObserver | null = null;
+    const focusOwner = () => {
+      const owner = document.querySelector<HTMLElement>(`[data-finish-owner="${focusRequest.target.targetId}"][data-finish-active="true"]`) ?? document.getElementById(focusRequest.target.targetId);
+      if (!owner) return false;
+      observer?.disconnect();
+      if (failureTimer !== null) window.clearTimeout(failureTimer);
+      const focusTarget = owner.matches(":disabled") ? owner.closest<HTMLElement>("article, section, fieldset") ?? owner : owner;
+      focusTarget.scrollIntoView?.({behavior: "smooth", block: "center"});
+      focusTarget.classList.add("finish-focus-pulse");
+      focusTarget.focus({preventScroll: true});
+      pulseTimer = window.setTimeout(() => focusTarget.classList.remove("finish-focus-pulse"), 1600);
+      return true;
+    };
+    if (!focusOwner()) {
+      const root = document.querySelector(".workspace-main") ?? document.body;
+      observer = new MutationObserver(() => {focusOwner();});
+      observer.observe(root, {attributes: true, childList: true, subtree: true});
+      failureTimer = window.setTimeout(() => {
+        observer?.disconnect();
+        setFocusRoutingError("StoryStage could not open the exact finish control. Its workspace may still be loading; use the highlighted Finish step to try again.");
+      }, 10_000);
+    }
+    return () => {
+      observer?.disconnect();
+      if (failureTimer !== null) window.clearTimeout(failureTimer);
+      if (pulseTimer !== null) window.clearTimeout(pulseTimer);
+    };
   }, [focusRequest, tab]);
 
   const navigateToFinishTarget = (target: FinishNavigationTarget) => {
@@ -1250,12 +1293,17 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
   };
 
   const renderApprovedProduction = async (scope: ProductionRenderScope = renderScope) => {
+    setRenderScope(scope);
+    setRenderJobScope(scope);
+    setRenderJob({jobId: "render-start", status: "queued", progress: null, message: scope === "full-production" ? "Starting full production render" : "Starting approved production slice"});
     try {
       const result = await host.startProductionRender({productionId: session.productionId, revision: session.revision, scope});
-      setRenderScope(scope);
-      setRenderJobScope(scope);
+      activeRenderJobIdRef.current = result.jobId;
+      activeRenderScopeRef.current = scope;
       setRenderJob({jobId: result.jobId, status: "queued", progress: null, message: scope === "full-production" ? "Full production render queued" : "Approved production slice queued"});
     } catch (error) {
+      activeRenderJobIdRef.current = null;
+      activeRenderScopeRef.current = null;
       setRenderJob({jobId: "render-start", status: "failed", progress: null, message: error instanceof Error ? error.message : "Production render could not start.", error: {code: "RENDER_START_FAILED", message: error instanceof Error ? error.message : "Production render could not start."}});
     }
   };
@@ -1295,17 +1343,18 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
 
   return (
     <div className="workspace-shell">
-      <header className="workspace-topbar"><Brand /><button className="quiet-button" onClick={onExit}><ArrowLeft size={14} />Productions</button><div className="production-crumb"><span>{pack.displayName}</span><ChevronRight size={13} /><strong>{session.title}</strong></div><span className="saved-state"><Check size={13} />{lastSavedHash ? `Saved ${lastSavedHash.slice(0, 8)}` : "Saving"}</span><label className="render-scope">Render scope<select aria-label="Render scope" disabled={Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onChange={(event) => setRenderScope(event.target.value as ProductionRenderScope)} value={renderScope}><option value="engineering-slice">24s engineering slice</option><option value="full-production">Full production · {fullRenderBlockers.length === 0 ? formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps) : `${fullRenderBlockers.length} gates left`}</option></select></label><button className="render-slice-button" disabled={!lastSavedHash || !capabilities.localRendering || session.approvedAssetVersions.length === 0 || (renderScope === "full-production" && fullRenderBlockers.length > 0) || Boolean(renderJob && !["completed", "failed"].includes(renderJob.status))} onClick={() => void renderApprovedProduction()}><PlayCircle size={15} />{renderJob && !["completed", "failed"].includes(renderJob.status) ? renderJob.message : renderScope === "full-production" ? "Render full production" : "Render approved 24s slice"}</button>{delivery ? <><button className="quiet-button" onClick={() => void host.openDeliveryMaster(delivery.deliveryManifestContentHash)}>Open master</button><button className="quiet-button" onClick={() => void host.revealDeliveryBundle(delivery.deliveryManifestContentHash)}>Reveal delivery</button></> : renderJob?.status === "completed" ? <button className="quiet-button" onClick={() => void host.openRenderedFile(renderJob.jobId)}>Open MP4</button> : null}</header>
+      <header className="workspace-topbar"><Brand /><button className="quiet-button" onClick={onExit}><ArrowLeft size={14} />Productions</button><div className="production-crumb"><span>{pack.displayName}</span><ChevronRight size={13} /><strong>{session.title}</strong></div><span className="saved-state"><Check size={13} />{lastSavedHash ? `Saved ${lastSavedHash.slice(0, 8)}` : "Saving"}</span><label className="render-scope">Render scope<select aria-label="Render scope" disabled={anyRenderActive} onChange={(event) => setRenderScope(event.target.value as ProductionRenderScope)} value={renderScope}><option value="engineering-slice">24s engineering slice</option><option value="full-production">Full production · {fullRenderBlockers.length === 0 ? formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps) : `${fullRenderBlockers.length} gates left`}</option></select></label><button className="render-slice-button" disabled={!lastSavedHash || !capabilities.localRendering || session.approvedAssetVersions.length === 0 || (renderScope === "full-production" && fullRenderBlockers.length > 0) || anyRenderActive} onClick={() => void renderApprovedProduction()}><PlayCircle size={15} />{anyRenderActive ? renderJob?.message : renderScope === "full-production" ? "Render full production" : "Render approved 24s slice"}</button>{currentDelivery ? <><button className="quiet-button" onClick={() => void host.openDeliveryMaster(currentDelivery.deliveryManifestContentHash)}>Open master</button><button className="quiet-button" onClick={() => void host.revealDeliveryBundle(currentDelivery.deliveryManifestContentHash)}>Reveal delivery</button></> : renderJob?.status === "completed" ? <button className="quiet-button" onClick={() => void host.openRenderedFile(renderJob.jobId)}>Open MP4</button> : null}</header>
       <aside className="workspace-nav">
         <button className={tab === "direction" ? "is-active" : ""} onClick={() => setTab("direction")}><Aperture size={18} /><span>Direction</span></button>
         <button className={tab === "assets" ? "is-active" : ""} onClick={() => setTab("assets")}><Layers3 size={18} /><span>Assets</span><b>{build.resolvedPlan.generationBriefs.length}</b></button>
         <button className={tab === "audio" ? "is-active" : ""} onClick={() => setTab("audio")}><Mic2 size={18} /><span>Audio</span></button>
         <div className="nav-spacer" />
-        <button aria-label="Finish episode" className={tab === "finish" ? "is-active" : ""} onClick={() => setTab("finish")}><ListChecks size={18} /><span>Finish</span><b>{delivery ? <Check size={9} /> : fullRenderBlockers.length}</b></button>
+        <button aria-label="Finish episode" className={tab === "finish" ? "is-active" : ""} onClick={() => setTab("finish")}><ListChecks size={18} /><span>Finish</span><b>{currentDelivery ? <Check size={9} /> : fullRenderBlockers.length}</b></button>
       </aside>
       <main className="workspace-main">
         <header className="workspace-heading" id="finish-direction" tabIndex={-1}><div><p className="eyebrow">{tab === "direction" ? "Profile-driven plan" : tab === "assets" ? "Generated-asset exchange" : tab === "audio" ? "Spoken editorial timing" : "Guided episode completion"}</p><h1>{session.title}</h1><p>{pack.profile.id} · {session.preset} · {build.creativePlan.scenes.length} scenes</p></div><span className="profile-chip" style={{"--profile": pack.profile.accentColor} as React.CSSProperties}>{pack.projectType === "kids" ? "Kids Adventure" : "Editorial Explainer"}</span></header>
-        {delivery ? <section className="verified-delivery-banner" aria-label="Verified delivery"><ShieldCheck size={20} /><div><small>Verified delivery</small><strong>1080p master · {delivery.master.frameCount} frames · {delivery.captionCueCount} caption cues · rights cleared</strong><span>Production {delivery.revision} · {delivery.productionBundleContentHash.slice(0, 10)} · manifest {delivery.deliveryManifestContentHash.slice(0, 10)}</span></div><button onClick={() => void host.openDeliveryMaster(delivery.deliveryManifestContentHash)}>Open master</button><button onClick={() => void host.revealDeliveryBundle(delivery.deliveryManifestContentHash)}>Reveal bundle</button></section> : null}
+        {focusRoutingError ? <p className="focus-routing-error" role="alert"><CircleAlert size={14} />{focusRoutingError}</p> : null}
+        {currentDelivery ? <section className="verified-delivery-banner" aria-label="Verified delivery"><ShieldCheck size={20} /><div><small>Verified delivery</small><strong>1080p master · {currentDelivery.master.frameCount} frames · {currentDelivery.captionCueCount} caption cues · rights cleared</strong><span>Production {currentDelivery.revision} · {currentDelivery.productionBundleContentHash.slice(0, 10)} · manifest {currentDelivery.deliveryManifestContentHash.slice(0, 10)}</span></div><button onClick={() => void host.openDeliveryMaster(currentDelivery.deliveryManifestContentHash)}>Open master</button><button onClick={() => void host.revealDeliveryBundle(currentDelivery.deliveryManifestContentHash)}>Reveal bundle</button></section> : null}
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
           <CutTimeline build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
@@ -1326,7 +1375,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               {currentOverride ? <p className="override-state"><Check size={13} />Override compiled into the current render plan.</p> : <p className="override-help">Change a field to create a semantic override. No JSON editing required.</p>}
             </aside>
           </div>
-        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} onShowPackReviewed={adoptShowPackReview} productionBundleContentHash={lastSavedHash} /> : tab === "audio" ? <AudioTimingWorkspace build={build} capabilities={capabilities} host={host} onAudioMix={applyAudioMix} onMusicTrack={applyMusicTrack} onOverride={updateShotOverride} onSelect={setSelectedShotId} onSoundEffectAssets={applySoundEffectAssets} onSoundEffectCues={applySoundEffectCues} onVoiceTrack={applyVoiceTrack} overrides={session.overrides} productionBundleContentHash={lastSavedHash} selectedShotId={selectedShot.id} session={session} /> : <FinishEpisodeWorkspace session={session} build={build} capabilities={capabilities} delivery={delivery} onNavigate={navigateToFinishTarget} onRender={() => void renderApprovedProduction("full-production")} productionBundleContentHash={lastSavedHash} renderJob={renderJob} renderJobScope={renderJobScope} />}
+        </> : tab === "assets" ? <AssetExchange session={session} build={build} host={host} capabilities={capabilities} onApprovedAsset={applyApprovedAsset} onShowPackReviewed={adoptShowPackReview} productionBundleContentHash={lastSavedHash} /> : tab === "audio" ? <AudioTimingWorkspace build={build} capabilities={capabilities} host={host} onAudioMix={applyAudioMix} onMusicTrack={applyMusicTrack} onOverride={updateShotOverride} onSelect={setSelectedShotId} onSoundEffectAssets={applySoundEffectAssets} onSoundEffectCues={applySoundEffectCues} onVoiceTrack={applyVoiceTrack} overrides={session.overrides} productionBundleContentHash={lastSavedHash} selectedShotId={selectedShot.id} session={session} /> : <FinishEpisodeWorkspace session={session} build={build} capabilities={capabilities} delivery={currentDelivery} anyRenderActive={anyRenderActive} onNavigate={navigateToFinishTarget} onRender={() => void renderApprovedProduction("full-production")} productionBundleContentHash={lastSavedHash} renderJob={renderJob} renderJobScope={renderJobScope} />}
       </main>
     </div>
   );

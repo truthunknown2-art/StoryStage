@@ -167,7 +167,7 @@ describe("StoryStage studio", () => {
 
   it("rehydrates an exact verified delivery and exposes only main-owned open actions", async () => {
     const manifestHash = "d".repeat(64);
-    const getVerifiedDelivery = vi.fn(async () => ({delivery: {deliveryManifestContentHash: manifestHash, productionId: "production-one", revision: 1, productionBundleContentHash: "a".repeat(64), rightsStatus: "cleared" as const, captionCueCount: 11, master: {width: 1920 as const, height: 1080 as const, fps: 30 as const, frameCount: 792, durationInSeconds: 26.4}}}));
+    const getVerifiedDelivery = vi.fn(async (request: Parameters<StoryStageDesktopBridge["getVerifiedDelivery"]>[0]) => ({delivery: {deliveryManifestContentHash: manifestHash, productionId: request.productionId, revision: request.revision, productionBundleContentHash: request.productionBundleContentHash, rightsStatus: "cleared" as const, captionCueCount: 11, master: {width: 1920 as const, height: 1080 as const, fps: 30 as const, frameCount: 792, durationInSeconds: 26.4}}}));
     const openDeliveryMaster = vi.fn(async () => ({ok: true as const}));
     const revealDeliveryBundle = vi.fn(async () => ({ok: true as const}));
     window.storyStage = makeDesktopBridge({getVerifiedDelivery, openDeliveryMaster, revealDeliveryBundle});
@@ -250,7 +250,7 @@ describe("StoryStage studio", () => {
 
     await user.click(screen.getByRole("button", {name: "Review artwork"}));
     expect(screen.getByRole("heading", {name: "Manual ChatGPT Images"})).toBeInTheDocument();
-    await waitFor(() => expect(document.getElementById("finish-asset-approvals")).toHaveFocus());
+    await waitFor(() => expect(screen.getByRole("button", {name: /Review generation export/})).toHaveFocus());
 
     await user.click(screen.getByRole("button", {name: "Finish episode"}));
     const voiceStep = screen.getByText("Approve the final voice").closest("li")!;
@@ -261,6 +261,11 @@ describe("StoryStage studio", () => {
     const timingStep = screen.getByText("Lock every spoken beat").closest("li")!;
     await user.click(within(timingStep).getByRole("button", {name: "Open"}));
     await waitFor(() => expect(screen.getAllByRole("button", {name: /Select timing cue/})[0]).toHaveFocus());
+
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    const mixStep = screen.getByText("Approve the final mix").closest("li")!;
+    await user.click(within(mixStep).getByRole("button", {name: "Open"}));
+    await waitFor(() => expect(screen.getByLabelText("Music decision")).toHaveFocus());
   });
 
   it("starts the exact full-production render from the guided finish path", async () => {
@@ -286,27 +291,73 @@ describe("StoryStage studio", () => {
     expect(startProductionRender).toHaveBeenCalledWith({productionId: bundle.production.productionId, revision: bundle.production.revision, scope: "full-production"});
     expect(screen.getByRole("button", {name: "Final render running"})).toBeDisabled();
 
+    act(() => emitRenderJob?.({jobId: "unrelated-finish-render", status: "completed", progress: null, message: "Unrelated job completed", outputPath: "C:/private/unrelated.mp4", delivery: {deliveryManifestContentHash: "c".repeat(64), productionId: bundle.production.productionId, revision: bundle.production.revision, productionBundleContentHash: bundle.contentHash, rightsStatus: "cleared", captionCueCount: 11, master: {width: 1920, height: 1080, fps: 30, frameCount: bundle.renderPlan.durationInFrames, durationInSeconds: bundle.renderPlan.durationInFrames / bundle.renderPlan.fps}}}));
+    expect(screen.queryByRole("region", {name: "Verified delivery"})).not.toBeInTheDocument();
+    expect(screen.getByRole("button", {name: "Final render running"})).toBeDisabled();
+
+    act(() => emitRenderJob?.({jobId: "finish-render-one", status: "completed", progress: null, message: "Another production completed", outputPath: "C:/private/other.mp4", delivery: {deliveryManifestContentHash: "d".repeat(64), productionId: "another-production", revision: 1, productionBundleContentHash: "e".repeat(64), rightsStatus: "cleared", captionCueCount: 1, master: {width: 1920, height: 1080, fps: 30, frameCount: 30, durationInSeconds: 1}}}));
+    expect(screen.queryByRole("region", {name: "Verified delivery"})).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: "Finish episode"})).toBeInTheDocument();
+    await user.click(screen.getByRole("button", {name: "Render & publish delivery"}));
+    expect(startProductionRender).toHaveBeenCalledTimes(2);
+
     act(() => emitRenderJob?.({jobId: "finish-render-one", status: "failed", progress: null, message: "Encoding failed", error: {code: "ENCODE_FAILED", message: "The final encoder stopped."}}));
     expect((await screen.findAllByText("The final encoder stopped.")).length).toBeGreaterThan(0);
     await user.click(screen.getByRole("button", {name: "Retry final render"}));
-    expect(startProductionRender).toHaveBeenCalledTimes(2);
+    expect(startProductionRender).toHaveBeenCalledTimes(3);
   });
 
-  it("plays a completed approved render inside the direction workspace", async () => {
+  it("shows and retries an immediate full-production start rejection", async () => {
+    const bundle = createGateReadyRookBundle();
+    const startProductionRender = vi.fn()
+      .mockRejectedValueOnce(new Error("The renderer refused this final job."))
+      .mockResolvedValueOnce({jobId: "finish-retry-one"});
+    window.storyStage = makeDesktopBridge({
+      listProductionBundles: vi.fn(async () => ({productions: [{productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash}]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
+      startProductionRender,
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", {name: new RegExp(bundle.production.title)}));
+    await waitFor(() => expect(screen.getByText(`Saved ${bundle.contentHash.slice(0, 8)}`)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    await user.click(screen.getByRole("button", {name: "Render & publish delivery"}));
+
+    expect((await screen.findAllByText("The renderer refused this final job.")).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", {name: "Retry final render"}));
+    expect(startProductionRender).toHaveBeenLastCalledWith({productionId: bundle.production.productionId, revision: bundle.production.revision, scope: "full-production"});
+    expect(screen.getByRole("button", {name: "Final render running"})).toBeDisabled();
+  });
+
+  it("blocks final delivery during an engineering render and then plays its completed output", async () => {
+    const bundle = createGateReadyRookBundle();
+    let emitRenderJob: Parameters<StoryStageDesktopBridge["subscribeToRenderJobs"]>[0] | null = null;
     const bridge = makeDesktopBridge({
-      subscribeToRenderJobs: vi.fn((listener) => {
-        listener({jobId: "render-approved-one", status: "completed", progress: null, message: "Approved production slice complete", outputPath: "C:/private/render-approved-one.mp4"});
-        return () => undefined;
-      }),
+      listProductionBundles: vi.fn(async () => ({productions: [{productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash}]})),
+      loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
+      saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
+      startProductionRender: vi.fn(async () => ({jobId: "render-approved-one"})),
+      subscribeToRenderJobs: vi.fn((listener) => {emitRenderJob = listener; return () => undefined;}),
     });
     window.storyStage = bridge;
-    await createDefaultProduction();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole("button", {name: new RegExp(bundle.production.title)}));
+    await waitFor(() => expect(screen.getByText(`Saved ${bundle.contentHash.slice(0, 8)}`)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", {name: "Render approved 24s slice"}));
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    expect(screen.getByRole("button", {name: "Preview render running"})).toBeDisabled();
+
+    act(() => emitRenderJob?.({jobId: "render-approved-one", status: "completed", progress: null, message: "Approved production slice complete", outputPath: "C:/private/render-approved-one.mp4"}));
+    await user.click(screen.getByRole("button", {name: "Direction"}));
 
     const player = await screen.findByLabelText("Approved render player");
     expect(player).toHaveAttribute("src", "storystage-media://render/render-approved-one");
     expect(screen.getByText(/actual H\.264 output/)).toBeInTheDocument();
 
-    await userEvent.setup().click(screen.getByRole("button", {name: /Seek rendered shot 1\.04/}));
+    await user.click(screen.getByRole("button", {name: /Seek rendered shot 1\.04/}));
     expect(screen.getByRole("slider", {name: "Approved render playhead"})).not.toHaveValue("0");
     expect(screen.getByRole("heading", {name: "1.04"})).toBeInTheDocument();
   });
@@ -353,6 +404,24 @@ describe("StoryStage studio", () => {
     expect(screen.getAllByText(/browser preview only/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("button", {name: /Approve Rook and bind/})).toBeDisabled();
     expect(screen.getByText(/desktop review is required/i)).toBeInTheDocument();
+  });
+
+  it("waits for delayed Rook verification and focuses the first unchecked acknowledgement", async () => {
+    window.storyStage = makeDesktopBridge({
+      listPublicShowPackCandidates: vi.fn(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1_150));
+        return {candidates: [rookCandidateSummary]};
+      }),
+    });
+    const user = await openProductionSetup();
+    await user.click(screen.getByRole("button", {name: /Load Rook Pilot 001/}));
+    await user.click(screen.getByRole("button", {name: "Create production"}));
+    await waitFor(() => expect(screen.getByText(/Saved aaaaaaaa/)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    await user.click(screen.getByRole("button", {name: "Review Rook"}));
+
+    const reviewRegion = await screen.findByRole("generic", {name: "Rook review acknowledgements"}, {timeout: 3_000});
+    await waitFor(() => expect(within(reviewRegion).getAllByRole("checkbox")[0]).toHaveFocus(), {timeout: 3_000});
   });
 
   it("edits and locks frame-accurate spoken timing instead of faking a voice track", async () => {
@@ -460,7 +529,12 @@ describe("StoryStage studio", () => {
     const importButton = screen.getByRole("button", {name: "Import SFX WAV"});
     await waitFor(() => expect(importButton).toBeEnabled());
     await user.click(importButton);
+    await screen.findByLabelText("Sound effect clock-hit.wav");
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    const mixStep = screen.getByText("Approve the final mix").closest("li")!;
+    await user.click(within(mixStep).getByRole("button", {name: "Open"}));
     const player = await screen.findByLabelText("Sound effect clock-hit.wav");
+    await waitFor(() => expect(player).toHaveFocus());
     fireEvent.ended(player);
     await user.type(screen.getByLabelText("Sound effect clock-hit.wav rights evidence"), "Original operator recording");
     await user.click(screen.getByLabelText("Sound effect clock-hit.wav rights cleared"));

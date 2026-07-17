@@ -646,6 +646,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .verified-delivery-banner strong { color: #c4dacd; font-size: 10px; }
 .verified-delivery-banner span { color: #6f897a; font-size: 8px; }
 .verified-delivery-banner button { background: #1c3025; border: 1px solid #466e55; border-radius: 6px; color: #a8d7b8; font-size: 8px; padding: 8px 10px; }
+.focus-routing-error { align-items: center; background: #281b18; border: 1px solid #623b32; border-radius: 7px; color: #e79280; display: flex; font-size: 8px; gap: 8px; margin-bottom: 12px; padding: 10px 12px; }
 
 @media (max-width: 1280px) {
   .home-main { padding-left: 34px; padding-right: 34px; }
