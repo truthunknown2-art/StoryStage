@@ -13,7 +13,7 @@ const workspaceRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)
 const candidateRoot = resolve(workspaceRoot, "packages/remotion-runtime/public/show-packs/weird-history/rook/v1");
 const outputRoot = resolve(workspaceRoot, "artifacts/SS-003/rook-pilot-visual-preview");
 const candidateId = "weird-history-rook-v1";
-const candidateContentHash = "86558382828a8db94cdc8c30369e3ff84c7aad0919081a1fe736efc5bb2f84d7";
+const candidateContentHash = "6c60b1fa633a4c3c7e9a32cbe475a52277f38b7d5cf2e239b0acee2ada85c691";
 const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
 async function preparedDataUrl(file: string, expectedHash: string): Promise<string> {

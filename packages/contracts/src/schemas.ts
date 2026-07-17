@@ -134,7 +134,13 @@ export const publicShowPackCandidateSummarySchema = z.object({
   diagnosticUrl: z.string().startsWith("/"),
   verifiedByHost: z.boolean(),
   canReview: z.boolean(),
+  review: z.discriminatedUnion("decision", [
+    z.object({decision: z.literal("none")}).strict(),
+    z.object({decision: z.literal("rejected"), decidedAt: z.string().datetime()}).strict(),
+    z.object({decision: z.literal("approved"), decidedAt: z.string().datetime(), targetProductionRevision: z.number().int().positive(), targetProductionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict(),
+  ]),
 }).strict();
+export const listPublicShowPackCandidatesRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/).nullable()}).strict();
 export const listPublicShowPackCandidatesResultSchema = z.object({candidates: z.array(publicShowPackCandidateSummarySchema)}).strict();
 export const publicShowPackReviewAcknowledgementsBridgeSchema = z.object({identitySheet: z.boolean(), neutralPose: z.boolean(), talkPose: z.boolean(), reactionPose: z.boolean(), movingDiagnostic: z.boolean(), identityConsistency: z.boolean(), matteEdges: z.boolean(), provenance: z.boolean()}).strict();
 export const reviewPublicShowPackCandidateRequestSchema = z.object({
@@ -416,6 +422,7 @@ export type ReviewCandidateSetRequest = z.infer<typeof reviewCandidateSetRequest
 export type ReviewCandidateSetResult = z.infer<typeof reviewCandidateSetResultSchema>;
 export type PublicShowPackCandidateSummary = z.infer<typeof publicShowPackCandidateSummarySchema>;
 export type ListPublicShowPackCandidatesResult = z.infer<typeof listPublicShowPackCandidatesResultSchema>;
+export type ListPublicShowPackCandidatesRequest = z.infer<typeof listPublicShowPackCandidatesRequestSchema>;
 export type ReviewPublicShowPackCandidateRequest = z.infer<typeof reviewPublicShowPackCandidateRequestSchema>;
 export type ReviewPublicShowPackCandidateResult = z.infer<typeof reviewPublicShowPackCandidateResultSchema>;
 export type VoiceTrackBridge = z.infer<typeof voiceTrackBridgeSchema>;
@@ -454,7 +461,7 @@ export type StoryStageDesktopBridge = {
   getGenerationExchange: (request: GetGenerationExchangeRequest) => Promise<GetGenerationExchangeResult>;
   prepareGenerationImport: (request: PrepareGenerationImportRequest) => Promise<PrepareGenerationImportResult>;
   reviewCandidateSet: (request: ReviewCandidateSetRequest) => Promise<ReviewCandidateSetResult>;
-  listPublicShowPackCandidates: () => Promise<ListPublicShowPackCandidatesResult>;
+  listPublicShowPackCandidates: (request: ListPublicShowPackCandidatesRequest) => Promise<ListPublicShowPackCandidatesResult>;
   reviewPublicShowPackCandidate: (request: ReviewPublicShowPackCandidateRequest) => Promise<ReviewPublicShowPackCandidateResult>;
   importVoiceTrack: (request: ImportVoiceTrackRequest) => Promise<ImportVoiceTrackResult>;
   approveVoiceTrack: (request: ApproveVoiceTrackRequest) => Promise<ApproveVoiceTrackResult>;

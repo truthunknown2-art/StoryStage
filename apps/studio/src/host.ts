@@ -23,6 +23,7 @@ import type {
   ListGenerationExchangesRequest,
   ListGenerationExchangesResult,
   ListProductionBundlesResult,
+  ListPublicShowPackCandidatesRequest,
   ListPublicShowPackCandidatesResult,
   LoadProductionBundleRequest,
   LoadProductionBundleResult,
@@ -57,7 +58,7 @@ export interface HostAdapter {
   getGenerationExchange(request: GetGenerationExchangeRequest): Promise<GetGenerationExchangeResult>;
   prepareGenerationImport(request: PrepareGenerationImportRequest): Promise<PrepareGenerationImportResult>;
   reviewCandidateSet(request: ReviewCandidateSetRequest): Promise<ReviewCandidateSetResult>;
-  listPublicShowPackCandidates(): Promise<ListPublicShowPackCandidatesResult>;
+  listPublicShowPackCandidates(request: ListPublicShowPackCandidatesRequest): Promise<ListPublicShowPackCandidatesResult>;
   reviewPublicShowPackCandidate(request: ReviewPublicShowPackCandidateRequest): Promise<ReviewPublicShowPackCandidateResult>;
   importVoiceTrack(request: ImportVoiceTrackRequest): Promise<ImportVoiceTrackResult>;
   approveVoiceTrack(request: ApproveVoiceTrackRequest): Promise<ApproveVoiceTrackResult>;
@@ -114,7 +115,9 @@ export class BrowserHostAdapter implements HostAdapter {
     void _request;
     return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Asset review requires the desktop app."}};
   };
-  listPublicShowPackCandidates = async (): Promise<ListPublicShowPackCandidatesResult> => ({candidates: [{candidateId: "weird-history-rook-v1", version: "1.0.0", showPackId: "weird-history-editorial-v1", displayName: "Rook editorial presenter", status: "candidate-needs-human-review", contentHash: "86558382828a8db94cdc8c30369e3ff84c7aad0919081a1fe736efc5bb2f84d7", identityLock: "Angular swept-back dark hair, cream rolled-sleeve shirt, vermilion neck scarf, charcoal high-waist trousers, practical dark shoes.", provenance: {provider: "ChatGPT Images", usageNotes: "Original StoryStage Show Pack candidate; do not promote to an approved production asset before explicit human visual review."}, files: [{role: "identity-sheet", url: "/show-packs/weird-history/rook/v1/identity-sheet.png", width: 1536, height: 1024}, {role: "neutral-pose", url: "/show-packs/weird-history/rook/v1/prepared/rook-v1-neutral.png", width: 1600, height: 1800}, {role: "talk-pose", url: "/show-packs/weird-history/rook/v1/prepared/rook-v1-talk.png", width: 1600, height: 1800}, {role: "reaction-pose", url: "/show-packs/weird-history/rook/v1/prepared/rook-v1-reaction.png", width: 1600, height: 1800}], diagnosticUrl: "/show-packs/weird-history/rook/v1/prepared/rig-diagnostic-rook-v1.mp4", verifiedByHost: false, canReview: false}]});
+  // The browser preview intentionally ignores production scope because it cannot read durable review state.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  listPublicShowPackCandidates = async (_request: ListPublicShowPackCandidatesRequest): Promise<ListPublicShowPackCandidatesResult> => ({candidates: [{candidateId: "weird-history-rook-v1", version: "1.0.0", showPackId: "weird-history-editorial-v1", displayName: "Rook editorial presenter", status: "candidate-needs-human-review", contentHash: "6c60b1fa633a4c3c7e9a32cbe475a52277f38b7d5cf2e239b0acee2ada85c691", identityLock: "Angular swept-back dark hair, cream rolled-sleeve shirt, vermilion neck scarf, charcoal high-waist trousers, practical dark shoes.", provenance: {provider: "ChatGPT Images", usageNotes: "Original StoryStage Show Pack candidate; do not promote to an approved production asset before explicit human visual review."}, files: [{role: "identity-sheet", url: "/show-packs/weird-history/rook/v1/identity-sheet.png", width: 1536, height: 1024}, {role: "neutral-pose", url: "/show-packs/weird-history/rook/v1/prepared/rook-v1-neutral.png", width: 1600, height: 1800}, {role: "talk-pose", url: "/show-packs/weird-history/rook/v1/prepared/rook-v1-talk.png", width: 1600, height: 1800}, {role: "reaction-pose", url: "/show-packs/weird-history/rook/v1/prepared/rook-v1-reaction.png", width: 1600, height: 1800}], diagnosticUrl: "/show-packs/weird-history/rook/v1/prepared/rig-diagnostic-rook-v1.mp4", verifiedByHost: false, canReview: false, review: {decision: "none"}}]});
   reviewPublicShowPackCandidate = async (_request: ReviewPublicShowPackCandidateRequest): Promise<ReviewPublicShowPackCandidateResult> => {
     void _request;
     return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Trusted Show Pack review and binding requires the desktop app."}};
@@ -169,7 +172,7 @@ export class DesktopHostAdapter implements HostAdapter {
   getGenerationExchange = (request: GetGenerationExchangeRequest) => this.bridge.getGenerationExchange(request);
   prepareGenerationImport = (request: PrepareGenerationImportRequest) => this.bridge.prepareGenerationImport(request);
   reviewCandidateSet = (request: ReviewCandidateSetRequest) => this.bridge.reviewCandidateSet(request);
-  listPublicShowPackCandidates = () => this.bridge.listPublicShowPackCandidates();
+  listPublicShowPackCandidates = (request: ListPublicShowPackCandidatesRequest) => this.bridge.listPublicShowPackCandidates(request);
   reviewPublicShowPackCandidate = (request: ReviewPublicShowPackCandidateRequest) => this.bridge.reviewPublicShowPackCandidate(request);
   importVoiceTrack = (request: ImportVoiceTrackRequest) => this.bridge.importVoiceTrack(request);
   approveVoiceTrack = (request: ApproveVoiceTrackRequest) => this.bridge.approveVoiceTrack(request);

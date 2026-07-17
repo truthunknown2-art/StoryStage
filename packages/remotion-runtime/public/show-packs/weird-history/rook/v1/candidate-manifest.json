@@ -3,6 +3,11 @@
   "candidateId": "weird-history-rook-v1",
   "version": "1.0.0",
   "showPackId": "weird-history-editorial-v1",
+  "showPack": {
+    "id": "weird-history-editorial-v1",
+    "version": "1.0.0",
+    "contentHash": "b05db9ebf1e8b2f8fa7a51ff4d43a295abaf9b80eff2790bd639264a20f3f292"
+  },
   "displayName": "Rook editorial presenter",
   "status": "candidate-needs-human-review",
   "provider": "chatgpt-built-in-imagegen",
@@ -50,5 +55,5 @@
     "movingDiagnosticFile": "prepared/rig-diagnostic-rook-v1.mp4",
     "movingDiagnosticContentHash": "a3e868d31b222e723dfbefc48349cd3549318dd3e4b3806c5b9a207487e40f29"
   },
-  "contentHash": "86558382828a8db94cdc8c30369e3ff84c7aad0919081a1fe736efc5bb2f84d7"
+  "contentHash": "6c60b1fa633a4c3c7e9a32cbe475a52277f38b7d5cf2e239b0acee2ada85c691"
 }

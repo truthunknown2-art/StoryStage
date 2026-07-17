@@ -1,6 +1,6 @@
 import {z} from "zod";
 import {hashCanonical} from "./canonical-hash";
-import {approvedAssetVersionSchema, hashSchema, identifierSchema, rightsRecordSchema} from "./model";
+import {approvedAssetVersionSchema, hashSchema, identifierSchema, rightsRecordSchema, type ShowPack} from "./model";
 
 const safeRelativeFileSchema = z.string().min(1).refine((value) => !value.includes("\\") && !value.includes(":") && !value.startsWith("/") && !value.split("/").includes(".."), "Candidate paths must stay relative to the allowlisted candidate root.");
 const candidateFileRoleSchema = z.enum(["identity-sheet", "neutral-pose", "talk-pose", "reaction-pose"]);
@@ -12,6 +12,7 @@ export const publicShowPackCandidateManifestSchema = z.object({
   candidateId: identifierSchema,
   version: z.string().min(1),
   showPackId: identifierSchema,
+  showPack: z.object({id: identifierSchema, version: z.string().min(1), contentHash: hashSchema}).strict(),
   displayName: z.string().min(1),
   status: z.literal("candidate-needs-human-review"),
   provider: z.string().min(1),
@@ -38,11 +39,16 @@ export const publicShowPackCandidateManifestSchema = z.object({
 }).strict().superRefine((candidate, context) => {
   const roles = candidate.files.map((file) => file.role);
   const preparedRoles = candidate.preparedFiles.map((file) => file.role);
+  if (candidate.showPackId !== candidate.showPack.id) context.addIssue({code: "custom", message: "The candidate Show Pack shortcut must match its exact release binding."});
   if (new Set(roles).size !== 4 || new Set(preparedRoles).size !== 4 || roles.some((role) => !preparedRoles.includes(role))) context.addIssue({code: "custom", message: "Source and prepared candidates must bind exactly one copy of every required Rook role."});
   if (candidate.validation.rigManifest !== candidate.evidence.rigManifest.file || candidate.validation.rigValidationReport !== candidate.evidence.rigValidation.file || candidate.validation.movingDiagnosticFile !== candidate.evidence.diagnosticVideo.file || candidate.validation.movingDiagnosticContentHash !== candidate.evidence.diagnosticVideo.fileContentHash || candidate.validation.prompts !== candidate.evidence.prompts.file) context.addIssue({code: "custom", message: "Candidate validation pointers must match the complete evidence bindings."});
 });
 
 export type PublicShowPackCandidateManifest = z.infer<typeof publicShowPackCandidateManifestSchema>;
+
+export function publicShowPackCandidateMatchesRelease(candidate: Pick<PublicShowPackCandidateManifest, "showPack">, showPack: ShowPack): boolean {
+  return candidate.showPack.id === showPack.id && candidate.showPack.version === showPack.version && candidate.showPack.contentHash === showPack.contentHash;
+}
 
 export function verifyPublicShowPackCandidateManifestHash(candidateInput: PublicShowPackCandidateManifest): boolean {
   const candidate = publicShowPackCandidateManifestSchema.parse(candidateInput);

@@ -7,7 +7,7 @@ import {assetRigManifestSchema, verifyAssetRigManifestHash} from "@storystage/st
 import {promotePublicShowPackCandidate, verifyPublicShowPackCandidate} from "./public-show-pack-promotion";
 
 const candidateId = "weird-history-rook-v1";
-const candidateContentHash = "86558382828a8db94cdc8c30369e3ff84c7aad0919081a1fe736efc5bb2f84d7";
+const candidateContentHash = "6c60b1fa633a4c3c7e9a32cbe475a52277f38b7d5cf2e239b0acee2ada85c691";
 const sourceCandidateRoot = resolve(fileURLToPath(new URL("../../remotion-runtime/public/show-packs/weird-history/rook/v1", import.meta.url)));
 const temporaryRoots: string[] = [];
 

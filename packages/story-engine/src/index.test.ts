@@ -26,6 +26,7 @@ import {
   getShowPack,
   measureDirectedPlan,
   parseScript,
+  publicShowPackCandidateMatchesRelease,
   hashCanonical,
   inspectPcmWav,
   rehashShowPack,
@@ -185,6 +186,13 @@ describe("StoryStage story engine", () => {
     expect(new Set(build.renderPlan.shots.map((shot) => shot.treatment)).size).toBeGreaterThanOrEqual(3);
     expect(build.renderPlan.shots.every((shot) => ["environment", "character-performance", "reaction", "kinetic-type"].includes(shot.treatment))).toBe(true);
     expect(build.renderPlan.shots.filter((shot) => shot.caption).every((shot) => shot.actions.some((action) => action.detail.type === "talk"))).toBe(true);
+  });
+
+  it("binds a public Show Pack candidate to the exact authoritative release", () => {
+    const showPack = getShowPack("weird-history-editorial-v1");
+    expect(publicShowPackCandidateMatchesRelease({showPack: {id: showPack.id, version: showPack.version, contentHash: showPack.contentHash}}, showPack)).toBe(true);
+    expect(publicShowPackCandidateMatchesRelease({showPack: {id: showPack.id, version: "0.9.0", contentHash: showPack.contentHash}}, showPack)).toBe(false);
+    expect(publicShowPackCandidateMatchesRelease({showPack: {id: showPack.id, version: showPack.version, contentHash: "f".repeat(64)}}, showPack)).toBe(false);
   });
 
   it("prioritizes real missing assets and leaves exhausted requirements visible", () => {

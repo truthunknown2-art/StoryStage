@@ -2,10 +2,12 @@ import {createHash, randomUUID} from "node:crypto";
 import {access, link, lstat, mkdir, readFile, readdir, realpath, rename, unlink, writeFile} from "node:fs/promises";
 import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:path";
 import {pathToFileURL} from "node:url";
+import {productionDraftPayload} from "./production-draft-payload";
 import {app, BrowserWindow, dialog, ipcMain, net, protocol, shell, utilityProcess, type OpenDialogOptions} from "electron";
 import {commitApprovalWorkflow} from "@storystage/asset-pipeline/approval-recovery";
 import {buildApprovedProductionRevisionDraft, buildSelectedCandidateRigArtifacts, persistAssetReviewRecordSnapshot, promotePreparedCandidateSet} from "@storystage/asset-pipeline/approved-asset-workflow";
 import {promotePublicShowPackCandidate, verifyPublicShowPackCandidate} from "@storystage/asset-pipeline/public-show-pack-promotion";
+import {persistPublicShowPackReviewRecord, readPublicShowPackReviewRecord} from "@storystage/asset-pipeline/public-show-pack-review-store";
 import {commitImportEvidenceDirectory} from "@storystage/asset-pipeline/import-evidence-store";
 import {createImportRecordFromStagedCandidates} from "@storystage/asset-pipeline/import-record-builder";
 import {
@@ -37,6 +39,7 @@ import {
   listGenerationExchangesRequestSchema,
   listGenerationExchangesResultSchema,
   listProductionBundlesResultSchema,
+  listPublicShowPackCandidatesRequestSchema,
   listPublicShowPackCandidatesResultSchema,
   loadProductionBundleRequestSchema,
   loadProductionBundleResultSchema,
@@ -88,7 +91,7 @@ import {
   importRecordSchema,
   importValidationReportSchema,
   preparationReportSchema,
-  publicShowPackReviewRecordSchema,
+  publicShowPackCandidateMatchesRelease,
   prepareCandidateSetsRequestSchema,
   rigValidationReportSchema,
   rigDiagnosticReportSchema,
@@ -105,7 +108,6 @@ import {
   verifyAssetReviewRecordHash,
   verifyRigValidationReportHash,
   verifyRigDiagnosticReportHash,
-  verifyPublicShowPackReviewRecordHash,
   validateCandidateSets,
   voiceTrackSchema,
   type CandidateBundle,
@@ -154,7 +156,7 @@ const workspaceRoot = app.isPackaged ? app.getAppPath() : resolve(__dirname, "..
 const rookCandidateRelease = {
   candidateId: "weird-history-rook-v1",
   showPackId: "weird-history-editorial-v1",
-  contentHash: "86558382828a8db94cdc8c30369e3ff84c7aad0919081a1fe736efc5bb2f84d7",
+  contentHash: "6c60b1fa633a4c3c7e9a32cbe475a52277f38b7d5cf2e239b0acee2ada85c691",
   relativeRoot: "packages/remotion-runtime/public/show-packs/weird-history/rook/v1",
   publicRoot: "/show-packs/weird-history/rook/v1",
 } as const;
@@ -176,29 +178,12 @@ const rookCandidateRoot = () => resolve(workspaceRoot, ...rookCandidateRelease.r
 
 async function readPublicShowPackReview(productionId: string, revision: number, candidateId: string): Promise<PublicShowPackReviewRecord | null> {
   const file = join(app.getPath("userData"), ".storystage-local", "show-pack-reviews", productionId, `r${revision}`, candidateId, "review.json");
-  try {
-    const info = await lstat(file);
-    if (info.isSymbolicLink() || !info.isFile() || info.size > 2_000_000) throw new Error("The private Show Pack review record is unsafe.");
-    const parsed = publicShowPackReviewRecordSchema.parse(JSON.parse(await readFile(file, "utf8")));
-    if (!verifyPublicShowPackReviewRecordHash(parsed)) throw new Error("The private Show Pack review record failed its content hash.");
-    return parsed;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-    throw error;
-  }
+  return readPublicShowPackReviewRecord(file);
 }
 
-async function persistPublicShowPackReview(record: PublicShowPackReviewRecord): Promise<void> {
-  if (!verifyPublicShowPackReviewRecordHash(record)) throw new Error("The Show Pack review record failed its content hash.");
+async function persistPublicShowPackReview(record: ReturnType<typeof finalizePublicShowPackReviewRecord>): Promise<void> {
   const file = join(app.getPath("userData"), ".storystage-local", "show-pack-reviews", record.productionId, `r${record.sourceProductionRevision}`, record.candidateId, "review.json");
-  await mkdir(dirname(file), {recursive: true});
-  try {
-    await writeFile(file, `${JSON.stringify(record, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-    const existing = JSON.parse(await readFile(file, "utf8")) as {contentHash?: unknown};
-    if (existing.contentHash !== record.contentHash) throw new Error("This production already has a different final review for the packaged candidate.");
-  }
+  await persistPublicShowPackReviewRecord({file, record});
 }
 
 async function publishImmutableVoiceFile(targetFile: string, bytes: Buffer): Promise<void> {
@@ -711,19 +696,6 @@ async function verifyApprovedAssetVersionOnDisk(approved: ApprovedAssetVersion):
   } catch {
     return false;
   }
-}
-
-function productionDraftPayload(bundle: ProductionBundle) {
-  return productionBundleDraftSchema.parse({
-    schemaVersion: bundle.schemaVersion,
-    production: bundle.production,
-    overrides: bundle.overrides,
-    approvedAssetVersions: bundle.approvedAssetVersions ?? [],
-    resolvedPlan: bundle.resolvedPlan,
-    renderPlan: bundle.renderPlan,
-    metrics: bundle.metrics,
-    estimate: bundle.estimate,
-  });
 }
 
 function approvedVersionsForExchange(exchange: GenerationExchangeRecord, reviewRecord: AssetReviewRecord): ApprovedAssetVersion[] | null {
@@ -1283,9 +1255,21 @@ ipcMain.handle(IPC_CHANNELS.loadProductionBundle, (_event, rawRequest: unknown) 
   }
 });
 
-ipcMain.handle(IPC_CHANNELS.listPublicShowPackCandidates, async () => {
+ipcMain.handle(IPC_CHANNELS.listPublicShowPackCandidates, async (_event, rawRequest: unknown) => {
   try {
+    const request = listPublicShowPackCandidatesRequestSchema.parse(rawRequest);
+    if (!request.productionBundleContentHash) throw new Error("A saved production snapshot is required before trusted candidate review.");
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Candidate review status requires the current acknowledged production snapshot.");
+    const showPack = getShowPack(stored.bundle.production.showPackId);
     const {candidate} = await verifyPublicShowPackCandidate({candidateRoot: rookCandidateRoot(), expectedCandidateId: rookCandidateRelease.candidateId, expectedCandidateContentHash: rookCandidateRelease.contentHash});
+    if (!publicShowPackCandidateMatchesRelease(candidate, showPack)) throw new Error("Rook was not prepared for this exact authoritative Show Pack release.");
+    const review = await readPublicShowPackReview(request.productionId, request.revision, candidate.candidateId);
+    if (review?.decision === "approved") {
+      if (!review.approvedAssetVersion || !(await verifyApprovedAssetVersionOnDisk(review.approvedAssetVersion))) throw new Error("The approved Rook review lost its private immutable asset.");
+      const target = productionBundleRegistry.get(productionBundleKey(request.productionId, review.targetProductionRevision!));
+      if (!target || !verifyProductionBundleHash(target.bundle) || target.bundle.contentHash !== review.targetProductionBundleContentHash) throw new Error("The approved Rook review lost its exact target production revision.");
+    }
     const sourceByRole = new Map(candidate.files.map((file) => [file.role, file]));
     const preparedByRole = new Map(candidate.preparedFiles.map((file) => [file.role, file]));
     const previewFile = (role: "identity-sheet" | "neutral-pose" | "talk-pose" | "reaction-pose") => role === "identity-sheet" ? sourceByRole.get(role)! : preparedByRole.get(role)!;
@@ -1301,7 +1285,8 @@ ipcMain.handle(IPC_CHANNELS.listPublicShowPackCandidates, async () => {
       files: (["identity-sheet", "neutral-pose", "talk-pose", "reaction-pose"] as const).map((role) => {const file = previewFile(role); return {role, url: `${rookCandidateRelease.publicRoot}/${file.file}`, width: file.width, height: file.height};}),
       diagnosticUrl: `${rookCandidateRelease.publicRoot}/${candidate.evidence.diagnosticVideo.file}`,
       verifiedByHost: true,
-      canReview: true,
+      canReview: review === null,
+      review: review === null ? {decision: "none"} : review.decision === "rejected" ? {decision: "rejected", decidedAt: review.decidedAt} : {decision: "approved", decidedAt: review.decidedAt, targetProductionRevision: review.targetProductionRevision!, targetProductionBundleContentHash: review.targetProductionBundleContentHash!},
     }]});
   } catch {
     return listPublicShowPackCandidatesResultSchema.parse({candidates: []});
@@ -1316,6 +1301,8 @@ ipcMain.handle(IPC_CHANNELS.reviewPublicShowPackCandidate, async (_event, rawReq
     if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Rook review requires the current acknowledged production snapshot.");
     if (stored.bundle.production.showPackId !== rookCandidateRelease.showPackId) throw new Error("Rook can only be reviewed for the Frankly Weird History Show Pack.");
     const {candidate} = await verifyPublicShowPackCandidate({candidateRoot: rookCandidateRoot(), expectedCandidateId: rookCandidateRelease.candidateId, expectedCandidateContentHash: rookCandidateRelease.contentHash});
+    const authoritativeShowPack = getShowPack(stored.bundle.production.showPackId);
+    if (!publicShowPackCandidateMatchesRelease(candidate, authoritativeShowPack)) throw new Error("Rook was not prepared for this exact authoritative Show Pack release.");
     const existingReview = await readPublicShowPackReview(request.productionId, request.revision, request.candidateId);
     if (existingReview) {
       if (existingReview.sourceProductionBundleContentHash !== stored.bundle.contentHash || existingReview.candidateContentHash !== candidate.contentHash || existingReview.decision !== (request.decision === "approve" ? "approved" : "rejected")) throw new Error("This production revision already has a different final Rook decision.");

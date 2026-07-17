@@ -2,6 +2,7 @@ import {cleanup, fireEvent, render, screen, waitFor, within} from "@testing-libr
 import userEvent from "@testing-library/user-event";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {StoryStageDesktopBridge} from "@storystage/contracts";
+import {audioMixSchema, buildAnimaticSync, createRookPilot001Fixture, finalizeProductionBundle, type ApprovedAssetVersion} from "@storystage/story-engine";
 import {App} from "./App";
 
 afterEach(() => {
@@ -53,6 +54,20 @@ function makeDesktopBridge(overrides: Partial<StoryStageDesktopBridge> = {}): St
   };
 }
 
+const rookCandidateSummary = {candidateId: "weird-history-rook-v1", version: "1.0.0", showPackId: "weird-history-editorial-v1", displayName: "Rook editorial presenter", status: "candidate-needs-human-review" as const, contentHash: "6c60b1fa633a4c3c7e9a32cbe475a52277f38b7d5cf2e239b0acee2ada85c691", identityLock: "Angular swept-back dark hair and a vermilion scarf.", provenance: {provider: "ChatGPT Images", usageNotes: "Human review required."}, files: [{role: "identity-sheet" as const, url: "/identity.png", width: 1536, height: 1024}, {role: "neutral-pose" as const, url: "/neutral.png", width: 1600, height: 1800}, {role: "talk-pose" as const, url: "/talk.png", width: 1600, height: 1800}, {role: "reaction-pose" as const, url: "/reaction.png", width: 1600, height: 1800}], diagnosticUrl: "/diagnostic.mp4", verifiedByHost: true, canReview: true, review: {decision: "none" as const}};
+
+function createApprovedRookTargetBundle() {
+  const fixture = createRookPilot001Fixture();
+  const source = buildAnimaticSync(fixture);
+  const presenter = source.resolvedPlan.characters.find((entry) => entry.entityName === "NARRATOR")!;
+  const requirement = source.resolvedPlan.requirements.find((entry) => entry.role === "character" && entry.entityId === presenter.entityId)!;
+  const approved: ApprovedAssetVersion = {assetId: `approved-weird-history-rook-v1-${requirement.id}`, version: "sha256-rook", requirementId: requirement.id, contentHash: "a".repeat(64), relativeFile: `approved-weird-history-rook-v1-${requirement.id}/sha256-rook/manifest.json`, provenance: {sourceType: "generated", provider: "ChatGPT Images", usageNotes: "Human reviewed."}, approvedAt: "2026-07-17T20:30:00.000Z"};
+  const draft = {...fixture.draft, revision: 2};
+  const build = buildAnimaticSync({draft, overrides: fixture.overrides, approvedAssetVersions: [approved]});
+  const audioMix = audioMixSchema.parse({profile: "explainer", voiceGain: 1, musicDecision: "pending", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: false});
+  return finalizeProductionBundle({schemaVersion: "1.0", production: draft, overrides: fixture.overrides, approvedAssetVersions: [approved], audioMix, soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T20:30:00.000Z");
+}
+
 describe("StoryStage studio", () => {
   it("opens a real production setup from the home screen", async () => {
     const user = userEvent.setup();
@@ -83,6 +98,48 @@ describe("StoryStage studio", () => {
     expect(shotButtons).toHaveLength(11);
     for (const button of shotButtons) expect(button).not.toHaveAccessibleName(/insert|licensed media|diagram|generated illustration/i);
     expect(screen.getAllByText("kinetic type").length).toBeGreaterThan(0);
+  });
+
+  it("adopts the exact main-owned Rook approval revision and saves the same acknowledged draft", async () => {
+    const target = createApprovedRookTargetBundle();
+    const saveProductionBundle = vi.fn(async (request: Parameters<StoryStageDesktopBridge["saveProductionBundle"]>[0]) => {
+      const revision = (JSON.parse(request.serializedDraft) as {production: {revision: number}}).production.revision;
+      return {ok: true as const, productionId: "rook-pilot-001", revision, contentHash: revision === 2 ? target.contentHash : "b".repeat(64)};
+    });
+    const loadProductionBundle = vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(target)}));
+    window.storyStage = makeDesktopBridge({
+      saveProductionBundle,
+      loadProductionBundle,
+      listPublicShowPackCandidates: vi.fn(async () => ({candidates: [rookCandidateSummary]})),
+      reviewPublicShowPackCandidate: vi.fn(async () => ({status: "reviewed" as const, decision: "approved" as const, approvedAssetVersion: target.approvedAssetVersions![0]!, targetProductionRevision: 2, targetProductionBundleContentHash: target.contentHash})),
+    });
+    const user = await openProductionSetup();
+    await user.click(screen.getByRole("button", {name: /Load Rook Pilot 001/}));
+    await user.click(screen.getByRole("button", {name: "Create production"}));
+    await waitFor(() => expect(screen.getByText(/Saved bbbbbbbb/)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", {name: /Assets/}));
+    const reviewRegion = await screen.findByRole("generic", {name: "Rook review acknowledgements"});
+    for (const checkbox of within(reviewRegion).getAllByRole("checkbox")) await user.click(checkbox);
+    await user.click(screen.getByRole("button", {name: /Approve Rook and bind/}));
+    await waitFor(() => expect(loadProductionBundle).toHaveBeenCalledWith({productionId: "rook-pilot-001", revision: 2}));
+    await waitFor(() => expect(screen.getByText(/Saved [a-f0-9]{8}/)).toHaveTextContent(`Saved ${target.contentHash.slice(0, 8)}`));
+    const revisionTwoSave = saveProductionBundle.mock.calls.map(([request]) => JSON.parse(request.serializedDraft) as {production: {revision: number}; approvedAssetVersions?: ApprovedAssetVersion[]}).find((draft) => draft.production.revision === 2);
+    expect(revisionTwoSave?.approvedAssetVersions?.[0]?.contentHash).toBe(target.approvedAssetVersions?.[0]?.contentHash);
+    expect(screen.getByText("Approved and bound")).toBeInTheDocument();
+  });
+
+  it("shows a durable rejected Rook decision without offering incompatible actions", async () => {
+    const listPublicShowPackCandidates = vi.fn(async () => ({candidates: [{...rookCandidateSummary, canReview: false, review: {decision: "rejected" as const, decidedAt: "2026-07-17T20:45:00.000Z"}}]}));
+    window.storyStage = makeDesktopBridge({listPublicShowPackCandidates});
+    const user = await openProductionSetup();
+    await user.click(screen.getByRole("button", {name: /Load Rook Pilot 001/}));
+    await user.click(screen.getByRole("button", {name: "Create production"}));
+    await waitFor(() => expect(screen.getByText(/Saved aaaaaaaa/)).toBeInTheDocument());
+    await user.click(screen.getByRole("button", {name: /Assets/}));
+    expect(await screen.findByText("Rejected")).toBeInTheDocument();
+    expect(screen.getByText("Rejected for this production revision. No asset was bound.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", {name: /Approve Rook and bind/})).not.toBeInTheDocument();
+    expect(listPublicShowPackCandidates).toHaveBeenCalledWith({productionId: "rook-pilot-001", revision: 1, productionBundleContentHash: "a".repeat(64)});
   });
 
   it("changes the actual Show Pack and routing rules for a kids production", async () => {

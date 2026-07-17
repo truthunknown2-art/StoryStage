@@ -8,11 +8,12 @@
     "./approval-recovery": "./src/approval-recovery.ts",
     "./approved-asset-workflow": "./src/approved-asset-workflow.ts",
     "./public-show-pack-promotion": "./src/public-show-pack-promotion.ts",
+    "./public-show-pack-review-store": "./src/public-show-pack-review-store.ts",
     "./import-evidence-store": "./src/import-evidence-store.ts",
     "./import-record-builder": "./src/import-record-builder.ts"
   },
   "scripts": {
-    "test": "vitest run src/index.test.ts src/import-evidence-store.test.ts src/approved-asset-workflow.test.ts src/public-show-pack-promotion.test.ts",
+    "test": "vitest run src/index.test.ts src/import-evidence-store.test.ts src/approved-asset-workflow.test.ts src/public-show-pack-promotion.test.ts src/public-show-pack-review-store.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
