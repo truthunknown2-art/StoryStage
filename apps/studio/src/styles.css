@@ -275,6 +275,27 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .audio-mix-card > footer p { color: #69736f; font-size: 8px; }
 .audio-mix-card > footer button { align-items: center; background: #263b30; border: 1px solid #466451; border-radius: 5px; color: #9ad8b0; display: inline-flex; font-size: 8px; gap: 6px; padding: 8px 10px; }
 .audio-mix-card > footer button:disabled { cursor: not-allowed; opacity: .4; }
+.sfx-workspace-card { background: #111718; border: 1px solid #30393b; border-radius: 9px; display: grid; gap: 12px; padding: 15px 17px; }
+.sfx-workspace-card > header { align-items: flex-start; display: flex; justify-content: space-between; }
+.sfx-workspace-card h3 { color: #d5dcda; font-size: 13px; margin: 4px 0; }
+.sfx-workspace-card > header p:last-child, .sfx-empty { color: #687370; font-size: 8px; }
+.sfx-workspace-card button { background: #18201e; border: 1px solid #38443f; border-radius: 5px; color: #9aa7a1; font-size: 8px; padding: 7px 9px; }
+.sfx-workspace-card button:disabled { cursor: not-allowed; opacity: .4; }
+.sfx-asset-list { display: grid; gap: 7px; }
+.sfx-asset-list > div { align-items: center; background: #0d1313; border: 1px solid #293330; border-radius: 6px; display: grid; gap: 10px; grid-template-columns: minmax(150px, .7fr) minmax(240px, 1fr) auto; padding: 9px 10px; }
+.sfx-asset-list strong, .sfx-asset-list small { display: block; }
+.sfx-asset-list strong { color: #aeb9b4; font-size: 9px; }
+.sfx-asset-list small { color: #64706b; font-size: 7px; margin-top: 3px; text-transform: uppercase; }
+.sfx-asset-list audio { height: 32px; width: 100%; }
+.sfx-cue-list { border-top: 1px solid #28312f; display: grid; gap: 6px; padding-top: 10px; }
+.sfx-cue-list h4 { color: #91a09a; font-size: 8px; text-transform: uppercase; }
+.sfx-cue-list > div { align-items: center; display: grid; gap: 10px; grid-template-columns: minmax(180px, 1fr) 110px minmax(140px, .7fr) auto; }
+.sfx-cue-list span strong, .sfx-cue-list span small { display: block; }
+.sfx-cue-list span strong { color: #aeb9b4; font-size: 8px; }
+.sfx-cue-list span small { color: #5f6b66; font-size: 7px; margin-top: 2px; }
+.sfx-cue-list label { color: #68746f; display: grid; font-size: 7px; gap: 4px; text-transform: uppercase; }
+.sfx-cue-list input[type="number"] { background: #151b1c; border: 1px solid #343d3f; border-radius: 4px; color: #abb4b1; font-size: 8px; padding: 6px; width: 100%; }
+.sfx-cue-list input[type="range"] { accent-color: #75c69a; width: 100%; }
 .audio-workspace-grid { display: grid; gap: 14px; grid-template-columns: minmax(300px, .85fr) minmax(420px, 1.15fr); min-height: 430px; }
 .audio-cue-list { background: #101516; border: 1px solid #2b3234; border-radius: 9px; max-height: 560px; overflow: auto; padding: 7px; }
 .audio-cue-list > button { align-items: center; background: transparent; border: 1px solid transparent; border-radius: 6px; color: inherit; display: grid; gap: 10px; grid-template-columns: 62px minmax(0, 1fr) auto; padding: 10px; text-align: left; width: 100%; }

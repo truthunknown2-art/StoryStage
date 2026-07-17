@@ -5,6 +5,7 @@ import {
   exportGenerationJobRequestSchema,
   importVoiceTrackRequestSchema,
   importMusicTrackRequestSchema,
+  importSoundEffectRequestSchema,
   prepareGenerationImportRequestSchema,
   renderJobEventSchema,
   renderWorkerMessageSchema,
@@ -34,6 +35,12 @@ describe("StoryStage contracts", () => {
     const valid = {productionId: "production-one", revision: 1, productionBundleContentHash: "a".repeat(64)};
     expect(importMusicTrackRequestSchema.safeParse(valid).success).toBe(true);
     expect(importMusicTrackRequestSchema.safeParse({...valid, sourcePath: "C:/untrusted/music.wav"}).success).toBe(false);
+  });
+
+  it("keeps sound-effect import requests path-free and snapshot-bound", () => {
+    const valid = {productionId: "production-one", revision: 1, productionBundleContentHash: "a".repeat(64)};
+    expect(importSoundEffectRequestSchema.safeParse(valid).success).toBe(true);
+    expect(importSoundEffectRequestSchema.safeParse({...valid, sourcePath: "C:/untrusted/hit.wav"}).success).toBe(false);
   });
 
   it("validates render-worker messages at the process boundary", () => {

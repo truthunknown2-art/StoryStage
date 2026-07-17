@@ -11,6 +11,8 @@ import {
   IPC_CHANNELS,
   approveMusicTrackRequestSchema,
   approveMusicTrackResultSchema,
+  approveSoundEffectRequestSchema,
+  approveSoundEffectResultSchema,
   approveVoiceTrackRequestSchema,
   approveVoiceTrackResultSchema,
   assetWorkerCommandSchema,
@@ -27,6 +29,8 @@ import {
   importLooseCandidateFilesResultSchema,
   importMusicTrackRequestSchema,
   importMusicTrackResultSchema,
+  importSoundEffectRequestSchema,
+  importSoundEffectResultSchema,
   importVoiceTrackRequestSchema,
   importVoiceTrackResultSchema,
   listGenerationExchangesRequestSchema,
@@ -75,6 +79,7 @@ import {
   hashCanonical,
   inspectPcmWav,
   musicTrackSchema,
+  soundEffectAssetSchema,
   importRecordSchema,
   importValidationReportSchema,
   preparationReportSchema,
@@ -107,6 +112,7 @@ import {
   type GenerationJobDraft,
   type ImportRecord,
   type MusicTrack,
+  type SoundEffectAsset,
   type PreparationReport,
   type ProductionBundle,
   type ShowPack,
@@ -128,6 +134,7 @@ const generationExchangeRegistry = new Map<string, GenerationExchangeRecord>();
 const productionBundleRegistry = new Map<string, {bundle: ProductionBundle; bundleFile: string}>();
 const voiceTrackRegistry = new Map<string, VoiceTrack>();
 const musicTrackRegistry = new Map<string, MusicTrack>();
+const soundEffectRegistry = new Map<string, SoundEffectAsset>();
 const productionSaveQueues = new Map<string, Promise<ProductionBundle>>();
 const looseImportRegistry = new Map<string, {
   exchange: GenerationExchangeRecord;
@@ -196,6 +203,12 @@ async function readVerifiedVoiceTrack(trackInput: VoiceTrack): Promise<{bytes: B
 async function readVerifiedMusicTrack(trackInput: MusicTrack): Promise<{bytes: Buffer; file: string}> {
   const track = musicTrackSchema.parse(trackInput);
   if (!track.relativeFile.startsWith("music/")) throw new Error("Music asset is outside its private media scope.");
+  return readVerifiedVoiceTrack(track);
+}
+
+async function readVerifiedSoundEffect(trackInput: SoundEffectAsset): Promise<{bytes: Buffer; file: string}> {
+  const track = soundEffectAssetSchema.parse(trackInput);
+  if (!track.relativeFile.startsWith("sfx/")) throw new Error("Sound-effect asset is outside its private media scope.");
   return readVerifiedVoiceTrack(track);
 }
 
@@ -306,6 +319,7 @@ async function rehydrateProductionBundleRegistry(): Promise<void> {
   productionBundleRegistry.clear();
   voiceTrackRegistry.clear();
   musicTrackRegistry.clear();
+  soundEffectRegistry.clear();
   const productionsRoot = join(app.getPath("userData"), ".storystage-local", "productions");
   await mkdir(productionsRoot, {recursive: true});
   const rootInfo = await lstat(productionsRoot);
@@ -342,6 +356,14 @@ async function rehydrateProductionBundleRegistry(): Promise<void> {
             musicTrackRegistry.set(bundle.musicTrack.contentHash, bundle.musicTrack);
           } catch {
             // Keep the production visible, but never expose or render a missing/tampered music asset.
+          }
+        }
+        for (const soundEffect of bundle.soundEffectAssets ?? []) {
+          try {
+            await readVerifiedSoundEffect(soundEffect);
+            soundEffectRegistry.set(soundEffect.contentHash, soundEffect);
+          } catch {
+            // Keep the production visible, but never expose or render a missing/tampered sound-effect asset.
           }
         }
       } catch {
@@ -1151,13 +1173,14 @@ function installRenderedMediaProtocol() {
     try {
       const requestedUrl = new URL(request.url);
       if (requestedUrl.search || requestedUrl.hash) throw new Error("Unsupported media request.");
-      if (requestedUrl.hostname === "voice" || requestedUrl.hostname === "music") {
+      if (["voice", "music", "sfx"].includes(requestedUrl.hostname)) {
         const contentHash = decodeURIComponent(requestedUrl.pathname.slice(1));
         if (!/^[a-f0-9]{64}$/.test(contentHash)) throw new Error("Audio asset hash is invalid.");
         const isMusic = requestedUrl.hostname === "music";
-        const track = isMusic ? musicTrackRegistry.get(contentHash) : voiceTrackRegistry.get(contentHash);
+        const isSoundEffect = requestedUrl.hostname === "sfx";
+        const track = isMusic ? musicTrackRegistry.get(contentHash) : isSoundEffect ? soundEffectRegistry.get(contentHash) : voiceTrackRegistry.get(contentHash);
         if (!track) throw new Error("Audio asset is unavailable.");
-        const verified = isMusic ? await readVerifiedMusicTrack(track) : await readVerifiedVoiceTrack(track);
+        const verified = isMusic ? await readVerifiedMusicTrack(track) : isSoundEffect ? await readVerifiedSoundEffect(track) : await readVerifiedVoiceTrack(track);
         return net.fetch(pathToFileURL(verified.file).toString(), {headers: request.headers});
       }
       if (requestedUrl.hostname !== "render") throw new Error("Unsupported media request.");
@@ -1297,6 +1320,50 @@ ipcMain.handle(IPC_CHANNELS.approveMusicTrack, async (_event, rawRequest: unknow
     return approveMusicTrackResultSchema.parse({ok: true, track: approved});
   } catch (error) {
     return approveMusicTrackResultSchema.parse({ok: false, error: {code: "MUSIC_APPROVAL_FAILED", message: error instanceof Error ? error.message : "Music master could not be approved."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.importSoundEffect, async (_event, rawRequest: unknown) => {
+  try {
+    const request = importSoundEffectRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Sound-effect import requires the current acknowledged production snapshot.");
+    const selectionOptions: OpenDialogOptions = {title: "Import sound effect", properties: ["openFile"], filters: [{name: "Uncompressed WAV sound effect", extensions: ["wav"]}]};
+    const selection = mainWindow ? await dialog.showOpenDialog(mainWindow, selectionOptions) : await dialog.showOpenDialog(selectionOptions);
+    if (selection.canceled || selection.filePaths.length !== 1) return importSoundEffectResultSchema.parse({status: "cancelled"});
+    const sourceFile = selection.filePaths[0]!;
+    const sourceInfo = await lstat(sourceFile);
+    if (sourceInfo.isSymbolicLink() || !sourceInfo.isFile() || sourceInfo.size <= 0 || sourceInfo.size > 64 * 1024 * 1024) throw new Error("Sound effect must be a regular WAV file no larger than 64 MB.");
+    const bytes = await readFile(sourceFile);
+    const metadata = inspectPcmWav(bytes);
+    if (metadata.durationInSeconds > 300) throw new Error("A sound effect must be five minutes or shorter.");
+    const {dataBytes: _dataBytes, ...soundEffectMetadata} = metadata;
+    void _dataBytes;
+    const contentHash = createHash("sha256").update(bytes).digest("hex");
+    const relativeFile = `sfx/${request.productionId}/r${request.revision}/${contentHash}.wav`;
+    const targetFile = resolve(localAssetsRoot(), ...relativeFile.split("/"));
+    await publishImmutableVoiceFile(targetFile, bytes);
+    const asset = soundEffectAssetSchema.parse({id: `sfx-${contentHash.slice(0, 20)}`, contentHash, relativeFile, sourceFileName: basename(sourceFile), ...soundEffectMetadata, importedAt: new Date().toISOString(), approvalStatus: "imported", approvedAt: null});
+    await readVerifiedSoundEffect(asset);
+    soundEffectRegistry.set(asset.contentHash, asset);
+    return importSoundEffectResultSchema.parse({status: "imported", track: asset});
+  } catch (error) {
+    return importSoundEffectResultSchema.parse({status: "failed", error: {code: "SFX_IMPORT_FAILED", message: error instanceof Error ? error.message : "Sound effect could not be imported."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.approveSoundEffect, async (_event, rawRequest: unknown) => {
+  try {
+    const request = approveSoundEffectRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    const asset = stored?.bundle.soundEffectAssets?.find((candidate) => candidate.contentHash === request.soundEffectContentHash);
+    if (!stored || !asset || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Sound-effect approval requires the exact saved imported asset.");
+    await readVerifiedSoundEffect(asset);
+    const approved = soundEffectAssetSchema.parse({...asset, approvalStatus: "approved", approvedAt: new Date().toISOString()});
+    soundEffectRegistry.set(approved.contentHash, approved);
+    return approveSoundEffectResultSchema.parse({ok: true, track: approved});
+  } catch (error) {
+    return approveSoundEffectResultSchema.parse({ok: false, error: {code: "SFX_APPROVAL_FAILED", message: error instanceof Error ? error.message : "Sound effect could not be approved."}});
   }
 });
 
@@ -1679,6 +1746,7 @@ ipcMain.handle(IPC_CHANNELS.productionRenderStart, async (_event, payload: unkno
   if (!(await Promise.all(approvedVersions.map(verifyApprovedAssetVersionOnDisk))).every(Boolean)) throw new Error("An approved asset or its watched diagnostic changed after final approval. Rendering is blocked.");
   if (stored.bundle.voiceTrack?.approvalStatus === "approved") await readVerifiedVoiceTrack(stored.bundle.voiceTrack);
   if (stored.bundle.musicTrack?.approvalStatus === "approved") await readVerifiedMusicTrack(stored.bundle.musicTrack);
+  await Promise.all((stored.bundle.soundEffectAssets ?? []).filter((asset) => asset.approvalStatus === "approved").map(readVerifiedSoundEffect));
   const jobId = randomUUID();
   const localRoot = join(app.getPath("userData"), ".storystage-local");
   const outputRoot = join(localRoot, "renders", request.productionId, `r${request.revision}`);

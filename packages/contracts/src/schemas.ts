@@ -156,6 +156,10 @@ export const importMusicTrackRequestSchema = importVoiceTrackRequestSchema;
 export const importMusicTrackResultSchema = importVoiceTrackResultSchema;
 export const approveMusicTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), musicTrackContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true)}).strict();
 export const approveMusicTrackResultSchema = approveVoiceTrackResultSchema;
+export const importSoundEffectRequestSchema = importVoiceTrackRequestSchema;
+export const importSoundEffectResultSchema = importVoiceTrackResultSchema;
+export const approveSoundEffectRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), soundEffectContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true)}).strict();
+export const approveSoundEffectResultSchema = approveVoiceTrackResultSchema;
 
 export const saveProductionBundleRequestSchema = z.object({serializedDraft: z.string().min(2).max(10_000_000)}).strict();
 export const saveProductionBundleResultSchema = z.discriminatedUnion("ok", [
@@ -337,6 +341,8 @@ export const IPC_CHANNELS = {
   approveVoiceTrack: "storystage:approve-voice-track",
   importMusicTrack: "storystage:import-music-track",
   approveMusicTrack: "storystage:approve-music-track",
+  importSoundEffect: "storystage:import-sound-effect",
+  approveSoundEffect: "storystage:approve-sound-effect",
   renderEvent: "storystage:render-event",
   renderStart: "storystage:render-start",
   productionRenderStart: "storystage:production-render-start",
@@ -385,6 +391,10 @@ export type ImportMusicTrackRequest = z.infer<typeof importMusicTrackRequestSche
 export type ImportMusicTrackResult = z.infer<typeof importMusicTrackResultSchema>;
 export type ApproveMusicTrackRequest = z.infer<typeof approveMusicTrackRequestSchema>;
 export type ApproveMusicTrackResult = z.infer<typeof approveMusicTrackResultSchema>;
+export type ImportSoundEffectRequest = z.infer<typeof importSoundEffectRequestSchema>;
+export type ImportSoundEffectResult = z.infer<typeof importSoundEffectResultSchema>;
+export type ApproveSoundEffectRequest = z.infer<typeof approveSoundEffectRequestSchema>;
+export type ApproveSoundEffectResult = z.infer<typeof approveSoundEffectResultSchema>;
 export type RenderJobEvent = z.infer<typeof renderJobEventSchema>;
 export type RenderJobState = z.infer<typeof renderJobStateSchema>;
 export type RenderJobStatus = RenderJobState["status"];
@@ -412,6 +422,8 @@ export type StoryStageDesktopBridge = {
   approveVoiceTrack: (request: ApproveVoiceTrackRequest) => Promise<ApproveVoiceTrackResult>;
   importMusicTrack: (request: ImportMusicTrackRequest) => Promise<ImportMusicTrackResult>;
   approveMusicTrack: (request: ApproveMusicTrackRequest) => Promise<ApproveMusicTrackResult>;
+  importSoundEffect: (request: ImportSoundEffectRequest) => Promise<ImportSoundEffectResult>;
+  approveSoundEffect: (request: ApproveSoundEffectRequest) => Promise<ApproveSoundEffectResult>;
   startSampleRender: (request: StartRenderRequest) => Promise<StartRenderResponse>;
   startProductionRender: (request: StartProductionRenderRequest) => Promise<StartRenderResponse>;
   subscribeToRenderJobs: (listener: (event: RenderJobEvent) => void) => () => void;

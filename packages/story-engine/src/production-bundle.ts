@@ -12,6 +12,8 @@ import {
   productionEstimateSchema,
   resolvedProductionPlanSchema,
   shotOverrideSchema,
+  soundEffectAssetSchema,
+  soundEffectCueSchema,
   voiceTrackSchema,
 } from "./model";
 
@@ -26,6 +28,8 @@ const productionBundleFields = {
   approvedAssetVersions: z.array(approvedAssetVersionSchema).optional(),
   audioMix: audioMixSchema.optional(),
   musicTrack: musicTrackSchema.optional(),
+  soundEffectAssets: z.array(soundEffectAssetSchema).optional(),
+  soundEffectCues: z.array(soundEffectCueSchema).optional(),
   voiceTrack: voiceTrackSchema.optional(),
 };
 
@@ -59,6 +63,19 @@ const validateProductionBundle = (bundle: z.infer<z.ZodObject<typeof productionB
   if (bundle.audioMix && bundle.audioMix.profile !== bundle.production.projectType) context.addIssue({code: "custom", path: ["audioMix", "profile"], message: "Audio mix profile must match the production type."});
   if (bundle.audioMix?.musicDecision === "approved-master" && bundle.musicTrack?.approvalStatus !== "approved") context.addIssue({code: "custom", path: ["audioMix", "musicDecision"], message: "An approved-master music decision requires an approved music track."});
   if (bundle.musicTrack && !bundle.musicTrack.relativeFile.startsWith(`music/${identity}/`)) context.addIssue({code: "custom", path: ["musicTrack", "relativeFile"], message: "Music tracks must stay inside their production-scoped private asset path."});
+  const soundEffectAssets = bundle.soundEffectAssets ?? [];
+  if (new Set(soundEffectAssets.map((asset) => asset.contentHash)).size !== soundEffectAssets.length) context.addIssue({code: "custom", path: ["soundEffectAssets"], message: "Sound-effect assets must have unique content hashes."});
+  const soundEffectByHash = new Map(soundEffectAssets.map((asset) => [asset.contentHash, asset]));
+  for (const [index, asset] of soundEffectAssets.entries()) if (!asset.relativeFile.startsWith(`sfx/${identity}/`)) context.addIssue({code: "custom", path: ["soundEffectAssets", index, "relativeFile"], message: "Sound-effect assets must stay inside their production-scoped private asset path."});
+  const cueIds = new Set<string>();
+  for (const [index, cue] of (bundle.soundEffectCues ?? []).entries()) {
+    if (cueIds.has(cue.id)) context.addIssue({code: "custom", path: ["soundEffectCues", index, "id"], message: "Sound-effect cue ids must be unique."});
+    cueIds.add(cue.id);
+    const asset = soundEffectByHash.get(cue.assetContentHash);
+    const shot = bundle.renderPlan.shots.find((candidate) => candidate.id === cue.shotId);
+    if (!asset || asset.approvalStatus !== "approved") context.addIssue({code: "custom", path: ["soundEffectCues", index, "assetContentHash"], message: "Sound-effect cues require an approved bound asset."});
+    if (!shot || cue.offsetInFrames >= shot.durationInFrames) context.addIssue({code: "custom", path: ["soundEffectCues", index, "offsetInFrames"], message: "Sound-effect cues must start within a render-plan shot."});
+  }
   if (bundle.voiceTrack && !bundle.voiceTrack.relativeFile.startsWith(`voice/${identity}/`)) context.addIssue({code: "custom", path: ["voiceTrack", "relativeFile"], message: "Voice tracks must stay inside their production-scoped private asset path."});
   for (const [index, approved] of (bundle.approvedAssetVersions ?? []).entries()) {
     const requirement = bundle.resolvedPlan.requirements.find((candidate) => candidate.id === approved.requirementId);

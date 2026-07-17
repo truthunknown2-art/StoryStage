@@ -263,6 +263,18 @@ describe("StoryStage story engine", () => {
     expect(verifyProductionBundleHash(finalizeProductionBundle({...base, musicTrack}, "2026-07-17T00:06:00.000Z"))).toBe(true);
   });
 
+  it("binds custom sound effects to approved assets and shot-relative frame offsets", () => {
+    const build = buildFor("explainer", "studio", "production-sfx-binding");
+    const shot = build.renderPlan.shots[1]!;
+    const contentHash = "c".repeat(64);
+    const soundEffectAsset = {id: "sfx-cccccccccccccccccccc", contentHash, relativeFile: `sfx/${build.draft.productionId}/r1/${contentHash}.wav`, sourceFileName: "impact.wav", codec: "pcm-wav" as const, durationInSeconds: .5, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 16 as const, importedAt: "2026-07-17T00:00:00.000Z", approvalStatus: "approved" as const, approvedAt: "2026-07-17T00:05:00.000Z"};
+    const cue = {id: "sfx-cue-impact-one", assetContentHash: contentHash, shotId: shot.id, offsetInFrames: 4, gain: .5, label: "Impact"};
+    const base = {schemaVersion: "1.0" as const, production: build.draft, overrides: [], soundEffectAssets: [soundEffectAsset], soundEffectCues: [cue], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate};
+    expect(verifyProductionBundleHash(finalizeProductionBundle(base, "2026-07-17T00:06:00.000Z"))).toBe(true);
+    expect(() => finalizeProductionBundle({...base, soundEffectCues: [{...cue, offsetInFrames: shot.durationInFrames}]}, "2026-07-17T00:06:00.000Z")).toThrow(/within a render-plan shot/i);
+    expect(() => finalizeProductionBundle({...base, soundEffectAssets: [{...soundEffectAsset, approvalStatus: "imported" as const, approvedAt: null}]}, "2026-07-17T00:06:00.000Z")).toThrow(/approved bound asset/i);
+  });
+
   it("validates complete candidate kits by set and preserves the import evidence", () => {
     const build = buildFor("explainer", "studio", "production-import-record");
     const pack = getShowPack(build.draft.showPackId);

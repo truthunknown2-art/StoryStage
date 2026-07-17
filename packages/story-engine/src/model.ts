@@ -467,6 +467,15 @@ export const voiceTrackSchema = z.object({
   if ((track.approvalStatus === "approved") !== Boolean(track.approvedAt)) context.addIssue({code: "custom", path: ["approvedAt"], message: "Approved voice tracks require an approval timestamp; imported tracks must not have one."});
 });
 export const musicTrackSchema = voiceTrackSchema;
+export const soundEffectAssetSchema = voiceTrackSchema;
+export const soundEffectCueSchema = z.object({
+  id: identifierSchema,
+  assetContentHash: hashSchema,
+  shotId: identifierSchema,
+  offsetInFrames: z.number().int().nonnegative(),
+  gain: z.number().min(0).max(1),
+  label: z.string().trim().min(1).max(120),
+}).strict();
 
 export const resolvedEntitySchema = z.object({
   entityId: identifierSchema,
@@ -634,6 +643,8 @@ export type ApprovedAssetVersion = z.infer<typeof approvedAssetVersionSchema>;
 export type AudioMix = z.infer<typeof audioMixSchema>;
 export type VoiceTrack = z.infer<typeof voiceTrackSchema>;
 export type MusicTrack = z.infer<typeof musicTrackSchema>;
+export type SoundEffectAsset = z.infer<typeof soundEffectAssetSchema>;
+export type SoundEffectCue = z.infer<typeof soundEffectCueSchema>;
 export type ResolvedProductionPlan = z.infer<typeof resolvedProductionPlanSchema>;
 export type ShotOverride = z.infer<typeof shotOverrideSchema>;
 export type FrameAccurateRenderPlan = z.infer<typeof frameAccurateRenderPlanSchema>;

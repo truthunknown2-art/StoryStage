@@ -1,6 +1,6 @@
 import {Audio} from "@remotion/media";
 import type {Caption} from "@remotion/captions";
-import type {AudioMix, FrameAccurateRenderPlan} from "@storystage/story-engine";
+import type {AudioMix, FrameAccurateRenderPlan, SoundEffectCue} from "@storystage/story-engine";
 import {AbsoluteFill, Easing, Img, interpolate, Sequence, staticFile, useCurrentFrame} from "remotion";
 import {Captions} from "./Captions";
 
@@ -15,6 +15,8 @@ export type ProductionCompositionProps = {
   sliceDurationInFrames: number;
   voiceTrackDataUrl?: string;
   musicTrackDataUrl?: string;
+  soundEffectDataUrls?: Record<string, string>;
+  soundEffectCues?: SoundEffectCue[];
   audioMix?: AudioMix;
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
@@ -92,13 +94,19 @@ const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record
   </AbsoluteFill>;
 };
 
-export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl, musicTrackDataUrl, audioMix}) => {
+export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl, musicTrackDataUrl, soundEffectDataUrls = {}, soundEffectCues = [], audioMix}) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
   const captions: Caption[] = plan.shots.filter((shot) => shot.caption && shot.startFrame < duration).map((shot) => ({text: shot.caption!, startMs: shot.startFrame / plan.fps * 1000, endMs: Math.min(duration, shot.startFrame + shot.durationInFrames) / plan.fps * 1000, timestampMs: null, confidence: null}));
   return <AbsoluteFill style={{background: "#111718"}}>
     {plan.shots.filter((shot) => shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={Math.min(shot.durationInFrames, duration - shot.startFrame)} key={shot.id}><TransitionedShot projectType={plan.projectType} shot={shot}><ShotScene plan={plan} playbackAssets={playbackAssets} shot={shot} /></TransitionedShot></Sequence>)}
     {voiceTrackDataUrl ? <Audio src={voiceTrackDataUrl} volume={() => audioMix?.voiceGain ?? 1} /> : null}
     {musicTrackDataUrl && audioMix?.musicDecision === "approved-master" ? <Audio loop={audioMix.musicLoop ?? true} src={musicTrackDataUrl} volume={() => audioMix.musicGain ?? .1} /> : null}
+    {soundEffectCues.map((cue) => {
+      const shot = plan.shots.find((candidate) => candidate.id === cue.shotId);
+      const src = soundEffectDataUrls[cue.assetContentHash];
+      const from = (shot?.startFrame ?? duration) + cue.offsetInFrames;
+      return shot && src && from < duration ? <Sequence durationInFrames={duration - from} from={from} key={cue.id}><Audio src={src} volume={() => cue.gain} /></Sequence> : null;
+    })}
     {audioMix?.transitionSfx === "paper-flip" ? plan.shots.filter((shot) => shot.startFrame > 0 && shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={18} key={`sfx-${shot.id}`}><Audio src={staticFile("audio/paper-flip.wav")} volume={() => audioMix.transitionSfxGain} /></Sequence>) : null}
     <Captions captions={captions} />
   </AbsoluteFill>;

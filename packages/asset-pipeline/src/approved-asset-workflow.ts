@@ -152,6 +152,8 @@ export function buildApprovedProductionRevisionDraft(input: {sourceBundle: Produ
     approvedAssetVersions,
     ...(input.sourceBundle.audioMix ? {audioMix: input.sourceBundle.audioMix} : {}),
     ...(input.sourceBundle.musicTrack ? {musicTrack: input.sourceBundle.musicTrack} : {}),
+    ...(input.sourceBundle.soundEffectAssets ? {soundEffectAssets: input.sourceBundle.soundEffectAssets} : {}),
+    ...(input.sourceBundle.soundEffectCues ? {soundEffectCues: input.sourceBundle.soundEffectCues} : {}),
     ...(input.sourceBundle.voiceTrack ? {voiceTrack: input.sourceBundle.voiceTrack} : {}),
     resolvedPlan: rebuilt.resolvedPlan,
     renderPlan: rebuilt.renderPlan,

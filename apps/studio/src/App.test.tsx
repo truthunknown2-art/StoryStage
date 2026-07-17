@@ -41,6 +41,8 @@ function makeDesktopBridge(overrides: Partial<StoryStageDesktopBridge> = {}): St
     approveVoiceTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
     importMusicTrack: vi.fn(async () => ({status: "cancelled" as const})),
     approveMusicTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
+    importSoundEffect: vi.fn(async () => ({status: "cancelled" as const})),
+    approveSoundEffect: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
     startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
     startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
     subscribeToRenderJobs: vi.fn(() => () => undefined),
@@ -245,6 +247,37 @@ describe("StoryStage studio", () => {
     expect(screen.getByText(/music approved-master/)).toBeInTheDocument();
   });
 
+  it("imports, approves, and places a custom SFX cue relative to a shot", async () => {
+    const importedAsset = {id: "sfx-cccccccccccccccccccc", contentHash: "c".repeat(64), relativeFile: `sfx/production-placeholder/r1/${"c".repeat(64)}.wav`, sourceFileName: "clock-hit.wav", codec: "pcm-wav" as const, durationInSeconds: .8, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 16 as const, importedAt: "2026-07-17T12:00:00.000Z", approvalStatus: "imported" as const, approvedAt: null};
+    let boundAsset = importedAsset;
+    const bridge = makeDesktopBridge({
+      importSoundEffect: vi.fn(async (request) => {boundAsset = {...importedAsset, relativeFile: `sfx/${request.productionId}/r${request.revision}/${"c".repeat(64)}.wav`}; return {status: "imported" as const, track: boundAsset};}),
+      approveSoundEffect: vi.fn(async () => ({ok: true as const, track: {...boundAsset, approvalStatus: "approved" as const, approvedAt: "2026-07-17T12:05:00.000Z"}})),
+    });
+    window.storyStage = bridge;
+    const user = await createDefaultProduction();
+    await user.click(screen.getByRole("button", {name: "Audio"}));
+    const importButton = screen.getByRole("button", {name: "Import SFX WAV"});
+    await waitFor(() => expect(importButton).toBeEnabled());
+    await user.click(importButton);
+    const player = await screen.findByLabelText("Sound effect clock-hit.wav");
+    fireEvent.ended(player);
+    const approve = screen.getByRole("button", {name: "Approve listened SFX"});
+    await waitFor(() => expect(approve).toBeEnabled());
+    await user.click(approve);
+    const place = await screen.findByRole("button", {name: /Place on 1\.01/});
+    await user.click(place);
+
+    expect(screen.getByLabelText("Offset frames for clock-hit")).toHaveValue(0);
+    await user.clear(screen.getByLabelText("Offset frames for clock-hit"));
+    await user.type(screen.getByLabelText("Offset frames for clock-hit"), "4");
+    expect(screen.getByLabelText("Offset frames for clock-hit")).toHaveValue(4);
+    expect(bridge.approveSoundEffect).toHaveBeenCalledWith(expect.objectContaining({soundEffectContentHash: "c".repeat(64), listenedThrough: true}));
+
+    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    expect(screen.getByText(/1\/1 effects approved · 1 shot-relative cues placed/)).toBeInTheDocument();
+  });
+
   it("requires explicit profile-aware music and SFX mix decisions", async () => {
     const user = await createDefaultProduction();
     await user.click(screen.getByRole("button", {name: "Audio"}));
@@ -319,6 +352,8 @@ describe("StoryStage studio", () => {
       approveVoiceTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
       importMusicTrack: vi.fn(async () => ({status: "cancelled" as const})),
       approveMusicTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
+      importSoundEffect: vi.fn(async () => ({status: "cancelled" as const})),
+      approveSoundEffect: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
       startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
       startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),
