@@ -93,6 +93,7 @@ const projectOptions: Array<{
 
 const framings = ["wide", "medium", "close-up", "insert"] as const;
 const cameraActions = ["cameraPush", "pan", "reframe"] as const;
+const transitionStyles = ["hard-cut", "foreground-wipe", "camera-carry", "brief-dissolve"] as const;
 
 const defaultRouting = (type: ProjectType): AssetRoutingPolicy => ({
   reuseApprovedFirst: true,
@@ -841,7 +842,8 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
               <header><div><p className="eyebrow">Shot inspector</p><h2>{selectedShot.number}</h2></div><span>{selectedShot.treatment.replaceAll("-", " ")}</span></header>
               <div className="intent-card"><WandSparkles size={19} /><div><small>Selected intent</small><strong>{selectedShot.title}</strong><p>{selectedShot.caption ?? selectedShot.actions[0]!.label}</p></div></div>
               <label>Framing<select aria-label="Shot framing" value={currentOverride?.framing ?? selectedShot.framing} onChange={(event) => updateOverride({framing: event.target.value as ShotOverride["framing"]})}>{framings.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
-              <div className="locked-field"><span>Visual treatment</span><strong>{selectedShot.treatment.replaceAll("-", " ")}</strong><small>Profile-directed; editable treatment routing arrives with Gate 8.</small></div>
+              <div className="locked-field"><span>Visual treatment</span><strong>{selectedShot.treatment.replaceAll("-", " ")}</strong><small>Asset-aware rerouting must update visual requirements; it is not a cosmetic shot override.</small></div>
+              <label>Transition<select aria-label="Shot transition" value={currentOverride?.transition ?? ""} onChange={(event) => updateOverride({transition: event.target.value ? event.target.value as ShotOverride["transition"] : undefined})}><option value="">Profile default · {selectedShot.transition.replaceAll("-", " ")}</option>{transitionStyles.map((value) => <option key={value} value={value}>{value.replaceAll("-", " ")}</option>)}</select></label>
               <label>Camera action<select aria-label="Camera action" value={currentOverride?.cameraAction ?? ""} onChange={(event) => updateOverride({cameraAction: event.target.value ? event.target.value as ShotOverride["cameraAction"] : undefined})}><option value="">Profile default</option>{cameraActions.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
               <label>Performance gesture<select aria-label="Performance gesture" value={currentOverride?.gesture ?? ""} onChange={(event) => updateOverride({gesture: event.target.value ? event.target.value as ShotOverride["gesture"] : undefined})}><option value="">Profile default</option>{pack.allowedGestures.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
               <div className="locked-field"><span>Resolved background</span><strong>{pack.assets.find((asset) => asset.id === selectedShot.locationAssetId)?.displayName ?? selectedShot.locationAssetId}</strong><small>Change the approved visual requirement, not the frozen render binding.</small></div>

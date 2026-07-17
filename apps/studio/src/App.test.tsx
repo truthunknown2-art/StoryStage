@@ -150,10 +150,12 @@ describe("StoryStage studio", () => {
     const user = await createDefaultProduction();
 
     await user.selectOptions(screen.getByLabelText("Shot framing"), "close-up");
+    await user.selectOptions(screen.getByLabelText("Shot transition"), "brief-dissolve");
     await user.selectOptions(screen.getByLabelText("Camera action"), "pan");
     await user.selectOptions(screen.getByLabelText("Performance gesture"), "point");
 
     expect(screen.getByLabelText("Shot framing")).toHaveValue("close-up");
+    expect(screen.getByLabelText("Shot transition")).toHaveValue("brief-dissolve");
     expect(screen.getByText("Override compiled into the current render plan.")).toBeInTheDocument();
     expect(screen.getAllByText("pan").some((element) => element.tagName === "B")).toBe(true);
     expect(screen.getAllByText("gesture").some((element) => element.tagName === "B")).toBe(true);

@@ -448,6 +448,7 @@ export const resolvedVisualSchema = z.object({requirementId: identifierSchema, r
 export const shotOverrideSchema = z.object({
   shotId: identifierSchema,
   framing: shotFramingSchema.optional(),
+  transition: transitionStyleSchema.optional(),
   gesture: gestureSchema.optional(),
   gestureIntensity: z.number().min(0).max(1).optional(),
   cameraAction: z.enum(["cameraPush", "pan", "reframe"]).optional(),

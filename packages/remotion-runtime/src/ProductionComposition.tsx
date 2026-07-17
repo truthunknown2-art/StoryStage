@@ -20,6 +20,23 @@ const fallbackPalette = (projectType: FrameAccurateRenderPlan["projectType"]) =>
   ? {ink: "#123c43", paper: "#f3d979", accent: "#ef5c52", ground: "#245b53"}
   : {ink: "#171b1d", paper: "#e7ece8", accent: "#ef4e3b", ground: "#68726c"};
 
+const TransitionedShot: React.FC<{projectType: FrameAccurateRenderPlan["projectType"]; shot: RenderShot; children: React.ReactNode}> = ({projectType, shot, children}) => {
+  const frame = useCurrentFrame();
+  const palette = fallbackPalette(projectType);
+  const entranceFrames = Math.max(1, Math.min(12, shot.durationInFrames - 1));
+  const eased = Easing.bezier(.2, .8, .2, 1);
+  const opacity = shot.transition === "brief-dissolve" ? interpolate(frame, [0, entranceFrames], [0, 1], {easing: eased, extrapolateLeft: "clamp", extrapolateRight: "clamp"}) : 1;
+  const carry = shot.transition === "camera-carry" ? interpolate(frame, [0, entranceFrames], [-24, 0], {easing: eased, extrapolateLeft: "clamp", extrapolateRight: "clamp"}) : 0;
+  const carryScale = shot.transition === "camera-carry" ? interpolate(frame, [0, entranceFrames], [1.025, 1], {easing: eased, extrapolateLeft: "clamp", extrapolateRight: "clamp"}) : 1;
+  const wipeReveal = shot.transition === "foreground-wipe" ? interpolate(frame, [0, entranceFrames], [100, 0], {easing: eased, extrapolateLeft: "clamp", extrapolateRight: "clamp"}) : 0;
+  const wipeEdge = shot.transition === "foreground-wipe" ? interpolate(frame, [0, entranceFrames], [-8, 108], {easing: eased, extrapolateLeft: "clamp", extrapolateRight: "clamp"}) : -20;
+
+  return <AbsoluteFill style={{background: palette.ink, overflow: "hidden"}}>
+    <AbsoluteFill style={{clipPath: shot.transition === "foreground-wipe" ? `inset(0 ${wipeReveal}% 0 0)` : undefined, opacity, scale: carryScale, translate: `${carry}px 0`}}>{children}</AbsoluteFill>
+    {shot.transition === "foreground-wipe" && frame <= entranceFrames ? <div style={{background: `linear-gradient(90deg, transparent, ${palette.accent} 45%, ${palette.paper})`, height: "120%", left: `${wipeEdge}%`, opacity: .92, position: "absolute", top: "-10%", rotate: "7deg", width: "12%"}} /> : null}
+  </AbsoluteFill>;
+};
+
 const ShotBackground: React.FC<{asset?: BackgroundPlaybackAsset; projectType: FrameAccurateRenderPlan["projectType"]; shot: RenderShot}> = ({asset, projectType, shot}) => {
   const frame = useCurrentFrame();
   const palette = fallbackPalette(projectType);
@@ -68,7 +85,7 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({pla
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
   const captions: Caption[] = plan.shots.filter((shot) => shot.caption && shot.startFrame < duration).map((shot) => ({text: shot.caption!, startMs: shot.startFrame / plan.fps * 1000, endMs: Math.min(duration, shot.startFrame + shot.durationInFrames) / plan.fps * 1000, timestampMs: null, confidence: null}));
   return <AbsoluteFill style={{background: "#111718"}}>
-    {plan.shots.filter((shot) => shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={Math.min(shot.durationInFrames, duration - shot.startFrame)} key={shot.id}><ShotScene plan={plan} playbackAssets={playbackAssets} shot={shot} /></Sequence>)}
+    {plan.shots.filter((shot) => shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={Math.min(shot.durationInFrames, duration - shot.startFrame)} key={shot.id}><TransitionedShot projectType={plan.projectType} shot={shot}><ShotScene plan={plan} playbackAssets={playbackAssets} shot={shot} /></TransitionedShot></Sequence>)}
     <Audio loop src={staticFile("audio/paper-flip.wav")} volume={0.025} />
     {plan.shots.filter((shot) => shot.startFrame > 0 && shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={18} key={`sfx-${shot.id}`}><Audio src={staticFile("audio/paper-flip.wav")} volume={0.2} /></Sequence>)}
     <Captions captions={captions} />

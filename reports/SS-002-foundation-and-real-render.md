@@ -37,18 +37,18 @@ Observed output:
 - diagnostic report hash `4d5c922ab564f4c1cddef8dd8d89d68ef366f0592b1787db3ca354d807a03fcc`
 - exact decoded frames 0, 45, 90, 135, and 179 have matching SHA-256 hashes across both renders
 
-Visual inspection confirms actual approved character pixels, pose/mouth/arm changes, plan-driven shot cuts, camera scaling/movement, and fallback visual treatment. The proof fixture is intentionally crude and must not be evaluated as final art.
+Visual inspection confirms actual approved character pixels, pose/mouth/arm changes, plan-driven shot cuts, deterministic transition entrance treatment, camera scaling/movement, and fallback visual treatment. The proof fixture is intentionally crude and must not be evaluated as final art. A two-pass proof after the transition implementation retained exact decoded-frame matches at all five sampled indices.
 
 ## Automated evidence
 
-- `pnpm verify`: privacy check, lint, all package typechecks, and 89 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
+- `pnpm verify`: privacy check, lint, all package typechecks, and 90 tests across fixtures, contracts, story-engine, desktop, asset-pipeline, studio, asset-worker, and render-worker
 - `pnpm build`: all nine code packages plus the Vite studio bundle
 - story-engine: production derivation, job/evidence hashes, lifecycle, approval/recompile, diagnostic binding, profile behavior
 - asset-pipeline: real transparent character-kit preparation, contact sheet, rig validation, opaque-mask stop, tamper rejection
 - asset-pipeline: 11 real filesystem replay tests after selected manifest, validation, diagnostic video/report, promoted files, manifest, validation, diagnostic video/report, and immediately before both review-persistence boundaries
 - desktop: approval transaction crash/retry tests at review persistence, production persistence, and approved-state persistence
 - render-worker: strict sample, production, and rig-diagnostic command routing
-- studio: host boundary, resume/review state, StrictMode-safe render subscription, exact-frame timeline/inspector synchronization, in-app completed-render playback and seeking, recoverable root renderer failure instead of a blank window, and evidence-backed preflight routing
+- studio: host boundary, resume/review state, StrictMode-safe render subscription, exact-frame timeline/inspector synchronization, real transition override editing, in-app completed-render playback and seeking, recoverable root renderer failure instead of a blank window, and evidence-backed preflight routing
 - desktop build: the asset pipeline is bundled into Electron instead of leaking workspace TypeScript imports; a build-time scan fails on any unresolved `@storystage/*` runtime import
 
 ## Live UI evidence
@@ -61,6 +61,6 @@ Screenshots are intentionally private engineering artifacts under `artifacts/SS-
 
 - Real original ChatGPT-generated kids and history art has not yet completed the manual round trip; the subscription prompt queue and private exported history job are ready for it.
 - The current character implementation is honest 2D pose-swap, not a skeletal or Blender rig.
-- Completed 24-second approved MP4s can now play and seek inside the editor, but unrendered live Remotion preview and full-length approved playback are not complete.
+- Completed 24-second approved MP4s can now play and seek inside the editor, and transition overrides visibly reach deterministic Remotion frames, but unrendered live Remotion preview, asset-aware visual-treatment rerouting, and full-length approved playback are not complete.
 - Final voice timing, lip sync, music selection, licensed archive/stock ingestion, and automatic Blender routing are not implemented.
 - The two polished 25-40 second profile outputs required by Gate 9 remain open.

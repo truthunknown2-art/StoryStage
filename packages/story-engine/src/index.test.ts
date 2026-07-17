@@ -274,8 +274,21 @@ describe("StoryStage story engine", () => {
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.every((binding) => binding.contentHash.length === 64))).toBe(true);
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.find((binding) => binding.role === "background")?.assetId === shot.locationAssetId)).toBe(true);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, treatment: "diagram"}).success).toBe(false);
+    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, transition: "brief-dissolve"}).success).toBe(true);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, locationAssetId: "other-background"}).success).toBe(false);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, cameraAction: "hardCut"}).success).toBe(false);
+  });
+
+  it("compiles transition overrides into rendered transition metadata and actions", () => {
+    const base = buildFor("explainer");
+    const shot = base.renderPlan.shots[1]!;
+    const dissolved = buildAnimaticSync({draft: base.draft, overrides: [{shotId: shot.id, transition: "brief-dissolve"}]}).renderPlan.shots[1]!;
+    const wiped = buildAnimaticSync({draft: base.draft, overrides: [{shotId: shot.id, transition: "foreground-wipe"}]}).renderPlan.shots[1]!;
+
+    expect(dissolved.transition).toBe("brief-dissolve");
+    expect(dissolved.actions.some((action) => action.detail.type === "hardCut")).toBe(false);
+    expect(wiped.transition).toBe("foreground-wipe");
+    expect(wiped.actions.some((action) => action.detail.type === "foregroundWipe")).toBe(true);
   });
 
   it("resolves only dependent shots when an immutable candidate is approved", () => {

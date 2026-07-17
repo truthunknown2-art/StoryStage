@@ -47,9 +47,16 @@ export function compileAnimation(plan: ResolvedProductionPlan): FrameAccurateRen
       else actions.push(cameraAction);
     }
 
+    if (override?.transition) {
+      const transitionActionTypes = new Set(["hardCut", "foregroundWipe"]);
+      for (let index = actions.length - 1; index >= 0; index -= 1) if (transitionActionTypes.has(actions[index]!.detail.type)) actions.splice(index, 1);
+      if (override.transition === "hard-cut") actions.push({id: `${shot.id}-override-hard-cut`, actorId: null, targetId: focusCharacterId, label: "Transition override: hard cut", startFrame, endFrame: startFrame + 1, detail: {type: "hardCut" as const}});
+      if (override.transition === "foreground-wipe") actions.push({id: `${shot.id}-override-foreground-wipe`, actorId: null, targetId: focusCharacterId, label: "Transition override: foreground wipe", startFrame, endFrame: startFrame + Math.min(12, shot.durationInFrames), detail: {type: "foregroundWipe" as const, layer: "environment" as const}});
+    }
+
     const visualBindings = shot.visualRequirementIds.map((id) => visualByRequirementId.get(id)).filter((visual): visual is NonNullable<typeof visual> => Boolean(visual));
     const background = visualBindings.find((visual) => visual.role === "background");
-    return {id: shot.id, sceneId: shot.sceneId, number: shot.number, title: shot.title, framing, treatment: shot.treatment, transition: shot.transition, locationAssetId: background?.assetId ?? placeholder.id, focusCharacterId, visualBindings, startFrame, durationInFrames: shot.durationInFrames, actions, caption: shot.caption};
+    return {id: shot.id, sceneId: shot.sceneId, number: shot.number, title: shot.title, framing, treatment: shot.treatment, transition: override?.transition ?? shot.transition, locationAssetId: background?.assetId ?? placeholder.id, focusCharacterId, visualBindings, startFrame, durationInFrames: shot.durationInFrames, actions, caption: shot.caption};
   });
 
   const payload = {

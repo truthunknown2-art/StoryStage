@@ -7,4 +7,8 @@ export default [
     files: ["packages/story-engine/**/*.ts", ".agents/skills/**/*.ts"],
     rules: {"@remotion/non-pure-animation": "off"},
   },
+  {
+    files: ["apps/studio/**/*.{ts,tsx}"],
+    rules: {"@remotion/non-pure-animation": "off"},
+  },
 ];
