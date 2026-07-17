@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {StoryStageDesktopBridge} from "@storystage/contracts";
 import {audioMixSchema, buildAnimaticSync, createRookPilot001Fixture, finalizeProductionBundle, getFullProductionRenderBlockers, type ApprovedAssetVersion} from "@storystage/story-engine";
-import {App} from "./App";
+import {App, buildChatGptAssetPrompt} from "./App";
 
 afterEach(() => {
   cleanup();
@@ -135,6 +135,18 @@ function refinalizeWithVoice(bundle: ReturnType<typeof createGateReadyRookBundle
 }
 
 describe("StoryStage studio", () => {
+  it("carries Rook's shot-specific art direction into the manual image prompt", () => {
+    const fixture = createRookPilot001Fixture();
+    const build = buildAnimaticSync(fixture);
+    const firstReconstruction = build.resolvedPlan.generationBriefs.find((brief) => build.renderPlan.shots.find((shot) => shot.number === "1.03")?.id === brief.consumingShotIds[0])!;
+    const prompt = buildChatGptAssetPrompt({title: fixture.draft.title}, firstReconstruction, 1, "candidate.png");
+
+    expect(prompt).toContain("one adult woman dances alone near the left third");
+    expect(prompt).toContain("hand-painted cut-paper shapes");
+    expect(prompt).toContain("no modern objects");
+    expect(prompt).toContain("complete 16:9 editorial frame");
+  });
+
   it("opens a real production setup from the home screen", async () => {
     const user = userEvent.setup();
     render(<App />);

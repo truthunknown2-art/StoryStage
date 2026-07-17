@@ -902,7 +902,7 @@ const promptRoleDirection = (brief: GenerationBrief, fileRole: string) => {
   return "Create one clean isolated production asset on transparency, or on the exact controlled matte if transparency is unavailable. Keep the full object visible and easy to cut out.";
 };
 
-function buildChatGptAssetPrompt(session: ProductionSession, brief: GenerationBrief, candidateSetNumber: number, fileRole: string) {
+export function buildChatGptAssetPrompt(session: Pick<ProductionSession, "title">, brief: GenerationBrief, candidateSetNumber: number, fileRole: string) {
   return [
     `Create ONE original image asset for the StoryStage production "${session.title}".`,
     `Entity: ${brief.entity.name} (${brief.outputRole.replaceAll("-", " ")}).`,
@@ -1238,7 +1238,8 @@ function AssetExchange({session, build, host, capabilities, onApprovedAsset, onS
       </section> : null}
       <section className="request-list" id="finish-asset-approvals" tabIndex={-1}><header><div><p className="eyebrow">Missing asset ledger</p><h2>{build.resolvedPlan.generationBriefs.length} generation briefs</h2></div><span>Approval required</span></header>
         {build.resolvedPlan.generationBriefs.map((request) => {
-          return <article className="request-card" key={request.id}><span className="request-kind">{request.outputRole.replaceAll("-", " ")}</span><div><h3>{request.entity.name}</h3><p>{request.creativeRequirements[0]}</p></div><dl><div><dt>Candidates</dt><dd>{request.candidateCount}</dd></div><div><dt>Quality</dt><dd>{request.imageQuality}</dd></div><div><dt>Layers</dt><dd>{request.backgroundLayerTarget}</dd></div><div><dt>Pose pack</dt><dd>{request.posePack}</dd></div></dl><span className="request-state">{request.status}</span></article>;
+          const shotDirection = request.creativeRequirements.find((requirement) => requirement.startsWith("Shot direction:"));
+          return <article className="request-card" key={request.id}><span className="request-kind">{request.outputRole.replaceAll("-", " ")}</span><div><h3>{request.entity.name}</h3><p>{shotDirection?.replace(/^Shot direction:\s*/, "") ?? request.creativeRequirements[0]}</p></div><dl><div><dt>Candidates</dt><dd>{request.candidateCount}</dd></div><div><dt>Quality</dt><dd>{request.imageQuality}</dd></div><div><dt>Layers</dt><dd>{request.backgroundLayerTarget}</dd></div><div><dt>Pose pack</dt><dd>{request.posePack}</dd></div></dl><span className="request-state">{request.status}</span></article>;
         })}
       </section>
     </div>

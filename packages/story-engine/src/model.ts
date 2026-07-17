@@ -493,6 +493,7 @@ export const resolvedVisualSchema = z.object({requirementId: identifierSchema, r
 export const shotOverrideSchema = z.object({
   shotId: identifierSchema,
   treatment: shotTreatmentSchema.optional(),
+  imageDirection: z.string().trim().min(1).max(2000).optional(),
   framing: shotFramingSchema.optional(),
   transition: transitionStyleSchema.optional(),
   caption: z.string().trim().min(1).max(500).nullable().optional(),

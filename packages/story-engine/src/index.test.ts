@@ -190,6 +190,13 @@ describe("StoryStage story engine", () => {
     expect(build.renderPlan.shots.every((shot) => Boolean(shot.editorialText))).toBe(true);
     expect(build.resolvedPlan.generationBriefs).toHaveLength(3);
     expect(build.resolvedPlan.generationBriefs.every((brief) => brief.outputRole === "reconstruction" && brief.consumingShotIds.length === 1)).toBe(true);
+    const reconstructionDirectionByShotNumber = new Map(build.resolvedPlan.generationBriefs.map((brief) => {
+      const shot = build.renderPlan.shots.find((candidate) => brief.consumingShotIds.includes(candidate.id))!;
+      return [shot.number, brief.creativeRequirements.find((requirement) => requirement.startsWith("Shot direction:"))];
+    }));
+    expect(reconstructionDirectionByShotNumber.get("1.03")).toMatch(/one adult woman dances alone.*cut-paper/i);
+    expect(reconstructionDirectionByShotNumber.get("1.05")).toMatch(/genuine public emergency.*gentle pan/i);
+    expect(reconstructionDirectionByShotNumber.get("1.08")).toMatch(/raised wooden stage.*civic officials/i);
     expect((build.metrics.treatmentDistribution["generated-illustration"] ?? 0) + (build.metrics.treatmentDistribution.diagram ?? 0) + (build.metrics.treatmentDistribution["kinetic-type"] ?? 0)).toBeGreaterThan(0.6);
     expect(build.renderPlan.shots.filter((shot) => shot.caption).every((shot) => shot.actions.some((action) => action.detail.type === "talk"))).toBe(true);
   });
@@ -376,6 +383,7 @@ describe("StoryStage story engine", () => {
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.every((binding) => binding.contentHash.length === 64))).toBe(true);
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.find((binding) => binding.role === "background")?.assetId === shot.locationAssetId)).toBe(true);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, treatment: "diagram"}).success).toBe(true);
+    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, imageDirection: "Wide editorial reconstruction with a readable focal point."}).success).toBe(true);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, transition: "brief-dissolve"}).success).toBe(true);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, locationAssetId: "other-background"}).success).toBe(false);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, cameraAction: "hardCut"}).success).toBe(false);

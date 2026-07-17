@@ -69,10 +69,17 @@ function outputRole(requirement: AssetRequirement, entity: StoryEntity | undefin
   return "editorial-illustration";
 }
 
-function makeGenerationBrief(showPack: ShowPack, creativePlan: CreativeEpisodePlan, requirement: AssetRequirement, entity: StoryEntity | undefined): GenerationBrief {
+function makeGenerationBrief(showPack: ShowPack, creativePlan: CreativeEpisodePlan, requirement: AssetRequirement, entity: StoryEntity | undefined, overrides: ShotOverride[]): GenerationBrief {
   const output = outputRole(requirement, entity);
   const compatibleKind = entity ? assetKindForEntity(entity) : output === "diagram" ? "graphic" : "placeholder";
   const references = showPack.assets.filter((asset) => asset.kind === compatibleKind && asset.kind !== "placeholder").slice(0, 2).map((asset) => ({assetId: asset.id, contentHash: asset.contentHash}));
+  const directionByShotId = new Map(overrides.filter((override) => override.imageDirection).map((override) => [override.shotId, override.imageDirection!]));
+  const shotDirections = creativePlan.shots
+    .filter((shot) => requirement.consumingShotIds.includes(shot.id))
+    .map((shot) => directionByShotId.get(shot.id))
+    .filter((direction): direction is string => Boolean(direction))
+    .filter((direction, index, directions) => directions.indexOf(direction) === index)
+    .map((direction) => `Shot direction: ${direction}`);
   return generationBriefSchema.parse({
     schemaVersion: "1.0",
     id: `brief-${requirement.id}`,
@@ -95,7 +102,7 @@ function makeGenerationBrief(showPack: ShowPack, creativePlan: CreativeEpisodePl
         .map((shot) => shot.sourceExcerpt)
         .filter((excerpt, index, excerpts) => excerpt.length > 0 && excerpts.indexOf(excerpt) === index)
         .slice(0, 3),
-      creativeRequirements: [`Create an original ${output.replaceAll("-", " ")} for ${entity?.name ?? requirement.role}.`, ...showPack.profile.qualityRules],
+      creativeRequirements: [`Create an original ${output.replaceAll("-", " ")} for ${entity?.name ?? requirement.role}.`, ...shotDirections, ...showPack.profile.qualityRules],
     continuityRequirements: [`Match style bible ${showPack.styleBible.id} at ${showPack.styleBible.contentHash}.`, "Preserve approved identity and proportions across every returned file."],
     prohibitedChanges: ["Do not copy supplied reference-channel characters or branded art.", "Do not add text, signatures, watermarks, or unrequested props."],
     expectedFiles: output === "character-canonical-sheet" ? ["identity-sheet.png", "neutral-pose.png", "talk-pose.png", "reaction-pose.png"] : output === "background-master" ? ["clean-plate.png", "midground.png", "foreground-occluders.png"] : ["candidate.png"],
@@ -160,7 +167,7 @@ export function resolveAssets(creativePlanInput: CreativeEpisodePlan, showPack: 
       warnings.push(`${requirement.id} remains unmet because the ${creativePlan.productionPolicy.preset} generation budget is exhausted or disabled.`);
       continue;
     }
-    generationBriefs.push(makeGenerationBrief(showPack, creativePlan, requirement, requirement.entityId ? entityById.get(requirement.entityId) : undefined));
+    generationBriefs.push(makeGenerationBrief(showPack, creativePlan, requirement, requirement.entityId ? entityById.get(requirement.entityId) : undefined, overrides));
   }
 
   const requirementByGroupKey = new Map(requirements.map((requirement) => [requirement.id.replace(/^requirement-/, ""), requirement]));

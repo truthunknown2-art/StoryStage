@@ -12,6 +12,7 @@ Put an actual show through the accepted StoryStage machinery. Carry the existing
 - Preserve the existing script as `draft-needs-user-approval`; do not extend it unless the user requests a story or pacing change.
 - Freeze an explicit 11-shot editorial map with at least 60% diagram, kinetic-type, or labeled-reconstruction treatments and hard cuts after the establishing shot.
 - Generate acquisition briefs only for visuals consumed by the frozen pilot. The first content pass requires exactly three one-shot reconstruction briefs; generic library expansion is excluded.
+- Bind each reconstruction brief to the consuming shot's authored subject, period setting, composition, mood, palette, and camera intent so the manual ChatGPT Images prompt is production-specific rather than generic.
 - Render approved editorial visuals according to their manifest class. Opaque reconstructions must render full-frame with a visible reconstruction label; they must not be rejected as transparent prop cutouts.
 - Code-authored diagrams must communicate the actual narrated claim rather than displaying the generic archive-stage fallback.
 - Rook, script, each reconstruction, final narration, spoken timing, audio mix, and delivery remain evidence-backed human gates.
