@@ -7,6 +7,7 @@ import {
   approvedAssetVersionSchema,
   frameAccurateRenderPlanSchema,
   hashSchema,
+  musicTrackSchema,
   productionDraftSchema,
   productionEstimateSchema,
   resolvedProductionPlanSchema,
@@ -24,6 +25,7 @@ const productionBundleFields = {
   estimate: productionEstimateSchema,
   approvedAssetVersions: z.array(approvedAssetVersionSchema).optional(),
   audioMix: audioMixSchema.optional(),
+  musicTrack: musicTrackSchema.optional(),
   voiceTrack: voiceTrackSchema.optional(),
 };
 
@@ -55,6 +57,8 @@ const validateProductionBundle = (bundle: z.infer<z.ZodObject<typeof productionB
   if (hashCanonical(bundle.overrides) !== hashCanonical(bundle.resolvedPlan.overrides)) context.addIssue({code: "custom", message: "Production bundle overrides must match the resolved plan."});
   if (hashCanonical(bundle.metrics) !== hashCanonical(bundle.renderPlan.metrics)) context.addIssue({code: "custom", message: "Production bundle metrics must match the frozen render plan."});
   if (bundle.audioMix && bundle.audioMix.profile !== bundle.production.projectType) context.addIssue({code: "custom", path: ["audioMix", "profile"], message: "Audio mix profile must match the production type."});
+  if (bundle.audioMix?.musicDecision === "approved-master" && bundle.musicTrack?.approvalStatus !== "approved") context.addIssue({code: "custom", path: ["audioMix", "musicDecision"], message: "An approved-master music decision requires an approved music track."});
+  if (bundle.musicTrack && !bundle.musicTrack.relativeFile.startsWith(`music/${identity}/`)) context.addIssue({code: "custom", path: ["musicTrack", "relativeFile"], message: "Music tracks must stay inside their production-scoped private asset path."});
   if (bundle.voiceTrack && !bundle.voiceTrack.relativeFile.startsWith(`voice/${identity}/`)) context.addIssue({code: "custom", path: ["voiceTrack", "relativeFile"], message: "Voice tracks must stay inside their production-scoped private asset path."});
   for (const [index, approved] of (bundle.approvedAssetVersions ?? []).entries()) {
     const requirement = bundle.resolvedPlan.requirements.find((candidate) => candidate.id === approved.requirementId);

@@ -253,6 +253,16 @@ describe("StoryStage story engine", () => {
     expect(migrated.renderPlan.shots.flatMap((shot) => shot.actions).filter((action) => action.detail.type === "talk").every((action) => action.detail.type === "talk" && action.detail.mouthCue === undefined)).toBe(true);
   });
 
+  it("requires an approved private music master when the reviewed mix selects one", () => {
+    const build = buildFor("kids", "studio", "production-music-binding");
+    const audioMix = {profile: "kids" as const, voiceGain: 1, musicDecision: "approved-master" as const, musicGain: .12, musicLoop: true, transitionSfx: "off" as const, transitionSfxGain: .1, reviewed: true};
+    const base = {schemaVersion: "1.0" as const, production: build.draft, overrides: [], audioMix, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate};
+    expect(() => finalizeProductionBundle(base, "2026-07-17T00:00:00.000Z")).toThrow(/approved music track/i);
+    const contentHash = "b".repeat(64);
+    const musicTrack = {id: "music-bbbbbbbbbbbbbbbbbbbb", contentHash, relativeFile: `music/${build.draft.productionId}/r1/${contentHash}.wav`, sourceFileName: "approved-bed.wav", codec: "pcm-wav" as const, durationInSeconds: 60, sampleRate: 48_000, channels: 2 as const, bitsPerSample: 24 as const, importedAt: "2026-07-17T00:00:00.000Z", approvalStatus: "approved" as const, approvedAt: "2026-07-17T00:05:00.000Z"};
+    expect(verifyProductionBundleHash(finalizeProductionBundle({...base, musicTrack}, "2026-07-17T00:06:00.000Z"))).toBe(true);
+  });
+
   it("validates complete candidate kits by set and preserves the import evidence", () => {
     const build = buildFor("explainer", "studio", "production-import-record");
     const pack = getShowPack(build.draft.showPackId);

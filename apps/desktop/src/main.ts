@@ -9,6 +9,8 @@ import {commitImportEvidenceDirectory} from "@storystage/asset-pipeline/import-e
 import {createImportRecordFromStagedCandidates} from "@storystage/asset-pipeline/import-record-builder";
 import {
   IPC_CHANNELS,
+  approveMusicTrackRequestSchema,
+  approveMusicTrackResultSchema,
   approveVoiceTrackRequestSchema,
   approveVoiceTrackResultSchema,
   assetWorkerCommandSchema,
@@ -23,6 +25,8 @@ import {
   getGenerationExchangeResultSchema,
   importLooseCandidateFilesRequestSchema,
   importLooseCandidateFilesResultSchema,
+  importMusicTrackRequestSchema,
+  importMusicTrackResultSchema,
   importVoiceTrackRequestSchema,
   importVoiceTrackResultSchema,
   listGenerationExchangesRequestSchema,
@@ -70,6 +74,7 @@ import {
   getShowPack,
   hashCanonical,
   inspectPcmWav,
+  musicTrackSchema,
   importRecordSchema,
   importValidationReportSchema,
   preparationReportSchema,
@@ -101,6 +106,7 @@ import {
   type GenerationJob,
   type GenerationJobDraft,
   type ImportRecord,
+  type MusicTrack,
   type PreparationReport,
   type ProductionBundle,
   type ShowPack,
@@ -121,6 +127,7 @@ type GenerationExchangeRecord = {job: GenerationJob; jobFile: string; stateFile:
 const generationExchangeRegistry = new Map<string, GenerationExchangeRecord>();
 const productionBundleRegistry = new Map<string, {bundle: ProductionBundle; bundleFile: string}>();
 const voiceTrackRegistry = new Map<string, VoiceTrack>();
+const musicTrackRegistry = new Map<string, MusicTrack>();
 const productionSaveQueues = new Map<string, Promise<ProductionBundle>>();
 const looseImportRegistry = new Map<string, {
   exchange: GenerationExchangeRecord;
@@ -184,6 +191,12 @@ async function readVerifiedVoiceTrack(trackInput: VoiceTrack): Promise<{bytes: B
   const metadata = inspectPcmWav(bytes);
   if (metadata.codec !== track.codec || metadata.sampleRate !== track.sampleRate || metadata.channels !== track.channels || metadata.bitsPerSample !== track.bitsPerSample || metadata.durationInSeconds !== track.durationInSeconds) throw new Error("Voice asset metadata no longer matches the production binding.");
   return {bytes, file: canonicalFile};
+}
+
+async function readVerifiedMusicTrack(trackInput: MusicTrack): Promise<{bytes: Buffer; file: string}> {
+  const track = musicTrackSchema.parse(trackInput);
+  if (!track.relativeFile.startsWith("music/")) throw new Error("Music asset is outside its private media scope.");
+  return readVerifiedVoiceTrack(track);
 }
 
 function makeExchangeState(job: GenerationJob, status: GenerationExchangeState["status"], importId: string | null): GenerationExchangeState {
@@ -292,6 +305,7 @@ function summarizeProductionBundle(bundle: ProductionBundle): ProductionBundleSu
 async function rehydrateProductionBundleRegistry(): Promise<void> {
   productionBundleRegistry.clear();
   voiceTrackRegistry.clear();
+  musicTrackRegistry.clear();
   const productionsRoot = join(app.getPath("userData"), ".storystage-local", "productions");
   await mkdir(productionsRoot, {recursive: true});
   const rootInfo = await lstat(productionsRoot);
@@ -320,6 +334,14 @@ async function rehydrateProductionBundleRegistry(): Promise<void> {
             voiceTrackRegistry.set(bundle.voiceTrack.contentHash, bundle.voiceTrack);
           } catch {
             // Keep the production visible, but never expose or render a missing/tampered voice asset.
+          }
+        }
+        if (bundle.musicTrack) {
+          try {
+            await readVerifiedMusicTrack(bundle.musicTrack);
+            musicTrackRegistry.set(bundle.musicTrack.contentHash, bundle.musicTrack);
+          } catch {
+            // Keep the production visible, but never expose or render a missing/tampered music asset.
           }
         }
       } catch {
@@ -1129,12 +1151,13 @@ function installRenderedMediaProtocol() {
     try {
       const requestedUrl = new URL(request.url);
       if (requestedUrl.search || requestedUrl.hash) throw new Error("Unsupported media request.");
-      if (requestedUrl.hostname === "voice") {
+      if (requestedUrl.hostname === "voice" || requestedUrl.hostname === "music") {
         const contentHash = decodeURIComponent(requestedUrl.pathname.slice(1));
-        if (!/^[a-f0-9]{64}$/.test(contentHash)) throw new Error("Voice asset hash is invalid.");
-        const track = voiceTrackRegistry.get(contentHash);
-        if (!track) throw new Error("Voice asset is unavailable.");
-        const verified = await readVerifiedVoiceTrack(track);
+        if (!/^[a-f0-9]{64}$/.test(contentHash)) throw new Error("Audio asset hash is invalid.");
+        const isMusic = requestedUrl.hostname === "music";
+        const track = isMusic ? musicTrackRegistry.get(contentHash) : voiceTrackRegistry.get(contentHash);
+        if (!track) throw new Error("Audio asset is unavailable.");
+        const verified = isMusic ? await readVerifiedMusicTrack(track) : await readVerifiedVoiceTrack(track);
         return net.fetch(pathToFileURL(verified.file).toString(), {headers: request.headers});
       }
       if (requestedUrl.hostname !== "render") throw new Error("Unsupported media request.");
@@ -1231,6 +1254,49 @@ ipcMain.handle(IPC_CHANNELS.approveVoiceTrack, async (_event, rawRequest: unknow
     return approveVoiceTrackResultSchema.parse({ok: true, track: approved});
   } catch (error) {
     return approveVoiceTrackResultSchema.parse({ok: false, error: {code: "VOICE_APPROVAL_FAILED", message: error instanceof Error ? error.message : "Voice recording could not be approved."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.importMusicTrack, async (_event, rawRequest: unknown) => {
+  try {
+    const request = importMusicTrackRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Music import requires the current acknowledged production snapshot.");
+    const selectionOptions: OpenDialogOptions = {title: "Import music master", properties: ["openFile"], filters: [{name: "Uncompressed WAV music master", extensions: ["wav"]}]};
+    const selection = mainWindow ? await dialog.showOpenDialog(mainWindow, selectionOptions) : await dialog.showOpenDialog(selectionOptions);
+    if (selection.canceled || selection.filePaths.length !== 1) return importMusicTrackResultSchema.parse({status: "cancelled"});
+    const sourceFile = selection.filePaths[0]!;
+    const sourceInfo = await lstat(sourceFile);
+    if (sourceInfo.isSymbolicLink() || !sourceInfo.isFile() || sourceInfo.size <= 0 || sourceInfo.size > 256 * 1024 * 1024) throw new Error("Music master must be a regular WAV file no larger than 256 MB.");
+    const bytes = await readFile(sourceFile);
+    const metadata = inspectPcmWav(bytes);
+    const {dataBytes: _dataBytes, ...musicMetadata} = metadata;
+    void _dataBytes;
+    const contentHash = createHash("sha256").update(bytes).digest("hex");
+    const relativeFile = `music/${request.productionId}/r${request.revision}/${contentHash}.wav`;
+    const targetFile = resolve(localAssetsRoot(), ...relativeFile.split("/"));
+    await publishImmutableVoiceFile(targetFile, bytes);
+    const track = musicTrackSchema.parse({id: `music-${contentHash.slice(0, 20)}`, contentHash, relativeFile, sourceFileName: basename(sourceFile), ...musicMetadata, importedAt: new Date().toISOString(), approvalStatus: "imported", approvedAt: null});
+    await readVerifiedMusicTrack(track);
+    musicTrackRegistry.set(track.contentHash, track);
+    return importMusicTrackResultSchema.parse({status: "imported", track});
+  } catch (error) {
+    return importMusicTrackResultSchema.parse({status: "failed", error: {code: "MUSIC_IMPORT_FAILED", message: error instanceof Error ? error.message : "Music master could not be imported."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.approveMusicTrack, async (_event, rawRequest: unknown) => {
+  try {
+    const request = approveMusicTrackRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    const track = stored?.bundle.musicTrack;
+    if (!stored || !track || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash || track.contentHash !== request.musicTrackContentHash) throw new Error("Music approval requires the exact saved imported track.");
+    await readVerifiedMusicTrack(track);
+    const approved = musicTrackSchema.parse({...track, approvalStatus: "approved", approvedAt: new Date().toISOString()});
+    musicTrackRegistry.set(approved.contentHash, approved);
+    return approveMusicTrackResultSchema.parse({ok: true, track: approved});
+  } catch (error) {
+    return approveMusicTrackResultSchema.parse({ok: false, error: {code: "MUSIC_APPROVAL_FAILED", message: error instanceof Error ? error.message : "Music master could not be approved."}});
   }
 });
 
@@ -1612,6 +1678,7 @@ ipcMain.handle(IPC_CHANNELS.productionRenderStart, async (_event, payload: unkno
   const approvedVersions = stored.bundle.approvedAssetVersions ?? [];
   if (!(await Promise.all(approvedVersions.map(verifyApprovedAssetVersionOnDisk))).every(Boolean)) throw new Error("An approved asset or its watched diagnostic changed after final approval. Rendering is blocked.");
   if (stored.bundle.voiceTrack?.approvalStatus === "approved") await readVerifiedVoiceTrack(stored.bundle.voiceTrack);
+  if (stored.bundle.musicTrack?.approvalStatus === "approved") await readVerifiedMusicTrack(stored.bundle.musicTrack);
   const jobId = randomUUID();
   const localRoot = join(app.getPath("userData"), ".storystage-local");
   const outputRoot = join(localRoot, "renders", request.productionId, `r${request.revision}`);

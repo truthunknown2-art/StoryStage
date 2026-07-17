@@ -68,11 +68,11 @@ async function imageDataUrl(versionRoot: string, binding: RigAssetBinding, requi
   return `data:image/png;base64,${bytes.toString("base64")}`;
 }
 
-async function approvedVoiceDataUrl(assetsRoot: string, track: VoiceTrack): Promise<string> {
+async function approvedAudioDataUrl(assetsRoot: string, track: VoiceTrack): Promise<string> {
   const bytes = await trustedFile(assetsRoot, resolve(assetsRoot, ...track.relativeFile.split("/")), 256 * 1024 * 1024);
-  if (createHash("sha256").update(bytes).digest("hex") !== track.contentHash) throw new Error("Approved voice bytes failed their content hash.");
+  if (createHash("sha256").update(bytes).digest("hex") !== track.contentHash) throw new Error("Approved audio bytes failed their content hash.");
   const metadata = inspectPcmWav(bytes);
-  if (metadata.codec !== track.codec || metadata.sampleRate !== track.sampleRate || metadata.channels !== track.channels || metadata.bitsPerSample !== track.bitsPerSample || metadata.durationInSeconds !== track.durationInSeconds) throw new Error("Approved voice metadata no longer matches its production binding.");
+  if (metadata.codec !== track.codec || metadata.sampleRate !== track.sampleRate || metadata.channels !== track.channels || metadata.bitsPerSample !== track.bitsPerSample || metadata.durationInSeconds !== track.durationInSeconds) throw new Error("Approved audio metadata no longer matches its production binding.");
   return `data:audio/wav;base64,${bytes.toString("base64")}`;
 }
 
@@ -128,8 +128,9 @@ export async function renderProduction(options: RenderProductionOptions): Promis
   const approvedVersions = productionBundle.approvedAssetVersions ?? [];
   if (approvedVersions.length === 0) throw new Error("A production render requires at least one human-approved asset version.");
   const playbackEntries = await Promise.all(approvedVersions.map(async (approved) => [approved.assetId, await playbackAsset(options.assetsRoot, approved)] as const));
-  const voiceTrackDataUrl = productionBundle.voiceTrack?.approvalStatus === "approved" ? await approvedVoiceDataUrl(options.assetsRoot, productionBundle.voiceTrack) : undefined;
-  const inputProps: ProductionCompositionProps = {plan: productionBundle.renderPlan, playbackAssets: Object.fromEntries(playbackEntries), sliceDurationInFrames: Math.min(productionBundle.renderPlan.durationInFrames, productionBundle.renderPlan.fps * 24), ...(voiceTrackDataUrl ? {voiceTrackDataUrl} : {}), ...(productionBundle.audioMix ? {audioMix: productionBundle.audioMix} : {})};
+  const voiceTrackDataUrl = productionBundle.voiceTrack?.approvalStatus === "approved" ? await approvedAudioDataUrl(options.assetsRoot, productionBundle.voiceTrack) : undefined;
+  const musicTrackDataUrl = productionBundle.musicTrack?.approvalStatus === "approved" ? await approvedAudioDataUrl(options.assetsRoot, productionBundle.musicTrack) : undefined;
+  const inputProps: ProductionCompositionProps = {plan: productionBundle.renderPlan, playbackAssets: Object.fromEntries(playbackEntries), sliceDurationInFrames: Math.min(productionBundle.renderPlan.durationInFrames, productionBundle.renderPlan.fps * 24), ...(voiceTrackDataUrl ? {voiceTrackDataUrl} : {}), ...(musicTrackDataUrl ? {musicTrackDataUrl} : {}), ...(productionBundle.audioMix ? {audioMix: productionBundle.audioMix} : {})};
   const outputPath = resolve(options.outputRoot, `${options.jobId}.mp4`);
   await mkdir(options.outputRoot, {recursive: true});
   const serveUrl = await bundle({entryPoint: resolve(options.workspaceRoot, "packages/remotion-runtime/src/remotion-entry.ts"), publicDir: resolve(options.workspaceRoot, "packages/remotion-runtime/public"), onProgress: (progress) => emit(options.onEvent, {jobId: options.jobId, status: "bundling", progress: Math.min(.18, progress / 100 * .18), message: "Bundling the plan-driven production slice"})});

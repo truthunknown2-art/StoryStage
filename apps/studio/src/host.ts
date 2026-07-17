@@ -1,4 +1,6 @@
 import type {
+  ApproveMusicTrackRequest,
+  ApproveMusicTrackResult,
   ApproveVoiceTrackRequest,
   ApproveVoiceTrackResult,
   DesktopCapabilities,
@@ -8,6 +10,8 @@ import type {
   FinalizeLooseCandidateMappingResult,
   ImportLooseCandidateFilesRequest,
   ImportLooseCandidateFilesResult,
+  ImportMusicTrackRequest,
+  ImportMusicTrackResult,
   ImportVoiceTrackRequest,
   ImportVoiceTrackResult,
   GetGenerationExchangeRequest,
@@ -48,6 +52,8 @@ export interface HostAdapter {
   reviewCandidateSet(request: ReviewCandidateSetRequest): Promise<ReviewCandidateSetResult>;
   importVoiceTrack(request: ImportVoiceTrackRequest): Promise<ImportVoiceTrackResult>;
   approveVoiceTrack(request: ApproveVoiceTrackRequest): Promise<ApproveVoiceTrackResult>;
+  importMusicTrack(request: ImportMusicTrackRequest): Promise<ImportMusicTrackResult>;
+  approveMusicTrack(request: ApproveMusicTrackRequest): Promise<ApproveMusicTrackResult>;
   startSampleRender(request: StartRenderRequest): Promise<StartRenderResponse>;
   startProductionRender(request: StartProductionRenderRequest): Promise<StartRenderResponse>;
   subscribeToRenderJobs(listener: (event: RenderJobEvent) => void): () => void;
@@ -105,6 +111,14 @@ export class BrowserHostAdapter implements HostAdapter {
     void _request;
     return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Voice recording approval requires the desktop app."}};
   };
+  importMusicTrack = async (_request: ImportMusicTrackRequest): Promise<ImportMusicTrackResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Music import requires the desktop app."}};
+  };
+  approveMusicTrack = async (_request: ApproveMusicTrackRequest): Promise<ApproveMusicTrackResult> => {
+    void _request;
+    return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Music approval requires the desktop app."}};
+  };
   startSampleRender = async (_request: StartRenderRequest): Promise<StartRenderResponse> => {
     void _request;
     throw new Error("Local rendering is available in the desktop app");
@@ -133,6 +147,8 @@ export class DesktopHostAdapter implements HostAdapter {
   reviewCandidateSet = (request: ReviewCandidateSetRequest) => this.bridge.reviewCandidateSet(request);
   importVoiceTrack = (request: ImportVoiceTrackRequest) => this.bridge.importVoiceTrack(request);
   approveVoiceTrack = (request: ApproveVoiceTrackRequest) => this.bridge.approveVoiceTrack(request);
+  importMusicTrack = (request: ImportMusicTrackRequest) => this.bridge.importMusicTrack(request);
+  approveMusicTrack = (request: ApproveMusicTrackRequest) => this.bridge.approveMusicTrack(request);
   startSampleRender = (request: StartRenderRequest) => this.bridge.startSampleRender(request);
   startProductionRender = (request: StartProductionRenderRequest) => this.bridge.startProductionRender(request);
   subscribeToRenderJobs = (listener: (event: RenderJobEvent) => void) => this.bridge.subscribeToRenderJobs(listener);

@@ -24,6 +24,8 @@ describe("host adapters", () => {
       reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
       importVoiceTrack: vi.fn(async () => ({status: "cancelled" as const})),
       approveVoiceTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
+      importMusicTrack: vi.fn(async () => ({status: "cancelled" as const})),
+      approveMusicTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
       startSampleRender: vi.fn(async () => ({jobId: "job-1"})),
       startProductionRender: vi.fn(async () => ({jobId: "production-job-1"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),

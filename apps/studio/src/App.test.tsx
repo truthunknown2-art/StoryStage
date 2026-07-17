@@ -39,6 +39,8 @@ function makeDesktopBridge(overrides: Partial<StoryStageDesktopBridge> = {}): St
     reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
     importVoiceTrack: vi.fn(async () => ({status: "cancelled" as const})),
     approveVoiceTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
+    importMusicTrack: vi.fn(async () => ({status: "cancelled" as const})),
+    approveMusicTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
     startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
     startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
     subscribeToRenderJobs: vi.fn(() => () => undefined),
@@ -213,6 +215,36 @@ describe("StoryStage studio", () => {
     expect(bridge.approveVoiceTrack).toHaveBeenCalledWith(expect.objectContaining({voiceTrackContentHash: "a".repeat(64), listenedThrough: true}));
   });
 
+  it("imports, auditions, approves, and selects an exact local music master", async () => {
+    const importedTrack = {id: "music-bbbbbbbbbbbbbbbbbbbb", contentHash: "b".repeat(64), relativeFile: `music/production-placeholder/r1/${"b".repeat(64)}.wav`, sourceFileName: "gentle-bed.wav", codec: "pcm-wav" as const, durationInSeconds: 45, sampleRate: 48_000, channels: 2 as const, bitsPerSample: 24 as const, importedAt: "2026-07-17T12:00:00.000Z", approvalStatus: "imported" as const, approvedAt: null};
+    let boundTrack = importedTrack;
+    const bridge = makeDesktopBridge({
+      importMusicTrack: vi.fn(async (request) => {boundTrack = {...importedTrack, relativeFile: `music/${request.productionId}/r${request.revision}/${"b".repeat(64)}.wav`}; return {status: "imported" as const, track: boundTrack};}),
+      approveMusicTrack: vi.fn(async () => ({ok: true as const, track: {...boundTrack, approvalStatus: "approved" as const, approvedAt: "2026-07-17T12:05:00.000Z"}})),
+    });
+    window.storyStage = bridge;
+    const user = await createDefaultProduction();
+    await user.click(screen.getByRole("button", {name: "Audio"}));
+    const importButton = screen.getByRole("button", {name: "Import music WAV"});
+    await waitFor(() => expect(importButton).toBeEnabled());
+    await user.click(importButton);
+
+    const player = await screen.findByLabelText("Imported music master");
+    expect(player).toHaveAttribute("src", `storystage-media://music/${"b".repeat(64)}`);
+    fireEvent.ended(player);
+    const approveMusic = screen.getByRole("button", {name: "Approve listened music"});
+    await waitFor(() => expect(approveMusic).toBeEnabled());
+    await user.click(approveMusic);
+    expect(await screen.findByText("Approved music bytes are render-bound")).toBeInTheDocument();
+    expect(bridge.approveMusicTrack).toHaveBeenCalledWith(expect.objectContaining({musicTrackContentHash: "b".repeat(64), listenedThrough: true}));
+
+    await user.selectOptions(screen.getByLabelText("Music decision"), "approved-master");
+    expect(screen.getByLabelText("Music gain")).toBeEnabled();
+    await user.click(screen.getByRole("button", {name: "Mark mix reviewed"}));
+    await user.click(screen.getByRole("button", {name: "Preflight"}));
+    expect(screen.getByText(/music approved-master/)).toBeInTheDocument();
+  });
+
   it("requires explicit profile-aware music and SFX mix decisions", async () => {
     const user = await createDefaultProduction();
     await user.click(screen.getByRole("button", {name: "Audio"}));
@@ -285,6 +317,8 @@ describe("StoryStage studio", () => {
       reviewCandidateSet: vi.fn(async () => ({status: "failed" as const, error: {code: "NOT_READY", message: "Not ready"}})),
       importVoiceTrack: vi.fn(async () => ({status: "cancelled" as const})),
       approveVoiceTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
+      importMusicTrack: vi.fn(async () => ({status: "cancelled" as const})),
+      approveMusicTrack: vi.fn(async () => ({ok: false as const, error: {code: "NOT_READY", message: "Not ready"}})),
       startSampleRender: vi.fn(async () => ({jobId: "render-one"})),
       startProductionRender: vi.fn(async () => ({jobId: "production-render-one"})),
       subscribeToRenderJobs: vi.fn(() => () => undefined),

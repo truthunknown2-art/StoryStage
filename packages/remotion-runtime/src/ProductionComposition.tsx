@@ -14,6 +14,7 @@ export type ProductionCompositionProps = {
   playbackAssets: Record<string, PlaybackAsset>;
   sliceDurationInFrames: number;
   voiceTrackDataUrl?: string;
+  musicTrackDataUrl?: string;
   audioMix?: AudioMix;
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
@@ -91,12 +92,13 @@ const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record
   </AbsoluteFill>;
 };
 
-export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl, audioMix}) => {
+export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl, musicTrackDataUrl, audioMix}) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
   const captions: Caption[] = plan.shots.filter((shot) => shot.caption && shot.startFrame < duration).map((shot) => ({text: shot.caption!, startMs: shot.startFrame / plan.fps * 1000, endMs: Math.min(duration, shot.startFrame + shot.durationInFrames) / plan.fps * 1000, timestampMs: null, confidence: null}));
   return <AbsoluteFill style={{background: "#111718"}}>
     {plan.shots.filter((shot) => shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={Math.min(shot.durationInFrames, duration - shot.startFrame)} key={shot.id}><TransitionedShot projectType={plan.projectType} shot={shot}><ShotScene plan={plan} playbackAssets={playbackAssets} shot={shot} /></TransitionedShot></Sequence>)}
     {voiceTrackDataUrl ? <Audio src={voiceTrackDataUrl} volume={() => audioMix?.voiceGain ?? 1} /> : null}
+    {musicTrackDataUrl && audioMix?.musicDecision === "approved-master" ? <Audio loop={audioMix.musicLoop ?? true} src={musicTrackDataUrl} volume={() => audioMix.musicGain ?? .1} /> : null}
     {audioMix?.transitionSfx === "paper-flip" ? plan.shots.filter((shot) => shot.startFrame > 0 && shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={18} key={`sfx-${shot.id}`}><Audio src={staticFile("audio/paper-flip.wav")} volume={() => audioMix.transitionSfxGain} /></Sequence>) : null}
     <Captions captions={captions} />
   </AbsoluteFill>;

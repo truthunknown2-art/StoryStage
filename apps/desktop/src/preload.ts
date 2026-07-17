@@ -1,6 +1,8 @@
 import {contextBridge, ipcRenderer} from "electron";
 import {
   IPC_CHANNELS,
+  approveMusicTrackRequestSchema,
+  approveMusicTrackResultSchema,
   approveVoiceTrackRequestSchema,
   approveVoiceTrackResultSchema,
   desktopCapabilitiesSchema,
@@ -10,6 +12,8 @@ import {
   finalizeLooseCandidateMappingResultSchema,
   importLooseCandidateFilesRequestSchema,
   importLooseCandidateFilesResultSchema,
+  importMusicTrackRequestSchema,
+  importMusicTrackResultSchema,
   importVoiceTrackRequestSchema,
   importVoiceTrackResultSchema,
   getGenerationExchangeRequestSchema,
@@ -33,9 +37,11 @@ import {
   stageCandidateBundleRequestSchema,
   stageCandidateBundleResultSchema,
   type ExportGenerationJobRequest,
+  type ApproveMusicTrackRequest,
   type ApproveVoiceTrackRequest,
   type FinalizeLooseCandidateMappingRequest,
   type ImportLooseCandidateFilesRequest,
+  type ImportMusicTrackRequest,
   type ImportVoiceTrackRequest,
   type GetGenerationExchangeRequest,
   type ListGenerationExchangesRequest,
@@ -100,6 +106,14 @@ const bridge: StoryStageDesktopBridge = {
   approveVoiceTrack: async (request: ApproveVoiceTrackRequest) => {
     const payload = approveVoiceTrackRequestSchema.parse(request);
     return approveVoiceTrackResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.approveVoiceTrack, payload));
+  },
+  importMusicTrack: async (request: ImportMusicTrackRequest) => {
+    const payload = importMusicTrackRequestSchema.parse(request);
+    return importMusicTrackResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.importMusicTrack, payload));
+  },
+  approveMusicTrack: async (request: ApproveMusicTrackRequest) => {
+    const payload = approveMusicTrackRequestSchema.parse(request);
+    return approveMusicTrackResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.approveMusicTrack, payload));
   },
   startSampleRender: async (request: StartRenderRequest) => {
     const payload = startRenderRequestSchema.parse(request);

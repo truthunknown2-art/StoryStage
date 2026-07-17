@@ -151,6 +151,7 @@ export function buildApprovedProductionRevisionDraft(input: {sourceBundle: Produ
     overrides: input.sourceBundle.overrides,
     approvedAssetVersions,
     ...(input.sourceBundle.audioMix ? {audioMix: input.sourceBundle.audioMix} : {}),
+    ...(input.sourceBundle.musicTrack ? {musicTrack: input.sourceBundle.musicTrack} : {}),
     ...(input.sourceBundle.voiceTrack ? {voiceTrack: input.sourceBundle.voiceTrack} : {}),
     resolvedPlan: rebuilt.resolvedPlan,
     renderPlan: rebuilt.renderPlan,
