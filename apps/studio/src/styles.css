@@ -24,6 +24,17 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 h1, h2, h3, p, dl, dt, dd { margin: 0; }
 h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI", system-ui, sans-serif; }
 
+.fatal-error { align-content: center; background: radial-gradient(circle at 50% 38%, rgba(255,96,71,.08), transparent 34%), #0c1011; display: grid; justify-items: center; min-height: 100vh; padding: 48px; text-align: center; }
+.fatal-error-mark { align-items: center; background: #e9efec; border-radius: 11px; display: flex; height: 54px; justify-content: center; margin-bottom: 25px; position: relative; width: 54px; }
+.fatal-error-mark::before { border: 3px solid #101718; border-radius: 5px; content: ""; height: 28px; position: absolute; width: 34px; }
+.fatal-error-mark span { background: #ff6047; border-radius: 50%; height: 8px; position: absolute; right: 9px; top: 9px; width: 8px; }
+.fatal-error h1 { color: #f0f4f2; font-size: 34px; letter-spacing: -.045em; margin-top: 9px; }
+.fatal-error > p:not(.eyebrow) { color: #7f8c87; font-size: 12px; line-height: 1.6; margin-top: 14px; max-width: 610px; }
+.fatal-error > button { background: #91e4b3; border: 1px solid #91e4b3; border-radius: 7px; color: #112018; font-size: 11px; font-weight: 800; margin-top: 24px; padding: 11px 16px; }
+.fatal-error details { color: #64716c; font-size: 9px; margin-top: 19px; max-width: 700px; }
+.fatal-error summary { cursor: pointer; }
+.fatal-error code { background: #151b1b; border: 1px solid #293132; border-radius: 5px; color: #9ba7a2; display: block; margin-top: 8px; overflow-wrap: anywhere; padding: 9px; text-align: left; }
+
 .eyebrow { color: #6d7a76; font-size: 11px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
 .brand-lockup { align-items: center; display: flex; gap: 12px; min-width: 180px; }
 .brand-lockup strong { color: #f4f7f5; display: block; font-size: 16px; letter-spacing: -.03em; }
