@@ -1,4 +1,4 @@
-import {cleanup, fireEvent, render, screen, waitFor, within} from "@testing-library/react";
+import {act, cleanup, fireEvent, render, screen, waitFor, within} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {StoryStageDesktopBridge} from "@storystage/contracts";
@@ -266,11 +266,13 @@ describe("StoryStage studio", () => {
   it("starts the exact full-production render from the guided finish path", async () => {
     const bundle = createGateReadyRookBundle();
     const startProductionRender = vi.fn(async () => ({jobId: "finish-render-one"}));
+    let emitRenderJob: Parameters<StoryStageDesktopBridge["subscribeToRenderJobs"]>[0] | null = null;
     window.storyStage = makeDesktopBridge({
       listProductionBundles: vi.fn(async () => ({productions: [{productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash}]})),
       loadProductionBundle: vi.fn(async () => ({ok: true as const, serializedBundle: JSON.stringify(bundle)})),
       saveProductionBundle: vi.fn(async () => ({ok: true as const, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash})),
       startProductionRender,
+      subscribeToRenderJobs: vi.fn((listener) => {emitRenderJob = listener; return () => undefined;}),
     });
     const user = userEvent.setup();
     render(<App />);
@@ -283,6 +285,11 @@ describe("StoryStage studio", () => {
     await user.click(screen.getByRole("button", {name: "Render & publish delivery"}));
     expect(startProductionRender).toHaveBeenCalledWith({productionId: bundle.production.productionId, revision: bundle.production.revision, scope: "full-production"});
     expect(screen.getByRole("button", {name: "Final render running"})).toBeDisabled();
+
+    act(() => emitRenderJob?.({jobId: "finish-render-one", status: "failed", progress: null, message: "Encoding failed", error: {code: "ENCODE_FAILED", message: "The final encoder stopped."}}));
+    expect((await screen.findAllByText("The final encoder stopped.")).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole("button", {name: "Retry final render"}));
+    expect(startProductionRender).toHaveBeenCalledTimes(2);
   });
 
   it("plays a completed approved render inside the direction workspace", async () => {
