@@ -20,7 +20,7 @@ async function openProductionSetup() {
 
 async function createDefaultProduction() {
   const user = await openProductionSetup();
-  await user.click(screen.getByRole("button", {name: "Create production"}));
+  await user.click(screen.getByRole("button", {name: "Create first cut"}));
   return user;
 }
 
@@ -104,7 +104,8 @@ describe("StoryStage studio", () => {
 
     await user.click(screen.getByRole("button", {name: "New production"}));
 
-    expect(screen.getByRole("heading", {name: "Choose how this story should think."})).toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: "Paste the script. Pick its directing brain."})).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: "Create first cut"})).toBeEnabled();
     expect(screen.getByRole("heading", {name: "Production type"})).toBeInTheDocument();
     expect((screen.getByLabelText("Screenplay") as HTMLTextAreaElement).value).toContain("INT. WORKSHOP");
     expect(screen.queryByText(/intensity/i)).not.toBeInTheDocument();
@@ -115,10 +116,10 @@ describe("StoryStage studio", () => {
     await user.click(screen.getByRole("button", {name: /Load Rook Pilot 001/}));
     expect(screen.getByLabelText("Episode title")).toHaveValue("The Dancing Plague Had a Payroll");
     expect((screen.getByLabelText("Screenplay") as HTMLTextAreaElement).value).toContain("approved its entertainment budget");
-    expect(screen.getByText(/11 planned shots/)).toBeInTheDocument();
+    expect(screen.getByText(/First cut ready · 11 directed shots/)).toBeInTheDocument();
     expect(screen.getByText("0:26")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", {name: "Create production"}));
+    await user.click(screen.getByRole("button", {name: "Create first cut"}));
     const shotButtons = screen.getAllByRole("button", {name: /Select shot/});
     expect(shotButtons).toHaveLength(11);
     const preview = screen.getByRole("region", {name: "Live production preview"});
@@ -144,7 +145,7 @@ describe("StoryStage studio", () => {
     });
     const user = await openProductionSetup();
     await user.click(screen.getByRole("button", {name: /Load Rook Pilot 001/}));
-    await user.click(screen.getByRole("button", {name: "Create production"}));
+    await user.click(screen.getByRole("button", {name: "Create first cut"}));
     await waitFor(() => expect(screen.getByText(/Saved bbbbbbbb/)).toBeInTheDocument());
     await user.click(screen.getByRole("button", {name: /Assets/}));
     const reviewRegion = await screen.findByRole("generic", {name: "Rook review acknowledgements"});
@@ -163,7 +164,7 @@ describe("StoryStage studio", () => {
     window.storyStage = makeDesktopBridge({listPublicShowPackCandidates});
     const user = await openProductionSetup();
     await user.click(screen.getByRole("button", {name: /Load Rook Pilot 001/}));
-    await user.click(screen.getByRole("button", {name: "Create production"}));
+    await user.click(screen.getByRole("button", {name: "Create first cut"}));
     await waitFor(() => expect(screen.getByText(/Saved aaaaaaaa/)).toBeInTheDocument());
     await user.click(screen.getByRole("button", {name: /Assets/}));
     expect(await screen.findByText("Rejected")).toBeInTheDocument();
@@ -247,6 +248,30 @@ describe("StoryStage studio", () => {
     expect(screen.getByRole("button", {name: "Pause direction timeline"})).toBeInTheDocument();
     await user.click(screen.getByRole("button", {name: "Pause direction timeline"}));
     expect(screen.getByRole("button", {name: "Play direction timeline"})).toBeInTheDocument();
+  });
+
+  it("labels a silent first cut and routes its next upgrade to picture review", async () => {
+    const user = await createDefaultProduction();
+    const preview = screen.getByRole("region", {name: "Live production preview"});
+    expect(within(preview).getByText("Silent first cut · add narration")).toBeInTheDocument();
+    const path = within(preview).getByRole("region", {name: "First cut upgrade path"});
+    expect(within(path).getByText("Next: Review picture")).toBeInTheDocument();
+    expect(screen.getByRole("slider", {name: "Production playhead"})).toHaveValue("0");
+
+    await user.click(within(path).getByRole("button", {name: "Review picture"}));
+    expect(screen.getByRole("button", {name: /Assets/})).toHaveClass("is-active");
+  });
+
+  it("creates a profile-distinct Kids first cut without pretending placeholder art is approved", async () => {
+    const user = await openProductionSetup();
+    await user.click(screen.getByRole("button", {name: /Kids Adventure/}));
+    await user.click(screen.getByRole("button", {name: "Create first cut"}));
+
+    const preview = await screen.findByRole("region", {name: "Live production preview"});
+    expect(screen.getByText(/kids-adventure-director-v1/)).toBeInTheDocument();
+    expect(screen.getAllByText("Kids Adventure").some((element) => element.classList.contains("profile-chip"))).toBe(true);
+    expect(within(preview).getByText("PLACEHOLDER PREVIEW · NOT APPROVED")).toBeInTheDocument();
+    expect(within(preview).getByText("Silent first cut · add narration")).toBeInTheDocument();
   });
 
   it("routes approved composition pixels through the verified private media protocol without a preview watermark", async () => {
@@ -472,7 +497,7 @@ describe("StoryStage studio", () => {
     });
     const user = await openProductionSetup();
     await user.click(screen.getByRole("button", {name: /Load Rook Pilot 001/}));
-    await user.click(screen.getByRole("button", {name: "Create production"}));
+    await user.click(screen.getByRole("button", {name: "Create first cut"}));
     await waitFor(() => expect(screen.getByText(/Saved aaaaaaaa/)).toBeInTheDocument());
     await user.click(screen.getByRole("button", {name: "Finish episode"}));
     await user.click(screen.getByRole("button", {name: "Review Rook"}));

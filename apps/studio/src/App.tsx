@@ -199,7 +199,7 @@ function HomeScreen({onNew, recentProductions, onResume}: {onNew: () => void; re
             <span className="status-chip"><Sparkles size={13} />SS-003 Rook pilot in progress</span>
             <h2>Two production grammars.<br />One deterministic pipeline.</h2>
             <p>Start with a script and a real production policy. StoryStage extracts the cast and locations, directs profile-specific shots, identifies missing art, and freezes approved decisions for render.</p>
-            <button className="secondary-action" onClick={onNew}>Create from script <ArrowRight size={16} /></button>
+            <button className="secondary-action" onClick={onNew}>Paste a script and make a first cut <ArrowRight size={16} /></button>
           </div>
           <div className="grammar-stack" aria-label="Available production types">
             {projectOptions.map((option) => (
@@ -294,9 +294,9 @@ function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: 
 
   return (
     <div className="new-shell">
-      <header className="new-topbar"><Brand /><button className="quiet-button" onClick={onBack}><ArrowLeft size={15} />Productions</button><span className="step-label">New production · analysis first</span></header>
+      <header className="new-topbar"><Brand /><button className="quiet-button" onClick={onBack}><ArrowLeft size={15} />Productions</button><span className="step-label">Paste script · choose profile · watch first cut</span><button className="create-button topbar-first-cut" disabled={!preview || !title.trim()} onClick={create}>Create first cut <PlayCircle size={16} /></button></header>
       <main className="new-main">
-        <section className="new-heading"><p className="eyebrow">Production setup</p><h1>Choose how this story should think.</h1><p>Project type changes the actual directing and asset-routing policy. Nothing below is decorative.</p></section>
+        <section className="new-heading"><p className="eyebrow">First-cut setup</p><h1>Paste the script. Pick its directing brain.</h1><p>One click opens a watchable Remotion cut. Candidate art, silent audio, and unfinished approvals stay visibly labeled.</p></section>
 
         <section className="setup-section" aria-labelledby="type-heading">
           <div className="section-number">01</div><div className="section-title"><h2 id="type-heading">Production type</h2><p>Select the broad storytelling grammar.</p></div>
@@ -352,9 +352,9 @@ function NewProductionScreen({onBack, onCreate}: {onBack: () => void; onCreate: 
         </section>
 
         <footer className="create-footer">
-          <div>{preview ? <><PackageCheck size={18} /><span><strong>{preview.estimate.newRequirementCount} asset briefs</strong><small>{preview.estimate.shotCount} planned shots · {preview.estimate.deferredRequirementCount} deferred requirements</small></span></> : <><CircleAlert size={18} /><span><strong>Script needs attention</strong><small>Creation remains blocked until parsing succeeds.</small></span></>}</div>
+          <div>{preview ? <><PackageCheck size={18} /><span><strong>First cut ready · {preview.estimate.shotCount} directed shots</strong><small>{preview.estimate.newRequirementCount} art briefs · {preview.estimate.deferredRequirementCount} deferred requirements · opens at frame zero</small></span></> : <><CircleAlert size={18} /><span><strong>Script needs attention</strong><small>Creation remains blocked until parsing succeeds.</small></span></>}</div>
           {error ? <p role="alert">{error}</p> : null}
-          <button className="create-button" disabled={!preview || !title.trim()} onClick={create}>Create production <ArrowRight size={17} /></button>
+          <span className="first-cut-hint">Use the always-visible action above to watch this plan now.</span>
         </footer>
       </main>
     </div>
@@ -454,7 +454,7 @@ function previewPlaybackAssets(session: ProductionSession, build: AnimaticBuild)
   return {assets, ...(watermark ? {watermark} : {}), approvedCount: session.approvedAssetVersions.length, candidateCount};
 }
 
-function LiveProductionPreview({build, onSelect, selectedShotId, session}: {build: AnimaticBuild; onSelect: (id: string) => void; selectedShotId: string; session: ProductionSession}) {
+function LiveProductionPreview({build, delivered, onNavigate, onSelect, selectedShotId, session}: {build: AnimaticBuild; delivered: boolean; onNavigate: (tab: Extract<WorkspaceTab, "assets" | "audio" | "finish">) => void; onSelect: (id: string) => void; selectedShotId: string; session: ProductionSession}) {
   const playerRef = useRef<PlayerRef>(null);
   const playback = useMemo(() => previewPlaybackAssets(session, build), [build, session]);
   const [frame, setFrame] = useState(0);
@@ -464,6 +464,25 @@ function LiveProductionPreview({build, onSelect, selectedShotId, session}: {buil
   const voiceTrackDataUrl = session.voiceTrack?.approvalStatus === "approved" ? voiceTrackMediaUrl(session.voiceTrack.contentHash) : undefined;
   const musicTrackDataUrl = session.musicTrack?.approvalStatus === "approved" ? musicTrackMediaUrl(session.musicTrack.contentHash) : undefined;
   const soundEffectDataUrls = Object.fromEntries(session.soundEffectAssets.filter((asset) => asset.approvalStatus === "approved").map((asset) => [asset.contentHash, soundEffectMediaUrl(asset.contentHash)]));
+  const approvedAssetIds = new Set(session.approvedAssetVersions.map((approved) => approved.assetId));
+  const pictureReady = session.approvedAssetVersions.length > 0 && build.renderPlan.shots.every((shot) => shot.visualBindings.every((binding) => approvedAssetIds.has(binding.assetId)));
+  const spokenShots = build.renderPlan.shots.filter((shot) => shot.actions.some((action) => action.detail.type === "talk") || Boolean(shot.caption));
+  const timingReady = spokenShots.every((shot) => session.overrides.some((override) => override.shotId === shot.id && override.timingLocked));
+  const planSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
+  const voiceAligned = Boolean(session.voiceTrack && Math.abs(session.voiceTrack.durationInSeconds - planSeconds) <= Math.max(2, planSeconds * .1));
+  const voiceReady = spokenShots.length === 0 || Boolean(session.voiceTrack?.approvalStatus === "approved" && session.voiceTrack.rights && voiceAligned);
+  const usedSoundEffectHashes = new Set(session.soundEffectCues.map((cue) => cue.assetContentHash));
+  const customEffectsReady = session.soundEffectAssets.every((asset) => asset.approvalStatus === "approved" && (!usedSoundEffectHashes.has(asset.contentHash) || Boolean(asset.rights)));
+  const mixReady = session.audioMix.reviewed && session.audioMix.musicDecision !== "pending" && (session.audioMix.musicDecision !== "approved-master" || Boolean(session.musicTrack?.approvalStatus === "approved" && session.musicTrack.rights)) && customEffectsReady;
+  const audioTruth = spokenShots.length === 0 ? "No narration required" : !session.voiceTrack ? "Silent first cut · add narration" : session.voiceTrack.approvalStatus !== "approved" ? "Draft voice · approval required" : !session.voiceTrack.rights ? "Voice rights incomplete" : !voiceAligned ? "Voice timing mismatch" : "Approved narration";
+  const upgradeSteps = [
+    {id: "picture", label: "Picture", ready: pictureReady, target: "assets" as const, action: "Review picture"},
+    {id: "voice", label: "Voice", ready: voiceReady, target: "audio" as const, action: session.voiceTrack ? "Finish voice" : "Add voice"},
+    {id: "timing", label: "Timing", ready: timingReady, target: "audio" as const, action: "Lock timing"},
+    {id: "mix", label: "Mix", ready: mixReady, target: "audio" as const, action: "Review mix"},
+    {id: "delivery", label: "Delivery", ready: delivered, target: "finish" as const, action: "Open Finish"},
+  ];
+  const nextUpgrade = upgradeSteps.find((step) => !step.ready) ?? upgradeSteps.at(-1)!;
 
   useEffect(() => {
     const player = playerRef.current;
@@ -519,8 +538,12 @@ function LiveProductionPreview({build, onSelect, selectedShotId, session}: {buil
     <header><div><p className="eyebrow">Live production preview</p><h2>Final composition, before export</h2><p>Camera, captions, pose swaps, sound, and transitions come from the current frozen plan.</p></div><span className={playback.watermark ? "is-watermarked" : "is-approved"}>{playback.watermark ? "Review media" : "Approved media"}</span></header>
     <div className="production-player-shell">
       <Player acknowledgeRemotionLicense allowFullscreen clickToPlay={false} component={ProductionComposition} compositionHeight={build.renderPlan.height} compositionWidth={build.renderPlan.width} controls={false} durationInFrames={build.renderPlan.durationInFrames} fps={build.renderPlan.fps} inputProps={{plan: build.renderPlan, playbackAssets: playback.assets, sliceDurationInFrames: build.renderPlan.durationInFrames, ...(voiceTrackDataUrl ? {voiceTrackDataUrl} : {}), ...(musicTrackDataUrl ? {musicTrackDataUrl} : {}), soundEffectDataUrls, soundEffectCues: session.soundEffectCues, audioMix: session.audioMix, ...(playback.watermark ? {previewWatermark: playback.watermark} : {})}} ref={playerRef} style={{aspectRatio: `${build.renderPlan.width} / ${build.renderPlan.height}`, width: "100%"}} />
-      <div className="preview-truth-strip"><span><Film size={13} />Same composition as final render</span><span>{playback.approvedCount} approved asset{playback.approvedCount === 1 ? "" : "s"}</span>{playback.candidateCount > 0 ? <strong>Candidate art is watermarked</strong> : null}</div>
+      <div className="preview-truth-strip"><span><Film size={13} />Same composition as final render</span><span>{audioTruth}</span><span>{playback.approvedCount} approved asset{playback.approvedCount === 1 ? "" : "s"}</span>{playback.candidateCount > 0 ? <strong>Candidate art is watermarked</strong> : null}</div>
     </div>
+    <section className="first-cut-upgrade" aria-label="First cut upgrade path">
+      <header><div><p className="eyebrow">First cut upgrade path</p><strong>{delivered ? "Episode delivered" : `Next: ${nextUpgrade.action}`}</strong><span>{delivered ? "The watchable cut has a verified final delivery." : "This preview is useful now. Each upgrade replaces one honest draft condition."}</span></div><button onClick={() => onNavigate(nextUpgrade.target)}>{nextUpgrade.action}<ArrowRight size={14} /></button></header>
+      <ol>{upgradeSteps.map((step, index) => <li className={step.ready ? "is-ready" : step.id === nextUpgrade.id ? "is-next" : ""} key={step.id}><span>{step.ready ? <Check size={11} /> : index + 1}</span><strong>{step.label}</strong><small>{step.ready ? "Ready" : step.id === nextUpgrade.id ? "Next" : "Later"}</small></li>)}</ol>
+    </section>
     <CutTimeline build={build} frame={frame} muted={muted} onFrameChange={seekTo} onRequestFullscreen={() => playerRef.current?.requestFullscreen()} onSelect={onSelect} onToggleMute={toggleMute} onTogglePlayback={togglePlayback} playing={playing} selectedShotId={selectedShotId} />
   </section>;
 }
@@ -1464,7 +1487,7 @@ function Workspace({session, setSession, onExit, host, capabilities}: {session: 
         {currentDelivery ? <section className="verified-delivery-banner" aria-label="Verified delivery"><ShieldCheck size={20} /><div><small>Verified delivery</small><strong>1080p master · {currentDelivery.master.frameCount} frames · {currentDelivery.captionCueCount} caption cues · rights cleared</strong><span>Production {currentDelivery.revision} · {currentDelivery.productionBundleContentHash.slice(0, 10)} · manifest {currentDelivery.deliveryManifestContentHash.slice(0, 10)}</span></div><button onClick={() => void host.openDeliveryMaster(currentDelivery.deliveryManifestContentHash)}>Open master</button><button onClick={() => void host.revealDeliveryBundle(currentDelivery.deliveryManifestContentHash)}>Reveal bundle</button></section> : null}
         {tab === "direction" ? <>
           <section className="metrics-row"><Metric label="Planned shots" value={String(build.renderPlan.shots.length)} detail={`${build.creativePlan.scenes.length} natural scenes`} /><Metric label="Average shot" value={`${averageShot.toFixed(1)}s`} detail={`${profileCadence(pack)} profile envelope`} /><Metric label="Editorial routing" value={`${Math.round(routed * 100)}%`} detail="Insert, evidence, type, diagram" /><Metric label="Estimated runtime" value={formatDuration(build.renderPlan.durationInFrames, build.renderPlan.fps)} detail={`${build.renderPlan.fps} fps · ${build.renderPlan.height}p`} /></section>
-          <LiveProductionPreview build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} session={session} />
+          <LiveProductionPreview build={build} delivered={Boolean(currentDelivery)} onNavigate={setTab} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} session={session} />
           {renderJob?.status === "completed" ? <ApprovedRenderReview build={build} job={renderJob} onReveal={() => void host.openRenderedFile(renderJob.jobId)} onSelect={setSelectedShotId} scope={renderJobScope} /> : null}
           <div className="workspace-grid">
             <DirectionBoard build={build} selectedShotId={selectedShot.id} onSelect={setSelectedShotId} />
