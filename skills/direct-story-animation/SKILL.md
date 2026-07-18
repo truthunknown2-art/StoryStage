@@ -5,7 +5,9 @@ description: Direct script-driven animated videos as coherent audiovisual produc
 
 # Direct Story Animation
 
-Create a machine-readable `DirectedSequencePlan`, then require the picture, asset, animation, and audio compilers to prove they consumed it. Treat prose as rationale, never as executable evidence.
+Create an untimed, machine-readable `DirectorPlan`, solve it into one `ExecutableEpisodePlan`, then require preview, animatic, picture, animation, audio, final render, and QA to consume that same plan. Treat prose as rationale, never as executable evidence.
+
+The world persists; shots do not own reality. Characters, props, entrances, exits, velocity, gaze, depth, and ownership live in one scene-world state. A shot is only a temporary view into that state and may never silently reset it.
 
 ## Workflow
 
@@ -17,13 +19,17 @@ Create a machine-readable `DirectedSequencePlan`, then require the picture, asse
    - visible action or revelation that changes the state;
    - information that must be understood with dialogue muted;
    - dialogue that must remain understandable with picture hidden.
-4. Design the shot flow. Give every shot one primary purpose, an entry and exit state, composition, screen direction, eyeline, depth plan, transition motivation, and event markers. Cut on a change of information, action, emotion, scale, or visual idea—not because a timer expired.
-5. Choose an honest performance source per performer and phase. Read [performance-and-rigging.md](references/performance-and-rigging.md). Reject whole-body pose switching as a fallback.
-6. Resolve assets through the reusable entity and view graph. Read [asset-factory.md](references/asset-factory.md). Reuse approved identities, plates, props, and rigs before generating new pixels.
-7. Spot dialogue, vocal reactions, Foley, ambience, sound effects, and music against named picture events. Read [audio-and-dialogue.md](references/audio-and-dialogue.md). Never leave long-term cues anchored only to guessed timestamps.
-8. Emit the contract described in [director-plan-contract.md](references/director-plan-contract.md). Bind stable IDs and content hashes. Keep creative rationale beside, not instead of, executable references.
-9. Run `node scripts/audit-director-plan.mjs <plan.json>`. Fix every error. Warnings require an explicit creative exception.
-10. Render the affected sequence, inspect consecutive frames and the encoded video, listen to the exact master, and revise. A valid plan is not proof of good direction.
+4. Build a causal event graph. Every reaction names its cause; every entrance, exit, reveal, attachment, offer, transfer, and release changes the persistent world through a named event.
+5. Design the shot flow without arbitrary frame ranges. Give every shot one primary purpose, an entry and exit event, composition, screen direction, eyeline, depth plan, transition motivation, and timing envelope. Cut on a change of information, action, emotion, scale, or visual idea—not because a timer expired.
+6. Choose an honest performance source per performer and phase. Read [performance-and-rigging.md](references/performance-and-rigging.md). Reject whole-body pose switching as a fallback.
+7. Resolve capabilities before artwork. Unsupported actions may use a proxy animatic, but final rendering remains locked until a renderer and asset plan exist.
+8. Resolve assets through the reusable entity and view graph. Read [asset-factory.md](references/asset-factory.md). Reuse approved identities, plates, props, and rigs before generating new pixels.
+9. Spot dialogue, vocal reactions, Foley, ambience, sound effects, and music against named picture events. Read [audio-and-dialogue.md](references/audio-and-dialogue.md). Never leave long-term cues anchored only to guessed timestamps.
+10. Emit the contracts described in [director-plan-contract.md](references/director-plan-contract.md). Bind stable IDs and content hashes. Keep creative rationale beside, not instead of, executable references.
+11. Solve event dependencies, read windows, performance envelopes, dialogue timing, and cut compatibility into exact frames. Do not manually stretch shots to fill a target duration.
+12. Run `node scripts/audit-director-plan.mjs <plan.json>`. Fix every error. Warnings require an explicit creative exception.
+13. Render a proxy animatic from the same executable plan as final production. Approve its geography, blocking, camera, cuts, and comprehension before generating final art.
+14. Render the affected sequence, inspect consecutive frames and the encoded video, listen to the exact master, and revise. A valid plan is not proof of good direction.
 
 ## Allocate judgment correctly
 
@@ -68,7 +74,7 @@ Fail the plan or render when any of these are true:
 
 Return:
 
-1. the validated `DirectedSequencePlan`;
+1. the validated `DirectorPlan`, `TimingSolution`, and `ExecutableEpisodePlan`;
 2. an asset reuse/generation list;
 3. performance and rig requirements by shot;
 4. audio cue and dialogue plans anchored to events;

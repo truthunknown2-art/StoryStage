@@ -8,11 +8,12 @@ import {
 } from "./kids-showcase";
 
 describe("30-second Kids showcase product path", () => {
-  it("binds one source script through three scenes, six beats, and twelve deterministic shots", () => {
+  it("binds one source script through three scenes, six beats, and ten event-directed shots", () => {
     const project = createKidsShowcaseProject();
     expect(project.program.scenes).toHaveLength(3);
     expect(project.program.beats).toHaveLength(6);
-    expect(project.program.shotBindings).toHaveLength(12);
+    expect(project.program.shotBindings).toHaveLength(10);
+    expect(project.program.directorTimeline.shots).toHaveLength(10);
     expect(project.program.renderPlan.durationInFrames).toBe(900);
     expect(project.program.payoffPuppetAssetHashes).toHaveLength(3);
     expect(
@@ -37,7 +38,7 @@ describe("30-second Kids showcase product path", () => {
     expect(
       project.program.audioCues.find((cue) => cue.id === "cue-sneeze")
         ?.offsetInFrames,
-    ).toBe(62);
+    ).toBe(48);
     const payoffPlan = project.directedBeatPlans[1]!;
     expect(payoffPlan.shots.map((shot) => shot.id)).toEqual([
       "shot-friendly-offer",
@@ -49,7 +50,7 @@ describe("30-second Kids showcase product path", () => {
       ),
     ).toMatchObject({
       shotId: "shot-understand-and-play",
-      offsetInFrames: 14,
+      offsetInFrames: 6,
     });
   });
 

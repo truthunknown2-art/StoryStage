@@ -593,6 +593,7 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
     <AbsoluteFill style={{ background: "#111718" }}>
       {showcaseProgram ? (
         <KidsShowcaseComposition
+          directorTimeline={showcaseProgram.directorTimeline}
           showCaptions={false}
           showProofLabel={false}
           sneezeIntensity={kidsShowcaseDirection?.sneezeIntensity ?? 1}

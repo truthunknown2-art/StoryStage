@@ -12,9 +12,9 @@ describe("directed sequence plan", () => {
     expect(plan.contentHash).toHaveLength(64);
     expect(
       resolveDirectorAudioIntentFrame(plan, "intent-guardian-sneeze"),
-    ).toBe(584);
+    ).toBe(582);
     expect(resolveDirectorAudioIntentFrame(plan, "intent-children-gasp")).toBe(
-      594,
+      590,
     );
     expect(
       plan.audioIntents.find((intent) => intent.id === "intent-music-duck"),

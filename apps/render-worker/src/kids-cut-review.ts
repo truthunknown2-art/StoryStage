@@ -23,12 +23,10 @@ async function main() {
   const boundaries = project.program.renderPlan.shots
     .slice(1)
     .map((shot) => shot.startFrame);
-  const reviewFrames = boundaries.flatMap((boundary) => [
-    boundary - 2,
-    boundary - 1,
-    boundary,
-    boundary + 1,
-  ]);
+  const proofOffsets = [-12, -8, -4, -2, -1, 0, 1, 2, 4, 8, 12];
+  const reviewFrames = boundaries.flatMap((boundary) =>
+    proofOffsets.map((offset) => boundary + offset),
+  );
   const serveUrl = await bundle({
     entryPoint: resolve(
       workspaceRoot,
@@ -64,7 +62,7 @@ async function main() {
     "-i",
     resolve(outputRoot, "cut-%02d.png"),
     "-vf",
-    `scale=320:180,tile=4x${boundaries.length}`,
+    `scale=256:144,tile=${proofOffsets.length}x${boundaries.length}`,
     "-frames:v",
     "1",
     resolve(outputRoot, "directed-cut-boundaries.png"),
@@ -73,6 +71,7 @@ async function main() {
     JSON.stringify(
       {
         boundaries,
+        proofOffsets,
         contactSheet: resolve(outputRoot, "directed-cut-boundaries.png"),
       },
       null,

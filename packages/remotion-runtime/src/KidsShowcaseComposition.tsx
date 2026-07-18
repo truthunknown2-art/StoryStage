@@ -10,6 +10,10 @@ import {
 } from "remotion";
 import { createContext, useContext } from "react";
 import { Audio } from "@remotion/media";
+import {
+  KIDS_SHOWCASE_DIRECTED_SHOTS,
+  type DirectorTimeline,
+} from "@storystage/story-engine";
 import maraRunAtlasManifest from "../public/show-packs/kids/moonlit-ruins/v1/rigs/mara/run-right-v1/atlas-manifest.json";
 import maraSneakAtlasManifest from "../public/show-packs/kids/moonlit-ruins/v1/rigs/mara/sneak-v1/atlas-manifest.json";
 import miloRunAtlasManifest from "../public/show-packs/kids/moonlit-ruins/v1/rigs/milo/run-right-v1/atlas-manifest.json";
@@ -38,6 +42,7 @@ export type KidsShowcaseShot = {
 };
 
 export type KidsShowcaseCompositionProps = {
+  directorTimeline?: DirectorTimeline;
   showCaptions?: boolean;
   showProofLabel?: boolean;
   sneezeIntensity?: number;
@@ -75,98 +80,82 @@ const ShowcaseOptionsContext = createContext({
 export const kidsShowcaseShots: KidsShowcaseShot[] = [
   {
     id: "run-to-the-ruin",
-    startFrame: 0,
-    durationInFrames: 84,
-    title: "Follow the glow",
-    intent: "Offset run cycles and a readable destination",
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[0].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[0].durationInFrames,
+    title: "Run through the arch",
+    intent: "One continuous pursuit, visible threshold, and planted exit contact",
     narration:
       "The little light slipped through the oldest arch in the forest.",
   },
   {
-    id: "cross-the-threshold",
-    startFrame: 84,
-    durationInFrames: 48,
-    title: "Cross the threshold",
-    intent: "Foot-cycle insert and foreground wipe",
-    narration: "Mara and Milo hurried after it.",
-  },
-  {
     id: "listen-in-the-dark",
-    startFrame: 132,
-    durationInFrames: 78,
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[1].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[1].durationInFrames,
     title: "Did you hear that?",
-    intent: "Gaze-led acting with a comprehension hold",
+    intent: "Inherited roots, visible deceleration, shared gaze, and comprehension hold",
     narration: "Then the ruin whispered back.",
   },
   {
-    id: "empty-corridor",
-    startFrame: 210,
-    durationInFrames: 48,
-    title: "Let the room breathe",
-    intent: "Empty-environment reset and traveling light",
-    narration: "For one tiny moment, nobody moved.",
-  },
-  {
     id: "sneak-entrance",
-    startFrame: 258,
-    durationInFrames: 84,
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[2].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[2].durationInFrames,
     title: "Into the moon hall",
-    intent: "Staggered entrances, sneak cycles, and camera push",
+    intent: "Visible entrance, continuous moth path, staggered sneaks, and planted reveal marks",
     narration: "So they followed the glow into the moon hall.",
   },
   {
     id: "creature-reveal",
-    startFrame: 342,
-    durationInFrames: 60,
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[3].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[3].durationInFrames,
     title: "Something wakes",
     intent: "Medium reveal with layered head and limb motion",
     narration: "A hill of moss opened two enormous eyes.",
   },
   {
     id: "eye-close-up",
-    startFrame: 402,
-    durationInFrames: 48,
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[4].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[4].durationInFrames,
     title: "Eye-line payoff",
     intent: "Extreme close-up, blink, and reframe",
     narration: "It looked straight at Mara.",
   },
   {
     id: "kids-reaction",
-    startFrame: 450,
-    durationInFrames: 72,
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[5].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[5].durationInFrames,
     title: "Read the reaction",
     intent: "Anticipation, recoil, settle, and shared eye-line",
     narration: "Mara gasped. Milo forgot how knees worked.",
   },
   {
     id: "spark-sneeze",
-    startFrame: 522,
-    durationInFrames: 108,
-    title: "The spark sneeze",
-    intent: "Anticipation, action, overshoot, particles, and hold",
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[6].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[6].durationInFrames,
+    title: "Sneeze, turn, and catch",
+    intent: "Anticipation, sneeze, delayed reaction, visible pivot, moth catch, and planted step",
     narration:
       "The creature puffed up its cheeks... and sneezed a skyful of sparks.",
   },
   {
     id: "escape-run",
-    startFrame: 630,
-    durationInFrames: 120,
-    title: "Run through the wipe",
-    intent: "Grounded escape cycles, parallax, and foreground wipes",
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[7].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[7].durationInFrames,
+    title: "Escape through the portal",
+    intent: "Matched gait, visible arch crossing, physical occlusion, and on-screen deceleration",
     narration: "That was more than enough adventure for one hallway.",
   },
   {
     id: "friendly-offer",
-    startFrame: 750,
-    durationInFrames: 78,
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[8].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[8].durationInFrames,
     title: "Offer and hesitate",
     intent: "Guardian offer, Mara gaze-led reach, and continuous moth handoff",
     narration: "In the clearing, the creature held out the little light.",
   },
   {
     id: "understand-and-play",
-    startFrame: 828,
-    durationInFrames: 72,
+    startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[9].startFrame,
+    durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[9].durationInFrames,
     title: "Understand and play",
     intent: "Action cut, moth release, staggered wave, and living hold",
     narration: "It had only wanted someone to play.",
@@ -508,25 +497,35 @@ const ProfileRunRig: React.FC<{
     facing === "left" ? `translate(${x * 2} 0) scale(-1 1)` : undefined;
 
   const sprite = (opacity: number, offsetX: number, blur: number) => (
-    <svg
+    <foreignObject
       height={renderedHeight}
       opacity={opacity}
-      overflow="hidden"
-      preserveAspectRatio="xMidYMid meet"
-      viewBox={`${sourceX} 0 ${frameWidth} ${atlas.height}`}
       width={renderedWidth}
       x={spriteX + offsetX}
       y={spriteY}
       style={{ filter: blur ? `blur(${blur}px)` : undefined }}
     >
-      <image
-        height={atlas.height}
-        href={staticFile(atlas.path)}
-        width={atlas.width}
-        x="0"
-        y="0"
-      />
-    </svg>
+      <div
+        style={{
+          height: renderedHeight,
+          overflow: "hidden",
+          position: "relative",
+          width: renderedWidth,
+        }}
+      >
+        <Img
+          src={staticFile(atlas.path)}
+          style={{
+            height: atlas.height * scale,
+            left: -sourceX * scale,
+            maxWidth: "none",
+            position: "absolute",
+            top: 0,
+            width: atlas.width * scale,
+          }}
+        />
+      </div>
+    </foreignObject>
   );
 
   return (
@@ -629,23 +628,33 @@ const PerformanceSprite: React.FC<{
       style={{ filter: "drop-shadow(10px 15px 8px rgba(4,18,18,.28))" }}
       transform={`translate(${x} ${y}) rotate(${rotation}) scale(${flip * scale * squash} ${scale / squash})`}
     >
-      <svg
+      <foreignObject
         height={frameSpec.source.height}
-        overflow="hidden"
-        preserveAspectRatio="xMidYMid meet"
-        viewBox={`${frameSpec.source.x} ${frameSpec.source.y} ${frameSpec.source.width} ${frameSpec.source.height}`}
         width={frameSpec.source.width}
         x={-frameSpec.anchor.x}
         y={-frameSpec.anchor.y}
       >
-        <image
-          height={atlas.height}
-          href={staticFile(atlas.path)}
-          width={atlas.width}
-          x="0"
-          y="0"
-        />
-      </svg>
+        <div
+          style={{
+            height: frameSpec.source.height,
+            overflow: "hidden",
+            position: "relative",
+            width: frameSpec.source.width,
+          }}
+        >
+          <Img
+            src={staticFile(atlas.path)}
+            style={{
+              height: atlas.height,
+              left: -frameSpec.source.x,
+              maxWidth: "none",
+              position: "absolute",
+              top: -frameSpec.source.y,
+              width: atlas.width,
+            }}
+          />
+        </div>
+      </foreignObject>
     </g>
   );
 };
@@ -712,23 +721,33 @@ const PuppetSheetPart: React.FC<{
   <g
     transform={`translate(${x} ${y}) rotate(${rotation}) scale(${flipX ? -1 : 1} 1)`}
   >
-    <svg
+    <foreignObject
       height={source.height}
-      overflow="hidden"
-      preserveAspectRatio="xMidYMid meet"
-      viewBox={`${source.x} ${source.y} ${source.width} ${source.height}`}
       width={source.width}
       x={-pivot.x}
       y={-pivot.y}
     >
-      <image
-        height="941"
-        href={staticFile(payoffPuppetSheets[sheet])}
-        width="1672"
-        x="0"
-        y="0"
-      />
-    </svg>
+      <div
+        style={{
+          height: source.height,
+          overflow: "hidden",
+          position: "relative",
+          width: source.width,
+        }}
+      >
+        <Img
+          src={staticFile(payoffPuppetSheets[sheet])}
+          style={{
+            height: 941,
+            left: -source.x,
+            maxWidth: "none",
+            position: "absolute",
+            top: -source.y,
+            width: 1672,
+          }}
+        />
+      </div>
+    </foreignObject>
   </g>
 );
 
@@ -1122,14 +1141,21 @@ const ShotShell: React.FC<{ children: React.ReactNode; narration: string }> = ({
 
 const RunApproachShot: React.FC = () => {
   const frame = useCurrentFrame();
-  const p = frame / 84;
-  const x = interpolate(frame, [0, 84], [-180, 965], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const p = frame / 120;
+  const x = clampInterpolate(frame, [0, 82, 108, 119], [-180, 530, 625, 640]);
+  const cameraPush = clampInterpolate(frame, [60, 119], [0, 1]);
+  const maraScale = clampInterpolate(cameraPush, [0, 1], [0.55, 1.28]);
+  const miloScale = clampInterpolate(cameraPush, [0, 1], [0.51, 1.04]);
+  const spacing = clampInterpolate(cameraPush, [0, 1], [150, 260]);
+  const groundY = clampInterpolate(cameraPush, [0, 1], [612, 674]);
+  const rootSpeed = clampInterpolate(
+    frame,
+    [0, 82, 108, 119],
+    [8.7, 8.7, 3.65, 1.35],
+  );
   return (
     <ShotShell narration={narrationAt(0)}>
-      <ForestBackdrop mode="forest" push={p * 0.42} travel={p} />
+      <ForestBackdrop mode="threshold" push={p * 0.55} travel={p * 0.42} />
       <svg
         height="100%"
         viewBox="0 0 1280 720"
@@ -1139,77 +1165,41 @@ const RunApproachShot: React.FC = () => {
         <GlowMoth
           phase={frame / 8}
           scale={1.05}
-          x={x + 250}
-          y={235 + Math.sin(frame / 7) * 32}
+          x={clampInterpolate(frame, [0, 90, 119], [70, 810, 850])}
+          y={250 + Math.sin(frame / 7) * 24}
         />
         <ProfileRunRig
           frame={frame}
-          rootPixelsPerFrame={1145 / 84}
-          scale={0.55}
+          rootPixelsPerFrame={rootSpeed}
+          scale={maraScale}
           variant="mara"
           x={x}
-          y={612}
+          y={groundY}
         />
         <ProfileRunRig
           frame={frame}
           phaseOffset={5.4}
-          rootPixelsPerFrame={1145 / 84}
-          scale={0.51}
+          rootPixelsPerFrame={rootSpeed}
+          scale={miloScale}
           variant="milo"
-          x={x - 150}
-          y={616}
+          x={x - spacing}
+          y={groundY + 3}
         />
       </svg>
-      <ForegroundFoliagePass travel={p} />
-    </ShotShell>
-  );
-};
-
-const ThresholdShot: React.FC = () => {
-  const frame = useCurrentFrame();
-  const p = frame / 48;
-  const x = interpolate(frame, [0, 48], [120, 940], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  return (
-    <ShotShell narration={narrationAt(1)}>
-      <ForestBackdrop mode="threshold" push={p * 0.5} travel={p * 0.3} />
-      <svg
-        height="100%"
-        viewBox="0 0 1280 720"
-        width="100%"
-        style={{ position: "absolute" }}
-      >
-        <ProfileRunRig
-          frame={frame}
-          rootPixelsPerFrame={820 / 48}
-          scale={1.06}
-          variant="mara"
-          x={x}
-          y={850}
-        />
-        <ProfileRunRig
-          frame={frame}
-          phaseOffset={5.1}
-          rootPixelsPerFrame={820 / 48}
-          scale={0.98}
-          variant="milo"
-          x={x - 260}
-          y={854}
-        />
-      </svg>
-      <ForegroundFoliagePass travel={p * 0.4} />
+      <ForegroundFoliagePass travel={p * 0.42} />
     </ShotShell>
   );
 };
 
 const ListenShot: React.FC = () => {
   const frame = useCurrentFrame();
-  const p = frame / 78;
-  const listenPose = frame < 16 ? 0 : 1;
+  const p = frame / 90;
+  const decelerating = frame < 14;
+  const listenPose = frame < 32 ? 0 : 1;
+  const maraX = clampInterpolate(frame, [0, 13], [640, 650]);
+  const miloX = clampInterpolate(frame, [0, 13], [380, 390]);
   return (
-    <ShotShell narration={narrationAt(2)}>
+    <ShotShell narration={narrationAt(1)}>
       <ForestBackdrop mode="threshold" push={0.35 + p * 0.35} />
       <svg
         height="100%"
@@ -1217,27 +1207,51 @@ const ListenShot: React.FC = () => {
         width="100%"
         style={{ position: "absolute" }}
       >
-        <PerformanceSprite
-          poseIndex={listenPose}
-          rotation={-1.5 + Math.sin(frame / 18) * 0.6}
-          scale={1.28}
-          variant="mara"
-          x={650}
-          y={674}
-        />
-        <PerformanceSprite
-          poseIndex={frame < 22 ? 0 : 1}
-          rotation={1 + Math.sin(frame / 20) * -0.5}
-          scale={1.04}
-          variant="milo"
-          x={390}
-          y={677}
-        />
+        {decelerating ? (
+          <>
+            <ProfileRunRig
+              frame={frame + 120}
+              rootPixelsPerFrame={0.72}
+              scale={1.28}
+              variant="mara"
+              x={maraX}
+              y={674}
+            />
+            <ProfileRunRig
+              frame={frame + 120}
+              phaseOffset={5.4}
+              rootPixelsPerFrame={0.72}
+              scale={1.04}
+              variant="milo"
+              x={miloX}
+              y={677}
+            />
+          </>
+        ) : (
+          <>
+            <PerformanceSprite
+              poseIndex={listenPose}
+              rotation={-1.5 + Math.sin(frame / 18) * 0.6}
+              scale={1.28}
+              variant="mara"
+              x={650}
+              y={674}
+            />
+            <PerformanceSprite
+              poseIndex={frame < 38 ? 0 : 1}
+              rotation={1 + Math.sin(frame / 20) * -0.5}
+              scale={1.04}
+              variant="milo"
+              x={390}
+              y={677}
+            />
+          </>
+        )}
         <GlowMoth
           phase={frame / 9}
           scale={0.85}
-          x={850 + Math.sin(frame / 12) * 20}
-          y={268 + Math.cos(frame / 8) * 16}
+          x={clampInterpolate(frame, [0, 72, 89], [850, 945, 1020])}
+          y={268 + Math.cos(frame / 8) * 13}
         />
       </svg>
       <div
@@ -1256,57 +1270,15 @@ const ListenShot: React.FC = () => {
   );
 };
 
-const EmptyCorridorShot: React.FC = () => {
-  const frame = useCurrentFrame();
-  const p = frame / 48;
-  return (
-    <ShotShell narration={narrationAt(3)}>
-      <ForestBackdrop mode="cave" push={p * 0.25} />
-      <svg
-        height="100%"
-        viewBox="0 0 1280 720"
-        width="100%"
-        style={{ position: "absolute" }}
-      >
-        <GlowMoth
-          phase={frame / 7}
-          scale={1.15}
-          x={clampInterpolate(frame, [0, 48], [850, 1030])}
-          y={285 + Math.sin(frame / 5) * 30}
-        />
-        {Array.from({ length: 14 }, (_, index) => (
-          <circle
-            cx={270 + index * 63}
-            cy={230 + (index % 4) * 57}
-            fill="#d6e6c0"
-            key={index}
-            opacity={0.08 + ((frame + index * 4) % 25) / 260}
-            r={2 + (index % 3)}
-          />
-        ))}
-        <ellipse
-          cx="1040"
-          cy="570"
-          fill="#183a35"
-          opacity=".72"
-          rx={94 + Math.sin(frame / 10) * 3}
-          ry={56 + Math.sin(frame / 10) * 6}
-        />
-      </svg>
-      <GeneratedSetForeground mode="cave" travel={p * 0.08} />
-    </ShotShell>
-  );
-};
-
 const SneakShot: React.FC = () => {
   const frame = useCurrentFrame();
-  const p = frame / 84;
-  const entry = clampInterpolate(frame, [0, 72], [35, 535]);
+  const p = frame / 132;
+  const entry = clampInterpolate(frame, [18, 103], [-80, 535]);
   const maraSneakPose = Math.floor(frame / 3) % 8;
   const miloSneakPose = Math.floor((frame + 10) / 3) % 8;
   return (
-    <ShotShell narration={narrationAt(4)}>
-      <ForestBackdrop mode="cave" push={p} travel={p * 0.4} />
+    <ShotShell narration={narrationAt(2)}>
+      <ForestBackdrop mode="cave" push={p * 0.55} travel={p * 0.22} />
       <div
         style={{
           background:
@@ -1327,8 +1299,23 @@ const SneakShot: React.FC = () => {
         <GlowMoth
           phase={frame / 8}
           scale={1}
-          x={790}
-          y={270 + Math.sin(frame / 7) * 18}
+          x={clampInterpolate(
+            frame,
+            [0, 95, 120, 131],
+            [220, 720, 905, 910],
+          )}
+          y={
+            clampInterpolate(frame, [0, 95, 120], [280, 250, 470]) +
+            Math.sin(frame / 7) * (frame < 120 ? 12 : 2)
+          }
+        />
+        <PerformanceSprite
+          facing="left"
+          poseIndex={0}
+          scale={1.55}
+          variant="guardian"
+          x={930}
+          y={672}
         />
         <PerformanceSprite
           poseIndex={maraSneakPose}
@@ -1347,19 +1334,18 @@ const SneakShot: React.FC = () => {
           y={650}
         />
       </svg>
-      <GeneratedSetForeground mode="cave" travel={p * 0.4} />
+      <GeneratedSetForeground mode="cave" travel={p * 0.18} />
     </ShotShell>
   );
 };
 
 const CreatureRevealShot: React.FC = () => {
   const frame = useCurrentFrame();
-  const p = frame / 60;
-  const revealReframe = clampInterpolate(frame, [0, 18], [0, 1]);
-  const guardianPose = frame < 15 ? 0 : frame < 30 ? 1 : frame < 47 ? 2 : 3;
+  const p = frame / 72;
+  const guardianPose = frame < 12 ? 0 : frame < 27 ? 1 : frame < 44 ? 2 : 3;
   return (
-    <ShotShell narration={narrationAt(5)}>
-      <ForestBackdrop mode="cave" push={0.25 + p * 0.45} />
+    <ShotShell narration={narrationAt(3)}>
+      <ForestBackdrop mode="cave" push={0.55 + p * 0.12} />
       <div
         style={{
           background:
@@ -1378,37 +1364,38 @@ const CreatureRevealShot: React.FC = () => {
         style={{ position: "absolute" }}
       >
         <PerformanceSprite
-          poseIndex={frame < 35 ? 1 : 4}
-          scale={0.66}
+          poseIndex={frame < 45 ? 1 : 4}
+          scale={1.02}
           variant="mara"
-          x={535 - revealReframe * 290}
-          y={622}
+          x={535}
+          y={646}
         />
         <PerformanceSprite
-          poseIndex={frame < 39 ? 1 : 4}
-          scale={0.55}
+          poseIndex={frame < 50 ? 1 : 4}
+          scale={0.84}
           variant="milo"
-          x={385 - revealReframe * 255}
-          y={624}
+          x={385}
+          y={650}
         />
         <PerformanceSprite
+          facing="left"
           poseIndex={guardianPose}
           rotation={frame < 30 ? 0 : Math.sin(frame / 10) * 0.7}
-          scale={1.72}
+          scale={1.55}
           squash={clampInterpolate(
             frame,
             [0, 16, 32, 48],
             [1.08, 1.04, 0.96, 1],
           )}
           variant="guardian"
-          x={1090 - revealReframe * 205}
-          y={665}
+          x={930}
+          y={672}
         />
         <GlowMoth
           phase={frame / 8}
           scale={0.78}
-          x={clampInterpolate(frame, [0, 22], [790, 885])}
-          y={clampInterpolate(frame, [0, 22], [270, 598])}
+          x={910}
+          y={470 + Math.sin(frame / 14) * 2}
         />
       </svg>
       <GeneratedSetForeground mode="cave" travel={p * 0.12} />
@@ -1436,7 +1423,7 @@ const EyeCloseShot: React.FC = () => {
                   ? 6
                   : 7;
   return (
-    <ShotShell narration={narrationAt(6)}>
+    <ShotShell narration={narrationAt(4)}>
       <ForestBackdrop mode="cave" push={0.8 + p * 0.2} />
       <svg
         height="100%"
@@ -1483,7 +1470,7 @@ const KidsReactionShot: React.FC = () => {
   const maraRoot = clampInterpolate(frame, [8, 30, 45, 62], [0, -20, 6, 0]);
   const miloRoot = clampInterpolate(frame, [12, 34, 49, 66], [0, 22, -6, 0]);
   return (
-    <ShotShell narration={narrationAt(7)}>
+    <ShotShell narration={narrationAt(5)}>
       <ForestBackdrop mode="cave" push={0.72 + p * 0.15} />
       <div
         style={{
@@ -1503,22 +1490,22 @@ const KidsReactionShot: React.FC = () => {
         style={{ position: "absolute" }}
       >
         <PerformanceSprite
-          poseIndex={maraPose}
-          rotation={maraRoot * -0.035}
-          scale={1.15}
-          variant="mara-reaction"
-          x={420 + maraRoot}
-          y={715}
-        />
-        <PerformanceSprite
           poseIndex={miloPose}
           rotation={miloRoot * 0.03}
           scale={0.98}
           variant="milo-reaction"
-          x={855 + miloRoot}
+          x={390 + miloRoot}
           y={716}
         />
-        <GlowMoth phase={frame / 8} scale={0.8} x={650} y={305} />
+        <PerformanceSprite
+          facing="left"
+          poseIndex={maraPose}
+          rotation={maraRoot * -0.035}
+          scale={1.15}
+          variant="mara-reaction"
+          x={650 + maraRoot}
+          y={715}
+        />
       </svg>
       <GeneratedSetForeground mode="cave" travel={recoilPhase * 0.08} />
     </ShotShell>
@@ -1528,30 +1515,45 @@ const KidsReactionShot: React.FC = () => {
 const SneezeShot: React.FC = () => {
   const frame = useCurrentFrame();
   const { sneezeIntensity } = useContext(ShowcaseOptionsContext);
-  const p = frame / 108;
-  const reverseReframe = clampInterpolate(frame, [0, 16], [0, 1]);
+  const p = frame / 120;
   const guardianPose =
-    frame < 18
+    frame < 16
       ? 0
-      : frame < 30
+      : frame < 28
         ? 1
-        : frame < 43
+        : frame < 40
           ? 2
-          : frame < 58
+          : frame < 48
             ? 3
-            : frame < 63
+            : frame < 54
               ? 4
-              : frame < 69
+              : frame < 64
                 ? 5
-                : frame < 82
+                : frame < 92
                   ? 6
                   : 7;
   const shake =
-    frame >= 62 && frame < 76
-      ? Math.sin((frame - 62) * 2.7) * 7 * sneezeIntensity
+    frame >= 48 && frame < 58
+      ? Math.sin((frame - 48) * 2.7) * 2.5 * sneezeIntensity
       : 0;
+  const running = frame >= 104;
+  const runFrame = Math.max(0, frame - 104);
+  const pivot = clampInterpolate(frame, [74, 88], [0, 1]);
+  const maraRunX = clampInterpolate(frame, [104, 119], [650, 570]);
+  const miloRunX = clampInterpolate(frame, [104, 119], [390, 310]);
+  const mothAirborne = frame >= 49 && frame < 92;
+  const mothX = mothAirborne
+    ? clampInterpolate(frame, [49, 68, 92], [910, 760, 860])
+    : frame >= 92
+      ? 860
+      : 910;
+  const mothY = mothAirborne
+    ? clampInterpolate(frame, [49, 66, 92], [470, 250, 500])
+    : frame >= 92
+      ? 500
+      : 470;
   return (
-    <ShotShell narration={narrationAt(8)}>
+    <ShotShell narration={narrationAt(6)}>
       <div
         style={{
           inset: 0,
@@ -1559,7 +1561,7 @@ const SneezeShot: React.FC = () => {
           transform: `translateX(${shake}px)`,
         }}
       >
-        <ForestBackdrop mode="cave" push={0.42 + p * 0.26} />
+        <ForestBackdrop mode="cave" push={0.58 + p * 0.08} />
         <div
           style={{
             background:
@@ -1577,45 +1579,73 @@ const SneezeShot: React.FC = () => {
           width="100%"
           style={{ position: "absolute" }}
         >
-          <PerformanceSprite
-            poseIndex={frame > 68 ? 5 : 4}
-            rotation={frame > 68 ? -7 : -1}
-            scale={0.76}
-            variant="mara"
-            x={420 - reverseReframe * 230}
-            y={635 - (frame > 68 ? 22 : 0)}
-          />
+          {running ? (
+            <>
+              <ProfileRunRig
+                facing="left"
+                frame={runFrame}
+                rootPixelsPerFrame={80 / 15}
+                scale={1.15}
+                variant="mara"
+                x={maraRunX}
+                y={715}
+              />
+              <ProfileRunRig
+                facing="left"
+                frame={runFrame}
+                phaseOffset={5.4}
+                rootPixelsPerFrame={80 / 15}
+                scale={0.98}
+                variant="milo"
+                x={miloRunX}
+                y={716}
+              />
+            </>
+          ) : (
+            <>
+              <PerformanceSprite
+                facing={pivot > 0.5 ? "left" : "right"}
+                poseIndex={frame < 56 ? 7 : frame < 78 ? 5 : 4}
+                rotation={clampInterpolate(pivot, [0, 1], [0, -7])}
+                scale={0.98}
+                variant="milo-reaction"
+                x={390}
+                y={716}
+              />
+              <PerformanceSprite
+                facing={pivot > 0.5 ? "left" : "right"}
+                poseIndex={frame < 52 ? 7 : frame < 74 ? 5 : 4}
+                rotation={clampInterpolate(pivot, [0, 1], [0, -8])}
+                scale={1.15}
+                variant="mara-reaction"
+                x={650}
+                y={715}
+              />
+            </>
+          )}
           <PerformanceSprite
             facing="left"
-            poseIndex={frame > 72 ? 5 : 4}
-            rotation={frame > 72 ? 7 : 1}
-            scale={0.66}
-            variant="milo"
-            x={855 + reverseReframe * 225}
-            y={637 - (frame > 72 ? 19 : 0)}
-          />
-          <PerformanceSprite
             poseIndex={guardianPose}
             rotation={
               frame >= 58 && frame < 76 ? Math.sin(frame * 2.7) * 1.2 : 0
             }
-            scale={1.55}
+            scale={1.5}
             variant="guardian-sneeze"
-            x={640}
+            x={930}
             y={672}
           />
           <GlowMoth
             phase={frame / 7}
             scale={0.65}
-            x={frame < 62 ? 640 : clampInterpolate(frame, [62, 92], [640, 920])}
-            y={frame < 62 ? 472 : clampInterpolate(frame, [62, 92], [472, 205])}
+            x={mothX}
+            y={mothY}
           />
         </svg>
-        {frame >= 62 ? (
+        {frame >= 48 ? (
           <SparkBurst
-            frame={frame - 62}
+            frame={frame - 48}
             intensity={sneezeIntensity}
-            originX={640}
+            originX={875}
             originY={345}
           />
         ) : null}
@@ -1627,19 +1657,23 @@ const SneezeShot: React.FC = () => {
 
 const EscapeShot: React.FC = () => {
   const frame = useCurrentFrame();
-  const runFrame = Math.max(0, frame - 22);
-  const p = runFrame / 98;
-  const x = interpolate(runFrame, [0, 98], [980, -180], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const wipe = clampInterpolate(frame, [12, 20, 31], [-1380, -40, 1380]);
-  const clearingReveal = clampInterpolate(frame, [98, 118], [0, 1]);
+  const p = frame / 120;
+  const clearingReveal = clampInterpolate(frame, [44, 72], [0, 1]);
+  const maraX = clampInterpolate(frame, [0, 90, 119], [760, 550, 520]);
+  const miloX = clampInterpolate(frame, [0, 90, 119], [555, 345, 315]);
+  const guardianX = clampInterpolate(frame, [0, 90, 119], [1080, 970, 930]);
+  const rootSpeed = clampInterpolate(frame, [0, 90, 119], [3.2, 3.2, 1]);
+  const portalTravel = clampInterpolate(frame, [26, 82], [-520, 720]);
+  const portalOpacity = clampInterpolate(
+    frame,
+    [18, 28, 76, 88],
+    [0, 1, 1, 0],
+  );
   return (
-    <ShotShell narration={narrationAt(9)}>
-      <ForestBackdrop mode="cave" push={0.3} travel={p * 1.5} />
+    <ShotShell narration={narrationAt(7)}>
+      <ForestBackdrop mode="cave" push={0.42} travel={p * 0.6} />
       <div style={{ inset: 0, opacity: clearingReveal, position: "absolute" }}>
-        <ForestBackdrop mode="clearing" push={0.05} />
+        <ForestBackdrop mode="clearing" push={0.08} travel={p * 0.18} />
       </div>
       <svg
         height="100%"
@@ -1647,98 +1681,83 @@ const EscapeShot: React.FC = () => {
         width="100%"
         style={{ position: "absolute" }}
       >
-        {frame < 22 ? (
-          <>
-            <PerformanceSprite
-              poseIndex={5}
-              rotation={-7 + frame * 0.25}
-              scale={0.76}
-              variant="mara"
-              x={190}
-              y={613}
-            />
-            <PerformanceSprite
-              facing="left"
-              poseIndex={5}
-              rotation={7 - frame * 0.22}
-              scale={0.66}
-              variant="milo"
-              x={1080}
-              y={618}
-            />
-            <PerformanceSprite
-              poseIndex={7}
-              rotation={Math.sin(frame / 8) * 0.7}
-              scale={1.55}
-              variant="guardian-sneeze"
-              x={640}
-              y={672}
-            />
-            <GlowMoth phase={frame / 7} scale={0.65} x={920} y={205} />
-          </>
-        ) : (
-          <>
-            <PerformanceSprite
-              facing="left"
-              poseIndex={Math.floor((runFrame + 4) / 3) % 8}
-              rotation={Math.sin((runFrame / 24) * Math.PI * 2) * 0.7}
-              scale={1.05}
-              variant="guardian-chase"
-              x={x + 385}
-              y={650}
-            />
-            <GlowMoth
-              phase={runFrame / 8}
-              scale={0.62}
-              x={x + 385}
-              y={492 + Math.sin(runFrame / 9) * 5}
-            />
-            <ProfileRunRig
-              facing="left"
-              frame={runFrame}
-              rootPixelsPerFrame={1160 / 98}
-              scale={0.55}
-              variant="mara"
-              x={x}
-              y={616}
-            />
-            <ProfileRunRig
-              facing="left"
-              frame={runFrame}
-              phaseOffset={5.8}
-              rootPixelsPerFrame={1160 / 98}
-              scale={0.51}
-              variant="milo"
-              x={x + 155}
-              y={620}
-            />
-          </>
-        )}
+        <PerformanceSprite
+          facing="left"
+          poseIndex={Math.floor((frame + 4) / 3) % 8}
+          rotation={Math.sin((frame / 24) * Math.PI * 2) * 0.55}
+          scale={1.05}
+          variant="guardian-chase"
+          x={guardianX}
+          y={650}
+        />
+        <GlowMoth
+          phase={frame / 8}
+          scale={0.62}
+          x={guardianX - 38}
+          y={492 + Math.sin(frame / 9) * 3}
+        />
+        <ProfileRunRig
+          facing="left"
+          frame={frame + 16}
+          rootPixelsPerFrame={rootSpeed}
+          scale={0.72}
+          variant="mara"
+          x={maraX}
+          y={660}
+        />
+        <ProfileRunRig
+          facing="left"
+          frame={frame + 16}
+          phaseOffset={5.4}
+          rootPixelsPerFrame={rootSpeed}
+          scale={0.62}
+          variant="milo"
+          x={miloX}
+          y={663}
+        />
       </svg>
-      <div
+      <svg
+        aria-label="Physical moon arch foreground occluder"
+        height="100%"
+        viewBox="0 0 1280 720"
+        width="100%"
         style={{
-          background:
-            "linear-gradient(105deg, transparent 0 12%, rgba(12,45,38,.98) 20% 74%, transparent 84%), radial-gradient(circle at 42% 40%, #729d5e 0 12%, transparent 13%)",
-          height: 920,
-          left: wipe,
+          opacity: portalOpacity,
           position: "absolute",
-          rotate: "-5deg",
-          top: -80,
-          width: 1420,
+          transform: `translateX(${portalTravel}px)`,
         }}
-      />
-      <GeneratedSetForeground mode="cave" travel={p * 1.5} />
+      >
+        <path
+          d="M515 720V350Q650 175 785 350v370"
+          fill="none"
+          stroke="rgba(8,27,27,.96)"
+          strokeWidth="92"
+        />
+        <path
+          d="M515 720V350Q650 175 785 350v370"
+          fill="none"
+          opacity=".55"
+          stroke="#55715b"
+          strokeWidth="18"
+        />
+      </svg>
+      <div style={{ inset: 0, opacity: 1 - clearingReveal, position: "absolute" }}>
+        <GeneratedSetForeground mode="cave" travel={p * 0.55} />
+      </div>
+      <div style={{ inset: 0, opacity: clearingReveal, position: "absolute" }}>
+        <GeneratedSetForeground mode="clearing" travel={p * 0.15} />
+      </div>
     </ShotShell>
   );
 };
 
 const FriendlyOfferShot: React.FC = () => {
   const frame = useCurrentFrame();
-  const p = frame / 78;
-  const arrival = clampInterpolate(frame, [0, 10], [0, 1]);
-  const mothOffer = clampInterpolate(frame, [6, 60], [0, 1]);
+  const p = frame / 72;
+  const mothOffer = clampInterpolate(frame, [16, 64], [0, 1]);
+  const residualSettle = clampInterpolate(frame, [0, 14], [1, 0]);
   return (
-    <ShotShell narration={narrationAt(10)}>
+    <ShotShell narration={narrationAt(8)}>
       <ForestBackdrop mode="clearing" push={p * 0.12} />
       <div
         style={{
@@ -1757,7 +1776,7 @@ const FriendlyOfferShot: React.FC = () => {
         width="100%"
         style={{ position: "absolute" }}
       >
-        <g opacity={arrival} transform={`translate(0 ${(1 - arrival) * 8})`}>
+        <g transform={`translate(0 ${Math.sin(frame / 3) * residualSettle * 3})`}>
           <MiloPayoffPuppet frame={frame} mode="offer" x={315} y={662} />
           <MaraPayoffPuppet frame={frame} mode="offer" x={520} y={660} />
           <GuardianPayoffPuppet frame={frame} mode="offer" x={930} y={655} />
@@ -1776,11 +1795,11 @@ const FriendlyOfferShot: React.FC = () => {
 
 const FriendlyPlayShot: React.FC = () => {
   const frame = useCurrentFrame();
-  const p = frame / 72;
+  const p = frame / 54;
   const release = clampInterpolate(frame, [0, 28], [0, 1]);
-  const halo = clampInterpolate(frame, [9, 26, 58], [0, 1, 0.35]);
+  const halo = clampInterpolate(frame, [6, 22, 53], [0, 1, 0.35]);
   return (
-    <ShotShell narration={narrationAt(11)}>
+    <ShotShell narration={narrationAt(9)}>
       <ForestBackdrop mode="clearing" push={0.12 + p * 0.11} />
       <div
         style={{
@@ -1827,9 +1846,7 @@ const FriendlyPlayShot: React.FC = () => {
 
 const shotComponents: Record<string, React.FC> = {
   "run-to-the-ruin": RunApproachShot,
-  "cross-the-threshold": ThresholdShot,
   "listen-in-the-dark": ListenShot,
-  "empty-corridor": EmptyCorridorShot,
   "sneak-entrance": SneakShot,
   "creature-reveal": CreatureRevealShot,
   "eye-close-up": EyeCloseShot,
@@ -1843,6 +1860,7 @@ const shotComponents: Record<string, React.FC> = {
 export const KidsShowcaseComposition: React.FC<
   KidsShowcaseCompositionProps
 > = ({
+  directorTimeline,
   showCaptions = false,
   showProofLabel = false,
   sneezeIntensity = 1,
@@ -1850,6 +1868,16 @@ export const KidsShowcaseComposition: React.FC<
 }) => {
   const { width } = useVideoConfig();
   const scale = width / KIDS_SHOWCASE_WIDTH;
+  const runtimeShots = directorTimeline
+    ? directorTimeline.shots.map((shot, index) => ({
+        id: shot.id.replace(/^shot-/, ""),
+        startFrame: shot.startFrame,
+        durationInFrames: shot.durationInFrames,
+        title: shot.storyFunction,
+        intent: shot.cutMotivation,
+        narration: kidsShowcaseShots[index]?.narration ?? "",
+      }))
+    : kidsShowcaseShots;
   return (
     <ShowcaseOptionsContext
       value={{ showCaptions, showProofLabel, sneezeIntensity }}
@@ -1863,7 +1891,7 @@ export const KidsShowcaseComposition: React.FC<
             width: KIDS_SHOWCASE_WIDTH,
           }}
         >
-          {kidsShowcaseShots.map((shot) => {
+          {runtimeShots.map((shot) => {
             const Shot = shotComponents[shot.id] ?? RunApproachShot;
             return (
               <Sequence
@@ -1871,6 +1899,7 @@ export const KidsShowcaseComposition: React.FC<
                 from={shot.startFrame}
                 key={shot.id}
                 name={shot.title}
+                premountFor={KIDS_SHOWCASE_FPS}
               >
                 <Shot />
               </Sequence>

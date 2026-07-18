@@ -1,96 +1,69 @@
-# Director plan contract
+# Director contracts
 
-Emit stable IDs and explicit references. The application schema is authoritative; this is the minimum semantic shape.
+StoryStage uses three separate contracts. Do not collapse them into one convenient shot table.
 
-```json
-{
-  "schemaVersion": "1.0",
-  "productionId": "production-id",
-  "grammarId": "kids-adventure-v1",
-  "sourceContentHash": "64-hex",
-  "startFrame": 84,
-  "durationInFrames": 48,
-  "scenes": [
-    {
-      "id": "scene-id",
-      "objective": "Make entering the ruins feel like a choice.",
-      "geography": "The arch divides safe forest from dark corridor.",
-      "beatIds": ["beat-id"],
-      "sceneKitId": "scene-kit-id"
-    }
-  ],
-  "beats": [
-    {
-      "id": "beat-id",
-      "sceneId": "scene-id",
-      "audienceQuestion": "What are they following?",
-      "knowledgeBefore": "A light is moving in the forest.",
-      "knowledgeAfter": "The light entered the ruins.",
-      "emotionBefore": "curiosity",
-      "emotionAfter": "caution",
-      "muteReadableAction": "The moth crosses the threshold and the children stop.",
-      "audioReadableIntent": "Forest ambience narrows; one leaf contact marks the step.",
-      "shotIds": ["shot-id"]
-    }
-  ],
-  "shots": [
-    {
-      "id": "shot-id",
-      "beatId": "beat-id",
-      "storyFunction": "threshold",
-      "startFrame": 84,
-      "durationInFrames": 48,
-      "sceneId": "scene-id",
-      "composition": {
-        "scale": "close-up",
-        "focalSubjectId": "mara-foot",
-        "screenDirection": "left-to-right",
-        "depthPlaneIds": ["ground", "feet", "foreground-leaves"],
-        "eyelineTargetIds": [],
-        "staging": "Keep the foot contact clear while leaves cross only the frame edge."
-      },
-      "transition": {
-        "type": "foreground-wipe",
-        "motivation": "leaf contact covers the geography change"
-      },
-      "continuity": {
-        "entryState": "Mara approaches frame-left.",
-        "exitState": "Her planted foot is inside the arch."
-      },
-      "performanceProgramIds": ["mara-threshold-step"],
-      "assetRequirementIds": ["moon-arch-scene-kit", "foreground-leaves"],
-      "events": [
-        {
-          "id": "threshold-contact",
-          "kind": "contact",
-          "frameOffset": 10,
-          "description": "Mara's foot plants inside the ruins."
-        }
-      ],
-      "audioIntentIds": ["threshold-rustle"]
-    }
-  ],
-  "audioIntents": [
-    {
-      "id": "threshold-rustle",
-      "role": "foley",
-      "shotId": "shot-id",
-      "anchorEventId": "threshold-contact",
-      "offsetFrames": 0,
-      "direction": "Dry paper-leaf rustle; brief and close."
-    }
-  ],
-  "contentHash": "64-hex"
-}
-```
+## 1. DirectorPlan: what happens, why, and how it should read
 
-Hard validation must confirm:
+This plan is causal and untimed. It must contain:
 
-- all scene, beat, shot, performance, asset, event, and audio references resolve exactly once;
-- frames and events remain within their shot and production;
-- shots cover their intended sequence without overlap or gaps unless declared;
-- moving-subject continuity is compatible or has an explicit reset/exception;
-- performance source semantics match the action;
-- audio anchors resolve to picture events and approved source hashes;
-- dialogue lines resolve to exact text, take, alignment, and viseme hashes;
-- every consumed visual and audio asset is included in the production content hash.
+- the exact story-graph hash and grammar-profile hash;
+- one persistent initial world state;
+- scene geography, landmarks, portals, and legal entrances/exits;
+- audience takeaway and emotional turn for every beat;
+- named causal events with explicit dependencies;
+- prop state and ownership changes through named events;
+- shot purpose, composition, camera motivation, blocking, eyelines, and depth;
+- honest performance requirements and required internal motion channels;
+- dialogue, SFX, ambience, and music intentions anchored to events;
+- an earliest, preferred, and latest cut event plus a read window.
+
+The DirectorPlan must not contain arbitrary final frame ranges.
+
+## 2. TimingSolution: when the approved events happen
+
+The deterministic solver combines:
+
+- causal dependencies;
+- action and rig duration envelopes;
+- contact and attachment events;
+- reaction-delay and comprehension-hold policy;
+- guide or approved dialogue timing;
+- music phrase and emphasis anchors;
+- compatible outgoing and incoming cut events.
+
+It returns exact event frames and contiguous shot ranges. A timing change invalidates downstream motion, audio, cut proof, and render approvals.
+
+## 3. ExecutableEpisodePlan: the only render input
+
+This plan binds the exact:
+
+- DirectorPlan and TimingSolution hashes;
+- shot ranges and cut-event IDs;
+- stage kits, landmarks, depth layers, and occluders;
+- performance renderer kinds and versioned manifests;
+- approved asset versions and content hashes;
+- dialogue takes, alignments, visemes, SFX, music, and mix settings;
+- output dimensions, frame rate, duration, and registry versions.
+
+Preview, proxy animatic, final Remotion output, cut proof, and decoded-MP4 QA must consume this exact object. The animatic swaps only the asset resolver for proxies; it does not use a separate shot path.
+
+## Hard validation
+
+Confirm all of the following before final artwork:
+
+- every story beat is covered exactly and in source order;
+- every reaction has an earlier cause and the event graph is acyclic;
+- every shot has one primary purpose and motivated entry/exit events;
+- moving subjects preserve legal world position, screen order, facing, gaze, velocity, and gait phase across cuts;
+- entity visibility changes only through entrance, exit, reveal, or occlusion events;
+- props follow one authoritative free, in-flight, attached, offered, transferred, or released state;
+- performance requirements resolve to a renderer with real internal motion channels;
+- audio cues resolve to named events and approved source hashes;
+- shot timing satisfies reaction delays, read windows, action envelopes, and dialogue timing;
+- shots cover the production without gaps or overlaps;
+- exact assets and audio are included in the production hash;
+- preview and export resolve the same plan and registry versions;
+- cut proof checks `-12 -8 -4 -2 -1 | 0 +1 +2 +4 +8 +12` decoded frames;
+- the encoded video contains no sprite dropout, clipping, ownership jump, teleport, or unmotivated geography reset.
+
+Creative judgment remains responsible for whether the staging is engaging, the emotion feels honest, the joke lands, and the episode is worth watching. Validation proves coherence and execution, not taste.

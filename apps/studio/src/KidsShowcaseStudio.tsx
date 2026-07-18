@@ -35,7 +35,7 @@ import "./kids-showcase-studio.css";
 
 const SHOWCASE_FPS = 30;
 export const KIDS_SHOWCASE_DOWNLOAD_URL =
-  "https://github.com/truthunknown2-art/StoryStage/releases/download/moonlit-ruins-preview-v1/moonlit-ruins-30s.mp4";
+  "/@fs/C:/Projects/StoryStage/artifacts/CV-003/kids-showcase/moonlit-ruins-30s.mp4";
 
 const stageTracks = [
   { id: "far-set", label: "Forest far" },
@@ -257,9 +257,8 @@ export function KidsShowcaseStudio({ onBack }: { onBack: () => void }) {
           <a
             aria-label="Download current 30-second MP4"
             className="ks-download-render"
+            download="moonlit-ruins-30s.mp4"
             href={KIDS_SHOWCASE_DOWNLOAD_URL}
-            rel="noreferrer"
-            target="_blank"
           >
             <Download size={15} />
             Download MP4
@@ -355,7 +354,7 @@ export function KidsShowcaseStudio({ onBack }: { onBack: () => void }) {
             </div>
             <span className="ks-status-pill">
               <span />
-              900-frame production
+              Director plan valid · 9 cuts checked
             </span>
           </header>
           <div className="ks-player-frame">
