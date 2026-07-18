@@ -13,6 +13,7 @@ import {Cv001CreatorStudio} from "./Cv001CreatorStudio";
 import "./cv001-creator-studio.css";
 
 type CreatorScreen = "creator-create" | "creator-studio";
+type StudioEntryMode = "new-first-cut" | "continue-saved";
 
 export function Cv001CreatorApp({onOpenLegacy}: {onOpenLegacy: () => void}) {
   const [screen, setScreen] = useState<CreatorScreen>("creator-create");
@@ -35,6 +36,7 @@ export function Cv001CreatorApp({onOpenLegacy}: {onOpenLegacy: () => void}) {
     }
   }, []);
   const [project, setProjectState] = useState<Cv001CreatorProjectState | null>(restored.project);
+  const [studioEntryMode, setStudioEntryMode] = useState<StudioEntryMode>("new-first-cut");
   const [notice, setNotice] = useState<string | null>(restored.notice);
   const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false);
   const scriptError = useMemo(() => {
@@ -60,13 +62,14 @@ export function Cv001CreatorApp({onOpenLegacy}: {onOpenLegacy: () => void}) {
     saveProject(next);
     setReplaceConfirmOpen(false);
     setNotice(null);
+    setStudioEntryMode("new-first-cut");
     setScreen("creator-studio");
   };
 
   if (screen === "creator-studio" && project)
     return (
       <Cv001CreatorStudio
-        autoPlay
+        entryMode={studioEntryMode}
         onExit={() => setScreen("creator-create")}
         onOpenLegacy={onOpenLegacy}
         onProjectChange={saveProject}
@@ -140,7 +143,7 @@ export function Cv001CreatorApp({onOpenLegacy}: {onOpenLegacy: () => void}) {
           </div> : null}
         </form>
       </div>
-      {project ? <button className="cv-continue-card" onClick={() => setScreen("creator-studio")} type="button">
+      {project ? <button className="cv-continue-card" onClick={() => {setStudioEntryMode("continue-saved"); setScreen("creator-studio");}} type="button">
         <span>Continue</span><strong>{project.title}</strong><small>3 beats · last selected: {project.baseInput.beats.find((beat) => beat.id === project.selectedBeatId)?.text ?? "Lantern scene"}</small>
       </button> : null}
       {notice ? <p className="cv-restore-notice" role="status">{notice}</p> : null}

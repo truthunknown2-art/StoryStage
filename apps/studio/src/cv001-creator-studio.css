@@ -208,6 +208,74 @@
 .cv-replace-confirm p span { color: #917f60; font-size: 8px; margin-top: 2px; }
 .cv-replace-confirm button { background: #333026; border-radius: 6px; color: #c5b892; font-size: 8px; min-height: 34px; padding: 0 9px; }
 
+/* Creator readability and keyboard/touch target floor */
+.cv-creator { --cv-muted: #b0b9b2; --cv-faint: #9ca69f; }
+.cv-creator button:focus-visible, .cv-create button:focus-visible, .cv-creator input:focus-visible, .cv-create input:focus-visible, .cv-creator textarea:focus-visible, .cv-create textarea:focus-visible, .cv-beats-panel summary:focus-visible { outline: 3px solid var(--cv-mint); outline-offset: 2px; }
+.cv-back { color: #b0b9b3; font-size: 13px; min-height: 44px; padding-left: 7px; padding-right: 7px; }
+.cv-project-title small { color: #a1aba4; font-size: 11px; }
+.cv-top-actions button { border-color: #3e4741; border-radius: 8px; color: #b8c1bb; font-size: 11px; height: 44px; min-width: 44px; padding: 0 12px; }
+.cv-prototype-badge { color: #a5d8b4; font-size: 10px; }
+.cv-beats-panel details > summary { align-items: center; min-height: 44px; }
+.cv-beats-panel details > summary p, .cv-beats-panel > header p, .cv-stage-heading p, .cv-director header p { color: #a5afa8; font-size: 11px; }
+.cv-beats-panel details > summary > span, .cv-beats-panel > header > span { border-color: #3d4a41; color: #b6c0b9; font-size: 10px; padding: 6px 9px; }
+.cv-panel-intro { color: #a4aea7; font-size: 12px; }
+.cv-beat-copy small { color: #a5afa8; font-size: 10px; }
+.cv-beat-copy strong { color: #f0f2ed; font-size: 12px; }
+.cv-beat-copy span { color: #aab4ad; font-size: 11px; line-height: 1.35; }
+.cv-beat-copy q { color: #b2bcb5; font-size: 11px; line-height: 1.4; }
+.cv-beat-list i { background: #e0c46c; font-size: 10px; padding: 4px 7px; }
+.cv-scene-note p { color: #a5afa8; font-size: 11px; }
+.cv-scene-note strong { color: #c5cec8; }
+.cv-real-badge { border-color: #385540; font-size: 10px; padding: 7px 10px; }
+.cv-player-controls button { border-color: #3d4740; border-radius: 8px; color: #c4cbc6; height: 44px; width: 44px; }
+.cv-player-controls > span { color: #a8b1ab; font-size: 10px; min-width: 38px; }
+.cv-player-controls input { height: 44px; }
+.cv-timeline button { border-color: #343c37; color: #aab3ad; min-height: 44px; padding: 10px 11px; }
+.cv-timeline span, .cv-timeline small { font-size: 10px; }
+.cv-timeline strong { font-size: 11px; }
+.cv-close-director, .cv-advanced-drawer header button { height: 44px; min-width: 44px; width: 44px; }
+.cv-selected-summary > span { color: #a8b3ab; font-size: 10px; }
+.cv-selected-summary strong { font-size: 13px; }
+.cv-selected-summary p { color: #aab3ad; font-size: 11px; }
+.cv-director > label { font-size: 12px; }
+.cv-director textarea { font-size: 13px; }
+.cv-director textarea::placeholder { color: #929d95; }
+.cv-suggestions button { border-color: #414b44; color: #aeb8b1; font-size: 11px; min-height: 44px; padding: 9px 12px; }
+.cv-feedback, .cv-error { font-size: 11px; }
+.cv-apply { font-size: 12px; min-height: 44px; }
+.cv-shortcut, .cv-prototype-note { color: #9ea8a1; font-size: 10px; }
+.cv-beat-facts dt, .cv-beat-facts dd { font-size: 11px; }
+.cv-beat-facts dt { color: #9da8a0; }
+.cv-edit-history > header span, .cv-edit-history > header small, .cv-edit-history > p, .cv-edit-history li > span { color: #a0aaa3; font-size: 10px; }
+.cv-edit-history li p { color: #b0bab3; font-size: 11px; }
+.cv-director > footer button { font-size: 11px; min-height: 44px; }
+.cv-advanced-drawer header p, .cv-advanced-drawer dt { color: #a5afa8; font-size: 10px; }
+.cv-advanced-drawer dd { color: #bec7c1; font-size: 11px; }
+.cv-open-legacy { font-size: 12px; min-height: 44px; }
+.cv-create-brand small { color: #9da8a0; font-size: 10px; }
+.cv-prototype-pill { color: #afe3bd; font-size: 10px; }
+.cv-kicker { color: #9fd2ad; font-size: 11px; }
+.cv-create-proof strong { color: #d1d8d3; font-size: 12px; }
+.cv-create-proof small { color: #a3ada6; font-size: 11px; }
+.cv-create-form > header p { color: #a5afa8; font-size: 10px; }
+.cv-create-label, .cv-create-form legend { color: #b8c1bb; font-size: 11px; }
+.cv-create-form > input, .cv-create-form > textarea { font-size: 13px; min-height: 44px; }
+.cv-script-help span, .cv-script-help small { font-size: 10px; }
+.cv-script-help small { color: #9da8a0; }
+.cv-choice-grid button { color: #aab3ad; }
+.cv-choice-grid button strong { color: #d6dcd7; font-size: 11px; }
+.cv-choice-grid button small { color: #a0aaa3; font-size: 10px; }
+.cv-create-action { font-size: 12px; min-height: 48px; }
+.cv-create-boundary { color: #9ba59e; font-size: 10px; }
+.cv-continue-card { min-height: 60px; }
+.cv-continue-card > span { color: #a9ddb7; font-size: 10px; }
+.cv-continue-card strong { font-size: 12px; }
+.cv-continue-card small { color: #aab4ad; font-size: 10px; }
+.cv-restore-notice { font-size: 11px; }
+.cv-replace-confirm p strong { font-size: 11px; }
+.cv-replace-confirm p span { color: #c0aa7d; font-size: 10px; }
+.cv-replace-confirm button { font-size: 11px; min-height: 44px; padding: 0 12px; }
+
 @media (max-width: 1199px) {
   body { min-width: 0; }
   .cv-workspace { grid-template-columns: 235px minmax(0, 1fr); }

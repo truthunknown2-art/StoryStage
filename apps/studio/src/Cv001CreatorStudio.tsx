@@ -46,13 +46,13 @@ const directionSummary = (project: Cv001CreatorProjectState, index: number) => {
 };
 
 export function Cv001CreatorStudio({
-  autoPlay,
+  entryMode,
   onExit,
   onOpenLegacy,
   onProjectChange,
   project,
 }: {
-  autoPlay?: boolean;
+  entryMode: "new-first-cut" | "continue-saved";
   onExit: () => void;
   onOpenLegacy: () => void;
   onProjectChange: (project: Cv001CreatorProjectState) => void;
@@ -66,7 +66,7 @@ export function Cv001CreatorStudio({
   const selectedIndex = Math.max(0, project.baseInput.beats.findIndex((beat) => beat.id === project.selectedBeatId));
   const selectedBeat = project.baseInput.beats[selectedIndex]!;
   const selectedShot = fixture.renderPlan.shots[selectedIndex]!;
-  const [frame, setFrame] = useState(selectedShot.startFrame);
+  const [frame, setFrame] = useState(entryMode === "new-first-cut" ? 0 : selectedShot.startFrame);
   const [playing, setPlaying] = useState(false);
   const [playOnlyBeat, setPlayOnlyBeat] = useState<number | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -77,16 +77,17 @@ export function Cv001CreatorStudio({
   const playerRef = useRef<PlayerRef>(null);
   const previewHeadingRef = useRef<HTMLHeadingElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
-  const initialPlayback = useRef({autoPlay: Boolean(autoPlay), selectedIndex, startFrame: selectedShot.startFrame});
+  const initialPlayback = useRef({entryMode, selectedStartFrame: selectedShot.startFrame});
 
   useEffect(() => {
     previewHeadingRef.current?.focus({preventScroll: true});
-    const {autoPlay: shouldAutoPlay, selectedIndex: initialBeatIndex, startFrame: initialFrame} = initialPlayback.current;
+    const {entryMode: initialEntryMode, selectedStartFrame} = initialPlayback.current;
+    const initialFrame = initialEntryMode === "new-first-cut" ? 0 : selectedStartFrame;
     playerRef.current?.seekTo(initialFrame);
     setFrame(initialFrame);
-    if (!shouldAutoPlay) return;
+    if (initialEntryMode === "continue-saved") return;
     const timer = window.setTimeout(() => {
-      setPlayOnlyBeat(initialBeatIndex);
+      setPlayOnlyBeat(null);
       playerRef.current?.seekTo(initialFrame);
       playerRef.current?.play();
     }, 0);
@@ -258,6 +259,7 @@ export function Cv001CreatorStudio({
                     aria-current={isActive ? "true" : undefined}
                     aria-pressed={isSelected}
                     className={`${isSelected ? "is-selected" : ""} ${isPlaying ? "is-playing" : ""}`}
+                    data-binding-hash={compiled.sceneMotion.bindings[index]!.contentHash}
                     key={beat.id}
                     onClick={() => selectBeat(index)}
                     type="button"

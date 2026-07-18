@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "1.0",
+  "status": "cv001-creator-browser-proof",
+  "accessibility": {
+    "create": {
+      "criticalOrSerious": [],
+      "passes": 17
+    },
+    "studio": {
+      "criticalOrSerious": [],
+      "passes": 25
+    }
+  },
+  "advancedClosedByDefault": true,
+  "bindingHashes": {
+    "before": [
+      "258d854bde727d22ffb71817b172ac2662bd657438ffe7d7af6cc02bbfb5a803",
+      "1fabc75294071477ea174efd25eaf5d38515c8a987a95e3a4262bb6a480a858b",
+      "edf356f58ddf33651e395907c93df786a4ad71b5c5d8d8f0c0f8cba12e2674c7"
+    ],
+    "edited": [
+      "258d854bde727d22ffb71817b172ac2662bd657438ffe7d7af6cc02bbfb5a803",
+      "1fabc75294071477ea174efd25eaf5d38515c8a987a95e3a4262bb6a480a858b",
+      "2d131af25c92875c72af76c0f41b274a1af1947b96ef34371639494431b1b63c"
+    ],
+    "undone": [
+      "258d854bde727d22ffb71817b172ac2662bd657438ffe7d7af6cc02bbfb5a803",
+      "1fabc75294071477ea174efd25eaf5d38515c8a987a95e3a4262bb6a480a858b",
+      "edf356f58ddf33651e395907c93df786a4ad71b5c5d8d8f0c0f8cba12e2674c7"
+    ],
+    "redone": [
+      "258d854bde727d22ffb71817b172ac2662bd657438ffe7d7af6cc02bbfb5a803",
+      "1fabc75294071477ea174efd25eaf5d38515c8a987a95e3a4262bb6a480a858b",
+      "2d131af25c92875c72af76c0f41b274a1af1947b96ef34371639494431b1b63c"
+    ]
+  },
+  "consoleErrors": [],
+  "entryPlayback": {
+    "initialFrame": 0,
+    "advancedFrame": 10,
+    "fullSceneFrame": 126,
+    "continueStart": 210,
+    "continueAfterWait": 210
+  },
+  "ergonomics": {
+    "create": {
+      "targets": [],
+      "microtype": []
+    },
+    "studio": {
+      "targets": [],
+      "microtype": []
+    }
+  },
+  "layout": {
+    "desktop": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "preview": {
+        "width": 761.84375,
+        "height": 429.40625
+      },
+      "director": {
+        "x": 1122,
+        "width": 318,
+        "right": 1440
+      },
+      "rail": {
+        "width": 268
+      }
+    },
+    "responsive": {
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "scrollWidth": 1024,
+      "preview": {
+        "width": 741,
+        "height": 417.6875
+      },
+      "director": {
+        "x": 664,
+        "width": 360,
+        "right": 1024
+      },
+      "rail": {
+        "width": 235
+      }
+    }
+  },
+  "persistedProjectHash": {
+    "beforeReload": "a446841d886e4c9e3fdfabdcab9b8b677603bd63e478e4c541e590ccc01806d1",
+    "afterReload": "a446841d886e4c9e3fdfabdcab9b8b677603bd63e478e4c541e590ccc01806d1"
+  },
+  "selectedBeatFrames": {
+    "beat2": 90,
+    "beat3": 210
+  },
+  "screenshots": [
+    "create-1440x900.png",
+    "studio-default-1440x900.png",
+    "studio-beat-3-edited-1440x900.png",
+    "studio-advanced-open-1440x900.png",
+    "studio-1024x768.png"
+  ]
+}

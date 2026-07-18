@@ -53,6 +53,14 @@ async function openStudio() {
   return user;
 }
 
+async function expectNoSeriousAccessibilityViolations() {
+  const audit = await axe.run(document, {
+    runOnly: {type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"]},
+  });
+  expect(audit.violations.filter((violation) => violation.impact === "critical" || violation.impact === "serious"))
+    .toEqual([]);
+}
+
 describe("CV-001 creator shell", () => {
   it("launches into Create instead of mounting the engineering cockpit", () => {
     render(<App />);
@@ -96,18 +104,22 @@ describe("CV-001 creator shell", () => {
       showMotionDiagnostics: false,
     });
     expect((playerHarness.lastProps?.inputProps as {directedSceneMotion?: unknown}).directedSceneMotion).toBeDefined();
+    expect(playerHarness.seekTo).toHaveBeenCalledWith(0);
+    expect(playerHarness.play).toHaveBeenCalled();
   });
 
-  it("has no critical or serious automated accessibility violations", async () => {
+  it("has no critical or serious automated accessibility violations on Create", async () => {
+    document.documentElement.lang = "en";
+    document.title = "StoryStage";
+    render(<App />);
+    await expectNoSeriousAccessibilityViolations();
+  });
+
+  it("has no critical or serious automated accessibility violations on Studio", async () => {
     document.documentElement.lang = "en";
     document.title = "StoryStage";
     await openStudio();
-    const audit = await axe.run(document, {
-      runOnly: {type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"]},
-      rules: {"color-contrast": {enabled: false}},
-    });
-    expect(audit.violations.filter((violation) => violation.impact === "critical" || violation.impact === "serious"))
-      .toEqual([]);
+    await expectNoSeriousAccessibilityViolations();
   });
 
   it("seeks to exact beat starts and plays only the selected beat", async () => {
@@ -205,10 +217,12 @@ describe("CV-001 creator shell", () => {
     cleanup();
     render(<App />);
     expect(screen.getByRole("button", {name: /ContinueThe Lantern Discovery/})).toBeInTheDocument();
+    vi.clearAllMocks();
     await user.click(screen.getByRole("button", {name: /ContinueThe Lantern Discovery/}));
     expect((playerHarness.lastProps?.inputProps as {directedSceneMotion: {contentHash: string}}).directedSceneMotion.contentHash).toBe(editedHash);
     expect(within(screen.getByRole("navigation", {name: "Scenes and beats"})).getByRole("button", {name: /Show the lantern/})).toHaveAttribute("aria-pressed", "true");
     expect(playerHarness.seekTo).toHaveBeenLastCalledWith(210);
+    expect(playerHarness.play).not.toHaveBeenCalled();
     expect(screen.getByRole("heading", {name: "Show the lantern"})).toBeInTheDocument();
   });
 

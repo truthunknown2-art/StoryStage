@@ -1,7 +1,7 @@
 import { config } from "@remotion/eslint-config-flat";
 
 export default [
-  { ignores: ["**/artifacts/**", "**/dist/**", "**/coverage/**", "**/node_modules.broken/**", "**/out/**"] },
+  { ignores: ["**/artifacts/**", "**/dist/**", "**/coverage/**", "**/node_modules.broken/**", "**/out/**", "**/output/playwright/**"] },
   ...config,
   {
     files: ["packages/story-engine/**/*.ts", ".agents/skills/**/*.ts"],

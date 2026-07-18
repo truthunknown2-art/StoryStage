@@ -5,7 +5,8 @@ Verified on July 17, 2026 against the fixed three-paragraph lantern prototype.
 ## Outcomes
 
 - The app launches into the creator-facing Create screen, not the engineering cockpit.
-- A verified saved project reopens on its saved beat and plays only that beat.
+- A verified saved project reopens paused at the first frame of its saved beat.
+- A newly created first cut plays the full ten-second scene from frame 0; Continue reopens paused at the saved beat start.
 - The Studio keeps the real `ProductionComposition` dominant at 1440×900 and 1024×768.
 - The 1024px layout has no horizontal overflow and exposes Director as a 360px drawer.
 - The required direction, `Make the reaction bigger and hold it longer.`, changes only Beat 3 and supports exact undo/redo.
@@ -30,17 +31,30 @@ The command renders baseline and edited production frames for `Make it bigger` o
 
 ## Browser QA
 
+Run the complete, repeatable Chromium proof:
+
+```text
+pnpm proof:cv001-creator
+```
+
+It writes regenerated screenshots and a machine-readable report to `output/playwright/cv001-creator/`. The latest passing report and all five required captures are also committed in this directory.
+
 - 1440×900: document width 1440px, no horizontal overflow, preview 761.84×429.41px, Director 318px.
 - 1024×768: document width 1024px, no horizontal overflow, preview 741×417.69px, Director drawer x=664px, width=360px, right edge=1024px.
 - In-app browser console: zero error-level messages.
-- Automated WCAG 2 A/AA/2.1 AA semantic audit: zero critical or serious violations. The jsdom audit excludes color contrast because it has no layout engine; visual contrast was checked in the real browser captures.
+- Real-browser axe WCAG 2 A/AA/2.1 AA audits on both Create and Studio, including color contrast: zero critical or serious violations.
+- Real-browser ergonomic audit: zero visible interactive targets below 44×44px and zero creator-facing text below 10px.
+- Entry proof: frame 0 on Create, playback advances beyond Beat 1, and Continue remains paused at exact frame 210.
+- Beat selection proof: exact frame 90 for Beat 2 and exact frame 210 for Beat 3.
 
 ## Captures
 
-- `create-1440.png` — default creator-facing project setup.
-- `studio-1440-edited.png` — edited Beat 3 at the end of its articulated performance.
-- `studio-1024-director.png` — responsive Director drawer over the production preview.
+- `create-1440x900.png` — default creator-facing project setup.
+- `studio-default-1440x900.png` — default Studio with Advanced closed.
+- `studio-beat-3-edited-1440x900.png` — required Beat 3 direction applied.
+- `studio-advanced-open-1440x900.png` — technical evidence isolated in Advanced.
+- `studio-1024x768.png` — responsive Director drawer over the production preview.
 
 ## Full verification
 
-`pnpm verify` passes privacy checks, lint, all workspace typechecks, and 232 tests, including 98 story-engine tests and 54 Studio tests.
+`pnpm verify` passes privacy checks, lint, all workspace typechecks, and 233 tests, including 98 story-engine tests and 55 Studio tests.

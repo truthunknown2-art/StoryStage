@@ -29,9 +29,11 @@
     "render:production-proof": "pnpm --filter @storystage/render-worker render:production-proof",
     "render:rook-preview": "pnpm --filter @storystage/render-worker render:rook-preview",
     "render:rook-motion-review": "pnpm --filter @storystage/render-worker render:rook-motion-review",
-    "render:cv001-creator-locality-proof": "pnpm --filter @storystage/render-worker render:cv001-creator-locality-proof"
+    "render:cv001-creator-locality-proof": "pnpm --filter @storystage/render-worker render:cv001-creator-locality-proof",
+    "proof:cv001-creator": "node scripts/proof-cv001-creator.mjs"
   },
   "devDependencies": {
+    "@playwright/cli": "0.1.17",
     "@remotion/eslint-config-flat": "4.0.490",
     "@types/node": "24.10.1",
     "axe-core": "4.10.3",
