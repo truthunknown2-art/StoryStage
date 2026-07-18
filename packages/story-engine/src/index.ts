@@ -13,6 +13,7 @@ export * from "./import-record";
 export * from "./model";
 export * from "./metrics";
 export * from "./motion-program";
+export * from "./performance-source";
 export * from "./cv001-rig-kinematics";
 export * from "./cv001-scene-compiler";
 export * from "./cv001-proof-fixture";
