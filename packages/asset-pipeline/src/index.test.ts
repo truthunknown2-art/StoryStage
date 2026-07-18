@@ -5,14 +5,19 @@ import {join} from "node:path";
 import sharp from "sharp";
 import {describe, expect, it} from "vitest";
 import {
+  candidateBundleSchema,
+  createImportValidationReport,
   createAssetRigManifest,
+  finalizeImportRecord,
+  finalizePreparationReport,
   generationBriefSchema,
+  hashCanonical,
   validateAssetRigManifest,
   verifyAssetRigManifestHash,
   verifyPreparationReportHash,
   verifyRigValidationReportHash,
 } from "@storystage/story-engine";
-import {CandidateStagingError, createPreparedCandidateComparisonSheet, prepareCandidateSets, stageCandidateBundle, stageLooseCandidateFiles, verifyLoggedCandidateBytes, verifyStagedCandidates} from "./index";
+import {CandidateStagingError, createPreparedCandidateComparisonSheet, prepareCandidateSets, stageCandidateBundle, stageLooseCandidateFiles, verifyLoggedCandidateBytes, verifyPreparationReportAgainstImportEvidence, verifyStagedCandidates} from "./index";
 
 const rgbaPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+Avz9WQAAAABJRU5ErkJggg==", "base64");
 
@@ -306,5 +311,39 @@ describe("candidate preparation and rig validation", () => {
     const [staged] = await stageLooseCandidateFiles({files: [{candidateId: "prop-candidate", sourceFile}], trustedStagingRoot, stagingRoot});
     const report = await prepareCandidateSets({request: {importId: "import-one", importRecordContentHash: "e".repeat(64), exchangeJobId: "job-one", candidates: [{candidateSetId: "set-prop-one", briefId: "brief-prop", requirementId: "requirement-prop", fileRole: "candidate.png", expectedMediaType: staged!.mediaType, expectedWidth: staged!.width, expectedHeight: staged!.height, outputRole: "prop-cutout", stagedCandidate: staged!.candidate}]}, trustedStagingRoot, stagingRoot});
     expect(verifyPreparationReportHash({...report, preparedAt: "2026-07-17T00:00:00.000Z"})).toBe(false);
+  });
+
+  it("rejects replacement prepared pixels even when their report hash is recomputed", async () => {
+    const {sourceRoot, trustedStagingRoot, stagingRoot} = await fixture();
+    const sourceBytes = await opaqueFixture(320, 180);
+    await writeFile(join(sourceRoot, "incoming", "friendly-name.png"), sourceBytes);
+    const candidateBundle = candidateBundleSchema.parse(bundle(hash(sourceBytes), {candidateId: "candidate-editorial", candidateSetId: "candidate-set-editorial", briefId: "brief-editorial", width: 320, height: 180}));
+    const [stagedCandidate] = await stageCandidateBundle({bundle: candidateBundle, sourceRoot, trustedStagingRoot, stagingRoot});
+    const rights = candidateBundle.assets[0]!.rights;
+    const importRecord = finalizeImportRecord({
+      schemaVersion: "1.0",
+      importId: "import-one",
+      sourceMode: "structured-bundle",
+      exchangeJobId: candidateBundle.exchangeJobId,
+      generationJobContentHash: candidateBundle.generationJobContentHash,
+      production: candidateBundle.production,
+      manifestContentHash: hashCanonical(candidateBundle),
+      candidateBundle,
+      assets: [{candidateId: "candidate-editorial", candidateSetId: "candidate-set-editorial", briefId: "brief-editorial", requirementId: "requirement-editorial", fileRole: "candidate.png", originalName: "friendly-name.png", mediaType: "image/png", width: 320, height: 180, rights, stagedCandidate: stagedCandidate!}],
+      candidateSets: [{candidateSetId: "candidate-set-editorial", briefId: "brief-editorial", requirementId: "requirement-editorial", expectedRoles: ["candidate.png"], returnedRoles: ["candidate.png"], missingRoles: [], complete: true}],
+      findings: [],
+      missingRoleCount: 0,
+    }, "2026-07-17T00:00:00.000Z");
+    const validationReport = createImportValidationReport(importRecord, "2026-07-17T00:01:00.000Z");
+    const preparationReport = await prepareCandidateSets({request: {importId: importRecord.importId, importRecordContentHash: importRecord.contentHash, exchangeJobId: importRecord.exchangeJobId, candidates: [{candidateSetId: "candidate-set-editorial", briefId: "brief-editorial", requirementId: "requirement-editorial", fileRole: "candidate.png", expectedMediaType: "image/png", expectedWidth: 320, expectedHeight: 180, outputRole: "reconstruction", stagedCandidate: stagedCandidate!}]}, trustedStagingRoot, stagingRoot});
+    await expect(verifyPreparationReportAgainstImportEvidence({candidateBundle, importRecord, validationReport, preparationReport, trustedStagingRoot, stagingRoot})).resolves.toMatchObject({preparationReport: {contentHash: preparationReport.contentHash}});
+
+    const replacement = await sharp({create: {width: 1920, height: 1080, channels: 4, background: {r: 1, g: 2, b: 3, alpha: 1}}}).png({compressionLevel: 9, adaptiveFiltering: true}).toBuffer();
+    const originalPrepared = preparationReport.candidateSets[0]!.preparedCandidates[0]!;
+    await writeFile(join(stagingRoot, originalPrepared.relativeFile), replacement);
+    const changedCandidateSets = preparationReport.candidateSets.map((set) => ({...set, preparedCandidates: set.preparedCandidates.map((candidate) => candidate.candidateId === originalPrepared.candidateId ? {...candidate, preparedContentHash: hash(replacement)} : candidate)}));
+    const replacedReport = finalizePreparationReport({schemaVersion: "1.0", importId: preparationReport.importId, importRecordContentHash: preparationReport.importRecordContentHash, exchangeJobId: preparationReport.exchangeJobId, processor: preparationReport.processor, candidateSets: changedCandidateSets}, preparationReport.preparedAt);
+    expect(verifyPreparationReportHash(replacedReport)).toBe(true);
+    await expect(verifyPreparationReportAgainstImportEvidence({candidateBundle, importRecord, validationReport, preparationReport: replacedReport, trustedStagingRoot, stagingRoot})).rejects.toMatchObject({code: "hash-mismatch"} satisfies Partial<CandidateStagingError>);
   });
 });

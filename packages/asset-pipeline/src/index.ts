@@ -7,13 +7,21 @@ import {
   candidateBundleSchema,
   candidateSetContactSheetSchema,
   finalizePreparationReport,
+  hashCanonical,
+  importRecordSchema,
+  importValidationReportSchema,
   prepareCandidateSetsRequestSchema,
+  preparationReportSchema,
   preparedCandidateSchema,
   stagedCandidateSchema,
+  verifyImportEvidence,
+  verifyPreparationReportHash,
   type CandidateBundle,
   type CandidatePreparationInput,
   type CandidateSetContactSheet,
   type CandidateSetPreparation,
+  type ImportRecord,
+  type ImportValidationReport,
   type PreparationReport,
   type PrepareCandidateSetsRequest,
   type PreparedCandidate,
@@ -78,6 +86,22 @@ export type PrepareCandidateSetsInput = {
   request: PrepareCandidateSetsRequest | unknown;
   trustedStagingRoot: string;
   stagingRoot: string;
+};
+
+export type VerifyPreparationEvidenceInput = {
+  candidateBundle: unknown;
+  importRecord: unknown;
+  validationReport: unknown;
+  preparationReport: unknown;
+  trustedStagingRoot: string;
+  stagingRoot: string;
+};
+
+export type VerifiedPreparationEvidence = {
+  candidateBundle: CandidateBundle;
+  importRecord: ImportRecord;
+  validationReport: ImportValidationReport;
+  preparationReport: PreparationReport;
 };
 
 export type PreparedCandidateComparisonSheet = {
@@ -518,7 +542,7 @@ function containedDimensions(sourceWidth: number, sourceHeight: number, targetWi
   return {width: Math.max(1, Math.round(sourceWidth * scale)), height: Math.max(1, Math.round(sourceHeight * scale))};
 }
 
-async function normalizeCandidate(input: CandidatePreparationInput, stagingRoot: string, sourceBytes: Buffer, detected: DetectedImage): Promise<{candidate: PreparedCandidate; bytes: Buffer}> {
+async function deriveNormalizedCandidate(input: CandidatePreparationInput, sourceBytes: Buffer, detected: DetectedImage): Promise<{candidate: PreparedCandidate; bytes: Buffer}> {
   const spec = preparationSpec(input);
   if (detected.mediaType !== input.expectedMediaType || detected.width !== input.expectedWidth || detected.height !== input.expectedHeight) throw new CandidateStagingError("media-mismatch", `${input.fileRole} no longer matches its imported codec or dimensions.`);
   const oriented = await sharp(sourceBytes, {limitInputPixels: DEFAULT_MAX_PIXELS, sequentialRead: true}).rotate().toBuffer();
@@ -553,15 +577,62 @@ async function normalizeCandidate(input: CandidatePreparationInput, stagingRoot:
   }
 
   const relativeFile = `prepared/${input.stagedCandidate.candidateId}.png`;
-  const destination = resolve(stagingRoot, ...relativeFile.split("/"));
+  const candidate = preparedCandidateSchema.parse({schemaVersion: "1.0", candidateId: input.stagedCandidate.candidateId, candidateSetId: input.candidateSetId, briefId: input.briefId, requirementId: input.requirementId, fileRole: input.fileRole, assetClass: spec.assetClass, sourceContentHash: input.stagedCandidate.sourceContentHash, preparedContentHash: sha256(output), relativeFile, mediaType: "image/png", width: spec.width, height: spec.height, contentBounds, registration: {anchorX: spec.anchorX, anchorY: spec.anchorY, pivotX: Math.round(spec.width * spec.anchorX), pivotY: groundY, groundY}, processor: {id: "sharp", version: sharp.versions.sharp}, preparationState: "prepared", checks: {dimensions: true, mediaType: true, alphaOrMatte: true, registration: true, metadataStripped: true}});
+  return {candidate, bytes: output};
+}
+
+async function normalizeCandidate(input: CandidatePreparationInput, stagingRoot: string, sourceBytes: Buffer, detected: DetectedImage): Promise<{candidate: PreparedCandidate; bytes: Buffer}> {
+  const normalized = await deriveNormalizedCandidate(input, sourceBytes, detected);
+  const destination = resolve(stagingRoot, ...normalized.candidate.relativeFile.split("/"));
   try {
-    await writeFile(destination, output, {flag: "wx", mode: 0o600});
+    await writeFile(destination, normalized.bytes, {flag: "wx", mode: 0o600});
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "EEXIST") throw new CandidateStagingError("output-collision", `Prepared candidate already exists: ${input.stagedCandidate.candidateId}`);
     throw error;
   }
-  const candidate = preparedCandidateSchema.parse({schemaVersion: "1.0", candidateId: input.stagedCandidate.candidateId, candidateSetId: input.candidateSetId, briefId: input.briefId, requirementId: input.requirementId, fileRole: input.fileRole, assetClass: spec.assetClass, sourceContentHash: input.stagedCandidate.sourceContentHash, preparedContentHash: sha256(output), relativeFile, mediaType: "image/png", width: spec.width, height: spec.height, contentBounds, registration: {anchorX: spec.anchorX, anchorY: spec.anchorY, pivotX: Math.round(spec.width * spec.anchorX), pivotY: groundY, groundY}, processor: {id: "sharp", version: sharp.versions.sharp}, preparationState: "prepared", checks: {dimensions: true, mediaType: true, alphaOrMatte: true, registration: true, metadataStripped: true}});
-  return {candidate, bytes: output};
+  return normalized;
+}
+
+export async function verifyPreparationReportAgainstImportEvidence(input: VerifyPreparationEvidenceInput): Promise<VerifiedPreparationEvidence> {
+  const candidateBundle = candidateBundleSchema.parse(input.candidateBundle);
+  const importRecord = importRecordSchema.parse(input.importRecord);
+  const validationReport = importValidationReportSchema.parse(input.validationReport);
+  const preparationReport = preparationReportSchema.parse(input.preparationReport);
+  if (!verifyImportEvidence(importRecord, validationReport)) throw new CandidateStagingError("invalid-bundle", "Prepared candidate import evidence failed its immutable three-file verification.");
+  if (!verifyPreparationReportHash(preparationReport)) throw new CandidateStagingError("invalid-bundle", "Preparation report failed its immutable content hash.");
+  if (hashCanonical(candidateBundle) !== importRecord.manifestContentHash || hashCanonical(candidateBundle) !== hashCanonical(importRecord.candidateBundle)) throw new CandidateStagingError("invalid-bundle", "Candidate bundle does not match the verified import record.");
+  if (preparationReport.importRecordContentHash !== importRecord.contentHash || preparationReport.importId !== importRecord.importId || preparationReport.exchangeJobId !== importRecord.exchangeJobId) throw new CandidateStagingError("invalid-bundle", "Preparation report is not bound to the verified import record.");
+
+  const preparedCandidates = preparationReport.candidateSets.flatMap((set) => set.preparedCandidates);
+  const preparedById = new Map(preparedCandidates.map((candidate) => [candidate.candidateId, candidate]));
+  if (preparedById.size !== preparedCandidates.length || preparedById.size !== importRecord.assets.length || preparationReport.candidateSets.some((set) => set.status !== "ready-for-review" || set.failures.length > 0)) throw new CandidateStagingError("invalid-bundle", "Preparation report must preserve every imported candidate exactly once before motion review.");
+  const setById = new Map(preparationReport.candidateSets.map((set) => [set.candidateSetId, set]));
+  const verifiedSources = await readVerifiedStagedCandidateBytes({candidates: importRecord.assets.map((asset) => asset.stagedCandidate), trustedStagingRoot: input.trustedStagingRoot, stagingRoot: input.stagingRoot});
+  const sourceById = new Map(verifiedSources.map((entry) => [entry.candidate.candidateId, entry]));
+  const stagingRoot = await ensureTrustedStagingRoot(input.trustedStagingRoot, input.stagingRoot);
+
+  for (const asset of importRecord.assets) {
+    const set = setById.get(asset.candidateSetId);
+    const prepared = preparedById.get(asset.candidateId);
+    const source = sourceById.get(asset.candidateId);
+    if (!set || !prepared || !source || set.briefId !== asset.briefId || set.requirementId !== asset.requirementId
+      || prepared.candidateSetId !== asset.candidateSetId || prepared.briefId !== asset.briefId || prepared.requirementId !== asset.requirementId
+      || prepared.fileRole !== asset.fileRole || prepared.sourceContentHash !== asset.stagedCandidate.sourceContentHash) throw new CandidateStagingError("invalid-bundle", `Prepared candidate lost its verified import identity: ${asset.candidateId}`);
+    const derived = await deriveNormalizedCandidate({candidateSetId: asset.candidateSetId, briefId: asset.briefId, requirementId: asset.requirementId, fileRole: asset.fileRole, expectedMediaType: asset.mediaType, expectedWidth: asset.width, expectedHeight: asset.height, outputRole: set.outputRole, stagedCandidate: asset.stagedCandidate}, source.bytes, source.detected);
+    if (hashCanonical(derived.candidate) !== hashCanonical(prepared)) throw new CandidateStagingError("hash-mismatch", `Prepared candidate does not derive from its verified imported source: ${asset.candidateId}`);
+
+    const pathParts = prepared.relativeFile.split("/");
+    const absoluteFile = resolve(stagingRoot, ...pathParts);
+    if (!isWithin(stagingRoot, absoluteFile)) throw new CandidateStagingError("untrusted-staging-root", `Prepared candidate escaped its trusted import root: ${asset.candidateId}`);
+    let currentPath = stagingRoot;
+    for (const part of pathParts) {
+      currentPath = join(currentPath, part);
+      if ((await lstat(currentPath)).isSymbolicLink()) throw new CandidateStagingError("symlink-rejected", `Prepared candidate path contains a symbolic link: ${asset.candidateId}`);
+    }
+    const actualBytes = await readFile(absoluteFile);
+    if (sha256(actualBytes) !== derived.candidate.preparedContentHash) throw new CandidateStagingError("hash-mismatch", `Prepared candidate bytes do not derive from their verified imported source: ${asset.candidateId}`);
+  }
+  return {candidateBundle, importRecord, validationReport, preparationReport};
 }
 
 async function createContactSheet(candidateSetId: string, entries: Array<{candidate: PreparedCandidate; bytes: Buffer}>, stagingRoot: string): Promise<CandidateSetContactSheet | null> {

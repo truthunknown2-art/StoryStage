@@ -6,8 +6,11 @@ import {
   productionBundleSchema,
   verifyGenerationJobHash,
   verifyProductionBundleHash,
+  type CandidateBundle,
   type GenerationExchangeState,
   type GenerationJob,
+  type ImportRecord,
+  type PreparationReport,
   type ProductionBundle,
 } from "@storystage/story-engine";
 
@@ -23,6 +26,13 @@ export type VerifiedMotionReviewLineage = {
   sourceProduction: ProductionBundle;
   generationJob: GenerationJob;
   exchangeState: GenerationExchangeState;
+};
+
+type MotionReviewEvidenceLineageInput = {
+  lineage: VerifiedMotionReviewLineage;
+  candidateBundle: CandidateBundle;
+  importRecord: ImportRecord;
+  preparationReport: PreparationReport;
 };
 
 export function verifyRookMotionReviewLineage(input: MotionReviewLineageInput): VerifiedMotionReviewLineage {
@@ -45,4 +55,15 @@ export function verifyRookMotionReviewLineage(input: MotionReviewLineageInput): 
   if (input.currentRenderPlanContentHash !== sourceProduction.renderPlan.contentHash) throw new Error("Current Rook render plan does not match the prepared source production render plan.");
 
   return {sourceProduction, generationJob, exchangeState};
+}
+
+export function verifyRookMotionReviewEvidenceLineage(input: MotionReviewEvidenceLineageInput): void {
+  const {sourceProduction, generationJob, exchangeState} = input.lineage;
+  const {candidateBundle, importRecord, preparationReport} = input;
+  if (importRecord.generationJobContentHash !== generationJob.contentHash || importRecord.exchangeJobId !== generationJob.exchangeJobId) throw new Error("Motion review import record is not bound to the verified generation job.");
+  if (importRecord.importId !== exchangeState.importId || preparationReport.importId !== importRecord.importId || preparationReport.importRecordContentHash !== importRecord.contentHash) throw new Error("Motion review preparation report is not bound to the verified import record.");
+  if (importRecord.production.id !== sourceProduction.production.productionId || importRecord.production.revision !== sourceProduction.production.revision) throw new Error("Motion review import record does not match the verified source production identity.");
+  if (candidateBundle.exchangeJobId !== generationJob.exchangeJobId || candidateBundle.generationJobContentHash !== generationJob.contentHash
+    || candidateBundle.production.id !== sourceProduction.production.productionId || candidateBundle.production.revision !== sourceProduction.production.revision
+    || hashCanonical(candidateBundle.showPack) !== hashCanonical(generationJob.showPack)) throw new Error("Motion review candidate bundle is not bound to the verified production lineage.");
 }

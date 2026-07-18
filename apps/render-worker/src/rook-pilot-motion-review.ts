@@ -10,15 +10,14 @@ import ffmpegPath from "ffmpeg-static";
 import ffprobeStatic from "ffprobe-static";
 import {STORY_STAGE_PRODUCTION_COMPOSITION_ID} from "@storystage/remotion-runtime/manifest";
 import type {ProductionCompositionProps} from "@storystage/remotion-runtime";
+import {verifyPreparationReportAgainstImportEvidence} from "@storystage/asset-pipeline";
 import {
   buildAnimaticSync,
   createRookPilot001Fixture,
   hashCanonical,
-  preparationReportSchema,
-  verifyPreparationReportHash,
   type PreparedCandidate,
 } from "@storystage/story-engine";
-import {verifyRookMotionReviewLineage} from "./rook-pilot-motion-review-lineage";
+import {verifyRookMotionReviewEvidenceLineage, verifyRookMotionReviewLineage} from "./rook-pilot-motion-review-lineage";
 
 const execFileAsync = promisify(execFile);
 const workspaceRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
@@ -27,6 +26,7 @@ const stagingRoot = resolve(packetRoot, "private-staging/rook-pilot-import");
 const motionRoot = resolve(packetRoot, "motion-review");
 const sourceClipRoot = resolve(motionRoot, "source-clips");
 const frameRoot = resolve(motionRoot, "review-frames");
+const importEvidenceRoot = resolve(stagingRoot, "evidence");
 
 const reviewGroups = [
   {shotNumber: "1.03", briefId: "brief-requirement-reconstruction-shot-shot-3-shot-3-reconstruction", candidateIds: ["rook-shot-1-03-dancing-alone-set-1", "rook-shot-1-03-dancing-alone-set-2"]},
@@ -78,17 +78,23 @@ async function extractReviewFrame(video: string, frame: number, output: string):
 
 async function main(): Promise<void> {
   if (!inside(packetRoot, motionRoot)) throw new Error("Refusing to replace a motion-review folder outside its private packet.");
-  const [report, exchangeStateInput, diagnostics, sourceProductionInput, generationJobInput] = await Promise.all([
-    readFile(resolve(packetRoot, "technical/preparation-report.json"), "utf8").then((value) => preparationReportSchema.parse(JSON.parse(value))),
+  const [preparationReportInput, exchangeStateInput, diagnostics, sourceProductionInput, generationJobInput, candidateBundleInput, importRecordInput, validationReportInput] = await Promise.all([
+    readFile(resolve(packetRoot, "technical/preparation-report.json"), "utf8").then((value) => JSON.parse(value) as unknown),
     readFile(resolve(packetRoot, "technical/generation-exchange-state.json"), "utf8").then((value) => JSON.parse(value) as unknown),
     readFile(resolve(packetRoot, "technical/technical-diagnostics.json"), "utf8").then((value) => JSON.parse(value) as {humanDecisions?: {selectedCandidateSetIds?: unknown[]; rejectedCandidateSetIds?: unknown[]; approvedAssetVersions?: unknown[]}}),
     readFile(resolve(packetRoot, "technical/source-production.json"), "utf8").then((value) => JSON.parse(value) as unknown),
     readFile(resolve(packetRoot, "technical/generation-job.json"), "utf8").then((value) => JSON.parse(value) as unknown),
+    readFile(resolve(importEvidenceRoot, "candidate-bundle.json"), "utf8").then((value) => JSON.parse(value) as unknown),
+    readFile(resolve(importEvidenceRoot, "import-record.json"), "utf8").then((value) => JSON.parse(value) as unknown),
+    readFile(resolve(importEvidenceRoot, "validation-report.json"), "utf8").then((value) => JSON.parse(value) as unknown),
   ]);
   const fixture = createRookPilot001Fixture();
   const build = buildAnimaticSync(fixture);
-  const {sourceProduction, generationJob, exchangeState} = verifyRookMotionReviewLineage({sourceProduction: sourceProductionInput, generationJob: generationJobInput, exchangeState: exchangeStateInput, currentProduction: {id: build.draft.productionId, revision: build.draft.revision}, currentRenderPlanContentHash: build.renderPlan.contentHash});
-  if (!verifyPreparationReportHash(report) || exchangeState.importId !== report.importId || exchangeState.exchangeJobId !== report.exchangeJobId) throw new Error("The reconstruction preparation packet is missing, stale, or no longer awaiting review.");
+  const lineage = verifyRookMotionReviewLineage({sourceProduction: sourceProductionInput, generationJob: generationJobInput, exchangeState: exchangeStateInput, currentProduction: {id: build.draft.productionId, revision: build.draft.revision}, currentRenderPlanContentHash: build.renderPlan.contentHash});
+  const {sourceProduction, generationJob, exchangeState} = lineage;
+  const evidence = await verifyPreparationReportAgainstImportEvidence({candidateBundle: candidateBundleInput, importRecord: importRecordInput, validationReport: validationReportInput, preparationReport: preparationReportInput, trustedStagingRoot: resolve(packetRoot, "private-staging"), stagingRoot});
+  verifyRookMotionReviewEvidenceLineage({lineage, candidateBundle: evidence.candidateBundle, importRecord: evidence.importRecord, preparationReport: evidence.preparationReport});
+  const report = evidence.preparationReport;
   const decisionCounts = [diagnostics.humanDecisions?.selectedCandidateSetIds?.length ?? -1, diagnostics.humanDecisions?.rejectedCandidateSetIds?.length ?? -1, diagnostics.humanDecisions?.approvedAssetVersions?.length ?? -1];
   if (decisionCounts.some((count) => count !== 0)) throw new Error("Motion review can only run before selection, rejection, or approval.");
   await rm(motionRoot, {recursive: true, force: true});
@@ -157,6 +163,9 @@ async function main(): Promise<void> {
     renderPlanContentHash: build.renderPlan.contentHash,
     sourceProductionContentHash: sourceProduction.contentHash,
     generationJobContentHash: generationJob.contentHash,
+    candidateBundleContentHash: hashCanonical(evidence.candidateBundle),
+    importRecordContentHash: evidence.importRecord.contentHash,
+    validationReportContentHash: evidence.validationReport.contentHash,
     preparationReportContentHash: report.contentHash,
     preparationCompletedAt: report.preparedAt,
     reviews,

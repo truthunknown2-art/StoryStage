@@ -37,12 +37,15 @@ Run `pnpm render:rook-motion-review` after rebuilding the preparation packet to 
 - Preparation-report hash: `4e38f6e0929159ac1e57a91747457b52227d323680d634fa323d86ae3ba8fa7d`.
 - Source-production hash: `51caf57a94e74ce9c91f87729d044e7c8ece320de59ed801de84959fc4d5b448`.
 - Generation-job hash: `b9b4049b002b3179d800ca4ceaf5a821311ec73b95bb69e0208a9799b87ec101`.
-- Motion-review manifest hash: `ab8a845d331e71d5cb2efee54658f5d08361082984c48da20fc364d2fa3cbc20`.
+- Candidate-bundle hash: `195478b2aeff2f993575786cddcee7d80fbb8aea1e42fe0c913f156740eceee7`.
+- Import-record hash: `9e5d82700d3040665e2a864800a83da4df822cdf7ac8fe08ed042bb201d4c114`.
+- Import-validation-report hash: `f1dbf8eef7b11cbb78b2cda531785d2ec4fa0a296b598db7d686db539f2bdb5c`.
+- Motion-review manifest hash: `400aa804b6341360e8a843ff93cb3346564cbc70fd235395ef26dc7bfe4472ab`.
 - Shot 1.03: 73 frames, `cameraPush`, paired MP4 SHA-256 `792c4d1ef4abc8c3bd32984326a9d7570c59fdd6c8d8fc6ec9ab02e0381c0bf8`.
 - Shot 1.05: 61 frames, `pan`, paired MP4 SHA-256 `19fd5b5a7a352467c89f82021ab215060c1545271e8358ec72c65ac5c8ddc61c`.
 - Shot 1.08: 73 frames, `cameraPush`, paired MP4 SHA-256 `7ff6240cd451bb6c45c175ed4ebad267351e0fea47ef8a5f1cdfff9e4e224e23`.
 - Human decisions recorded: zero. The exchange remains `needs-review`; the reels are comparison evidence, never production approval or binding.
-- Before rendering, the command hash-verifies the packet source production and generation job, requires job-to-production and exchange-to-job binding, and requires the current compiled render-plan hash to equal the prepared source snapshot. A same-ID/revision direction change therefore fails closed instead of reusing stale candidates.
+- Before rendering, the command hash-verifies the packet source production, generation job, candidate bundle, import record, import-validation report, and preparation report; requires the complete cross-file lineage; and requires the current compiled render-plan hash to equal the prepared source snapshot. It also reopens each immutable staged source and deterministically re-derives the Sharp-normalized candidate in memory before accepting the reported metadata or prepared PNG bytes. Same-ID/revision direction changes and self-rehashed replacement reports therefore fail closed.
 
 ## Exact prompts
 
