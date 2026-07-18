@@ -14,6 +14,7 @@ import {
   assertMotionProgram,
   cv001RigContract,
   directedBeatProgramSchema,
+  evaluateMotionProgram,
   type DirectedBeatProgram,
   type MotionTrack,
 } from "./motion-program";
@@ -84,7 +85,12 @@ export const cv001CreatorCommandSchema = z
     normalizedText: z.string().min(1),
     operations: z.array(creatorOperationSchema).min(1).max(4),
   })
-  .strict();
+  .strict()
+  .superRefine((command, context) => {
+    const operationTypes = command.operations.map((operation) => operation.type);
+    if (new Set(operationTypes).size !== operationTypes.length)
+      context.addIssue({code: "custom", message: "A creator command may change each direction field at most once.", path: ["operations"]});
+  });
 
 export type Cv001CreatorCommand = z.infer<typeof cv001CreatorCommandSchema>;
 
@@ -280,6 +286,24 @@ const retimeKeyframes = (
   return mapped;
 };
 
+const pinKeyframe = (
+  keyframes: Exclude<MotionTrack, {type: "attachment"}>["keyframes"],
+  frame: number,
+  value: number,
+) => {
+  const existing = keyframes.find((keyframe) => keyframe.frame === frame);
+  if (existing) return keyframes.map((keyframe) => keyframe.frame === frame ? {...keyframe, value} : keyframe);
+  return [...keyframes, {frame, value, easing: "linear" as const}].sort((left, right) => left.frame - right.frame);
+};
+
+const renderedProgramSignature = (program: DirectedBeatProgram) =>
+  hashCanonical({
+    fps: program.fps,
+    durationInFrames: program.durationInFrames,
+    phases: program.phases,
+    tracks: program.tracks,
+  });
+
 const directProgram = (
   base: DirectedBeatProgram,
   direction: Cv001CreatorBeatDirection,
@@ -291,7 +315,7 @@ const directProgram = (
   const retime = direction.tempo !== "standard" || direction.hold !== "standard";
   const performanceMultiplier = direction.performance === "big" ? 1.25 : direction.performance === "subtle" ? 0.8 : 1;
   const cameraMultiplier = direction.camera === "strong" ? 1.4 : direction.camera === "subtle" ? 0.7 : direction.camera === "none" ? 0 : 1;
-  const tracks = base.tracks.map((track) => {
+  let tracks = base.tracks.map((track) => {
     if (track.type === "attachment")
       return retime
         ? {...track, startFrame: track.startFrame === 0 ? 0 : mapFrameBetweenPhases(track.startFrame, base.phases, phases), endFrame: base.durationInFrames}
@@ -305,7 +329,7 @@ const directProgram = (
     if (track.type === "camera" && multiplier > 0 && multiplier < 1) {
       const values = keyframes.map((keyframe) => keyframe.value);
       const range = Math.max(...values) - Math.min(...values);
-      const minimum = track.property === "scale" ? 0.015 : 8;
+      const minimum = track.property === "scale" ? 0.016 : 8;
       if (range > 0 && range < minimum) {
         const correction = minimum / range;
         keyframes = keyframes.map((keyframe) => ({...keyframe, value: initial + (keyframe.value - initial) * correction}));
@@ -314,7 +338,41 @@ const directProgram = (
     if (retime) keyframes = retimeKeyframes(keyframes, base.phases, phases, base.durationInFrames);
     return {...track, keyframes};
   });
-  return assertMotionProgram(
+  if (
+    direction.camera !== "standard" &&
+    direction.camera !== "none" &&
+    !tracks.some((track) => track.type === "camera")
+  ) {
+    const requestedMultiplier = direction.camera === "strong" ? 1.4 : 0.7;
+    // Keep a small numerical margin above the validator's inclusive 0.015 floor.
+    const endValue = 1 + Math.max(0.016, 0.02 * requestedMultiplier);
+    tracks.push({
+      type: "camera",
+      property: "scale",
+      keyframes: [
+        {frame: 0, value: 1, easing: "ease-in-out"},
+        {frame: base.durationInFrames - 1, value: endValue, easing: "linear"},
+      ],
+    });
+  }
+  if (beatIndex === 1) {
+    const baseAttachment = base.tracks.find((track) => track.type === "attachment");
+    const nextAttachment = tracks.find((track) => track.type === "attachment");
+    if (!baseAttachment || !nextAttachment) throw new Error("Pickup direction requires the lantern attachment.");
+    const fixedPickup = evaluateMotionProgram(base, baseAttachment.startFrame);
+    tracks = tracks.map((track) => {
+      if (track.type === "attachment" || track.type === "camera" || track.type === "face") return track;
+      const fixedValue = track.type === "root"
+        ? fixedPickup.root[track.property]
+        : ["torso", "upper-arm-right", "lower-arm-right", "hand-right"].includes(track.boneId)
+          ? fixedPickup.bones[track.boneId]?.[track.property]
+          : undefined;
+      return fixedValue === undefined
+        ? track
+        : {...track, keyframes: pinKeyframe(track.keyframes, nextAttachment.startFrame, fixedValue)};
+    });
+  }
+  const directed = assertMotionProgram(
     directedBeatProgramSchema.parse({
       ...base,
       id: `${base.id}-creator-${hashCanonical(direction).slice(0, 10)}`,
@@ -323,6 +381,7 @@ const directProgram = (
     }),
     {rigContract: cv001RigContract},
   );
+  return renderedProgramSignature(directed) === renderedProgramSignature(base) ? base : directed;
 };
 
 export function compileCv001CreatorScene({
@@ -415,6 +474,8 @@ export const cv001CreatorEditTransactionSchema = z
     const {contentHash, ...draft} = transaction;
     if (hashCanonical(draft) !== contentHash)
       context.addIssue({code: "custom", message: "Creator edit transaction hash is invalid.", path: ["contentHash"]});
+    if (transaction.beatId !== transaction.command.beatId)
+      context.addIssue({code: "custom", message: "Creator transaction and command beat IDs must match.", path: ["command", "beatId"]});
   });
 
 export type Cv001CreatorEditTransaction = z.infer<typeof cv001CreatorEditTransactionSchema>;
@@ -443,6 +504,33 @@ export const cv001CreatorProjectStateSchema = z
       context.addIssue({code: "custom", message: "Creator history cursor exceeds the edit history.", path: ["historyCursor"]});
     if (!project.baseInput.beats.some((beat) => beat.id === project.selectedBeatId))
       context.addIssue({code: "custom", message: "Selected creator beat is invalid.", path: ["selectedBeatId"]});
+    try {
+      const paragraphs = parseCv001ThreeBeatScript(project.script);
+      if (paragraphs.some((paragraph, index) => paragraph !== project.baseInput.beats[index]!.text))
+        context.addIssue({code: "custom", message: "Creator script must match the three compiled beat texts.", path: ["script"]});
+    } catch {
+      context.addIssue({code: "custom", message: "Creator script must contain exactly three valid paragraphs.", path: ["script"]});
+    }
+    let expectedState = createDefaultCv001CreatorDirectionState(project.baseInput);
+    const states: Cv001CreatorDirectionState[] = [expectedState];
+    project.history.forEach((transaction, index) => {
+      if (transaction.sequence !== index + 1 || transaction.id !== `edit-${String(index + 1).padStart(4, "0")}`)
+        context.addIssue({code: "custom", message: "Creator history IDs and sequences must be contiguous.", path: ["history", index]});
+      if (transaction.beforeDirectionState.contentHash !== expectedState.contentHash)
+        context.addIssue({code: "custom", message: "Creator edit history is not a contiguous state chain.", path: ["history", index, "beforeDirectionState"]});
+      try {
+        const reapplied = applyCv001CreatorCommand(expectedState, transaction.command);
+        if (reapplied.contentHash !== transaction.afterDirectionState.contentHash)
+          context.addIssue({code: "custom", message: "Creator transaction result does not match its command.", path: ["history", index, "afterDirectionState"]});
+      } catch {
+        context.addIssue({code: "custom", message: "Creator transaction command cannot be reapplied.", path: ["history", index, "command"]});
+      }
+      expectedState = transaction.afterDirectionState;
+      states.push(expectedState);
+    });
+    const cursorState = states[project.historyCursor];
+    if (cursorState && cursorState.contentHash !== project.directionState.contentHash)
+      context.addIssue({code: "custom", message: "Creator direction state does not match the history cursor.", path: ["directionState"]});
   });
 
 export type Cv001CreatorProjectState = z.infer<typeof cv001CreatorProjectStateSchema>;
@@ -485,12 +573,14 @@ export function commitCv001CreatorCommand({
   command: Cv001CreatorCommand;
   renderPlan: FrameAccurateRenderPlan;
 }): {project: Cv001CreatorProjectState; compiled: Cv001CreatorCompiledScene; transaction: Cv001CreatorEditTransaction} {
-  const project = cv001CreatorProjectStateSchema.parse(rawProject);
+  const project = verifyCv001CreatorProjectSemantics(rawProject, renderPlan);
   const command = cv001CreatorCommandSchema.parse(rawCommand);
   const beforeCompiled = compileCv001CreatorScene({baseInput: project.baseInput, directionState: project.directionState, renderPlan});
   const afterDirectionState = applyCv001CreatorCommand(project.directionState, command);
   const afterCompiled = compileCv001CreatorScene({baseInput: project.baseInput, directionState: afterDirectionState, renderPlan});
   const changedIndex = project.baseInput.beats.findIndex((beat) => beat.id === command.beatId);
+  if (beforeCompiled.sceneMotion.bindings[changedIndex]!.contentHash === afterCompiled.sceneMotion.bindings[changedIndex]!.contentHash)
+    throw new Error("No change needed. That direction does not alter the selected beat's rendered motion.");
   beforeCompiled.sceneMotion.bindings.forEach((binding, index) => {
     if (index !== changedIndex && binding.contentHash !== afterCompiled.sceneMotion.bindings[index]!.contentHash)
       throw new Error("Creator edit changed an unrelated beat binding.");
@@ -518,31 +608,43 @@ export function commitCv001CreatorCommand({
   };
 }
 
-export function undoCv001CreatorEdit(project: Cv001CreatorProjectState): Cv001CreatorProjectState {
-  const current = cv001CreatorProjectStateSchema.parse(project);
+export function undoCv001CreatorEdit(project: Cv001CreatorProjectState, renderPlan: FrameAccurateRenderPlan): Cv001CreatorProjectState {
+  const current = verifyCv001CreatorProjectSemantics(project, renderPlan);
   if (current.historyCursor === 0) throw new Error("There is no direction change to undo.");
   const transaction = current.history[current.historyCursor - 1]!;
   const {contentHash: _hash, ...draft} = current;
   void _hash;
-  return sealProject({...draft, directionState: transaction.beforeDirectionState, historyCursor: current.historyCursor - 1, selectedBeatId: transaction.beatId});
+  return verifyCv001CreatorProjectSemantics(sealProject({...draft, directionState: transaction.beforeDirectionState, historyCursor: current.historyCursor - 1, selectedBeatId: transaction.beatId}), renderPlan);
 }
 
-export function redoCv001CreatorEdit(project: Cv001CreatorProjectState): Cv001CreatorProjectState {
-  const current = cv001CreatorProjectStateSchema.parse(project);
+export function redoCv001CreatorEdit(project: Cv001CreatorProjectState, renderPlan: FrameAccurateRenderPlan): Cv001CreatorProjectState {
+  const current = verifyCv001CreatorProjectSemantics(project, renderPlan);
   if (current.historyCursor >= current.history.length) throw new Error("There is no direction change to redo.");
   const transaction = current.history[current.historyCursor]!;
   const {contentHash: _hash, ...draft} = current;
   void _hash;
-  return sealProject({...draft, directionState: transaction.afterDirectionState, historyCursor: current.historyCursor + 1, selectedBeatId: transaction.beatId});
+  return verifyCv001CreatorProjectSemantics(sealProject({...draft, directionState: transaction.afterDirectionState, historyCursor: current.historyCursor + 1, selectedBeatId: transaction.beatId}), renderPlan);
+}
+
+export function verifyCv001CreatorProjectSemantics(rawProject: Cv001CreatorProjectState, renderPlan: FrameAccurateRenderPlan): Cv001CreatorProjectState {
+  const project = cv001CreatorProjectStateSchema.parse(rawProject);
+  if (project.baseInput.planContentHash !== renderPlan.contentHash)
+    throw new Error("Saved creator project belongs to a stale render plan.");
+  for (const transaction of project.history) {
+    const before = compileCv001CreatorScene({baseInput: project.baseInput, directionState: transaction.beforeDirectionState, renderPlan});
+    const after = compileCv001CreatorScene({baseInput: project.baseInput, directionState: transaction.afterDirectionState, renderPlan});
+    if (before.contentHash !== transaction.beforeCompiledHash || after.contentHash !== transaction.afterCompiledHash)
+      throw new Error(`Creator transaction ${transaction.id} does not reproduce its compiled motion hashes.`);
+  }
+  const compiled = compileCv001CreatorScene({baseInput: project.baseInput, directionState: project.directionState, renderPlan});
+  const expectedHash = project.historyCursor === 0
+    ? project.history[0]?.beforeCompiledHash
+    : project.history[project.historyCursor - 1]?.afterCompiledHash;
+  if (expectedHash && expectedHash !== compiled.contentHash)
+    throw new Error("Saved creator project does not reproduce its active compiled motion hash.");
+  return project;
 }
 
 export function restoreCv001CreatorProject(serialized: string, renderPlan: FrameAccurateRenderPlan): Cv001CreatorProjectState {
-  const project = cv001CreatorProjectStateSchema.parse(JSON.parse(serialized));
-  if (project.baseInput.planContentHash !== renderPlan.contentHash)
-    throw new Error("Saved creator project belongs to a stale render plan.");
-  const compiled = compileCv001CreatorScene({baseInput: project.baseInput, directionState: project.directionState, renderPlan});
-  const activeTransaction = project.historyCursor > 0 ? project.history[project.historyCursor - 1] : undefined;
-  if (activeTransaction && activeTransaction.afterCompiledHash !== compiled.contentHash)
-    throw new Error("Saved creator project does not reproduce its compiled motion hash.");
-  return project;
+  return verifyCv001CreatorProjectSemantics(JSON.parse(serialized), renderPlan);
 }

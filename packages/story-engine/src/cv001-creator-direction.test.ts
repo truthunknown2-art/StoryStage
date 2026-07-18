@@ -1,6 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {hashCanonical} from "./canonical-hash";
 import {
+  cv001CreatorCommandSchema,
   commitCv001CreatorCommand,
   compileCv001CreatorScene,
   createCv001CreatorProject,
@@ -14,7 +15,9 @@ import {
   CV001_DEFAULT_SCRIPT,
 } from "./cv001-creator-direction";
 import {createCv001ThreeBeatProofFixture} from "./cv001-proof-fixture";
+import {getCv001LanternPickupTransform} from "./cv001-rig-kinematics";
 import {compileCv001ThreeBeatScene, getCv001CompiledBeatIssues} from "./cv001-scene-compiler";
+import {evaluateMotionProgram, type DirectedBeatProgram} from "./motion-program";
 import {frameAccurateRenderPlanSchema} from "./model";
 
 const setup = () => {
@@ -22,6 +25,31 @@ const setup = () => {
   const project = createCv001CreatorProject({title: "The Lantern Discovery", script: CV001_DEFAULT_SCRIPT});
   return {fixture, project};
 };
+
+const renderedProgramHash = (program: DirectedBeatProgram) =>
+  hashCanonical({
+    fps: program.fps,
+    durationInFrames: program.durationInFrames,
+    phases: program.phases,
+    tracks: program.tracks,
+  });
+
+const reseal = <T extends {contentHash: string}>(value: T): T => {
+  const {contentHash: _hash, ...draft} = value;
+  void _hash;
+  return {...draft, contentHash: hashCanonical(draft)} as T;
+};
+
+const supportedDirections = [
+  "Make it bigger",
+  "Make it more subtle",
+  "Hold it longer",
+  "Shorten the hold",
+  "Make it snappier",
+  "Make it slower",
+  "Push in more",
+  "Use less camera movement",
+] as const;
 
 describe("CV-001 creator direction model", () => {
   it("parses only the fixed three-paragraph script shape", () => {
@@ -76,16 +104,7 @@ describe("CV-001 creator direction model", () => {
     expect(fixture.renderPlan.durationInFrames).toBe(300);
   });
 
-  it.each([
-    "Make it bigger",
-    "Make it more subtle",
-    "Hold it longer",
-    "Shorten the hold",
-    "Make it snappier",
-    "Make it slower",
-    "Push in more",
-    "Use less camera movement",
-  ])("keeps every supported direction validator-clean: %s", (text) => {
+  it.each(supportedDirections)("keeps every supported direction validator-clean: %s", (text) => {
     const {fixture, project} = setup();
     const command = parseCv001CreatorCommand(project.baseInput.beats[1].id, text);
     const result = commitCv001CreatorCommand({project, command, renderPlan: fixture.renderPlan});
@@ -93,6 +112,52 @@ describe("CV-001 creator direction model", () => {
       expect(getCv001CompiledBeatIssues(project.baseInput.beats[index]!, binding.program)).toEqual([]);
     });
     expect(result.compiled.sceneMotion.bindings[1].program.durationInFrames).toBe(120);
+  });
+
+  it.each(supportedDirections)("changes renderer-consumed motion on every beat: %s", (text) => {
+    for (const beatIndex of [0, 1, 2] as const) {
+      const {fixture, project} = setup();
+      const before = compileCv001CreatorScene({baseInput: project.baseInput, directionState: project.directionState, renderPlan: fixture.renderPlan});
+      const result = commitCv001CreatorCommand({
+        project,
+        command: parseCv001CreatorCommand(project.baseInput.beats[beatIndex].id, text),
+        renderPlan: fixture.renderPlan,
+      });
+      expect(renderedProgramHash(result.compiled.sceneMotion.bindings[beatIndex].program))
+        .not.toBe(renderedProgramHash(before.sceneMotion.bindings[beatIndex].program));
+      result.compiled.sceneMotion.bindings.forEach((binding, index) => {
+        expect(getCv001CompiledBeatIssues(project.baseInput.beats[index]!, binding.program)).toEqual([]);
+        if (index !== beatIndex) expect(binding).toEqual(before.sceneMotion.bindings[index]);
+      });
+    }
+  });
+
+  it.each(supportedDirections)("preserves the exact lantern pickup transform for Beat 2: %s", (text) => {
+    const {fixture, project} = setup();
+    const before = compileCv001CreatorScene({baseInput: project.baseInput, directionState: project.directionState, renderPlan: fixture.renderPlan});
+    const result = commitCv001CreatorCommand({
+      project,
+      command: parseCv001CreatorCommand(project.baseInput.beats[1].id, text),
+      renderPlan: fixture.renderPlan,
+    });
+    expect(getCv001LanternPickupTransform(result.compiled.sceneMotion.bindings[1].program))
+      .toEqual(getCv001LanternPickupTransform(before.sceneMotion.bindings[1].program));
+  });
+
+  it.each(["Push in more", "Use less camera movement"])("synthesizes a visible Beat 3 camera move: %s", (text) => {
+    const {fixture, project} = setup();
+    const result = commitCv001CreatorCommand({
+      project,
+      command: parseCv001CreatorCommand(project.baseInput.beats[2].id, text),
+      renderPlan: fixture.renderPlan,
+    });
+    const program = result.compiled.sceneMotion.bindings[2].program;
+    const beginning = evaluateMotionProgram(program, 0).camera.scale;
+    const ending = evaluateMotionProgram(program, program.durationInFrames - 1).camera.scale;
+    expect(beginning).toBeDefined();
+    expect(ending).toBeDefined();
+    expect(ending).not.toBe(beginning);
+    expect(Math.abs(ending! - beginning!)).toBeGreaterThanOrEqual(0.015);
   });
 
   it("keeps a long present hold inside the fixed beat and above twelve frames", () => {
@@ -119,10 +184,10 @@ describe("CV-001 creator direction model", () => {
     const {fixture, project} = setup();
     const beatId = project.baseInput.beats[2].id;
     const first = commitCv001CreatorCommand({project, command: parseCv001CreatorCommand(beatId, "Make it bigger"), renderPlan: fixture.renderPlan});
-    const undone = undoCv001CreatorEdit(first.project);
+    const undone = undoCv001CreatorEdit(first.project, fixture.renderPlan);
     const undoneCompiled = compileCv001CreatorScene({baseInput: undone.baseInput, directionState: undone.directionState, renderPlan: fixture.renderPlan});
     expect(undoneCompiled.contentHash).toBe(first.transaction.beforeCompiledHash);
-    const redone = redoCv001CreatorEdit(undone);
+    const redone = redoCv001CreatorEdit(undone, fixture.renderPlan);
     const redoneCompiled = compileCv001CreatorScene({baseInput: redone.baseInput, directionState: redone.directionState, renderPlan: fixture.renderPlan});
     expect(redoneCompiled.contentHash).toBe(first.transaction.afterCompiledHash);
     const branched = commitCv001CreatorCommand({project: undone, command: parseCv001CreatorCommand(beatId, "Hold it longer"), renderPlan: fixture.renderPlan});
@@ -140,9 +205,64 @@ describe("CV-001 creator direction model", () => {
     expect(() => restoreCv001CreatorProject(JSON.stringify(tampered), fixture.renderPlan)).toThrow();
 
     const {contentHash: _hash, ...payload} = fixture.renderPlan;
+    void _hash;
     const stalePayload = {...payload, title: `${payload.title} stale`};
     const stalePlan = frameAccurateRenderPlanSchema.parse({...stalePayload, contentHash: hashCanonical(stalePayload)});
     expect(() => restoreCv001CreatorProject(JSON.stringify(selected), stalePlan)).toThrow(/stale render plan/);
+  });
+
+  it("rejects schema-valid-looking duplicate operation types outside the text parser", () => {
+    const {project} = setup();
+    expect(() => cv001CreatorCommandSchema.parse({
+      schemaVersion: "1.0",
+      beatId: project.baseInput.beats[2].id,
+      normalizedText: "make it bigger and make it more subtle",
+      operations: [
+        {type: "set-performance", value: "big"},
+        {type: "set-performance", value: "subtle"},
+      ],
+    })).toThrow(/at most once/);
+  });
+
+  it("rejects a rehashed script that diverges from the compiled beat text", () => {
+    const {fixture, project} = setup();
+    const tampered = reseal({...project, script: "Changed one.\n\nChanged two.\n\nChanged three."});
+    expect(() => restoreCv001CreatorProject(JSON.stringify(tampered), fixture.renderPlan)).toThrow(/script must match/);
+  });
+
+  it("rejects rehashed history whose command does not produce its recorded state", () => {
+    const {fixture, project} = setup();
+    const committed = commitCv001CreatorCommand({
+      project,
+      command: parseCv001CreatorCommand(project.baseInput.beats[2].id, "Make it bigger"),
+      renderPlan: fixture.renderPlan,
+    }).project;
+    const transaction = committed.history[0]!;
+    const mismatched = reseal({
+      ...transaction,
+      command: {
+        ...transaction.command,
+        normalizedText: "make it more subtle",
+        operations: [{type: "set-performance" as const, value: "subtle" as const}],
+      },
+    });
+    const tampered = reseal({...committed, history: [mismatched]});
+    expect(() => restoreCv001CreatorProject(JSON.stringify(tampered), fixture.renderPlan)).toThrow(/transaction result/);
+  });
+
+  it("rejects rehashed compiled hashes and cursor-state divergence", () => {
+    const {fixture, project} = setup();
+    const committed = commitCv001CreatorCommand({
+      project,
+      command: parseCv001CreatorCommand(project.baseInput.beats[2].id, "Make it bigger"),
+      renderPlan: fixture.renderPlan,
+    }).project;
+    const transaction = reseal({...committed.history[0]!, afterCompiledHash: "0".repeat(64)});
+    const compiledTamper = reseal({...committed, history: [transaction]});
+    expect(() => restoreCv001CreatorProject(JSON.stringify(compiledTamper), fixture.renderPlan)).toThrow(/compiled motion hashes/);
+
+    const cursorTamper = reseal({...committed, historyCursor: 0});
+    expect(() => restoreCv001CreatorProject(JSON.stringify(cursorTamper), fixture.renderPlan)).toThrow(/history cursor/);
   });
 
   it("keeps canonical creator history free of time, UUID, path, and random fields", () => {

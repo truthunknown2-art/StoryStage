@@ -1,6 +1,9 @@
 import {
   createCv001CreatorProject,
+  createCv001ThreeBeatProofFixture,
   parseCv001ThreeBeatScript,
+  restoreCv001CreatorProject,
+  CV001_CREATOR_STORAGE_KEY,
   CV001_DEFAULT_SCRIPT,
   type Cv001CreatorProjectState,
 } from "@storystage/story-engine";
@@ -15,7 +18,25 @@ export function Cv001CreatorApp({onOpenLegacy}: {onOpenLegacy: () => void}) {
   const [screen, setScreen] = useState<CreatorScreen>("creator-create");
   const [title, setTitle] = useState("The Lantern Discovery");
   const [script, setScript] = useState(CV001_DEFAULT_SCRIPT);
-  const [project, setProject] = useState<Cv001CreatorProjectState | null>(null);
+  const restored = useMemo(() => {
+    const serialized = window.localStorage.getItem(CV001_CREATOR_STORAGE_KEY);
+    if (!serialized) return {project: null, notice: null};
+    try {
+      return {
+        project: restoreCv001CreatorProject(serialized, createCv001ThreeBeatProofFixture().renderPlan),
+        notice: null,
+      };
+    } catch {
+      window.localStorage.removeItem(CV001_CREATOR_STORAGE_KEY);
+      return {
+        project: null,
+        notice: "The saved prototype could not be verified, so StoryStage restored the original lantern scene.",
+      };
+    }
+  }, []);
+  const [project, setProjectState] = useState<Cv001CreatorProjectState | null>(restored.project);
+  const [notice, setNotice] = useState<string | null>(restored.notice);
+  const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false);
   const scriptError = useMemo(() => {
     try {
       parseCv001ThreeBeatScript(script);
@@ -25,9 +46,20 @@ export function Cv001CreatorApp({onOpenLegacy}: {onOpenLegacy: () => void}) {
     }
   }, [script]);
 
-  const createFirstCut = () => {
+  const saveProject = (next: Cv001CreatorProjectState) => {
+    window.localStorage.setItem(CV001_CREATOR_STORAGE_KEY, JSON.stringify(next));
+    setProjectState(next);
+  };
+
+  const createFirstCut = (confirmed = false) => {
+    if (!confirmed && project && project.history.length > 0) {
+      setReplaceConfirmOpen(true);
+      return;
+    }
     const next = createCv001CreatorProject({title, script});
-    setProject(next);
+    saveProject(next);
+    setReplaceConfirmOpen(false);
+    setNotice(null);
     setScreen("creator-studio");
   };
 
@@ -37,7 +69,7 @@ export function Cv001CreatorApp({onOpenLegacy}: {onOpenLegacy: () => void}) {
         autoPlay
         onExit={() => setScreen("creator-create")}
         onOpenLegacy={onOpenLegacy}
-        onProjectChange={setProject}
+        onProjectChange={saveProject}
         project={project}
       />
     );
@@ -101,8 +133,17 @@ export function Cv001CreatorApp({onOpenLegacy}: {onOpenLegacy: () => void}) {
             <Play fill="currentColor" size={16} />Create animated first cut
           </button>
           <p className="cv-create-boundary">Prototype art · real articulated motion · no voice or export yet</p>
+          {replaceConfirmOpen ? <div className="cv-replace-confirm" role="alertdialog" aria-label="Replace edited prototype">
+            <p><strong>Replace your edited prototype?</strong><span>Creating a new first cut clears its direction history.</span></p>
+            <button onClick={() => setReplaceConfirmOpen(false)} type="button">Keep editing</button>
+            <button onClick={() => createFirstCut(true)} type="button">Replace and create</button>
+          </div> : null}
         </form>
       </div>
+      {project ? <button className="cv-continue-card" onClick={() => setScreen("creator-studio")} type="button">
+        <span>Continue</span><strong>{project.title}</strong><small>3 beats · last selected: {project.baseInput.beats.find((beat) => beat.id === project.selectedBeatId)?.text ?? "Lantern scene"}</small>
+      </button> : null}
+      {notice ? <p className="cv-restore-notice" role="status">{notice}</p> : null}
     </main>
   );
 }

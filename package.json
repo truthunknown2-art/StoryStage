@@ -28,11 +28,13 @@
     "verify": "pnpm verify:privacy && pnpm lint && pnpm typecheck && pnpm test",
     "render:production-proof": "pnpm --filter @storystage/render-worker render:production-proof",
     "render:rook-preview": "pnpm --filter @storystage/render-worker render:rook-preview",
-    "render:rook-motion-review": "pnpm --filter @storystage/render-worker render:rook-motion-review"
+    "render:rook-motion-review": "pnpm --filter @storystage/render-worker render:rook-motion-review",
+    "render:cv001-creator-locality-proof": "pnpm --filter @storystage/render-worker render:cv001-creator-locality-proof"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.490",
     "@types/node": "24.10.1",
+    "axe-core": "4.10.3",
     "concurrently": "9.2.1",
     "eslint": "9.19.0",
     "prettier": "3.8.1",

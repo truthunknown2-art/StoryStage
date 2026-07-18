@@ -1,8 +1,12 @@
 import {Player, type CallbackListener, type PlayerRef} from "@remotion/player";
 import {ProductionComposition} from "@storystage/remotion-runtime";
 import {
+  commitCv001CreatorCommand,
   compileCv001CreatorScene,
   createCv001ThreeBeatProofFixture,
+  parseCv001CreatorCommand,
+  redoCv001CreatorEdit,
+  undoCv001CreatorEdit,
   updateCv001CreatorSelection,
   type Cv001CreatorProjectState,
 } from "@storystage/story-engine";
@@ -62,21 +66,28 @@ export function Cv001CreatorStudio({
   const selectedIndex = Math.max(0, project.baseInput.beats.findIndex((beat) => beat.id === project.selectedBeatId));
   const selectedBeat = project.baseInput.beats[selectedIndex]!;
   const selectedShot = fixture.renderPlan.shots[selectedIndex]!;
-  const [frame, setFrame] = useState(0);
+  const [frame, setFrame] = useState(selectedShot.startFrame);
   const [playing, setPlaying] = useState(false);
   const [playOnlyBeat, setPlayOnlyBeat] = useState<number | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [directorOpen, setDirectorOpen] = useState(false);
+  const [instruction, setInstruction] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const playerRef = useRef<PlayerRef>(null);
   const previewHeadingRef = useRef<HTMLHeadingElement>(null);
+  const statusRef = useRef<HTMLParagraphElement>(null);
+  const initialPlayback = useRef({autoPlay: Boolean(autoPlay), selectedIndex, startFrame: selectedShot.startFrame});
 
   useEffect(() => {
     previewHeadingRef.current?.focus({preventScroll: true});
-    if (!autoPlay) {
-      playerRef.current?.seekTo(selectedShot.startFrame);
-      return;
-    }
+    const {autoPlay: shouldAutoPlay, selectedIndex: initialBeatIndex, startFrame: initialFrame} = initialPlayback.current;
+    playerRef.current?.seekTo(initialFrame);
+    setFrame(initialFrame);
+    if (!shouldAutoPlay) return;
     const timer = window.setTimeout(() => {
-      playerRef.current?.seekTo(0);
+      setPlayOnlyBeat(initialBeatIndex);
+      playerRef.current?.seekTo(initialFrame);
       playerRef.current?.play();
     }, 0);
     return () => window.clearTimeout(timer);
@@ -89,7 +100,9 @@ export function Cv001CreatorStudio({
       setFrame(detail.frame);
       if (playOnlyBeat !== null) {
         const shot = fixture.renderPlan.shots[playOnlyBeat]!;
-        if (detail.frame >= shot.startFrame + shot.durationInFrames - 1) {
+        // Remotion can emit `ended` before the final frameupdate. Stop one tick
+        // early, then pin the playhead to the exact final frame of the beat.
+        if (detail.frame >= shot.startFrame + shot.durationInFrames - 2) {
           player.pause();
           player.seekTo(shot.startFrame + shot.durationInFrames - 1);
           setPlayOnlyBeat(null);
@@ -121,6 +134,8 @@ export function Cv001CreatorStudio({
     const beat = project.baseInput.beats[index]!;
     const shot = fixture.renderPlan.shots[index]!;
     onProjectChange(updateCv001CreatorSelection(project, beat.id));
+    setStatus(`Selected “${beatPresentation[index]!.title}”.`);
+    setError(null);
     setPlayOnlyBeat(index);
     seekTo(shot.startFrame);
     playerRef.current?.play();
@@ -142,6 +157,77 @@ export function Cv001CreatorStudio({
     playerRef.current?.play();
   };
 
+  const replayBeatAfterStateChange = (index: number) => {
+    const shot = fixture.renderPlan.shots[index]!;
+    window.setTimeout(() => {
+      setPlayOnlyBeat(index);
+      playerRef.current?.seekTo(shot.startFrame);
+      setFrame(shot.startFrame);
+      playerRef.current?.play();
+      statusRef.current?.focus({preventScroll: true});
+    }, 0);
+  };
+
+  const applyDirection = () => {
+    try {
+      const command = parseCv001CreatorCommand(selectedBeat.id, instruction);
+      const result = commitCv001CreatorCommand({project, command, renderPlan: fixture.renderPlan});
+      onProjectChange(result.project);
+      setInstruction("");
+      setError(null);
+      setStatus(`Updated “${beatPresentation[selectedIndex]!.title}”.`);
+      replayBeatAfterStateChange(selectedIndex);
+    } catch (caught) {
+      setStatus(null);
+      setError(caught instanceof Error ? caught.message : "That direction could not be applied.");
+    }
+  };
+
+  const undo = () => {
+    if (project.historyCursor === 0) return;
+    const next = undoCv001CreatorEdit(project, fixture.renderPlan);
+    onProjectChange(next);
+    setError(null);
+    setStatus("Undid direction change.");
+    replayBeatAfterStateChange(next.baseInput.beats.findIndex((beat) => beat.id === next.selectedBeatId));
+  };
+
+  const redo = () => {
+    if (project.historyCursor >= project.history.length) return;
+    const next = redoCv001CreatorEdit(project, fixture.renderPlan);
+    onProjectChange(next);
+    setError(null);
+    setStatus("Redid direction change.");
+    replayBeatAfterStateChange(next.baseInput.beats.findIndex((beat) => beat.id === next.selectedBeatId));
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        if (event.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (event.code === "Space") {
+        event.preventDefault();
+        togglePlayback();
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        moveBeat(-1);
+      }
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        moveBeat(1);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
   return (
     <div className="cv-creator">
       <header className="cv-topbar">
@@ -149,8 +235,9 @@ export function Cv001CreatorStudio({
         <div className="cv-project-title"><div><strong>{project.title}</strong><small>Three-beat animation prototype</small></div></div>
         <div className="cv-top-actions">
           <span className="cv-prototype-badge"><Sparkles size={13} />Prototype</span>
-          <button aria-label="Undo direction" disabled type="button"><RotateCcw size={15} /></button>
-          <button aria-label="Redo direction" disabled type="button"><Redo2 size={15} /></button>
+          <button aria-label="Undo direction" disabled={project.historyCursor === 0} onClick={undo} type="button"><RotateCcw size={15} /></button>
+          <button aria-label="Redo direction" disabled={project.historyCursor >= project.history.length} onClick={redo} type="button"><Redo2 size={15} /></button>
+          <button className="cv-direct-beat" onClick={() => setDirectorOpen(true)} type="button"><WandSparkles size={15} />Direct beat</button>
           <button aria-expanded={advancedOpen} onClick={() => setAdvancedOpen((open) => !open)} type="button"><Settings2 size={15} />Advanced</button>
         </div>
       </header>
@@ -165,23 +252,38 @@ export function Cv001CreatorStudio({
                 const presentation = beatPresentation[index]!;
                 const isSelected = index === selectedIndex;
                 const isActive = index === activeIndex;
+                const isPlaying = playing && isActive;
                 return (
                   <button
                     aria-current={isActive ? "true" : undefined}
                     aria-pressed={isSelected}
-                    className={`${isSelected ? "is-selected" : ""} ${isActive ? "is-playing" : ""}`}
+                    className={`${isSelected ? "is-selected" : ""} ${isPlaying ? "is-playing" : ""}`}
                     key={beat.id}
                     onClick={() => selectBeat(index)}
                     type="button"
                   >
-                    <span className="cv-beat-thumb"><img alt="" src={presentation.thumbnail} /></span>
+                    <span className="cv-beat-thumb">
+                      <Player
+                        acknowledgeRemotionLicense
+                        clickToPlay={false}
+                        component={ProductionComposition}
+                        compositionHeight={fixture.renderPlan.height}
+                        compositionWidth={fixture.renderPlan.width}
+                        controls={false}
+                        durationInFrames={fixture.renderPlan.durationInFrames}
+                        fps={fixture.renderPlan.fps}
+                        initialFrame={[30, 150, 240][index]}
+                        inputProps={{plan: fixture.renderPlan, playbackAssets: {}, sliceDurationInFrames: fixture.renderPlan.durationInFrames, directedSceneMotion: compiled.sceneMotion, showMotionDiagnostics: false}}
+                        style={{height: "100%", width: "100%"}}
+                      />
+                    </span>
                     <span className="cv-beat-copy">
                       <small>0{index + 1} · {presentation.eyebrow}</small>
                       <strong>{presentation.title}</strong>
                       <q>{beat.text}</q>
                       <span>{(beat.durationInFrames / 30).toFixed(1)} sec · {directionSummary(project, index)}</span>
                     </span>
-                    {isActive ? <i>Playing</i> : isSelected ? <i>Selected</i> : null}
+                    {isPlaying ? <i>Playing</i> : isSelected ? <i>Selected</i> : null}
                   </button>
                 );
               })}
@@ -226,19 +328,31 @@ export function Cv001CreatorStudio({
           </div>
         </main>
 
-        <aside aria-label="Director" className="cv-director">
-          <header><span><WandSparkles size={17} /></span><div><p>Director</p><h2>Direct this beat</h2></div></header>
+        <aside aria-label="Director" className={`cv-director ${directorOpen ? "is-open" : ""}`}>
+          <header><span><WandSparkles size={17} /></span><div><p>Director</p><h2>Direct this beat</h2></div><button aria-label="Close Director" className="cv-close-director" onClick={() => setDirectorOpen(false)} type="button">×</button></header>
           <div className="cv-selected-summary"><span>Selected beat</span><strong>{beatPresentation[selectedIndex]!.title}</strong><p>{selectedBeat.text}</p></div>
           <label htmlFor="cv-direction">What should change?</label>
-          <textarea disabled id="cv-direction" placeholder="Try: Make the reaction bigger and hold it longer." rows={4} />
-          <p className="cv-prototype-note">This prototype understands a small set of directing phrases. Editing is enabled in the next build step.</p>
-          <button className="cv-apply" disabled type="button"><WandSparkles size={16} />Update beat</button>
+          <textarea id="cv-direction" onChange={(event) => setInstruction(event.target.value)} onKeyDown={(event) => {if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && instruction.trim()) {event.preventDefault(); applyDirection();}}} placeholder={selectedIndex === 2 ? "Try: Make the reaction bigger and hold it longer." : "Try: Make it bigger and snappier."} rows={4} value={instruction} />
+          <div className="cv-suggestions" aria-label="Direction examples">
+            <button onClick={() => setInstruction("Make it bigger")} type="button">Bigger</button>
+            <button onClick={() => setInstruction("Hold it longer")} type="button">Longer hold</button>
+            <button onClick={() => setInstruction("Make it snappier")} type="button">Snappier</button>
+            <button onClick={() => setInstruction("Push in more")} type="button">Stronger camera</button>
+          </div>
+          <p className="cv-prototype-note">This prototype understands a small set of directing phrases. No AI call or fake free-form interpretation.</p>
+          {status ? <p aria-live="polite" className="cv-feedback" ref={statusRef} role="status" tabIndex={-1}><Check size={14} />{status}</p> : null}
+          {error ? <p aria-live="polite" className="cv-error" role="alert">{error}</p> : null}
+          <button className="cv-apply" disabled={!instruction.trim()} onClick={applyDirection} type="button"><WandSparkles size={16} />Update beat</button>
           <dl className="cv-beat-facts">
             <div><dt>Performance</dt><dd>{project.directionState.beats[selectedIndex]!.performance}</dd></div>
             <div><dt>Tempo</dt><dd>{project.directionState.beats[selectedIndex]!.tempo}</dd></div>
             <div><dt>Hold</dt><dd>{project.directionState.beats[selectedIndex]!.hold}</dd></div>
             <div><dt>Camera</dt><dd>{project.directionState.beats[selectedIndex]!.camera}</dd></div>
           </dl>
+          <section className="cv-edit-history" aria-label="Direction history">
+            <header><span>Recent changes</span><small>{project.historyCursor}/{project.history.length}</small></header>
+            {project.history.length === 0 ? <p>No direction changes yet.</p> : <ol>{project.history.slice(Math.max(0, project.historyCursor - 3), project.historyCursor).map((transaction) => <li key={transaction.id}><span>{transaction.id.replace("edit-", "")}</span><p>{transaction.command.normalizedText}</p></li>)}</ol>}
+          </section>
         </aside>
       </div>
 

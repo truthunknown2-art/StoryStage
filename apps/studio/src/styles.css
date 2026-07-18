@@ -16,7 +16,7 @@
 }
 
 * { box-sizing: border-box; }
-body { margin: 0; min-width: 1120px; min-height: 100vh; background: #0c1011; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: #0c1011; }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; }
