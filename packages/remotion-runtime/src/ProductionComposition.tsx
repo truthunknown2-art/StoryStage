@@ -23,6 +23,7 @@ export type ProductionCompositionProps = {
   soundEffectCues?: SoundEffectCue[];
   audioMix?: AudioMix;
   previewWatermark?: string;
+  previewAssetStatus?: "unapproved-candidate";
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
@@ -84,7 +85,7 @@ const CharacterPerformance: React.FC<{asset: CharacterPlaybackAsset; projectType
   return <Img src={pose} style={{bottom: closeUp ? -150 : -20, filter: "drop-shadow(18px 22px 12px rgba(0,0,0,.28))", height: characterHeight, objectFit: "contain", objectPosition: "bottom", position: "absolute", right: side === "right" ? 50 : undefined, left: side === "left" ? 50 : undefined, scale: interpolate(frame, [0, shot.durationInFrames], [.96, 1.02], {extrapolateRight: "clamp"}), translate: `${entrance}px ${gestureLift + Math.sin(frame / 8) * 3}px`, width: closeUp ? "58%" : "48%"}} />;
 };
 
-const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record<string, PlaybackAsset>; shot: RenderShot}> = ({plan, playbackAssets, shot}) => {
+const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record<string, PlaybackAsset>; previewAssetStatus?: ProductionCompositionProps["previewAssetStatus"]; shot: RenderShot}> = ({plan, playbackAssets, previewAssetStatus, shot}) => {
   const frame = useCurrentFrame();
   const backgroundBinding = shot.visualBindings.find((binding) => binding.role === "background");
   const background = backgroundBinding ? playbackAssets[backgroundBinding.assetId] : undefined;
@@ -102,7 +103,7 @@ const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record
   const singleCharacterSide = kineticType || ordinal % 2 === 1 ? "left" : "right";
   return <AbsoluteFill style={{background: palette.ink, overflow: "hidden"}}>
     {background?.type === "background-layers" ? <ShotBackground asset={background} projectType={plan.projectType} shot={shot} /> : historyMode ? <HistoryEditorialStage shot={shot} /> : <ShotBackground projectType={plan.projectType} shot={shot} />}
-    {reconstruction ? <HistoryEditorialVisual asset={editorialVisual} shot={shot} /> : null}
+    {reconstruction ? <HistoryEditorialVisual asset={editorialVisual} candidatePreview={previewAssetStatus === "unapproved-candidate"} shot={shot} /> : null}
     {diagram ? <HistoryDiagram shot={shot} /> : null}
     {kineticType ? <HistoryKineticType reservePresenter={characters.length > 0} shot={shot} /> : null}
     {showCharacters ? characters.slice(0, 2).map((asset, index) => <CharacterPerformance asset={asset} key={asset.assetId} projectType={plan.projectType} shot={shot} side={index === 0 ? singleCharacterSide : singleCharacterSide === "left" ? "right" : "left"} />) : null}
@@ -112,11 +113,11 @@ const ShotScene: React.FC<{plan: FrameAccurateRenderPlan; playbackAssets: Record
   </AbsoluteFill>;
 };
 
-export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl, musicTrackDataUrl, soundEffectDataUrls = {}, soundEffectCues = [], audioMix, previewWatermark}) => {
+export const ProductionComposition: React.FC<ProductionCompositionProps> = ({plan, playbackAssets, sliceDurationInFrames, voiceTrackDataUrl, musicTrackDataUrl, soundEffectDataUrls = {}, soundEffectCues = [], audioMix, previewWatermark, previewAssetStatus}) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
   const captions: Caption[] = plan.shots.filter((shot) => shot.caption && shot.startFrame < duration).map((shot) => ({text: shot.caption!, startMs: shot.startFrame / plan.fps * 1000, endMs: Math.min(duration, shot.startFrame + shot.durationInFrames) / plan.fps * 1000, timestampMs: null, confidence: null}));
   return <AbsoluteFill style={{background: "#111718"}}>
-    {plan.shots.filter((shot) => shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={Math.min(shot.durationInFrames, duration - shot.startFrame)} key={shot.id}><TransitionedShot projectType={plan.projectType} shot={shot}><ShotScene plan={plan} playbackAssets={playbackAssets} shot={shot} /></TransitionedShot></Sequence>)}
+    {plan.shots.filter((shot) => shot.startFrame < duration).map((shot) => <Sequence from={shot.startFrame} durationInFrames={Math.min(shot.durationInFrames, duration - shot.startFrame)} key={shot.id}><TransitionedShot projectType={plan.projectType} shot={shot}><ShotScene plan={plan} playbackAssets={playbackAssets} previewAssetStatus={previewAssetStatus} shot={shot} /></TransitionedShot></Sequence>)}
     {voiceTrackDataUrl ? <Audio src={voiceTrackDataUrl} volume={() => audioMix?.voiceGain ?? 1} /> : null}
     {musicTrackDataUrl && audioMix?.musicDecision === "approved-master" ? <Audio loop={audioMix.musicLoop ?? true} src={musicTrackDataUrl} volume={() => audioMix.musicGain ?? .1} /> : null}
     {soundEffectCues.map((cue) => {

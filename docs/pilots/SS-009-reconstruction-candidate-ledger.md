@@ -29,6 +29,18 @@ Run `pnpm prepare:rook-pilot-review` to rebuild the packet from the six logged s
 - Shot 1.08 A/B sheet: `8534936f8c4a4eb4c7662e77c83a4f57295922d1a6160242ad20166629b8b8b2`.
 - Human decisions recorded: zero. Rig diagnostics, selection, approval, promotion, production binding, and final render remain downstream gates.
 
+## Non-approving motion-review evidence
+
+Run `pnpm render:rook-motion-review` after rebuilding the preparation packet to render the two candidates for each reconstruction through the exact frozen `ProductionComposition`. The renderer uses the production shot range, duration, caption, disclosure, and intended camera action; adds an unmistakable `UNAPPROVED CANDIDATE` watermark; probes every H.264 result; and extracts start, middle, and end frames to prove that motion survived encoding. It writes only to ignored `artifacts/SS-009/reconstruction-review-packet/motion-review/`.
+
+- Production render-plan hash: `2c60f72c984bb13d5392b8065972a501a0e47b4e43ab2a610c7c9f86eed0f9a4`.
+- Preparation-report hash: `4e38f6e0929159ac1e57a91747457b52227d323680d634fa323d86ae3ba8fa7d`.
+- Motion-review manifest hash: `21ddb2d0421b3e501ad55cd31dd7c6d75e94c018b98974211483f30c1949e77f`.
+- Shot 1.03: 73 frames, `cameraPush`, paired MP4 SHA-256 `792c4d1ef4abc8c3bd32984326a9d7570c59fdd6c8d8fc6ec9ab02e0381c0bf8`.
+- Shot 1.05: 61 frames, `pan`, paired MP4 SHA-256 `19fd5b5a7a352467c89f82021ab215060c1545271e8358ec72c65ac5c8ddc61c`.
+- Shot 1.08: 73 frames, `cameraPush`, paired MP4 SHA-256 `7ff6240cd451bb6c45c175ed4ebad267351e0fea47ef8a5f1cdfff9e4e224e23`.
+- Human decisions recorded: zero. The exchange remains `needs-review`; the reels are comparison evidence, never production approval or binding.
+
 ## Exact prompts
 
 ### Shot 1.03 — candidate set 1

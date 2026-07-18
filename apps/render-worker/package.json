@@ -15,7 +15,8 @@
     "test": "vitest run src/worker-protocol.test.ts",
     "typecheck": "tsc --noEmit",
     "render:production-proof": "tsx src/production-proof.ts",
-    "render:rook-preview": "tsx src/rook-pilot-visual-preview.ts"
+    "render:rook-preview": "tsx src/rook-pilot-visual-preview.ts",
+    "render:rook-motion-review": "tsx src/rook-pilot-motion-review.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.490",

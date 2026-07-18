@@ -4,7 +4,7 @@ import type {PropPlaybackAsset} from "./ProductionComposition";
 
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
-export const HistoryEditorialVisual: React.FC<{asset?: PropPlaybackAsset; shot: RenderShot}> = ({asset, shot}) => {
+export const HistoryEditorialVisual: React.FC<{asset?: PropPlaybackAsset; candidatePreview?: boolean; shot: RenderShot}> = ({asset, candidatePreview = false, shot}) => {
   const frame = useCurrentFrame();
   const ordinal = Number(shot.number.split(".").at(-1) ?? 1);
   const reverse = ordinal % 2 === 0;
@@ -22,6 +22,6 @@ export const HistoryEditorialVisual: React.FC<{asset?: PropPlaybackAsset; shot: 
     </>}
     <AbsoluteFill style={{background: "linear-gradient(90deg,rgba(14,17,18,.68),transparent 45%,rgba(14,17,18,.2))"}} />
     <div style={{background: "#ef4e3b", color: "#f5efe2", fontFamily: "Arial,sans-serif", fontSize: 22, fontWeight: 950, left: 70, letterSpacing: 4, padding: "13px 18px", position: "absolute", textTransform: "uppercase", top: 82}}>Generated reconstruction</div>
-    <div style={{bottom: 70, color: "rgba(245,239,226,.88)", fontFamily: "Arial,sans-serif", fontSize: 18, fontWeight: 800, left: 74, letterSpacing: 2.5, maxWidth: 420, position: "absolute", textTransform: "uppercase"}}>{asset ? "Human-approved production visual" : "Candidate required · approval gate remains open"}</div>
+    <div style={{bottom: 70, color: "rgba(245,239,226,.88)", fontFamily: "Arial,sans-serif", fontSize: 18, fontWeight: 800, left: 74, letterSpacing: 2.5, maxWidth: 520, position: "absolute", textTransform: "uppercase"}}>{asset ? candidatePreview ? "Unapproved candidate · review only" : "Human-approved production visual" : "Candidate required · approval gate remains open"}</div>
   </AbsoluteFill>;
 };
