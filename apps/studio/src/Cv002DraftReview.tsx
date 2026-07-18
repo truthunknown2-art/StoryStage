@@ -13,6 +13,17 @@ import {
   type Cv002TemplateAssignment,
 } from "@storystage/story-engine";
 import {
+  compileDirectorProject,
+  createDirectorWorkspaceState,
+  currentDirectorWorkspaceProject,
+  DIRECTOR_WORKSPACE_STORAGE_KEY,
+  restoreDirectorWorkspaceState,
+  selectDirectorWorkspaceBeat,
+  serializeDirectorWorkspaceState,
+  type DirectorProject,
+  type DirectorWorkspaceState,
+} from "@storystage/story-engine/director-alpha";
+import {
   ArrowLeft,
   ArrowRight,
   Check,
@@ -26,7 +37,7 @@ import {
   Sparkles,
   Trees,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Cv002TemplateAssignmentPanel } from "./Cv002TemplateAssignmentPanel";
 import { DirectorAnimaticPreview } from "./director/DirectorPreview";
 import "./cv002-draft-review.css";
@@ -44,6 +55,25 @@ const ROLE_OPTIONS: Array<{ value: Cv002BeatRole; label: string }> = [
 ];
 
 const humanize = (value: string) => value.replaceAll("-", " ");
+
+const loadDirectorWorkspace = (
+  directorProject: DirectorProject,
+  selectedBeatId: string,
+) => {
+  const serialized = window.localStorage.getItem(
+    DIRECTOR_WORKSPACE_STORAGE_KEY,
+  );
+  if (serialized)
+    try {
+      return restoreDirectorWorkspaceState(
+        serialized,
+        directorProject.storyProjectContentHash,
+      );
+    } catch {
+      window.localStorage.removeItem(DIRECTOR_WORKSPACE_STORAGE_KEY);
+    }
+  return createDirectorWorkspaceState(directorProject, selectedBeatId);
+};
 
 const operationLabel = (operation: Cv002GraphOperation) => {
   if (operation.type === "split-beat") return "Split beat";
@@ -92,7 +122,35 @@ export function Cv002DraftReview({
     () => project.graph.scenes.flatMap((scene) => scene.beats),
     [project.graph],
   );
-  const [selectedBeatId, setSelectedBeatId] = useState(allBeats[0]!.id);
+  const directorCompilation = useMemo<{
+    directorProject: DirectorProject | null;
+    error: string | null;
+  }>(() => {
+    try {
+      return {
+        directorProject: compileDirectorProject({ storyProject: project }),
+        error: null,
+      };
+    } catch (caught) {
+      return {
+        directorProject: null,
+        error:
+          caught instanceof Error
+            ? caught.message
+            : "The Director could not compile this script.",
+      };
+    }
+  }, [project]);
+  const [directorWorkspace, setDirectorWorkspace] =
+    useState<DirectorWorkspaceState | null>(() =>
+      directorCompilation.directorProject
+        ? loadDirectorWorkspace(
+            directorCompilation.directorProject,
+            allBeats[0]!.id,
+          )
+        : null,
+    );
+  const pendingSelectedBeatId = useRef<string | null>(null);
   const [splitCursor, setSplitCursor] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -110,6 +168,52 @@ export function Cv002DraftReview({
       }
     },
   );
+  useEffect(() => {
+    const directorProject = directorCompilation.directorProject;
+    if (!directorProject) {
+      setDirectorWorkspace(null);
+      return;
+    }
+    setDirectorWorkspace((current) => {
+      if (current?.storyProjectContentHash === project.contentHash)
+        return current;
+      const requestedBeatId =
+        pendingSelectedBeatId.current ??
+        current?.selectedBeatId ??
+        allBeats[0]!.id;
+      pendingSelectedBeatId.current = null;
+      const selectedBeatId = allBeats.some(
+        (beat) => beat.id === requestedBeatId,
+      )
+        ? requestedBeatId
+        : allBeats[0]!.id;
+      return loadDirectorWorkspace(directorProject, selectedBeatId);
+    });
+  }, [allBeats, directorCompilation.directorProject, project.contentHash]);
+
+  useEffect(() => {
+    if (!directorWorkspace) return;
+    window.localStorage.setItem(
+      DIRECTOR_WORKSPACE_STORAGE_KEY,
+      serializeDirectorWorkspaceState(directorWorkspace),
+    );
+  }, [directorWorkspace]);
+
+  const selectedBeatId = directorWorkspace?.selectedBeatId ?? allBeats[0]!.id;
+  const setSelectedBeatId = (beatId: string) => {
+    setDirectorWorkspace((current) => {
+      if (
+        !current ||
+        !currentDirectorWorkspaceProject(current).directorPlan.beats.some(
+          (beat) => beat.beatId === beatId,
+        )
+      ) {
+        pendingSelectedBeatId.current = beatId;
+        return current;
+      }
+      return selectDirectorWorkspaceBeat(current, beatId);
+    });
+  };
   const selectedBeat =
     allBeats.find((beat) => beat.id === selectedBeatId) ?? allBeats[0]!;
   const selectedIndex = allBeats.findIndex(
@@ -255,7 +359,11 @@ export function Cv002DraftReview({
   );
 
   return (
-    <main className={`cv2-review is-${project.grammar}`}>
+    <main
+      className={`cv2-review is-${project.grammar}${
+        screen === "direction" ? " is-direction-screen" : ""
+      }`}
+    >
       <header className="cv2-topbar">
         <button className="cv2-back" onClick={onBack} type="button">
           <ArrowLeft size={17} /> Projects
@@ -558,127 +666,193 @@ export function Cv002DraftReview({
         </div>
       ) : (
         <section className="cv2-direction-page">
-          <header className="cv2-page-heading">
+          <header className="cv2-studio-heading">
             <div>
-              <p>Direction draft</p>
-              <h1>
-                {project.grammar === "kids-adventure"
-                  ? "Readable action, warm reactions, room to breathe."
-                  : "Evidence first, hard cuts, and a faster editorial pulse."}
-              </h1>
+              <p>Director Studio</p>
+              <h1>{project.title}</h1>
               <span>
-                Every beat is translated through the selected show grammar. This
-                is a shot plan—not generated footage.
+                First cut · {project.graph.scenes.length} scenes ·{" "}
+                {allBeats.length} beats · honest proxy animation
               </span>
             </div>
             <GrammarBadge grammar={project.grammar} />
           </header>
 
-          <div className="cv2-honesty-banner" role="status">
+          <div className="cv2-studio-status" role="status">
+            <Check size={15} />
+            <strong>Draft animatic ready</strong>
             <span>
-              <Check size={17} />
+              Real direction, timing, blocking, and camera intent · final art
+              and motion still needed
             </span>
-            <div>
-              <strong>
-                Directed proxy animatic ready. Final animation capabilities are
-                not fully assigned.
-              </strong>
-              <small>
-                The Player and render worker consume the same sealed episode
-                plan. Proxy figures show real geography, blocking, shot purpose,
-                timing, and camera intent without pretending final art exists.
-              </small>
-            </div>
           </div>
 
-          <DirectorAnimaticPreview
-            project={project}
-            selectedBeatId={selectedBeatId}
-          />
+          <section className="cv2-studio-workspace">
+            <aside
+              className="cv2-direction-rail"
+              aria-label="Studio scenes and beats"
+            >
+              <header>
+                <div>
+                  <small>Your story</small>
+                  <strong>Scenes & beats</strong>
+                </div>
+                <span>{allBeats.length}</span>
+              </header>
+              <nav aria-label="Choose a scene or beat">
+                {project.graph.scenes.map((scene, sceneIndex) => (
+                  <section key={scene.id}>
+                    <header>
+                      <span>Scene {sceneIndex + 1}</span>
+                      <small>{scene.beats.length} beats</small>
+                    </header>
+                    {scene.beats.map((beat, beatIndex) => (
+                      <button
+                        aria-pressed={beat.id === selectedBeatId}
+                        key={beat.id}
+                        onClick={() => setSelectedBeatId(beat.id)}
+                        type="button"
+                      >
+                        <span>
+                          {sceneIndex + 1}.{beatIndex + 1}
+                        </span>
+                        <div>
+                          <strong>{humanize(beat.role)}</strong>
+                          <small>{beat.text}</small>
+                        </div>
+                      </button>
+                    ))}
+                  </section>
+                ))}
+              </nav>
+            </aside>
 
-          <details className="cv2-advanced-capabilities">
-            <summary>Advanced · legacy animation capability prototype</summary>
-            <Cv002TemplateAssignmentPanel
-              assignment={assignment}
-              onAssignmentChange={saveAssignment}
+            <DirectorAnimaticPreview
+              compileError={directorCompilation.error}
+              onWorkspaceChange={setDirectorWorkspace}
               project={project}
+              workspace={directorWorkspace}
             />
+
+            <nav className="cv2-beat-strip" aria-label="Compact beat strip">
+              <header>
+                <small>First cut</small>
+                <strong>Beat strip</strong>
+              </header>
+              <div>
+                {project.graph.scenes.flatMap((scene, sceneIndex) =>
+                  scene.beats.map((beat, beatIndex) => (
+                    <button
+                      aria-label={`Scene ${sceneIndex + 1}, beat ${beatIndex + 1}: ${beat.text}`}
+                      aria-pressed={beat.id === selectedBeatId}
+                      key={beat.id}
+                      onClick={() => setSelectedBeatId(beat.id)}
+                      type="button"
+                    >
+                      <span>
+                        {sceneIndex + 1}.{beatIndex + 1}
+                      </span>
+                      <small>{humanize(beat.role)}</small>
+                    </button>
+                  )),
+                )}
+              </div>
+            </nav>
+          </section>
+
+          <details className="cv2-studio-advanced">
+            <summary>Advanced production details</summary>
+            <p>
+              Technical shot intent, animation capability assignment, and the
+              sealed plan live here—not in the creative workspace.
+            </p>
+            <details className="cv2-advanced-capabilities">
+              <summary>Animation capability prototype</summary>
+              <Cv002TemplateAssignmentPanel
+                assignment={assignment}
+                onAssignmentChange={saveAssignment}
+                project={project}
+              />
+            </details>
+
+            <div className="cv2-direction-scenes">
+              {project.graph.scenes.map((scene, sceneIndex) => (
+                <section key={scene.id}>
+                  <header>
+                    <div>
+                      <small>
+                        Scene {String(sceneIndex + 1).padStart(2, "0")}
+                      </small>
+                      <strong>
+                        {scene.beats[0]!.text.slice(0, 72)}
+                        {scene.beats[0]!.text.length > 72 ? "…" : ""}
+                      </strong>
+                    </div>
+                    <span>
+                      {assignment?.sceneId === scene.id
+                        ? "Animated template assigned"
+                        : "Direction only · template not assigned"}{" "}
+                      · {scene.beats.length}{" "}
+                      {scene.beats.length === 1 ? "beat" : "beats"}
+                    </span>
+                  </header>
+                  <div className="cv2-direction-grid">
+                    {scene.beats.map((beat, beatIndex) => {
+                      const direction = directionByBeat.get(beat.id)!;
+                      return (
+                        <article
+                          className={
+                            beat.id === selectedBeatId
+                              ? "is-selected"
+                              : undefined
+                          }
+                          key={beat.id}
+                        >
+                          <button
+                            aria-pressed={beat.id === selectedBeatId}
+                            className="cv2-direction-beat-select"
+                            onClick={() => setSelectedBeatId(beat.id)}
+                            type="button"
+                          >
+                            <span>
+                              {sceneIndex + 1}.{beatIndex + 1}
+                            </span>
+                            <div>
+                              <small>{humanize(beat.role)}</small>
+                              <strong>{beat.text}</strong>
+                            </div>
+                          </button>
+                          <dl>
+                            {directionFields.map((field) => (
+                              <div key={field.key}>
+                                <dt>{field.label}</dt>
+                                <dd>
+                                  {humanize(String(direction[field.key]))}
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </article>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+            </div>
           </details>
 
-          <div className="cv2-direction-scenes">
-            {project.graph.scenes.map((scene, sceneIndex) => (
-              <section key={scene.id}>
-                <header>
-                  <div>
-                    <small>
-                      Scene {String(sceneIndex + 1).padStart(2, "0")}
-                    </small>
-                    <strong>
-                      {scene.beats[0]!.text.slice(0, 72)}
-                      {scene.beats[0]!.text.length > 72 ? "…" : ""}
-                    </strong>
-                  </div>
-                  <span>
-                    {assignment?.sceneId === scene.id
-                      ? "Animated template assigned"
-                      : "Direction only · template not assigned"}{" "}
-                    · {scene.beats.length}{" "}
-                    {scene.beats.length === 1 ? "beat" : "beats"}
-                  </span>
-                </header>
-                <div className="cv2-direction-grid">
-                  {scene.beats.map((beat, beatIndex) => {
-                    const direction = directionByBeat.get(beat.id)!;
-                    return (
-                      <article
-                        className={
-                          beat.id === selectedBeatId ? "is-selected" : undefined
-                        }
-                        key={beat.id}
-                      >
-                        <button
-                          aria-pressed={beat.id === selectedBeatId}
-                          className="cv2-direction-beat-select"
-                          onClick={() => setSelectedBeatId(beat.id)}
-                          type="button"
-                        >
-                          <span>
-                            {sceneIndex + 1}.{beatIndex + 1}
-                          </span>
-                          <div>
-                            <small>{humanize(beat.role)}</small>
-                            <strong>{beat.text}</strong>
-                          </div>
-                        </button>
-                        <dl>
-                          {directionFields.map((field) => (
-                            <div key={field.key}>
-                              <dt>{field.label}</dt>
-                              <dd>{humanize(String(direction[field.key]))}</dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </article>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-          </div>
-
-          <footer className="cv2-review-footer">
+          <footer className="cv2-studio-footer">
             <button
               className="is-secondary"
               onClick={() => setScreen("breakdown")}
               type="button"
             >
-              <ArrowLeft size={17} /> Edit breakdown
+              <ArrowLeft size={17} /> Edit scenes & beats
             </button>
             <div>
               <strong>First canonical cut compiled</strong>
               <span>
-                Next: the full creator-first Director Studio workspace and
-                beat-by-beat revision.
+                Your next direction will revise only the selected beat.
               </span>
             </div>
           </footer>

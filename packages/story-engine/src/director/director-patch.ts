@@ -9,8 +9,10 @@ import {
 export const directorPatchOperationSchema = z
   .object({
     id: identifierSchema,
-    kind: z.literal("delay-reaction"),
+    kind: z.literal("delay-event"),
     beatId: identifierSchema,
+    eventId: identifierSchema,
+    sourceShotId: identifierSchema,
     frames: z.number().int().min(1).max(30),
   })
   .strict();
@@ -105,10 +107,39 @@ export function proposeDirectorPatch(input: {
   const frames = requestedFrames(command);
   if (!Number.isInteger(frames) || frames < 1 || frames > 30)
     throw new Error("Reaction delay must be between 1 and 30 frames.");
+  const reactionEvents = base.directorPlan.events.filter(
+    (event) => event.beatId === input.targetBeatId && event.kind === "reaction",
+  );
+  const candidates = reactionEvents.flatMap((event) =>
+    base.directorPlan.shots
+      .filter(
+        (shot) =>
+          shot.beatIds.includes(input.targetBeatId) &&
+          [
+            shot.entryEventId,
+            shot.exitEventId,
+            shot.timingEnvelope.earliestCutEventId,
+            shot.timingEnvelope.preferredCutEventId,
+            shot.timingEnvelope.latestCutEventId,
+          ].includes(event.id),
+      )
+      .map((shot) => ({ event, shot })),
+  );
+  if (candidates.length === 0)
+    throw new Error(
+      "The selected beat has no concrete reaction event to delay.",
+    );
+  if (candidates.length > 1)
+    throw new Error(
+      "The selected beat has more than one possible reaction event. Choose a specific event before applying this direction.",
+    );
+  const { event, shot } = candidates[0]!;
   const operation: DirectorPatchOperation = {
-    id: `delay-reaction-${input.targetBeatId}`,
-    kind: "delay-reaction",
+    id: `delay-event-${event.id}`,
+    kind: "delay-event",
     beatId: input.targetBeatId,
+    eventId: event.id,
+    sourceShotId: shot.id,
     frames,
   };
   const identity = hashCanonical({
@@ -130,7 +161,7 @@ export function describeDirectorPatch(patch: DirectorPatch): string[] {
   return directorPatchSchema
     .parse(patch)
     .operations.map((operation) =>
-      operation.kind === "delay-reaction"
+      operation.kind === "delay-event"
         ? `Delay the reaction by ${operation.frames} frames`
         : "Apply the direction change",
     );

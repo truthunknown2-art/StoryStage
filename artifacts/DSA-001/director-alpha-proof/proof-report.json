@@ -8,10 +8,10 @@
       "grammar": "kids-adventure",
       "compositionId": "StoryStageProduction",
       "storyProjectContentHash": "6a6adb4e04db8477eab10da7642492d6cfd17c11fa6b7f7809b58ba9e3bbce4e",
-      "directorProjectContentHash": "b4316a3caf434d9012a13150e8d130b67efc6c0b3b0dc28c8bc266c03a5213ee",
-      "directorPlanContentHash": "6917784de8e973fcfcc4c982a04fc793d4aa1309a1355558176b57046f572e24",
-      "timingSolutionContentHash": "cd9eacd2e91b12fe86af61773c1572bb146a102a034e151fb72e4f8bd08a4f88",
-      "executableEpisodePlanContentHash": "0e08f4040da3b2ca31e71ec951b306734bf17e67549c96e3f424ee0b023714ce",
+      "directorProjectContentHash": "8e5dc25e08cdc09954d3cdc8eafd71cbeafb801660b7355c23a5167d9c5cabf3",
+      "directorPlanContentHash": "1878e3a156c6d75684b153a30fed51c8b0e46292565207a15260b071f257ab09",
+      "timingSolutionContentHash": "ab864e16c72b272d4e069175143a06582f8c33ff181cc2d87e387e2dc04515ee",
+      "executableEpisodePlanContentHash": "5ed33744ca32108abce4038052873fde2a0013b1b0b330ea36dda0b7ab935943",
       "capabilitySummary": {
         "supported": 0,
         "proxyOnly": 11,
@@ -26,18 +26,18 @@
         "contiguous": true
       },
       "directorPatch": {
-        "contentHash": "b84773c24cce0d3ac5965d4c778ff8ffdd323f7e5d55710c603fd89d2be68389",
-        "baseDirectorProjectContentHash": "b4316a3caf434d9012a13150e8d130b67efc6c0b3b0dc28c8bc266c03a5213ee",
-        "editedDirectorProjectContentHash": "ff7adbe9d8040415bc4d610bc96bc3b9b4a5e73bc132957a414b1e06e8e63317",
-        "editedExecutableEpisodePlanContentHash": "c48c7d84e767457f930292e8e23159192feb5e9bea2b5ab6ebede6a6a1724cd2",
+        "contentHash": "a104328aacbd6bad74d04a0b36ebdecdf9fc2bf137c86b96cecfbcd53e7e9adb",
+        "baseDirectorProjectContentHash": "8e5dc25e08cdc09954d3cdc8eafd71cbeafb801660b7355c23a5167d9c5cabf3",
+        "editedDirectorProjectContentHash": "a7eec966dac0c5306168935488efb60e394dc3b5106a3034e18e7f22d90d24ed",
+        "editedExecutableEpisodePlanContentHash": "2fb0885b525c22892153a7982143ae8141ed14502ad7cc5ed48a7f9fe013e9bd",
         "targetBeatId": "beat-79b11a73ddca",
         "reactionDelayFrames": 6,
         "preservedUntouchedPrograms": true,
         "untouchedProgramCount": 47,
         "deterministicStill": {
-          "frame": 0,
-          "contentHash": "283c049fc8877519aa588bd0a4728d56286a0a93c7a336b34227502d4abd8d32",
-          "repeatContentHash": "283c049fc8877519aa588bd0a4728d56286a0a93c7a336b34227502d4abd8d32"
+          "frame": 56,
+          "contentHash": "48e892ced56416931dab16580a02dc3a7c5e7b176282ea9ea70d610c9ee46089",
+          "repeatContentHash": "48e892ced56416931dab16580a02dc3a7c5e7b176282ea9ea70d610c9ee46089"
         }
       },
       "movingShot": {
@@ -115,11 +115,11 @@
       "status": "pass",
       "grammar": "weird-history",
       "compositionId": "StoryStageProduction",
-      "storyProjectContentHash": "ccf2e1b05f6937dfb57c64f133917eb932e91b200195cc2bbf5b917c4e7329b4",
-      "directorProjectContentHash": "135ec65b7aeb480bfe919a7df04ab85d29809888bf35937173ec676d5f51b731",
-      "directorPlanContentHash": "317bfaeb8d4a6f1d8c77fe694355cdcb93e0b4de4a31bcf796b165cc406b36e0",
-      "timingSolutionContentHash": "6a38c0df39034450bc054989ba9a3cc66e9ee3952c2b1fbb284f34e66c40b793",
-      "executableEpisodePlanContentHash": "f3efba0e39c55c570b85dbcb42531d570f94f27ac821ac83a337231b05f22108",
+      "storyProjectContentHash": "41149f5f882ff55cd0cba572614f46d6a14d0cbc1199b63f94e57fa246588adf",
+      "directorProjectContentHash": "5fa3aa8fee8b54c39c73bef4c12d62b48f54ea152bcf7e1d8dda5f65afe40c3e",
+      "directorPlanContentHash": "0d791b15d6b428c91adfa67e1590aae0cad933edce3d783957c9d3e512606fdd",
+      "timingSolutionContentHash": "7cb7e2cffb63d506e0b87ba99f91aaef269a4e21a3cc14a42e9fdc5be10d6eab",
+      "executableEpisodePlanContentHash": "e0cf4bbcb705f113d64a2ae51dbb58878fb2b71094322165087027667c47786a",
       "capabilitySummary": {
         "supported": 0,
         "proxyOnly": 10,
@@ -134,18 +134,18 @@
         "contiguous": true
       },
       "directorPatch": {
-        "contentHash": "1ba4bca0af60c491f0097ec23717f6d22984c068b706f36c71a375baac7efb80",
-        "baseDirectorProjectContentHash": "135ec65b7aeb480bfe919a7df04ab85d29809888bf35937173ec676d5f51b731",
-        "editedDirectorProjectContentHash": "c9c69302d582fe125756e403a39dc4472101c73e637df97278a5df3eb322da55",
-        "editedExecutableEpisodePlanContentHash": "bf0e0fbe611242c6a910023e956ef469d303003b9a40311717ed5b57a7f70cd4",
-        "targetBeatId": "beat-8f7cd2ccf0ed",
+        "contentHash": "d4de179e8bca60cd96a7e8fa90a213fa4aeb407f1472e7593e61cc0ee6e6a290",
+        "baseDirectorProjectContentHash": "5fa3aa8fee8b54c39c73bef4c12d62b48f54ea152bcf7e1d8dda5f65afe40c3e",
+        "editedDirectorProjectContentHash": "c117479a405d57d50fd60834e8782a1f5c60c6c5252830ff738a93fc8f8553a9",
+        "editedExecutableEpisodePlanContentHash": "c998b3e5e9abf0ea96cf4fa5a6ed3530b5efe53a19cf23ee7faa87fd014c09a8",
+        "targetBeatId": "beat-51030d2004d5",
         "reactionDelayFrames": 6,
         "preservedUntouchedPrograms": true,
-        "untouchedProgramCount": 42,
+        "untouchedProgramCount": 46,
         "deterministicStill": {
-          "frame": 49,
-          "contentHash": "bda9d3986d262cbc58eb4ee4964f8bd26d3a1416b7d7386bd9c0fe7306706bf6",
-          "repeatContentHash": "bda9d3986d262cbc58eb4ee4964f8bd26d3a1416b7d7386bd9c0fe7306706bf6"
+          "frame": 159,
+          "contentHash": "806a21c8b2ebb28861f64773ba8ac31d9499f22431f94d4b02c3a077f1feb1fc",
+          "repeatContentHash": "806a21c8b2ebb28861f64773ba8ac31d9499f22431f94d4b02c3a077f1feb1fc"
         }
       },
       "movingShot": {
@@ -161,7 +161,7 @@
         "width": 1920,
         "height": 1080,
         "fps": 30,
-        "durationInFrames": 475
+        "durationInFrames": 478
       },
       "stills": [
         {
@@ -203,25 +203,25 @@
         {
           "frame": 159,
           "file": "frame-0159.png",
-          "contentHash": "4dfa632b42a47d3cd7935965a2077fdbb190e04148f32f71f6cb4cedc2945730",
-          "repeatContentHash": "4dfa632b42a47d3cd7935965a2077fdbb190e04148f32f71f6cb4cedc2945730"
+          "contentHash": "806a21c8b2ebb28861f64773ba8ac31d9499f22431f94d4b02c3a077f1feb1fc",
+          "repeatContentHash": "806a21c8b2ebb28861f64773ba8ac31d9499f22431f94d4b02c3a077f1feb1fc"
         },
         {
-          "frame": 324,
-          "file": "frame-0324.png",
+          "frame": 327,
+          "file": "frame-0327.png",
           "contentHash": "3fca151c74dcf1ef2e7b1a8cff919a6f90fd7a242ccfc0d408b1ddb0c39ac2c3",
           "repeatContentHash": "3fca151c74dcf1ef2e7b1a8cff919a6f90fd7a242ccfc0d408b1ddb0c39ac2c3"
         },
         {
-          "frame": 474,
-          "file": "frame-0474.png",
+          "frame": 477,
+          "file": "frame-0477.png",
           "contentHash": "682365e8c2e3b2ba7710153a6eab24edb27064b8526c0a1c28e2561d025038bc",
           "repeatContentHash": "682365e8c2e3b2ba7710153a6eab24edb27064b8526c0a1c28e2561d025038bc"
         }
       ],
       "video": {
         "file": "arbitrary-history.mp4",
-        "contentHash": "3ba522b26a6e42b36a7e10d960c9a52746b8c40df5ecfd8de1f0fbb8f3afabf8"
+        "contentHash": "8312ddd7fa2bc5112cddaa1e3b828c1b349c532d3a86c58e88df159f7cf39aaf"
       }
     }
   ]

@@ -1,4 +1,5 @@
 import type { ArtifactByHashStore, HashBoundArtifact } from "./artifact-store";
+import type { ArtifactCodec } from "./artifact-codec";
 import type { ProductionStageRecord } from "./production-stage";
 import { reduceProductionStage } from "./stage-reducer";
 
@@ -21,7 +22,9 @@ export async function runProductionStage<
   TOutput extends HashBoundArtifact,
 >(input: {
   record: ProductionStageRecord;
-  stageInput: TInput;
+  stageInput: unknown;
+  inputCodec: ArtifactCodec<TInput>;
+  outputCodec: ArtifactCodec<TOutput>;
   execute: (stageInput: TInput) => Promise<TOutput> | TOutput;
   artifactStore: ArtifactByHashStore;
   clock: StageClock;
@@ -31,12 +34,23 @@ export async function runProductionStage<
     at: input.clock.now(),
   });
   try {
-    const output = await input.execute(input.stageInput);
+    const stageInput = input.inputCodec.parse(input.stageInput);
+    const verifiedInputHash = input.inputCodec.contentHash(stageInput);
+    if (verifiedInputHash !== record.inputContentHash)
+      throw new Error(
+        `Stage input hash mismatch: expected ${record.inputContentHash}, received ${verifiedInputHash}.`,
+      );
+    const output = input.outputCodec.parse(await input.execute(stageInput));
+    const verifiedOutputHash = input.outputCodec.contentHash(output);
+    if (verifiedOutputHash !== output.contentHash)
+      throw new Error(
+        `Stage output hash mismatch: declared ${output.contentHash}, computed ${verifiedOutputHash}.`,
+      );
     await input.artifactStore.put(output);
     record = reduceProductionStage(record, {
       type: "completed",
       at: input.clock.now(),
-      outputContentHash: output.contentHash,
+      outputContentHash: verifiedOutputHash,
     });
     return { ok: true, record, output };
   } catch (error) {

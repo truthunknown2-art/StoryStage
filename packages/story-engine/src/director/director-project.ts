@@ -4,6 +4,7 @@ import { hashSchema, identifierSchema } from "../model";
 import { capabilityReportSchema } from "./capability-report";
 import { directorPlanSchema } from "./director-plan";
 import { executableEpisodePlanSchema } from "./executable-episode-plan";
+import { directorProposalSchema } from "./director-proposal";
 import { directorQualityReportSchema } from "./quality-report";
 import { sceneWorldPlanSchema } from "./scene-world";
 import { timingSolutionSchema } from "./timing-solution";
@@ -12,6 +13,7 @@ const directorProjectFields = {
   schemaVersion: z.literal("1.0"),
   id: identifierSchema,
   storyProjectContentHash: hashSchema,
+  planningArtifact: directorProposalSchema,
   sceneWorlds: z.array(sceneWorldPlanSchema).min(1),
   directorPlan: directorPlanSchema,
   timingSolution: timingSolutionSchema,
@@ -47,6 +49,20 @@ export const directorProjectSchema = z
         code: "custom",
         path: ["directorPlan"],
         message: "Director plan is not bound to a story graph.",
+      });
+    if (
+      project.planningArtifact.storyGraphContentHash !==
+        project.directorPlan.storyGraphContentHash ||
+      project.planningArtifact.plannerId !==
+        project.directorPlan.planningAuthority.plannerId ||
+      project.planningArtifact.plannerVersion !==
+        project.directorPlan.planningAuthority.plannerVersion
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["planningArtifact"],
+        message:
+          "Director project planning artifact does not match the compiled plan authority.",
       });
     if (
       project.timingSolution.directorPlanContentHash !==

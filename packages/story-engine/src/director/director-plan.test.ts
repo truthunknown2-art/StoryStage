@@ -69,6 +69,7 @@ const createDraft = () => ({
       audienceTakeaway: "Mara sees something unexpected.",
       emotionalTurn: { from: "curious", to: "surprised" },
       reactionDelayFrames: 0,
+      eventTimingAdjustments: [],
       muteReadable: true,
       eventIds: ["notice-moth", "mara-reacts"],
       performanceRequirements: [

@@ -1,22 +1,61 @@
-import type {
-  Cv002BeatDirection,
-  Cv002Grammar,
-  Cv002Project,
+import { z } from "zod";
+import { hashCanonical } from "../canonical-hash";
+import {
+  cv002BeatDirectionSchema,
+  cv002GrammarSchema,
+  type Cv002Project,
 } from "../cv002-story-draft";
+import { hashSchema, identifierSchema } from "../model";
 
-/** AI-judgment boundary. A future GPT/Codex skill emits this contract; the
- * deterministic compiler remains responsible for validating and sealing it. */
-export type DirectorProposal = {
-  schemaVersion: "1.0";
-  plannerId: string;
-  plannerVersion: string;
-  storyGraphContentHash: string;
-  grammar: Cv002Grammar;
-  beatDirections: Cv002BeatDirection[];
-  beatTimingAdjustments: Array<{
-    beatId: string;
-    reactionDelayFrames: number;
-  }>;
+export const directorEventTimingAdjustmentSchema = z
+  .object({
+    beatId: identifierSchema,
+    eventId: identifierSchema,
+    sourceShotId: identifierSchema,
+    frames: z.number().int().min(1).max(30),
+  })
+  .strict();
+
+const directorProposalFields = {
+  schemaVersion: z.literal("1.0"),
+  plannerId: identifierSchema,
+  plannerVersion: z.string().trim().min(1),
+  storyGraphContentHash: hashSchema,
+  grammar: cv002GrammarSchema,
+  beatDirections: z.array(cv002BeatDirectionSchema).min(1),
+  eventTimingAdjustments: z.array(directorEventTimingAdjustmentSchema),
+};
+
+/** AI-judgment boundary. A future GPT/Codex skill emits this draft contract;
+ * the deterministic compiler validates and seals the exact planning artifact. */
+export const directorProposalDraftSchema = z
+  .object(directorProposalFields)
+  .strict();
+
+export const directorProposalSchema = z
+  .object({ ...directorProposalFields, contentHash: hashSchema })
+  .strict()
+  .superRefine((proposal, context) => {
+    const { contentHash, ...draft } = proposal;
+    if (hashCanonical(draft) !== contentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["contentHash"],
+        message: "Director planning artifact hash is invalid.",
+      });
+  });
+
+export type DirectorProposalDraft = z.infer<typeof directorProposalDraftSchema>;
+export type DirectorProposal = z.infer<typeof directorProposalSchema>;
+
+export const sealDirectorProposal = (
+  raw: DirectorProposalDraft,
+): DirectorProposal => {
+  const draft = directorProposalDraftSchema.parse(raw);
+  return directorProposalSchema.parse({
+    ...draft,
+    contentHash: hashCanonical(draft),
+  });
 };
 
 export type DirectorPlanningContext = {
@@ -24,11 +63,11 @@ export type DirectorPlanningContext = {
 };
 
 export interface DirectorPlanner {
-  propose(input: DirectorPlanningContext): DirectorProposal;
+  propose(input: DirectorPlanningContext): DirectorProposalDraft;
 }
 
 export class Cv002AlphaDirectorPlanner implements DirectorPlanner {
-  propose({ storyProject }: DirectorPlanningContext): DirectorProposal {
+  propose({ storyProject }: DirectorPlanningContext): DirectorProposalDraft {
     return {
       schemaVersion: "1.0",
       plannerId: "cv002-alpha-director",
@@ -36,7 +75,7 @@ export class Cv002AlphaDirectorPlanner implements DirectorPlanner {
       storyGraphContentHash: storyProject.graph.contentHash,
       grammar: storyProject.grammar,
       beatDirections: storyProject.directionDraft.directions,
-      beatTimingAdjustments: [],
+      eventTimingAdjustments: [],
     };
   }
 }

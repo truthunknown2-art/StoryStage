@@ -36,7 +36,7 @@ At the fountain, Nia pours one drop of water onto the seed. Golden roots race th
 
 const historyScript = `In 1814, London beer drinkers received a reminder that even a brewery can become a natural disaster. A giant vat at the Horse Shoe Brewery failed, and its collapsing hoops struck nearby tanks. The result was not a polite spill but a dark wave of porter rushing into the streets.
 
-Newspapers described broken walls, flooded cellars, and families trapped in crowded rooms. The brewery stood in a poor neighborhood where homes were packed below street level, so the liquid had nowhere safe to go. Eight people died, and the absurd headline hid a very real urban tragedy.
+Londoners gasped at reports of broken walls, flooded cellars, and families trapped in crowded rooms. The brewery stood in a poor neighborhood where homes were packed below street level, so the liquid had nowhere safe to go. Eight people died, and the absurd headline hid a very real urban tragedy.
 
 The strangest aftermath came in court. The flood was ruled an act of God, which meant the brewery avoided legal responsibility. Londoners were left with a disaster caused by industrial equipment but explained as bad luck, a conclusion almost as unbelievable as a tidal wave made of beer.`;
 
@@ -100,9 +100,18 @@ async function renderFixture(serveUrl: string, fixture: Fixture) {
         (range) => range.shotId === shot.id,
       )!,
   );
+  const patchBeat = first.directorPlan.beats.find((beat) =>
+    first.directorPlan.events.some(
+      (event) => event.beatId === beat.beatId && event.kind === "reaction",
+    ),
+  );
+  if (!patchBeat)
+    throw new Error(
+      `${fixture.slug} has no event-bound reaction patch target.`,
+    );
   const patch = proposeDirectorPatch({
     baseDirectorProject: first,
-    targetBeatId: multiBeat.beatId,
+    targetBeatId: patchBeat.beatId,
     command: "Make the reaction 6 frames later",
   });
   const patched = applyDirectorPatch({
@@ -123,7 +132,7 @@ async function renderFixture(serveUrl: string, fixture: Fixture) {
     ...(first.executableEpisodePlan.proxyEntityPrograms ?? []),
     ...(first.executableEpisodePlan.proxyCaptionPrograms ?? []),
     ...(first.executableEpisodePlan.proxyTransitionPrograms ?? []),
-  ].filter((program) => !program.sourceBeatIds.includes(multiBeat.beatId));
+  ].filter((program) => !program.sourceBeatIds.includes(patchBeat.beatId));
   const patchedPrograms = new Map(
     [
       ...(patched.executableEpisodePlan.proxyStagePrograms ?? []),
@@ -151,7 +160,7 @@ async function renderFixture(serveUrl: string, fixture: Fixture) {
     inputProps: patchedInputProps,
   });
   const patchedRange = patched.timingSolution.resolvedShots.find(
-    (range) => range.shotId === multiShots[0]!.id,
+    (range) => range.shotId === patch.operations[0]!.sourceShotId,
   )!;
   const patchedStill = resolve(fixtureRoot, "patched-beat-start.png");
   const patchedRepeatStill = resolve(

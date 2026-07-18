@@ -15,6 +15,7 @@ export * from "./director/director-compiler";
 export * from "./director/director-patch";
 export * from "./director/apply-director-patch";
 export * from "./director/director-history";
+export * from "./director/director-workspace";
 export * from "./director/capability-report";
 export * from "./director/event-constraint-solver";
 export * from "./director/executable-episode-plan";

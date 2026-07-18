@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { hashCanonical } from "../canonical-hash";
 import { hashSchema, identifierSchema } from "../model";
+import { directorEventTimingAdjustmentSchema } from "./director-proposal";
 import { directorWorldStateSchema } from "./world-state";
 
 const causalEventSchema = z
@@ -63,6 +64,7 @@ const beatPlanSchema = z
       .object({ from: z.string().min(1), to: z.string().min(1) })
       .strict(),
     reactionDelayFrames: z.number().int().min(0).max(30),
+    eventTimingAdjustments: z.array(directorEventTimingAdjustmentSchema),
     muteReadable: z.boolean(),
     eventIds: z.array(identifierSchema).min(1),
     performanceRequirements: z.array(performanceRequirementSchema),
@@ -274,6 +276,7 @@ function validateDirectorPlan(
   const events = new Map(plan.events.map((event) => [event.id, event]));
   const beats = new Set(plan.beats.map((beat) => beat.beatId));
   const shots = new Set(plan.shots.map((shot) => shot.id));
+  const shotsById = new Map(plan.shots.map((shot) => [shot.id, shot]));
   const scenes = new Set(plan.scenes.map((scene) => scene.sceneId));
 
   plan.events.forEach((event, eventIndex) =>
@@ -332,6 +335,42 @@ function validateDirectorPlan(
             message: `${requirement.id} references unknown event ${eventId}.`,
           });
       });
+    });
+    const totalDelay = beat.eventTimingAdjustments.reduce(
+      (total, adjustment) => total + adjustment.frames,
+      0,
+    );
+    if (totalDelay !== beat.reactionDelayFrames)
+      context.addIssue({
+        code: "custom",
+        path: ["beats", beatIndex, "reactionDelayFrames"],
+        message: `${beat.beatId} reaction delay does not match its event-bound adjustments.`,
+      });
+    beat.eventTimingAdjustments.forEach((adjustment, adjustmentIndex) => {
+      const event = events.get(adjustment.eventId);
+      const shot = shotsById.get(adjustment.sourceShotId);
+      if (!event || event.beatId !== beat.beatId || event.kind !== "reaction")
+        context.addIssue({
+          code: "custom",
+          path: ["beats", beatIndex, "eventTimingAdjustments", adjustmentIndex],
+          message: `${adjustment.eventId} is not a reaction event for ${beat.beatId}.`,
+        });
+      if (
+        !shot ||
+        !shot.beatIds.includes(beat.beatId) ||
+        ![
+          shot.entryEventId,
+          shot.exitEventId,
+          shot.timingEnvelope.earliestCutEventId,
+          shot.timingEnvelope.preferredCutEventId,
+          shot.timingEnvelope.latestCutEventId,
+        ].includes(adjustment.eventId)
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["beats", beatIndex, "eventTimingAdjustments", adjustmentIndex],
+          message: `${adjustment.sourceShotId} is not the source shot for ${adjustment.eventId}.`,
+        });
     });
   });
 

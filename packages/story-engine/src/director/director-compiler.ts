@@ -24,6 +24,7 @@ import {
 } from "./director-project";
 import {
   Cv002AlphaDirectorPlanner,
+  sealDirectorProposal,
   type DirectorPlanner,
   type DirectorProposal,
 } from "./director-proposal";
@@ -262,21 +263,17 @@ function assertProposal(project: Cv002Project, proposal: DirectorProposal) {
     throw new Error(
       "Director proposal must cover every story beat exactly once in source order.",
     );
-  const adjustmentIds = proposal.beatTimingAdjustments.map(
-    (adjustment) => adjustment.beatId,
+  const adjustmentIds = proposal.eventTimingAdjustments.map(
+    (adjustment) => `${adjustment.eventId}:${adjustment.sourceShotId}`,
   );
   if (
     new Set(adjustmentIds).size !== adjustmentIds.length ||
-    proposal.beatTimingAdjustments.some(
-      (adjustment) =>
-        !beatIds.includes(adjustment.beatId) ||
-        !Number.isInteger(adjustment.reactionDelayFrames) ||
-        adjustment.reactionDelayFrames < 0 ||
-        adjustment.reactionDelayFrames > 30,
+    proposal.eventTimingAdjustments.some(
+      (adjustment) => !beatIds.includes(adjustment.beatId),
     )
   )
     throw new Error(
-      "Director proposal timing adjustments must target unique known beats with a 0 to 30 frame reaction delay.",
+      "Director proposal timing adjustments must target unique events on known beats.",
     );
 }
 
@@ -431,10 +428,14 @@ function buildDirectorPlan(
   const directionByBeat = new Map(
     proposal.beatDirections.map((direction) => [direction.beatId, direction]),
   );
-  const timingAdjustmentByBeat = new Map(
-    proposal.beatTimingAdjustments.map((adjustment) => [
-      adjustment.beatId,
-      adjustment.reactionDelayFrames,
+  const timingAdjustmentsByBeat = new Map<
+    string,
+    typeof proposal.eventTimingAdjustments
+  >();
+  proposal.eventTimingAdjustments.forEach((adjustment) =>
+    timingAdjustmentsByBeat.set(adjustment.beatId, [
+      ...(timingAdjustmentsByBeat.get(adjustment.beatId) ?? []),
+      adjustment,
     ]),
   );
   const isKids = project.grammar === "kids-adventure";
@@ -456,7 +457,6 @@ function buildDirectorPlan(
         (candidate) => candidate.id === beat.id,
       );
       const direction = directionByBeat.get(beat.id)!;
-      const reactionDelayFrames = timingAdjustmentByBeat.get(beat.id) ?? 0;
       const startEventId = `beat-${globalIndex + 1}-start`;
       const pivotEventId = `beat-${globalIndex + 1}-pivot`;
       const resolveEventId = `beat-${globalIndex + 1}-resolve`;
@@ -473,6 +473,29 @@ function buildDirectorPlan(
           : "lead"
         : "evidence";
       const multiShot = beat.id === multiShotBeatId;
+      const shotCount = multiShot ? 2 : 1;
+      const reactionEventId =
+        (multiShot && isKids) || beat.role === "reaction"
+          ? resolveEventId
+          : null;
+      const reactionSourceShotId = `shot-${globalIndex + 1}-${
+        multiShot ? "response" : "main"
+      }`;
+      const eventTimingAdjustments = timingAdjustmentsByBeat.get(beat.id) ?? [];
+      if (
+        eventTimingAdjustments.some(
+          (adjustment) =>
+            adjustment.eventId !== reactionEventId ||
+            adjustment.sourceShotId !== reactionSourceShotId,
+        )
+      )
+        throw new Error(
+          `${beat.id} timing adjustment is not bound to its unique reaction event and source shot.`,
+        );
+      const reactionDelayFrames = eventTimingAdjustments.reduce(
+        (total, adjustment) => total + adjustment.frames,
+        0,
+      );
       events.push({
         id: startEventId,
         sceneId: scene.id,
@@ -556,6 +579,7 @@ function buildDirectorPlan(
           to: beat.role === "reaction" ? "response" : humanize(beat.role),
         },
         reactionDelayFrames,
+        eventTimingAdjustments,
         muteReadable: isKids,
         eventIds,
         performanceRequirements,
@@ -589,7 +613,6 @@ function buildDirectorPlan(
           : globalIndex % 3 === 1
             ? ("right-third" as const)
             : ("center" as const);
-      const shotCount = multiShot ? 2 : 1;
       Array.from({ length: shotCount }, (_, shotIndex) => {
         const suffix =
           shotCount === 1 ? "main" : shotIndex === 0 ? "primary" : "response";
@@ -608,11 +631,12 @@ function buildDirectorPlan(
         const entryEventId = secondary ? pivotEventId : startEventId;
         const exitEventId =
           secondary || !multiShot ? resolveEventId : pivotEventId;
+        const eventDelayFrames = eventTimingAdjustments
+          .filter((adjustment) => adjustment.sourceShotId === shotId)
+          .reduce((total, adjustment) => total + adjustment.frames, 0);
         const duration =
           shotDurationFor(project, beat, shotCount, shotIndex) +
-          (reactionDelayFrames > 0 && (secondary || shotIndex === shotCount - 1)
-            ? reactionDelayFrames
-            : 0);
+          eventDelayFrames;
         shotIds.push(shotId);
         shots.push({
           id: shotId,
@@ -782,6 +806,7 @@ function solveTiming(
 
 function buildExecutable(
   project: Cv002Project,
+  proposal: DirectorProposal,
   worlds: SceneWorldPlan[],
   plan: ReturnType<typeof buildDirectorPlan>,
   timing: ReturnType<typeof solveTiming>,
@@ -790,10 +815,7 @@ function buildExecutable(
   const beats = project.graph.scenes.flatMap((scene) => scene.beats);
   const beatById = new Map(beats.map((beat) => [beat.id, beat]));
   const directionByBeat = new Map(
-    project.directionDraft.directions.map((direction) => [
-      direction.beatId,
-      direction,
-    ]),
+    proposal.beatDirections.map((direction) => [direction.beatId, direction]),
   );
   const programsByBeat = new Map(
     plan.beats.map((beat) => [
@@ -968,6 +990,15 @@ function buildExecutable(
         ];
     return entitySpecs.map((entity, entityIndex) => {
       const isActive = entity.id === active;
+      const eventDelayFrames = beatPlan.eventTimingAdjustments
+        .filter(
+          (adjustment) =>
+            adjustment.sourceShotId === shot.id &&
+            plan.events
+              .find((event) => event.id === adjustment.eventId)
+              ?.subjectIds.includes(entity.id),
+        )
+        .reduce((total, adjustment) => total + adjustment.frames, 0);
       const actionTravel =
         beat.role === "action" && isActive
           ? entityIndex === 0
@@ -975,7 +1006,11 @@ function buildExecutable(
             : -0.08
           : 0;
       const reactionLift =
-        beat.role === "reaction" && isActive ? -0.055 : isActive ? -0.02 : 0;
+        (beat.role === "reaction" || eventDelayFrames > 0) && isActive
+          ? -0.055
+          : isActive
+            ? -0.02
+            : 0;
       return sealExecutableProgram({
         id: `proxy-entity-${shot.id}-${entity.id}`,
         sourceSceneIds: [shot.sceneId],
@@ -1006,11 +1041,7 @@ function buildExecutable(
           {
             frame: Math.min(
               duration - 2,
-              Math.max(
-                1,
-                Math.round(duration * 0.46) +
-                  (isActive ? beatPlan.reactionDelayFrames : 0),
-              ),
+              Math.max(1, Math.round(duration * 0.46) + eventDelayFrames),
             ),
             transform: {
               x: entity.baseX + actionTravel * 0.6,
@@ -1021,7 +1052,7 @@ function buildExecutable(
             },
             facing: entityIndex === 0 ? ("right" as const) : ("left" as const),
             actionPhase:
-              beat.role === "reaction" || beatPlan.reactionDelayFrames > 0
+              beat.role === "reaction" || eventDelayFrames > 0
                 ? ("reaction" as const)
                 : ("action" as const),
           },
@@ -1129,7 +1160,7 @@ export function compileDirectorProject(
     );
   const planner = input.planner ?? new Cv002AlphaDirectorPlanner();
   const proposal = compileStep("planner-output-invalid", () => {
-    const result = planner.propose({ storyProject });
+    const result = sealDirectorProposal(planner.propose({ storyProject }));
     assertProposal(storyProject, result);
     return result;
   });
@@ -1152,6 +1183,7 @@ export function compileDirectorProject(
   const executableEpisodePlan = compileStep("executable-plan-invalid", () =>
     buildExecutable(
       storyProject,
+      proposal,
       worlds,
       directorPlan,
       timingSolution,
@@ -1173,6 +1205,7 @@ export function compileDirectorProject(
     schemaVersion: "1.0" as const,
     id: `director-project-${storyProject.graph.contentHash.slice(0, 12)}`,
     storyProjectContentHash: storyProject.contentHash,
+    planningArtifact: proposal,
     sceneWorlds: worlds,
     directorPlan,
     timingSolution,

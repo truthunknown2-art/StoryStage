@@ -6,40 +6,31 @@ import {
   type DirectorProject,
 } from "./director-project";
 import {
-  Cv002AlphaDirectorPlanner,
+  sealDirectorProposal,
   type DirectorPlanner,
+  type DirectorProposal,
+  type DirectorProposalDraft,
 } from "./director-proposal";
 
-class DirectorPatchPlanner implements DirectorPlanner {
-  constructor(
-    private readonly base: DirectorProject,
-    private readonly patch: DirectorPatch,
-  ) {}
+class FixedDirectorProposalPlanner implements DirectorPlanner {
+  constructor(private readonly artifact: DirectorProposal) {}
 
-  propose({ storyProject }: Parameters<DirectorPlanner["propose"]>[0]) {
-    const proposal = new Cv002AlphaDirectorPlanner().propose({ storyProject });
-    const delays = new Map(
-      this.base.directorPlan.beats
-        .filter((beat) => beat.reactionDelayFrames > 0)
-        .map((beat) => [beat.beatId, beat.reactionDelayFrames]),
-    );
-    this.patch.operations.forEach((operation) => {
-      if (operation.kind === "delay-reaction")
-        delays.set(
-          operation.beatId,
-          (delays.get(operation.beatId) ?? 0) + operation.frames,
-        );
-    });
-    return {
-      ...proposal,
-      plannerId: "director-patch-applier",
-      plannerVersion: "1.0",
-      beatTimingAdjustments: [...delays.entries()].map(
-        ([beatId, reactionDelayFrames]) => ({ beatId, reactionDelayFrames }),
-      ),
-    };
+  propose(): DirectorProposalDraft {
+    return proposalDraftFrom(this.artifact);
   }
 }
+
+const proposalDraftFrom = (
+  artifact: DirectorProposal,
+): DirectorProposalDraft => ({
+  schemaVersion: artifact.schemaVersion,
+  plannerId: artifact.plannerId,
+  plannerVersion: artifact.plannerVersion,
+  storyGraphContentHash: artifact.storyGraphContentHash,
+  grammar: artifact.grammar,
+  beatDirections: structuredClone(artifact.beatDirections),
+  eventTimingAdjustments: structuredClone(artifact.eventTimingAdjustments),
+});
 
 export function applyDirectorPatch(input: {
   storyProject: Cv002Project;
@@ -55,22 +46,71 @@ export function applyDirectorPatch(input: {
     throw new Error(
       "Director patch story source does not match its first cut.",
     );
-  const currentDelay =
-    base.directorPlan.beats.find((beat) => beat.beatId === patch.targetBeatId)
-      ?.reactionDelayFrames ?? 0;
-  const addedDelay = patch.operations.reduce(
-    (total, operation) => total + operation.frames,
-    0,
-  );
-  if (currentDelay + addedDelay > 30)
-    throw new Error("Accumulated reaction delay cannot exceed 30 frames.");
 
-  return compileDirectorProject({
+  const adjustments = base.planningArtifact.eventTimingAdjustments.map(
+    (adjustment) => ({ ...adjustment }),
+  );
+  patch.operations.forEach((operation) => {
+    const event = base.directorPlan.events.find(
+      (candidate) => candidate.id === operation.eventId,
+    );
+    const shot = base.directorPlan.shots.find(
+      (candidate) => candidate.id === operation.sourceShotId,
+    );
+    if (
+      operation.kind !== "delay-event" ||
+      !event ||
+      event.kind !== "reaction" ||
+      event.beatId !== operation.beatId ||
+      !shot ||
+      !shot.beatIds.includes(operation.beatId) ||
+      ![
+        shot.entryEventId,
+        shot.exitEventId,
+        shot.timingEnvelope.earliestCutEventId,
+        shot.timingEnvelope.preferredCutEventId,
+        shot.timingEnvelope.latestCutEventId,
+      ].includes(operation.eventId)
+    )
+      throw new Error(
+        "Director patch reaction event is stale or does not match its source shot.",
+      );
+    const existingIndex = adjustments.findIndex(
+      (adjustment) =>
+        adjustment.eventId === operation.eventId &&
+        adjustment.sourceShotId === operation.sourceShotId,
+    );
+    const accumulatedFrames =
+      (existingIndex >= 0 ? adjustments[existingIndex]!.frames : 0) +
+      operation.frames;
+    if (accumulatedFrames > 30)
+      throw new Error("Accumulated reaction delay cannot exceed 30 frames.");
+    const nextAdjustment = {
+      beatId: operation.beatId,
+      eventId: operation.eventId,
+      sourceShotId: operation.sourceShotId,
+      frames: accumulatedFrames,
+    };
+    if (existingIndex >= 0) adjustments[existingIndex] = nextAdjustment;
+    else adjustments.push(nextAdjustment);
+  });
+
+  const baseProposalDraft = proposalDraftFrom(base.planningArtifact);
+  const planningArtifact = sealDirectorProposal({
+    ...baseProposalDraft,
+    eventTimingAdjustments: adjustments,
+  });
+  const next = compileDirectorProject({
     storyProject,
-    planner: new DirectorPatchPlanner(base, patch),
+    planner: new FixedDirectorProposalPlanner(planningArtifact),
     revision: {
       baseDirectorProjectContentHash: base.contentHash,
       directorPatchContentHash: patch.contentHash,
     },
   });
+  if (next.planningArtifact.contentHash !== planningArtifact.contentHash)
+    throw new Error(
+      "Director patch compile did not preserve its exact planning artifact.",
+    );
+  return next;
 }

@@ -11,11 +11,17 @@ export type {
   DirectorOutputFormat,
   DirectorTimingBasis,
 } from "./director-compiler";
-export { Cv002AlphaDirectorPlanner } from "./director-proposal";
+export {
+  Cv002AlphaDirectorPlanner,
+  directorProposalDraftSchema,
+  directorProposalSchema,
+  sealDirectorProposal,
+} from "./director-proposal";
 export type {
   DirectorPlanner,
   DirectorPlanningContext,
   DirectorProposal,
+  DirectorProposalDraft,
 } from "./director-proposal";
 export { directorProjectSchema } from "./director-project";
 export type {
@@ -40,6 +46,21 @@ export {
   undoDirectorHistory,
 } from "./director-history";
 export type { DirectorHistory, DirectorHistoryEntry } from "./director-history";
+export {
+  canRedoDirectorWorkspace,
+  canUndoDirectorWorkspace,
+  createDirectorWorkspaceState,
+  currentDirectorWorkspaceProject,
+  DIRECTOR_WORKSPACE_STORAGE_KEY,
+  directorWorkspaceStateSchema,
+  recordDirectorWorkspaceRevision,
+  redoDirectorWorkspace,
+  restoreDirectorWorkspaceState,
+  selectDirectorWorkspaceBeat,
+  serializeDirectorWorkspaceState,
+  undoDirectorWorkspace,
+} from "./director-workspace";
+export type { DirectorWorkspaceState } from "./director-workspace";
 export {
   alphaCapabilityRegistry,
   capabilityReportSchema,

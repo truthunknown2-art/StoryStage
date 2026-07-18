@@ -1,4 +1,11 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
+import { act } from "react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -8,6 +15,10 @@ import { App } from "./App";
 
 const playerHarness = vi.hoisted(() => ({
   lastProps: null as Record<string, unknown> | null,
+  lastSeek: null as number | null,
+  frameListener: null as
+    | ((event: { detail: { frame: number } }) => void)
+    | null,
 }));
 
 vi.mock("@remotion/player", async () => {
@@ -15,8 +26,32 @@ vi.mock("@remotion/player", async () => {
   return {
     Player: React.forwardRef(function MockPlayer(
       props: Record<string, unknown>,
+      ref,
     ) {
       playerHarness.lastProps = props;
+      React.useImperativeHandle(ref, () => ({
+        addEventListener: (
+          name: string,
+          listener: typeof playerHarness.frameListener,
+        ) => {
+          if (name === "frameupdate") playerHarness.frameListener = listener;
+        },
+        removeEventListener: (
+          name: string,
+          listener: typeof playerHarness.frameListener,
+        ) => {
+          if (
+            name === "frameupdate" &&
+            playerHarness.frameListener === listener
+          )
+            playerHarness.frameListener = null;
+        },
+        seekTo: (frame: number) => {
+          playerHarness.lastSeek = frame;
+        },
+        play: vi.fn(),
+        pause: vi.fn(),
+      }));
       return <div aria-label="Remotion animation" role="img" />;
     }),
   };
@@ -25,6 +60,8 @@ vi.mock("@remotion/player", async () => {
 afterEach(() => {
   cleanup();
   playerHarness.lastProps = null;
+  playerHarness.lastSeek = null;
+  playerHarness.frameListener = null;
   window.localStorage.clear();
   delete window.storyStage;
 });
@@ -58,9 +95,7 @@ async function assignKidsTemplate(user: ReturnType<typeof userEvent.setup>) {
   await user.click(
     screen.getByRole("button", { name: /Review direction draft/ }),
   );
-  await user.click(
-    screen.getByText(/Advanced.*legacy animation capability prototype/),
-  );
+  await openAdvancedProductionDetails(user);
   const scene = screen.getByLabelText("Three-beat scene") as HTMLSelectElement;
   await user.selectOptions(scene, scene.options[1]!.value);
   const notice = screen.getByLabelText(
@@ -84,6 +119,13 @@ async function assignKidsTemplate(user: ReturnType<typeof userEvent.setup>) {
   await user.click(
     screen.getByRole("button", { name: "Verify and assign template" }),
   );
+}
+
+async function openAdvancedProductionDetails(
+  user: ReturnType<typeof userEvent.setup>,
+) {
+  await user.click(screen.getByText("Advanced production details"));
+  await user.click(screen.getByText("Animation capability prototype"));
 }
 
 describe("CV-002 editable script breakdown", () => {
@@ -134,23 +176,22 @@ describe("CV-002 editable script breakdown", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Split beat");
   });
 
-  it("shows the Weird History direction grammar and mounts the canonical directed animatic", async () => {
+  it("shows the creator-first Weird History studio and mounts the canonical directed animatic", async () => {
     const user = await openHistoryBreakdown();
     await user.click(
       screen.getByRole("button", { name: /Review direction draft/ }),
     );
-    await user.click(
-      screen.getByText(/Advanced.*legacy animation capability prototype/),
-    );
+    await openAdvancedProductionDetails(user);
 
     expect(
-      screen.getByRole("heading", {
-        name: "Evidence first, hard cuts, and a faster editorial pulse.",
-      }),
+      screen.getByRole("heading", { name: "The Alaska Bargain" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Directed proxy animatic ready. Final animation capabilities are not fully assigned.",
+      "Draft animatic ready",
     );
+    expect(screen.getByLabelText("Studio scenes and beats")).toBeVisible();
+    expect(screen.getByLabelText("Director controls")).toBeVisible();
+    expect(screen.getByLabelText("Compact beat strip")).toBeVisible();
     expect(screen.getAllByText("Visual treatment").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Camera").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Sound effect").length).toBeGreaterThan(0);
@@ -173,16 +214,16 @@ describe("CV-002 editable script breakdown", () => {
     );
   });
 
-  it("previews a structured beat patch and restores exact animatic hashes with undo and redo", async () => {
-    const user = await openHistoryBreakdown();
+  it("previews a structured beat patch and restores exact workspace history after reload", async () => {
+    const user = await openKidsBreakdown();
     await user.click(
       screen.getByRole("button", { name: /Review direction draft/ }),
     );
     const animatic = screen.getByLabelText("Directed animatic draft");
     const originalHash = animatic.getAttribute("data-episode-hash");
-    const targetBeat = screen.getByRole("button", {
-      name: /1\.3 punchline/i,
-    });
+    const targetBeat = within(
+      screen.getByLabelText("Studio scenes and beats"),
+    ).getByRole("button", { name: /3\.1 reaction/i });
 
     await user.click(targetBeat);
     expect(targetBeat).toHaveAttribute("aria-pressed", "true");
@@ -211,8 +252,59 @@ describe("CV-002 editable script breakdown", () => {
 
     await user.click(screen.getByRole("button", { name: "Undo direction" }));
     expect(animatic).toHaveAttribute("data-episode-hash", originalHash);
-    await user.click(screen.getByRole("button", { name: "Redo" }));
+    await user.click(screen.getByRole("button", { name: "Redo direction" }));
     expect(animatic).toHaveAttribute("data-episode-hash", editedHash);
+
+    cleanup();
+    render(<App />);
+    await user.click(
+      screen.getByRole("button", {
+        name: /Continue direction draftThe Blue Lantern Trail/,
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: /Direction draft/ }));
+
+    expect(screen.getByLabelText("Directed animatic draft")).toHaveAttribute(
+      "data-episode-hash",
+      editedHash,
+    );
+    expect(
+      within(screen.getByLabelText("Studio scenes and beats")).getByRole(
+        "button",
+        { name: /3\.1 reaction/i },
+      ),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("button", { name: "Undo direction" }),
+    ).toBeEnabled();
+  });
+
+  it("keeps rail and beat-strip selection synchronized with Player playback", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const rail = screen.getByLabelText("Studio scenes and beats");
+    const strip = screen.getByLabelText("Compact beat strip");
+    const reactionBeat = within(rail).getByRole("button", {
+      name: /3\.1 reaction/i,
+    });
+    await user.click(reactionBeat);
+    const reactionStartFrame = playerHarness.lastSeek;
+    expect(reactionStartFrame).not.toBeNull();
+
+    await user.click(within(rail).getByRole("button", { name: /1\.1 setup/i }));
+    expect(reactionBeat).toHaveAttribute("aria-pressed", "false");
+    act(() => {
+      playerHarness.frameListener?.({
+        detail: { frame: reactionStartFrame! },
+      });
+    });
+
+    expect(reactionBeat).toHaveAttribute("aria-pressed", "true");
+    expect(
+      within(strip).getByRole("button", { name: /Scene 3, beat 1/i }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   it("restores a verified local direction draft without routing into ProductionComposition", async () => {
@@ -257,9 +349,7 @@ describe("CV-002 editable script breakdown", () => {
     await user.click(
       screen.getByRole("button", { name: /Review direction draft/ }),
     );
-    await user.click(
-      screen.getByText(/Advanced.*legacy animation capability prototype/),
-    );
+    await openAdvancedProductionDetails(user);
     const directionAudit = await axe.run(document, {
       runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] },
     });
@@ -362,11 +452,9 @@ describe("CV-002 editable script breakdown", () => {
       "template assignment was invalidated",
     );
     await user.click(screen.getByRole("button", { name: /Direction draft/ }));
-    await user.click(
-      screen.getByText(/Advanced.*legacy animation capability prototype/),
-    );
+    await openAdvancedProductionDetails(user);
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Directed proxy animatic ready. Final animation capabilities are not fully assigned.",
+      "Draft animatic ready",
     );
     expect(
       screen.queryByRole("button", { name: "Preview animated scene" }),
@@ -388,9 +476,7 @@ describe("CV-002 editable script breakdown", () => {
       }),
     );
     await user.click(screen.getByRole("button", { name: /Direction draft/ }));
-    await user.click(
-      screen.getByText(/Advanced.*legacy animation capability prototype/),
-    );
+    await openAdvancedProductionDetails(user);
 
     expect(
       screen.getByRole("heading", {
