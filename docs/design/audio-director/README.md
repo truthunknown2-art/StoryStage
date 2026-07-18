@@ -23,8 +23,10 @@ Generated or recorded audio is never played directly from a provider response. A
 
 ### Music
 
-- Suno's official help currently documents browser-based creation, Studio timeline mixing, WAV/stem export, and selected-range export. It also documents **Suno Sounds**, a beta UI for one-shots, loops, ambience, and Foley. No official public developer API was found in Suno's documentation during this review. Do not build against reverse-engineered or reseller endpoints. [Studio export](https://help.suno.com/en/articles/8128193), [Suno Sounds](https://help.suno.com/en/articles/10625537)
-- Until Suno publishes a supported developer contract, StoryStage should create a directed music brief, open a manual generation task, and ingest the downloaded mix/stems through the normal approval pipeline.
+- **Correction, 2026-07-18:** Suno now operates a first-party developer platform. Its official landing page advertises Suno's music-generation engine behind a REST API for original songs, covers, and mashups. StoryStage should support an official Suno Platform adapter when the owner configures separate API credentials. [Suno Platform](https://platform.suno.com/auth/login?returnTo=%2F)
+- The existing browser workflow remains a useful fallback. Suno's official help documents Studio timeline mixing, WAV/stem export, selected-range export, and **Suno Sounds** for one-shots, loops, ambience, and Foley. [Studio export](https://help.suno.com/en/articles/8128193), [Suno Sounds](https://help.suno.com/en/articles/10625537)
+- Do not use reverse-engineered session endpoints or reseller services now that a first-party route exists. StoryStage must use credentials issued by Suno Platform, never consumer-account cookies or browser tokens.
+- The adapter boundary remains provider-neutral: submit the canonical `AudioBrief`, retain the external job ID and model metadata, download the completed mix/stems, canonicalize them to approved 48 kHz assets, and then use the same local timeline and deterministic mixer as every other acquisition route. Provider output never bypasses import verification or creator approval.
 - Rights evidence belongs on the imported asset. Suno states that songs made while subscribed to Pro or Premier receive commercial-use rights; free-plan generations do not. Record the plan and creation date at import time. [Suno commercial-use guidance](https://help.suno.com/en/articles/9601665)
 
 ### Sound effects
@@ -179,8 +181,8 @@ Keep the default editor simple:
 1. Audio cue schema, source/rights ledger, and deterministic cue compilation.
 2. Local ADR recorder with take lanes and frame-locked playback.
 3. Waveform tracks, per-role buses, music ducking, stems, and loudness/clipping validation.
-4. Manual Suno/Suno Sounds task plus drag/drop and watch-folder import.
-5. Optional provider adapter interface and one official SFX integration.
+4. Official Suno Platform music adapter, with manual Studio/Suno Sounds generation and verified import as a fallback.
+5. One optional official SFX adapter plus drag/drop and watch-folder import.
 6. Optional TTS dialogue adapter only after voice quality, disclosure, cost, and character-consistency review.
 
 ## Showcase acceptance proof
