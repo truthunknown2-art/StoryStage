@@ -3,6 +3,7 @@ import {lstat, mkdir, readFile, realpath, writeFile} from "node:fs/promises";
 import {basename, isAbsolute, join, relative, resolve} from "node:path";
 import sharp from "sharp";
 export * from "./import-evidence-store";
+export * from "./sprite-atlas";
 import {
   candidateBundleSchema,
   candidateSetContactSheetSchema,

@@ -1,4 +1,5 @@
 export * from "./animation-compiler";
+export * from "./audio-director";
 export * from "./asset-preparation";
 export * from "./asset-approval";
 export * from "./asset-review";
@@ -18,6 +19,7 @@ export * from "./cv001-proof-fixture";
 export * from "./cv001-creator-direction";
 export * from "./cv002-story-draft";
 export * from "./cv002-template-assignment";
+export * from "./kids-showcase";
 export * from "./pipeline";
 export * from "./pilots/rook-pilot-001";
 export * from "./production-policy";

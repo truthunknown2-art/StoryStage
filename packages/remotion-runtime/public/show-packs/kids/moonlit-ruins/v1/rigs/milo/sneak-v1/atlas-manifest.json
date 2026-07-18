@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "1.0",
+  "assetId": "milo-sneak-v1",
+  "sourceContentHash": "325a7ef4858e6ece5f47a937a46c6545e21e739f76081e0a9ad6402985fd07f5",
+  "width": 1774,
+  "height": 887,
+  "alphaThreshold": 16,
+  "minGapColumns": 8,
+  "groundY": 320,
+  "frames": [
+    {
+      "index": 0,
+      "source": {
+        "x": 152,
+        "y": 47,
+        "width": 180,
+        "height": 320
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 180,
+        "height": 320
+      },
+      "anchor": {
+        "x": 90.325,
+        "y": 320
+      }
+    },
+    {
+      "index": 1,
+      "source": {
+        "x": 550,
+        "y": 93,
+        "width": 203,
+        "height": 273
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 203,
+        "height": 273
+      },
+      "anchor": {
+        "x": 101.178,
+        "y": 273
+      }
+    },
+    {
+      "index": 2,
+      "source": {
+        "x": 938,
+        "y": 62,
+        "width": 220,
+        "height": 305
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 220,
+        "height": 305
+      },
+      "anchor": {
+        "x": 124.229,
+        "y": 305
+      }
+    },
+    {
+      "index": 3,
+      "source": {
+        "x": 1362,
+        "y": 50,
+        "width": 199,
+        "height": 317
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 199,
+        "height": 317
+      },
+      "anchor": {
+        "x": 102.975,
+        "y": 317
+      }
+    },
+    {
+      "index": 4,
+      "source": {
+        "x": 142,
+        "y": 465,
+        "width": 213,
+        "height": 310
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 213,
+        "height": 310
+      },
+      "anchor": {
+        "x": 114.171,
+        "y": 310
+      }
+    },
+    {
+      "index": 5,
+      "source": {
+        "x": 543,
+        "y": 490,
+        "width": 190,
+        "height": 286
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 190,
+        "height": 286
+      },
+      "anchor": {
+        "x": 88.037,
+        "y": 286
+      }
+    },
+    {
+      "index": 6,
+      "source": {
+        "x": 932,
+        "y": 472,
+        "width": 236,
+        "height": 304
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 236,
+        "height": 304
+      },
+      "anchor": {
+        "x": 134.796,
+        "y": 304
+      }
+    },
+    {
+      "index": 7,
+      "source": {
+        "x": 1380,
+        "y": 472,
+        "width": 197,
+        "height": 306
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 197,
+        "height": 306
+      },
+      "anchor": {
+        "x": 95.293,
+        "y": 306
+      }
+    }
+  ],
+  "checks": {
+    "expectedFrameCount": true,
+    "transparentSeparation": true,
+    "noClippedPixels": true,
+    "stableAnchors": true
+  }
+}

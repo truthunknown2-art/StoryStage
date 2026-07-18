@@ -1,0 +1,895 @@
+{
+  "schemaVersion": "1.0",
+  "status": "PASS",
+  "productionCompositionId": "StoryStageProduction",
+  "sourceScriptHash": "5c484943e2b7949c653072b7995f22f6826e569d56555de5d24f585132e63ca8",
+  "programContentHash": "80327ec1457e952eef1029fbf3e1fb04d947b9456731e6297bab05151daab020",
+  "scenes": 3,
+  "beats": 6,
+  "shots": 11,
+  "templateId": "kids-moonlit-ruins-v1",
+  "rigAssets": [
+    "mara-cutout-rig-v1",
+    "milo-cutout-rig-v1",
+    "moss-creature-rig-v1"
+  ],
+  "audioCueCount": 18,
+  "pass1": {
+    "codec": "h264",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "frameCount": 900,
+    "audioCodec": "aac",
+    "audioChannels": 2,
+    "byteLength": 54058031
+  },
+  "pass2": {
+    "codec": "h264",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "frameCount": 900,
+    "audioCodec": "aac",
+    "audioChannels": 2,
+    "byteLength": 54054259
+  },
+  "stills": [
+    {
+      "frame": 24,
+      "relativeFile": "frame-024.png",
+      "contentHash": "e767f489e13b603740bd9419992f98624b4345cacc8824d3158f5007e8fbfccb",
+      "repeatHash": "e767f489e13b603740bd9419992f98624b4345cacc8824d3158f5007e8fbfccb",
+      "shotId": "shot-run-to-the-ruin",
+      "beatId": "beat-follow-the-moth",
+      "motionChannels": [
+        "mara-root-and-run-rig",
+        "milo-offset-run-rig",
+        "moth-flight",
+        "camera-pan",
+        "forest-parallax",
+        "foreground-plant-occlusion"
+      ]
+    },
+    {
+      "frame": 51,
+      "relativeFile": "frame-051.png",
+      "contentHash": "0a38f32239ff15e81112f2b54db2d78c87da1da628571b0fcd9c5c873cb62171",
+      "repeatHash": "0a38f32239ff15e81112f2b54db2d78c87da1da628571b0fcd9c5c873cb62171",
+      "shotId": "shot-run-to-the-ruin",
+      "beatId": "beat-follow-the-moth",
+      "motionChannels": [
+        "mara-root-and-run-rig",
+        "milo-offset-run-rig",
+        "moth-flight",
+        "camera-pan",
+        "forest-parallax",
+        "foreground-plant-occlusion"
+      ]
+    },
+    {
+      "frame": 69,
+      "relativeFile": "frame-069.png",
+      "contentHash": "49decff83688b5cae450be47ead3a674b6ea59de60c3554463a9ba277f2f53c4",
+      "repeatHash": "49decff83688b5cae450be47ead3a674b6ea59de60c3554463a9ba277f2f53c4",
+      "shotId": "shot-run-to-the-ruin",
+      "beatId": "beat-follow-the-moth",
+      "motionChannels": [
+        "mara-root-and-run-rig",
+        "milo-offset-run-rig",
+        "moth-flight",
+        "camera-pan",
+        "forest-parallax",
+        "foreground-plant-occlusion"
+      ]
+    },
+    {
+      "frame": 108,
+      "relativeFile": "frame-108.png",
+      "contentHash": "453b589fafd90f44d203299f951639afa5c23f51c09a70e0c647dafd079814c7",
+      "repeatHash": "453b589fafd90f44d203299f951639afa5c23f51c09a70e0c647dafd079814c7",
+      "shotId": "shot-cross-the-threshold",
+      "beatId": "beat-follow-the-moth",
+      "motionChannels": [
+        "articulated-feet",
+        "ground-contact",
+        "match-direction",
+        "leaf-wipe"
+      ]
+    },
+    {
+      "frame": 174,
+      "relativeFile": "frame-174.png",
+      "contentHash": "994554a84a4c67c5b2572b895ffa73f2bcb76a4c0cc6711e56d95993ffb983d5",
+      "repeatHash": "994554a84a4c67c5b2572b895ffa73f2bcb76a4c0cc6711e56d95993ffb983d5",
+      "shotId": "shot-listen-in-the-dark",
+      "beatId": "beat-listen-at-the-threshold",
+      "motionChannels": [
+        "shared-eyeline",
+        "head-lead",
+        "torso-settle",
+        "arm-gesture",
+        "camera-push"
+      ]
+    },
+    {
+      "frame": 230,
+      "relativeFile": "frame-230.png",
+      "contentHash": "0f15223de17fc5b67bb821d7b78f8256b4bfaceba049e749738cb0a1a23ceb81",
+      "repeatHash": "0f15223de17fc5b67bb821d7b78f8256b4bfaceba049e749738cb0a1a23ceb81",
+      "shotId": "shot-empty-corridor",
+      "beatId": "beat-listen-at-the-threshold",
+      "motionChannels": [
+        "moth-flight",
+        "moss-breath-plant",
+        "dust-layers",
+        "camera-hold"
+      ]
+    },
+    {
+      "frame": 270,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-270.png",
+      "contentHash": "2607c548fd824d65a35c57a5fd60af97a1b6bff0ef1cfe591062f4aa379bb524",
+      "repeatHash": "2607c548fd824d65a35c57a5fd60af97a1b6bff0ef1cfe591062f4aa379bb524",
+      "shotId": "shot-sneak-entrance",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "mara-sneak-rig",
+        "milo-staggered-sneak-rig",
+        "silhouette-entry",
+        "camera-push",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 273,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-273.png",
+      "contentHash": "6320030c4e932d2ece85a74591e1e7594dfb25532d998672e299a24f2c21528b",
+      "repeatHash": "6320030c4e932d2ece85a74591e1e7594dfb25532d998672e299a24f2c21528b",
+      "shotId": "shot-sneak-entrance",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "mara-sneak-rig",
+        "milo-staggered-sneak-rig",
+        "silhouette-entry",
+        "camera-push",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 276,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-276.png",
+      "contentHash": "fac69326f790366d8b05e7b62e8d8ad4c271747cddbdd6ea3d85c97597bf9ae3",
+      "repeatHash": "fac69326f790366d8b05e7b62e8d8ad4c271747cddbdd6ea3d85c97597bf9ae3",
+      "shotId": "shot-sneak-entrance",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "mara-sneak-rig",
+        "milo-staggered-sneak-rig",
+        "silhouette-entry",
+        "camera-push",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 279,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-279.png",
+      "contentHash": "1467ec039ae81c47cc51052293fe654ce075a3c1e987239aa1218a22f622dc7f",
+      "repeatHash": "1467ec039ae81c47cc51052293fe654ce075a3c1e987239aa1218a22f622dc7f",
+      "shotId": "shot-sneak-entrance",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "mara-sneak-rig",
+        "milo-staggered-sneak-rig",
+        "silhouette-entry",
+        "camera-push",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 282,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-282.png",
+      "contentHash": "930da6299e2105e3f59fbc90a5e2d5d110201eaad3d160e85d898bd08c49c75b",
+      "repeatHash": "930da6299e2105e3f59fbc90a5e2d5d110201eaad3d160e85d898bd08c49c75b",
+      "shotId": "shot-sneak-entrance",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "mara-sneak-rig",
+        "milo-staggered-sneak-rig",
+        "silhouette-entry",
+        "camera-push",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 285,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-285.png",
+      "contentHash": "ffd5d6d70f32a000cb30540f520ec4917423cb977f3848c3d688a6271f1cbcc4",
+      "repeatHash": "ffd5d6d70f32a000cb30540f520ec4917423cb977f3848c3d688a6271f1cbcc4",
+      "shotId": "shot-sneak-entrance",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "mara-sneak-rig",
+        "milo-staggered-sneak-rig",
+        "silhouette-entry",
+        "camera-push",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 288,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-288.png",
+      "contentHash": "81c2226325a134856883fd3d7acc38924ecbb91ec3c3ff5baa2f7f778393f45a",
+      "repeatHash": "81c2226325a134856883fd3d7acc38924ecbb91ec3c3ff5baa2f7f778393f45a",
+      "shotId": "shot-sneak-entrance",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "mara-sneak-rig",
+        "milo-staggered-sneak-rig",
+        "silhouette-entry",
+        "camera-push",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 291,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-291.png",
+      "contentHash": "72976f185864bf83479ced899ce55cacd831aa39ed39af7cdd38a7eea36da288",
+      "repeatHash": "72976f185864bf83479ced899ce55cacd831aa39ed39af7cdd38a7eea36da288",
+      "shotId": "shot-sneak-entrance",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "mara-sneak-rig",
+        "milo-staggered-sneak-rig",
+        "silhouette-entry",
+        "camera-push",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 310,
+      "relativeFile": "frame-310.png",
+      "contentHash": "9c4ba701a5e63d7d81f28b936ea5d5138b564b72e539dc101020d31460cd866f",
+      "repeatHash": "9c4ba701a5e63d7d81f28b936ea5d5138b564b72e539dc101020d31460cd866f",
+      "shotId": "shot-sneak-entrance",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "mara-sneak-rig",
+        "milo-staggered-sneak-rig",
+        "silhouette-entry",
+        "camera-push",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 370,
+      "relativeFile": "frame-370.png",
+      "contentHash": "806e96f14d81313a4e83a3885bd13c3923d591d0da144c6bfb357a9ddc3e5f13",
+      "repeatHash": "806e96f14d81313a4e83a3885bd13c3923d591d0da144c6bfb357a9ddc3e5f13",
+      "shotId": "shot-creature-reveal",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "creature-rise",
+        "head-and-arms",
+        "eye-open",
+        "moth-landing",
+        "kids-eyeline"
+      ]
+    },
+    {
+      "frame": 402,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-402.png",
+      "contentHash": "6b2e4e2418817a60770834ab7c7c400e0b0df1998b4db2276e74f72dc97ef4be",
+      "repeatHash": "6b2e4e2418817a60770834ab7c7c400e0b0df1998b4db2276e74f72dc97ef4be",
+      "shotId": "shot-eye-close-up",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "eye-track",
+        "blink",
+        "brow-change",
+        "shy-recoil",
+        "extreme-reframe"
+      ]
+    },
+    {
+      "frame": 408,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-408.png",
+      "contentHash": "e3d79f88a5bf7705ccab327608cc185b297fc5f2214ab3ba59cc0351859eebe5",
+      "repeatHash": "e3d79f88a5bf7705ccab327608cc185b297fc5f2214ab3ba59cc0351859eebe5",
+      "shotId": "shot-eye-close-up",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "eye-track",
+        "blink",
+        "brow-change",
+        "shy-recoil",
+        "extreme-reframe"
+      ]
+    },
+    {
+      "frame": 414,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-414.png",
+      "contentHash": "7ff530f1489a351e4d069f03143a7d6cb885984dc02eede843d73573e34791fa",
+      "repeatHash": "7ff530f1489a351e4d069f03143a7d6cb885984dc02eede843d73573e34791fa",
+      "shotId": "shot-eye-close-up",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "eye-track",
+        "blink",
+        "brow-change",
+        "shy-recoil",
+        "extreme-reframe"
+      ]
+    },
+    {
+      "frame": 420,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-420.png",
+      "contentHash": "c46ac591fe97de36d5ee0bf706a33f48fa369b32548e46ee2941be9e289692c4",
+      "repeatHash": "c46ac591fe97de36d5ee0bf706a33f48fa369b32548e46ee2941be9e289692c4",
+      "shotId": "shot-eye-close-up",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "eye-track",
+        "blink",
+        "brow-change",
+        "shy-recoil",
+        "extreme-reframe"
+      ]
+    },
+    {
+      "frame": 424,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-424.png",
+      "contentHash": "6f7bf063117609f7137f341ee42ad4c0859c559e1b86b454d6548c9af197ae45",
+      "repeatHash": "6f7bf063117609f7137f341ee42ad4c0859c559e1b86b454d6548c9af197ae45",
+      "shotId": "shot-eye-close-up",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "eye-track",
+        "blink",
+        "brow-change",
+        "shy-recoil",
+        "extreme-reframe"
+      ]
+    },
+    {
+      "frame": 426,
+      "relativeFile": "frame-426.png",
+      "contentHash": "eb00c6bd56eab68304c26fac1c2b81f857b466947d9b8c7ec5ed207ff870a32e",
+      "repeatHash": "eb00c6bd56eab68304c26fac1c2b81f857b466947d9b8c7ec5ed207ff870a32e",
+      "shotId": "shot-eye-close-up",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "eye-track",
+        "blink",
+        "brow-change",
+        "shy-recoil",
+        "extreme-reframe"
+      ]
+    },
+    {
+      "frame": 428,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-428.png",
+      "contentHash": "f3acb2f6068de4940eba133cb7c4168782868a3a705ea4c3a0d9d3839b1bbbe6",
+      "repeatHash": "f3acb2f6068de4940eba133cb7c4168782868a3a705ea4c3a0d9d3839b1bbbe6",
+      "shotId": "shot-eye-close-up",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "eye-track",
+        "blink",
+        "brow-change",
+        "shy-recoil",
+        "extreme-reframe"
+      ]
+    },
+    {
+      "frame": 433,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-433.png",
+      "contentHash": "89932463f800100c980b99e6bde870a8ae5247d5bcf2a6d7ca79ac3def3f4dc3",
+      "repeatHash": "89932463f800100c980b99e6bde870a8ae5247d5bcf2a6d7ca79ac3def3f4dc3",
+      "shotId": "shot-eye-close-up",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "eye-track",
+        "blink",
+        "brow-change",
+        "shy-recoil",
+        "extreme-reframe"
+      ]
+    },
+    {
+      "frame": 442,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-442.png",
+      "contentHash": "0fe276eb605a6fe84443f6ec862eb4de98d3838fc44ecab8b4d31fa57ce639b3",
+      "repeatHash": "0fe276eb605a6fe84443f6ec862eb4de98d3838fc44ecab8b4d31fa57ce639b3",
+      "shotId": "shot-eye-close-up",
+      "beatId": "beat-wake-the-creature",
+      "motionChannels": [
+        "eye-track",
+        "blink",
+        "brow-change",
+        "shy-recoil",
+        "extreme-reframe"
+      ]
+    },
+    {
+      "frame": 450,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-450.png",
+      "contentHash": "5bbe58a8d9b52b7ff3b417dee36c20396df4466bccacecf76e5a11f2c88bd3d6",
+      "repeatHash": "5bbe58a8d9b52b7ff3b417dee36c20396df4466bccacecf76e5a11f2c88bd3d6",
+      "shotId": "shot-kids-reaction",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "shared-eyeline",
+        "anticipation",
+        "recoil",
+        "overshoot",
+        "settle"
+      ]
+    },
+    {
+      "frame": 458,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-458.png",
+      "contentHash": "b2de1b98e166f170beef190f7b13e8aa786f8e98a8fa3f39b07d50aac35d932f",
+      "repeatHash": "b2de1b98e166f170beef190f7b13e8aa786f8e98a8fa3f39b07d50aac35d932f",
+      "shotId": "shot-kids-reaction",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "shared-eyeline",
+        "anticipation",
+        "recoil",
+        "overshoot",
+        "settle"
+      ]
+    },
+    {
+      "frame": 466,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-466.png",
+      "contentHash": "9bc8257c321783604e9d2e1ccab606e3b106287494300371fb01cf3bef3f0e03",
+      "repeatHash": "9bc8257c321783604e9d2e1ccab606e3b106287494300371fb01cf3bef3f0e03",
+      "shotId": "shot-kids-reaction",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "shared-eyeline",
+        "anticipation",
+        "recoil",
+        "overshoot",
+        "settle"
+      ]
+    },
+    {
+      "frame": 474,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-474.png",
+      "contentHash": "3a15a9b3246b1947f6f566731f7334cc4ed7b6c15bde3e8dcf111c02f8e12229",
+      "repeatHash": "3a15a9b3246b1947f6f566731f7334cc4ed7b6c15bde3e8dcf111c02f8e12229",
+      "shotId": "shot-kids-reaction",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "shared-eyeline",
+        "anticipation",
+        "recoil",
+        "overshoot",
+        "settle"
+      ]
+    },
+    {
+      "frame": 480,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-480.png",
+      "contentHash": "36b9785e6cd3fd0149d8730c52e2fbbd83cbbd71bac576d237adb73c0343ac06",
+      "repeatHash": "36b9785e6cd3fd0149d8730c52e2fbbd83cbbd71bac576d237adb73c0343ac06",
+      "shotId": "shot-kids-reaction",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "shared-eyeline",
+        "anticipation",
+        "recoil",
+        "overshoot",
+        "settle"
+      ]
+    },
+    {
+      "frame": 482,
+      "relativeFile": "frame-482.png",
+      "contentHash": "0bf5891fdf7b164e08e999514827efe00348f9b45a53109b0b920d2aef76053c",
+      "repeatHash": "0bf5891fdf7b164e08e999514827efe00348f9b45a53109b0b920d2aef76053c",
+      "shotId": "shot-kids-reaction",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "shared-eyeline",
+        "anticipation",
+        "recoil",
+        "overshoot",
+        "settle"
+      ]
+    },
+    {
+      "frame": 487,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-487.png",
+      "contentHash": "82224de0c62152843a4fe30b6b94391530db3488d09eae28b47a3417583e3214",
+      "repeatHash": "82224de0c62152843a4fe30b6b94391530db3488d09eae28b47a3417583e3214",
+      "shotId": "shot-kids-reaction",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "shared-eyeline",
+        "anticipation",
+        "recoil",
+        "overshoot",
+        "settle"
+      ]
+    },
+    {
+      "frame": 495,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-495.png",
+      "contentHash": "6ec1a41ef341b0f8bfefcfcf223837253a26a4f90c26668dbe61d0ef9861f8d1",
+      "repeatHash": "6ec1a41ef341b0f8bfefcfcf223837253a26a4f90c26668dbe61d0ef9861f8d1",
+      "shotId": "shot-kids-reaction",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "shared-eyeline",
+        "anticipation",
+        "recoil",
+        "overshoot",
+        "settle"
+      ]
+    },
+    {
+      "frame": 508,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-508.png",
+      "contentHash": "38d13b434b868927613bb69c2bf7c60557e56642fd58170f8f4c6cf6db08db4a",
+      "repeatHash": "38d13b434b868927613bb69c2bf7c60557e56642fd58170f8f4c6cf6db08db4a",
+      "shotId": "shot-kids-reaction",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "shared-eyeline",
+        "anticipation",
+        "recoil",
+        "overshoot",
+        "settle"
+      ]
+    },
+    {
+      "frame": 540,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-540.png",
+      "contentHash": "ae05b2e413a7cac49ac23de292dc517f066ae98325c2d5e4b84b4a19cf5f7aaa",
+      "repeatHash": "ae05b2e413a7cac49ac23de292dc517f066ae98325c2d5e4b84b4a19cf5f7aaa",
+      "shotId": "shot-spark-sneeze",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "moth-contact",
+        "creature-compression",
+        "blink-and-head",
+        "limb-overshoot",
+        "spark-emission",
+        "delayed-kids-reaction",
+        "camera-response"
+      ]
+    },
+    {
+      "frame": 552,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-552.png",
+      "contentHash": "aa00f4a91ec6463983ce305ea1d6328113cb8d083a6c9b1c0a336fb8a1d35357",
+      "repeatHash": "aa00f4a91ec6463983ce305ea1d6328113cb8d083a6c9b1c0a336fb8a1d35357",
+      "shotId": "shot-spark-sneeze",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "moth-contact",
+        "creature-compression",
+        "blink-and-head",
+        "limb-overshoot",
+        "spark-emission",
+        "delayed-kids-reaction",
+        "camera-response"
+      ]
+    },
+    {
+      "frame": 565,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-565.png",
+      "contentHash": "e1b71eb68b7428ae0db33f7b5cc2f9a06e224ff1305171e31c34cc5fe7e9f1e4",
+      "repeatHash": "e1b71eb68b7428ae0db33f7b5cc2f9a06e224ff1305171e31c34cc5fe7e9f1e4",
+      "shotId": "shot-spark-sneeze",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "moth-contact",
+        "creature-compression",
+        "blink-and-head",
+        "limb-overshoot",
+        "spark-emission",
+        "delayed-kids-reaction",
+        "camera-response"
+      ]
+    },
+    {
+      "frame": 580,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-580.png",
+      "contentHash": "196c97ebbe85a685c0485e2b1ffe83878e5af424dac86d39a826db2940bc0c64",
+      "repeatHash": "196c97ebbe85a685c0485e2b1ffe83878e5af424dac86d39a826db2940bc0c64",
+      "shotId": "shot-spark-sneeze",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "moth-contact",
+        "creature-compression",
+        "blink-and-head",
+        "limb-overshoot",
+        "spark-emission",
+        "delayed-kids-reaction",
+        "camera-response"
+      ]
+    },
+    {
+      "frame": 581,
+      "relativeFile": "frame-581.png",
+      "contentHash": "e446a7d80288a2d0dea86483331aebcae882502faf54772cf0e7025bf939aea0",
+      "repeatHash": "e446a7d80288a2d0dea86483331aebcae882502faf54772cf0e7025bf939aea0",
+      "shotId": "shot-spark-sneeze",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "moth-contact",
+        "creature-compression",
+        "blink-and-head",
+        "limb-overshoot",
+        "spark-emission",
+        "delayed-kids-reaction",
+        "camera-response"
+      ]
+    },
+    {
+      "frame": 585,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-585.png",
+      "contentHash": "1a2c1d5eb65982eebb4821940a810da28a1c6677b207e73f245b93233192a166",
+      "repeatHash": "1a2c1d5eb65982eebb4821940a810da28a1c6677b207e73f245b93233192a166",
+      "shotId": "shot-spark-sneeze",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "moth-contact",
+        "creature-compression",
+        "blink-and-head",
+        "limb-overshoot",
+        "spark-emission",
+        "delayed-kids-reaction",
+        "camera-response"
+      ]
+    },
+    {
+      "frame": 591,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-591.png",
+      "contentHash": "a7a8f60054207f6ff9e33f4303e9c4b09e4fb71bab54dcd229142007aaac280c",
+      "repeatHash": "a7a8f60054207f6ff9e33f4303e9c4b09e4fb71bab54dcd229142007aaac280c",
+      "shotId": "shot-spark-sneeze",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "moth-contact",
+        "creature-compression",
+        "blink-and-head",
+        "limb-overshoot",
+        "spark-emission",
+        "delayed-kids-reaction",
+        "camera-response"
+      ]
+    },
+    {
+      "frame": 593,
+      "relativeFile": "frame-593.png",
+      "contentHash": "7c23acca287ea822e4e43129dbf6408f9a614a58a7061213a4a9f1b236afcbfb",
+      "repeatHash": "7c23acca287ea822e4e43129dbf6408f9a614a58a7061213a4a9f1b236afcbfb",
+      "shotId": "shot-spark-sneeze",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "moth-contact",
+        "creature-compression",
+        "blink-and-head",
+        "limb-overshoot",
+        "spark-emission",
+        "delayed-kids-reaction",
+        "camera-response"
+      ]
+    },
+    {
+      "frame": 604,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-604.png",
+      "contentHash": "36f1bc23940b1ca48a7d4b19108c75ff45325a2beb12a44f3557e0e691f5ccea",
+      "repeatHash": "36f1bc23940b1ca48a7d4b19108c75ff45325a2beb12a44f3557e0e691f5ccea",
+      "shotId": "shot-spark-sneeze",
+      "beatId": "beat-spark-sneeze",
+      "motionChannels": [
+        "moth-contact",
+        "creature-compression",
+        "blink-and-head",
+        "limb-overshoot",
+        "spark-emission",
+        "delayed-kids-reaction",
+        "camera-response"
+      ]
+    },
+    {
+      "frame": 687,
+      "relativeFile": "frame-687.png",
+      "contentHash": "6738710ba48032b689cebb6bc25930a5cc48bab523a3e040367df524aa9cd2b6",
+      "repeatHash": "6738710ba48032b689cebb6bc25930a5cc48bab523a3e040367df524aa9cd2b6",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 690,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-690.png",
+      "contentHash": "b5c21ef43f6e27386d4e2f9b03865b660bce22e63b68d1297be3d9d6072bec1d",
+      "repeatHash": "b5c21ef43f6e27386d4e2f9b03865b660bce22e63b68d1297be3d9d6072bec1d",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 693,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-693.png",
+      "contentHash": "cc81ac4f236ff995aa76184fa64401f97bdc2d0ccbdd7b05711620c84621f537",
+      "repeatHash": "cc81ac4f236ff995aa76184fa64401f97bdc2d0ccbdd7b05711620c84621f537",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 696,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-696.png",
+      "contentHash": "1428db22e208b184a97037e43376df29da32a6dbc869417c0f0f573187910900",
+      "repeatHash": "1428db22e208b184a97037e43376df29da32a6dbc869417c0f0f573187910900",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 699,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-699.png",
+      "contentHash": "4c476b90ffd88a2b9d1c55443cd2dc4f70e4250230bff63471637645b0e46694",
+      "repeatHash": "4c476b90ffd88a2b9d1c55443cd2dc4f70e4250230bff63471637645b0e46694",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 702,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-702.png",
+      "contentHash": "de12c8271c8d96511d69dbe357341e7c6b239958c8390c14579cd4443655c759",
+      "repeatHash": "de12c8271c8d96511d69dbe357341e7c6b239958c8390c14579cd4443655c759",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 705,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-705.png",
+      "contentHash": "84c01b1a0e54f839828b8361710851c585c7b8dc4596cf732a5d50f24057c04f",
+      "repeatHash": "84c01b1a0e54f839828b8361710851c585c7b8dc4596cf732a5d50f24057c04f",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 708,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-708.png",
+      "contentHash": "17105726f044f1d042fa0700708f7f9a8f364039422f8350ac85e84beff52eaa",
+      "repeatHash": "17105726f044f1d042fa0700708f7f9a8f364039422f8350ac85e84beff52eaa",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 711,
+      "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-711.png",
+      "contentHash": "f530ce640415c4cdf6f822b403f2442ecc6ee12ce29ce1521f5401500cf8e4a1",
+      "repeatHash": "f530ce640415c4cdf6f822b403f2442ecc6ee12ce29ce1521f5401500cf8e4a1",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 715,
+      "relativeFile": "frame-715.png",
+      "contentHash": "99193fbe4df2c6c36ac0ffac6934e97548c6c37ef07b8b026feb52e825d50de2",
+      "repeatHash": "99193fbe4df2c6c36ac0ffac6934e97548c6c37ef07b8b026feb52e825d50de2",
+      "shotId": "shot-escape-run",
+      "beatId": "beat-escape-the-hall",
+      "motionChannels": [
+        "motivated-turn",
+        "mara-escape-rig",
+        "milo-offset-escape-rig",
+        "creature-carry",
+        "foreground-occluders",
+        "cave-parallax"
+      ]
+    },
+    {
+      "frame": 820,
+      "relativeFile": "frame-820.png",
+      "contentHash": "5f2f4e7fc8e07bb0ef6d6c270e47cc3a8b3d550ae52874010af47edc4b1f6e92",
+      "repeatHash": "5f2f4e7fc8e07bb0ef6d6c270e47cc3a8b3d550ae52874010af47edc4b1f6e92",
+      "shotId": "shot-friendly-payoff",
+      "beatId": "beat-friendly-offer",
+      "motionChannels": [
+        "creature-offer",
+        "mara-cautious-reach",
+        "milo-relax",
+        "mirrored-wave",
+        "moth-release",
+        "comprehension-hold"
+      ]
+    },
+    {
+      "frame": 880,
+      "relativeFile": "frame-880.png",
+      "contentHash": "7fd40c28e8ec8e0f6d533cabbe3b0bc7d61d6454b347786d0c6d4ff76168b7e9",
+      "repeatHash": "7fd40c28e8ec8e0f6d533cabbe3b0bc7d61d6454b347786d0c6d4ff76168b7e9",
+      "shotId": "shot-friendly-payoff",
+      "beatId": "beat-friendly-offer",
+      "motionChannels": [
+        "creature-offer",
+        "mara-cautious-reach",
+        "milo-relax",
+        "mirrored-wave",
+        "moth-release",
+        "comprehension-hold"
+      ]
+    }
+  ]
+}

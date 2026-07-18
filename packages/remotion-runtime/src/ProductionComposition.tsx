@@ -5,8 +5,11 @@ import type {
   Cv001CompiledSceneMotion,
   DirectedBeatProgram,
   FrameAccurateRenderPlan,
+  KidsShowcaseDirection,
+  KidsShowcaseProgram,
   SoundEffectCue,
 } from "@storystage/story-engine";
+import { kidsShowcaseProgramSchema } from "@storystage/story-engine";
 import {
   AbsoluteFill,
   Easing,
@@ -22,6 +25,7 @@ import { HistoryEditorialStage } from "./HistoryEditorialStage";
 import { HistoryEditorialVisual } from "./HistoryEditorialVisual";
 import { HistoryKineticType } from "./HistoryKineticType";
 import { Cv001RigProofComposition } from "./Cv001RigProofComposition";
+import { KidsShowcaseComposition } from "./KidsShowcaseComposition";
 import {
   getCv001LanternPickupTransform,
   type Cv001WorldTransform,
@@ -66,6 +70,8 @@ export type ProductionCompositionProps = {
   previewAssetStatus?: "unapproved-candidate";
   directedSceneMotion?: Cv001CompiledSceneMotion;
   showMotionDiagnostics?: boolean;
+  kidsShowcaseProgram?: KidsShowcaseProgram;
+  kidsShowcaseDirection?: KidsShowcaseDirection;
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
@@ -538,8 +544,18 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
   previewAssetStatus,
   directedSceneMotion,
   showMotionDiagnostics = false,
+  kidsShowcaseProgram,
+  kidsShowcaseDirection,
 }) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
+  const showcaseProgram = kidsShowcaseProgram
+    ? kidsShowcaseProgramSchema.parse(kidsShowcaseProgram)
+    : undefined;
+  if (
+    showcaseProgram &&
+    showcaseProgram.renderPlan.contentHash !== plan.contentHash
+  )
+    throw new Error("Kids showcase program does not match the render plan.");
   const validatedSceneMotion = directedSceneMotion
     ? assertDirectedSceneMotion(
         plan,
@@ -575,30 +591,49 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
     }));
   return (
     <AbsoluteFill style={{ background: "#111718" }}>
-      {plan.shots
-        .filter((shot) => shot.startFrame < duration)
-        .map((shot) => (
-          <Sequence
-            from={shot.startFrame}
-            durationInFrames={Math.min(
-              shot.durationInFrames,
-              duration - shot.startFrame,
-            )}
-            key={shot.id}
-          >
-            <TransitionedShot projectType={plan.projectType} shot={shot}>
-              <ShotScene
-                directedBeatProgram={motionByShotId.get(shot.id)}
-                lanternPickupTransform={lanternPickupTransform}
-                plan={plan}
-                playbackAssets={playbackAssets}
-                previewAssetStatus={previewAssetStatus}
-                showMotionDiagnostics={showMotionDiagnostics}
-                shot={shot}
-              />
-            </TransitionedShot>
-          </Sequence>
-        ))}
+      {showcaseProgram ? (
+        <KidsShowcaseComposition
+          showCaptions={false}
+          showProofLabel={false}
+          sneezeIntensity={kidsShowcaseDirection?.sneezeIntensity ?? 1}
+          scheduledSoundCues={showcaseProgram.audioCues.map((cue) => {
+            const shot = showcaseProgram.renderPlan.shots.find(
+              (candidate) => candidate.id === cue.shotId,
+            )!;
+            return {
+              id: cue.id,
+              from: shot.startFrame + cue.offsetInFrames,
+              assetId: cue.assetId,
+              gain: cue.gain,
+            };
+          })}
+        />
+      ) : (
+        plan.shots
+          .filter((shot) => shot.startFrame < duration)
+          .map((shot) => (
+            <Sequence
+              from={shot.startFrame}
+              durationInFrames={Math.min(
+                shot.durationInFrames,
+                duration - shot.startFrame,
+              )}
+              key={shot.id}
+            >
+              <TransitionedShot projectType={plan.projectType} shot={shot}>
+                <ShotScene
+                  directedBeatProgram={motionByShotId.get(shot.id)}
+                  lanternPickupTransform={lanternPickupTransform}
+                  plan={plan}
+                  playbackAssets={playbackAssets}
+                  previewAssetStatus={previewAssetStatus}
+                  showMotionDiagnostics={showMotionDiagnostics}
+                  shot={shot}
+                />
+              </TransitionedShot>
+            </Sequence>
+          ))
+      )}
       {voiceTrackDataUrl ? (
         <Audio
           src={voiceTrackDataUrl}

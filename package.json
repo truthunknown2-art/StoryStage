@@ -22,6 +22,7 @@
     "render:audio": "pnpm --filter @storystage/render-worker render:audio",
     "prepare:rook": "tsx scripts/prepare-rook-show-pack.ts",
     "prepare:rook-pilot-review": "tsx scripts/prepare-rook-pilot-review.ts",
+    "analyze:sprite-atlases": "tsx scripts/analyze-sprite-atlases.ts",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck",
     "verify:privacy": "node scripts/verify-privacy.mjs",
@@ -31,7 +32,9 @@
     "render:rook-motion-review": "pnpm --filter @storystage/render-worker render:rook-motion-review",
     "render:cv001-creator-locality-proof": "pnpm --filter @storystage/render-worker render:cv001-creator-locality-proof",
     "proof:cv001-creator": "node scripts/proof-cv001-creator.mjs",
-    "proof:cv002-draft": "node scripts/proof-cv002-draft.mjs"
+    "proof:cv002-draft": "node scripts/proof-cv002-draft.mjs",
+    "proof:cv002-template": "node scripts/proof-cv002-template.mjs",
+    "render:kids-showcase-proof": "pnpm --filter @storystage/render-worker render:kids-showcase-proof"
   },
   "devDependencies": {
     "@playwright/cli": "0.1.17",

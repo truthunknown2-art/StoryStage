@@ -129,6 +129,18 @@ export type { RigDiagnosticCompositionProps } from "./RigDiagnosticComposition";
 export { Cv001RigProofComposition };
 export type { Cv001RigProofCompositionProps } from "./Cv001RigProofComposition";
 export {
+  KIDS_SHOWCASE_DURATION_IN_FRAMES,
+  KIDS_SHOWCASE_FPS,
+  KIDS_SHOWCASE_HEIGHT,
+  KIDS_SHOWCASE_WIDTH,
+  KidsShowcaseComposition,
+  kidsShowcaseShots,
+} from "./KidsShowcaseComposition";
+export type {
+  KidsShowcaseCompositionProps,
+  KidsShowcaseShot,
+} from "./KidsShowcaseComposition";
+export {
   cv001RigLayout,
   getCv001AttachmentContinuity,
   getCv001LanternHandAnchor,

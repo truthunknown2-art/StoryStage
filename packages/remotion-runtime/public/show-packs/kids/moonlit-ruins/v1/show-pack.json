@@ -1,0 +1,373 @@
+{
+  "schemaVersion": "1.0",
+  "id": "kids-moonlit-ruins-v1",
+  "title": "Moonlit Ruins",
+  "grammarId": "kids-adventure-v1",
+  "artDirection": {
+    "medium": "layered-paper-gouache",
+    "motionBlurPolicy": "direction-explicit",
+    "defaultCharacterBlur": false
+  },
+  "characters": [
+    {
+      "id": "mara",
+      "modelSheet": "concepts/mara-milo-model-sheet-v1.png",
+      "views": ["front", "three-quarter-right", "profile-right", "back"],
+      "cycles": {
+        "run-right": {
+          "asset": "rigs/mara/run-right-v1/atlas.png",
+          "manifest": "rigs/mara/run-right-v1/atlas-manifest.json",
+          "frames": 8,
+          "poses": [
+            "contact",
+            "down",
+            "passing",
+            "up",
+            "contact",
+            "down",
+            "passing",
+            "up"
+          ],
+          "sourceWidth": 2172,
+          "sourceHeight": 724,
+          "groundOffset": 580
+        },
+        "performance": {
+          "asset": "rigs/mara/performance-v1/atlas.png",
+          "manifest": "rigs/mara/performance-v1/atlas-manifest.json",
+          "frames": 8,
+          "poses": [
+            "neutral",
+            "listen",
+            "sneak-a",
+            "sneak-b",
+            "worry",
+            "recoil",
+            "offer",
+            "wave"
+          ],
+          "sourceWidth": 2098,
+          "sourceHeight": 750,
+          "groundOffset": 546
+        },
+        "sneak": {
+          "asset": "rigs/mara/sneak-v1/atlas.png",
+          "manifest": "rigs/mara/sneak-v1/atlas-manifest.json",
+          "layout": { "rows": 2, "columns": 4, "order": "row-major" },
+          "frames": 8,
+          "poses": [
+            "contact",
+            "down",
+            "passing",
+            "high-step",
+            "opposite-contact",
+            "opposite-down",
+            "opposite-passing",
+            "opposite-high-step"
+          ],
+          "sourceWidth": 1672,
+          "sourceHeight": 941,
+          "groundOffset": 357
+        },
+        "reaction": {
+          "asset": "rigs/mara/reaction-v1/atlas.png",
+          "manifest": "rigs/mara/reaction-v1/atlas-manifest.json",
+          "layout": { "rows": 2, "columns": 4, "order": "row-major" },
+          "frames": 8,
+          "poses": [
+            "worried-hold",
+            "anticipation",
+            "brace",
+            "recoil",
+            "maximum-overshoot",
+            "secondary-wobble",
+            "regain-footing",
+            "relieved-settle"
+          ],
+          "sourceWidth": 1774,
+          "sourceHeight": 887,
+          "groundOffset": 369
+        }
+      }
+    },
+    {
+      "id": "milo",
+      "modelSheet": "concepts/mara-milo-model-sheet-v1.png",
+      "views": ["front", "three-quarter-right", "profile-right", "back"],
+      "cycles": {
+        "run-right": {
+          "asset": "rigs/milo/run-right-v1/atlas.png",
+          "manifest": "rigs/milo/run-right-v1/atlas-manifest.json",
+          "frames": 8,
+          "poses": [
+            "contact",
+            "down",
+            "passing",
+            "up",
+            "contact",
+            "down",
+            "passing",
+            "up"
+          ],
+          "sourceWidth": 2079,
+          "sourceHeight": 756,
+          "groundOffset": 588
+        },
+        "performance": {
+          "asset": "rigs/milo/performance-v1/atlas.png",
+          "manifest": "rigs/milo/performance-v1/atlas-manifest.json",
+          "frames": 8,
+          "poses": [
+            "neutral",
+            "listen",
+            "sneak-a",
+            "sneak-b",
+            "worry",
+            "recoil",
+            "offer",
+            "wave"
+          ],
+          "sourceWidth": 2172,
+          "sourceHeight": 724,
+          "groundOffset": 605
+        },
+        "sneak": {
+          "asset": "rigs/milo/sneak-v1/atlas.png",
+          "manifest": "rigs/milo/sneak-v1/atlas-manifest.json",
+          "layout": { "rows": 2, "columns": 4, "order": "row-major" },
+          "frames": 8,
+          "poses": [
+            "contact",
+            "down",
+            "passing",
+            "high-step",
+            "opposite-contact",
+            "opposite-down",
+            "opposite-passing",
+            "opposite-high-step"
+          ],
+          "sourceWidth": 1774,
+          "sourceHeight": 887,
+          "groundOffset": 320
+        },
+        "reaction": {
+          "asset": "rigs/milo/reaction-v1/atlas.png",
+          "manifest": "rigs/milo/reaction-v1/atlas-manifest.json",
+          "layout": { "rows": 2, "columns": 4, "order": "row-major" },
+          "frames": 8,
+          "poses": [
+            "worried-hold",
+            "anticipation",
+            "brace",
+            "recoil",
+            "maximum-overshoot",
+            "secondary-wobble",
+            "regain-footing",
+            "relieved-settle"
+          ],
+          "sourceWidth": 1774,
+          "sourceHeight": 887,
+          "groundOffset": 375
+        }
+      }
+    },
+    {
+      "id": "moss-guardian",
+      "views": ["front", "three-quarter-left"],
+      "cycles": {
+        "performance": {
+          "asset": "rigs/moss-guardian/performance-v1/atlas.png",
+          "manifest": "rigs/moss-guardian/performance-v1/atlas-manifest.json",
+          "frames": 8,
+          "poses": [
+            "sleep",
+            "wake",
+            "stand",
+            "alert",
+            "inhale",
+            "sneeze",
+            "chase",
+            "offer"
+          ],
+          "sourceWidth": 1983,
+          "sourceHeight": 793,
+          "groundOffset": 517
+        },
+        "chase": {
+          "asset": "rigs/moss-guardian/chase-v1/atlas.png",
+          "manifest": "rigs/moss-guardian/chase-v1/atlas-manifest.json",
+          "layout": { "rows": 2, "columns": 4, "order": "row-major" },
+          "frames": 8,
+          "poses": [
+            "contact",
+            "down",
+            "passing",
+            "up",
+            "opposite-contact",
+            "opposite-down",
+            "opposite-passing",
+            "opposite-up"
+          ],
+          "sourceWidth": 1774,
+          "sourceHeight": 887,
+          "groundOffset": 294
+        },
+        "closeup": {
+          "asset": "rigs/moss-guardian/closeup-v1/atlas.png",
+          "manifest": "rigs/moss-guardian/closeup-v1/atlas-manifest.json",
+          "layout": { "rows": 2, "columns": 4, "order": "row-major" },
+          "frames": 8,
+          "poses": [
+            "neutral",
+            "eye-track",
+            "recognition-widen",
+            "half-blink",
+            "full-blink",
+            "open-overshoot",
+            "shy-recoil",
+            "soft-settle"
+          ],
+          "sourceWidth": 1774,
+          "sourceHeight": 887,
+          "groundOffset": 385
+        },
+        "sneeze": {
+          "asset": "rigs/moss-guardian/sneeze-v1/atlas.png",
+          "manifest": "rigs/moss-guardian/sneeze-v1/atlas-manifest.json",
+          "layout": { "rows": 2, "columns": 4, "order": "row-major" },
+          "frames": 8,
+          "poses": [
+            "inhale-neutral",
+            "chest-expand",
+            "compression",
+            "maximum-anticipation",
+            "blast",
+            "overshoot",
+            "secondary-recoil",
+            "embarrassed-settle"
+          ],
+          "sourceWidth": 1983,
+          "sourceHeight": 793,
+          "groundOffset": 295
+        }
+      }
+    }
+  ],
+  "sets": [
+    {
+      "id": "moonlit-forest",
+      "cameraSpace": "2.5d",
+      "layers": [
+        {
+          "id": "atmosphere-far",
+          "depth": -30,
+          "parallax": 0.08,
+          "kind": "procedural"
+        },
+        {
+          "id": "forest-background",
+          "depth": -20,
+          "parallax": 0.16,
+          "kind": "image",
+          "asset": "sets/moonlit-forest/background-v1.png"
+        },
+        {
+          "id": "arch-and-set",
+          "depth": -10,
+          "parallax": 0.28,
+          "kind": "set-piece"
+        },
+        {
+          "id": "back-props",
+          "depth": -4,
+          "parallax": 0.45,
+          "kind": "prop-lane"
+        },
+        {
+          "id": "characters",
+          "depth": 0,
+          "parallax": 1,
+          "kind": "performance-lane"
+        },
+        {
+          "id": "moth-and-effects",
+          "depth": 3,
+          "parallax": 1.08,
+          "kind": "interactive-prop-lane"
+        },
+        {
+          "id": "foreground-plants",
+          "depth": 12,
+          "parallax": 1.65,
+          "kind": "occlusion-lane",
+          "asset": "sets/moonlit-forest/foreground-v1.png",
+          "reactive": false
+        }
+      ]
+    },
+    {
+      "id": "moon-hall",
+      "cameraSpace": "2.5d",
+      "layers": [
+        {
+          "id": "hall-background",
+          "depth": -20,
+          "parallax": 0.16,
+          "kind": "image",
+          "asset": "sets/moon-hall/background-v1.png"
+        },
+        {
+          "id": "hall-characters",
+          "depth": 0,
+          "parallax": 1,
+          "kind": "performance-lane"
+        },
+        {
+          "id": "hall-fx",
+          "depth": 3,
+          "parallax": 1.08,
+          "kind": "interactive-prop-lane"
+        },
+        {
+          "id": "hall-side-arches",
+          "depth": 12,
+          "parallax": 1.4,
+          "kind": "occlusion-lane",
+          "asset": "sets/moon-hall/foreground-v1.png"
+        }
+      ]
+    },
+    {
+      "id": "dawn-clearing",
+      "cameraSpace": "2.5d",
+      "layers": [
+        {
+          "id": "clearing-background",
+          "depth": -20,
+          "parallax": 0.16,
+          "kind": "image",
+          "asset": "sets/dawn-clearing/background-v1.png"
+        },
+        {
+          "id": "clearing-characters",
+          "depth": 0,
+          "parallax": 1,
+          "kind": "performance-lane"
+        },
+        {
+          "id": "clearing-moth",
+          "depth": 3,
+          "parallax": 1.08,
+          "kind": "interactive-prop-lane"
+        },
+        {
+          "id": "clearing-ground-card",
+          "depth": 12,
+          "parallax": 1.25,
+          "kind": "occlusion-lane",
+          "asset": "sets/dawn-clearing/foreground-v1.png"
+        }
+      ]
+    }
+  ]
+}

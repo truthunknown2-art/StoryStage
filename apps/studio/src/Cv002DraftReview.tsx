@@ -1,12 +1,16 @@
 import {
   commitCv002Operation,
   redoCv002Operation,
+  restoreCv002TemplateAssignment,
   undoCv002Operation,
+  verifyCv002TemplateAssignment,
+  CV002_TEMPLATE_ASSIGNMENT_STORAGE_KEY,
   type Cv002Beat,
   type Cv002BeatDirection,
   type Cv002BeatRole,
   type Cv002GraphOperation,
   type Cv002Project,
+  type Cv002TemplateAssignment,
 } from "@storystage/story-engine";
 import {
   ArrowLeft,
@@ -23,6 +27,7 @@ import {
   Trees,
 } from "lucide-react";
 import {useMemo, useRef, useState} from "react";
+import {Cv002TemplateAssignmentPanel} from "./Cv002TemplateAssignmentPanel";
 import "./cv002-draft-review.css";
 
 type DraftScreen = "breakdown" | "direction";
@@ -79,11 +84,38 @@ export function Cv002DraftReview({
   const [splitCursor, setSplitCursor] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [assignment, setAssignment] = useState<Cv002TemplateAssignment | null>(() => {
+    const serialized = window.localStorage.getItem(CV002_TEMPLATE_ASSIGNMENT_STORAGE_KEY);
+    if (!serialized) return null;
+    try {
+      return restoreCv002TemplateAssignment(serialized, project);
+    } catch {
+      window.localStorage.removeItem(CV002_TEMPLATE_ASSIGNMENT_STORAGE_KEY);
+      return null;
+    }
+  });
   const selectedBeat = allBeats.find((beat) => beat.id === selectedBeatId) ?? allBeats[0]!;
   const selectedIndex = allBeats.findIndex((beat) => beat.id === selectedBeat.id);
   const selectedSceneIndex = project.graph.scenes.findIndex((scene) => scene.beats.some((beat) => beat.id === selectedBeat.id));
   const isSceneStart = project.graph.scenes.some((scene) => scene.beats[0]?.id === selectedBeat.id);
   const sourceRef = useRef<HTMLTextAreaElement>(null);
+
+  const saveAssignment = (next: Cv002TemplateAssignment | null) => {
+    if (next) window.localStorage.setItem(CV002_TEMPLATE_ASSIGNMENT_STORAGE_KEY, JSON.stringify(next));
+    else window.localStorage.removeItem(CV002_TEMPLATE_ASSIGNMENT_STORAGE_KEY);
+    setAssignment(next);
+  };
+
+  const invalidateAssignmentIfNeeded = (next: Cv002Project) => {
+    if (!assignment) return false;
+    try {
+      verifyCv002TemplateAssignment(next, assignment);
+      return false;
+    } catch {
+      saveAssignment(null);
+      return true;
+    }
+  };
 
   const update = (operation: Cv002GraphOperation, nextSelection?: (next: Cv002Project) => string) => {
     try {
@@ -92,7 +124,7 @@ export function Cv002DraftReview({
       setSelectedBeatId(nextSelection ? nextSelection(next) : next.graph.scenes.flatMap((scene) => scene.beats).find((beat) => beat.sourceRange.start <= selectedBeat.sourceRange.start && beat.sourceRange.end >= selectedBeat.sourceRange.start)?.id ?? next.graph.scenes[0]!.beats[0]!.id);
       setSplitCursor(null);
       setError(null);
-      setFeedback(operationLabel(operation));
+      setFeedback(invalidateAssignmentIfNeeded(next) ? "Story updated. The animation template assignment was invalidated and must be reviewed again." : operationLabel(operation));
     } catch (caught) {
       setFeedback(null);
       setError(caught instanceof Error ? caught.message : "That edit could not be applied.");
@@ -104,7 +136,7 @@ export function Cv002DraftReview({
       const next = undoCv002Operation(project);
       onProjectChange(next);
       setSelectedBeatId(next.graph.scenes.flatMap((scene) => scene.beats).find((beat) => beat.sourceRange.start <= selectedBeat.sourceRange.start && beat.sourceRange.end >= selectedBeat.sourceRange.start)?.id ?? next.graph.scenes[0]!.beats[0]!.id);
-      setFeedback("Undid story edit");
+      setFeedback(invalidateAssignmentIfNeeded(next) ? "Undid story edit. The animation template assignment was invalidated and must be reviewed again." : "Undid story edit");
       setError(null);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "There is nothing to undo.");
@@ -116,7 +148,7 @@ export function Cv002DraftReview({
       const next = redoCv002Operation(project);
       onProjectChange(next);
       setSelectedBeatId(next.graph.scenes.flatMap((scene) => scene.beats).find((beat) => beat.sourceRange.start <= selectedBeat.sourceRange.start && beat.sourceRange.end >= selectedBeat.sourceRange.start)?.id ?? next.graph.scenes[0]!.beats[0]!.id);
-      setFeedback("Redid story edit");
+      setFeedback(invalidateAssignmentIfNeeded(next) ? "Redid story edit. The animation template assignment was invalidated and must be reviewed again." : "Redid story edit");
       setError(null);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "There is nothing to redo.");
@@ -223,12 +255,14 @@ export function Cv002DraftReview({
             <GrammarBadge grammar={project.grammar} />
           </header>
 
-          <div className="cv2-honesty-banner" role="status"><span><Check size={17} /></span><div><strong>Direction draft ready. Animation templates have not been assigned yet.</strong><small>Artwork, rigs, voices, music, stock footage, and rendering remain future production steps.</small></div></div>
+          <div className="cv2-honesty-banner" role="status"><span><Check size={17} /></span><div><strong>{assignment ? "One scene template assigned. Full-production templates are not assigned." : "Direction draft ready. Animation templates have not been assigned yet."}</strong><small>{assignment ? "Only the explicitly mapped scene can open the project-owned articulated lantern preview." : "Artwork, rigs, voices, music, stock footage, and rendering remain future production steps."}</small></div></div>
+
+          <Cv002TemplateAssignmentPanel assignment={assignment} onAssignmentChange={saveAssignment} project={project} />
 
           <div className="cv2-direction-scenes">
             {project.graph.scenes.map((scene, sceneIndex) => (
               <section key={scene.id}>
-                <header><div><small>Scene {String(sceneIndex + 1).padStart(2, "0")}</small><strong>{scene.beats[0]!.text.slice(0, 72)}{scene.beats[0]!.text.length > 72 ? "…" : ""}</strong></div><span>{scene.beats.length} {scene.beats.length === 1 ? "beat" : "beats"}</span></header>
+                <header><div><small>Scene {String(sceneIndex + 1).padStart(2, "0")}</small><strong>{scene.beats[0]!.text.slice(0, 72)}{scene.beats[0]!.text.length > 72 ? "…" : ""}</strong></div><span>{assignment?.sceneId === scene.id ? "Animated template assigned" : "Direction only · template not assigned"} · {scene.beats.length} {scene.beats.length === 1 ? "beat" : "beats"}</span></header>
                 <div className="cv2-direction-grid">
                   {scene.beats.map((beat, beatIndex) => {
                     const direction = directionByBeat.get(beat.id)!;
