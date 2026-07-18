@@ -21,6 +21,10 @@ import { HistoryEditorialStage } from "./HistoryEditorialStage";
 import { HistoryEditorialVisual } from "./HistoryEditorialVisual";
 import { HistoryKineticType } from "./HistoryKineticType";
 import { Cv001RigProofComposition } from "./Cv001RigProofComposition";
+import {
+  assertDirectedShotMotionBinding,
+  type DirectedShotMotionBinding,
+} from "./production-motion-binding";
 
 export type CharacterPlaybackAsset = {
   type: "character-rig";
@@ -58,7 +62,7 @@ export type ProductionCompositionProps = {
   audioMix?: AudioMix;
   previewWatermark?: string;
   previewAssetStatus?: "unapproved-candidate";
-  directedBeatProgram?: DirectedBeatProgram;
+  directedMotion?: DirectedShotMotionBinding;
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
@@ -519,9 +523,16 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
   audioMix,
   previewWatermark,
   previewAssetStatus,
-  directedBeatProgram,
+  directedMotion,
 }) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
+  const validatedMotion = directedMotion
+    ? assertDirectedShotMotionBinding(
+        plan,
+        sliceDurationInFrames,
+        directedMotion,
+      )
+    : undefined;
   const captions: Caption[] = plan.shots
     .filter((shot) => shot.caption && shot.startFrame < duration)
     .map((shot) => ({
@@ -538,7 +549,7 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
     <AbsoluteFill style={{ background: "#111718" }}>
       {plan.shots
         .filter((shot) => shot.startFrame < duration)
-        .map((shot, index) => (
+        .map((shot) => (
           <Sequence
             from={shot.startFrame}
             durationInFrames={Math.min(
@@ -550,7 +561,9 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
             <TransitionedShot projectType={plan.projectType} shot={shot}>
               <ShotScene
                 directedBeatProgram={
-                  index === 0 ? directedBeatProgram : undefined
+                  validatedMotion?.shotId === shot.id
+                    ? validatedMotion.program
+                    : undefined
                 }
                 plan={plan}
                 playbackAssets={playbackAssets}

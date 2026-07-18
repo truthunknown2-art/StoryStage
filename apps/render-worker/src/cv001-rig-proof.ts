@@ -8,12 +8,19 @@ import {
   renderStill,
   selectComposition,
 } from "@remotion/renderer";
-import { STORY_STAGE_CV001_RIG_PROOF_COMPOSITION_ID } from "@storystage/remotion-runtime/manifest";
-import type { Cv001RigProofCompositionProps } from "@storystage/remotion-runtime";
 import {
+  getCv001AttachmentContinuity,
+  type ProductionCompositionProps,
+} from "@storystage/remotion-runtime";
+import { STORY_STAGE_PRODUCTION_COMPOSITION_ID } from "@storystage/remotion-runtime/manifest";
+import {
+  buildAnimaticSync,
+  createProductionDraft,
   cv001LanternMotionProgram,
   evaluateMotionProgram,
+  frameAccurateRenderPlanSchema,
   getMotionProgramIssues,
+  sampleWorkshopScript,
 } from "@storystage/story-engine";
 
 const workspaceRoot = resolve(
@@ -22,6 +29,43 @@ const workspaceRoot = resolve(
 const outputRoot = resolve(workspaceRoot, "artifacts/CV-001/rig-kernel-proof");
 const sha256 = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
+
+const createSingleShotProofPlan = () => {
+  const basePlan = buildAnimaticSync({
+    draft: createProductionDraft({
+      productionId: "production-cv001-rig-proof",
+      title: "CV-001 Lantern Reach",
+      projectType: "explainer",
+      showPackId: "weird-history-editorial-v1",
+      preset: "studio",
+      script: sampleWorkshopScript,
+    }),
+  }).renderPlan;
+  const sourceShot = basePlan.shots[0]!;
+  const durationInFrames = cv001LanternMotionProgram.durationInFrames;
+  return frameAccurateRenderPlanSchema.parse({
+    ...basePlan,
+    id: "plan-cv001-rig-proof",
+    productionId: "production-cv001-rig-proof",
+    contentHash: "c".repeat(64),
+    title: "CV-001 Lantern Reach",
+    durationInFrames,
+    shots: [
+      {
+        ...sourceShot,
+        id: "shot-cv001-lantern-reach",
+        number: "1.01",
+        startFrame: 0,
+        durationInFrames,
+        actions: sourceShot.actions.map((action) => ({
+          ...action,
+          startFrame: 0,
+          endFrame: durationInFrames,
+        })),
+      },
+    ],
+  });
+};
 
 async function main(): Promise<void> {
   const issues = getMotionProgramIssues(cv001LanternMotionProgram, {
@@ -39,15 +83,36 @@ async function main(): Promise<void> {
     ),
     publicDir: resolve(workspaceRoot, "packages/remotion-runtime/public"),
   });
-  const inputProps: Cv001RigProofCompositionProps = {
-    program: cv001LanternMotionProgram,
+  const plan = createSingleShotProofPlan();
+  const shotId = plan.shots[0]!.id;
+  const inputProps: ProductionCompositionProps = {
+    plan,
+    playbackAssets: {},
+    sliceDurationInFrames: cv001LanternMotionProgram.durationInFrames,
+    directedMotion: {
+      shotId,
+      program: cv001LanternMotionProgram,
+    },
   };
   const composition = await selectComposition({
     serveUrl,
-    id: STORY_STAGE_CV001_RIG_PROOF_COMPOSITION_ID,
+    id: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
     inputProps,
   });
-  const frames = [0, 24, 48, 70, 100, 119];
+  if (
+    composition.durationInFrames !== cv001LanternMotionProgram.durationInFrames
+  )
+    throw new Error(
+      `Production composition truncated CV-001: ${composition.durationInFrames} rendered frames for ${cv001LanternMotionProgram.durationInFrames} program frames.`,
+    );
+  const attachmentContinuity = getCv001AttachmentContinuity(
+    cv001LanternMotionProgram,
+  );
+  if (attachmentContinuity.distance >= 0.001)
+    throw new Error(
+      `Lantern attachment teleports by ${attachmentContinuity.distance}px.`,
+    );
+  const frames = [0, 24, 47, 48, 70, 100, 119];
   const stills = [];
   for (const frame of frames) {
     const output = resolve(
@@ -73,13 +138,26 @@ async function main(): Promise<void> {
   const report = {
     schemaVersion: "1.0",
     status: "engineering-motion-proof",
-    compositionId: STORY_STAGE_CV001_RIG_PROOF_COMPOSITION_ID,
+    compositionId: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
     programId: cv001LanternMotionProgram.id,
     fps: composition.fps,
     durationInFrames: composition.durationInFrames,
     width: composition.width,
     height: composition.height,
     validatorIssues: issues,
+    rigContractId: "cv001-paper-cut-rig-v1",
+    attachmentContinuity,
+    integration: {
+      path: "ProductionComposition",
+      shotId,
+      planDurationInFrames: plan.durationInFrames,
+      programDurationInFrames: cv001LanternMotionProgram.durationInFrames,
+      renderedDurationInFrames: composition.durationInFrames,
+      exactDuration:
+        plan.durationInFrames === cv001LanternMotionProgram.durationInFrames &&
+        composition.durationInFrames ===
+          cv001LanternMotionProgram.durationInFrames,
+    },
     requiredBehaviors: [
       "frame-evaluated hierarchy",
       "head leads torso",

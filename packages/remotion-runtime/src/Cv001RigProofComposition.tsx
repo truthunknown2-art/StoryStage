@@ -4,6 +4,10 @@ import {
   type DirectedBeatProgram,
 } from "@storystage/story-engine";
 import { useCurrentFrame } from "remotion";
+import {
+  cv001RigLayout,
+  getCv001LanternPickupAnchor,
+} from "./cv001-rig-kinematics";
 
 export type Cv001RigProofCompositionProps = { program: DirectedBeatProgram };
 
@@ -67,15 +71,18 @@ export const Cv001RigProofComposition: React.FC<
   const torsoRotation = evaluated.bones.torso?.rotation ?? 0;
   const headRotation = evaluated.bones.head?.rotation ?? 0;
   const upperArmRotation =
-    40 - (evaluated.bones["upper-arm-right"]?.rotation ?? 0);
+    cv001RigLayout.upperArmRotationOffset -
+    (evaluated.bones["upper-arm-right"]?.rotation ?? 0);
   const lowerArmRotation =
-    70 + (evaluated.bones["lower-arm-right"]?.rotation ?? 0);
+    cv001RigLayout.lowerArmRotationOffset +
+    (evaluated.bones["lower-arm-right"]?.rotation ?? 0);
   const handRotation = evaluated.bones["hand-right"]?.rotation ?? 0;
   const gazeX = evaluated.face["gaze-x"] ?? 0;
   const blink = Math.max(0, Math.min(1, evaluated.face.blink ?? 0));
   const mouthOpen = Math.max(0, Math.min(1, evaluated.face["mouth-open"] ?? 0));
   const cameraScale = evaluated.camera.scale ?? 1;
   const cameraX = evaluated.camera.x ?? 0;
+  const lanternPickupAnchor = getCv001LanternPickupAnchor(validated);
   const lanternAttached = evaluated.attachments.some(
     (attachment) =>
       attachment.propId === "lantern" && attachment.boneId === "hand-right",
@@ -162,16 +169,24 @@ export const Cv001RigProofComposition: React.FC<
       <g
         transform={`translate(${cameraX} 0) translate(960 540) scale(${cameraScale}) translate(-960 -540)`}
       >
-        <circle cx="935" cy="645" fill="url(#cv001-glow)" r="210" />
+        <circle
+          cx={lanternPickupAnchor.x}
+          cy={lanternPickupAnchor.y}
+          fill="url(#cv001-glow)"
+          r="210"
+        />
         {!lanternAttached ? (
-          <g filter="url(#cv001-shadow)" transform="translate(936 662)">
-            <Lantern scale={1.08} />
+          <g
+            filter="url(#cv001-shadow)"
+            transform={`translate(${lanternPickupAnchor.x} ${lanternPickupAnchor.y})`}
+          >
+            <Lantern scale={0.92} />
           </g>
         ) : null}
         <g
           data-phase={evaluated.phase ?? "none"}
           filter="url(#cv001-shadow)"
-          transform={`translate(${535 + rootX} ${760 + rootY}) rotate(${rootRotation}) scale(${rootScale})`}
+          transform={`translate(${cv001RigLayout.rootOrigin.x + rootX} ${cv001RigLayout.rootOrigin.y + rootY}) rotate(${rootRotation}) scale(${rootScale})`}
         >
           <g transform={`rotate(${torsoRotation})`}>
             <path
@@ -240,7 +255,9 @@ export const Cv001RigProofComposition: React.FC<
                 ry={5 + mouthOpen * 18}
               />
             </g>
-            <g transform={`translate(78 -170) rotate(${upperArmRotation})`}>
+            <g
+              transform={`translate(${cv001RigLayout.upperArmPivot.x} ${cv001RigLayout.upperArmPivot.y}) rotate(${upperArmRotation})`}
+            >
               <rect
                 fill="#e0a34c"
                 height="58"
@@ -251,7 +268,9 @@ export const Cv001RigProofComposition: React.FC<
                 x="-8"
                 y="-29"
               />
-              <g transform={`translate(116 0) rotate(${lowerArmRotation})`}>
+              <g
+                transform={`translate(${cv001RigLayout.forearmPivot.x} ${cv001RigLayout.forearmPivot.y}) rotate(${lowerArmRotation})`}
+              >
                 <rect
                   fill="#d8894f"
                   height="52"
@@ -262,7 +281,9 @@ export const Cv001RigProofComposition: React.FC<
                   x="-4"
                   y="-26"
                 />
-                <g transform={`translate(104 0) rotate(${handRotation})`}>
+                <g
+                  transform={`translate(${cv001RigLayout.handPivot.x} ${cv001RigLayout.handPivot.y}) rotate(${handRotation})`}
+                >
                   <ellipse
                     cx="18"
                     cy="0"
@@ -273,7 +294,9 @@ export const Cv001RigProofComposition: React.FC<
                     strokeWidth="8"
                   />
                   {lanternAttached ? (
-                    <g transform="translate(44 42)">
+                    <g
+                      transform={`translate(${cv001RigLayout.lanternOffset.x} ${cv001RigLayout.lanternOffset.y})`}
+                    >
                       <Lantern scale={0.92} />
                     </g>
                   ) : null}

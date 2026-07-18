@@ -82,6 +82,52 @@ describe("directed motion programs", () => {
     ).toEqual(["missing-prop-attachment"]);
   });
 
+  it("rejects motion targets that the bound rig does not render", () => {
+    const ghostTargets = directedBeatProgramSchema.parse({
+      ...cv001LanternMotionProgram,
+      tracks: cv001LanternMotionProgram.tracks.map((track) => {
+        if (track.type === "bone")
+          return {
+            ...track,
+            boneId: `ghost-${track.boneId}`,
+          };
+        if (track.type === "face" && track.channel === "gaze-x")
+          return { ...track, channel: "gaze-y" as const };
+        if (track.type === "camera" && track.property === "x")
+          return { ...track, property: "y" as const };
+        if (track.type === "attachment")
+          return { ...track, boneId: "ghost-hand" };
+        return track;
+      }),
+    });
+    const issueCodes = getMotionProgramIssues(ghostTargets, {
+      cv001Proof: true,
+    }).map((issue) => issue.code);
+    expect(issueCodes).toContain("unsupported-track-target");
+    expect(issueCodes).toContain("missing-articulated-motion");
+    expect(issueCodes).toContain("missing-prop-attachment");
+    expect(() =>
+      assertMotionProgram(ghostTargets, { cv001Proof: true }),
+    ).toThrow(/unsupported-track-target/);
+  });
+
+  it("rejects duplicate targets instead of applying order-dependent overrides", () => {
+    const duplicated = directedBeatProgramSchema.parse({
+      ...cv001LanternMotionProgram,
+      tracks: [
+        ...cv001LanternMotionProgram.tracks,
+        cv001LanternMotionProgram.tracks.find(
+          (track) => track.type === "bone" && track.boneId === "head",
+        )!,
+      ],
+    });
+    expect(
+      getMotionProgramIssues(duplicated, { cv001Proof: true }).map(
+        (issue) => issue.code,
+      ),
+    ).toContain("duplicate-track-target");
+  });
+
   it("contains continuous head-led articulated motion", () => {
     const early = evaluateMotionProgram(cv001LanternMotionProgram, 12);
     const torsoAtTwelve = early.bones.torso?.rotation ?? 0;

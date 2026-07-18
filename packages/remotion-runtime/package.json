@@ -9,7 +9,8 @@
     "./manifest": "./src/manifest.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run src/cv001-rig-contract.test.ts"
   },
   "dependencies": {
     "@remotion/captions": "4.0.490",
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@types/react": "19.2.7",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
   }
 }

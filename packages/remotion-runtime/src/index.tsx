@@ -128,3 +128,11 @@ export { RigDiagnosticComposition };
 export type { RigDiagnosticCompositionProps } from "./RigDiagnosticComposition";
 export { Cv001RigProofComposition };
 export type { Cv001RigProofCompositionProps } from "./Cv001RigProofComposition";
+export {
+  cv001RigLayout,
+  getCv001AttachmentContinuity,
+  getCv001LanternHandAnchor,
+  getCv001LanternPickupAnchor,
+} from "./cv001-rig-kinematics";
+export { assertDirectedShotMotionBinding } from "./production-motion-binding";
+export type { DirectedShotMotionBinding } from "./production-motion-binding";

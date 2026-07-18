@@ -151,6 +151,40 @@ export const directedBeatProgramSchema = z
 export type MotionKeyframe = z.infer<typeof motionKeyframeSchema>;
 export type MotionTrack = z.infer<typeof motionTrackSchema>;
 export type DirectedBeatProgram = z.infer<typeof directedBeatProgramSchema>;
+type BoneMotionProperty = Extract<MotionTrack, { type: "bone" }>["property"];
+
+export type MotionRigContract = {
+  id: string;
+  bones: Readonly<Record<string, readonly BoneMotionProperty[]>>;
+  rootProperties: ReadonlyArray<
+    Extract<MotionTrack, { type: "root" }>["property"]
+  >;
+  faceChannels: ReadonlyArray<
+    Extract<MotionTrack, { type: "face" }>["channel"]
+  >;
+  cameraProperties: ReadonlyArray<
+    Extract<MotionTrack, { type: "camera" }>["property"]
+  >;
+  attachments: readonly {
+    propId: string;
+    boneId: string;
+  }[];
+};
+
+export const cv001RigContract = {
+  id: "cv001-paper-cut-rig-v1",
+  bones: {
+    torso: ["rotation"],
+    head: ["rotation"],
+    "upper-arm-right": ["rotation"],
+    "lower-arm-right": ["rotation"],
+    "hand-right": ["rotation"],
+  },
+  rootProperties: ["x", "y", "rotation", "scale"],
+  faceChannels: ["gaze-x", "blink", "mouth-open"],
+  cameraProperties: ["x", "scale"],
+  attachments: [{ propId: "lantern", boneId: "hand-right" }],
+} as const satisfies MotionRigContract;
 
 export type MotionProgramIssue = {
   code:
@@ -159,22 +193,70 @@ export type MotionProgramIssue = {
     | "missing-facial-motion"
     | "missing-performance-phases"
     | "missing-prop-attachment"
-    | "root-without-articulation";
+    | "root-without-articulation"
+    | "duplicate-track-target"
+    | "unsupported-track-target";
   message: string;
 };
 
 const trackChanges = (track: Exclude<MotionTrack, { type: "attachment" }>) =>
   new Set(track.keyframes.map((keyframe) => keyframe.value)).size > 1;
 
+const motionTrackTarget = (track: MotionTrack): string => {
+  if (track.type === "bone") return `bone:${track.boneId}:${track.property}`;
+  if (track.type === "root") return `root:${track.property}`;
+  if (track.type === "face") return `face:${track.channel}`;
+  if (track.type === "camera") return `camera:${track.property}`;
+  return `attachment:${track.propId}:${track.boneId}`;
+};
+
+const trackIsSupported = (
+  track: MotionTrack,
+  contract: MotionRigContract,
+): boolean => {
+  if (track.type === "bone")
+    return contract.bones[track.boneId]?.includes(track.property) ?? false;
+  if (track.type === "root")
+    return contract.rootProperties.includes(track.property);
+  if (track.type === "face")
+    return contract.faceChannels.includes(track.channel);
+  if (track.type === "camera")
+    return contract.cameraProperties.includes(track.property);
+  return contract.attachments.some(
+    (attachment) =>
+      attachment.propId === track.propId && attachment.boneId === track.boneId,
+  );
+};
+
 export function getMotionProgramIssues(
   program: DirectedBeatProgram,
-  options: { cv001Proof?: boolean } = {},
+  options: { cv001Proof?: boolean; rigContract?: MotionRigContract } = {},
 ): MotionProgramIssue[] {
+  const contract =
+    options.rigContract ?? (options.cv001Proof ? cv001RigContract : undefined);
+  const issues: MotionProgramIssue[] = [];
+  const seenTargets = new Set<string>();
+  for (const track of program.tracks) {
+    const target = motionTrackTarget(track);
+    if (seenTargets.has(target))
+      issues.push({
+        code: "duplicate-track-target",
+        message: `Motion target ${target} is declared more than once.`,
+      });
+    seenTargets.add(target);
+    if (contract && !trackIsSupported(track, contract))
+      issues.push({
+        code: "unsupported-track-target",
+        message: `Motion target ${target} is not rendered by rig ${contract.id}.`,
+      });
+  }
   const movingBones = new Set(
     program.tracks
       .filter(
         (track): track is Extract<MotionTrack, { type: "bone" }> =>
-          track.type === "bone" && trackChanges(track),
+          track.type === "bone" &&
+          trackChanges(track) &&
+          (!contract || trackIsSupported(track, contract)),
       )
       .map((track) => track.boneId),
   );
@@ -182,7 +264,6 @@ export function getMotionProgramIssues(
     (track) => track.type === "root" && trackChanges(track),
   );
   const phaseTypes = new Set(program.phases.map((phase) => phase.type));
-  const issues: MotionProgramIssue[] = [];
   if (movingBones.size < 3)
     issues.push({
       code: "missing-articulated-motion",
@@ -211,7 +292,8 @@ export function getMotionProgramIssues(
         (track) =>
           track.type === "face" &&
           ["gaze-x", "gaze-y", "mouth-open"].includes(track.channel) &&
-          trackChanges(track),
+          trackChanges(track) &&
+          (!contract || trackIsSupported(track, contract)),
       )
     )
       issues.push({
@@ -220,14 +302,23 @@ export function getMotionProgramIssues(
       });
     if (
       !program.tracks.some(
-        (track) => track.type === "camera" && trackChanges(track),
+        (track) =>
+          track.type === "camera" &&
+          trackChanges(track) &&
+          (!contract || trackIsSupported(track, contract)),
       )
     )
       issues.push({
         code: "missing-camera-motion",
         message: "CV-001 requires a deterministic camera move.",
       });
-    if (!program.tracks.some((track) => track.type === "attachment"))
+    if (
+      !program.tracks.some(
+        (track) =>
+          track.type === "attachment" &&
+          (!contract || trackIsSupported(track, contract)),
+      )
+    )
       issues.push({
         code: "missing-prop-attachment",
         message: "CV-001 requires a bounded prop attachment.",
@@ -238,7 +329,7 @@ export function getMotionProgramIssues(
 
 export function assertMotionProgram(
   program: DirectedBeatProgram,
-  options: { cv001Proof?: boolean } = {},
+  options: { cv001Proof?: boolean; rigContract?: MotionRigContract } = {},
 ): DirectedBeatProgram {
   const parsed = directedBeatProgramSchema.parse(program);
   const issues = getMotionProgramIssues(parsed, options);

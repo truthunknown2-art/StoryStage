@@ -14,7 +14,7 @@ The creator-first Create and Studio mocks are in `docs/design/creator-first-rese
 
 The former SS-009 pilot remains a valid infrastructure and content test, but incremental SS-009 gate work is paused until CV-001 proves the front door and the actual animation kernel.
 
-`CV-001-A` is implemented locally for audit: a validated 120-frame deterministic rig proof now evaluates root, torso, head, upper arm, forearm, hand, gaze, blink, mouth, camera, parallax, and bounded lantern attachment tracks at the requested frame. A new motion-program schema rejects root sliding without articulated motion and cannot represent a full-body pose-swap track. The proof renders through Remotion to a local MP4 and exact-frame contact sheet; it remains engineering art and is not yet the creator-facing product.
+`CV-001-A` is implemented for re-audit: a validated 120-frame deterministic rig proof now evaluates root, torso, head, upper arm, forearm, hand, gaze, blink, mouth, camera, parallax, and bounded lantern attachment tracks at the requested frame. The motion program is bound to the explicit `cv001-paper-cut-rig-v1` contract, so ghost bones, unsupported channels/properties/attachments, duplicate targets, root-only sliding, and full-body pose swapping cannot pass as valid proof motion. The lantern's free and attached world anchors meet with a measured zero-pixel discontinuity. The proof now renders through the shot-bound `ProductionComposition` path with exact plan/program/render duration equality to a local MP4 and adjacent-boundary contact sheet; it remains engineering art and is not yet the creator-facing product.
 
 `SS-002: Two-Profile Script-to-Animatic + Generated Asset Seam` is active.
 
