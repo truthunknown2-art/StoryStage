@@ -93,6 +93,14 @@ describe("CV-002 editable story breakdown", () => {
     expect(removed.contentHash).toBe(graph.contentHash);
   });
 
+  it("rejects idempotent scene-boundary operations", () => {
+    const graph = createCv002StoryGraph(SCRIPT, "weird-history");
+    const existingBoundary = graph.scenes[1]!.beats[0]!;
+    const ordinaryBeat = graph.scenes[0]!.beats[1]!;
+    expect(() => applyCv002GraphOperation(graph, {type: "set-scene-boundary", beatId: existingBoundary.id, enabled: true})).toThrow(/already starts a scene/i);
+    expect(() => applyCv002GraphOperation(graph, {type: "set-scene-boundary", beatId: ordinaryBeat.id, enabled: false})).toThrow(/does not start a scene/i);
+  });
+
   it("changes only one beat direction when its semantic role changes", () => {
     const graph = createCv002StoryGraph(SCRIPT, "kids-adventure");
     const target = flatten(graph)[2]!;
@@ -169,6 +177,25 @@ describe("CV-002 editable story breakdown", () => {
     const forgedScene = reseal({...firstScene, id: "scene-forged"});
     const sceneGraph = reseal({...project.graph, scenes: [forgedScene, ...project.graph.scenes.slice(1)]});
     expect(() => restoreCv002Project(JSON.stringify(resealProjectWithGraph(project, sceneGraph)))).toThrow(/Scene ID is not derived/i);
+  });
+
+  it("rejects a self-rehashed no-op history transaction", () => {
+    const project = createCv002Project("Harbor signals", SCRIPT, "weird-history");
+    const existingBoundary = project.graph.scenes[1]!.beats[0]!;
+    const transactionDraft = {
+      schemaVersion: "1.0" as const,
+      id: "edit-0001",
+      sequence: 1,
+      operation: {type: "set-scene-boundary" as const, beatId: existingBoundary.id, enabled: true},
+      beforeGraph: project.graph,
+      afterGraph: project.graph,
+      beforeDirectionHash: project.directionDraft.contentHash,
+      afterDirectionHash: project.directionDraft.contentHash,
+    };
+    const transaction = {...transactionDraft, contentHash: hashCanonical(transactionDraft)};
+    const forged = reseal({...project, history: [transaction], historyCursor: 1});
+
+    expect(() => restoreCv002Project(JSON.stringify(forged))).toThrow(/must change the graph/i);
   });
 
   it("keeps canonical project state free of clocks, UUIDs, paths, and random values", () => {

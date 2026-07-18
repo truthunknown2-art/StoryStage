@@ -343,6 +343,8 @@ export function applyCv002GraphOperation(graph: Cv002StoryGraph, rawOperation: C
   if (operation.type === "set-scene-boundary") {
     const index = beats.findIndex((beat) => beat.id === operation.beatId);
     if (index <= 0) throw new Error("The first beat must remain the first scene boundary.");
+    if (breaks.has(index) === operation.enabled)
+      throw new Error(operation.enabled ? "No change needed. That beat already starts a scene." : "No change needed. That beat does not start a scene.");
     if (operation.enabled) breaks.add(index); else breaks.delete(index);
     return rebuildGraph(current.sourceText, current.grammar, beats, breaks);
   }
@@ -367,6 +369,10 @@ const cv002TransactionDraftSchema = z.object(transactionFields).strict();
 export const cv002TransactionSchema = z.object({...transactionFields, contentHash: hashSchema}).strict().superRefine((transaction, context) => {
   const {contentHash, ...draft} = transaction;
   if (hashCanonical(draft) !== contentHash) context.addIssue({code: "custom", message: "Story edit transaction hash is invalid.", path: ["contentHash"]});
+  if (transaction.beforeGraph.contentHash === transaction.afterGraph.contentHash)
+    context.addIssue({code: "custom", message: "Story edit transaction must change the graph.", path: ["afterGraph"]});
+  if (transaction.beforeDirectionHash === transaction.afterDirectionHash)
+    context.addIssue({code: "custom", message: "Story edit transaction must change the direction draft.", path: ["afterDirectionHash"]});
 });
 export type Cv002Transaction = z.infer<typeof cv002TransactionSchema>;
 
