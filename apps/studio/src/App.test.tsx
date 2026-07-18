@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {StoryStageDesktopBridge} from "@storystage/contracts";
 import {audioMixSchema, buildAnimaticSync, createRookPilot001Fixture, finalizeProductionBundle, finalizeScriptApprovalRecord, getFullProductionRenderBlockers, type ApprovedAssetVersion} from "@storystage/story-engine";
-import {App, buildChatGptAssetPrompt} from "./App";
+import {LegacyApp as App, buildChatGptAssetPrompt} from "./App";
 
 afterEach(() => {
   cleanup();

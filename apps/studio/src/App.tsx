@@ -78,6 +78,7 @@ import {
 } from "lucide-react";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {createHostAdapter, type HostAdapter} from "./host";
+import {Cv001CreatorApp} from "./Cv001CreatorApp";
 import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, ProductionRenderScope, PublicShowPackCandidateSummary, RenderJobEvent, ReviewPublicShowPackCandidateResult, StagedCandidateSummary, VerifiedDeliverySummary} from "@storystage/contracts";
 
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
@@ -198,7 +199,7 @@ function Brand() {
   );
 }
 
-function HomeScreen({guidance, onNew, recentProductions, onResume}: {guidance: Record<string, CompletionGuidance>; onNew: () => void; recentProductions: ProductionBundleSummary[]; onResume: (production: ProductionBundleSummary) => void}) {
+function HomeScreen({guidance, onNew, onOpenCreator, recentProductions, onResume}: {guidance: Record<string, CompletionGuidance>; onNew: () => void; onOpenCreator: () => void; recentProductions: ProductionBundleSummary[]; onResume: (production: ProductionBundleSummary) => void}) {
   return (
     <div className="home-shell">
       <aside className="home-sidebar">
@@ -216,14 +217,15 @@ function HomeScreen({guidance, onNew, recentProductions, onResume}: {guidance: R
       <main className="home-main">
         <header className="home-header">
           <div><p className="eyebrow">Production desk</p><h1>Make the directing decisions<br />before the frames.</h1></div>
-          <button className="primary-action" onClick={onNew}><Plus size={18} />New production</button>
+          <div className="home-header-actions"><button className="quiet-button" onClick={onNew}><Plus size={17} />New production</button><button className="primary-action" onClick={onOpenCreator}><PlayCircle size={17} />Open animated scene</button></div>
         </header>
         <section className="home-intro">
           <div className="intro-copy">
-            <span className="status-chip"><Sparkles size={13} />SS-009 Rook pilot production</span>
-            <h2>Two production grammars.<br />One deterministic pipeline.</h2>
-            <p>Start with a script and a real production policy. StoryStage extracts the cast and locations, directs profile-specific shots, identifies missing art, and freezes approved decisions for render.</p>
-            <button className="secondary-action" onClick={onNew}>Paste a script and make a first cut <ArrowRight size={16} /></button>
+            <span className="status-chip"><Sparkles size={13} />Real animation is ready to direct</span>
+            <h2>Watch a story beat.<br />Then tell it what to do.</h2>
+            <p>Open the Lantern Discovery lab to direct a real articulated character, camera and prop across three connected beats. It is a narrow working scene—not a pose-swap mockup pretending to be a finished episode.</p>
+            <button className="secondary-action" onClick={onOpenCreator}>Direct the animated scene <ArrowRight size={16} /></button>
+            <button className="home-script-link" onClick={onNew}>Or paste a script into the production planner</button>
           </div>
           <div className="grammar-stack" aria-label="Available production types">
             {projectOptions.map((option) => (
@@ -1622,7 +1624,7 @@ function Workspace({capabilities, host, initialTab, onExit, session, setSession}
   );
 }
 
-export function App() {
+export function LegacyApp({onOpenCreator = () => undefined}: {onOpenCreator?: () => void}) {
   const [screen, setScreen] = useState<Screen>("home");
   const [session, setSession] = useState<ProductionSession | null>(null);
   const [host] = useState(() => createHostAdapter(window.storyStage));
@@ -1673,5 +1675,12 @@ export function App() {
 
   if (screen === "new-production") return <NewProductionScreen onBack={() => setScreen("home")} onCreate={(created) => {setSession(created); setWorkspaceStartTab("direction"); setScreen("workspace");}} />;
   if (screen === "workspace" && session) return <Workspace capabilities={capabilities} host={host} initialTab={workspaceStartTab} onExit={() => void returnHome()} session={session} setSession={setSession} />;
-  return <HomeScreen guidance={recentGuidance} onNew={() => setScreen("new-production")} recentProductions={recentProductions} onResume={(production) => void resumeProduction(production)} />;
+  return <HomeScreen guidance={recentGuidance} onNew={() => setScreen("new-production")} onOpenCreator={onOpenCreator} recentProductions={recentProductions} onResume={(production) => void resumeProduction(production)} />;
+}
+
+export function App() {
+  const [legacyOpen, setLegacyOpen] = useState(false);
+  return legacyOpen
+    ? <LegacyApp onOpenCreator={() => setLegacyOpen(false)} />
+    : <Cv001CreatorApp onOpenLegacy={() => setLegacyOpen(true)} />;
 }

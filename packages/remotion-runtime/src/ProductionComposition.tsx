@@ -65,6 +65,7 @@ export type ProductionCompositionProps = {
   previewWatermark?: string;
   previewAssetStatus?: "unapproved-candidate";
   directedSceneMotion?: Cv001CompiledSceneMotion;
+  showMotionDiagnostics?: boolean;
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
@@ -356,6 +357,7 @@ const ShotScene: React.FC<{
   plan: FrameAccurateRenderPlan;
   playbackAssets: Record<string, PlaybackAsset>;
   previewAssetStatus?: ProductionCompositionProps["previewAssetStatus"];
+  showMotionDiagnostics?: boolean;
   shot: RenderShot;
 }> = ({
   directedBeatProgram,
@@ -363,6 +365,7 @@ const ShotScene: React.FC<{
   plan,
   playbackAssets,
   previewAssetStatus,
+  showMotionDiagnostics,
   shot,
 }) => {
   const frame = useCurrentFrame();
@@ -371,6 +374,7 @@ const ShotScene: React.FC<{
       <Cv001RigProofComposition
         lanternPickupTransform={lanternPickupTransform}
         program={directedBeatProgram}
+        showDiagnosticOverlay={showMotionDiagnostics}
       />
     );
   const backgroundBinding = shot.visualBindings.find(
@@ -533,6 +537,7 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
   previewWatermark,
   previewAssetStatus,
   directedSceneMotion,
+  showMotionDiagnostics = false,
 }) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
   const validatedSceneMotion = directedSceneMotion
@@ -588,6 +593,7 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
                 plan={plan}
                 playbackAssets={playbackAssets}
                 previewAssetStatus={previewAssetStatus}
+                showMotionDiagnostics={showMotionDiagnostics}
                 shot={shot}
               />
             </TransitionedShot>

@@ -140,6 +140,7 @@ async function main(): Promise<void> {
     playbackAssets: {},
     sliceDurationInFrames: fixture.renderPlan.durationInFrames,
     directedSceneMotion: compiled,
+    showMotionDiagnostics: true,
   };
   const composition = await selectComposition({
     serveUrl,

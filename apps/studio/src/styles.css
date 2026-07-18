@@ -62,12 +62,15 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .sidebar-note small { color: #5d6965; font-size: 9px; margin-top: 2px; }
 .home-main { background: radial-gradient(circle at 72% 9%, rgba(66,104,85,.14), transparent 32%), #0c1011; padding: 34px 52px 44px; }
 .home-header { align-items: flex-start; display: flex; justify-content: space-between; }
+.home-header-actions { align-items: center; display: flex; gap: 16px; }
 .home-header h1 { color: #f2f5f3; font-size: clamp(30px, 3vw, 48px); letter-spacing: -.055em; line-height: 1.03; margin-top: 12px; }
 .home-intro { align-items: stretch; display: grid; gap: 48px; grid-template-columns: minmax(330px, .8fr) minmax(560px, 1.2fr); margin-top: 68px; }
 .intro-copy { padding: 30px 0; }
 .status-chip { align-items: center; background: #18231e; border: 1px solid #294035; border-radius: 999px; color: #90d4ad; display: inline-flex; font-size: 10px; font-weight: 700; gap: 7px; padding: 6px 9px; text-transform: uppercase; }
 .intro-copy h2 { color: #eef3f0; font-size: clamp(27px, 2.5vw, 42px); letter-spacing: -.05em; line-height: 1.06; margin-top: 24px; }
 .intro-copy > p { color: #83908c; font-size: 14px; line-height: 1.7; margin: 20px 0 28px; max-width: 500px; }
+.home-script-link { background: transparent; border: 0; color: #718079; display: block; font-size: 10px; margin-top: 13px; padding: 4px 0; text-decoration: underline; text-decoration-color: #37423c; text-underline-offset: 4px; }
+.home-script-link:hover { color: #aebbb4; }
 .grammar-stack { display: grid; gap: 14px; }
 .grammar-card { background: linear-gradient(115deg, rgba(255,255,255,.025), transparent 60%), #131919; border: 1px solid #283131; border-radius: 13px; display: grid; gap: 20px; min-height: 196px; overflow: hidden; padding: 25px 27px 20px; position: relative; }
 .grammar-card::before { background: var(--grammar-color); content: ""; height: 100%; left: 0; opacity: .85; position: absolute; top: 0; width: 4px; }

@@ -14,6 +14,7 @@ import {
 export type Cv001RigProofCompositionProps = {
   program: DirectedBeatProgram;
   lanternPickupTransform?: Cv001WorldTransform;
+  showDiagnosticOverlay?: boolean;
 };
 
 const Lantern: React.FC<{ scale?: number }> = ({ scale = 1 }) => (
@@ -65,7 +66,7 @@ const CutPaperLeaf: React.FC<{
 
 export const Cv001RigProofComposition: React.FC<
   Cv001RigProofCompositionProps
-> = ({ program, lanternPickupTransform }) => {
+> = ({ program, lanternPickupTransform, showDiagnosticOverlay = true }) => {
   const validated = assertMotionProgram(program, {
     rigContract: cv001RigContract,
   });
@@ -335,7 +336,8 @@ export const Cv001RigProofComposition: React.FC<
           />
         ))}
       </g>
-      <g transform="translate(70 72)">
+      {showDiagnosticOverlay ? (
+        <g transform="translate(70 72)">
         <rect
           fill="#10211f"
           height="72"
@@ -365,7 +367,8 @@ export const Cv001RigProofComposition: React.FC<
           {evaluated.phase ?? "hold"} · frame {frame} /{" "}
           {validated.durationInFrames - 1}
         </text>
-      </g>
+        </g>
+      ) : null}
     </svg>
   );
 };
