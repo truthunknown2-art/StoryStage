@@ -6,6 +6,14 @@ SS-001 remains accepted workstation infrastructure: browser studio, secure Elect
 
 ## Active milestone
 
+`CV-001: One Genuinely Animated Kids Scene` is now the active product milestone. Direct user testing rejected the existing default workspace as a confusing engineering cockpit and rejected three-pose substitution as animation. Pro agreed that the product requires a creator-first reset: paste script -> choose grammar and style -> review natural beats -> watch a directed animated first cut -> improve the selected beat -> export. The current readiness, approval, rights, lineage, render, and delivery systems remain valuable backstage infrastructure and move behind contextual creator language plus a collapsed Advanced Preflight surface.
+
+CV-001 is a 10-15 second, three-to-five-beat Kids Adventure scene with one project-owned articulated character, one interactive prop, a three-layer background, two shot sizes, a camera reframe, parallax, guide voice, phoneme-timed mouth shapes, captions, and two SFX cues. It passes only when the preview is dominant, beats are obvious without documentation, plain-language direction changes the selected beat, the character performs continuous layered motion, prop contacts hold, and preview and MP4 use the same frame-evaluated composition. Full-body pose swapping may accent the performance but cannot carry it.
+
+The creator-first Create and Studio mocks are in `docs/design/creator-first-reset/`. The measured animation study and strengthened Visual Director skill are in `docs/research/mister-kipley-limited-animation-study.md` and `.agents/skills/story-stage-visual-director/`.
+
+The former SS-009 pilot remains a valid infrastructure and content test, but incremental SS-009 gate work is paused until CV-001 proves the front door and the actual animation kernel.
+
 `SS-002: Two-Profile Script-to-Animatic + Generated Asset Seam` is active.
 
 `SS-004: Verified Delivery Bundle + Durable Render Receipt` was accepted by Pro at `b6c9a1d`. Full renders now produce a probed content-hashed receipt and an atomic seven-file delivery binding the exact production, master, captions, rights/provenance, and toolchain. Delivery status survives restart and is re-verified before open/reveal; imported audio cannot pass the final gate without explicit content-bound clearance.

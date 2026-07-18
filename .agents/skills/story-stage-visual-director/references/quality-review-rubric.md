@@ -18,6 +18,10 @@
 - stable, child-safe imagery without accidental frightening details or flashes
 - clear anticipation, action, and hold
 - no sliding character without locomotion intent
+- primary performance is carried by articulated motion, not full-body pose replacement
+- gaze, face, head, torso, and limb accents form one readable action rather than unrelated loops
+- prop contacts and feet remain attached through motion
+- preview and export resolve the same frame-evaluated tracks
 - lyric or narration stress aligns with the performance accent
 
 ## History checks
