@@ -196,12 +196,76 @@ function validateTimeline(
     expectedStart = shot.startFrame + shot.durationInFrames;
 
     const eventById = new Map(shot.events.map((event) => [event.id, event]));
+    if (eventById.size !== shot.events.length)
+      context.addIssue({
+        code: "custom",
+        path: ["shots", shotIndex, "events"],
+        message: `Shot ${shot.id} contains duplicate event ids.`,
+      });
     shot.events.forEach((event, eventIndex) => {
       if (event.frameOffset >= shot.durationInFrames)
         context.addIssue({
           code: "custom",
           path: ["shots", shotIndex, "events", eventIndex, "frameOffset"],
           message: `Event ${event.id} falls outside ${shot.id}.`,
+        });
+    });
+
+    const entryByEntity = new Map(
+      shot.entryState.map((state) => [state.entityId, state]),
+    );
+    const exitByEntity = new Map(
+      shot.exitState.map((state) => [state.entityId, state]),
+    );
+    for (const [entityId, incoming] of entryByEntity) {
+      const outgoing = exitByEntity.get(entityId);
+      if (!outgoing) continue;
+      const beginsLocomoting = ["running", "sneaking", "decelerating"].includes(
+        incoming.motion,
+      );
+      const endsPlanted = ["idle", "performing"].includes(outgoing.motion);
+      const hasPlantEvent = shot.events.some(
+        (event) =>
+          event.subjectIds.includes(entityId) &&
+          ["foot-contact", "settle"].includes(event.kind),
+      );
+      if (beginsLocomoting && endsPlanted && !hasPlantEvent)
+        context.addIssue({
+          code: "custom",
+          path: ["shots", shotIndex, "events"],
+          message: `${entityId} ends locomotion in ${shot.id} without a named plant or settle event.`,
+        });
+
+      if (incoming.attachmentOwnerId !== outgoing.attachmentOwnerId) {
+        const hasOwnershipEvent = shot.events.some(
+          (event) =>
+            event.subjectIds.includes(entityId) &&
+            ["attach", "detach"].includes(event.kind),
+        );
+        if (!hasOwnershipEvent)
+          context.addIssue({
+            code: "custom",
+            path: ["shots", shotIndex, "events"],
+            message: `${entityId} changes owner inside ${shot.id} without a visible attach or detach event.`,
+          });
+      }
+    }
+
+    shot.events.forEach((event, eventIndex) => {
+      if (event.kind !== "attach") return;
+      const sharedDetachment = shot.events.find(
+        (candidate) =>
+          candidate.kind === "detach" &&
+          candidate.frameOffset > event.frameOffset &&
+          candidate.subjectIds.some((id) => event.subjectIds.includes(id)),
+      );
+      const readableUntil =
+        sharedDetachment?.frameOffset ?? shot.durationInFrames;
+      if (readableUntil - event.frameOffset < 6)
+        context.addIssue({
+          code: "custom",
+          path: ["shots", shotIndex, "events", eventIndex, "frameOffset"],
+          message: `${event.id} must remain visibly attached for at least six frames.`,
         });
     });
     const cutOut = eventById.get(shot.cutOutEventId);
@@ -232,7 +296,8 @@ function validateTimeline(
     context.addIssue({
       code: "custom",
       path: ["durationInFrames"],
-      message: "Director shots must cover the production without gaps or overlaps.",
+      message:
+        "Director shots must cover the production without gaps or overlaps.",
     });
 
   for (let index = 1; index < timeline.shots.length; index += 1) {
@@ -319,8 +384,7 @@ function validateTimeline(
     }
 
     const sharedVisible = [...previousById.keys()].filter(
-      (id) =>
-        previousById.get(id)?.visible && currentById.get(id)?.visible,
+      (id) => previousById.get(id)?.visible && currentById.get(id)?.visible,
     );
     for (let left = 0; left < sharedVisible.length; left += 1)
       for (let right = left + 1; right < sharedVisible.length; right += 1) {

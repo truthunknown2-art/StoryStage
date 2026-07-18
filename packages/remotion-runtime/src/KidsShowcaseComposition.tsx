@@ -83,7 +83,8 @@ export const kidsShowcaseShots: KidsShowcaseShot[] = [
     startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[0].startFrame,
     durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[0].durationInFrames,
     title: "Run through the arch",
-    intent: "One continuous pursuit, visible threshold, and planted exit contact",
+    intent:
+      "One continuous pursuit, visible threshold, and planted exit contact",
     narration:
       "The little light slipped through the oldest arch in the forest.",
   },
@@ -92,7 +93,8 @@ export const kidsShowcaseShots: KidsShowcaseShot[] = [
     startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[1].startFrame,
     durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[1].durationInFrames,
     title: "Did you hear that?",
-    intent: "Inherited roots, visible deceleration, shared gaze, and comprehension hold",
+    intent:
+      "Inherited roots, visible deceleration, shared gaze, and comprehension hold",
     narration: "Then the ruin whispered back.",
   },
   {
@@ -100,7 +102,8 @@ export const kidsShowcaseShots: KidsShowcaseShot[] = [
     startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[2].startFrame,
     durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[2].durationInFrames,
     title: "Into the moon hall",
-    intent: "Visible entrance, continuous moth path, staggered sneaks, and planted reveal marks",
+    intent:
+      "Visible entrance, continuous moth path, staggered sneaks, and planted reveal marks",
     narration: "So they followed the glow into the moon hall.",
   },
   {
@@ -132,7 +135,8 @@ export const kidsShowcaseShots: KidsShowcaseShot[] = [
     startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[6].startFrame,
     durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[6].durationInFrames,
     title: "Sneeze, turn, and catch",
-    intent: "Anticipation, sneeze, delayed reaction, visible pivot, moth catch, and planted step",
+    intent:
+      "Anticipation, sneeze, delayed reaction, visible pivot, moth catch, and planted step",
     narration:
       "The creature puffed up its cheeks... and sneezed a skyful of sparks.",
   },
@@ -141,7 +145,8 @@ export const kidsShowcaseShots: KidsShowcaseShot[] = [
     startFrame: KIDS_SHOWCASE_DIRECTED_SHOTS[7].startFrame,
     durationInFrames: KIDS_SHOWCASE_DIRECTED_SHOTS[7].durationInFrames,
     title: "Escape through the portal",
-    intent: "Matched gait, visible arch crossing, physical occlusion, and on-screen deceleration",
+    intent:
+      "Matched gait, visible arch crossing, physical occlusion, and on-screen deceleration",
     narration: "That was more than enough adventure for one hallway.",
   },
   {
@@ -458,9 +463,12 @@ const ProfileRunRig: React.FC<{
   facing?: "left" | "right";
   frame: number;
   motionBlur?: boolean;
+  opacity?: number;
   phaseOffset?: number;
+  rotation?: number;
   rootPixelsPerFrame: number;
   scale: number;
+  squash?: number;
   variant: KidVariant;
   x: number;
   y: number;
@@ -468,9 +476,12 @@ const ProfileRunRig: React.FC<{
   facing = "right",
   frame,
   motionBlur = false,
+  opacity = 1,
   phaseOffset = 0,
+  rotation = 0,
   rootPixelsPerFrame,
   scale,
+  squash = 1,
   variant,
   x,
   y,
@@ -529,10 +540,16 @@ const ProfileRunRig: React.FC<{
   );
 
   return (
-    <g aria-label={`${variant} profile frame-drawn run rig`} transform={mirror}>
-      {motionBlur ? sprite(0.12, -rootPixelsPerFrame * 1.6, 2.4) : null}
-      {motionBlur ? sprite(0.08, -rootPixelsPerFrame * 2.8, 4.2) : null}
-      {sprite(1, 0, 0)}
+    <g
+      aria-label={`${variant} profile frame-drawn run rig`}
+      opacity={opacity}
+      transform={`translate(${x} ${y}) rotate(${rotation}) scale(1 ${squash}) translate(${-x} ${-y})`}
+    >
+      <g transform={mirror}>
+        {motionBlur ? sprite(0.12, -rootPixelsPerFrame * 1.6, 2.4) : null}
+        {motionBlur ? sprite(0.08, -rootPixelsPerFrame * 2.8, 4.2) : null}
+        {sprite(1, 0, 0)}
+      </g>
     </g>
   );
 };
@@ -759,15 +776,21 @@ const MaraPayoffPuppet: React.FC<{
 }> = ({ frame, mode, x, y }) => {
   const reach =
     mode === "offer" ? clampInterpolate(frame, [12, 58], [0, 1]) : 1;
-  const wave = mode === "play" ? clampInterpolate(frame, [10, 32], [0, 1]) : 0;
-  const hold = mode === "play" ? clampInterpolate(frame, [48, 71], [0, 1]) : 0;
+  const wave =
+    mode === "play"
+      ? clampInterpolate(frame, [10, 15, 40, 49], [0, 1, 1, 0])
+      : 0;
+  const waveArc =
+    mode === "play" ? Math.sin((frame - 10) * 0.7) * 16 * wave : 0;
+  const hold = mode === "play" ? clampInterpolate(frame, [40, 49], [0, 1]) : 0;
+  const breathing =
+    mode === "play" ? Math.sin(frame / 8) * (1.2 - hold * 0.35) : 0;
   const releaseReach =
     mode === "play" ? clampInterpolate(frame, [0, 16], [0, 1]) : 0;
   const rightShoulder =
     mode === "offer"
       ? clampInterpolate(reach, [0, 1], [8, -68])
-      : clampInterpolate(releaseReach, [0, 1], [-68, -96]) +
-        Math.sin(frame / 3.2) * 9 * wave * (1 - hold * 0.7);
+      : clampInterpolate(releaseReach, [0, 1], [-68, -96]) + waveArc;
   const headRotation =
     mode === "offer"
       ? clampInterpolate(frame, [5, 20, 58, 77], [-1, -7, 2, 0])
@@ -776,7 +799,7 @@ const MaraPayoffPuppet: React.FC<{
     <g
       aria-label="Mara articulated payoff puppet"
       style={{ filter: "drop-shadow(10px 15px 8px rgba(4,18,18,.24))" }}
-      transform={`translate(${x} ${y}) scale(.36)`}
+      transform={`translate(${x} ${y + breathing}) scale(.36)`}
     >
       <PuppetSheetPart
         pivot={{ x: 125, y: 255 }}
@@ -870,12 +893,18 @@ const MiloPayoffPuppet: React.FC<{
   y: number;
 }> = ({ frame, mode, x, y }) => {
   const relax = mode === "play" ? clampInterpolate(frame, [8, 25], [0, 1]) : 0;
-  const wave = mode === "play" ? clampInterpolate(frame, [24, 45], [0, 1]) : 0;
+  const wave =
+    mode === "play"
+      ? clampInterpolate(frame, [24, 30, 46, 53], [0, 1, 1, 0])
+      : 0;
+  const waveArc =
+    mode === "play" ? Math.sin((frame - 24) * 0.72) * 14 * wave : 0;
+  const breathing = mode === "play" ? Math.sin((frame + 4) / 8.5) * 1.1 : 0;
   return (
     <g
       aria-label="Milo articulated payoff puppet"
       style={{ filter: "drop-shadow(10px 15px 8px rgba(4,18,18,.24))" }}
-      transform={`translate(${x} ${y}) scale(.34)`}
+      transform={`translate(${x} ${y + breathing}) scale(.34)`}
     >
       <PuppetSheetPart
         pivot={{ x: 110, y: 245 }}
@@ -932,7 +961,7 @@ const MiloPayoffPuppet: React.FC<{
         y={-415}
       />
       <g
-        transform={`translate(155 -720) rotate(${8 - relax * 18 - wave * 74})`}
+        transform={`translate(155 -720) rotate(${8 - relax * 18 - wave * 74 + waveArc})`}
       >
         <PuppetSheetPart
           pivot={{ x: 95, y: 25 }}
@@ -970,13 +999,20 @@ const GuardianPayoffPuppet: React.FC<{
   y: number;
 }> = ({ frame, mode, x, y }) => {
   const offer = mode === "offer" ? clampInterpolate(frame, [6, 56], [0, 1]) : 1;
-  const wave = mode === "play" ? clampInterpolate(frame, [16, 38], [0, 1]) : 0;
-  const hold = mode === "play" ? clampInterpolate(frame, [50, 71], [0, 1]) : 0;
+  const wave =
+    mode === "play"
+      ? clampInterpolate(frame, [16, 22, 42, 51], [0, 1, 1, 0])
+      : 0;
+  const waveArc =
+    mode === "play" ? Math.sin((frame - 16) * 0.63) * 19 * wave : 0;
+  const hold = mode === "play" ? clampInterpolate(frame, [42, 51], [0, 1]) : 0;
+  const breathing =
+    mode === "play" ? Math.sin((frame + 2) / 9) * (1.5 - hold * 0.4) : 0;
   return (
     <g
       aria-label="Guardian articulated payoff puppet"
       style={{ filter: "drop-shadow(10px 15px 8px rgba(4,18,18,.28))" }}
-      transform={`translate(${x} ${y}) scale(.40)`}
+      transform={`translate(${x} ${y + breathing}) scale(.40)`}
     >
       <PuppetSheetPart
         pivot={{ x: 115, y: 190 }}
@@ -1010,9 +1046,7 @@ const GuardianPayoffPuppet: React.FC<{
         x={0}
         y={-190}
       />
-      <g
-        transform={`translate(205 -335) rotate(${8 - wave * 70 + Math.sin(frame / 3.2) * 8 * wave * (1 - hold * 0.7)})`}
-      >
+      <g transform={`translate(205 -335) rotate(${8 - wave * 70 + waveArc})`}>
         <PuppetSheetPart
           pivot={{ x: 55, y: 125 }}
           sheet="guardian"
@@ -1194,10 +1228,24 @@ const RunApproachShot: React.FC = () => {
 const ListenShot: React.FC = () => {
   const frame = useCurrentFrame();
   const p = frame / 90;
-  const decelerating = frame < 14;
-  const listenPose = frame < 32 ? 0 : 1;
-  const maraX = clampInterpolate(frame, [0, 13], [640, 650]);
-  const miloX = clampInterpolate(frame, [0, 13], [380, 390]);
+  const maraRunOpacity = clampInterpolate(frame, [20, 29], [1, 0]);
+  const miloRunOpacity = clampInterpolate(frame, [24, 33], [1, 0]);
+  const maraPlantOpacity = clampInterpolate(frame, [22, 30], [0, 1]);
+  const miloPlantOpacity = clampInterpolate(frame, [26, 34], [0, 1]);
+  const maraX = clampInterpolate(frame, [0, 12, 24, 30], [640, 654, 668, 670]);
+  const miloX = clampInterpolate(frame, [0, 15, 28, 34], [380, 394, 408, 410]);
+  const maraSpeed = clampInterpolate(
+    frame,
+    [0, 12, 24, 30],
+    [1.35, 1.1, 0.35, 0.12],
+  );
+  const miloSpeed = clampInterpolate(
+    frame,
+    [0, 15, 28, 34],
+    [1.35, 1.15, 0.35, 0.12],
+  );
+  const maraOvershoot = clampInterpolate(frame, [20, 27, 36], [-4, 2, 0]);
+  const miloOvershoot = clampInterpolate(frame, [24, 31, 40], [-4, 2, 0]);
   return (
     <ShotShell narration={narrationAt(1)}>
       <ForestBackdrop mode="threshold" push={0.35 + p * 0.35} />
@@ -1207,46 +1255,49 @@ const ListenShot: React.FC = () => {
         width="100%"
         style={{ position: "absolute" }}
       >
-        {decelerating ? (
-          <>
-            <ProfileRunRig
-              frame={frame + 120}
-              rootPixelsPerFrame={0.72}
-              scale={1.28}
-              variant="mara"
-              x={maraX}
-              y={674}
-            />
-            <ProfileRunRig
-              frame={frame + 120}
-              phaseOffset={5.4}
-              rootPixelsPerFrame={0.72}
-              scale={1.04}
-              variant="milo"
-              x={miloX}
-              y={677}
-            />
-          </>
-        ) : (
-          <>
-            <PerformanceSprite
-              poseIndex={listenPose}
-              rotation={-1.5 + Math.sin(frame / 18) * 0.6}
-              scale={1.28}
-              variant="mara"
-              x={650}
-              y={674}
-            />
-            <PerformanceSprite
-              poseIndex={frame < 38 ? 0 : 1}
-              rotation={1 + Math.sin(frame / 20) * -0.5}
-              scale={1.04}
-              variant="milo"
-              x={390}
-              y={677}
-            />
-          </>
-        )}
+        <ProfileRunRig
+          frame={Math.min(frame, 29) + 120}
+          opacity={maraRunOpacity}
+          rootPixelsPerFrame={maraSpeed}
+          rotation={maraOvershoot}
+          scale={1.28}
+          squash={clampInterpolate(frame, [20, 27, 36], [1, 0.96, 1])}
+          variant="mara"
+          x={maraX}
+          y={674}
+        />
+        <ProfileRunRig
+          frame={Math.min(frame, 33) + 120}
+          opacity={miloRunOpacity}
+          phaseOffset={5.4}
+          rootPixelsPerFrame={miloSpeed}
+          rotation={miloOvershoot}
+          scale={1.04}
+          squash={clampInterpolate(frame, [24, 31, 40], [1, 0.96, 1])}
+          variant="milo"
+          x={miloX}
+          y={677}
+        />
+        <PerformanceSprite
+          opacity={maraPlantOpacity}
+          poseIndex={frame < 44 ? 0 : 1}
+          rotation={maraOvershoot + Math.sin(frame / 18) * 0.45}
+          scale={1.28}
+          squash={clampInterpolate(frame, [22, 29, 38], [0.97, 1.025, 1])}
+          variant="mara"
+          x={670}
+          y={674}
+        />
+        <PerformanceSprite
+          opacity={miloPlantOpacity}
+          poseIndex={frame < 50 ? 0 : 1}
+          rotation={miloOvershoot + Math.sin(frame / 20) * -0.4}
+          scale={1.04}
+          squash={clampInterpolate(frame, [26, 33, 42], [0.97, 1.025, 1])}
+          variant="milo"
+          x={410}
+          y={677}
+        />
         <GlowMoth
           phase={frame / 9}
           scale={0.85}
@@ -1273,9 +1324,14 @@ const ListenShot: React.FC = () => {
 const SneakShot: React.FC = () => {
   const frame = useCurrentFrame();
   const p = frame / 132;
-  const entry = clampInterpolate(frame, [18, 103], [-80, 535]);
-  const maraSneakPose = Math.floor(frame / 3) % 8;
-  const miloSneakPose = Math.floor((frame + 10) / 3) % 8;
+  const entry = clampInterpolate(
+    frame,
+    [18, 103, 118, 131],
+    [-80, 490, 530, 535],
+  );
+  const maraSneakPose = Math.floor(Math.min(frame, 117) / 3) % 8;
+  const miloSneakPose = Math.floor((Math.min(frame, 117) + 10) / 3) % 8;
+  const sneakSettle = clampInterpolate(frame, [116, 124, 131], [0, 1, 0]);
   return (
     <ShotShell narration={narrationAt(2)}>
       <ForestBackdrop mode="cave" push={p * 0.55} travel={p * 0.22} />
@@ -1299,11 +1355,7 @@ const SneakShot: React.FC = () => {
         <GlowMoth
           phase={frame / 8}
           scale={1}
-          x={clampInterpolate(
-            frame,
-            [0, 95, 120, 131],
-            [220, 720, 905, 910],
-          )}
+          x={clampInterpolate(frame, [0, 95, 120, 131], [220, 720, 905, 910])}
           y={
             clampInterpolate(frame, [0, 95, 120], [280, 250, 470]) +
             Math.sin(frame / 7) * (frame < 120 ? 12 : 2)
@@ -1319,7 +1371,10 @@ const SneakShot: React.FC = () => {
         />
         <PerformanceSprite
           poseIndex={maraSneakPose}
-          rotation={Math.sin((frame / 24) * Math.PI * 2) * 0.65}
+          rotation={
+            Math.sin((frame / 24) * Math.PI * 2) * 0.65 - sneakSettle * 2.5
+          }
+          squash={1 - sneakSettle * 0.025}
           scale={1.02}
           variant="mara-sneak"
           x={entry}
@@ -1327,7 +1382,10 @@ const SneakShot: React.FC = () => {
         />
         <PerformanceSprite
           poseIndex={miloSneakPose}
-          rotation={Math.sin(((frame + 10) / 24) * Math.PI * 2) * 0.55}
+          rotation={
+            Math.sin(((frame + 10) / 24) * Math.PI * 2) * 0.55 - sneakSettle * 2
+          }
+          squash={1 - sneakSettle * 0.025}
           scale={0.84}
           variant="milo-sneak"
           x={entry - 150}
@@ -1343,6 +1401,8 @@ const CreatureRevealShot: React.FC = () => {
   const frame = useCurrentFrame();
   const p = frame / 72;
   const guardianPose = frame < 12 ? 0 : frame < 27 ? 1 : frame < 44 ? 2 : 3;
+  const sneakOpacity = clampInterpolate(frame, [0, 10], [1, 0]);
+  const plantedOpacity = clampInterpolate(frame, [3, 12], [0, 1]);
   return (
     <ShotShell narration={narrationAt(3)}>
       <ForestBackdrop mode="cave" push={0.55 + p * 0.12} />
@@ -1364,6 +1424,27 @@ const CreatureRevealShot: React.FC = () => {
         style={{ position: "absolute" }}
       >
         <PerformanceSprite
+          opacity={sneakOpacity}
+          poseIndex={7}
+          rotation={clampInterpolate(frame, [0, 7, 12], [0, -2, 0])}
+          scale={1.02}
+          squash={clampInterpolate(frame, [0, 7, 12], [1, 0.975, 1])}
+          variant="mara-sneak"
+          x={535}
+          y={646}
+        />
+        <PerformanceSprite
+          opacity={sneakOpacity}
+          poseIndex={2}
+          rotation={clampInterpolate(frame, [0, 8, 13], [0, -2, 0])}
+          scale={0.84}
+          squash={clampInterpolate(frame, [0, 8, 13], [1, 0.975, 1])}
+          variant="milo-sneak"
+          x={385}
+          y={650}
+        />
+        <PerformanceSprite
+          opacity={plantedOpacity}
           poseIndex={frame < 45 ? 1 : 4}
           scale={1.02}
           variant="mara"
@@ -1371,6 +1452,7 @@ const CreatureRevealShot: React.FC = () => {
           y={646}
         />
         <PerformanceSprite
+          opacity={plantedOpacity}
           poseIndex={frame < 50 ? 1 : 4}
           scale={0.84}
           variant="milo"
@@ -1541,17 +1623,18 @@ const SneezeShot: React.FC = () => {
   const pivot = clampInterpolate(frame, [74, 88], [0, 1]);
   const maraRunX = clampInterpolate(frame, [104, 119], [650, 570]);
   const miloRunX = clampInterpolate(frame, [104, 119], [390, 310]);
-  const mothAirborne = frame >= 49 && frame < 92;
+  const mothAirborne = frame >= 49 && frame < 88;
   const mothX = mothAirborne
-    ? clampInterpolate(frame, [49, 68, 92], [910, 760, 860])
-    : frame >= 92
+    ? clampInterpolate(frame, [49, 66, 88], [910, 760, 860])
+    : frame >= 88
       ? 860
       : 910;
   const mothY = mothAirborne
-    ? clampInterpolate(frame, [49, 66, 92], [470, 250, 500])
-    : frame >= 92
+    ? clampInterpolate(frame, [49, 66, 88], [470, 250, 500])
+    : frame >= 88
       ? 500
       : 470;
+  const mothCatchAccent = clampInterpolate(frame, [84, 90, 99], [0, 1, 0]);
   return (
     <ShotShell narration={narrationAt(6)}>
       <div
@@ -1634,11 +1717,15 @@ const SneezeShot: React.FC = () => {
             x={930}
             y={672}
           />
-          <GlowMoth
-            phase={frame / 7}
-            scale={0.65}
-            x={mothX}
-            y={mothY}
+          <GlowMoth phase={frame / 7} scale={0.65} x={mothX} y={mothY} />
+          <circle
+            cx={mothX}
+            cy={mothY}
+            fill="none"
+            opacity={mothCatchAccent * 0.9}
+            r={22 + mothCatchAccent * 26}
+            stroke="rgba(255,245,178,.95)"
+            strokeWidth={3}
           />
         </svg>
         {frame >= 48 ? (
@@ -1658,21 +1745,25 @@ const SneezeShot: React.FC = () => {
 const EscapeShot: React.FC = () => {
   const frame = useCurrentFrame();
   const p = frame / 120;
-  const clearingReveal = clampInterpolate(frame, [44, 72], [0, 1]);
-  const maraX = clampInterpolate(frame, [0, 90, 119], [760, 550, 520]);
-  const miloX = clampInterpolate(frame, [0, 90, 119], [555, 345, 315]);
-  const guardianX = clampInterpolate(frame, [0, 90, 119], [1080, 970, 930]);
-  const rootSpeed = clampInterpolate(frame, [0, 90, 119], [3.2, 3.2, 1]);
-  const portalTravel = clampInterpolate(frame, [26, 82], [-520, 720]);
-  const portalOpacity = clampInterpolate(
-    frame,
-    [18, 28, 76, 88],
-    [0, 1, 1, 0],
-  );
+  const clearingReveal = clampInterpolate(frame, [84, 112], [0.78, 1]);
+  const maraX = clampInterpolate(frame, [0, 90, 119], [760, 575, 545]);
+  const miloX = clampInterpolate(frame, [0, 90, 119], [555, 370, 340]);
+  const guardianX = clampInterpolate(frame, [0, 90, 119], [1080, 1000, 960]);
+  const rootSpeed = clampInterpolate(frame, [0, 90, 119], [3.2, 3.2, 1.05]);
+  // The arch is a world landmark. It holds its scene-space mark while the
+  // cast crosses, then leaves frame only when the camera follows outside.
+  const portalTravel = clampInterpolate(frame, [0, 92, 119], [350, 350, 690]);
+  const portalOpacity = clampInterpolate(frame, [0, 1, 105, 119], [1, 1, 1, 0]);
   return (
     <ShotShell narration={narrationAt(7)}>
       <ForestBackdrop mode="cave" push={0.42} travel={p * 0.6} />
-      <div style={{ inset: 0, opacity: clearingReveal, position: "absolute" }}>
+      <div
+        style={{
+          clipPath: `inset(0 ${(1 - clearingReveal) * 100}% 0 0)`,
+          inset: 0,
+          position: "absolute",
+        }}
+      >
         <ForestBackdrop mode="clearing" push={0.08} travel={p * 0.18} />
       </div>
       <svg
@@ -1730,21 +1821,40 @@ const EscapeShot: React.FC = () => {
         <path
           d="M515 720V350Q650 175 785 350v370"
           fill="none"
-          stroke="rgba(8,27,27,.96)"
-          strokeWidth="92"
+          stroke="rgba(35,58,51,.98)"
+          strokeWidth="108"
         />
         <path
           d="M515 720V350Q650 175 785 350v370"
           fill="none"
-          opacity=".55"
-          stroke="#55715b"
-          strokeWidth="18"
+          opacity=".98"
+          stroke="#71806a"
+          strokeWidth="72"
+        />
+        <path
+          d="M515 720V350Q650 175 785 350v370"
+          fill="none"
+          opacity=".62"
+          stroke="#b4b27e"
+          strokeWidth="10"
         />
       </svg>
-      <div style={{ inset: 0, opacity: 1 - clearingReveal, position: "absolute" }}>
+      <div
+        style={{
+          clipPath: `inset(0 0 0 ${clearingReveal * 100}%)`,
+          inset: 0,
+          position: "absolute",
+        }}
+      >
         <GeneratedSetForeground mode="cave" travel={p * 0.55} />
       </div>
-      <div style={{ inset: 0, opacity: clearingReveal, position: "absolute" }}>
+      <div
+        style={{
+          clipPath: `inset(0 ${(1 - clearingReveal) * 100}% 0 0)`,
+          inset: 0,
+          position: "absolute",
+        }}
+      >
         <GeneratedSetForeground mode="clearing" travel={p * 0.15} />
       </div>
     </ShotShell>
@@ -1754,8 +1864,24 @@ const EscapeShot: React.FC = () => {
 const FriendlyOfferShot: React.FC = () => {
   const frame = useCurrentFrame();
   const p = frame / 72;
-  const mothOffer = clampInterpolate(frame, [16, 64], [0, 1]);
-  const residualSettle = clampInterpolate(frame, [0, 14], [1, 0]);
+  const plant = clampInterpolate(frame, [0, 22], [0, 1]);
+  const runOpacity = clampInterpolate(frame, [15, 25], [1, 0]);
+  const puppetOpacity = clampInterpolate(frame, [18, 27], [0, 1]);
+  const payoffFrame = Math.max(0, frame - 22);
+  const mothOffer = clampInterpolate(frame, [28, 64], [0, 1]);
+  const maraX = clampInterpolate(plant, [0, 1], [545, 520]);
+  const miloX = clampInterpolate(plant, [0, 1], [340, 315]);
+  const guardianX = clampInterpolate(plant, [0, 1], [960, 930]);
+  const arrivalSpeed = clampInterpolate(plant, [0, 1], [1.05, 0.12]);
+  const mothX =
+    frame < 28
+      ? guardianX - 38
+      : clampInterpolate(mothOffer, [0, 1], [892, 700]);
+  const mothY =
+    frame < 28
+      ? 492 + Math.sin(frame / 9) * 2
+      : clampInterpolate(mothOffer, [0, 1], [492, 390]);
+  const handContactAccent = clampInterpolate(frame, [60, 65, 71], [0, 1, 0.35]);
   return (
     <ShotShell narration={narrationAt(8)}>
       <ForestBackdrop mode="clearing" push={p * 0.12} />
@@ -1776,15 +1902,62 @@ const FriendlyOfferShot: React.FC = () => {
         width="100%"
         style={{ position: "absolute" }}
       >
-        <g transform={`translate(0 ${Math.sin(frame / 3) * residualSettle * 3})`}>
-          <MiloPayoffPuppet frame={frame} mode="offer" x={315} y={662} />
-          <MaraPayoffPuppet frame={frame} mode="offer" x={520} y={660} />
-          <GuardianPayoffPuppet frame={frame} mode="offer" x={930} y={655} />
-          <GlowMoth
-            phase={frame / 7}
-            scale={0.9}
-            x={clampInterpolate(mothOffer, [0, 1], [735, 700])}
-            y={clampInterpolate(mothOffer, [0, 1], [405, 390])}
+        <ProfileRunRig
+          facing="left"
+          frame={frame + 135}
+          opacity={runOpacity}
+          phaseOffset={5.4}
+          rootPixelsPerFrame={arrivalSpeed}
+          rotation={clampInterpolate(plant, [0, 0.75, 1], [0, 3, 0])}
+          scale={0.62}
+          squash={clampInterpolate(plant, [0, 0.82, 1], [1, 0.96, 1])}
+          variant="milo"
+          x={miloX}
+          y={663}
+        />
+        <ProfileRunRig
+          facing="left"
+          frame={frame + 135}
+          opacity={runOpacity}
+          rootPixelsPerFrame={arrivalSpeed}
+          rotation={clampInterpolate(plant, [0, 0.72, 1], [0, 3.5, 0])}
+          scale={0.72}
+          squash={clampInterpolate(plant, [0, 0.8, 1], [1, 0.96, 1])}
+          variant="mara"
+          x={maraX}
+          y={660}
+        />
+        <PerformanceSprite
+          facing="left"
+          opacity={runOpacity}
+          poseIndex={Math.floor((frame + 123) / 3) % 8}
+          rotation={clampInterpolate(plant, [0, 0.8, 1], [0, -3, 0])}
+          scale={1.05}
+          squash={clampInterpolate(plant, [0, 0.82, 1], [1, 0.965, 1])}
+          variant="guardian-chase"
+          x={guardianX}
+          y={650}
+        />
+        <g opacity={puppetOpacity}>
+          <MiloPayoffPuppet frame={payoffFrame} mode="offer" x={315} y={662} />
+          <MaraPayoffPuppet frame={payoffFrame} mode="offer" x={520} y={660} />
+          <GuardianPayoffPuppet
+            frame={payoffFrame}
+            mode="offer"
+            x={930}
+            y={655}
+          />
+        </g>
+        <g>
+          <GlowMoth phase={frame / 7} scale={0.9} x={mothX} y={mothY} />
+          <circle
+            cx={mothX}
+            cy={mothY}
+            fill="none"
+            opacity={handContactAccent * 0.9}
+            r={20 + handContactAccent * 24}
+            stroke="rgba(255,247,203,.94)"
+            strokeWidth="3"
           />
         </g>
       </svg>
@@ -1796,8 +1969,9 @@ const FriendlyOfferShot: React.FC = () => {
 const FriendlyPlayShot: React.FC = () => {
   const frame = useCurrentFrame();
   const p = frame / 54;
-  const release = clampInterpolate(frame, [0, 28], [0, 1]);
-  const halo = clampInterpolate(frame, [6, 22, 53], [0, 1, 0.35]);
+  // Mara visibly owns the moth for eight frames before a separate release.
+  const release = clampInterpolate(frame, [8, 28], [0, 1]);
+  const halo = clampInterpolate(frame, [8, 24, 53], [0, 1, 0.35]);
   return (
     <ShotShell narration={narrationAt(9)}>
       <ForestBackdrop mode="clearing" push={0.12 + p * 0.11} />

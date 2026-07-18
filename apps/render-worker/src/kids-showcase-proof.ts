@@ -121,7 +121,9 @@ async function decodeCutProof(
         );
         const bytes = await readFile(file);
         if (bytes.length < 20_000)
-          throw new Error(`Decoded proof frame ${frame} is suspiciously small.`);
+          throw new Error(
+            `Decoded proof frame ${frame} is suspiciously small.`,
+          );
         return { frame, byteLength: bytes.length, hash: sha256(bytes) };
       }),
     );
@@ -129,7 +131,9 @@ async function decodeCutProof(
   const first = await decode(firstVideo, "pass-1");
   const second = await decode(secondVideo, "pass-2");
   if (first.length !== second.length)
-    throw new Error("Decoded render passes produced different cut-frame counts.");
+    throw new Error(
+      "Decoded render passes produced different cut-frame counts.",
+    );
   const similarityResult = await execFileAsync(
     ffmpeg,
     [
@@ -241,20 +245,21 @@ async function main() {
     );
 
   const auditFrames = [
-    24, 69, 108, 119, 120, 121, 174, 209, 210, 211, 230,
+    24, 69, 108, 119, 120, 121, 126, 132, 133, 134, 138, 146, 174, 209, 210,
+    211, 230,
     // Hall entrance, plant, guardian wake, and the first-frame exposure gate.
     258, 282, 310, 330, 341, 342, 343, 354, 369, 386, 397, 413,
     // Guardian close-up and child reaction.
     414, 415, 420, 426, 433, 445, 461, 462, 463, 470, 486, 508, 521, 533,
     // Sneeze, pivot, catch, and planted escape contact.
-    534, 535, 550, 562, 582, 590, 612, 626, 642, 653,
+    534, 535, 550, 562, 582, 590, 612, 618, 624, 625, 626, 632, 642, 653,
     // Matched escape, physical portal, clearing deceleration, and payoff.
-    654, 655, 666, 682, 698, 718, 735, 746, 764, 773, 774, 775, 790,
-    802, 820, 838, 845, 846, 847, 852, 870, 888, 899,
+    654, 655, 666, 674, 682, 690, 698, 706, 718, 735, 746, 764, 773, 774, 775,
+    784, 790, 796, 802, 820, 832, 838, 845, 846, 847, 852, 854, 870, 888, 899,
   ];
   const committedFrames = new Set([
-    24, 108, 174, 230, 310, 342, 386, 426, 486, 582, 626, 682, 718,
-    774, 820, 870, 899,
+    24, 108, 174, 230, 310, 342, 386, 426, 486, 582, 626, 682, 718, 774, 820,
+    870, 899,
   ]);
   const stills = [];
   for (const frame of auditFrames) {
