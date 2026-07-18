@@ -22,7 +22,11 @@ import { HistoryEditorialVisual } from "./HistoryEditorialVisual";
 import { HistoryKineticType } from "./HistoryKineticType";
 import { Cv001RigProofComposition } from "./Cv001RigProofComposition";
 import {
-  assertDirectedShotMotionBinding,
+  getCv001LanternPickupTransform,
+  type Cv001WorldTransform,
+} from "./cv001-rig-kinematics";
+import {
+  assertDirectedShotMotionBindings,
   type DirectedShotMotionBinding,
 } from "./production-motion-binding";
 
@@ -62,7 +66,7 @@ export type ProductionCompositionProps = {
   audioMix?: AudioMix;
   previewWatermark?: string;
   previewAssetStatus?: "unapproved-candidate";
-  directedMotion?: DirectedShotMotionBinding;
+  directedMotions?: DirectedShotMotionBinding[];
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
@@ -350,12 +354,14 @@ const CharacterPerformance: React.FC<{
 
 const ShotScene: React.FC<{
   directedBeatProgram?: DirectedBeatProgram;
+  lanternPickupTransform?: Cv001WorldTransform;
   plan: FrameAccurateRenderPlan;
   playbackAssets: Record<string, PlaybackAsset>;
   previewAssetStatus?: ProductionCompositionProps["previewAssetStatus"];
   shot: RenderShot;
 }> = ({
   directedBeatProgram,
+  lanternPickupTransform,
   plan,
   playbackAssets,
   previewAssetStatus,
@@ -363,7 +369,12 @@ const ShotScene: React.FC<{
 }) => {
   const frame = useCurrentFrame();
   if (directedBeatProgram)
-    return <Cv001RigProofComposition program={directedBeatProgram} />;
+    return (
+      <Cv001RigProofComposition
+        lanternPickupTransform={lanternPickupTransform}
+        program={directedBeatProgram}
+      />
+    );
   const backgroundBinding = shot.visualBindings.find(
     (binding) => binding.role === "background",
   );
@@ -523,15 +534,26 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
   audioMix,
   previewWatermark,
   previewAssetStatus,
-  directedMotion,
+  directedMotions = [],
 }) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
-  const validatedMotion = directedMotion
-    ? assertDirectedShotMotionBinding(
-        plan,
-        sliceDurationInFrames,
-        directedMotion,
-      )
+  const validatedMotions = assertDirectedShotMotionBindings(
+    plan,
+    sliceDurationInFrames,
+    directedMotions,
+  );
+  const motionByShotId = new Map(
+    validatedMotions.map((binding) => [binding.shotId, binding.program]),
+  );
+  const pickupProgram = validatedMotions
+    .map((binding) => binding.program)
+    .find((program) =>
+      program.tracks.some(
+        (track) => track.type === "attachment" && track.startFrame > 0,
+      ),
+    );
+  const lanternPickupTransform = pickupProgram
+    ? getCv001LanternPickupTransform(pickupProgram)
     : undefined;
   const captions: Caption[] = plan.shots
     .filter((shot) => shot.caption && shot.startFrame < duration)
@@ -560,11 +582,8 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
           >
             <TransitionedShot projectType={plan.projectType} shot={shot}>
               <ShotScene
-                directedBeatProgram={
-                  validatedMotion?.shotId === shot.id
-                    ? validatedMotion.program
-                    : undefined
-                }
+                directedBeatProgram={motionByShotId.get(shot.id)}
+                lanternPickupTransform={lanternPickupTransform}
                 plan={plan}
                 playbackAssets={playbackAssets}
                 previewAssetStatus={previewAssetStatus}

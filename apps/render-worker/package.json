@@ -17,7 +17,8 @@
     "render:production-proof": "tsx src/production-proof.ts",
     "render:rook-preview": "tsx src/rook-pilot-visual-preview.ts",
     "render:rook-motion-review": "tsx src/rook-pilot-motion-review.ts",
-    "render:cv001-rig-proof": "tsx src/cv001-rig-proof.ts"
+    "render:cv001-rig-proof": "tsx src/cv001-rig-proof.ts",
+    "render:cv001-three-beat-proof": "tsx src/cv001-three-beat-proof.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.490",

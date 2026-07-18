@@ -15,11 +15,14 @@ import {
 import { STORY_STAGE_PRODUCTION_COMPOSITION_ID } from "@storystage/remotion-runtime/manifest";
 import {
   buildAnimaticSync,
+  createDirectedShotMotionBinding,
   createProductionDraft,
+  cv001BeatInputSchema,
   cv001LanternMotionProgram,
   evaluateMotionProgram,
   frameAccurateRenderPlanSchema,
   getMotionProgramIssues,
+  hashCanonical,
   sampleWorkshopScript,
 } from "@storystage/story-engine";
 
@@ -43,11 +46,12 @@ const createSingleShotProofPlan = () => {
   }).renderPlan;
   const sourceShot = basePlan.shots[0]!;
   const durationInFrames = cv001LanternMotionProgram.durationInFrames;
-  return frameAccurateRenderPlanSchema.parse({
-    ...basePlan,
+  const { contentHash: _baseContentHash, ...basePayload } = basePlan;
+  void _baseContentHash;
+  const payload = {
+    ...basePayload,
     id: "plan-cv001-rig-proof",
     productionId: "production-cv001-rig-proof",
-    contentHash: "c".repeat(64),
     title: "CV-001 Lantern Reach",
     durationInFrames,
     shots: [
@@ -64,6 +68,10 @@ const createSingleShotProofPlan = () => {
         })),
       },
     ],
+  };
+  return frameAccurateRenderPlanSchema.parse({
+    ...payload,
+    contentHash: hashCanonical(payload),
   });
 };
 
@@ -85,14 +93,26 @@ async function main(): Promise<void> {
   });
   const plan = createSingleShotProofPlan();
   const shotId = plan.shots[0]!.id;
+  const proofBeat = cv001BeatInputSchema.parse({
+    id: "beat-cv001-rig-proof",
+    order: 2,
+    sceneId: plan.shots[0]!.sceneId,
+    shotId,
+    text: "Reach for the lantern and lift it.",
+    intent: "reach-and-pick-up",
+    characterId: "cv001-character",
+    propId: "lantern",
+    emotion: "cautious",
+    durationInFrames: cv001LanternMotionProgram.durationInFrames,
+    cameraIntent: "gentle-push",
+  });
   const inputProps: ProductionCompositionProps = {
     plan,
     playbackAssets: {},
     sliceDurationInFrames: cv001LanternMotionProgram.durationInFrames,
-    directedMotion: {
-      shotId,
-      program: cv001LanternMotionProgram,
-    },
+    directedMotions: [
+      createDirectedShotMotionBinding(proofBeat, cv001LanternMotionProgram),
+    ],
   };
   const composition = await selectComposition({
     serveUrl,

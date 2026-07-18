@@ -137,5 +137,8 @@ export {
   getCv001LanternPickupTransform,
 } from "./cv001-rig-kinematics";
 export type { Cv001WorldTransform } from "./cv001-rig-kinematics";
-export { assertDirectedShotMotionBinding } from "./production-motion-binding";
+export {
+  assertDirectedShotMotionBinding,
+  assertDirectedShotMotionBindings,
+} from "./production-motion-binding";
 export type { DirectedShotMotionBinding } from "./production-motion-binding";

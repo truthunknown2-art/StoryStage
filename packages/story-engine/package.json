@@ -8,7 +8,7 @@
     "./sample": "./src/sample-script.ts"
   },
   "scripts": {
-    "test": "vitest run src/index.test.ts src/delivery.test.ts src/motion-program.test.ts",
+    "test": "vitest run src/index.test.ts src/delivery.test.ts src/motion-program.test.ts src/cv001-scene-compiler.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -1,5 +1,6 @@
 import {
   assertMotionProgram,
+  cv001RigContract,
   evaluateMotionProgram,
   type DirectedBeatProgram,
 } from "@storystage/story-engine";
@@ -7,9 +8,13 @@ import { useCurrentFrame } from "remotion";
 import {
   cv001RigLayout,
   getCv001LanternPickupTransform,
+  type Cv001WorldTransform,
 } from "./cv001-rig-kinematics";
 
-export type Cv001RigProofCompositionProps = { program: DirectedBeatProgram };
+export type Cv001RigProofCompositionProps = {
+  program: DirectedBeatProgram;
+  lanternPickupTransform?: Cv001WorldTransform;
+};
 
 const Lantern: React.FC<{ scale?: number }> = ({ scale = 1 }) => (
   <g transform={`scale(${scale})`}>
@@ -60,8 +65,10 @@ const CutPaperLeaf: React.FC<{
 
 export const Cv001RigProofComposition: React.FC<
   Cv001RigProofCompositionProps
-> = ({ program }) => {
-  const validated = assertMotionProgram(program, { cv001Proof: true });
+> = ({ program, lanternPickupTransform }) => {
+  const validated = assertMotionProgram(program, {
+    rigContract: cv001RigContract,
+  });
   const frame = useCurrentFrame();
   const evaluated = evaluateMotionProgram(validated, frame);
   const rootX = evaluated.root.x ?? 0;
@@ -82,7 +89,16 @@ export const Cv001RigProofComposition: React.FC<
   const mouthOpen = Math.max(0, Math.min(1, evaluated.face["mouth-open"] ?? 0));
   const cameraScale = evaluated.camera.scale ?? 1;
   const cameraX = evaluated.camera.x ?? 0;
-  const lanternPickupTransform = getCv001LanternPickupTransform(validated);
+  const ownAttachment = validated.tracks.find(
+    (track) => track.type === "attachment" && track.propId === "lantern",
+  );
+  const resolvedLanternPickupTransform =
+    lanternPickupTransform ??
+    (ownAttachment ? getCv001LanternPickupTransform(validated) : null);
+  if (!resolvedLanternPickupTransform)
+    throw new Error(
+      "An unattached CV-001 beat requires the scene lantern pickup transform.",
+    );
   const lanternAttached = evaluated.attachments.some(
     (attachment) =>
       attachment.propId === "lantern" && attachment.boneId === "hand-right",
@@ -170,15 +186,15 @@ export const Cv001RigProofComposition: React.FC<
         transform={`translate(${cameraX} 0) translate(960 540) scale(${cameraScale}) translate(-960 -540)`}
       >
         <circle
-          cx={lanternPickupTransform.x}
-          cy={lanternPickupTransform.y}
+          cx={resolvedLanternPickupTransform.x}
+          cy={resolvedLanternPickupTransform.y}
           fill="url(#cv001-glow)"
           r="210"
         />
         {!lanternAttached ? (
           <g
             filter="url(#cv001-shadow)"
-            transform={`translate(${lanternPickupTransform.x} ${lanternPickupTransform.y}) rotate(${lanternPickupTransform.rotation}) scale(${lanternPickupTransform.scale})`}
+            transform={`translate(${resolvedLanternPickupTransform.x} ${resolvedLanternPickupTransform.y}) rotate(${resolvedLanternPickupTransform.rotation}) scale(${resolvedLanternPickupTransform.scale})`}
           >
             <Lantern scale={0.92} />
           </g>

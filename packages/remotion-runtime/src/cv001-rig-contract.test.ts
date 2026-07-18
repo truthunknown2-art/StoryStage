@@ -1,21 +1,12 @@
-import type { FrameAccurateRenderPlan } from "@storystage/story-engine";
-import { cv001LanternMotionProgram } from "@storystage/story-engine";
+import {
+  compileCv001ThreeBeatScene,
+  createCv001ThreeBeatProofFixture,
+  createDirectedShotMotionBinding,
+  cv001LanternMotionProgram,
+} from "@storystage/story-engine";
 import { describe, expect, it } from "vitest";
 import { getCv001AttachmentContinuity } from "./cv001-rig-kinematics";
-import { assertDirectedShotMotionBinding } from "./production-motion-binding";
-
-const singleShotPlan = {
-  id: "cv001-single-shot-plan",
-  fps: 30,
-  durationInFrames: 120,
-  shots: [
-    {
-      id: "cv001-shot",
-      startFrame: 0,
-      durationInFrames: 120,
-    },
-  ],
-} as FrameAccurateRenderPlan;
+import { assertDirectedShotMotionBindings } from "./production-motion-binding";
 
 describe("CV-001 render contract", () => {
   it("keeps the lantern continuous across the attachment boundary", () => {
@@ -26,27 +17,55 @@ describe("CV-001 render contract", () => {
     expect(continuity.scaleDelta).toBeLessThan(0.001);
   });
 
-  it("binds the program to an exact non-truncated shot", () => {
+  it("binds all compiled programs to exact non-truncated shots", () => {
+    const fixture = createCv001ThreeBeatProofFixture();
+    const compiled = compileCv001ThreeBeatScene(fixture);
     expect(
-      assertDirectedShotMotionBinding(singleShotPlan, 120, {
-        shotId: "cv001-shot",
-        program: cv001LanternMotionProgram,
-      }),
-    ).toEqual({
-      shotId: "cv001-shot",
-      program: cv001LanternMotionProgram,
-    });
+      assertDirectedShotMotionBindings(
+        fixture.renderPlan,
+        fixture.renderPlan.durationInFrames,
+        [...compiled.bindings],
+      ),
+    ).toEqual(compiled.bindings);
     expect(() =>
-      assertDirectedShotMotionBinding(singleShotPlan, 100, {
-        shotId: "cv001-shot",
-        program: cv001LanternMotionProgram,
-      }),
+      assertDirectedShotMotionBindings(fixture.renderPlan, 200, [
+        compiled.bindings[1],
+      ]),
     ).toThrow(/truncated/);
+  });
+
+  it("rejects duplicate, unknown, and stale bindings", () => {
+    const fixture = createCv001ThreeBeatProofFixture();
+    const compiled = compileCv001ThreeBeatScene(fixture);
     expect(() =>
-      assertDirectedShotMotionBinding(singleShotPlan, 120, {
-        shotId: "missing-shot",
-        program: cv001LanternMotionProgram,
-      }),
+      assertDirectedShotMotionBindings(
+        fixture.renderPlan,
+        fixture.renderPlan.durationInFrames,
+        [compiled.bindings[0], compiled.bindings[0]],
+      ),
+    ).toThrow(/target a shot twice/);
+    const unknownBinding = createDirectedShotMotionBinding(
+      { ...fixture.input.beats[1], shotId: "missing-shot" },
+      compiled.bindings[1].program,
+    );
+    expect(() =>
+      assertDirectedShotMotionBindings(
+        fixture.renderPlan,
+        fixture.renderPlan.durationInFrames,
+        [unknownBinding],
+      ),
     ).toThrow(/does not exist/);
+    expect(() =>
+      assertDirectedShotMotionBindings(
+        fixture.renderPlan,
+        fixture.renderPlan.durationInFrames,
+        [
+          {
+            ...compiled.bindings[0],
+            beatContentHash: "0".repeat(64),
+          },
+        ],
+      ),
+    ).toThrow();
   });
 });
