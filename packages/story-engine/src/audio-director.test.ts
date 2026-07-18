@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  audioMixPlanSchema,
   approvedAudioAssetVersionSchema,
   createAudioMixPlan,
   frameToSample,
@@ -53,6 +54,18 @@ describe("audio director contracts", () => {
     const second = createAudioMixPlan(draft);
     expect(first.contentHash).toBe(second.contentHash);
     expect(first.contentHash).toHaveLength(64);
+    expect(() =>
+      audioMixPlanSchema.parse({
+        ...first,
+        target: { ...first.target, integratedLufs: -12 },
+      }),
+    ).toThrow(/mix plan hash/i);
+    expect(() =>
+      createAudioMixPlan({
+        ...draft,
+        cues: [{ ...draft.cues[0]!, productionId: "another-production" }],
+      }),
+    ).toThrow(/Cue production must match/);
   });
 
   it("rejects stale or missing voice-consent evidence references", () => {

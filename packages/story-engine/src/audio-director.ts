@@ -210,18 +210,54 @@ export const audioMixPlanDraftSchema = z
           message: `Duplicate cue id ${cue.id}.`,
         });
       ids.add(cue.id);
+      if (cue.productionId !== plan.productionId)
+        context.addIssue({
+          code: "custom",
+          path: ["cues", index, "productionId"],
+          message: "Cue production must match its mix plan.",
+        });
       if (cue.startFrame + cue.durationInFrames > plan.durationInFrames)
         context.addIssue({
           code: "custom",
           path: ["cues", index, "durationInFrames"],
           message: "Cue extends beyond the production duration.",
         });
+      try {
+        frameToSample(cue.startFrame, plan.fps, plan.sampleRate);
+        frameToSample(
+          cue.startFrame + cue.durationInFrames,
+          plan.fps,
+          plan.sampleRate,
+        );
+      } catch (error) {
+        context.addIssue({
+          code: "custom",
+          path: ["cues", index, "startFrame"],
+          message:
+            error instanceof Error
+              ? error.message
+              : "Cue does not resolve to exact sample boundaries.",
+        });
+      }
     }
   });
 
-export const audioMixPlanSchema = audioMixPlanDraftSchema.and(
-  z.object({ contentHash: hashSchema }).strict(),
-);
+export const audioMixPlanSchema = z
+  .object({ ...audioMixPlanFields, contentHash: hashSchema })
+  .strict()
+  .superRefine((plan, context) => {
+    const { contentHash, ...draft } = plan;
+    const draftResult = audioMixPlanDraftSchema.safeParse(draft);
+    if (!draftResult.success)
+      for (const issue of draftResult.error.issues)
+        context.addIssue({ ...issue, path: issue.path });
+    if (hashCanonical(draft) !== contentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["contentHash"],
+        message: "Audio mix plan hash is invalid.",
+      });
+  });
 
 export const audioMasterReceiptSchema = z
   .object({
