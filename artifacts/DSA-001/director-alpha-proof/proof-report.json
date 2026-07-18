@@ -1,0 +1,198 @@
+{
+  "schemaVersion": "1.0",
+  "status": "pass",
+  "reports": [
+    {
+      "schemaVersion": "1.0",
+      "status": "pass",
+      "grammar": "kids-adventure",
+      "compositionId": "StoryStageProduction",
+      "storyProjectContentHash": "6a6adb4e04db8477eab10da7642492d6cfd17c11fa6b7f7809b58ba9e3bbce4e",
+      "directorProjectContentHash": "5bb9e593b5320909fe1b3c6f8871a1a6b358d09be51318f244dbcac8c7043963",
+      "directorPlanContentHash": "9db982316bdbb49dd23794f7ae3ccd5635431c17605e3f8ad04f7719632342fd",
+      "timingSolutionContentHash": "38778140b002cba843ca7d511cccb244e31e341e534e02b61106cc892c01f0e6",
+      "executableEpisodePlanContentHash": "89852b024ad52ba9c80d7bd1558d42a40255922f17d970c275339fd9e8662f4f",
+      "capabilitySummary": {
+        "supported": 0,
+        "proxyOnly": 11,
+        "blocked": 0
+      },
+      "multiShotBeat": {
+        "beatId": "beat-79b11a73ddca",
+        "shotIds": [
+          "shot-1-primary",
+          "shot-1-response"
+        ],
+        "contiguous": true
+      },
+      "movingShot": {
+        "shotId": "shot-1-response",
+        "frames": [
+          56,
+          79,
+          103
+        ],
+        "distinctDecodedFrames": 3
+      },
+      "format": {
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "durationInFrames": 838
+      },
+      "stills": [
+        {
+          "frame": 0,
+          "file": "frame-0000.png",
+          "contentHash": "283c049fc8877519aa588bd0a4728d56286a0a93c7a336b34227502d4abd8d32",
+          "repeatContentHash": "283c049fc8877519aa588bd0a4728d56286a0a93c7a336b34227502d4abd8d32"
+        },
+        {
+          "frame": 55,
+          "file": "frame-0055.png",
+          "contentHash": "b787c004bed4a53a1270aa1b922d2d21152975803c717bafb96c099eb203777b",
+          "repeatContentHash": "b787c004bed4a53a1270aa1b922d2d21152975803c717bafb96c099eb203777b"
+        },
+        {
+          "frame": 56,
+          "file": "frame-0056.png",
+          "contentHash": "48e892ced56416931dab16580a02dc3a7c5e7b176282ea9ea70d610c9ee46089",
+          "repeatContentHash": "48e892ced56416931dab16580a02dc3a7c5e7b176282ea9ea70d610c9ee46089"
+        },
+        {
+          "frame": 79,
+          "file": "frame-0079.png",
+          "contentHash": "0a26d308aaa5dff14c0d1548a8f327f7f594adb23dc23da26f1b33fb3a2e69de",
+          "repeatContentHash": "0a26d308aaa5dff14c0d1548a8f327f7f594adb23dc23da26f1b33fb3a2e69de"
+        },
+        {
+          "frame": 103,
+          "file": "frame-0103.png",
+          "contentHash": "d8e428434b8e66e9bc3bb96fd466ba478d1a58d4c0e72d6abf37c2fa2acdef27",
+          "repeatContentHash": "d8e428434b8e66e9bc3bb96fd466ba478d1a58d4c0e72d6abf37c2fa2acdef27"
+        },
+        {
+          "frame": 264,
+          "file": "frame-0264.png",
+          "contentHash": "c610ff1dcbf1e794b0897e6d9fba16cf272c044b1f42388315cfb1158c01ef58",
+          "repeatContentHash": "c610ff1dcbf1e794b0897e6d9fba16cf272c044b1f42388315cfb1158c01ef58"
+        },
+        {
+          "frame": 502,
+          "file": "frame-0502.png",
+          "contentHash": "0b5c94e4176d371577a92f856064b59dfff03172b1ade89de6e4923902c3793c",
+          "repeatContentHash": "0b5c94e4176d371577a92f856064b59dfff03172b1ade89de6e4923902c3793c"
+        },
+        {
+          "frame": 837,
+          "file": "frame-0837.png",
+          "contentHash": "946344d5f5c8955a117a4e294d8a6b41a99dea8932f2f38ac9683b3e2d61cd5e",
+          "repeatContentHash": "946344d5f5c8955a117a4e294d8a6b41a99dea8932f2f38ac9683b3e2d61cd5e"
+        }
+      ],
+      "video": {
+        "file": "arbitrary-kids.mp4",
+        "contentHash": "ebab86f0d59064b43568f0f8ab9c3675237704b10ed1c536ceb2a896b2159532"
+      }
+    },
+    {
+      "schemaVersion": "1.0",
+      "status": "pass",
+      "grammar": "weird-history",
+      "compositionId": "StoryStageProduction",
+      "storyProjectContentHash": "ccf2e1b05f6937dfb57c64f133917eb932e91b200195cc2bbf5b917c4e7329b4",
+      "directorProjectContentHash": "b23b06c892805fdf69a9280c1476fd821c7ba04447b2b532ed3d9e450d309c95",
+      "directorPlanContentHash": "9298e6d0cbcb0acc9f6e4b2e79245e12a6f7203297b3b2a539804ec176529267",
+      "timingSolutionContentHash": "b5f9d2f29695e1e015000698c2d619293c7750252738a4be012a9eca21928f75",
+      "executableEpisodePlanContentHash": "117b92c09214d302a7095a218717dd55f2ec2b67cd1d44849641df061f86432b",
+      "capabilitySummary": {
+        "supported": 0,
+        "proxyOnly": 10,
+        "blocked": 0
+      },
+      "multiShotBeat": {
+        "beatId": "beat-8f7cd2ccf0ed",
+        "shotIds": [
+          "shot-2-primary",
+          "shot-2-response"
+        ],
+        "contiguous": true
+      },
+      "movingShot": {
+        "shotId": "shot-3-main",
+        "frames": [
+          114,
+          136,
+          158
+        ],
+        "distinctDecodedFrames": 3
+      },
+      "format": {
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "durationInFrames": 475
+      },
+      "stills": [
+        {
+          "frame": 0,
+          "file": "frame-0000.png",
+          "contentHash": "d9bb9130a9090a75d7ffaac923fd5a56b93c9208e2ea49494c69e979b07a3a7d",
+          "repeatContentHash": "d9bb9130a9090a75d7ffaac923fd5a56b93c9208e2ea49494c69e979b07a3a7d"
+        },
+        {
+          "frame": 84,
+          "file": "frame-0084.png",
+          "contentHash": "d7346cbd93347a4f70712fdccfdb4f1c5881871c4a79350303b891324dc14ac1",
+          "repeatContentHash": "d7346cbd93347a4f70712fdccfdb4f1c5881871c4a79350303b891324dc14ac1"
+        },
+        {
+          "frame": 85,
+          "file": "frame-0085.png",
+          "contentHash": "5e0d4fe148808cb5c21cc1a4c277eb3948a9c91facf50fb60a5dae765584a6f0",
+          "repeatContentHash": "5e0d4fe148808cb5c21cc1a4c277eb3948a9c91facf50fb60a5dae765584a6f0"
+        },
+        {
+          "frame": 114,
+          "file": "frame-0114.png",
+          "contentHash": "5ca4d4350b7b1ab5fe6a4c7a22dca2f1842b9f4b1b291f0d681e9159752d259e",
+          "repeatContentHash": "5ca4d4350b7b1ab5fe6a4c7a22dca2f1842b9f4b1b291f0d681e9159752d259e"
+        },
+        {
+          "frame": 136,
+          "file": "frame-0136.png",
+          "contentHash": "51d7a3571f1f6cbaccf890c5196e863d3e0e897cdf0f9c5a60f02265f340fedd",
+          "repeatContentHash": "51d7a3571f1f6cbaccf890c5196e863d3e0e897cdf0f9c5a60f02265f340fedd"
+        },
+        {
+          "frame": 158,
+          "file": "frame-0158.png",
+          "contentHash": "26472bc2eeb784cd8e86d696e31342eba88bdefd9b0c39867a1542167c18edbc",
+          "repeatContentHash": "26472bc2eeb784cd8e86d696e31342eba88bdefd9b0c39867a1542167c18edbc"
+        },
+        {
+          "frame": 159,
+          "file": "frame-0159.png",
+          "contentHash": "4dfa632b42a47d3cd7935965a2077fdbb190e04148f32f71f6cb4cedc2945730",
+          "repeatContentHash": "4dfa632b42a47d3cd7935965a2077fdbb190e04148f32f71f6cb4cedc2945730"
+        },
+        {
+          "frame": 324,
+          "file": "frame-0324.png",
+          "contentHash": "3fca151c74dcf1ef2e7b1a8cff919a6f90fd7a242ccfc0d408b1ddb0c39ac2c3",
+          "repeatContentHash": "3fca151c74dcf1ef2e7b1a8cff919a6f90fd7a242ccfc0d408b1ddb0c39ac2c3"
+        },
+        {
+          "frame": 474,
+          "file": "frame-0474.png",
+          "contentHash": "682365e8c2e3b2ba7710153a6eab24edb27064b8526c0a1c28e2561d025038bc",
+          "repeatContentHash": "682365e8c2e3b2ba7710153a6eab24edb27064b8526c0a1c28e2561d025038bc"
+        }
+      ],
+      "video": {
+        "file": "arbitrary-history.mp4",
+        "contentHash": "3ba522b26a6e42b36a7e10d960c9a52746b8c40df5ecfd8de1f0fbb8f3afabf8"
+      }
+    }
+  ]
+}
