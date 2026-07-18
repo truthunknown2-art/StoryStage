@@ -10,14 +10,12 @@ import {
 } from "@remotion/renderer";
 import {
   getCv001AttachmentContinuity,
-  type ProductionCompositionProps,
+  type Cv001RigProofCompositionProps,
 } from "@storystage/remotion-runtime";
-import { STORY_STAGE_PRODUCTION_COMPOSITION_ID } from "@storystage/remotion-runtime/manifest";
+import { STORY_STAGE_CV001_RIG_PROOF_COMPOSITION_ID } from "@storystage/remotion-runtime/manifest";
 import {
   buildAnimaticSync,
-  createDirectedShotMotionBinding,
   createProductionDraft,
-  cv001BeatInputSchema,
   cv001LanternMotionProgram,
   evaluateMotionProgram,
   frameAccurateRenderPlanSchema,
@@ -93,37 +91,19 @@ async function main(): Promise<void> {
   });
   const plan = createSingleShotProofPlan();
   const shotId = plan.shots[0]!.id;
-  const proofBeat = cv001BeatInputSchema.parse({
-    id: "beat-cv001-rig-proof",
-    order: 2,
-    sceneId: plan.shots[0]!.sceneId,
-    shotId,
-    text: "Reach for the lantern and lift it.",
-    intent: "reach-and-pick-up",
-    characterId: "cv001-character",
-    propId: "lantern",
-    emotion: "cautious",
-    durationInFrames: cv001LanternMotionProgram.durationInFrames,
-    cameraIntent: "gentle-push",
-  });
-  const inputProps: ProductionCompositionProps = {
-    plan,
-    playbackAssets: {},
-    sliceDurationInFrames: cv001LanternMotionProgram.durationInFrames,
-    directedMotions: [
-      createDirectedShotMotionBinding(proofBeat, cv001LanternMotionProgram),
-    ],
+  const inputProps: Cv001RigProofCompositionProps = {
+    program: cv001LanternMotionProgram,
   };
   const composition = await selectComposition({
     serveUrl,
-    id: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
+    id: STORY_STAGE_CV001_RIG_PROOF_COMPOSITION_ID,
     inputProps,
   });
   if (
     composition.durationInFrames !== cv001LanternMotionProgram.durationInFrames
   )
     throw new Error(
-      `Production composition truncated CV-001: ${composition.durationInFrames} rendered frames for ${cv001LanternMotionProgram.durationInFrames} program frames.`,
+      `Rig proof composition truncated CV-001: ${composition.durationInFrames} rendered frames for ${cv001LanternMotionProgram.durationInFrames} program frames.`,
     );
   const attachmentContinuity = getCv001AttachmentContinuity(
     cv001LanternMotionProgram,
@@ -162,7 +142,7 @@ async function main(): Promise<void> {
   const report = {
     schemaVersion: "1.0",
     status: "engineering-motion-proof",
-    compositionId: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
+    compositionId: STORY_STAGE_CV001_RIG_PROOF_COMPOSITION_ID,
     programId: cv001LanternMotionProgram.id,
     fps: composition.fps,
     durationInFrames: composition.durationInFrames,
@@ -172,7 +152,7 @@ async function main(): Promise<void> {
     rigContractId: "cv001-paper-cut-rig-v1",
     attachmentContinuity,
     integration: {
-      path: "ProductionComposition",
+      path: "Cv001RigProofComposition",
       shotId,
       planDurationInFrames: plan.durationInFrames,
       programDurationInFrames: cv001LanternMotionProgram.durationInFrames,

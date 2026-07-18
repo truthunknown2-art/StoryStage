@@ -59,6 +59,12 @@ describe("CV-001 deterministic three-beat compiler", () => {
 
     expect(second).toEqual(first);
     expect(hashCanonical(second)).toBe(hashCanonical(first));
+    const roundTrip = JSON.parse(JSON.stringify(first)) as typeof first;
+    expect(roundTrip).toEqual(first);
+    expect(hashCanonical(roundTrip)).toBe(hashCanonical(first));
+    expect(JSON.stringify(first)).not.toMatch(
+      /createdAt|updatedAt|timestamp|uuid|filePath|random/i,
+    );
   });
 
   it("isolates a beat-two edit to beat two and the scene hash", () => {
@@ -79,6 +85,36 @@ describe("CV-001 deterministic three-beat compiler", () => {
       first.bindings[1].programContentHash,
     );
     expect(second.contentHash).not.toBe(first.contentHash);
+  });
+
+  it("compiles every supported beat duration without collapsed phases or keyframes", () => {
+    for (let duration = 24; duration <= 180; duration += 1) {
+      const fixture = createCv001ThreeBeatProofFixture();
+      let cursor = 0;
+      for (const [index, shot] of fixture.renderPlan.shots.entries()) {
+        shot.startFrame = cursor;
+        shot.durationInFrames = duration;
+        shot.actions = shot.actions.map((action) => ({
+          ...action,
+          startFrame: cursor,
+          endFrame: cursor + duration,
+        }));
+        fixture.input.beats[index]!.durationInFrames = duration;
+        cursor += duration;
+      }
+      fixture.renderPlan.durationInFrames = cursor;
+      const { contentHash: _contentHash, ...planPayload } = fixture.renderPlan;
+      void _contentHash;
+      fixture.renderPlan.contentHash = hashCanonical(planPayload);
+      fixture.input.planContentHash = fixture.renderPlan.contentHash;
+
+      const compiled = compileCv001ThreeBeatScene(fixture);
+      expect(
+        compiled.bindings.every(
+          (binding) => binding.program.durationInFrames === duration,
+        ),
+      ).toBe(true);
+    }
   });
 
   it("enforces the intended attachment and phase lifecycle", () => {
@@ -112,6 +148,68 @@ describe("CV-001 deterministic three-beat compiler", () => {
     expect(finalHold.endFrame - finalHold.startFrame).toBeGreaterThanOrEqual(
       12,
     );
+    for (const boneId of ["upper-arm-right", "lower-arm-right", "hand-right"])
+      expect(
+        pickup!.tracks.some(
+          (track) =>
+            track.type === "bone" &&
+            track.boneId === boneId &&
+            new Set(track.keyframes.map((keyframe) => keyframe.value)).size > 1,
+        ),
+      ).toBe(true);
+  });
+
+  it("rejects malformed beat identity, order, intent, and scene input", () => {
+    const fixture = createCv001ThreeBeatProofFixture();
+    const repeatedId = structuredClone(fixture.input);
+    repeatedId.beats[1].id = repeatedId.beats[0].id;
+    expect(() =>
+      compileCv001ThreeBeatScene({
+        input: repeatedId,
+        renderPlan: fixture.renderPlan,
+      }),
+    ).toThrow();
+
+    const repeatedShot = structuredClone(fixture.input);
+    repeatedShot.beats[1].shotId = repeatedShot.beats[0].shotId;
+    expect(() =>
+      compileCv001ThreeBeatScene({
+        input: repeatedShot,
+        renderPlan: fixture.renderPlan,
+      }),
+    ).toThrow();
+
+    const outOfOrder = structuredClone(fixture.input) as unknown as Record<
+      string,
+      unknown
+    >;
+    outOfOrder.beats = (outOfOrder.beats as unknown[]).slice().reverse();
+    expect(() =>
+      compileCv001ThreeBeatScene({
+        input: outOfOrder as never,
+        renderPlan: fixture.renderPlan,
+      }),
+    ).toThrow();
+
+    const unknownIntent = structuredClone(fixture.input) as unknown as {
+      beats: Array<Record<string, unknown>>;
+    };
+    unknownIntent.beats[0]!.intent = "do-something-animated";
+    expect(() =>
+      compileCv001ThreeBeatScene({
+        input: unknownIntent as never,
+        renderPlan: fixture.renderPlan,
+      }),
+    ).toThrow();
+
+    const wrongScene = structuredClone(fixture.input);
+    wrongScene.beats[2].sceneId = "scene-elsewhere";
+    expect(() =>
+      compileCv001ThreeBeatScene({
+        input: wrongScene,
+        renderPlan: fixture.renderPlan,
+      }),
+    ).toThrow();
   });
 
   it("rejects stale plans, duration mismatches, and tampered hashes", () => {
@@ -135,6 +233,23 @@ describe("CV-001 deterministic three-beat compiler", () => {
       }),
     ).toThrow(/duration does not match/);
 
+    const duplicatePlanShot = structuredClone(fixture.renderPlan);
+    duplicatePlanShot.shots.push(structuredClone(duplicatePlanShot.shots[0]!));
+    const { contentHash: _oldHash, ...duplicatePlanPayload } =
+      duplicatePlanShot;
+    void _oldHash;
+    duplicatePlanShot.contentHash = hashCanonical(duplicatePlanPayload);
+    const duplicatePlanInput = {
+      ...fixture.input,
+      planContentHash: duplicatePlanShot.contentHash,
+    };
+    expect(() =>
+      compileCv001ThreeBeatScene({
+        input: duplicatePlanInput,
+        renderPlan: duplicatePlanShot,
+      }),
+    ).toThrow(/exactly once/);
+
     const compiled = compileCv001ThreeBeatScene(fixture);
     const tamperedBinding = {
       ...compiled.bindings[0],
@@ -150,6 +265,12 @@ describe("CV-001 deterministic three-beat compiler", () => {
       cv001CompiledSceneMotionSchema.safeParse({
         ...compiled,
         contentHash: "f".repeat(64),
+      }).success,
+    ).toBe(false);
+    expect(
+      cv001CompiledSceneMotionSchema.safeParse({
+        ...compiled,
+        rigContractId: "another-rig",
       }).success,
     ).toBe(false);
   });

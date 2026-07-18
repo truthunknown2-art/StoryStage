@@ -2,6 +2,7 @@ import { Audio } from "@remotion/media";
 import type { Caption } from "@remotion/captions";
 import type {
   AudioMix,
+  Cv001CompiledSceneMotion,
   DirectedBeatProgram,
   FrameAccurateRenderPlan,
   SoundEffectCue,
@@ -25,10 +26,7 @@ import {
   getCv001LanternPickupTransform,
   type Cv001WorldTransform,
 } from "./cv001-rig-kinematics";
-import {
-  assertDirectedShotMotionBindings,
-  type DirectedShotMotionBinding,
-} from "./production-motion-binding";
+import { assertDirectedSceneMotion } from "./production-motion-binding";
 
 export type CharacterPlaybackAsset = {
   type: "character-rig";
@@ -66,7 +64,7 @@ export type ProductionCompositionProps = {
   audioMix?: AudioMix;
   previewWatermark?: string;
   previewAssetStatus?: "unapproved-candidate";
-  directedMotions?: DirectedShotMotionBinding[];
+  directedSceneMotion?: Cv001CompiledSceneMotion;
 };
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
@@ -534,14 +532,17 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
   audioMix,
   previewWatermark,
   previewAssetStatus,
-  directedMotions = [],
+  directedSceneMotion,
 }) => {
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
-  const validatedMotions = assertDirectedShotMotionBindings(
-    plan,
-    sliceDurationInFrames,
-    directedMotions,
-  );
+  const validatedSceneMotion = directedSceneMotion
+    ? assertDirectedSceneMotion(
+        plan,
+        sliceDurationInFrames,
+        directedSceneMotion,
+      )
+    : undefined;
+  const validatedMotions = validatedSceneMotion?.bindings ?? [];
   const motionByShotId = new Map(
     validatedMotions.map((binding) => [binding.shotId, binding.program]),
   );

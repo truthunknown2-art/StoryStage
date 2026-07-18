@@ -125,30 +125,6 @@ export const Cv001RigProofComposition: React.FC<
           <stop offset=".45" stopColor="#ffc955" stopOpacity=".45" />
           <stop offset="1" stopColor="#ffc955" stopOpacity="0" />
         </radialGradient>
-        <filter id="cv001-shadow">
-          <feDropShadow
-            dx="14"
-            dy="20"
-            floodColor="#0b211d"
-            floodOpacity=".32"
-            stdDeviation="10"
-          />
-        </filter>
-        <filter id="cv001-paper">
-          <feTurbulence
-            baseFrequency=".7"
-            numOctaves="2"
-            result="noise"
-            seed="7"
-            type="fractalNoise"
-          />
-          <feColorMatrix
-            in="noise"
-            result="grain"
-            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 .07 0"
-          />
-          <feBlend in="SourceGraphic" in2="grain" mode="multiply" />
-        </filter>
       </defs>
       <rect fill="#102d2f" height="1080" width="1920" />
       <g transform={`translate(${farX} 0)`}>
@@ -159,7 +135,7 @@ export const Cv001RigProofComposition: React.FC<
           fill="#315f4d"
         />
       </g>
-      <g filter="url(#cv001-paper)" transform={`translate(${midgroundX} 0)`}>
+      <g transform={`translate(${midgroundX} 0)`}>
         <path
           d="M0 890 Q260 700 480 840 T900 790 T1370 820 T1920 750 V1080 H0Z"
           fill="#1f5143"
@@ -193,7 +169,6 @@ export const Cv001RigProofComposition: React.FC<
         />
         {!lanternAttached ? (
           <g
-            filter="url(#cv001-shadow)"
             transform={`translate(${resolvedLanternPickupTransform.x} ${resolvedLanternPickupTransform.y}) rotate(${resolvedLanternPickupTransform.rotation}) scale(${resolvedLanternPickupTransform.scale})`}
           >
             <Lantern scale={0.92} />
@@ -201,7 +176,6 @@ export const Cv001RigProofComposition: React.FC<
         ) : null}
         <g
           data-phase={evaluated.phase ?? "none"}
-          filter="url(#cv001-shadow)"
           transform={`translate(${cv001RigLayout.rootOrigin.x + rootX} ${cv001RigLayout.rootOrigin.y + rootY}) rotate(${rootRotation}) scale(${rootScale})`}
         >
           <g transform={`rotate(${torsoRotation})`}>
@@ -346,7 +320,7 @@ export const Cv001RigProofComposition: React.FC<
           </g>
         </g>
       </g>
-      <g filter="url(#cv001-paper)" transform={`translate(${foregroundX} 0)`}>
+      <g transform={`translate(${foregroundX} 0)`}>
         <path
           d="M0 900 Q250 720 480 910 T910 900 T1360 930 T2000 850 V1080 H0Z"
           fill="#123d35"

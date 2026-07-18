@@ -12,7 +12,7 @@ Status: integrated engineering proof submitted for Pro audit. This proves beat c
 - Beat two uses anticipation, reach, a single ground-to-hand attachment, overshoot, settle, and hold.
 - Beat three begins with the lantern attached, reacts toward the audience, presents it, and ends with a hold of at least twelve frames.
 - Canonical SHA-256 hashes bind each beat, program, binding, plan, and compiled scene. Editing only beat two changes only its program/binding hashes plus the scene hash.
-- `ProductionComposition` consumes a `directedMotions` array and rejects duplicate targets, stale binding/program hashes, unknown shots, duration or fps mismatch, and slice truncation.
+- `ProductionComposition` consumes the complete `Cv001CompiledSceneMotion` envelope. It validates the scene hash, requires the compiled `planContentHash` to equal the active render-plan hash, requires all three unique bindings, and rejects duplicate targets, stale binding/program hashes, unknown or wrong-scene shots, duration or fps mismatch, and slice truncation.
 - The scene renderer shares the pickup transform across beats so the free lantern and its attached hand transform meet without a position, rotation, or scale jump.
 
 ## Executable proof
@@ -25,9 +25,10 @@ pnpm --filter @storystage/render-worker render:cv001-three-beat-proof
 
 The command writes an ignored evidence packet under `artifacts/CV-001/three-beat-proof/`:
 
-- a ten-second, 300-frame, 30 fps H.264 render through `StoryStageProduction`;
+- two ten-second, 300-frame, 30 fps H.264 renders through `StoryStageProduction`;
+- FFprobe verification of codec, 1920×1080 dimensions, frame rate, and exact frame count for both MP4s;
 - thirteen fixed-frame PNGs spanning all three beats;
-- a second render of every audited frame with exact matching SHA-256 pixel hashes;
+- the same thirteen frames decoded from both MP4s with exact matching SHA-256 hashes and at least three visibly distinct decoded frames inside every beat;
 - a JSON report with plan, scene, beat, program, binding, and video hashes;
 - measured pickup continuity with position, rotation, and scale deltas below `0.001` (currently all zero).
 
@@ -37,8 +38,8 @@ The committed [three-beat contact sheet](../design/creator-first-reset/cv001-thr
 
 - `pnpm verify` passes across all workspaces.
 - `pnpm build` passes for the render worker, asset worker, Electron host, and Studio.
-- Story engine: 54 passing tests, including compiler schema, determinism, edit isolation, phase/attachment lifecycle, stale-plan rejection, duration mismatch, and hash tampering.
-- Remotion runtime: three passing contract tests, including exact multi-shot binding plus duplicate, unknown, stale, and truncated rejection.
+- Story engine: 56 passing tests, including compiler schema, every supported 24–180-frame beat duration, determinism, serialization, edit isolation, phase/attachment lifecycle, malformed identity/order/intent, stale-plan rejection, duplicate plan targets, duration mismatch, and hash tampering.
+- Remotion runtime: four passing contract tests, including the complete scene envelope, exact multi-shot binding, missing-entry rejection, valid-old-scene versus valid-new-plan rejection, unbound fourth-shot behavior, and duplicate, unknown, stale, fps-drift, duration-drift, and truncation rejection.
 
 ## Still outside this slice
 

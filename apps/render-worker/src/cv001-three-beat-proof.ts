@@ -1,6 +1,8 @@
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import {
@@ -8,6 +10,8 @@ import {
   renderStill,
   selectComposition,
 } from "@remotion/renderer";
+import ffmpegPath from "ffmpeg-static";
+import ffprobeStatic from "ffprobe-static";
 import type { ProductionCompositionProps } from "@storystage/remotion-runtime";
 import { STORY_STAGE_PRODUCTION_COMPOSITION_ID } from "@storystage/remotion-runtime/manifest";
 import {
@@ -23,8 +27,85 @@ const workspaceRoot = resolve(
   fileURLToPath(new URL("../../..", import.meta.url)),
 );
 const outputRoot = resolve(workspaceRoot, "artifacts/CV-001/three-beat-proof");
+const execFileAsync = promisify(execFile);
 const sha256 = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
+
+type ProbedVideoStream = {
+  avg_frame_rate?: string;
+  codec_name?: string;
+  codec_type?: string;
+  duration?: string;
+  height?: number;
+  nb_frames?: string;
+  width?: number;
+};
+
+async function probeVideo(file: string) {
+  const { stdout } = await execFileAsync(
+    ffprobeStatic.path,
+    ["-v", "error", "-show_streams", "-of", "json", file],
+    { maxBuffer: 10 * 1024 * 1024 },
+  );
+  const stream = (
+    (JSON.parse(stdout) as { streams?: ProbedVideoStream[] }).streams ?? []
+  ).find((candidate) => candidate.codec_type === "video");
+  if (
+    !stream ||
+    stream.codec_name !== "h264" ||
+    stream.width !== 1920 ||
+    stream.height !== 1080
+  )
+    throw new Error(`CV-001 proof is not H.264 at 1920x1080: ${file}`);
+  const [numerator, denominator] = (stream.avg_frame_rate ?? "0/1")
+    .split("/")
+    .map(Number);
+  const fps = denominator ? numerator! / denominator : 0;
+  const frameCount = Number(
+    stream.nb_frames || Math.round(Number(stream.duration) * fps),
+  );
+  if (fps !== 30 || frameCount !== 300)
+    throw new Error(
+      `CV-001 proof has ${frameCount} frames at ${fps} fps instead of 300 at 30 fps.`,
+    );
+  const bytes = await readFile(file);
+  return {
+    codec: stream.codec_name,
+    width: stream.width,
+    height: stream.height,
+    fps,
+    frameCount,
+    durationInSeconds: frameCount / fps,
+    byteLength: bytes.length,
+    contentHash: sha256(bytes),
+  };
+}
+
+async function extractDecodedFrame(
+  video: string,
+  frame: number,
+  output: string,
+): Promise<string> {
+  if (!ffmpegPath)
+    throw new Error("ffmpeg-static did not provide an executable path.");
+  await execFileAsync(
+    ffmpegPath,
+    [
+      "-loglevel",
+      "error",
+      "-y",
+      "-i",
+      video,
+      "-vf",
+      `select=eq(n\\,${frame})`,
+      "-frames:v",
+      "1",
+      output,
+    ],
+    { maxBuffer: 10 * 1024 * 1024 },
+  );
+  return sha256(await readFile(output));
+}
 
 async function main(): Promise<void> {
   const fixture = createCv001ThreeBeatProofFixture();
@@ -58,7 +139,7 @@ async function main(): Promise<void> {
     plan: fixture.renderPlan,
     playbackAssets: {},
     sliceDurationInFrames: fixture.renderPlan.durationInFrames,
-    directedMotions: [...compiled.bindings],
+    directedSceneMotion: compiled,
   };
   const composition = await selectComposition({
     serveUrl,
@@ -126,6 +207,7 @@ async function main(): Promise<void> {
   }
 
   const video = resolve(outputRoot, "cv001-three-beat-proof.mp4");
+  const repeatVideo = resolve(outputRoot, "cv001-three-beat-proof-pass-2.mp4");
   await renderMedia({
     codec: "h264",
     composition,
@@ -133,6 +215,61 @@ async function main(): Promise<void> {
     outputLocation: video,
     serveUrl,
   });
+  await renderMedia({
+    codec: "h264",
+    composition,
+    inputProps,
+    outputLocation: repeatVideo,
+    serveUrl,
+  });
+  const [videoProbe, repeatVideoProbe] = await Promise.all([
+    probeVideo(video),
+    probeVideo(repeatVideo),
+  ]);
+  const decodedPassOneRoot = resolve(outputRoot, "decoded-pass-1");
+  const decodedPassTwoRoot = resolve(outputRoot, "decoded-pass-2");
+  await Promise.all([
+    mkdir(decodedPassOneRoot, { recursive: true }),
+    mkdir(decodedPassTwoRoot, { recursive: true }),
+  ]);
+  const decodedFrameComparisons = [];
+  for (const audit of auditFrames) {
+    const filename = `frame-${String(audit.frame).padStart(3, "0")}.png`;
+    const [passOneHash, passTwoHash] = await Promise.all([
+      extractDecodedFrame(
+        video,
+        audit.frame,
+        resolve(decodedPassOneRoot, filename),
+      ),
+      extractDecodedFrame(
+        repeatVideo,
+        audit.frame,
+        resolve(decodedPassTwoRoot, filename),
+      ),
+    ]);
+    if (passOneHash !== passTwoHash)
+      throw new Error(
+        `Decoded frame ${audit.frame} changed across identical H.264 renders.`,
+      );
+    decodedFrameComparisons.push({
+      beatIndex: audit.beatIndex,
+      frame: audit.frame,
+      passOneHash,
+      passTwoHash,
+      matches: true,
+    });
+  }
+  for (const beatIndex of [0, 1, 2] as const) {
+    const uniqueFrames = new Set(
+      decodedFrameComparisons
+        .filter((comparison) => comparison.beatIndex === beatIndex)
+        .map((comparison) => comparison.passOneHash),
+    );
+    if (uniqueFrames.size < 3)
+      throw new Error(
+        `Beat ${beatIndex + 1} lacks visible variation across decoded audit frames.`,
+      );
+  }
   const pickupContinuity = getCv001AttachmentContinuity(
     compiled.bindings[1].program,
   );
@@ -160,11 +297,13 @@ async function main(): Promise<void> {
     height: composition.height,
     validatorIssues,
     deterministicFixedFrameAudit: {
-      rendersPerFrame: 2,
-      frameCount: stills.length,
-      allHashesMatch: stills.every(
-        (still) => still.contentHash === still.repeatContentHash,
-      ),
+      h264RenderCount: 2,
+      decodedFrameCountPerRender: decodedFrameComparisons.length,
+      allHashesMatch:
+        stills.every(
+          (still) => still.contentHash === still.repeatContentHash,
+        ) && decodedFrameComparisons.every((comparison) => comparison.matches),
+      decodedFrameComparisons,
     },
     beats: compiled.bindings.map((binding, index) => ({
       beatId: binding.beatId,
@@ -180,8 +319,11 @@ async function main(): Promise<void> {
     pickupAttachmentContinuity: pickupContinuity,
     video: {
       relativeFile: "cv001-three-beat-proof.mp4",
-      codec: "h264",
-      contentHash: sha256(await readFile(video)),
+      ...videoProbe,
+    },
+    repeatVideo: {
+      relativeFile: "cv001-three-beat-proof-pass-2.mp4",
+      ...repeatVideoProbe,
     },
     stills,
   };

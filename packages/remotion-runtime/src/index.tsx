@@ -140,5 +140,6 @@ export type { Cv001WorldTransform } from "./cv001-rig-kinematics";
 export {
   assertDirectedShotMotionBinding,
   assertDirectedShotMotionBindings,
+  assertDirectedSceneMotion,
 } from "./production-motion-binding";
 export type { DirectedShotMotionBinding } from "./production-motion-binding";

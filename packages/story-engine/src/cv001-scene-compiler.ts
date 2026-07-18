@@ -746,10 +746,16 @@ const validateInputPlan = (
   if (renderPlan.fps !== input.fps)
     throw new Error("CV-001 input and render plan must run at 30 fps.");
   const shots = input.beats.map((beat) => {
-    const shot = renderPlan.shots.find(
+    const matchingShots = renderPlan.shots.filter(
       (candidate) => candidate.id === beat.shotId,
     );
-    if (!shot) throw new Error(`CV-001 shot ${beat.shotId} does not exist.`);
+    if (matchingShots.length !== 1)
+      throw new Error(
+        matchingShots.length === 0
+          ? `CV-001 shot ${beat.shotId} does not exist.`
+          : `CV-001 shot ${beat.shotId} must appear exactly once in the render plan.`,
+      );
+    const shot = matchingShots[0]!;
     if (shot.sceneId !== input.sceneId)
       throw new Error(`CV-001 shot ${shot.id} belongs to the wrong scene.`);
     if (shot.durationInFrames !== beat.durationInFrames)
