@@ -1,4 +1,5 @@
 import { cv002ProjectSchema, type Cv002Project } from "../cv002-story-draft";
+import type { CapabilityRegistry } from "./capability-report";
 import { compileDirectorProject } from "./director-compiler";
 import { directorPatchSchema, type DirectorPatch } from "./director-patch";
 import {
@@ -37,6 +38,7 @@ export function applyDirectorPatch(input: {
   storyProject: Cv002Project;
   baseDirectorProject: DirectorProject;
   patch: DirectorPatch;
+  capabilities?: CapabilityRegistry;
 }): DirectorProject {
   const storyProject = cv002ProjectSchema.parse(input.storyProject);
   const base = directorProjectSchema.parse(input.baseDirectorProject);
@@ -141,6 +143,7 @@ export function applyDirectorPatch(input: {
   const next = compileDirectorProject({
     storyProject,
     planner: new FixedDirectorProposalPlanner(planningArtifact),
+    capabilities: input.capabilities,
     revision: {
       baseDirectorProjectContentHash: base.contentHash,
       directorPatchContentHash: patch.contentHash,

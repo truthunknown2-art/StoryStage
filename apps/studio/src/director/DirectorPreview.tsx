@@ -11,6 +11,7 @@ import {
   selectDirectorWorkspaceBeat,
   undoDirectorWorkspace,
   type Cv002Project,
+  type CapabilityRegistry,
   type DirectorPatch,
   type DirectorProject,
   type DirectorWorkspaceState,
@@ -60,11 +61,13 @@ const beatRange = (director: DirectorProject, beatId: string) => {
 };
 
 export function DirectorAnimaticPreview({
+  capabilityRegistry,
   compileError,
   onWorkspaceChange,
   project,
   workspace,
 }: {
+  capabilityRegistry: CapabilityRegistry;
   compileError: string | null;
   onWorkspaceChange: Dispatch<SetStateAction<DirectorWorkspaceState | null>>;
   project: Cv002Project;
@@ -201,6 +204,7 @@ export function DirectorAnimaticPreview({
         storyProject: project,
         baseDirectorProject: director,
         patch: proposal,
+        capabilities: capabilityRegistry,
       });
       replayOnNextPlan.current = true;
       onWorkspaceChange(

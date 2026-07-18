@@ -7,6 +7,8 @@ import {
 } from "../cv002-story-draft";
 import {
   alphaCapabilityRegistry,
+  capabilityRegistrySchema,
+  findDirectorCapability,
   resolveDirectorCapabilities,
   type CapabilityRegistry,
 } from "./capability-report";
@@ -549,7 +551,9 @@ function buildDirectorPlan(
       const performanceSource = isKids
         ? beat.role === "setup" || beat.role === "explanation"
           ? ("living-hold" as const)
-          : ("articulated-rig" as const)
+          : beat.role === "action"
+            ? ("atlas-cycle" as const)
+            : ("articulated-rig" as const)
         : ["reveal", "action", "explanation"].includes(beat.role)
           ? ("drawing-sequence" as const)
           : ("living-hold" as const);
@@ -841,6 +845,7 @@ function buildExecutable(
   plan: ReturnType<typeof buildDirectorPlan>,
   timing: ReturnType<typeof solveTiming>,
   format: DirectorOutputFormat,
+  capabilityRegistry: CapabilityRegistry,
 ) {
   const beats = project.graph.scenes.flatMap((scene) => scene.beats);
   const beatById = new Map(beats.map((beat) => [beat.id, beat]));
@@ -894,21 +899,40 @@ function buildExecutable(
             .map((shot) => shot.sceneId),
         ),
       ];
+      const capability = findDirectorCapability(
+        capabilityRegistry,
+        requirement,
+      );
       return sealExecutableProgram({
         id: requirement.id,
         kind: requirement.source,
-        rendererId: "director-proxy-performance",
-        rendererVersion: "1.0.0",
+        rendererId: capability?.rendererId ?? "director-proxy-performance",
+        rendererVersion: capability?.rendererVersion ?? "1.0.0",
         entityId: requirement.entityId,
         eventIds: requirement.requiredEventIds,
-        assetIds: [],
-        manifestContentHash: hashCanonical(requirement),
+        assetIds: capability?.assets.map((asset) => asset.assetId) ?? [],
+        manifestContentHash:
+          capability?.contentHash ?? hashCanonical(requirement),
         sourceSceneIds,
         sourceBeatIds: [beat.beatId],
         sourceShotIds,
+        ...(capability ? { execution: capability.execution } : {}),
       });
     }),
   );
+  const approvedAssets = [
+    ...new Map(
+      capabilityRegistry.capabilities
+        .filter((capability) =>
+          performancePrograms.some(
+            (program) =>
+              program.execution && program.id === capability.requirementId,
+          ),
+        )
+        .flatMap((capability) => capability.assets)
+        .map((asset) => [asset.assetId, asset]),
+    ).values(),
+  ];
   const proxyStagePrograms = worlds.map((world, sceneIndex) => {
     const sourceScene = plan.scenes.find(
       (scene) => scene.sceneId === world.sceneId,
@@ -1245,7 +1269,7 @@ function buildExecutable(
     grammarProfileContentHash: getGrammarProfile(project.grammar).contentHash,
     registryVersions: {
       stage: "director-alpha-1",
-      performance: "director-alpha-1",
+      performance: capabilityRegistry.version,
       treatment: "director-alpha-1",
       transition: "director-alpha-1",
       audio: "director-alpha-1",
@@ -1254,7 +1278,7 @@ function buildExecutable(
     stageKits,
     shots: executableShots,
     performancePrograms,
-    approvedAssets: [],
+    approvedAssets,
     audioCues,
     proxyStagePrograms,
     proxyCameraPrograms,
@@ -1282,6 +1306,11 @@ export function compileDirectorProject(
       `Director Studio Alpha supports scripts from ${directorAlphaInputPolicy.minimumWords} to ${directorAlphaInputPolicy.maximumWords} words. This script has ${words}.`,
     );
   const planner = input.planner ?? new Cv002AlphaDirectorPlanner();
+  const capabilityRegistry = compileStep("capability-resolution-failed", () =>
+    capabilityRegistrySchema.parse(
+      input.capabilities ?? alphaCapabilityRegistry,
+    ),
+  );
   const proposal = compileStep("planner-output-invalid", () => {
     const result = sealDirectorProposal(planner.propose({ storyProject }));
     assertProposal(storyProject, result);
@@ -1311,13 +1340,11 @@ export function compileDirectorProject(
       directorPlan,
       timingSolution,
       input.format ?? { width: 1920, height: 1080, fps: 30 },
+      capabilityRegistry,
     ),
   );
   const capabilityReport = compileStep("capability-resolution-failed", () =>
-    resolveDirectorCapabilities(
-      directorPlan,
-      input.capabilities ?? alphaCapabilityRegistry,
-    ),
+    resolveDirectorCapabilities(directorPlan, capabilityRegistry),
   );
   const qualityReport = analyzeDirectorQuality(
     directorPlan,

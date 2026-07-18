@@ -11,7 +11,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run src/cv001-rig-contract.test.ts"
+    "test": "vitest run src/cv001-rig-contract.test.ts src/director/bundledKidsCapabilities.test.ts"
   },
   "dependencies": {
     "@remotion/captions": "4.0.490",

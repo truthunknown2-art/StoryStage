@@ -6,6 +6,10 @@ import {
   tryCompileDirectorProject,
 } from "./director-compiler";
 import {
+  createCapabilityRegistry,
+  type PerformanceCapabilityDraft,
+} from "./capability-report";
+import {
   Cv002AlphaDirectorPlanner,
   type DirectorCameraMovement,
   type DirectorPlanner,
@@ -40,6 +44,110 @@ const cameraMovements = [
   "pull",
   "reframe",
 ] as const satisfies readonly DirectorCameraMovement[];
+
+const capabilityFor = (
+  requirement: {
+    id: string;
+    entityId: string;
+    source: "atlas-cycle" | "articulated-rig" | "living-hold";
+  },
+  index: number,
+): PerformanceCapabilityDraft => {
+  const assetId = `performance-asset-${index}`;
+  const common = {
+    id: `concrete-capability-${index}`,
+    requirementId: requirement.id,
+    entityId: requirement.entityId,
+    kind: requirement.source,
+    rendererId: `renderer-${requirement.source}`,
+    rendererVersion: "1.0.0",
+    assets: [
+      {
+        assetId,
+        version: "1.0.0",
+        contentHash: `${index + 1}`.repeat(64),
+        status: "approved" as const,
+        relativeFile: `approved/${assetId}.png`,
+      },
+    ],
+  };
+  if (requirement.source === "articulated-rig")
+    return {
+      ...common,
+      execution: {
+        kind: "articulated-rig",
+        assetId,
+        sheetWidth: 100,
+        sheetHeight: 100,
+        displayScale: 1,
+        parts: [
+          {
+            id: "body",
+            parentId: null,
+            source: { x: 0, y: 0, width: 50, height: 50 },
+            pivot: { x: 25, y: 50 },
+            joint: { x: 0, y: 0 },
+            rotation: 0,
+            zIndex: 0,
+          },
+          {
+            id: "arm",
+            parentId: "body",
+            source: { x: 50, y: 0, width: 50, height: 50 },
+            pivot: { x: 5, y: 5 },
+            joint: { x: 20, y: 10 },
+            rotation: 0,
+            zIndex: 1,
+          },
+        ],
+        channels: [
+          {
+            partId: "arm",
+            keyframes: [
+              { progress: 0, rotation: 0 },
+              { progress: 1, rotation: 30 },
+            ],
+          },
+        ],
+      },
+    };
+  const atlas = {
+    assetId,
+    atlasWidth: 100,
+    atlasHeight: 50,
+    frames: [
+      {
+        source: { x: 0, y: 0, width: 50, height: 50 },
+        anchor: { x: 25, y: 50 },
+      },
+      {
+        source: { x: 50, y: 0, width: 50, height: 50 },
+        anchor: { x: 25, y: 50 },
+      },
+    ],
+  };
+  return requirement.source === "atlas-cycle"
+    ? {
+        ...common,
+        execution: {
+          kind: "atlas-cycle",
+          ...atlas,
+          loop: true,
+          rootDistancePerLoop: 100,
+          footContactFrameIndices: [0],
+        },
+      }
+    : {
+        ...common,
+        execution: {
+          kind: "living-hold",
+          ...atlas,
+          poseSequence: [0, 1],
+          cycleFrames: 24,
+          breathingAmplitude: 0.01,
+        },
+      };
+};
 
 const compileCameraSemantics = (
   size: DirectorShotSize,
@@ -194,6 +302,80 @@ describe("Director Studio Alpha compiler", () => {
           ).length === 2,
       ),
     ).toBe(true);
+  });
+
+  it("embeds exact concrete performance programs while leaving every unmatched beat honestly proxy-only", () => {
+    const capabilityScript = [
+      "A curious traveler studies a bright trail beside the quiet forest before sunrise.",
+      "She ran across the clearing, jumped over a stream, and carried the glowing map toward the old gate.",
+      "She discovers the secret marker and reveals that the hidden road circles back toward their village.",
+      ...Array.from(
+        { length: 6 },
+        (_, index) =>
+          `The patient guide explains why the marker was important to their careful search and what the friends learned from clue ${index + 1}.`,
+      ),
+    ].join(" ");
+    const story = createCv002Project(
+      "Capability boundary",
+      capabilityScript,
+      "kids-adventure",
+    );
+    const proxy = compileDirectorProject({ storyProject: story });
+    const supportedKinds = [
+      "living-hold",
+      "atlas-cycle",
+      "articulated-rig",
+    ] as const;
+    const targets = supportedKinds.map(
+      (kind) =>
+        proxy.directorPlan.beats
+          .flatMap((beat) => beat.performanceRequirements)
+          .find((requirement) => requirement.source === kind)!,
+    );
+    expect(targets.every(Boolean)).toBe(true);
+    const registry = createCapabilityRegistry({
+      version: "test-concrete-performance-v1",
+      capabilities: targets.map((target, index) =>
+        capabilityFor(
+          target as typeof target & {
+            source: (typeof supportedKinds)[number];
+          },
+          index,
+        ),
+      ),
+    });
+    const compiled = compileDirectorProject({
+      storyProject: story,
+      capabilities: registry,
+    });
+    const supported = compiled.executableEpisodePlan.performancePrograms.filter(
+      (program) => program.execution,
+    );
+    const proxyOnly = compiled.executableEpisodePlan.performancePrograms.filter(
+      (program) => !program.execution,
+    );
+
+    expect(compiled.capabilityReport.summary.supported).toBe(3);
+    expect(compiled.capabilityReport.summary.proxyOnly).toBe(proxyOnly.length);
+    expect(supported.map((program) => program.kind).sort()).toEqual(
+      [...supportedKinds].sort(),
+    );
+    expect(
+      supported.every(
+        (program) =>
+          program.assetIds.length > 0 &&
+          program.rendererId !== "director-proxy-performance" &&
+          program.sourceShotIds?.length,
+      ),
+    ).toBe(true);
+    expect(
+      proxyOnly.every(
+        (program) =>
+          program.assetIds.length === 0 &&
+          program.rendererId === "director-proxy-performance",
+      ),
+    ).toBe(true);
+    expect(compiled.executableEpisodePlan.approvedAssets).toHaveLength(3);
   });
 
   it("compiles every exposed shot size to a distinct renderer-consumed scale", () => {

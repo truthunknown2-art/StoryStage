@@ -1,8 +1,17 @@
 import {
   executableEpisodePlanSchema,
+  type ApprovedAssetBinding,
   type ExecutableEpisodePlan,
+  type PerformanceProgram,
 } from "@storystage/story-engine/director-alpha";
-import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
+import {
+  AbsoluteFill,
+  Img,
+  interpolate,
+  Sequence,
+  staticFile,
+  useCurrentFrame,
+} from "remotion";
 
 type ProxyEntity = NonNullable<
   ExecutableEpisodePlan["proxyEntityPrograms"]
@@ -16,6 +25,14 @@ type ProxyStage = NonNullable<
 type ProxyTransition = NonNullable<
   ExecutableEpisodePlan["proxyTransitionPrograms"]
 >[number];
+type AtlasPerformanceExecution = Extract<
+  NonNullable<PerformanceProgram["execution"]>,
+  { kind: "atlas-cycle" | "living-hold" }
+>;
+type ArticulatedPerformanceExecution = Extract<
+  NonNullable<PerformanceProgram["execution"]>,
+  { kind: "articulated-rig" }
+>;
 
 const valueAt = (frame: number, frames: number[], values: number[]) =>
   interpolate(frame, frames, values, {
@@ -23,35 +40,300 @@ const valueAt = (frame: number, frames: number[], values: number[]) =>
     extrapolateRight: "clamp",
   });
 
+const entityStateAt = (program: ProxyEntity, frame: number) => {
+  const frames = program.keyframes.map((keyframe) => keyframe.frame);
+  return {
+    x: valueAt(
+      frame,
+      frames,
+      program.keyframes.map((keyframe) => keyframe.transform.x),
+    ),
+    y: valueAt(
+      frame,
+      frames,
+      program.keyframes.map((keyframe) => keyframe.transform.y),
+    ),
+    scale: valueAt(
+      frame,
+      frames,
+      program.keyframes.map((keyframe) => keyframe.transform.scale),
+    ),
+    rotation: valueAt(
+      frame,
+      frames,
+      program.keyframes.map((keyframe) => keyframe.transform.rotation),
+    ),
+    current: program.keyframes.reduce(
+      (selected, keyframe) => (keyframe.frame <= frame ? keyframe : selected),
+      program.keyframes[0]!,
+    ),
+  };
+};
+
+const assetFile = (assets: ApprovedAssetBinding[], assetId: string): string => {
+  const binding = assets.find((asset) => asset.assetId === assetId);
+  if (binding?.status !== "approved" || !binding.relativeFile)
+    throw new Error(`${assetId} is not bound to an approved renderable file.`);
+  return binding.relativeFile;
+};
+
+const AtlasFrame: React.FC<{
+  execution: AtlasPerformanceExecution;
+  frameIndex: number;
+  relativeFile: string;
+}> = ({ execution, frameIndex, relativeFile }) => {
+  const atlasFrame = execution.frames[frameIndex]!;
+  return (
+    <div
+      style={{
+        height: atlasFrame.source.height,
+        left: -atlasFrame.anchor.x,
+        overflow: "hidden",
+        position: "absolute",
+        top: -atlasFrame.anchor.y,
+        width: atlasFrame.source.width,
+      }}
+    >
+      <Img
+        src={staticFile(relativeFile)}
+        style={{
+          height: execution.atlasHeight,
+          left: -atlasFrame.source.x,
+          maxWidth: "none",
+          position: "absolute",
+          top: -atlasFrame.source.y,
+          width: execution.atlasWidth,
+        }}
+      />
+    </div>
+  );
+};
+
+const AtlasPerformanceRenderer: React.FC<{
+  approvedAssets: ApprovedAssetBinding[];
+  formatWidth: number;
+  performance: PerformanceProgram & {
+    execution: AtlasPerformanceExecution;
+  };
+  proxy: ProxyEntity;
+}> = ({ approvedAssets, formatWidth, performance, proxy }) => {
+  const frame = useCurrentFrame();
+  const state = entityStateAt(proxy, frame);
+  const execution = performance.execution;
+  const firstX = proxy.keyframes[0]!.transform.x;
+  const frameIndex =
+    execution.kind === "atlas-cycle"
+      ? Math.floor(
+          ((Math.abs(state.x - firstX) * formatWidth) /
+            execution.rootDistancePerLoop) *
+            execution.frames.length,
+        ) % execution.frames.length
+      : execution.poseSequence[
+          Math.floor(
+            ((frame % execution.cycleFrames) / execution.cycleFrames) *
+              execution.poseSequence.length,
+          ) % execution.poseSequence.length
+        ]!;
+  const breath =
+    execution.kind === "living-hold"
+      ? 1 +
+        Math.sin((frame / execution.cycleFrames) * Math.PI * 2) *
+          execution.breathingAmplitude
+      : 1;
+  const performerScale =
+    state.scale *
+    (formatWidth / 1920) *
+    (execution.kind === "atlas-cycle" ? 0.82 : 0.92);
+  return (
+    <div
+      data-performance-kind={execution.kind}
+      data-performance-program={performance.id}
+      style={{
+        left: `${state.x * 100}%`,
+        position: "absolute",
+        top: `${state.y * 100}%`,
+        transform: `rotate(${state.rotation}deg) scale(${performerScale}) scaleY(${breath})`,
+        transformOrigin: "0 0",
+        zIndex: Math.round(state.current.transform.z + 4),
+      }}
+    >
+      <AtlasFrame
+        execution={execution}
+        frameIndex={frameIndex}
+        relativeFile={assetFile(approvedAssets, execution.assetId)}
+      />
+    </div>
+  );
+};
+
+const rotationAt = (
+  execution: ArticulatedPerformanceExecution,
+  partId: string,
+  progress: number,
+) => {
+  const channel = execution.channels.find(
+    (candidate) => candidate.partId === partId,
+  );
+  if (!channel) return 0;
+  return interpolate(
+    progress,
+    channel.keyframes.map((keyframe) => keyframe.progress),
+    channel.keyframes.map((keyframe) => keyframe.rotation),
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+};
+
+const ArticulatedPart: React.FC<{
+  execution: ArticulatedPerformanceExecution;
+  part: ArticulatedPerformanceExecution["parts"][number];
+  progress: number;
+  relativeFile: string;
+}> = ({ execution, part, progress, relativeFile }) => {
+  const children = execution.parts
+    .filter((candidate) => candidate.parentId === part.id)
+    .sort((left, right) => left.zIndex - right.zIndex);
+  return (
+    <div
+      style={{
+        left: part.joint.x,
+        position: "absolute",
+        top: part.joint.y,
+        transform: `rotate(${part.rotation + rotationAt(execution, part.id, progress)}deg)`,
+        transformOrigin: "0 0",
+        zIndex: part.zIndex,
+      }}
+    >
+      <div
+        style={{
+          height: part.source.height,
+          left: -part.pivot.x,
+          overflow: "hidden",
+          position: "absolute",
+          top: -part.pivot.y,
+          width: part.source.width,
+        }}
+      >
+        <Img
+          src={staticFile(relativeFile)}
+          style={{
+            height: execution.sheetHeight,
+            left: -part.source.x,
+            maxWidth: "none",
+            position: "absolute",
+            top: -part.source.y,
+            width: execution.sheetWidth,
+          }}
+        />
+      </div>
+      {children.map((child) => (
+        <ArticulatedPart
+          execution={execution}
+          key={child.id}
+          part={child}
+          progress={progress}
+          relativeFile={relativeFile}
+        />
+      ))}
+    </div>
+  );
+};
+
+const ArticulatedPerformanceRenderer: React.FC<{
+  approvedAssets: ApprovedAssetBinding[];
+  durationInFrames: number;
+  formatWidth: number;
+  performance: PerformanceProgram & {
+    execution: ArticulatedPerformanceExecution;
+  };
+  proxy: ProxyEntity;
+}> = ({
+  approvedAssets,
+  durationInFrames,
+  formatWidth,
+  performance,
+  proxy,
+}) => {
+  const frame = useCurrentFrame();
+  const state = entityStateAt(proxy, frame);
+  const execution = performance.execution;
+  const progress = frame / Math.max(1, durationInFrames - 1);
+  const relativeFile = assetFile(approvedAssets, execution.assetId);
+  return (
+    <div
+      data-performance-kind={execution.kind}
+      data-performance-program={performance.id}
+      style={{
+        left: `${state.x * 100}%`,
+        position: "absolute",
+        top: `${state.y * 100}%`,
+        transform: `rotate(${state.rotation}deg) scale(${state.scale * execution.displayScale * (formatWidth / 1920)})`,
+        transformOrigin: "0 0",
+        zIndex: Math.round(state.current.transform.z + 4),
+      }}
+    >
+      {execution.parts
+        .filter((part) => part.parentId === null)
+        .sort((left, right) => left.zIndex - right.zIndex)
+        .map((part) => (
+          <ArticulatedPart
+            execution={execution}
+            key={part.id}
+            part={part}
+            progress={progress}
+            relativeFile={relativeFile}
+          />
+        ))}
+    </div>
+  );
+};
+
+const ExecutablePerformanceRenderer: React.FC<{
+  approvedAssets: ApprovedAssetBinding[];
+  durationInFrames: number;
+  formatWidth: number;
+  performance: PerformanceProgram;
+  proxy: ProxyEntity;
+}> = ({
+  approvedAssets,
+  durationInFrames,
+  formatWidth,
+  performance,
+  proxy,
+}) => {
+  if (!performance.execution) return <ProxyEntityRenderer program={proxy} />;
+  if (performance.execution.kind === "articulated-rig")
+    return (
+      <ArticulatedPerformanceRenderer
+        approvedAssets={approvedAssets}
+        durationInFrames={durationInFrames}
+        formatWidth={formatWidth}
+        performance={
+          performance as PerformanceProgram & {
+            execution: ArticulatedPerformanceExecution;
+          }
+        }
+        proxy={proxy}
+      />
+    );
+  return (
+    <AtlasPerformanceRenderer
+      approvedAssets={approvedAssets}
+      formatWidth={formatWidth}
+      performance={
+        performance as PerformanceProgram & {
+          execution: AtlasPerformanceExecution;
+        }
+      }
+      proxy={proxy}
+    />
+  );
+};
+
 const ProxyEntityRenderer: React.FC<{ program: ProxyEntity }> = ({
   program,
 }) => {
   const frame = useCurrentFrame();
-  const frames = program.keyframes.map((keyframe) => keyframe.frame);
-  const x = valueAt(
-    frame,
-    frames,
-    program.keyframes.map((keyframe) => keyframe.transform.x),
-  );
-  const y = valueAt(
-    frame,
-    frames,
-    program.keyframes.map((keyframe) => keyframe.transform.y),
-  );
-  const scale = valueAt(
-    frame,
-    frames,
-    program.keyframes.map((keyframe) => keyframe.transform.scale),
-  );
-  const rotation = valueAt(
-    frame,
-    frames,
-    program.keyframes.map((keyframe) => keyframe.transform.rotation),
-  );
-  const current = program.keyframes.reduce(
-    (selected, keyframe) => (keyframe.frame <= frame ? keyframe : selected),
-    program.keyframes[0]!,
-  );
+  const { x, y, scale, rotation, current } = entityStateAt(program, frame);
   const evidence = program.appearance.shape === "evidence";
   return (
     <div
@@ -224,15 +506,31 @@ const ProxyEntityRenderer: React.FC<{ program: ProxyEntity }> = ({
 };
 
 const ProxyShot: React.FC<{
+  approvedAssets: ApprovedAssetBinding[];
   camera: ProxyCamera;
   caption:
     | NonNullable<ExecutableEpisodePlan["proxyCaptionPrograms"]>[number]
     | undefined;
   entities: ProxyEntity[];
+  formatWidth: number;
+  performancePrograms: PerformanceProgram[];
   stage: ProxyStage;
   transitionProgram: ProxyTransition | undefined;
-}> = ({ camera, caption, entities, stage, transitionProgram }) => {
+}> = ({
+  approvedAssets,
+  camera,
+  caption,
+  entities,
+  formatWidth,
+  performancePrograms,
+  stage,
+  transitionProgram,
+}) => {
   const frame = useCurrentFrame();
+  const hasFinalPerformance = performancePrograms.some(
+    (program) =>
+      program.execution && program.sourceShotIds?.includes(camera.shotId),
+  );
   const frames = camera.keyframes.map((keyframe) => keyframe.frame);
   const x = valueAt(
     frame,
@@ -318,9 +616,25 @@ const ProxyShot: React.FC<{
             zIndex: 8,
           }}
         />
-        {entities.map((entity) => (
-          <ProxyEntityRenderer key={entity.id} program={entity} />
-        ))}
+        {entities.map((entity) => {
+          const performance = performancePrograms.find(
+            (program) =>
+              program.entityId === entity.entityId &&
+              program.sourceShotIds?.includes(camera.shotId),
+          );
+          return performance ? (
+            <ExecutablePerformanceRenderer
+              approvedAssets={approvedAssets}
+              durationInFrames={(frames.at(-1) ?? 0) + 1}
+              formatWidth={formatWidth}
+              key={entity.id}
+              performance={performance}
+              proxy={entity}
+            />
+          ) : (
+            <ProxyEntityRenderer key={entity.id} program={entity} />
+          );
+        })}
         {diagram ? (
           <div
             style={{
@@ -423,7 +737,7 @@ const ProxyShot: React.FC<{
             textTransform: "uppercase",
           }}
         >
-          Directed proxy · {camera.size}
+          Directed {hasFinalPerformance ? "hybrid" : "proxy"} · {camera.size}
         </div>
         <div
           style={{
@@ -479,7 +793,7 @@ const ProxyShot: React.FC<{
           top: 34,
         }}
       >
-        Proxy animatic
+        {hasFinalPerformance ? "Approved performance" : "Proxy animatic"}
       </div>
     </AbsoluteFill>
   );
@@ -523,9 +837,12 @@ export const DirectorEpisodeRenderer: React.FC<{
             key={shot.id}
           >
             <ProxyShot
+              approvedAssets={plan.approvedAssets}
               camera={camera}
               caption={caption}
               entities={entities}
+              formatWidth={plan.format.width}
+              performancePrograms={plan.performancePrograms}
               stage={stage}
               transitionProgram={transition}
             />

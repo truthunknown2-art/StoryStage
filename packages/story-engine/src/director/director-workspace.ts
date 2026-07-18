@@ -2,6 +2,7 @@ import { z } from "zod";
 import { cv002ProjectSchema, type Cv002Project } from "../cv002-story-draft";
 import { hashSchema, identifierSchema } from "../model";
 import { applyDirectorPatch } from "./apply-director-patch";
+import type { CapabilityRegistry } from "./capability-report";
 import {
   canRedoDirectorHistory,
   canUndoDirectorHistory,
@@ -123,6 +124,7 @@ export function createDirectorWorkspaceState(
 export function restoreDirectorWorkspaceState(
   serialized: string,
   expectedStoryProject: Cv002Project,
+  capabilities?: CapabilityRegistry,
 ): DirectorWorkspaceState {
   const workspace = directorWorkspaceStateSchema.parse(JSON.parse(serialized));
   const storyProject = cv002ProjectSchema.parse(expectedStoryProject);
@@ -132,14 +134,13 @@ export function restoreDirectorWorkspaceState(
     );
   let replayed = workspace.history.entries[0]!.directorProject;
   if (
-    replayed.directorPlan.storyGraphContentHash !== storyProject.graph.contentHash ||
+    replayed.directorPlan.storyGraphContentHash !==
+      storyProject.graph.contentHash ||
     replayed.planningArtifact.storyGraphContentHash !==
       storyProject.graph.contentHash ||
     replayed.planningArtifact.grammar !== storyProject.grammar
   )
-    throw new Error(
-      "Saved Director first cut belongs to another story graph.",
-    );
+    throw new Error("Saved Director first cut belongs to another story graph.");
   for (let index = 1; index < workspace.history.entries.length; index += 1) {
     const entry = workspace.history.entries[index]!;
     if (!entry.patch)
@@ -150,6 +151,7 @@ export function restoreDirectorWorkspaceState(
       storyProject,
       baseDirectorProject: replayed,
       patch: entry.patch,
+      capabilities,
     });
     if (computed.contentHash !== entry.directorProject.contentHash)
       throw new Error(

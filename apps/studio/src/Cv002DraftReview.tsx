@@ -13,6 +13,7 @@ import {
   type Cv002TemplateAssignment,
 } from "@storystage/story-engine";
 import {
+  alphaCapabilityRegistry,
   compileDirectorProject,
   createDirectorWorkspaceState,
   currentDirectorWorkspaceProject,
@@ -20,9 +21,11 @@ import {
   restoreDirectorWorkspaceState,
   selectDirectorWorkspaceBeat,
   serializeDirectorWorkspaceState,
+  type CapabilityRegistry,
   type DirectorProject,
   type DirectorWorkspaceState,
 } from "@storystage/story-engine/director-alpha";
+import { createBundledKidsPilotCapabilityRegistry } from "@storystage/remotion-runtime/director";
 import {
   ArrowLeft,
   ArrowRight,
@@ -65,12 +68,17 @@ const loadDirectorWorkspace = (
   storyProject: Cv002Project,
   directorProject: DirectorProject,
   selectedBeatId: string,
+  capabilities: CapabilityRegistry,
 ) => {
   const storageKey = directorWorkspaceStorageKey(storyProject.contentHash);
   const serialized = window.localStorage.getItem(storageKey);
   if (serialized)
     try {
-      return restoreDirectorWorkspaceState(serialized, storyProject);
+      return restoreDirectorWorkspaceState(
+        serialized,
+        storyProject,
+        capabilities,
+      );
     } catch {
       window.localStorage.removeItem(storageKey);
     }
@@ -124,13 +132,27 @@ export function Cv002DraftReview({
     () => project.graph.scenes.flatMap((scene) => scene.beats),
     [project.graph],
   );
+  const firstBeatRole = allBeats[0]!.role;
+  const capabilityRegistry = useMemo(() => {
+    if (project.grammar !== "kids-adventure") return alphaCapabilityRegistry;
+    const kind =
+      firstBeatRole === "setup" || firstBeatRole === "explanation"
+        ? "living-hold"
+        : firstBeatRole === "action"
+          ? "atlas-cycle"
+          : "articulated-rig";
+    return createBundledKidsPilotCapabilityRegistry(kind);
+  }, [firstBeatRole, project.grammar]);
   const directorCompilation = useMemo<{
     directorProject: DirectorProject | null;
     error: string | null;
   }>(() => {
     try {
       return {
-        directorProject: compileDirectorProject({ storyProject: project }),
+        directorProject: compileDirectorProject({
+          storyProject: project,
+          capabilities: capabilityRegistry,
+        }),
         error: null,
       };
     } catch (caught) {
@@ -142,7 +164,7 @@ export function Cv002DraftReview({
             : "The Director could not compile this script.",
       };
     }
-  }, [project]);
+  }, [capabilityRegistry, project]);
   const [directorWorkspace, setDirectorWorkspace] =
     useState<DirectorWorkspaceState | null>(() =>
       directorCompilation.directorProject
@@ -150,6 +172,7 @@ export function Cv002DraftReview({
             project,
             directorCompilation.directorProject,
             allBeats[0]!.id,
+            capabilityRegistry,
           )
         : null,
     );
@@ -190,9 +213,19 @@ export function Cv002DraftReview({
       )
         ? requestedBeatId
         : allBeats[0]!.id;
-      return loadDirectorWorkspace(project, directorProject, selectedBeatId);
+      return loadDirectorWorkspace(
+        project,
+        directorProject,
+        selectedBeatId,
+        capabilityRegistry,
+      );
     });
-  }, [allBeats, directorCompilation.directorProject, project]);
+  }, [
+    allBeats,
+    capabilityRegistry,
+    directorCompilation.directorProject,
+    project,
+  ]);
 
   useEffect(() => {
     if (!directorWorkspace) return;
@@ -704,6 +737,7 @@ export function Cv002DraftReview({
             ) : null}
 
             <DirectorAnimaticPreview
+              capabilityRegistry={capabilityRegistry}
               compileError={directorCompilation.error}
               onWorkspaceChange={setDirectorWorkspace}
               project={project}

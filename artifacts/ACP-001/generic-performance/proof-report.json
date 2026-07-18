@@ -1,0 +1,103 @@
+{
+  "proof": "ACP-001 Generic Performance Capability",
+  "storyProjectContentHash": "71130d4115095af4f6ea24726867eb4412eee82d526432d24c36018b0b84447f",
+  "registryContentHash": "74f2e5bd8eb31fe2b8d9eb73f77a35271d21bd4f79fc447301bcd7e02fa10015",
+  "episodePlanContentHash": "432dbb23c2a6e6707902066171f6a33d39dd155357cbe37c687ff2b0389c3539",
+  "capabilitySummary": {
+    "supported": 3,
+    "proxyOnly": 6,
+    "blocked": 0
+  },
+  "supportedKinds": [
+    "living-hold",
+    "atlas-cycle",
+    "articulated-rig"
+  ],
+  "rendererPath": "StoryStageProduction -> DirectorEpisodeRenderer -> generic executable performance",
+  "proofs": [
+    {
+      "kind": "living-hold",
+      "requirementId": "performance-1-primary",
+      "entityId": "lead",
+      "rendererId": "director-living-hold",
+      "rendererVersion": "1.0.0",
+      "executionContentHash": "0a79c4271869ea4384e41aa11453df5ec763615c9d0961f810cfb17a7ec8e7ef",
+      "capabilityRegistryContentHash": "620e23a30c7fba91e2783264058b627c86da175f7bc1b8d3cb3bb45898bf5c60",
+      "assetIds": [
+        "mara-performance-v1"
+      ],
+      "rendered": [
+        {
+          "frame": 66,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\living-hold-1.png",
+          "finalHash": "991aa49c96f67bb0a8619bebebb3d932d2508e6c6e2fe8ba40c0e61aaaac06d9",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\living-hold-1-proxy.png",
+          "proxyHash": "ed50c2ce5182af7e94b6ae066f01cae4bd8e52ea57cf2ad50ccebbc08b77b220"
+        },
+        {
+          "frame": 88,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\living-hold-2.png",
+          "finalHash": "81dfcc88161728c64ce1e15f2e1baa7479be0c340720386b6643cc41a2eab18c",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\living-hold-2-proxy.png",
+          "proxyHash": "4789ba9a07fd58ac99da7881badc8daa3577d25230128ef70442830c4e85a655"
+        }
+      ]
+    },
+    {
+      "kind": "atlas-cycle",
+      "requirementId": "performance-3-primary",
+      "entityId": "lead",
+      "rendererId": "director-atlas-cycle",
+      "rendererVersion": "1.0.0",
+      "executionContentHash": "ee4f8227b11ce004d0e2df687b9f3e2a96d4ad8401e19ccfbed1fd2e60622b55",
+      "capabilityRegistryContentHash": "dd1f1d98eacabd1dff6e6b3450c42b68a908942089fa60e8b827655f5636a339",
+      "assetIds": [
+        "mara-run-right-v1"
+      ],
+      "rendered": [
+        {
+          "frame": 215,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\atlas-cycle-1.png",
+          "finalHash": "87cd798e71a653e9e0b2defa5f26da671442177538b0b75124b3419c3657c401",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\atlas-cycle-1-proxy.png",
+          "proxyHash": "30e724ba25516900e049d7f474056109bdd10abfd2f0c999c6b753986442268b"
+        },
+        {
+          "frame": 265,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\atlas-cycle-2.png",
+          "finalHash": "f6000786f0371644565f6f02c68f0bb99e770846c0893318cb1864eb47947df2",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\atlas-cycle-2-proxy.png",
+          "proxyHash": "c25e081e7139a1562409ccccc4a787d6076d016b53221a1f83c663b9b26f2b52"
+        }
+      ]
+    },
+    {
+      "kind": "articulated-rig",
+      "requirementId": "performance-1-response",
+      "entityId": "support",
+      "rendererId": "director-articulated-rig",
+      "rendererVersion": "1.0.0",
+      "executionContentHash": "43337e5aaa40a8552402dcbb62d322d2bc5214d961e5a15f6128768448ff8f64",
+      "capabilityRegistryContentHash": "1f91f1449f07e7bee9f7bda71294babb89ee9c8cc1ca8e37e1156ff49af432cb",
+      "assetIds": [
+        "mara-payoff-puppet-v1"
+      ],
+      "rendered": [
+        {
+          "frame": 66,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\articulated-rig-1.png",
+          "finalHash": "85aa77e751f6827330e98d95203f6a8caffcef554804520ed051687f8718a648",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\articulated-rig-1-proxy.png",
+          "proxyHash": "ed50c2ce5182af7e94b6ae066f01cae4bd8e52ea57cf2ad50ccebbc08b77b220"
+        },
+        {
+          "frame": 88,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\articulated-rig-2.png",
+          "finalHash": "132e72bed08921bf0d3638a753769a74a89fa436837abd6f64375509ea58ef5b",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\articulated-rig-2-proxy.png",
+          "proxyHash": "4789ba9a07fd58ac99da7881badc8daa3577d25230128ef70442830c4e85a655"
+        }
+      ]
+    }
+  ]
+}

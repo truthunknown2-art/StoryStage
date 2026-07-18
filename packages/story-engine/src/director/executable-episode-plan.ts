@@ -19,7 +19,157 @@ const executableShotSchema = z
   })
   .strict();
 
-const performanceProgramSchema = z
+const spriteSourceRectSchema = z
+  .object({
+    x: z.number().int().nonnegative(),
+    y: z.number().int().nonnegative(),
+    width: z.number().int().positive(),
+    height: z.number().int().positive(),
+  })
+  .strict();
+
+const spriteAnchorSchema = z.object({ x: z.number(), y: z.number() }).strict();
+
+const atlasFrameSchema = z
+  .object({
+    source: spriteSourceRectSchema,
+    anchor: spriteAnchorSchema,
+  })
+  .strict();
+
+const atlasExecutionFields = {
+  assetId: identifierSchema,
+  atlasWidth: z.number().int().positive(),
+  atlasHeight: z.number().int().positive(),
+  frames: z.array(atlasFrameSchema).min(1),
+};
+
+const atlasCycleExecutionSchema = z
+  .object({
+    kind: z.literal("atlas-cycle"),
+    ...atlasExecutionFields,
+    loop: z.literal(true),
+    rootDistancePerLoop: z.number().positive(),
+    footContactFrameIndices: z.array(z.number().int().nonnegative()).min(1),
+  })
+  .strict()
+  .superRefine((execution, context) => {
+    if (
+      execution.footContactFrameIndices.some(
+        (index) => index >= execution.frames.length,
+      )
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["footContactFrameIndices"],
+        message: "Atlas foot contacts must reference an authored frame.",
+      });
+  });
+
+const livingHoldExecutionSchema = z
+  .object({
+    kind: z.literal("living-hold"),
+    ...atlasExecutionFields,
+    poseSequence: z.array(z.number().int().nonnegative()).min(2),
+    cycleFrames: z.number().int().min(12).max(120),
+    breathingAmplitude: z.number().positive().max(0.08),
+  })
+  .strict()
+  .superRefine((execution, context) => {
+    if (
+      execution.poseSequence.some((index) => index >= execution.frames.length)
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["poseSequence"],
+        message: "Living-hold poses must reference an authored frame.",
+      });
+  });
+
+const articulatedPartSchema = z
+  .object({
+    id: identifierSchema,
+    parentId: identifierSchema.nullable(),
+    source: spriteSourceRectSchema,
+    pivot: spriteAnchorSchema,
+    joint: spriteAnchorSchema,
+    rotation: z.number(),
+    zIndex: z.number().int(),
+  })
+  .strict();
+
+const articulatedChannelSchema = z
+  .object({
+    partId: identifierSchema,
+    keyframes: z
+      .array(
+        z
+          .object({
+            progress: z.number().min(0).max(1),
+            rotation: z.number(),
+          })
+          .strict(),
+      )
+      .min(2),
+  })
+  .strict();
+
+const articulatedRigExecutionSchema = z
+  .object({
+    kind: z.literal("articulated-rig"),
+    assetId: identifierSchema,
+    sheetWidth: z.number().int().positive(),
+    sheetHeight: z.number().int().positive(),
+    displayScale: z.number().positive(),
+    parts: z.array(articulatedPartSchema).min(2),
+    channels: z.array(articulatedChannelSchema).min(1),
+  })
+  .strict()
+  .superRefine((execution, context) => {
+    const partIds = new Set(execution.parts.map((part) => part.id));
+    if (partIds.size !== execution.parts.length)
+      context.addIssue({
+        code: "custom",
+        path: ["parts"],
+        message: "Articulated part IDs must be unique.",
+      });
+    execution.parts.forEach((part, index) => {
+      if (part.parentId && !partIds.has(part.parentId))
+        context.addIssue({
+          code: "custom",
+          path: ["parts", index, "parentId"],
+          message: "Articulated parents must reference another part.",
+        });
+    });
+    execution.channels.forEach((channel, index) => {
+      if (!partIds.has(channel.partId))
+        context.addIssue({
+          code: "custom",
+          path: ["channels", index, "partId"],
+          message: "Articulated channels must target a declared part.",
+        });
+      if (
+        channel.keyframes.some(
+          (keyframe, keyframeIndex) =>
+            keyframeIndex > 0 &&
+            keyframe.progress <= channel.keyframes[keyframeIndex - 1]!.progress,
+        )
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["channels", index, "keyframes"],
+          message: "Articulated channel progress must increase.",
+        });
+    });
+  });
+
+export const performanceExecutionSchema = z.discriminatedUnion("kind", [
+  atlasCycleExecutionSchema,
+  articulatedRigExecutionSchema,
+  livingHoldExecutionSchema,
+]);
+
+export const performanceProgramSchema = z
   .object({
     id: identifierSchema,
     kind: z.enum([
@@ -37,6 +187,7 @@ const performanceProgramSchema = z
     sourceSceneIds: z.array(identifierSchema).optional(),
     sourceBeatIds: z.array(identifierSchema).optional(),
     sourceShotIds: z.array(identifierSchema).optional(),
+    execution: performanceExecutionSchema.optional(),
     contentHash: hashSchema.optional(),
   })
   .strict()
@@ -51,14 +202,19 @@ const performanceProgramSchema = z
       });
   });
 
-const approvedAssetBindingSchema = z
+export const approvedAssetBindingSchema = z
   .object({
     assetId: identifierSchema,
     version: z.string().min(1),
     contentHash: hashSchema,
     status: z.enum(["approved", "proxy"]),
+    relativeFile: z.string().min(1).optional(),
   })
   .strict();
+
+export type PerformanceExecution = z.infer<typeof performanceExecutionSchema>;
+export type PerformanceProgram = z.infer<typeof performanceProgramSchema>;
+export type ApprovedAssetBinding = z.infer<typeof approvedAssetBindingSchema>;
 
 const executableProgramLineageFields = {
   sourceSceneIds: z.array(identifierSchema),
@@ -418,6 +574,20 @@ export function sealExecutableEpisodePlan(
   draft.performancePrograms.forEach((program) => {
     if (program.assetIds.some((assetId) => !assetIds.has(assetId)))
       throw new Error(`${program.id} references an unresolved asset.`);
+    if (program.execution) {
+      const executionAsset = draft.approvedAssets.find(
+        (asset) => asset.assetId === program.execution!.assetId,
+      );
+      if (
+        program.kind !== program.execution.kind ||
+        !program.assetIds.includes(program.execution.assetId) ||
+        executionAsset?.status !== "approved" ||
+        !executionAsset.relativeFile
+      )
+        throw new Error(
+          `${program.id} executable performance is not bound to an approved renderable asset.`,
+        );
+    }
   });
   draft.stageKits.forEach((stage) => {
     if (stage.assetIds.some((assetId) => !assetIds.has(assetId)))

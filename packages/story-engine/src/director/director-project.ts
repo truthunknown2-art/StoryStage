@@ -88,13 +88,38 @@ export const directorProjectSchema = z
       });
     if (
       project.capabilityReport.directorPlanContentHash !==
-      project.directorPlan.contentHash
+        project.directorPlan.contentHash ||
+      project.capabilityReport.registryVersion !==
+        project.executableEpisodePlan.registryVersions.performance
     )
       context.addIssue({
         code: "custom",
         path: ["capabilityReport"],
         message: "Director project capability report is stale.",
       });
+    const performancePrograms = new Map(
+      project.executableEpisodePlan.performancePrograms.map((program) => [
+        program.id,
+        program,
+      ]),
+    );
+    project.capabilityReport.items.forEach((item, index) => {
+      const program = performancePrograms.get(item.requirementId);
+      const executableFinal = Boolean(
+        program?.execution &&
+        item.capabilityContentHash === program.manifestContentHash,
+      );
+      if (
+        (item.resolution === "supported" && !executableFinal) ||
+        (item.resolution !== "supported" && Boolean(program?.execution))
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["capabilityReport", "items", index],
+          message:
+            "Capability status must match a hash-bound executable performance program.",
+        });
+    });
     if (
       project.qualityReport.directorPlanContentHash !==
       project.directorPlan.contentHash
