@@ -11,8 +11,10 @@ import {
 import type { ProductionCompositionProps } from "@storystage/remotion-runtime";
 import { STORY_STAGE_PRODUCTION_COMPOSITION_ID } from "@storystage/remotion-runtime/manifest";
 import {
+  applyDirectorPatch,
   compileDirectorProject,
   createCv002Project,
+  proposeDirectorPatch,
   type Cv002Grammar,
 } from "@storystage/story-engine/director-alpha";
 
@@ -98,6 +100,84 @@ async function renderFixture(serveUrl: string, fixture: Fixture) {
         (range) => range.shotId === shot.id,
       )!,
   );
+  const patch = proposeDirectorPatch({
+    baseDirectorProject: first,
+    targetBeatId: multiBeat.beatId,
+    command: "Make the reaction 6 frames later",
+  });
+  const patched = applyDirectorPatch({
+    storyProject,
+    baseDirectorProject: first,
+    patch,
+  });
+  const patchedRepeat = applyDirectorPatch({
+    storyProject,
+    baseDirectorProject: first,
+    patch,
+  });
+  if (patched.contentHash !== patchedRepeat.contentHash)
+    throw new Error(`${fixture.slug} Director patch was not deterministic.`);
+  const baseUntouchedPrograms = [
+    ...(first.executableEpisodePlan.proxyStagePrograms ?? []),
+    ...(first.executableEpisodePlan.proxyCameraPrograms ?? []),
+    ...(first.executableEpisodePlan.proxyEntityPrograms ?? []),
+    ...(first.executableEpisodePlan.proxyCaptionPrograms ?? []),
+    ...(first.executableEpisodePlan.proxyTransitionPrograms ?? []),
+  ].filter((program) => !program.sourceBeatIds.includes(multiBeat.beatId));
+  const patchedPrograms = new Map(
+    [
+      ...(patched.executableEpisodePlan.proxyStagePrograms ?? []),
+      ...(patched.executableEpisodePlan.proxyCameraPrograms ?? []),
+      ...(patched.executableEpisodePlan.proxyEntityPrograms ?? []),
+      ...(patched.executableEpisodePlan.proxyCaptionPrograms ?? []),
+      ...(patched.executableEpisodePlan.proxyTransitionPrograms ?? []),
+    ].map((program) => [program.id, program]),
+  );
+  const preservedUntouchedPrograms = baseUntouchedPrograms.every(
+    (program) =>
+      patchedPrograms.get(program.id)?.contentHash === program.contentHash,
+  );
+  if (!preservedUntouchedPrograms)
+    throw new Error(
+      `${fixture.slug} Director patch changed an unrelated executable program.`,
+    );
+  const patchedInputProps: ProductionCompositionProps = {
+    mode: "director-episode",
+    episodePlan: patched.executableEpisodePlan,
+  };
+  const patchedComposition = await selectComposition({
+    serveUrl,
+    id: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
+    inputProps: patchedInputProps,
+  });
+  const patchedRange = patched.timingSolution.resolvedShots.find(
+    (range) => range.shotId === multiShots[0]!.id,
+  )!;
+  const patchedStill = resolve(fixtureRoot, "patched-beat-start.png");
+  const patchedRepeatStill = resolve(
+    fixtureRoot,
+    "patched-beat-start-repeat.png",
+  );
+  await renderStill({
+    composition: patchedComposition,
+    frame: patchedRange.startFrame,
+    inputProps: patchedInputProps,
+    output: patchedStill,
+    serveUrl,
+  });
+  await renderStill({
+    composition: patchedComposition,
+    frame: patchedRange.startFrame,
+    inputProps: patchedInputProps,
+    output: patchedRepeatStill,
+    serveUrl,
+  });
+  const patchedStillHash = sha256(await readFile(patchedStill));
+  const patchedRepeatStillHash = sha256(await readFile(patchedRepeatStill));
+  if (patchedStillHash !== patchedRepeatStillHash)
+    throw new Error(
+      `${fixture.slug} patched frame changed across identical renders.`,
+    );
   const sceneStarts = first.directorPlan.scenes.map(
     (scene) =>
       first.timingSolution.resolvedShots.find((range) =>
@@ -193,6 +273,22 @@ async function renderFixture(serveUrl: string, fixture: Fixture) {
       shotIds: multiShots.map((shot) => shot.id),
       contiguous:
         multiRanges[0]!.endFrameExclusive === multiRanges[1]!.startFrame,
+    },
+    directorPatch: {
+      contentHash: patch.contentHash,
+      baseDirectorProjectContentHash: patch.baseDirectorProjectContentHash,
+      editedDirectorProjectContentHash: patched.contentHash,
+      editedExecutableEpisodePlanContentHash:
+        patched.executableEpisodePlan.contentHash,
+      targetBeatId: patch.targetBeatId,
+      reactionDelayFrames: patch.operations[0]!.frames,
+      preservedUntouchedPrograms,
+      untouchedProgramCount: baseUntouchedPrograms.length,
+      deterministicStill: {
+        frame: patchedRange.startFrame,
+        contentHash: patchedStillHash,
+        repeatContentHash: patchedRepeatStillHash,
+      },
     },
     movingShot: {
       shotId: movingShot.id,

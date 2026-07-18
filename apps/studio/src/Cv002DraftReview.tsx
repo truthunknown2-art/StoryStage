@@ -591,7 +591,10 @@ export function Cv002DraftReview({
             </div>
           </div>
 
-          <DirectorAnimaticPreview project={project} />
+          <DirectorAnimaticPreview
+            project={project}
+            selectedBeatId={selectedBeatId}
+          />
 
           <details className="cv2-advanced-capabilities">
             <summary>Advanced · legacy animation capability prototype</summary>
@@ -627,8 +630,18 @@ export function Cv002DraftReview({
                   {scene.beats.map((beat, beatIndex) => {
                     const direction = directionByBeat.get(beat.id)!;
                     return (
-                      <article key={beat.id}>
-                        <header>
+                      <article
+                        className={
+                          beat.id === selectedBeatId ? "is-selected" : undefined
+                        }
+                        key={beat.id}
+                      >
+                        <button
+                          aria-pressed={beat.id === selectedBeatId}
+                          className="cv2-direction-beat-select"
+                          onClick={() => setSelectedBeatId(beat.id)}
+                          type="button"
+                        >
                           <span>
                             {sceneIndex + 1}.{beatIndex + 1}
                           </span>
@@ -636,7 +649,7 @@ export function Cv002DraftReview({
                             <small>{humanize(beat.role)}</small>
                             <strong>{beat.text}</strong>
                           </div>
-                        </header>
+                        </button>
                         <dl>
                           {directionFields.map((field) => (
                             <div key={field.key}>

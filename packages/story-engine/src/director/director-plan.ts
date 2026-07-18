@@ -62,6 +62,7 @@ const beatPlanSchema = z
     emotionalTurn: z
       .object({ from: z.string().min(1), to: z.string().min(1) })
       .strict(),
+    reactionDelayFrames: z.number().int().min(0).max(30),
     muteReadable: z.boolean(),
     eventIds: z.array(identifierSchema).min(1),
     performanceRequirements: z.array(performanceRequirementSchema),
@@ -146,13 +147,18 @@ const shotIntentSchema = z
         latestCutEventId: identifierSchema,
         minimumReadFrames: z.number().int().nonnegative(),
         minimumDurationFrames: z.number().int().positive(),
+        preferredDurationFrames: z.number().int().positive(),
         maximumDurationFrames: z.number().int().positive(),
       })
       .strict()
       .refine(
         (envelope) =>
-          envelope.minimumDurationFrames <= envelope.maximumDurationFrames,
-        { message: "Shot timing minimum must not exceed its maximum." },
+          envelope.minimumDurationFrames <= envelope.preferredDurationFrames &&
+          envelope.preferredDurationFrames <= envelope.maximumDurationFrames,
+        {
+          message:
+            "Shot timing preference must stay inside its minimum and maximum.",
+        },
       ),
   })
   .strict();

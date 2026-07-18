@@ -13,6 +13,10 @@ export type DirectorProposal = {
   storyGraphContentHash: string;
   grammar: Cv002Grammar;
   beatDirections: Cv002BeatDirection[];
+  beatTimingAdjustments: Array<{
+    beatId: string;
+    reactionDelayFrames: number;
+  }>;
 };
 
 export type DirectorPlanningContext = {
@@ -32,6 +36,7 @@ export class Cv002AlphaDirectorPlanner implements DirectorPlanner {
       storyGraphContentHash: storyProject.graph.contentHash,
       grammar: storyProject.grammar,
       beatDirections: storyProject.directionDraft.directions,
+      beatTimingAdjustments: [],
     };
   }
 }

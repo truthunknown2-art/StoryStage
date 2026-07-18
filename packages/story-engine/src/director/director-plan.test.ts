@@ -68,6 +68,7 @@ const createDraft = () => ({
       beatContentHash: hash,
       audienceTakeaway: "Mara sees something unexpected.",
       emotionalTurn: { from: "curious", to: "surprised" },
+      reactionDelayFrames: 0,
       muteReadable: true,
       eventIds: ["notice-moth", "mara-reacts"],
       performanceRequirements: [
@@ -140,6 +141,7 @@ const createDraft = () => ({
         latestCutEventId: "mara-reacts",
         minimumReadFrames: 12,
         minimumDurationFrames: 60,
+        preferredDurationFrames: 90,
         maximumDurationFrames: 120,
       },
     },

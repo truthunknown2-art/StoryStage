@@ -17,7 +17,11 @@ import {
 } from "./executable-episode-plan";
 import { getGrammarProfile } from "./grammar-profile";
 import { analyzeDirectorQuality } from "./quality-report";
-import { sealDirectorProject, type DirectorProject } from "./director-project";
+import {
+  sealDirectorProject,
+  type DirectorProject,
+  type DirectorRevisionLineage,
+} from "./director-project";
 import {
   Cv002AlphaDirectorPlanner,
   type DirectorPlanner,
@@ -61,6 +65,7 @@ export type CompileDirectorProjectInput = {
   capabilities?: CapabilityRegistry;
   format?: DirectorOutputFormat;
   timingBasis?: DirectorTimingBasis;
+  revision?: DirectorRevisionLineage;
 };
 
 export type CompileDirectorProjectResult =
@@ -257,6 +262,22 @@ function assertProposal(project: Cv002Project, proposal: DirectorProposal) {
     throw new Error(
       "Director proposal must cover every story beat exactly once in source order.",
     );
+  const adjustmentIds = proposal.beatTimingAdjustments.map(
+    (adjustment) => adjustment.beatId,
+  );
+  if (
+    new Set(adjustmentIds).size !== adjustmentIds.length ||
+    proposal.beatTimingAdjustments.some(
+      (adjustment) =>
+        !beatIds.includes(adjustment.beatId) ||
+        !Number.isInteger(adjustment.reactionDelayFrames) ||
+        adjustment.reactionDelayFrames < 0 ||
+        adjustment.reactionDelayFrames > 30,
+    )
+  )
+    throw new Error(
+      "Director proposal timing adjustments must target unique known beats with a 0 to 30 frame reaction delay.",
+    );
 }
 
 function buildSceneWorlds(project: Cv002Project) {
@@ -410,6 +431,12 @@ function buildDirectorPlan(
   const directionByBeat = new Map(
     proposal.beatDirections.map((direction) => [direction.beatId, direction]),
   );
+  const timingAdjustmentByBeat = new Map(
+    proposal.beatTimingAdjustments.map((adjustment) => [
+      adjustment.beatId,
+      adjustment.reactionDelayFrames,
+    ]),
+  );
   const isKids = project.grammar === "kids-adventure";
   let eventOrder = 0;
   let previousResolveId: string | null = null;
@@ -429,6 +456,7 @@ function buildDirectorPlan(
         (candidate) => candidate.id === beat.id,
       );
       const direction = directionByBeat.get(beat.id)!;
+      const reactionDelayFrames = timingAdjustmentByBeat.get(beat.id) ?? 0;
       const startEventId = `beat-${globalIndex + 1}-start`;
       const pivotEventId = `beat-${globalIndex + 1}-pivot`;
       const resolveEventId = `beat-${globalIndex + 1}-resolve`;
@@ -527,6 +555,7 @@ function buildDirectorPlan(
           from: beatIndex === 0 ? "orientation" : "attention",
           to: beat.role === "reaction" ? "response" : humanize(beat.role),
         },
+        reactionDelayFrames,
         muteReadable: isKids,
         eventIds,
         performanceRequirements,
@@ -579,7 +608,11 @@ function buildDirectorPlan(
         const entryEventId = secondary ? pivotEventId : startEventId;
         const exitEventId =
           secondary || !multiShot ? resolveEventId : pivotEventId;
-        const duration = shotDurationFor(project, beat, shotCount, shotIndex);
+        const duration =
+          shotDurationFor(project, beat, shotCount, shotIndex) +
+          (reactionDelayFrames > 0 && (secondary || shotIndex === shotCount - 1)
+            ? reactionDelayFrames
+            : 0);
         shotIds.push(shotId);
         shots.push({
           id: shotId,
@@ -665,13 +698,17 @@ function buildDirectorPlan(
             preferredCutEventId: exitEventId,
             latestCutEventId: exitEventId,
             minimumReadFrames: readFrames,
-            minimumDurationFrames: Math.max(
-              grammar.pacing.shotDurationFrames.minimum,
-              duration - 8,
+            minimumDurationFrames: Math.min(
+              duration,
+              Math.max(grammar.pacing.shotDurationFrames.minimum, duration - 8),
             ),
-            maximumDurationFrames: Math.min(
-              grammar.pacing.shotDurationFrames.maximum,
-              duration + 8,
+            preferredDurationFrames: duration,
+            maximumDurationFrames: Math.max(
+              duration,
+              Math.min(
+                grammar.pacing.shotDurationFrames.maximum + 30,
+                duration + 8,
+              ),
             ),
           },
         });
@@ -706,29 +743,14 @@ function buildDirectorPlan(
 }
 
 function solveTiming(
-  project: Cv002Project,
   plan: ReturnType<typeof buildDirectorPlan>,
   timingBasis: DirectorTimingBasis,
 ) {
-  const beats = project.graph.scenes.flatMap((scene) => scene.beats);
-  const beatById = new Map(beats.map((beat) => [beat.id, beat]));
   let cursor = 0;
   const eventFrames = new Map<string, number>();
   const resolvedShots: TimingSolutionDraft["resolvedShots"] = [];
   plan.shots.forEach((shot) => {
-    const beat = beatById.get(shot.beatIds[0]!)!;
-    const beatShots = plan.shots.filter(
-      (candidate) => candidate.beatIds[0] === beat.id,
-    );
-    const shotIndex = beatShots.findIndex(
-      (candidate) => candidate.id === shot.id,
-    );
-    const duration = shotDurationFor(
-      project,
-      beat,
-      beatShots.length,
-      shotIndex,
-    );
+    const duration = shot.timingEnvelope.preferredDurationFrames;
     const startFrame = cursor;
     const endFrameExclusive = startFrame + duration;
     const cutFrame =
@@ -982,7 +1004,14 @@ function buildExecutable(
             actionPhase: "anticipation" as const,
           },
           {
-            frame: Math.max(1, Math.round(duration * 0.46)),
+            frame: Math.min(
+              duration - 2,
+              Math.max(
+                1,
+                Math.round(duration * 0.46) +
+                  (isActive ? beatPlan.reactionDelayFrames : 0),
+              ),
+            ),
             transform: {
               x: entity.baseX + actionTravel * 0.6,
               y: (entity.shape === "evidence" ? 0.48 : 0.72) + reactionLift,
@@ -992,7 +1021,7 @@ function buildExecutable(
             },
             facing: entityIndex === 0 ? ("right" as const) : ("left" as const),
             actionPhase:
-              beat.role === "reaction"
+              beat.role === "reaction" || beatPlan.reactionDelayFrames > 0
                 ? ("reaction" as const)
                 : ("action" as const),
           },
@@ -1118,7 +1147,7 @@ export function compileDirectorProject(
     }),
   };
   const timingSolution = compileStep("timing-unsatisfiable", () =>
-    solveTiming(storyProject, directorPlan, timingBasis),
+    solveTiming(directorPlan, timingBasis),
   );
   const executableEpisodePlan = compileStep("executable-plan-invalid", () =>
     buildExecutable(
@@ -1150,6 +1179,7 @@ export function compileDirectorProject(
     executableEpisodePlan,
     capabilityReport,
     qualityReport,
+    revision: input.revision ?? null,
     status: "animatic-ready" as const,
   };
   return sealDirectorProject(draft);

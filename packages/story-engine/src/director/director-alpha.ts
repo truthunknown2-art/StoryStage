@@ -18,7 +18,28 @@ export type {
   DirectorProposal,
 } from "./director-proposal";
 export { directorProjectSchema } from "./director-project";
-export type { DirectorProject } from "./director-project";
+export type {
+  DirectorProject,
+  DirectorRevisionLineage,
+} from "./director-project";
+export {
+  describeDirectorPatch,
+  directorPatchSchema,
+  proposeDirectorPatch,
+  sealDirectorPatch,
+} from "./director-patch";
+export type { DirectorPatch, DirectorPatchOperation } from "./director-patch";
+export { applyDirectorPatch } from "./apply-director-patch";
+export {
+  canRedoDirectorHistory,
+  canUndoDirectorHistory,
+  createDirectorHistory,
+  currentDirectorProject,
+  recordDirectorRevision,
+  redoDirectorHistory,
+  undoDirectorHistory,
+} from "./director-history";
+export type { DirectorHistory, DirectorHistoryEntry } from "./director-history";
 export {
   alphaCapabilityRegistry,
   capabilityReportSchema,

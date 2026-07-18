@@ -173,6 +173,48 @@ describe("CV-002 editable script breakdown", () => {
     );
   });
 
+  it("previews a structured beat patch and restores exact animatic hashes with undo and redo", async () => {
+    const user = await openHistoryBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const animatic = screen.getByLabelText("Directed animatic draft");
+    const originalHash = animatic.getAttribute("data-episode-hash");
+    const targetBeat = screen.getByRole("button", {
+      name: /1\.3 punchline/i,
+    });
+
+    await user.click(targetBeat);
+    expect(targetBeat).toHaveAttribute("aria-pressed", "true");
+    await user.type(
+      screen.getByLabelText("Direction for selected beat"),
+      "Make the reaction 6 frames later",
+    );
+    await user.click(screen.getByRole("button", { name: "Preview change" }));
+
+    expect(screen.getByLabelText("Proposed change")).toHaveTextContent(
+      "Delay the reaction by 6 frames",
+    );
+    expect(screen.getByLabelText("Proposed change")).toHaveTextContent(
+      "Re-solve timing and preserve the other beat programs",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Apply and replay this beat" }),
+    );
+
+    const editedHash = animatic.getAttribute("data-episode-hash");
+    expect(editedHash).not.toBe(originalHash);
+    expect(screen.getByText(/Beat updated\. New canonical cut/)).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Undo direction" }),
+    ).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "Undo direction" }));
+    expect(animatic).toHaveAttribute("data-episode-hash", originalHash);
+    await user.click(screen.getByRole("button", { name: "Redo" }));
+    expect(animatic).toHaveAttribute("data-episode-hash", editedHash);
+  });
+
   it("restores a verified local direction draft without routing into ProductionComposition", async () => {
     const user = await openHistoryBreakdown();
     await user.selectOptions(

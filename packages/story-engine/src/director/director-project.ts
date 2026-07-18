@@ -18,6 +18,13 @@ const directorProjectFields = {
   executableEpisodePlan: executableEpisodePlanSchema,
   capabilityReport: capabilityReportSchema,
   qualityReport: directorQualityReportSchema,
+  revision: z
+    .object({
+      baseDirectorProjectContentHash: hashSchema,
+      directorPatchContentHash: hashSchema,
+    })
+    .strict()
+    .nullable(),
   status: z.enum(["animatic-ready", "director-blocked"]),
 };
 
@@ -95,6 +102,7 @@ export const directorProjectSchema = z
   });
 
 export type DirectorProject = z.infer<typeof directorProjectSchema>;
+export type DirectorRevisionLineage = NonNullable<DirectorProject["revision"]>;
 
 export function sealDirectorProject(
   raw: Omit<DirectorProject, "contentHash">,
