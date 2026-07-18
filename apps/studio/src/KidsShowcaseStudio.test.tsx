@@ -6,7 +6,10 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { KidsShowcaseStudio } from "./KidsShowcaseStudio";
+import {
+  KidsShowcaseStudio,
+  KIDS_SHOWCASE_DOWNLOAD_URL,
+} from "./KidsShowcaseStudio";
 
 const playerHarness = vi.hoisted(() => ({
   addEventListener: vi.fn(),
@@ -53,6 +56,16 @@ afterEach(() => {
 });
 
 describe("Kids showcase transport", () => {
+  it("offers the exact published 30-second render for download", () => {
+    render(<KidsShowcaseStudio onBack={vi.fn()} />);
+
+    expect(
+      screen.getByRole("link", {
+        name: "Download current 30-second MP4",
+      }),
+    ).toHaveAttribute("href", KIDS_SHOWCASE_DOWNLOAD_URL);
+  });
+
   it("seeks the player and the directed workspace from range input", () => {
     render(<KidsShowcaseStudio onBack={vi.fn()} />);
 
@@ -79,7 +92,7 @@ describe("Kids showcase transport", () => {
 
     expect(screen.getByText("0:27.33")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "It only wanted to play" }),
+      screen.getByRole("heading", { name: "Offer and hesitate" }),
     ).toBeInTheDocument();
   });
 });

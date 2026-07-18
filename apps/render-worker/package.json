@@ -20,7 +20,9 @@
     "render:cv001-rig-proof": "tsx src/cv001-rig-proof.ts",
     "render:cv001-three-beat-proof": "tsx src/cv001-three-beat-proof.ts",
     "render:cv001-creator-locality-proof": "tsx src/cv001-creator-locality-proof.ts",
-    "render:kids-showcase-proof": "tsx src/kids-showcase-proof.ts"
+    "render:kids-showcase-proof": "tsx src/kids-showcase-proof.ts",
+    "render:kids-payoff-review": "tsx src/kids-payoff-review.ts",
+    "render:kids-cut-review": "tsx src/kids-cut-review.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.490",

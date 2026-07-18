@@ -3,17 +3,17 @@
   "status": "PASS",
   "productionCompositionId": "StoryStageProduction",
   "sourceScriptHash": "5c484943e2b7949c653072b7995f22f6826e569d56555de5d24f585132e63ca8",
-  "programContentHash": "80327ec1457e952eef1029fbf3e1fb04d947b9456731e6297bab05151daab020",
+  "programContentHash": "c8da7158044b5c163e3392b6a35ef0ec819317dc1bf11590482c84d52afe275b",
   "scenes": 3,
   "beats": 6,
-  "shots": 11,
+  "shots": 12,
   "templateId": "kids-moonlit-ruins-v1",
   "rigAssets": [
     "mara-cutout-rig-v1",
     "milo-cutout-rig-v1",
     "moss-creature-rig-v1"
   ],
-  "audioCueCount": 18,
+  "audioCueCount": 19,
   "pass1": {
     "codec": "h264",
     "width": 1920,
@@ -22,7 +22,7 @@
     "frameCount": 900,
     "audioCodec": "aac",
     "audioChannels": 2,
-    "byteLength": 54058031
+    "byteLength": 53000862
   },
   "pass2": {
     "codec": "h264",
@@ -32,7 +32,7 @@
     "frameCount": 900,
     "audioCodec": "aac",
     "audioChannels": 2,
-    "byteLength": 54054259
+    "byteLength": 53209447
   },
   "stills": [
     {
@@ -86,8 +86,8 @@
     {
       "frame": 108,
       "relativeFile": "frame-108.png",
-      "contentHash": "453b589fafd90f44d203299f951639afa5c23f51c09a70e0c647dafd079814c7",
-      "repeatHash": "453b589fafd90f44d203299f951639afa5c23f51c09a70e0c647dafd079814c7",
+      "contentHash": "69ce1e64b864a5145d86671dc14b9a5275f87d6f07bb7790779486258c462502",
+      "repeatHash": "69ce1e64b864a5145d86671dc14b9a5275f87d6f07bb7790779486258c462502",
       "shotId": "shot-cross-the-threshold",
       "beatId": "beat-follow-the-moth",
       "motionChannels": [
@@ -100,8 +100,8 @@
     {
       "frame": 174,
       "relativeFile": "frame-174.png",
-      "contentHash": "994554a84a4c67c5b2572b895ffa73f2bcb76a4c0cc6711e56d95993ffb983d5",
-      "repeatHash": "994554a84a4c67c5b2572b895ffa73f2bcb76a4c0cc6711e56d95993ffb983d5",
+      "contentHash": "b597dacd95f6013b830ee9a64d4190efc17607b82496cb43889dd35da68a58d0",
+      "repeatHash": "b597dacd95f6013b830ee9a64d4190efc17607b82496cb43889dd35da68a58d0",
       "shotId": "shot-listen-in-the-dark",
       "beatId": "beat-listen-at-the-threshold",
       "motionChannels": [
@@ -115,8 +115,8 @@
     {
       "frame": 230,
       "relativeFile": "frame-230.png",
-      "contentHash": "0f15223de17fc5b67bb821d7b78f8256b4bfaceba049e749738cb0a1a23ceb81",
-      "repeatHash": "0f15223de17fc5b67bb821d7b78f8256b4bfaceba049e749738cb0a1a23ceb81",
+      "contentHash": "43ebce083e53cf20f8e56228601104003bedb98c4b1e250f2d668e59bd4bc339",
+      "repeatHash": "43ebce083e53cf20f8e56228601104003bedb98c4b1e250f2d668e59bd4bc339",
       "shotId": "shot-empty-corridor",
       "beatId": "beat-listen-at-the-threshold",
       "motionChannels": [
@@ -702,8 +702,8 @@
     {
       "frame": 687,
       "relativeFile": "frame-687.png",
-      "contentHash": "6738710ba48032b689cebb6bc25930a5cc48bab523a3e040367df524aa9cd2b6",
-      "repeatHash": "6738710ba48032b689cebb6bc25930a5cc48bab523a3e040367df524aa9cd2b6",
+      "contentHash": "0e7bd013ef2a94750b552a3e49b36f0772df5d1ce60c35951a9283ef36ec0d31",
+      "repeatHash": "0e7bd013ef2a94750b552a3e49b36f0772df5d1ce60c35951a9283ef36ec0d31",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -718,8 +718,8 @@
     {
       "frame": 690,
       "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-690.png",
-      "contentHash": "b5c21ef43f6e27386d4e2f9b03865b660bce22e63b68d1297be3d9d6072bec1d",
-      "repeatHash": "b5c21ef43f6e27386d4e2f9b03865b660bce22e63b68d1297be3d9d6072bec1d",
+      "contentHash": "fe76b21b296b420a1eea72c83efa569e527c5fef818b21df9cba3e1d11072ee7",
+      "repeatHash": "fe76b21b296b420a1eea72c83efa569e527c5fef818b21df9cba3e1d11072ee7",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -734,8 +734,8 @@
     {
       "frame": 693,
       "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-693.png",
-      "contentHash": "cc81ac4f236ff995aa76184fa64401f97bdc2d0ccbdd7b05711620c84621f537",
-      "repeatHash": "cc81ac4f236ff995aa76184fa64401f97bdc2d0ccbdd7b05711620c84621f537",
+      "contentHash": "d4340646f49aa4361442608e3dfe5f6283d995d69b3e79342a6dc4c2c6b633bc",
+      "repeatHash": "d4340646f49aa4361442608e3dfe5f6283d995d69b3e79342a6dc4c2c6b633bc",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -750,8 +750,8 @@
     {
       "frame": 696,
       "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-696.png",
-      "contentHash": "1428db22e208b184a97037e43376df29da32a6dbc869417c0f0f573187910900",
-      "repeatHash": "1428db22e208b184a97037e43376df29da32a6dbc869417c0f0f573187910900",
+      "contentHash": "9f9870c00fa954752eeef33c36e52c8d7e3ea2a0bca57d282ffd54df318f57fe",
+      "repeatHash": "9f9870c00fa954752eeef33c36e52c8d7e3ea2a0bca57d282ffd54df318f57fe",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -766,8 +766,8 @@
     {
       "frame": 699,
       "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-699.png",
-      "contentHash": "4c476b90ffd88a2b9d1c55443cd2dc4f70e4250230bff63471637645b0e46694",
-      "repeatHash": "4c476b90ffd88a2b9d1c55443cd2dc4f70e4250230bff63471637645b0e46694",
+      "contentHash": "ca88313ae6b5a45973f372e6385d1a7cdfc583309f35c7ff30f84e4480afd147",
+      "repeatHash": "ca88313ae6b5a45973f372e6385d1a7cdfc583309f35c7ff30f84e4480afd147",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -782,8 +782,8 @@
     {
       "frame": 702,
       "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-702.png",
-      "contentHash": "de12c8271c8d96511d69dbe357341e7c6b239958c8390c14579cd4443655c759",
-      "repeatHash": "de12c8271c8d96511d69dbe357341e7c6b239958c8390c14579cd4443655c759",
+      "contentHash": "db197372dac96523e4f89f3df2d8e7550c50b9c74f8e772036ebdae3af75daf9",
+      "repeatHash": "db197372dac96523e4f89f3df2d8e7550c50b9c74f8e772036ebdae3af75daf9",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -798,8 +798,8 @@
     {
       "frame": 705,
       "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-705.png",
-      "contentHash": "84c01b1a0e54f839828b8361710851c585c7b8dc4596cf732a5d50f24057c04f",
-      "repeatHash": "84c01b1a0e54f839828b8361710851c585c7b8dc4596cf732a5d50f24057c04f",
+      "contentHash": "92fb6db3a77ebc5216fadcdef9596c1036db21378d903ac7ec4256ba3f0a0170",
+      "repeatHash": "92fb6db3a77ebc5216fadcdef9596c1036db21378d903ac7ec4256ba3f0a0170",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -814,8 +814,8 @@
     {
       "frame": 708,
       "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-708.png",
-      "contentHash": "17105726f044f1d042fa0700708f7f9a8f364039422f8350ac85e84beff52eaa",
-      "repeatHash": "17105726f044f1d042fa0700708f7f9a8f364039422f8350ac85e84beff52eaa",
+      "contentHash": "ca0212ccfb99d0e07603b80e90024acd2dbcd8f28cce8b8738a17510d2c267e6",
+      "repeatHash": "ca0212ccfb99d0e07603b80e90024acd2dbcd8f28cce8b8738a17510d2c267e6",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -830,8 +830,8 @@
     {
       "frame": 711,
       "relativeFile": "artifacts/CV-003/kids-showcase/audit-frame-711.png",
-      "contentHash": "f530ce640415c4cdf6f822b403f2442ecc6ee12ce29ce1521f5401500cf8e4a1",
-      "repeatHash": "f530ce640415c4cdf6f822b403f2442ecc6ee12ce29ce1521f5401500cf8e4a1",
+      "contentHash": "388a7be174f0a900176ccea0544bc00f44cb20844d05b26f45cc3268bd8589ae",
+      "repeatHash": "388a7be174f0a900176ccea0544bc00f44cb20844d05b26f45cc3268bd8589ae",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -846,8 +846,8 @@
     {
       "frame": 715,
       "relativeFile": "frame-715.png",
-      "contentHash": "99193fbe4df2c6c36ac0ffac6934e97548c6c37ef07b8b026feb52e825d50de2",
-      "repeatHash": "99193fbe4df2c6c36ac0ffac6934e97548c6c37ef07b8b026feb52e825d50de2",
+      "contentHash": "0c473053248746e4c13c0930309d7bec93572cfcee3c971857262e36f9cce8ad",
+      "repeatHash": "0c473053248746e4c13c0930309d7bec93572cfcee3c971857262e36f9cce8ad",
       "shotId": "shot-escape-run",
       "beatId": "beat-escape-the-hall",
       "motionChannels": [
@@ -862,33 +862,31 @@
     {
       "frame": 820,
       "relativeFile": "frame-820.png",
-      "contentHash": "5f2f4e7fc8e07bb0ef6d6c270e47cc3a8b3d550ae52874010af47edc4b1f6e92",
-      "repeatHash": "5f2f4e7fc8e07bb0ef6d6c270e47cc3a8b3d550ae52874010af47edc4b1f6e92",
-      "shotId": "shot-friendly-payoff",
+      "contentHash": "58cac8555106b2df74cd375624fe44480cff1e5459e12d1db8f2c1e0ebe75dae",
+      "repeatHash": "58cac8555106b2df74cd375624fe44480cff1e5459e12d1db8f2c1e0ebe75dae",
+      "shotId": "shot-friendly-offer",
       "beatId": "beat-friendly-offer",
       "motionChannels": [
-        "creature-offer",
-        "mara-cautious-reach",
-        "milo-relax",
-        "mirrored-wave",
-        "moth-release",
-        "comprehension-hold"
+        "guardian-offer-track",
+        "mara-gaze-lead",
+        "mara-reach-track",
+        "milo-guarded-hold",
+        "moth-hand-attachment"
       ]
     },
     {
       "frame": 880,
       "relativeFile": "frame-880.png",
-      "contentHash": "7fd40c28e8ec8e0f6d533cabbe3b0bc7d61d6454b347786d0c6d4ff76168b7e9",
-      "repeatHash": "7fd40c28e8ec8e0f6d533cabbe3b0bc7d61d6454b347786d0c6d4ff76168b7e9",
-      "shotId": "shot-friendly-payoff",
+      "contentHash": "2555a66910c8e14824baa8aca0f1dd467764325b48491c44835badfcb99076bd",
+      "repeatHash": "2555a66910c8e14824baa8aca0f1dd467764325b48491c44835badfcb99076bd",
+      "shotId": "shot-understand-and-play",
       "beatId": "beat-friendly-offer",
       "motionChannels": [
-        "creature-offer",
-        "mara-cautious-reach",
-        "milo-relax",
-        "mirrored-wave",
-        "moth-release",
-        "comprehension-hold"
+        "moth-release-track",
+        "mara-wave-track",
+        "milo-late-wave-track",
+        "guardian-mirrored-wave-track",
+        "living-hold-channels"
       ]
     }
   ]

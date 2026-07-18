@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { hashCanonical } from "./canonical-hash";
 import {
+  createDirectedSequencePlan,
+  resolveDirectorAudioIntentFrame,
+  type DirectedSequencePlan,
+} from "./directed-sequence-plan";
+import {
   frameAccurateRenderPlanSchema,
   hashSchema,
   identifierSchema,
@@ -15,6 +20,11 @@ export const KIDS_SHOWCASE_RIG_IDS = [
   "mara-cutout-rig-v1",
   "milo-cutout-rig-v1",
   "moss-creature-rig-v1",
+] as const;
+export const KIDS_SHOWCASE_PAYOFF_PUPPET_HASHES = [
+  "d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9",
+  "e9892507a1d07de2afe69917af295ac546ab721be2c8a911e365365ff41903ba",
+  "11996c64a02ee27a0125a287d716a567bb7618c527d08e3afcad83fb1d122697",
 ] as const;
 
 const sceneDrafts = [
@@ -66,7 +76,7 @@ const sceneDrafts = [
       {
         id: "beat-friendly-offer",
         text: "In the clearing, the creature offers the moth to Mara. She reaches, Milo relaxes, and the creature mirrors their playful wave before everyone holds on the new understanding.",
-        shotIds: ["shot-friendly-payoff"],
+        shotIds: ["shot-friendly-offer", "shot-understand-and-play"],
       },
     ],
   },
@@ -75,6 +85,400 @@ const sceneDrafts = [
 export const KIDS_SHOWCASE_SOURCE_SCRIPT = sceneDrafts
   .flatMap((scene) => scene.beats.map((beat) => beat.text))
   .join("\n\n");
+
+export function createKidsShowcaseSparkSneezePlan(): DirectedSequencePlan {
+  return createDirectedSequencePlan({
+    schemaVersion: "1.0",
+    id: "director-plan-spark-sneeze-v1",
+    productionId: "production-kids-moonlit-ruins",
+    grammarId: "kids-adventure-v1",
+    sourceContentHash: hashCanonical(KIDS_SHOWCASE_SOURCE_SCRIPT),
+    startFrame: 522,
+    durationInFrames: 108,
+    scenes: [
+      {
+        id: "scene-moonlit-ruins-02",
+        objective: "Turn the apparent threat into a funny misunderstanding.",
+        geography:
+          "The guardian fills center frame; Mara and Milo share the reaction plane camera-left; the moth remains at the guardian's nose.",
+        sceneKitId: "scene-kit-moon-hall-v1",
+        beatIds: ["beat-spark-sneeze"],
+      },
+    ],
+    beats: [
+      {
+        id: "beat-spark-sneeze",
+        sceneId: "scene-moonlit-ruins-02",
+        audienceQuestion: "Will the guardian attack the children?",
+        knowledgeBefore:
+          "The children believe the waking guardian is dangerous.",
+        knowledgeAfter:
+          "The guardian is startled, shy, and accidentally magical.",
+        emotionBefore: "held-breath fear",
+        emotionAfter: "surprised relief",
+        muteReadableAction:
+          "The guardian inhales, sneezes sparks, then blinks in embarrassment while the children react a few frames later.",
+        audioReadableIntent:
+          "A rising inhale, sneeze impact, sparkling tail, delayed gasp, and music duck sell the reversal without narration.",
+        shotIds: ["shot-spark-sneeze"],
+      },
+    ],
+    shots: [
+      {
+        id: "shot-spark-sneeze",
+        sceneId: "scene-moonlit-ruins-02",
+        beatId: "beat-spark-sneeze",
+        storyFunction:
+          "Pay off the threat setup with a readable comic sneeze and delayed child reaction.",
+        startFrame: 522,
+        durationInFrames: 108,
+        composition: {
+          scale: "medium",
+          focalSubjectId: "moss-guardian",
+          screenDirection: "static",
+          depthPlaneIds: [
+            "moon-hall-backdrop",
+            "guardian-performance-plane",
+            "children-reaction-plane",
+            "foreground-vines",
+          ],
+          eyelineTargetIds: ["moss-guardian", "silver-moth"],
+          staging:
+            "Hold the guardian center with clear negative space for sparks; keep the children readable on the left and foreground vines outside every face crop.",
+        },
+        transition: {
+          type: "hard-cut",
+          motivation:
+            "The preceding reaction shot establishes the children's fear; cutting to the guardian answers it.",
+        },
+        continuity: {
+          entryState:
+            "The moth rests on the guardian's nose while the children brace camera-left.",
+          exitState:
+            "Sparks settle; the guardian is embarrassed and the children understand the mistake.",
+        },
+        performanceProgramIds: [
+          "guardian-sneeze-hybrid-v1",
+          "children-delayed-reaction-v1",
+        ],
+        assetRequirementIds: [
+          "scene-kit-moon-hall-v1",
+          "guardian-sneeze-sequence-v1",
+          "mara-articulated-rig-v1",
+          "milo-articulated-rig-v1",
+          "spark-particle-program-v1",
+        ],
+        events: [
+          {
+            id: "inhale-apex",
+            kind: "anticipation",
+            frameOffset: 42,
+            description: "The guardian reaches maximum inhale compression.",
+          },
+          {
+            id: "sneeze-impact",
+            kind: "impact",
+            frameOffset: 62,
+            description: "The guardian snaps through the sneeze action.",
+          },
+          {
+            id: "spark-onset",
+            kind: "action",
+            frameOffset: 64,
+            description: "The first visible sparks leave the guardian.",
+          },
+          {
+            id: "child-reaction",
+            kind: "reaction",
+            frameOffset: 72,
+            description: "Mara and Milo recoil after perceiving the sneeze.",
+          },
+          {
+            id: "settle",
+            kind: "settle",
+            frameOffset: 96,
+            description:
+              "The guardian and children land in the new emotional state.",
+          },
+        ],
+        audioIntentIds: [
+          "intent-guardian-inhale",
+          "intent-guardian-sneeze",
+          "intent-spark-burst",
+          "intent-children-gasp",
+          "intent-music-duck",
+        ],
+      },
+    ],
+    audioIntents: [
+      {
+        id: "intent-guardian-inhale",
+        role: "sfx",
+        shotId: "shot-spark-sneeze",
+        anchorEventId: "inhale-apex",
+        offsetFrames: -18,
+        direction: "Soft leafy inhale rising into the held apex.",
+      },
+      {
+        id: "intent-guardian-sneeze",
+        role: "sfx",
+        shotId: "shot-spark-sneeze",
+        anchorEventId: "sneeze-impact",
+        offsetFrames: 0,
+        direction: "Round, funny sneeze with weight but no frightening crack.",
+      },
+      {
+        id: "intent-spark-burst",
+        role: "sfx",
+        shotId: "shot-spark-sneeze",
+        anchorEventId: "spark-onset",
+        offsetFrames: 0,
+        direction:
+          "Bright paper-sparkle burst followed by a short glittering tail.",
+      },
+      {
+        id: "intent-children-gasp",
+        role: "dialogue",
+        shotId: "shot-spark-sneeze",
+        anchorEventId: "child-reaction",
+        offsetFrames: 0,
+        direction:
+          "Two owner-performed, staggered surprise gasps; never cloned child voices.",
+      },
+      {
+        id: "intent-music-duck",
+        role: "music",
+        shotId: "shot-spark-sneeze",
+        anchorEventId: "sneeze-impact",
+        offsetFrames: -2,
+        direction:
+          "Duck the curious music bed through the sneeze and reaction, then recover at settle.",
+        duckMusicDb: -8,
+      },
+    ],
+  });
+}
+
+export function createKidsShowcaseFriendlyPayoffPlan(): DirectedSequencePlan {
+  return createDirectedSequencePlan({
+    schemaVersion: "1.0",
+    id: "director-plan-friendly-payoff-v1",
+    productionId: "production-kids-moonlit-ruins",
+    grammarId: "kids-adventure-v1",
+    sourceContentHash: hashCanonical(KIDS_SHOWCASE_SOURCE_SCRIPT),
+    startFrame: 750,
+    durationInFrames: 150,
+    scenes: [
+      {
+        id: "scene-moonlit-ruins-03",
+        objective: "Make the guardian's friendly intent unmistakable.",
+        geography:
+          "The children remain camera-left and center; the guardian offers from camera-right; the moth crosses between their hands without teleporting.",
+        sceneKitId: "scene-kit-dawn-clearing-v1",
+        beatIds: ["beat-friendly-offer"],
+      },
+    ],
+    beats: [
+      {
+        id: "beat-friendly-offer",
+        sceneId: "scene-moonlit-ruins-03",
+        audienceQuestion: "Was the guardian chasing them or trying to help?",
+        knowledgeBefore: "The children still read the guardian as a threat.",
+        knowledgeAfter: "The guardian protected the moth and wants to play.",
+        emotionBefore: "guarded uncertainty",
+        emotionAfter: "warm understanding",
+        muteReadableAction:
+          "The guardian offers the moth, Mara hesitates then accepts, Milo relaxes, and their waves become shared play.",
+        audioReadableIntent:
+          "The moth chime marks release and the returning motif confirms safety without dialogue.",
+        shotIds: ["shot-friendly-offer", "shot-understand-and-play"],
+      },
+    ],
+    shots: [
+      {
+        id: "shot-friendly-offer",
+        sceneId: "scene-moonlit-ruins-03",
+        beatId: "beat-friendly-offer",
+        storyFunction:
+          "Show the guardian's offer and Mara's cautious choice in one readable three-shot.",
+        startFrame: 750,
+        durationInFrames: 78,
+        composition: {
+          scale: "medium",
+          focalSubjectId: "guardian-offering-hand",
+          screenDirection: "right-to-left",
+          depthPlaneIds: [
+            "dawn-clearing-backdrop",
+            "character-performance-plane",
+            "moth-prop-plane",
+            "foreground-plants",
+          ],
+          eyelineTargetIds: ["silver-moth", "guardian-offering-hand"],
+          staging:
+            "Guardian offers from camera-right; Mara's gaze leads her head, torso, and hand; Milo stays guarded behind her.",
+        },
+        transition: {
+          type: "hard-cut",
+          motivation:
+            "The escape ends in the clearing; the wider three-shot re-establishes the new geography.",
+        },
+        continuity: {
+          entryState:
+            "The children have stopped camera-left; the guardian holds the moth camera-right.",
+          exitState:
+            "Mara's hand meets the guardian's offering hand while Milo begins to relax.",
+        },
+        performanceProgramIds: [
+          "guardian-offer-articulated-v1",
+          "mara-cautious-reach-v1",
+          "milo-guarded-hold-v1",
+        ],
+        assetRequirementIds: [
+          "scene-kit-dawn-clearing-v1",
+          "guardian-payoff-puppet-v1",
+          "mara-payoff-puppet-v1",
+          "milo-payoff-puppet-v1",
+          "silver-moth-prop-v1",
+        ],
+        events: [
+          {
+            id: "guardian-offer-start",
+            kind: "action",
+            frameOffset: 8,
+            description: "The guardian begins extending the moth.",
+          },
+          {
+            id: "mara-gaze-acquire",
+            kind: "reaction",
+            frameOffset: 14,
+            description: "Mara looks from the guardian to the moth.",
+          },
+          {
+            id: "mara-reach-start",
+            kind: "action",
+            frameOffset: 28,
+            description: "Mara's hand begins its cautious reach.",
+          },
+          {
+            id: "mara-hand-contact",
+            kind: "contact",
+            frameOffset: 60,
+            description: "Mara's hand reaches the offered moth without a jump.",
+          },
+        ],
+        audioIntentIds: [],
+      },
+      {
+        id: "shot-understand-and-play",
+        sceneId: "scene-moonlit-ruins-03",
+        beatId: "beat-friendly-offer",
+        storyFunction:
+          "Release the moth, show the guardian mirror the children's wave, and land the comprehension image.",
+        startFrame: 828,
+        durationInFrames: 72,
+        composition: {
+          scale: "close-up",
+          focalSubjectId: "mara-and-guardian",
+          screenDirection: "static",
+          depthPlaneIds: [
+            "dawn-clearing-backdrop",
+            "character-performance-plane",
+            "moth-prop-plane",
+            "foreground-plants",
+          ],
+          eyelineTargetIds: ["silver-moth", "mara", "moss-guardian"],
+          staging:
+            "Cut closer on hand contact, follow the moth release upward, then settle into an asymmetrical shared wave.",
+        },
+        transition: {
+          type: "action-cut",
+          motivation:
+            "Cutting on hand contact changes scale while preserving the transfer action.",
+        },
+        continuity: {
+          entryState:
+            "Mara and the guardian share hand contact; Milo's shoulders have started to drop.",
+          exitState:
+            "The moth flies free; everyone shares a playful wave and living hold.",
+        },
+        performanceProgramIds: [
+          "mara-release-and-wave-v1",
+          "guardian-mirrored-wave-v1",
+          "milo-late-wave-v1",
+          "payoff-living-hold-v1",
+        ],
+        assetRequirementIds: [
+          "scene-kit-dawn-clearing-v1",
+          "guardian-payoff-puppet-v1",
+          "mara-payoff-puppet-v1",
+          "milo-payoff-puppet-v1",
+          "silver-moth-prop-v1",
+        ],
+        events: [
+          {
+            id: "moth-detach-guardian",
+            kind: "action",
+            frameOffset: 4,
+            description: "The moth detaches from the guardian's hand.",
+          },
+          {
+            id: "milo-relax-start",
+            kind: "reaction",
+            frameOffset: 10,
+            description: "Milo's guarded shoulders visibly release.",
+          },
+          {
+            id: "moth-release",
+            kind: "action",
+            frameOffset: 14,
+            description: "Mara releases the moth into the clearing light.",
+          },
+          {
+            id: "music-resolve",
+            kind: "reveal",
+            frameOffset: 22,
+            description: "The friendly motif returns on the new understanding.",
+          },
+          {
+            id: "mirrored-wave-apex",
+            kind: "action",
+            frameOffset: 38,
+            description:
+              "Mara and the guardian reach the high point of the shared wave.",
+          },
+          {
+            id: "comprehension-hold-start",
+            kind: "settle",
+            frameOffset: 50,
+            description:
+              "The final living hold begins after the action is complete.",
+          },
+        ],
+        audioIntentIds: ["intent-payoff-moth-chime", "intent-payoff-resolve"],
+      },
+    ],
+    audioIntents: [
+      {
+        id: "intent-payoff-moth-chime",
+        role: "sfx",
+        shotId: "shot-understand-and-play",
+        anchorEventId: "moth-release",
+        offsetFrames: 0,
+        direction:
+          "A delicate silver chime follows the moth's visible release.",
+      },
+      {
+        id: "intent-payoff-resolve",
+        role: "music",
+        shotId: "shot-understand-and-play",
+        anchorEventId: "music-resolve",
+        offsetFrames: 0,
+        direction:
+          "Return the curious motif warmly, then leave room for the final hold.",
+      },
+    ],
+  });
+}
 
 const shotDrafts = [
   {
@@ -260,22 +664,39 @@ const shotDrafts = [
     ],
   },
   {
-    id: "shot-friendly-payoff",
+    id: "shot-friendly-offer",
     sceneId: sceneDrafts[2].id,
     beatId: "beat-friendly-offer",
-    title: "It only wanted to play",
+    title: "Offer and hesitate",
     startFrame: 750,
-    durationInFrames: 150,
+    durationInFrames: 78,
     framing: "medium",
     treatment: "character-performance",
-    transition: "brief-dissolve",
+    transition: "hard-cut",
     motionChannels: [
-      "creature-offer",
-      "mara-cautious-reach",
-      "milo-relax",
-      "mirrored-wave",
-      "moth-release",
-      "comprehension-hold",
+      "guardian-offer-track",
+      "mara-gaze-lead",
+      "mara-reach-track",
+      "milo-guarded-hold",
+      "moth-hand-attachment",
+    ],
+  },
+  {
+    id: "shot-understand-and-play",
+    sceneId: sceneDrafts[2].id,
+    beatId: "beat-friendly-offer",
+    title: "Understand and play",
+    startFrame: 828,
+    durationInFrames: 72,
+    framing: "close-up",
+    treatment: "character-performance",
+    transition: "hard-cut",
+    motionChannels: [
+      "moth-release-track",
+      "mara-wave-track",
+      "milo-late-wave-track",
+      "guardian-mirrored-wave-track",
+      "living-hold-channels",
     ],
   },
 ] as const;
@@ -341,12 +762,17 @@ const kidsShowcaseProgramFields = {
   renderPlan: frameAccurateRenderPlanSchema,
   scenes: z.array(kidsShowcaseSceneSchema).length(3),
   beats: z.array(kidsShowcaseBeatSchema).length(6),
-  shotBindings: z.array(kidsShowcaseShotBindingSchema).length(11),
+  shotBindings: z.array(kidsShowcaseShotBindingSchema).length(12),
   audioCues: z.array(kidsShowcaseAudioCueSchema).min(1),
   rigAssets: z.tuple([
     z.literal(KIDS_SHOWCASE_RIG_IDS[0]),
     z.literal(KIDS_SHOWCASE_RIG_IDS[1]),
     z.literal(KIDS_SHOWCASE_RIG_IDS[2]),
+  ]),
+  payoffPuppetAssetHashes: z.tuple([
+    z.literal(KIDS_SHOWCASE_PAYOFF_PUPPET_HASHES[0]),
+    z.literal(KIDS_SHOWCASE_PAYOFF_PUPPET_HASHES[1]),
+    z.literal(KIDS_SHOWCASE_PAYOFF_PUPPET_HASHES[2]),
   ]),
 };
 
@@ -459,6 +885,15 @@ const buildRenderPlan = (): FrameAccurateRenderPlan => {
 
 export function createKidsShowcaseProgram(): KidsShowcaseProgram {
   const renderPlan = buildRenderPlan();
+  const sparkSneezePlan = createKidsShowcaseSparkSneezePlan();
+  const friendlyPayoffPlan = createKidsShowcaseFriendlyPayoffPlan();
+  const sparkShotStart = sparkSneezePlan.shots[0]!.startFrame;
+  const sparkIntentOffset = (intentId: string) =>
+    resolveDirectorAudioIntentFrame(sparkSneezePlan, intentId) - sparkShotStart;
+  const payoffShotStart = friendlyPayoffPlan.shots[1]!.startFrame;
+  const payoffIntentOffset = (intentId: string) =>
+    resolveDirectorAudioIntentFrame(friendlyPayoffPlan, intentId) -
+    payoffShotStart;
   const beats = sceneDrafts.flatMap((scene, sceneIndex) =>
     scene.beats.map((beat, beatIndex) => {
       const draft = {
@@ -529,14 +964,14 @@ export function createKidsShowcaseProgram(): KidsShowcaseProgram {
     {
       id: "cue-sneeze",
       shotId: "shot-spark-sneeze",
-      offsetInFrames: 62,
+      offsetInFrames: sparkIntentOffset("intent-guardian-sneeze"),
       assetId: "showcase-sneeze",
       gain: 0.62,
     },
     {
       id: "cue-spark",
       shotId: "shot-spark-sneeze",
-      offsetInFrames: 64,
+      offsetInFrames: sparkIntentOffset("intent-spark-burst"),
       assetId: "showcase-spark",
       gain: 0.44,
     },
@@ -548,9 +983,16 @@ export function createKidsShowcaseProgram(): KidsShowcaseProgram {
       gain: 0.28,
     })),
     {
+      id: "cue-payoff-moth-release",
+      shotId: "shot-understand-and-play",
+      offsetInFrames: payoffIntentOffset("intent-payoff-moth-chime"),
+      assetId: "showcase-moth-chime",
+      gain: 0.34,
+    },
+    {
       id: "cue-clearing-resolve",
-      shotId: "shot-friendly-payoff",
-      offsetInFrames: 55,
+      shotId: "shot-understand-and-play",
+      offsetInFrames: payoffIntentOffset("intent-payoff-resolve"),
       assetId: "showcase-resolve",
       gain: 0.46,
     },
@@ -570,6 +1012,11 @@ export function createKidsShowcaseProgram(): KidsShowcaseProgram {
       (typeof KIDS_SHOWCASE_RIG_IDS)[0],
       (typeof KIDS_SHOWCASE_RIG_IDS)[1],
       (typeof KIDS_SHOWCASE_RIG_IDS)[2],
+    ],
+    payoffPuppetAssetHashes: [...KIDS_SHOWCASE_PAYOFF_PUPPET_HASHES] as [
+      (typeof KIDS_SHOWCASE_PAYOFF_PUPPET_HASHES)[0],
+      (typeof KIDS_SHOWCASE_PAYOFF_PUPPET_HASHES)[1],
+      (typeof KIDS_SHOWCASE_PAYOFF_PUPPET_HASHES)[2],
     ],
   };
   return kidsShowcaseProgramSchema.parse({
@@ -591,6 +1038,7 @@ export type KidsShowcaseEdit = {
 
 export type KidsShowcaseProject = {
   program: KidsShowcaseProgram;
+  directedBeatPlans: DirectedSequencePlan[];
   direction: KidsShowcaseDirection;
   history: KidsShowcaseEdit[];
   historyCursor: number;
@@ -599,6 +1047,10 @@ export type KidsShowcaseProject = {
 export function createKidsShowcaseProject(): KidsShowcaseProject {
   return {
     program: createKidsShowcaseProgram(),
+    directedBeatPlans: [
+      createKidsShowcaseSparkSneezePlan(),
+      createKidsShowcaseFriendlyPayoffPlan(),
+    ],
     direction: { sneezeIntensity: 1 },
     history: [],
     historyCursor: 0,

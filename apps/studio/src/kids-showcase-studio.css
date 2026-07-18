@@ -42,6 +42,7 @@
 }
 
 .ks-brand,
+.ks-download-render,
 .ks-top-actions button,
 .ks-transport button,
 .ks-beat-strip button,
@@ -128,6 +129,75 @@
   gap: 7px;
   min-height: 36px;
   padding: 0 12px;
+}
+
+.ks-download-render {
+  border: 1px solid var(--ks-line);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 750;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 12px;
+  text-decoration: none;
+}
+
+.ks-download-render:hover {
+  background: rgba(140, 230, 189, 0.08);
+  border-color: rgba(140, 230, 189, 0.45);
+}
+
+.ks-director-plan {
+  background: linear-gradient(
+    145deg,
+    rgba(140, 230, 189, 0.09),
+    rgba(124, 108, 255, 0.08)
+  );
+  border: 1px solid rgba(140, 230, 189, 0.25);
+  border-radius: 10px;
+  display: grid;
+  gap: 7px;
+  padding: 12px;
+}
+
+.ks-director-plan > span {
+  color: var(--ks-mint);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ks-director-plan > strong {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.ks-director-plan > p {
+  color: var(--ks-muted);
+  font-size: 11px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.ks-director-plan > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.ks-director-plan small {
+  background: rgba(3, 10, 11, 0.42);
+  border: 1px solid var(--ks-line);
+  border-radius: 999px;
+  color: var(--ks-muted);
+  font-size: 9px;
+  padding: 4px 7px;
+}
+
+.ks-director-plan small b {
+  color: var(--ks-text);
+  font-weight: 750;
 }
 
 .ks-top-actions button:disabled {
@@ -784,6 +854,7 @@
   }
 
   .ks-top-actions button:not(.is-primary),
+  .ks-download-render,
   .ks-saved {
     display: none;
   }

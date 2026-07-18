@@ -8,12 +8,13 @@ import {
 } from "./kids-showcase";
 
 describe("30-second Kids showcase product path", () => {
-  it("binds one source script through three scenes, six beats, and eleven deterministic shots", () => {
+  it("binds one source script through three scenes, six beats, and twelve deterministic shots", () => {
     const project = createKidsShowcaseProject();
     expect(project.program.scenes).toHaveLength(3);
     expect(project.program.beats).toHaveLength(6);
-    expect(project.program.shotBindings).toHaveLength(11);
+    expect(project.program.shotBindings).toHaveLength(12);
     expect(project.program.renderPlan.durationInFrames).toBe(900);
+    expect(project.program.payoffPuppetAssetHashes).toHaveLength(3);
     expect(
       project.program.renderPlan.shots.at(-1)!.startFrame +
         project.program.renderPlan.shots.at(-1)!.durationInFrames,
@@ -24,6 +25,32 @@ describe("30-second Kids showcase product path", () => {
     );
     expect(lineage.beat.id).toBe("beat-spark-sneeze");
     expect(lineage.binding.motionChannels).toContain("delayed-kids-reaction");
+    const sneezePlan = project.directedBeatPlans[0]!;
+    expect(sneezePlan.beats[0]!.audienceQuestion).toMatch(/guardian attack/i);
+    expect(sneezePlan.shots[0]!.events.map((event) => event.id)).toEqual([
+      "inhale-apex",
+      "sneeze-impact",
+      "spark-onset",
+      "child-reaction",
+      "settle",
+    ]);
+    expect(
+      project.program.audioCues.find((cue) => cue.id === "cue-sneeze")
+        ?.offsetInFrames,
+    ).toBe(62);
+    const payoffPlan = project.directedBeatPlans[1]!;
+    expect(payoffPlan.shots.map((shot) => shot.id)).toEqual([
+      "shot-friendly-offer",
+      "shot-understand-and-play",
+    ]);
+    expect(
+      project.program.audioCues.find(
+        (cue) => cue.id === "cue-payoff-moth-release",
+      ),
+    ).toMatchObject({
+      shotId: "shot-understand-and-play",
+      offsetInFrames: 14,
+    });
   });
 
   it("edits only the bounded sneeze direction and supports exact undo and redo", () => {

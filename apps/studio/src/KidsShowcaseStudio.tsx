@@ -16,6 +16,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Download,
   Expand,
   Film,
   Layers3,
@@ -33,6 +34,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "./kids-showcase-studio.css";
 
 const SHOWCASE_FPS = 30;
+export const KIDS_SHOWCASE_DOWNLOAD_URL =
+  "https://github.com/truthunknown2-art/StoryStage/releases/download/moonlit-ruins-preview-v1/moonlit-ruins-30s.mp4";
 
 const stageTracks = [
   { id: "far-set", label: "Forest far" },
@@ -130,6 +133,15 @@ export function KidsShowcaseStudio({ onBack }: { onBack: () => void }) {
   )!;
   const sneezeSelected = activeBeat.id === "beat-spark-sneeze";
   const sneezeIsBigger = project.direction.sneezeIntensity > 1;
+  const activeDirectorPlan = project.directedBeatPlans.find((candidate) =>
+    candidate.beats.some((beat) => beat.id === activeBeat.id),
+  );
+  const activeDirectedBeat = activeDirectorPlan?.beats.find(
+    (beat) => beat.id === activeBeat.id,
+  );
+  const activeDirectedShot = activeDirectorPlan?.shots.find(
+    (shot) => shot.id === activeShot.id,
+  );
 
   const seekTo = (nextFrame: number) => {
     stopAtFrame.current = null;
@@ -180,7 +192,7 @@ export function KidsShowcaseStudio({ onBack }: { onBack: () => void }) {
     const next = makeKidsShowcaseSneezeBigger(project);
     setProject(next);
     setStatus(
-      "Only the spark-sneeze motion was recompiled. Replaying that beat now.",
+      "Sneeze intensity updated inside the bounded spark-sneeze beat. Replaying it now.",
     );
     window.setTimeout(() => playRange(522, 630), 0);
   };
@@ -242,6 +254,16 @@ export function KidsShowcaseStudio({ onBack }: { onBack: () => void }) {
             <Check size={13} />
             Source → render linked
           </span>
+          <a
+            aria-label="Download current 30-second MP4"
+            className="ks-download-render"
+            href={KIDS_SHOWCASE_DOWNLOAD_URL}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <Download size={15} />
+            Download MP4
+          </a>
           <button
             disabled={project.historyCursor === 0}
             onClick={undo}
@@ -415,6 +437,20 @@ export function KidsShowcaseStudio({ onBack }: { onBack: () => void }) {
               {activeLineage.binding.motionChannels.slice(0, 3).join(" · ")}
             </small>
           </section>
+          {activeDirectedBeat && activeDirectedShot ? (
+            <section className="ks-director-plan">
+              <span>Director plan</span>
+              <strong>{activeDirectedBeat.audienceQuestion}</strong>
+              <p>{activeDirectedShot.storyFunction}</p>
+              <div aria-label="Picture events">
+                {activeDirectedShot.events.map((event) => (
+                  <small key={event.id}>
+                    {event.id} <b>+{event.frameOffset}f</b>
+                  </small>
+                ))}
+              </div>
+            </section>
+          ) : null}
           <label className="ks-direction-input" htmlFor="ks-direction">
             <span>Your direction</span>
             <textarea

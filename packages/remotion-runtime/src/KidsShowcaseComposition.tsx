@@ -4,7 +4,6 @@ import {
   Img,
   interpolate,
   Sequence,
-  spring,
   useCurrentFrame,
   useVideoConfig,
   staticFile,
@@ -157,12 +156,20 @@ export const kidsShowcaseShots: KidsShowcaseShot[] = [
     narration: "That was more than enough adventure for one hallway.",
   },
   {
-    id: "friendly-payoff",
+    id: "friendly-offer",
     startFrame: 750,
-    durationInFrames: 150,
-    title: "It only wanted to play",
-    intent: "Daylight reveal, secondary action, and comprehension hold",
-    narration: "But the moss giant only wanted someone to catch its light.",
+    durationInFrames: 78,
+    title: "Offer and hesitate",
+    intent: "Guardian offer, Mara gaze-led reach, and continuous moth handoff",
+    narration: "In the clearing, the creature held out the little light.",
+  },
+  {
+    id: "understand-and-play",
+    startFrame: 828,
+    durationInFrames: 72,
+    title: "Understand and play",
+    intent: "Action cut, moth release, staggered wave, and living hold",
+    narration: "It had only wanted someone to play.",
   },
 ];
 
@@ -643,6 +650,378 @@ const PerformanceSprite: React.FC<{
   );
 };
 
+type PuppetSourceRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+const payoffPuppetSheets = {
+  mara: "show-packs/kids/moonlit-ruins/v1/rigs/mara/payoff-puppet-v1/puppet-parts.png",
+  milo: "show-packs/kids/moonlit-ruins/v1/rigs/milo/payoff-puppet-v1/puppet-parts.png",
+  guardian:
+    "show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/payoff-puppet-v1/puppet-parts.png",
+} as const;
+
+const puppetParts = {
+  mara: {
+    head: { x: 30, y: 20, width: 490, height: 430 },
+    body: { x: 730, y: 35, width: 350, height: 410 },
+    upperArmLeft: { x: 520, y: 45, width: 180, height: 275 },
+    upperArmRight: { x: 1110, y: 40, width: 180, height: 280 },
+    lowerArmLeft: { x: 520, y: 290, width: 200, height: 245 },
+    lowerArmRight: { x: 1080, y: 290, width: 210, height: 250 },
+    thighLeft: { x: 710, y: 430, width: 190, height: 180 },
+    thighRight: { x: 900, y: 430, width: 200, height: 180 },
+    legLeft: { x: 660, y: 560, width: 250, height: 270 },
+    legRight: { x: 920, y: 560, width: 270, height: 270 },
+  },
+  milo: {
+    head: { x: 130, y: 25, width: 390, height: 390 },
+    body: { x: 680, y: 65, width: 400, height: 450 },
+    upperArmLeft: { x: 500, y: 115, width: 180, height: 250 },
+    upperArmRight: { x: 1120, y: 105, width: 190, height: 260 },
+    lowerArmLeft: { x: 340, y: 340, width: 250, height: 245 },
+    lowerArmRight: { x: 1160, y: 330, width: 280, height: 230 },
+    thighLeft: { x: 590, y: 490, width: 220, height: 160 },
+    thighRight: { x: 890, y: 480, width: 220, height: 170 },
+    legLeft: { x: 560, y: 600, width: 220, height: 260 },
+    legRight: { x: 930, y: 600, width: 230, height: 260 },
+  },
+  guardian: {
+    head: { x: 70, y: 35, width: 540, height: 430 },
+    body: { x: 680, y: 80, width: 540, height: 390 },
+    tuft: { x: 1250, y: 190, width: 270, height: 220 },
+    armLeft: { x: 270, y: 480, width: 470, height: 240 },
+    armRight: { x: 1000, y: 450, width: 430, height: 250 },
+    footLeft: { x: 660, y: 620, width: 230, height: 210 },
+    footRight: { x: 900, y: 620, width: 240, height: 210 },
+  },
+} as const;
+
+const PuppetSheetPart: React.FC<{
+  flipX?: boolean;
+  pivot: { x: number; y: number };
+  rotation?: number;
+  sheet: keyof typeof payoffPuppetSheets;
+  source: PuppetSourceRect;
+  x: number;
+  y: number;
+}> = ({ flipX = false, pivot, rotation = 0, sheet, source, x, y }) => (
+  <g
+    transform={`translate(${x} ${y}) rotate(${rotation}) scale(${flipX ? -1 : 1} 1)`}
+  >
+    <svg
+      height={source.height}
+      overflow="hidden"
+      preserveAspectRatio="xMidYMid meet"
+      viewBox={`${source.x} ${source.y} ${source.width} ${source.height}`}
+      width={source.width}
+      x={-pivot.x}
+      y={-pivot.y}
+    >
+      <image
+        height="941"
+        href={staticFile(payoffPuppetSheets[sheet])}
+        width="1672"
+        x="0"
+        y="0"
+      />
+    </svg>
+  </g>
+);
+
+const MaraPayoffPuppet: React.FC<{
+  frame: number;
+  mode: "offer" | "play";
+  x: number;
+  y: number;
+}> = ({ frame, mode, x, y }) => {
+  const reach =
+    mode === "offer" ? clampInterpolate(frame, [12, 58], [0, 1]) : 1;
+  const wave = mode === "play" ? clampInterpolate(frame, [10, 32], [0, 1]) : 0;
+  const hold = mode === "play" ? clampInterpolate(frame, [48, 71], [0, 1]) : 0;
+  const releaseReach =
+    mode === "play" ? clampInterpolate(frame, [0, 16], [0, 1]) : 0;
+  const rightShoulder =
+    mode === "offer"
+      ? clampInterpolate(reach, [0, 1], [8, -68])
+      : clampInterpolate(releaseReach, [0, 1], [-68, -96]) +
+        Math.sin(frame / 3.2) * 9 * wave * (1 - hold * 0.7);
+  const headRotation =
+    mode === "offer"
+      ? clampInterpolate(frame, [5, 20, 58, 77], [-1, -7, 2, 0])
+      : Math.sin(frame / 18) * 1.2;
+  return (
+    <g
+      aria-label="Mara articulated payoff puppet"
+      style={{ filter: "drop-shadow(10px 15px 8px rgba(4,18,18,.24))" }}
+      transform={`translate(${x} ${y}) scale(.36)`}
+    >
+      <PuppetSheetPart
+        pivot={{ x: 125, y: 255 }}
+        sheet="mara"
+        source={puppetParts.mara.legLeft}
+        x={-62}
+        y={-44}
+      />
+      <PuppetSheetPart
+        pivot={{ x: 135, y: 255 }}
+        sheet="mara"
+        source={puppetParts.mara.legRight}
+        x={68}
+        y={-44}
+      />
+      <PuppetSheetPart
+        pivot={{ x: 95, y: 165 }}
+        sheet="mara"
+        source={puppetParts.mara.thighLeft}
+        x={-62}
+        y={-245}
+      />
+      <PuppetSheetPart
+        pivot={{ x: 100, y: 165 }}
+        sheet="mara"
+        source={puppetParts.mara.thighRight}
+        x={68}
+        y={-245}
+      />
+      <g transform={`translate(-142 -690) rotate(${-3 + hold})`}>
+        <PuppetSheetPart
+          pivot={{ x: 90, y: 20 }}
+          rotation={8}
+          sheet="mara"
+          source={puppetParts.mara.upperArmLeft}
+          x={0}
+          y={0}
+        />
+        <g transform="translate(20 205) rotate(8)">
+          <PuppetSheetPart
+            pivot={{ x: 90, y: 20 }}
+            sheet="mara"
+            source={puppetParts.mara.lowerArmLeft}
+            x={0}
+            y={0}
+          />
+        </g>
+      </g>
+      <PuppetSheetPart
+        pivot={{ x: 175, y: 385 }}
+        rotation={clampInterpolate(reach, [0, 1], [-2, 4])}
+        sheet="mara"
+        source={puppetParts.mara.body}
+        x={0}
+        y={-400}
+      />
+      <g transform={`translate(145 -690) rotate(${rightShoulder})`}>
+        <PuppetSheetPart
+          pivot={{ x: 90, y: 20 }}
+          sheet="mara"
+          source={puppetParts.mara.upperArmRight}
+          x={0}
+          y={0}
+        />
+        <g transform={`translate(0 205) rotate(${-18 - reach * 10})`}>
+          <PuppetSheetPart
+            pivot={{ x: 105, y: 20 }}
+            sheet="mara"
+            source={puppetParts.mara.lowerArmRight}
+            x={0}
+            y={0}
+          />
+        </g>
+      </g>
+      <PuppetSheetPart
+        pivot={{ x: 245, y: 410 }}
+        rotation={headRotation}
+        sheet="mara"
+        source={puppetParts.mara.head}
+        x={0}
+        y={-755}
+      />
+    </g>
+  );
+};
+
+const MiloPayoffPuppet: React.FC<{
+  frame: number;
+  mode: "offer" | "play";
+  x: number;
+  y: number;
+}> = ({ frame, mode, x, y }) => {
+  const relax = mode === "play" ? clampInterpolate(frame, [8, 25], [0, 1]) : 0;
+  const wave = mode === "play" ? clampInterpolate(frame, [24, 45], [0, 1]) : 0;
+  return (
+    <g
+      aria-label="Milo articulated payoff puppet"
+      style={{ filter: "drop-shadow(10px 15px 8px rgba(4,18,18,.24))" }}
+      transform={`translate(${x} ${y}) scale(.34)`}
+    >
+      <PuppetSheetPart
+        pivot={{ x: 110, y: 245 }}
+        sheet="milo"
+        source={puppetParts.milo.legLeft}
+        x={-65}
+        y={-25}
+      />
+      <PuppetSheetPart
+        pivot={{ x: 115, y: 245 }}
+        sheet="milo"
+        source={puppetParts.milo.legRight}
+        x={66}
+        y={-25}
+      />
+      <PuppetSheetPart
+        pivot={{ x: 110, y: 150 }}
+        sheet="milo"
+        source={puppetParts.milo.thighLeft}
+        x={-65}
+        y={-280}
+      />
+      <PuppetSheetPart
+        pivot={{ x: 110, y: 155 }}
+        sheet="milo"
+        source={puppetParts.milo.thighRight}
+        x={66}
+        y={-280}
+      />
+      <g transform={`translate(-155 -720) rotate(${-10 + relax * 9})`}>
+        <PuppetSheetPart
+          pivot={{ x: 90, y: 25 }}
+          sheet="milo"
+          source={puppetParts.milo.upperArmLeft}
+          x={0}
+          y={0}
+        />
+        <g transform="translate(0 205) rotate(20)">
+          <PuppetSheetPart
+            pivot={{ x: 125, y: 25 }}
+            sheet="milo"
+            source={puppetParts.milo.lowerArmLeft}
+            x={0}
+            y={0}
+          />
+        </g>
+      </g>
+      <PuppetSheetPart
+        pivot={{ x: 200, y: 425 }}
+        rotation={-2 + relax * 2}
+        sheet="milo"
+        source={puppetParts.milo.body}
+        x={0}
+        y={-415}
+      />
+      <g
+        transform={`translate(155 -720) rotate(${8 - relax * 18 - wave * 74})`}
+      >
+        <PuppetSheetPart
+          pivot={{ x: 95, y: 25 }}
+          sheet="milo"
+          source={puppetParts.milo.upperArmRight}
+          x={0}
+          y={0}
+        />
+        <g transform={`translate(0 205) rotate(${-12 - wave * 18})`}>
+          <PuppetSheetPart
+            pivot={{ x: 140, y: 25 }}
+            sheet="milo"
+            source={puppetParts.milo.lowerArmRight}
+            x={0}
+            y={0}
+          />
+        </g>
+      </g>
+      <PuppetSheetPart
+        pivot={{ x: 195, y: 370 }}
+        rotation={-3 + relax * 4 + Math.sin(frame / 18) * 0.7}
+        sheet="milo"
+        source={puppetParts.milo.head}
+        x={0}
+        y={-785 + relax * 7}
+      />
+    </g>
+  );
+};
+
+const GuardianPayoffPuppet: React.FC<{
+  frame: number;
+  mode: "offer" | "play";
+  x: number;
+  y: number;
+}> = ({ frame, mode, x, y }) => {
+  const offer = mode === "offer" ? clampInterpolate(frame, [6, 56], [0, 1]) : 1;
+  const wave = mode === "play" ? clampInterpolate(frame, [16, 38], [0, 1]) : 0;
+  const hold = mode === "play" ? clampInterpolate(frame, [50, 71], [0, 1]) : 0;
+  return (
+    <g
+      aria-label="Guardian articulated payoff puppet"
+      style={{ filter: "drop-shadow(10px 15px 8px rgba(4,18,18,.28))" }}
+      transform={`translate(${x} ${y}) scale(.40)`}
+    >
+      <PuppetSheetPart
+        pivot={{ x: 115, y: 190 }}
+        sheet="guardian"
+        source={puppetParts.guardian.footLeft}
+        x={-95}
+        y={0}
+      />
+      <PuppetSheetPart
+        pivot={{ x: 120, y: 190 }}
+        sheet="guardian"
+        source={puppetParts.guardian.footRight}
+        x={95}
+        y={0}
+      />
+      <g transform={`translate(-175 -510) rotate(${8 - offer * 12})`}>
+        <PuppetSheetPart
+          pivot={{ x: 390, y: 125 }}
+          rotation={-4 - offer * 5}
+          sheet="guardian"
+          source={puppetParts.guardian.armRight}
+          x={0}
+          y={0}
+        />
+      </g>
+      <PuppetSheetPart
+        pivot={{ x: 270, y: 365 }}
+        rotation={clampInterpolate(offer, [0, 1], [2, -3])}
+        sheet="guardian"
+        source={puppetParts.guardian.body}
+        x={0}
+        y={-190}
+      />
+      <g
+        transform={`translate(205 -335) rotate(${8 - wave * 70 + Math.sin(frame / 3.2) * 8 * wave * (1 - hold * 0.7)})`}
+      >
+        <PuppetSheetPart
+          pivot={{ x: 55, y: 125 }}
+          sheet="guardian"
+          source={puppetParts.guardian.armLeft}
+          x={0}
+          y={0}
+        />
+      </g>
+      <PuppetSheetPart
+        pivot={{ x: 270, y: 405 }}
+        rotation={-2 + offer * 5 + Math.sin(frame / 20) * 1.2}
+        sheet="guardian"
+        source={puppetParts.guardian.head}
+        x={0}
+        y={-485}
+      />
+      <PuppetSheetPart
+        pivot={{ x: 135, y: 190 }}
+        rotation={Math.sin(frame / 7) * 2.2 * (1 - hold * 0.5)}
+        sheet="guardian"
+        source={puppetParts.guardian.tuft}
+        x={20}
+        y={-755}
+      />
+    </g>
+  );
+};
+
 const SparkBurst: React.FC<{
   frame: number;
   intensity?: number;
@@ -789,7 +1168,7 @@ const RunApproachShot: React.FC = () => {
 const ThresholdShot: React.FC = () => {
   const frame = useCurrentFrame();
   const p = frame / 48;
-  const x = interpolate(frame, [0, 48], [-310, 940], {
+  const x = interpolate(frame, [0, 48], [120, 940], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
@@ -804,7 +1183,7 @@ const ThresholdShot: React.FC = () => {
       >
         <ProfileRunRig
           frame={frame}
-          rootPixelsPerFrame={1250 / 48}
+          rootPixelsPerFrame={820 / 48}
           scale={1.06}
           variant="mara"
           x={x}
@@ -813,7 +1192,7 @@ const ThresholdShot: React.FC = () => {
         <ProfileRunRig
           frame={frame}
           phaseOffset={5.1}
-          rootPixelsPerFrame={1250 / 48}
+          rootPixelsPerFrame={820 / 48}
           scale={0.98}
           variant="milo"
           x={x - 260}
@@ -843,7 +1222,7 @@ const ListenShot: React.FC = () => {
           rotation={-1.5 + Math.sin(frame / 18) * 0.6}
           scale={1.28}
           variant="mara"
-          x={440}
+          x={650}
           y={674}
         />
         <PerformanceSprite
@@ -851,13 +1230,13 @@ const ListenShot: React.FC = () => {
           rotation={1 + Math.sin(frame / 20) * -0.5}
           scale={1.04}
           variant="milo"
-          x={185}
+          x={390}
           y={677}
         />
         <GlowMoth
           phase={frame / 9}
           scale={0.85}
-          x={650 + Math.sin(frame / 12) * 20}
+          x={850 + Math.sin(frame / 12) * 20}
           y={268 + Math.cos(frame / 8) * 16}
         />
       </svg>
@@ -866,7 +1245,7 @@ const ListenShot: React.FC = () => {
           border: "3px solid rgba(255,231,132,.25)",
           borderRadius: "50%",
           height: 150 + Math.sin(frame / 8) * 9,
-          left: 575,
+          left: 775,
           position: "absolute",
           top: 192,
           width: 150 + Math.sin(frame / 8) * 9,
@@ -892,7 +1271,7 @@ const EmptyCorridorShot: React.FC = () => {
         <GlowMoth
           phase={frame / 7}
           scale={1.15}
-          x={clampInterpolate(frame, [0, 48], [330, 970])}
+          x={clampInterpolate(frame, [0, 48], [850, 1030])}
           y={285 + Math.sin(frame / 5) * 30}
         />
         {Array.from({ length: 14 }, (_, index) => (
@@ -976,6 +1355,7 @@ const SneakShot: React.FC = () => {
 const CreatureRevealShot: React.FC = () => {
   const frame = useCurrentFrame();
   const p = frame / 60;
+  const revealReframe = clampInterpolate(frame, [0, 18], [0, 1]);
   const guardianPose = frame < 15 ? 0 : frame < 30 ? 1 : frame < 47 ? 2 : 3;
   return (
     <ShotShell narration={narrationAt(5)}>
@@ -1001,14 +1381,14 @@ const CreatureRevealShot: React.FC = () => {
           poseIndex={frame < 35 ? 1 : 4}
           scale={0.66}
           variant="mara"
-          x={245}
+          x={535 - revealReframe * 290}
           y={622}
         />
         <PerformanceSprite
           poseIndex={frame < 39 ? 1 : 4}
           scale={0.55}
           variant="milo"
-          x={130}
+          x={385 - revealReframe * 255}
           y={624}
         />
         <PerformanceSprite
@@ -1021,7 +1401,7 @@ const CreatureRevealShot: React.FC = () => {
             [1.08, 1.04, 0.96, 1],
           )}
           variant="guardian"
-          x={885}
+          x={1090 - revealReframe * 205}
           y={665}
         />
         <GlowMoth
@@ -1149,6 +1529,7 @@ const SneezeShot: React.FC = () => {
   const frame = useCurrentFrame();
   const { sneezeIntensity } = useContext(ShowcaseOptionsContext);
   const p = frame / 108;
+  const reverseReframe = clampInterpolate(frame, [0, 16], [0, 1]);
   const guardianPose =
     frame < 18
       ? 0
@@ -1201,7 +1582,7 @@ const SneezeShot: React.FC = () => {
             rotation={frame > 68 ? -7 : -1}
             scale={0.76}
             variant="mara"
-            x={190}
+            x={420 - reverseReframe * 230}
             y={635 - (frame > 68 ? 22 : 0)}
           />
           <PerformanceSprite
@@ -1210,7 +1591,7 @@ const SneezeShot: React.FC = () => {
             rotation={frame > 72 ? 7 : 1}
             scale={0.66}
             variant="milo"
-            x={1080}
+            x={855 + reverseReframe * 225}
             y={637 - (frame > 72 ? 19 : 0)}
           />
           <PerformanceSprite
@@ -1246,74 +1627,119 @@ const SneezeShot: React.FC = () => {
 
 const EscapeShot: React.FC = () => {
   const frame = useCurrentFrame();
-  const p = frame / 120;
-  const x = interpolate(frame, [0, 120], [1080, -180], {
+  const runFrame = Math.max(0, frame - 22);
+  const p = runFrame / 98;
+  const x = interpolate(runFrame, [0, 98], [980, -180], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
+  const wipe = clampInterpolate(frame, [12, 20, 31], [-1380, -40, 1380]);
+  const clearingReveal = clampInterpolate(frame, [98, 118], [0, 1]);
   return (
     <ShotShell narration={narrationAt(9)}>
       <ForestBackdrop mode="cave" push={0.3} travel={p * 1.5} />
+      <div style={{ inset: 0, opacity: clearingReveal, position: "absolute" }}>
+        <ForestBackdrop mode="clearing" push={0.05} />
+      </div>
       <svg
         height="100%"
         viewBox="0 0 1280 720"
         width="100%"
         style={{ position: "absolute" }}
       >
-        <PerformanceSprite
-          facing="left"
-          poseIndex={Math.floor((frame + 4) / 3) % 8}
-          rotation={Math.sin((frame / 24) * Math.PI * 2) * 0.7}
-          scale={1.05}
-          variant="guardian-chase"
-          x={x + 385}
-          y={650}
-        />
-        <GlowMoth
-          phase={frame / 8}
-          scale={0.62}
-          x={x + 385}
-          y={492 + Math.sin(frame / 9) * 5}
-        />
-        <ProfileRunRig
-          facing="left"
-          frame={frame}
-          rootPixelsPerFrame={1260 / 120}
-          scale={0.55}
-          variant="mara"
-          x={x}
-          y={616}
-        />
-        <ProfileRunRig
-          facing="left"
-          frame={frame}
-          phaseOffset={5.8}
-          rootPixelsPerFrame={1260 / 120}
-          scale={0.51}
-          variant="milo"
-          x={x + 155}
-          y={620}
-        />
+        {frame < 22 ? (
+          <>
+            <PerformanceSprite
+              poseIndex={5}
+              rotation={-7 + frame * 0.25}
+              scale={0.76}
+              variant="mara"
+              x={190}
+              y={613}
+            />
+            <PerformanceSprite
+              facing="left"
+              poseIndex={5}
+              rotation={7 - frame * 0.22}
+              scale={0.66}
+              variant="milo"
+              x={1080}
+              y={618}
+            />
+            <PerformanceSprite
+              poseIndex={7}
+              rotation={Math.sin(frame / 8) * 0.7}
+              scale={1.55}
+              variant="guardian-sneeze"
+              x={640}
+              y={672}
+            />
+            <GlowMoth phase={frame / 7} scale={0.65} x={920} y={205} />
+          </>
+        ) : (
+          <>
+            <PerformanceSprite
+              facing="left"
+              poseIndex={Math.floor((runFrame + 4) / 3) % 8}
+              rotation={Math.sin((runFrame / 24) * Math.PI * 2) * 0.7}
+              scale={1.05}
+              variant="guardian-chase"
+              x={x + 385}
+              y={650}
+            />
+            <GlowMoth
+              phase={runFrame / 8}
+              scale={0.62}
+              x={x + 385}
+              y={492 + Math.sin(runFrame / 9) * 5}
+            />
+            <ProfileRunRig
+              facing="left"
+              frame={runFrame}
+              rootPixelsPerFrame={1160 / 98}
+              scale={0.55}
+              variant="mara"
+              x={x}
+              y={616}
+            />
+            <ProfileRunRig
+              facing="left"
+              frame={runFrame}
+              phaseOffset={5.8}
+              rootPixelsPerFrame={1160 / 98}
+              scale={0.51}
+              variant="milo"
+              x={x + 155}
+              y={620}
+            />
+          </>
+        )}
       </svg>
+      <div
+        style={{
+          background:
+            "linear-gradient(105deg, transparent 0 12%, rgba(12,45,38,.98) 20% 74%, transparent 84%), radial-gradient(circle at 42% 40%, #729d5e 0 12%, transparent 13%)",
+          height: 920,
+          left: wipe,
+          position: "absolute",
+          rotate: "-5deg",
+          top: -80,
+          width: 1420,
+        }}
+      />
       <GeneratedSetForeground mode="cave" travel={p * 1.5} />
     </ShotShell>
   );
 };
 
-const FriendlyPayoffShot: React.FC = () => {
+const FriendlyOfferShot: React.FC = () => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const p = frame / 150;
-  const entrance = spring({
-    fps,
-    frame,
-    config: { damping: 14, stiffness: 85, mass: 0.7 },
-  });
-  const offer = clampInterpolate(frame, [28, 82], [0, 1]);
-  const realize = clampInterpolate(frame, [64, 104], [0, 1]);
+  const p = frame / 78;
+  const arrival = clampInterpolate(frame, [0, 10], [0, 1]);
+  const mothOffer = clampInterpolate(frame, [6, 60], [0, 1]);
   return (
     <ShotShell narration={narrationAt(10)}>
-      <ForestBackdrop mode="clearing" push={p * 0.23} />
+      <ForestBackdrop mode="clearing" push={p * 0.12} />
       <div
         style={{
           background:
@@ -1331,76 +1757,88 @@ const FriendlyPayoffShot: React.FC = () => {
         width="100%"
         style={{ position: "absolute" }}
       >
-        <PerformanceSprite
-          poseIndex={frame < 64 ? 4 : frame < 104 ? 6 : 7}
-          rotation={frame < 64 ? -2 : 0}
-          scale={1.08}
-          variant="mara"
-          x={350 + offer * 45}
-          y={625 + (1 - entrance) * 80}
-        />
-        <PerformanceSprite
-          poseIndex={frame < 68 ? 4 : frame < 108 ? 6 : 7}
-          rotation={frame < 68 ? 2 : 0}
-          scale={0.92}
-          variant="milo"
-          x={605}
-          y={629 + (1 - entrance) * 92}
-        />
-        <PerformanceSprite
-          facing="left"
-          poseIndex={frame < 42 ? 6 : 7}
-          rotation={Math.sin(frame / 24) * 0.8}
-          scale={1.25}
-          variant="guardian"
-          x={835}
-          y={650 + (1 - entrance) * 130}
-        />
-        <GlowMoth
-          phase={frame / 7}
-          scale={1.05}
-          x={
-            clampInterpolate(offer, [0, 1], [835, 560]) +
-            Math.sin(frame / 14) * 8
-          }
-          y={
-            clampInterpolate(offer, [0, 1], [475, 390]) +
-            Math.cos(frame / 11) * 7
-          }
-        />
+        <g opacity={arrival} transform={`translate(0 ${(1 - arrival) * 8})`}>
+          <MiloPayoffPuppet frame={frame} mode="offer" x={315} y={662} />
+          <MaraPayoffPuppet frame={frame} mode="offer" x={520} y={660} />
+          <GuardianPayoffPuppet frame={frame} mode="offer" x={930} y={655} />
+          <GlowMoth
+            phase={frame / 7}
+            scale={0.9}
+            x={clampInterpolate(mothOffer, [0, 1], [735, 700])}
+            y={clampInterpolate(mothOffer, [0, 1], [405, 390])}
+          />
+        </g>
       </svg>
-      <GeneratedSetForeground mode="clearing" travel={p * 0.08} />
-      {frame > 92 ? (
-        <div
-          style={{
-            border: "5px solid rgba(255,247,203,.72)",
-            borderRadius: "50%",
-            height: 120 + realize * 55,
-            left: 555,
-            opacity: realize * 0.75,
-            position: "absolute",
-            top: 315,
-            width: 120 + realize * 55,
-          }}
-        />
-      ) : null}
+      <GeneratedSetForeground mode="clearing" travel={p * 0.035} />
     </ShotShell>
   );
 };
 
-const shotComponents: React.FC[] = [
-  RunApproachShot,
-  ThresholdShot,
-  ListenShot,
-  EmptyCorridorShot,
-  SneakShot,
-  CreatureRevealShot,
-  EyeCloseShot,
-  KidsReactionShot,
-  SneezeShot,
-  EscapeShot,
-  FriendlyPayoffShot,
-];
+const FriendlyPlayShot: React.FC = () => {
+  const frame = useCurrentFrame();
+  const p = frame / 72;
+  const release = clampInterpolate(frame, [0, 28], [0, 1]);
+  const halo = clampInterpolate(frame, [9, 26, 58], [0, 1, 0.35]);
+  return (
+    <ShotShell narration={narrationAt(11)}>
+      <ForestBackdrop mode="clearing" push={0.12 + p * 0.11} />
+      <div
+        style={{
+          background:
+            "radial-gradient(circle, rgba(255,244,174,.82), transparent 68%)",
+          height: 670,
+          left: 285,
+          position: "absolute",
+          top: -45,
+          width: 700,
+        }}
+      />
+      <svg
+        height="100%"
+        viewBox="0 0 1280 720"
+        width="100%"
+        style={{ position: "absolute" }}
+      >
+        <g transform="translate(-45 -25) scale(1.08)">
+          <MiloPayoffPuppet frame={frame} mode="play" x={315} y={662} />
+          <MaraPayoffPuppet frame={frame} mode="play" x={520} y={660} />
+          <GuardianPayoffPuppet frame={frame} mode="play" x={930} y={655} />
+          <GlowMoth
+            phase={frame / 6}
+            scale={0.95 + release * 0.18}
+            x={clampInterpolate(release, [0, 0.55, 1], [690, 715, 755])}
+            y={clampInterpolate(release, [0, 0.55, 1], [384, 290, 215])}
+          />
+        </g>
+        <circle
+          cx={clampInterpolate(release, [0, 1], [700, 770])}
+          cy={clampInterpolate(release, [0, 1], [390, 208])}
+          fill="none"
+          opacity={halo * 0.68}
+          r={42 + halo * 36}
+          stroke="rgba(255,247,203,.9)"
+          strokeWidth="4"
+        />
+      </svg>
+      <GeneratedSetForeground mode="clearing" travel={0.035 + p * 0.025} />
+    </ShotShell>
+  );
+};
+
+const shotComponents: Record<string, React.FC> = {
+  "run-to-the-ruin": RunApproachShot,
+  "cross-the-threshold": ThresholdShot,
+  "listen-in-the-dark": ListenShot,
+  "empty-corridor": EmptyCorridorShot,
+  "sneak-entrance": SneakShot,
+  "creature-reveal": CreatureRevealShot,
+  "eye-close-up": EyeCloseShot,
+  "kids-reaction": KidsReactionShot,
+  "spark-sneeze": SneezeShot,
+  "escape-run": EscapeShot,
+  "friendly-offer": FriendlyOfferShot,
+  "understand-and-play": FriendlyPlayShot,
+};
 
 export const KidsShowcaseComposition: React.FC<
   KidsShowcaseCompositionProps
@@ -1425,8 +1863,8 @@ export const KidsShowcaseComposition: React.FC<
             width: KIDS_SHOWCASE_WIDTH,
           }}
         >
-          {kidsShowcaseShots.map((shot, index) => {
-            const Shot = shotComponents[index] ?? RunApproachShot;
+          {kidsShowcaseShots.map((shot) => {
+            const Shot = shotComponents[shot.id] ?? RunApproachShot;
             return (
               <Sequence
                 durationInFrames={shot.durationInFrames}
