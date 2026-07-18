@@ -25,6 +25,7 @@ import {
   finalizeAssetReviewRecord,
   finalizeGenerationJob,
   finalizeProductionBundle,
+  finalizeScriptApprovalRecord,
   generationExchangeStateSchema,
   generationJobDraftSchema,
   hashCanonical,
@@ -375,6 +376,7 @@ async function main() {
   const engineeringRights = (label: string) => ({sourceType: "project-owned" as const, provider: "StoryStage engineering proof", usageNotes: `Generated locally for the ${label} proof; not sourced from third-party media.`, clearanceStatus: "cleared" as const, evidenceReference: `SS-004 engineering proof ledger: ${label}`});
   const approvedBundle = finalizeProductionBundle({
     ...revisionTwoDraft,
+    scriptApproval: finalizeScriptApprovalRecord(revisionTwoDraft.production, approvedAt),
     audioMix: {profile: "kids", voiceGain: .95, musicDecision: "approved-master", musicGain: .08, musicLoop: true, transitionSfx: "off", transitionSfxGain: .1, reviewed: true},
     musicTrack: {id: `music-${musicContentHash.slice(0, 20)}`, contentHash: musicContentHash, relativeFile: musicRelativeFile, sourceFileName: "engineering-music-proof.wav", codec: "pcm-wav", durationInSeconds: revisionTwoDraft.renderPlan.durationInFrames / revisionTwoDraft.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt, rights: engineeringRights("music master")},
     soundEffectAssets: [{id: `sfx-${soundEffectContentHash.slice(0, 20)}`, contentHash: soundEffectContentHash, relativeFile: soundEffectRelativeFile, sourceFileName: "engineering-impact-proof.wav", codec: "pcm-wav", durationInSeconds: .35, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: approvedAt, approvalStatus: "approved", approvedAt, rights: engineeringRights("sound effect master")}],

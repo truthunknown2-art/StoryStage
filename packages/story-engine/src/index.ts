@@ -20,6 +20,7 @@ export * from "./public-show-pack-candidate";
 export * from "./rig-manifests";
 export * from "./sample-script";
 export * from "./script-parser";
+export * from "./script-approval";
 export * from "./show-pack";
 export * from "./timing";
 export * from "./visual-requirements";

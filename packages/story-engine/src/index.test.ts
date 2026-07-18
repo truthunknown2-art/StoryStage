@@ -19,6 +19,7 @@ import {
   finalizeRigDiagnosticReport,
   finalizePublicShowPackReviewRecord,
   finalizeProductionBundle,
+  finalizeScriptApprovalRecord,
   generationBriefsMatchAuthoritativePlan,
   generationBriefSchema,
   generationJobDraftSchema,
@@ -43,7 +44,9 @@ import {
   verifyAssetReviewRecordHash,
   verifyImportEvidence,
   verifyRigDiagnosticReportHash,
+  verifyScriptApprovalRecordHash,
   verifyShowPackHash,
+  scriptApprovalMatchesProduction,
   type DirectingProfile,
   type ProjectType,
   type ShowPack,
@@ -282,6 +285,22 @@ describe("StoryStage story engine", () => {
     expect(() => finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: {...build.renderPlan, shots: build.renderPlan.shots.map((shot, index) => index === 0 ? {...shot, title: "Divergent shot with retained hash"} : shot)}, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z")).toThrow(/exactly derive|content hash/i);
   });
 
+  it("binds human editorial approval to the exact production script", () => {
+    const build = buildFor("explainer", "studio", "production-script-lock");
+    const approvedAt = "2026-07-17T00:00:00.000Z";
+    const scriptApproval = finalizeScriptApprovalRecord(build.draft, approvedAt);
+    const unrelatedRevision = {...build.draft, revision: build.draft.revision + 1};
+    expect(verifyScriptApprovalRecordHash(scriptApproval)).toBe(true);
+    expect(scriptApprovalMatchesProduction(scriptApproval, build.draft)).toBe(true);
+    expect(scriptApprovalMatchesProduction(scriptApproval, unrelatedRevision)).toBe(true);
+    expect(scriptApprovalMatchesProduction(scriptApproval, {...build.draft, script: `${build.draft.script}\nOne changed word.`})).toBe(false);
+    expect(verifyScriptApprovalRecordHash({...scriptApproval, approvedAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
+
+    const bundleDraft = {schemaVersion: "1.0" as const, production: build.draft, overrides: [], scriptApproval, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate};
+    expect(finalizeProductionBundle(bundleDraft, approvedAt).scriptApproval?.contentHash).toBe(scriptApproval.contentHash);
+    expect(() => finalizeProductionBundle({...bundleDraft, production: {...build.draft, script: `${build.draft.script}\nOne changed word.`}}, approvedAt)).toThrow(/exact production script/i);
+  });
+
   it("rehydrates the exact pre-mouth-cue plan shape for one-way workspace migration", () => {
     const build = buildFor("explainer", "studio", "production-legacy-mouth-cues");
     const {contentHash: _contentHash, ...currentPayload} = build.renderPlan;
@@ -412,8 +431,8 @@ describe("StoryStage story engine", () => {
 
   it("keeps the full-production renderer behind the actual approval gates", () => {
     const build = buildFor("explainer");
-    const initialBlockers = getFullProductionRenderBlockers({approvedAssetVersions: [], audioMix: {profile: "explainer", voiceGain: 1, musicDecision: "pending", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: false}, overrides: [], renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: []});
-    expect(initialBlockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["approved-art", "audio-mix", "source-acquisition", "spoken-timing", "visual-bindings", "voice-master"]));
+    const initialBlockers = getFullProductionRenderBlockers({approvedAssetVersions: [], audioMix: {profile: "explainer", voiceGain: 1, musicDecision: "pending", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: false}, overrides: [], production: build.draft, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: []});
+    expect(initialBlockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["approved-art", "audio-mix", "script-approval", "source-acquisition", "spoken-timing", "visual-bindings", "voice-master"]));
 
     const spokenShotIds = build.renderPlan.shots.filter((shot) => shot.actions.some((action) => action.detail.type === "talk") || Boolean(shot.caption)).map((shot) => shot.id);
     const approvedAssetVersion = {assetId: "approved-full-render-art", version: "1.0.0", requirementId: build.resolvedPlan.requirements[0]!.id, contentHash: "f".repeat(64), relativeFile: "approved-full-render-art/1.0.0/manifest.json", provenance: {sourceType: "generated" as const, provider: "chatgpt-images", usageNotes: "Human-approved production art"}, approvedAt: "2026-07-17T00:00:00.000Z"};
@@ -421,8 +440,10 @@ describe("StoryStage story engine", () => {
       approvedAssetVersions: [approvedAssetVersion],
       audioMix: {profile: "explainer", voiceGain: 1, musicDecision: "none", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: true},
       overrides: spokenShotIds.map((shotId) => ({shotId, timingLocked: true as const})),
+      production: build.draft,
       renderPlan: {...build.renderPlan, shots: build.renderPlan.shots.map((shot) => ({...shot, visualBindings: shot.visualBindings.map((binding) => ({...binding, ...(binding.role === "character" ? {assetId: approvedAssetVersion.assetId} : {}), resolutionStatus: "approved" as const}))}))},
       resolvedPlan: {...build.resolvedPlan, generationBriefs: [], requirements: build.resolvedPlan.requirements.map((requirement) => ({...requirement, status: "resolved" as const}))},
+      scriptApproval: finalizeScriptApprovalRecord(build.draft, "2026-07-17T00:00:00.000Z"),
       soundEffectAssets: [],
       voiceTrack: {id: "voice-full-render-ready", contentHash: "a".repeat(64), relativeFile: "voice/production-one/r1/ready.wav", sourceFileName: "ready.wav", codec: "pcm-wav", durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: "2026-07-17T00:00:00.000Z", approvalStatus: "approved", approvedAt: "2026-07-17T00:01:00.000Z", rights: {sourceType: "user-owned", provider: "Operator", usageNotes: "Original narration recording.", clearanceStatus: "cleared", evidenceReference: "Operator recording ledger 2026-07-17"}},
     });

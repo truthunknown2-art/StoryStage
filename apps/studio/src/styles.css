@@ -236,6 +236,25 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .metric > span { color: #5e6a66; font-size: 8px; text-transform: uppercase; }
 .metric strong { color: #dce4e0; font-size: 18px; margin-top: 4px; }
 .metric small { color: #65716d; font-size: 8px; margin-top: 3px; }
+.script-approval-card { align-items: start; background: linear-gradient(100deg, #211b12, #121817 68%); border: 1px solid #5a4827; border-radius: 10px; display: grid; gap: 14px; grid-template-columns: auto minmax(0, 1fr) minmax(220px, 290px); margin-top: 13px; padding: 16px; }
+.script-approval-card.is-approved { background: linear-gradient(100deg, #14231a, #111817 68%); border-color: #386047; }
+.script-approval-icon { align-items: center; background: #332817; border: 1px solid #6b5228; border-radius: 8px; color: #ebc66a; display: flex; height: 42px; justify-content: center; width: 42px; }
+.script-approval-card.is-approved .script-approval-icon { background: #1a3022; border-color: #426f52; color: #8ed1a6; }
+.script-approval-copy h2 { color: #e1ded4; font-size: 14px; margin: 4px 0; }
+.script-approval-copy > p:not(.eyebrow) { color: #80776a; font-size: 8px; line-height: 1.5; }
+.script-approval-copy > span { color: #625e55; display: block; font-family: "DM Mono", "Consolas", monospace; font-size: 7px; margin-top: 7px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.script-approval-copy details { margin-top: 8px; }
+.script-approval-copy summary { color: #b89c5a; cursor: pointer; font-size: 8px; font-weight: 700; }
+.script-approval-copy pre { background: #0c1111; border: 1px solid #303733; border-radius: 6px; color: #aab1ad; font-family: "DM Mono", "Consolas", monospace; font-size: 8px; line-height: 1.55; margin: 9px 0 0; max-height: 240px; overflow: auto; padding: 11px; white-space: pre-wrap; }
+.script-approval-action { align-content: center; align-self: stretch; border-left: 1px solid #3e392c; display: grid; gap: 8px; padding-left: 15px; }
+.script-approval-card.is-approved .script-approval-action { color: #8ed1a6; grid-template-columns: auto 1fr; }
+.script-approval-action label { align-items: flex-start; color: #9b907b; display: flex; font-size: 8px; gap: 7px; line-height: 1.4; }
+.script-approval-action input { accent-color: #d9b658; margin: 0; }
+.script-approval-action button { align-items: center; background: #d9b658; border: 0; border-radius: 6px; color: #17140d; display: flex; font-size: 8px; font-weight: 800; gap: 6px; justify-content: center; padding: 9px 10px; }
+.script-approval-action button:disabled { cursor: not-allowed; opacity: .35; }
+.script-approval-action small { color: #665f53; font-size: 7px; line-height: 1.4; }
+.script-approval-card.is-approved .script-approval-action strong { color: #9bd5ae; font-size: 9px; }
+.script-approval-card.is-approved .script-approval-action small { grid-column: 2; }
 .live-production-preview { background: radial-gradient(circle at 10% 0, rgba(125,191,153,.08), transparent 34%), #0d1213; border: 1px solid #34413d; border-radius: 12px; display: grid; gap: 0; margin-top: 14px; overflow: hidden; }
 .live-production-preview > header { align-items: center; border-bottom: 1px solid #293330; display: flex; justify-content: space-between; padding: 15px 17px; }
 .live-production-preview > header h2 { color: #e0e7e3; font-size: 15px; margin: 3px 0 4px; }
@@ -717,4 +736,6 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   .exchange-actions.is-desktop { grid-template-columns: 1fr 1fr; }
   .audio-mix-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .prepared-set-grid { grid-template-columns: 1fr; }
+  .script-approval-card { grid-template-columns: auto minmax(0, 1fr); }
+  .script-approval-action { border-left: 0; border-top: 1px solid #3e392c; grid-column: 2; padding-left: 0; padding-top: 12px; }
 }

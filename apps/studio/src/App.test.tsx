@@ -2,7 +2,7 @@ import {act, cleanup, fireEvent, render, screen, waitFor, within} from "@testing
 import userEvent from "@testing-library/user-event";
 import {afterEach, describe, expect, it, vi} from "vitest";
 import type {StoryStageDesktopBridge} from "@storystage/contracts";
-import {audioMixSchema, buildAnimaticSync, createRookPilot001Fixture, finalizeProductionBundle, getFullProductionRenderBlockers, type ApprovedAssetVersion} from "@storystage/story-engine";
+import {audioMixSchema, buildAnimaticSync, createRookPilot001Fixture, finalizeProductionBundle, finalizeScriptApprovalRecord, getFullProductionRenderBlockers, type ApprovedAssetVersion} from "@storystage/story-engine";
 import {App, buildChatGptAssetPrompt} from "./App";
 
 afterEach(() => {
@@ -68,7 +68,7 @@ function createApprovedRookTargetBundle() {
   const draft = {...fixture.draft, revision: 2};
   const build = buildAnimaticSync({draft, overrides: fixture.overrides, approvedAssetVersions: [approved]});
   const audioMix = audioMixSchema.parse({profile: "explainer", voiceGain: 1, musicDecision: "pending", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: false});
-  return finalizeProductionBundle({schemaVersion: "1.0", production: draft, overrides: fixture.overrides, approvedAssetVersions: [approved], audioMix, soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T20:30:00.000Z");
+  return finalizeProductionBundle({schemaVersion: "1.0", production: draft, overrides: fixture.overrides, approvedAssetVersions: [approved], audioMix, scriptApproval: finalizeScriptApprovalRecord(fixture.draft, "2026-07-17T20:29:00.000Z"), soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T20:30:00.000Z");
 }
 
 function createPictureCompleteRookBundle() {
@@ -82,13 +82,14 @@ function createPictureCompleteRookBundle() {
   });
   const draft = {...fixture.draft, revision: 2};
   const build = buildAnimaticSync({draft, overrides: fixture.overrides, approvedAssetVersions});
-  return finalizeProductionBundle({schemaVersion: "1.0", production: draft, overrides: fixture.overrides, approvedAssetVersions, soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
+  return finalizeProductionBundle({schemaVersion: "1.0", production: draft, overrides: fixture.overrides, approvedAssetVersions, scriptApproval: finalizeScriptApprovalRecord(draft, approvedAt), soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
 }
 
 function createPictureBlockedRookBundle() {
   const fixture = createRookPilot001Fixture();
   const build = buildAnimaticSync(fixture);
-  return finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides: fixture.overrides, approvedAssetVersions: [], soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T20:00:00.000Z");
+  const approvedAt = "2026-07-17T20:00:00.000Z";
+  return finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides: fixture.overrides, approvedAssetVersions: [], scriptApproval: finalizeScriptApprovalRecord(fixture.draft, approvedAt), soundEffectAssets: [], soundEffectCues: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
 }
 
 function bundleSummary(bundle: ReturnType<typeof createPictureBlockedRookBundle>) {
@@ -109,8 +110,9 @@ function createGateReadyRookBundle() {
   const build = buildAnimaticSync({draft: fixture.draft, overrides, approvedAssetVersions});
   const audioMix = audioMixSchema.parse({profile: "explainer", voiceGain: 1, musicDecision: "none", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: true});
   const voiceTrack = {id: "voice-finish-ready", contentHash: "f".repeat(64), relativeFile: `voice/${fixture.draft.productionId}/r${fixture.draft.revision}/${"f".repeat(64)}.wav`, sourceFileName: "final-rook-narration.wav", codec: "pcm-wav" as const, durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 24 as const, importedAt: approvedAt, approvalStatus: "approved" as const, approvedAt, rights: {sourceType: "user-owned" as const, provider: "Operator", usageNotes: "Original narration recording.", clearanceStatus: "cleared" as const, evidenceReference: "Operator recording ledger 2026-07-17"}};
-  expect(getFullProductionRenderBlockers({approvedAssetVersions, audioMix, overrides, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: [], soundEffectCues: [], voiceTrack})).toEqual([]);
-  return finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides, approvedAssetVersions, audioMix, soundEffectAssets: [], soundEffectCues: [], voiceTrack, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
+  const scriptApproval = finalizeScriptApprovalRecord(fixture.draft, approvedAt);
+  expect(getFullProductionRenderBlockers({approvedAssetVersions, audioMix, overrides, production: fixture.draft, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, scriptApproval, soundEffectAssets: [], soundEffectCues: [], voiceTrack})).toEqual([]);
+  return finalizeProductionBundle({schemaVersion: "1.0", production: fixture.draft, overrides, approvedAssetVersions, audioMix, scriptApproval, soundEffectAssets: [], soundEffectCues: [], voiceTrack, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, approvedAt);
 }
 
 function createPlaybackValidationBundle() {
@@ -127,11 +129,11 @@ function createPlaybackValidationBundle() {
     {id: "sfx-cue-validation-earlier", assetContentHash: contentHash, shotId: captionShot.id, offsetInFrames: 0, gain: .5, label: "Earlier validation hit"},
   ];
   const voiceTrack = {...base.voiceTrack!, durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps};
-  return finalizeProductionBundle({schemaVersion: "1.0", production: base.production, overrides, approvedAssetVersions: base.approvedAssetVersions, audioMix: base.audioMix, soundEffectAssets, soundEffectCues, voiceTrack, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, base.savedAt);
+  return finalizeProductionBundle({schemaVersion: "1.0", production: base.production, overrides, approvedAssetVersions: base.approvedAssetVersions, audioMix: base.audioMix, scriptApproval: base.scriptApproval, soundEffectAssets, soundEffectCues, voiceTrack, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, base.savedAt);
 }
 
 function refinalizeWithVoice(bundle: ReturnType<typeof createGateReadyRookBundle>, voiceTrack: NonNullable<ReturnType<typeof createGateReadyRookBundle>["voiceTrack"]>) {
-  return finalizeProductionBundle({schemaVersion: "1.0", production: bundle.production, overrides: bundle.overrides, approvedAssetVersions: bundle.approvedAssetVersions ?? [], ...(bundle.audioMix ? {audioMix: bundle.audioMix} : {}), ...(bundle.musicTrack ? {musicTrack: bundle.musicTrack} : {}), soundEffectAssets: bundle.soundEffectAssets ?? [], soundEffectCues: bundle.soundEffectCues ?? [], voiceTrack, resolvedPlan: bundle.resolvedPlan, renderPlan: bundle.renderPlan, metrics: bundle.metrics, estimate: bundle.estimate}, bundle.savedAt);
+  return finalizeProductionBundle({schemaVersion: "1.0", production: bundle.production, overrides: bundle.overrides, approvedAssetVersions: bundle.approvedAssetVersions ?? [], ...(bundle.audioMix ? {audioMix: bundle.audioMix} : {}), ...(bundle.musicTrack ? {musicTrack: bundle.musicTrack} : {}), ...(bundle.scriptApproval ? {scriptApproval: bundle.scriptApproval} : {}), soundEffectAssets: bundle.soundEffectAssets ?? [], soundEffectCues: bundle.soundEffectCues ?? [], voiceTrack, resolvedPlan: bundle.resolvedPlan, renderPlan: bundle.renderPlan, metrics: bundle.metrics, estimate: bundle.estimate}, bundle.savedAt);
 }
 
 describe("StoryStage studio", () => {
@@ -275,7 +277,7 @@ describe("StoryStage studio", () => {
     expect(revisionTwoSave?.approvedAssetVersions?.[0]?.contentHash).toBe(target.approvedAssetVersions?.[0]?.contentHash);
     expect(screen.getByText("Approved and bound")).toBeInTheDocument();
 
-    const pictureBlockers = getFullProductionRenderBlockers({approvedAssetVersions: target.approvedAssetVersions ?? [], audioMix: target.audioMix, overrides: target.overrides, renderPlan: target.renderPlan, resolvedPlan: target.resolvedPlan, soundEffectAssets: target.soundEffectAssets, soundEffectCues: target.soundEffectCues, voiceTrack: target.voiceTrack}).filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id));
+    const pictureBlockers = getFullProductionRenderBlockers({approvedAssetVersions: target.approvedAssetVersions ?? [], audioMix: target.audioMix, overrides: target.overrides, production: target.production, renderPlan: target.renderPlan, resolvedPlan: target.resolvedPlan, scriptApproval: target.scriptApproval, soundEffectAssets: target.soundEffectAssets, soundEffectCues: target.soundEffectCues, voiceTrack: target.voiceTrack}).filter((blocker) => ["approved-art", "source-acquisition", "visual-bindings"].includes(blocker.id));
     expect(pictureBlockers.map((blocker) => blocker.id)).toEqual(["source-acquisition", "visual-bindings"]);
     await user.click(screen.getByRole("button", {name: /Direction/}));
     const upgradePath = within(screen.getByRole("region", {name: "Live production preview"})).getByRole("region", {name: "First cut upgrade path"});
@@ -314,7 +316,7 @@ describe("StoryStage studio", () => {
     expect(revealDeliveryBundle).toHaveBeenCalledWith(manifestHash);
     await user.click(screen.getByRole("button", {name: "Finish episode"}));
     expect(screen.getByRole("heading", {name: "Episode delivered"})).toBeInTheDocument();
-    expect(screen.getByText("6/6 complete")).toBeInTheDocument();
+    expect(screen.getByText("7/7 complete")).toBeInTheDocument();
     expect(screen.getByText(/Verified delivery is current/)).toBeInTheDocument();
   });
 
@@ -358,6 +360,26 @@ describe("StoryStage studio", () => {
     expect(screen.getAllByRole("button", {name: /Select shot/}).length).toBeGreaterThan(10);
   });
 
+  it("records editorial approval only after explicit review of the exact script", async () => {
+    const saveProductionBundle = vi.fn(async (request: Parameters<StoryStageDesktopBridge["saveProductionBundle"]>[0]) => {
+      const draft = JSON.parse(request.serializedDraft) as {production: {productionId: string; revision: number}};
+      return {ok: true as const, productionId: draft.production.productionId, revision: draft.production.revision, contentHash: "a".repeat(64)};
+    });
+    window.storyStage = makeDesktopBridge({saveProductionBundle});
+    const user = await createDefaultProduction();
+    const approve = screen.getByRole("button", {name: "Approve exact script"});
+    expect(approve).toBeDisabled();
+    expect(screen.getByText(/Script SHA-256 [a-f0-9]{64}/)).toBeInTheDocument();
+    await waitFor(() => expect(saveProductionBundle).toHaveBeenCalled());
+    expect(saveProductionBundle.mock.calls.map(([request]) => JSON.parse(request.serializedDraft) as {scriptApproval?: unknown}).every((draft) => draft.scriptApproval === undefined)).toBe(true);
+
+    await user.click(screen.getByRole("checkbox", {name: /reviewed the exact screenplay/i}));
+    await user.click(approve);
+
+    expect(await screen.findByRole("heading", {name: "Exact script approved"})).toBeInTheDocument();
+    await waitFor(() => expect(saveProductionBundle.mock.calls.map(([request]) => JSON.parse(request.serializedDraft) as {scriptApproval?: {decision: string; reviewMethod: string}}).some((draft) => draft.scriptApproval?.decision === "approved" && draft.scriptApproval.reviewMethod === "human-editorial-review")).toBe(true));
+  });
+
   it("uses a functional frame playhead to synchronize the timeline and inspector", async () => {
     const user = await createDefaultProduction();
 
@@ -374,16 +396,16 @@ describe("StoryStage studio", () => {
     expect(screen.getByRole("button", {name: "Play direction timeline"})).toBeInTheDocument();
   });
 
-  it("labels a silent first cut and routes its next upgrade to picture review", async () => {
+  it("labels a silent first cut and routes its first upgrade to script review", async () => {
     const user = await createDefaultProduction();
     const preview = screen.getByRole("region", {name: "Live production preview"});
     expect(within(preview).getByText("Silent first cut · add narration")).toBeInTheDocument();
     const path = within(preview).getByRole("region", {name: "First cut upgrade path"});
-    expect(within(path).getByText("Next: Review picture")).toBeInTheDocument();
+    expect(within(path).getByText("Next: Review script")).toBeInTheDocument();
     expect(screen.getByRole("slider", {name: "Production playhead"})).toHaveValue("0");
 
-    await user.click(within(path).getByRole("button", {name: "Review picture"}));
-    expect(screen.getByRole("button", {name: /Assets/})).toHaveClass("is-active");
+    await user.click(within(path).getByRole("button", {name: "Review script"}));
+    expect(document.getElementById("finish-script-action")).toHaveFocus();
   });
 
   it("shows evidence-backed confidence and seeks the first playback validation cue", async () => {
@@ -461,12 +483,16 @@ describe("StoryStage studio", () => {
     await user.click(screen.getByRole("button", {name: "Finish episode"}));
 
     expect(screen.getByRole("heading", {name: "Finish episode"})).toBeInTheDocument();
-    expect(screen.getByRole("region", {name: "Next finish action"})).toHaveTextContent("Review and approve picture");
+    expect(screen.getByRole("region", {name: "Next finish action"})).toHaveTextContent("Approve the exact script");
     expect(screen.getByText(/asset approvals still required/)).toBeInTheDocument();
     expect(screen.getByText("Desktop renderer unavailable in this host.")).toBeInTheDocument();
     expect(screen.getByText(/Final delivery stays locked/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", {name: "Review artwork"}));
+    await user.click(screen.getByRole("button", {name: "Review script"}));
+    await waitFor(() => expect(document.getElementById("finish-script-action")).toHaveFocus());
+    await user.click(screen.getByRole("button", {name: "Finish episode"}));
+    const pictureStep = screen.getByText("Review and approve picture").closest("li")!;
+    await user.click(within(pictureStep).getByRole("button", {name: "Open"}));
     expect(screen.getByRole("heading", {name: "Manual ChatGPT Images"})).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("button", {name: /Review generation export/})).toHaveFocus());
 
@@ -504,7 +530,7 @@ describe("StoryStage studio", () => {
     await user.click(screen.getByRole("button", {name: "Finish episode"}));
 
     expect(screen.getByRole("region", {name: "Next finish action"})).toHaveTextContent("Render and verify delivery");
-    expect(screen.getByText("5/6 complete")).toBeInTheDocument();
+    expect(screen.getByText("6/7 complete")).toBeInTheDocument();
     await user.click(screen.getByRole("button", {name: "Render & publish delivery"}));
     expect(startProductionRender).toHaveBeenCalledWith({productionId: bundle.production.productionId, revision: bundle.production.revision, scope: "full-production"});
     expect(screen.getByRole("button", {name: "Final render running"})).toBeDisabled();
@@ -665,7 +691,8 @@ describe("StoryStage studio", () => {
     await user.click(screen.getByRole("button", {name: "Create first cut"}));
     await waitFor(() => expect(screen.getByText(/Saved aaaaaaaa/)).toBeInTheDocument());
     await user.click(screen.getByRole("button", {name: "Finish episode"}));
-    await user.click(screen.getByRole("button", {name: "Review Rook"}));
+    const pictureStep = screen.getByText("Review Rook and episode picture").closest("li")!;
+    await user.click(within(pictureStep).getByRole("button", {name: "Open"}));
 
     const reviewRegion = await screen.findByRole("generic", {name: "Rook review acknowledgements"}, {timeout: 3_000});
     await waitFor(() => expect(within(reviewRegion).getAllByRole("checkbox")[0]).toHaveFocus(), {timeout: 3_000});

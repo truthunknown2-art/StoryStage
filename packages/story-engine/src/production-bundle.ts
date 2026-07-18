@@ -1,6 +1,7 @@
 import {z} from "zod";
 import {hashCanonical} from "./canonical-hash";
 import {compileAnimation, verifyRenderPlanHash} from "./animation-compiler";
+import {scriptApprovalMatchesProduction, scriptApprovalRecordSchema, verifyScriptApprovalRecordHash} from "./script-approval";
 import {
   audioMixSchema,
   directedPlanMetricsSchema,
@@ -31,6 +32,7 @@ const productionBundleFields = {
   soundEffectAssets: z.array(soundEffectAssetSchema).optional(),
   soundEffectCues: z.array(soundEffectCueSchema).optional(),
   voiceTrack: voiceTrackSchema.optional(),
+  scriptApproval: scriptApprovalRecordSchema.optional(),
 };
 
 const withoutTimingDrivenMouthCues = (plan: z.infer<typeof frameAccurateRenderPlanSchema>) => {
@@ -51,6 +53,7 @@ const validateProductionBundle = (bundle: z.infer<z.ZodObject<typeof productionB
   if (bundle.resolvedPlan.creativePlan.productionId !== identity || bundle.renderPlan.productionId !== identity) context.addIssue({code: "custom", message: "Production bundle plans must share the production identity."});
   if (bundle.resolvedPlan.creativePlan.planRevision !== revision || bundle.renderPlan.planRevision !== revision) context.addIssue({code: "custom", message: "Production bundle plans must share the production revision."});
   if (bundle.resolvedPlan.showPack.id !== bundle.production.showPackId || bundle.renderPlan.showPack.id !== bundle.production.showPackId || bundle.resolvedPlan.showPack.contentHash !== bundle.renderPlan.showPack.contentHash) context.addIssue({code: "custom", message: "Production bundle plans must share the authoritative Show Pack identity and hash."});
+  if (bundle.scriptApproval && (!verifyScriptApprovalRecordHash(bundle.scriptApproval) || !scriptApprovalMatchesProduction(bundle.scriptApproval, bundle.production))) context.addIssue({code: "custom", path: ["scriptApproval"], message: "Script approval must be hash-valid and bind the exact production script."});
   const compiledRenderPlan = compileAnimation(bundle.resolvedPlan);
   const matchesCurrentCompiler = hashCanonical(compiledRenderPlan) === hashCanonical(bundle.renderPlan);
   const matchesPreMouthCueCompiler = hashCanonical(withoutTimingDrivenMouthCues(compiledRenderPlan)) === hashCanonical(bundle.renderPlan);

@@ -173,7 +173,7 @@ export async function renderProduction(options: RenderProductionOptions): Promis
   const productionBundle = productionBundleSchema.parse(JSON.parse(bundleBytes.toString("utf8")));
   if (!verifyProductionBundleHash(productionBundle) || productionBundle.contentHash !== options.bundleContentHash) throw new Error("Production render snapshot failed exact derivation or content-hash verification.");
   if (options.scope === "full-production") {
-    const blockers = getFullProductionRenderBlockers({approvedAssetVersions: productionBundle.approvedAssetVersions ?? [], audioMix: productionBundle.audioMix, musicTrack: productionBundle.musicTrack, overrides: productionBundle.overrides, renderPlan: productionBundle.renderPlan, resolvedPlan: productionBundle.resolvedPlan, soundEffectAssets: productionBundle.soundEffectAssets, soundEffectCues: productionBundle.soundEffectCues, voiceTrack: productionBundle.voiceTrack});
+    const blockers = getFullProductionRenderBlockers({approvedAssetVersions: productionBundle.approvedAssetVersions ?? [], audioMix: productionBundle.audioMix, musicTrack: productionBundle.musicTrack, overrides: productionBundle.overrides, production: productionBundle.production, renderPlan: productionBundle.renderPlan, resolvedPlan: productionBundle.resolvedPlan, scriptApproval: productionBundle.scriptApproval, soundEffectAssets: productionBundle.soundEffectAssets, soundEffectCues: productionBundle.soundEffectCues, voiceTrack: productionBundle.voiceTrack});
     if (blockers.length > 0) throw new Error(`Full production render is blocked: ${blockers.map((blocker) => blocker.message).join(" ")}`);
   }
   const approvedVersions = productionBundle.approvedAssetVersions ?? [];

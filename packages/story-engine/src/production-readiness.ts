@@ -1,7 +1,8 @@
-import type {AudioMix, ApprovedAssetVersion, FrameAccurateRenderPlan, MusicTrack, ResolvedProductionPlan, ShotOverride, SoundEffectAsset, SoundEffectCue, VoiceTrack} from "./model";
+import type {AudioMix, ApprovedAssetVersion, FrameAccurateRenderPlan, MusicTrack, ProductionDraft, ResolvedProductionPlan, ShotOverride, SoundEffectAsset, SoundEffectCue, VoiceTrack} from "./model";
+import {scriptApprovalMatchesProduction, type ScriptApprovalRecord} from "./script-approval";
 
 export type FullProductionRenderBlocker = {
-  id: "approved-art" | "audio-mix" | "custom-sfx" | "rights-clearance" | "source-acquisition" | "spoken-timing" | "visual-bindings" | "voice-master";
+  id: "approved-art" | "audio-mix" | "custom-sfx" | "rights-clearance" | "script-approval" | "source-acquisition" | "spoken-timing" | "visual-bindings" | "voice-master";
   message: string;
 };
 
@@ -10,8 +11,10 @@ export type FullProductionReadinessInput = {
   audioMix?: AudioMix;
   musicTrack?: MusicTrack;
   overrides: ShotOverride[];
+  production: ProductionDraft;
   renderPlan: FrameAccurateRenderPlan;
   resolvedPlan: ResolvedProductionPlan;
+  scriptApproval?: ScriptApprovalRecord;
   soundEffectAssets?: SoundEffectAsset[];
   soundEffectCues?: SoundEffectCue[];
   voiceTrack?: VoiceTrack;
@@ -19,6 +22,7 @@ export type FullProductionReadinessInput = {
 
 export function getFullProductionRenderBlockers(input: FullProductionReadinessInput): FullProductionRenderBlocker[] {
   const blockers: FullProductionRenderBlocker[] = [];
+  if (!scriptApprovalMatchesProduction(input.scriptApproval, input.production)) blockers.push({id: "script-approval", message: "The exact current script needs content-bound human editorial approval."});
   const unresolvedRequirements = input.resolvedPlan.requirements.filter((requirement) => requirement.status !== "resolved").length;
   if (unresolvedRequirements > 0 || input.resolvedPlan.generationBriefs.length > 0) blockers.push({id: "source-acquisition", message: `${Math.max(unresolvedRequirements, input.resolvedPlan.generationBriefs.length)} visual requirements still need acquisition or approval.`});
   if (input.approvedAssetVersions.length === 0) blockers.push({id: "approved-art", message: "At least one prepared human-approved art version must be bound."});
