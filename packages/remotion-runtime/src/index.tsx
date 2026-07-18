@@ -132,7 +132,10 @@ export {
   cv001RigLayout,
   getCv001AttachmentContinuity,
   getCv001LanternHandAnchor,
+  getCv001LanternHandTransform,
   getCv001LanternPickupAnchor,
+  getCv001LanternPickupTransform,
 } from "./cv001-rig-kinematics";
+export type { Cv001WorldTransform } from "./cv001-rig-kinematics";
 export { assertDirectedShotMotionBinding } from "./production-motion-binding";
 export type { DirectedShotMotionBinding } from "./production-motion-binding";

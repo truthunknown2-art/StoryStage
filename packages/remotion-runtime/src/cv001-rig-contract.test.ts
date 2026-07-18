@@ -22,6 +22,8 @@ describe("CV-001 render contract", () => {
     const continuity = getCv001AttachmentContinuity(cv001LanternMotionProgram);
     expect(continuity.startFrame).toBe(48);
     expect(continuity.distance).toBeLessThan(0.001);
+    expect(continuity.rotationDelta).toBeLessThan(0.001);
+    expect(continuity.scaleDelta).toBeLessThan(0.001);
   });
 
   it("binds the program to an exact non-truncated shot", () => {

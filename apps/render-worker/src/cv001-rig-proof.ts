@@ -108,9 +108,13 @@ async function main(): Promise<void> {
   const attachmentContinuity = getCv001AttachmentContinuity(
     cv001LanternMotionProgram,
   );
-  if (attachmentContinuity.distance >= 0.001)
+  if (
+    attachmentContinuity.distance >= 0.001 ||
+    attachmentContinuity.rotationDelta >= 0.001 ||
+    attachmentContinuity.scaleDelta >= 0.001
+  )
     throw new Error(
-      `Lantern attachment teleports by ${attachmentContinuity.distance}px.`,
+      `Lantern attachment is discontinuous: ${attachmentContinuity.distance}px, ${attachmentContinuity.rotationDelta}deg, ${attachmentContinuity.scaleDelta} scale delta.`,
     );
   const frames = [0, 24, 47, 48, 70, 100, 119];
   const stills = [];

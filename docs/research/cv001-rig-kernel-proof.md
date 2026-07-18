@@ -14,7 +14,7 @@ Status: corrected engineering motion proof awaiting Pro re-audit, not final char
 - A shot-bound `directedMotion` path inside `ProductionComposition`. The binding must identify an existing shot, match the plan frame rate, exactly match the shot duration, and fit inside the rendered slice without truncation.
 - A repeatable render command: `pnpm --filter @storystage/render-worker render:cv001-rig-proof`.
 
-The local proof render now goes through `StoryStageProduction`, not the standalone proof composition. It produces an H.264 MP4, seven exact-frame PNGs, and a JSON report under ignored `artifacts/CV-001/rig-kernel-proof/`. The report proves plan, program, and rendered duration are all 120 frames. It also records the lantern's free and attached world anchors at frame 48 and requires a continuity distance below 0.001 pixels; the current measured distance is zero. The committed [contact sheet](../design/creator-first-reset/cv001-rig-kernel-proof-contact-sheet.png) includes adjacent frames 47 and 48 so the pickup boundary is directly inspectable.
+The local proof render now goes through `StoryStageProduction`, not the standalone proof composition. It produces an H.264 MP4, seven exact-frame PNGs, and a JSON report under ignored `artifacts/CV-001/rig-kernel-proof/`. The report proves plan, program, and rendered duration are all 120 frames. It also records the lantern's full free and attached world transform at frame 48 and requires position, rotation, and scale deltas below 0.001; all three current deltas are zero. The committed [contact sheet](../design/creator-first-reset/cv001-rig-kernel-proof-contact-sheet.png) includes adjacent frames 47 and 48 so the pickup boundary is directly inspectable.
 
 ## What this does not claim
 

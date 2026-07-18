@@ -6,7 +6,7 @@ import {
 import { useCurrentFrame } from "remotion";
 import {
   cv001RigLayout,
-  getCv001LanternPickupAnchor,
+  getCv001LanternPickupTransform,
 } from "./cv001-rig-kinematics";
 
 export type Cv001RigProofCompositionProps = { program: DirectedBeatProgram };
@@ -82,7 +82,7 @@ export const Cv001RigProofComposition: React.FC<
   const mouthOpen = Math.max(0, Math.min(1, evaluated.face["mouth-open"] ?? 0));
   const cameraScale = evaluated.camera.scale ?? 1;
   const cameraX = evaluated.camera.x ?? 0;
-  const lanternPickupAnchor = getCv001LanternPickupAnchor(validated);
+  const lanternPickupTransform = getCv001LanternPickupTransform(validated);
   const lanternAttached = evaluated.attachments.some(
     (attachment) =>
       attachment.propId === "lantern" && attachment.boneId === "hand-right",
@@ -170,15 +170,15 @@ export const Cv001RigProofComposition: React.FC<
         transform={`translate(${cameraX} 0) translate(960 540) scale(${cameraScale}) translate(-960 -540)`}
       >
         <circle
-          cx={lanternPickupAnchor.x}
-          cy={lanternPickupAnchor.y}
+          cx={lanternPickupTransform.x}
+          cy={lanternPickupTransform.y}
           fill="url(#cv001-glow)"
           r="210"
         />
         {!lanternAttached ? (
           <g
             filter="url(#cv001-shadow)"
-            transform={`translate(${lanternPickupAnchor.x} ${lanternPickupAnchor.y})`}
+            transform={`translate(${lanternPickupTransform.x} ${lanternPickupTransform.y}) rotate(${lanternPickupTransform.rotation}) scale(${lanternPickupTransform.scale})`}
           >
             <Lantern scale={0.92} />
           </g>
