@@ -30,7 +30,8 @@
     "render:rook-preview": "pnpm --filter @storystage/render-worker render:rook-preview",
     "render:rook-motion-review": "pnpm --filter @storystage/render-worker render:rook-motion-review",
     "render:cv001-creator-locality-proof": "pnpm --filter @storystage/render-worker render:cv001-creator-locality-proof",
-    "proof:cv001-creator": "node scripts/proof-cv001-creator.mjs"
+    "proof:cv001-creator": "node scripts/proof-cv001-creator.mjs",
+    "proof:cv002-draft": "node scripts/proof-cv002-draft.mjs"
   },
   "devDependencies": {
     "@playwright/cli": "0.1.17",

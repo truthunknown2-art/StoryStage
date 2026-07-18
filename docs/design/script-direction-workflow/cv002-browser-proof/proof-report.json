@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "1.0",
+  "status": "cv002-draft-browser-proof",
+  "accessibility": {
+    "create": {
+      "criticalOrSerious": [],
+      "passes": 17
+    },
+    "breakdown": {
+      "criticalOrSerious": [],
+      "passes": 20
+    },
+    "direction": {
+      "criticalOrSerious": [],
+      "passes": 19
+    }
+  },
+  "consoleErrors": [],
+  "direction": {
+    "beatCount": 9,
+    "fields": [
+      "staging",
+      "shotSize",
+      "treatment",
+      "cameraIntent",
+      "transition",
+      "performanceIntent",
+      "textEmphasis",
+      "sfxIntent",
+      "musicIntent"
+    ],
+    "grammar": "weird-history",
+    "templatesAssigned": false
+  },
+  "editing": {
+    "initialGraphHash": "8a6eb4ee2c4b952f7dd129b102b8bdb8b1081e44dc2148d3755bf83a1b602576",
+    "roleEditedGraphHash": "1439e4239f782ded165847b602fa9950204243ab49fea8902e616dc178615f7b",
+    "finalProjectHash": "1274d7b0b2391f973b7a07b6c4ddd6565e79b7adae5590a34a1ab9e2118cade0",
+    "historyLength": 5
+  },
+  "ergonomics": {
+    "create": {
+      "targets": [],
+      "microtype": []
+    },
+    "breakdown": {
+      "targets": [],
+      "microtype": []
+    },
+    "direction": {
+      "targets": [],
+      "microtype": []
+    }
+  },
+  "layout": {
+    "desktop": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "scrollWidth": 1440,
+      "railWidth": 300,
+      "sourceWidth": 703
+    },
+    "responsive": {
+      "viewport": {
+        "width": 760,
+        "height": 900
+      },
+      "scrollWidth": 760,
+      "railWidth": 760,
+      "sourceWidth": 732
+    }
+  },
+  "sourceIntegrity": {
+    "characters": 923,
+    "exactRoundTrip": true,
+    "paragraphs": 3,
+    "words": 147
+  },
+  "screenshots": [
+    "create-weird-history-1440x900.png",
+    "breakdown-edited-1440x900.png",
+    "direction-weird-history-1440x900.png",
+    "breakdown-760x900.png"
+  ]
+}

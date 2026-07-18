@@ -197,7 +197,11 @@
 .cv-create-action { align-items: center; background: #a9efc2; border-radius: 8px; color: #142018; display: flex; font-size: 10px; font-weight: 900; gap: 8px; justify-content: center; margin-top: 22px; min-height: 45px; width: 100%; }
 .cv-create-action:disabled { background: #28312b; color: #5c655f; }
 .cv-create-boundary { color: #59635c; font-size: 8px; margin-top: 9px; text-align: center; }
+.cv-load-sample { align-items: center; background: transparent; color: #a9cdb5; display: inline-flex; font-size: 10px; gap: 7px; margin-top: 9px; min-height: 44px; padding: 0 4px; text-decoration: underline; text-decoration-color: #4f6b58; text-underline-offset: 3px; }
 .cv-continue-card { background: rgba(24, 31, 26, .96); border: 1px solid #3b4c40 !important; border-radius: 10px; bottom: 22px; box-shadow: 0 18px 45px rgba(0,0,0,.3); color: #dce5de; display: grid; gap: 3px; left: 34px; max-width: 360px; padding: 12px 14px; position: fixed; text-align: left; z-index: 4; }
+.cv-continue-draft { border-color: #5c4936 !important; left: auto; right: 34px; }
+.cv-continue-draft > span { color: #e1b177; }
+.cv-continue-draft.has-animation-card { right: 34px; }
 .cv-continue-card > span { color: #8bc09a; font-size: 7px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
 .cv-continue-card strong { font-size: 10px; }
 .cv-continue-card small { color: #758078; font-size: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -323,6 +327,7 @@
   .cv-script-help { display: grid; gap: 5px; }
   .cv-script-help small { text-align: left; }
   .cv-continue-card { bottom: 12px; left: 12px; max-width: calc(100vw - 24px); }
+  .cv-continue-draft { bottom: 82px; left: 12px; right: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {

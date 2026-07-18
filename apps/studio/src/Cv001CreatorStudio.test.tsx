@@ -69,13 +69,13 @@ describe("CV-001 creator shell", () => {
     expect(screen.getByLabelText("Title")).toHaveValue("The Lantern Discovery");
     expect((screen.getByLabelText("Script") as HTMLTextAreaElement).value).toContain("Mara notices");
     expect(screen.getByRole("button", {name: /Kids Adventure/})).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", {name: /Weird History/})).toBeDisabled();
+    expect(screen.getByRole("button", {name: /Weird History/})).toBeEnabled();
     expect(screen.getByRole("button", {name: /Cut-paper forest/})).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", {name: /Storybook ink/})).toBeDisabled();
     expect(screen.queryByText("Production confidence", {exact: false})).not.toBeInTheDocument();
   });
 
-  it("requires exactly three paragraphs before creating the cut", async () => {
+  it("routes changed scripts into the bounded draft workflow instead of the lantern animation", async () => {
     const user = userEvent.setup();
     render(<App />);
     const script = screen.getByLabelText("Script");
@@ -83,8 +83,9 @@ describe("CV-001 creator shell", () => {
     await user.clear(script);
     await user.type(script, "Only one paragraph");
 
-    expect(screen.getByText(/exactly three non-empty paragraphs/)).toBeInTheDocument();
-    expect(screen.getByRole("button", {name: "Create animated first cut"})).toBeDisabled();
+    expect(screen.getByText(/Paste 80 to 400 words/)).toBeInTheDocument();
+    expect(screen.getByRole("button", {name: "Break script into scenes"})).toBeDisabled();
+    expect(screen.queryByRole("button", {name: "Create animated first cut"})).not.toBeInTheDocument();
   });
 
   it("opens a real preview with exactly three creator-facing beat cards", async () => {
