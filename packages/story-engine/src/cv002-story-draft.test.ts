@@ -6,6 +6,8 @@ import {
   compileCv002DirectionDraft,
   createCv002Project,
   createCv002StoryGraph,
+  type Cv002Project,
+  type Cv002StoryGraph,
   reconstructCv002Source,
   redoCv002Operation,
   restoreCv002Project,
@@ -19,6 +21,19 @@ const SCRIPT = [
 ].join("\n\n");
 
 const flatten = (graph: ReturnType<typeof createCv002StoryGraph>) => graph.scenes.flatMap((scene) => scene.beats);
+
+function reseal<T extends {contentHash: string}>(value: T): T {
+  const {contentHash: _contentHash, ...draft} = value;
+  void _contentHash;
+  return {...draft, contentHash: hashCanonical(draft)} as T;
+}
+
+function resealProjectWithGraph(project: Cv002Project, graph: Cv002StoryGraph): Cv002Project {
+  const beats = flatten(graph);
+  const directions = project.directionDraft.directions.map((direction, index) => reseal({...direction, beatId: beats[index]!.id, beatContentHash: beats[index]!.contentHash}));
+  const directionDraft = reseal({...project.directionDraft, graphContentHash: graph.contentHash, directions});
+  return reseal({...project, graph, directionDraft});
+}
 
 describe("CV-002 editable story breakdown", () => {
   it("accepts the bounded script and preserves exact text and offsets", () => {
@@ -116,6 +131,44 @@ describe("CV-002 editable story breakdown", () => {
     const alteredProject = {...projectDraft, history: [resealedTransaction]};
     const resealedProject = {...alteredProject, contentHash: hashCanonical(alteredProject)};
     expect(() => restoreCv002Project(JSON.stringify(resealedProject))).toThrow(/Story edit result/);
+  });
+
+  it("rejects a self-rehashed final source span beyond the real source length", () => {
+    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure");
+    const graph = project.graph;
+    const lastScene = graph.scenes.at(-1)!;
+    const lastBeat = lastScene.beats.at(-1)!;
+    const sourceRange = {...lastBeat.sourceRange, end: SCRIPT.length + 100};
+    const forgedBeat = reseal({...lastBeat, sourceRange, id: `beat-${hashCanonical({sourceRange, text: lastBeat.text}).slice(0, 12)}`});
+    const sceneBeats = [...lastScene.beats.slice(0, -1), forgedBeat];
+    const sceneRange = {...lastScene.sourceRange, end: SCRIPT.length + 100};
+    const forgedScene = reseal({...lastScene, sourceRange: sceneRange, beats: sceneBeats, id: `scene-${hashCanonical({sourceRange: sceneRange, beatIds: sceneBeats.map((beat) => beat.id)}).slice(0, 12)}`});
+    const forgedGraph = reseal({...graph, scenes: [...graph.scenes.slice(0, -1), forgedScene]});
+    const forgedProject = resealProjectWithGraph(project, forgedGraph);
+
+    expect(() => restoreCv002Project(JSON.stringify(forgedProject))).toThrow(/source span exceeds/i);
+  });
+
+  it("rejects a self-rehashed project whose edit history was erased", () => {
+    const project = createCv002Project("Harbor signals", SCRIPT, "weird-history");
+    const target = flatten(project.graph)[1]!;
+    const changedGraph = applyCv002GraphOperation(project.graph, {type: "set-role", beatId: target.id, role: "reaction"});
+    const forged = reseal({...project, graph: changedGraph, directionDraft: compileCv002DirectionDraft(changedGraph), history: [], historyCursor: 0});
+
+    expect(() => restoreCv002Project(JSON.stringify(forged))).toThrow(/not anchored to the deterministic initial breakdown/i);
+  });
+
+  it("rejects self-rehashed forged beat and scene IDs", () => {
+    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure");
+    const firstScene = project.graph.scenes[0]!;
+    const forgedBeat = reseal({...firstScene.beats[0]!, id: "beat-forged"});
+    const beatScene = reseal({...firstScene, beats: [forgedBeat, ...firstScene.beats.slice(1)], id: `scene-${hashCanonical({sourceRange: firstScene.sourceRange, beatIds: [forgedBeat, ...firstScene.beats.slice(1)].map((beat) => beat.id)}).slice(0, 12)}`});
+    const beatGraph = reseal({...project.graph, scenes: [beatScene, ...project.graph.scenes.slice(1)]});
+    expect(() => restoreCv002Project(JSON.stringify(resealProjectWithGraph(project, beatGraph)))).toThrow(/Beat ID is not derived/i);
+
+    const forgedScene = reseal({...firstScene, id: "scene-forged"});
+    const sceneGraph = reseal({...project.graph, scenes: [forgedScene, ...project.graph.scenes.slice(1)]});
+    expect(() => restoreCv002Project(JSON.stringify(resealProjectWithGraph(project, sceneGraph)))).toThrow(/Scene ID is not derived/i);
   });
 
   it("keeps canonical project state free of clocks, UUIDs, paths, and random values", () => {

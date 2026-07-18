@@ -55,8 +55,13 @@ export const cv002StoryGraphSchema = z.object({...graphFields, contentHash: hash
   let previousEnd = 0;
   beats.forEach((beat, index) => {
     const {start, end} = beat.sourceRange;
+    if (end > graph.sourceText.length)
+      context.addIssue({code: "custom", message: "Beat source span exceeds the source text length.", path: ["scenes"]});
     if (graph.sourceText.slice(start, end) !== beat.text)
       context.addIssue({code: "custom", message: "Beat text does not match its exact source span.", path: ["scenes"]});
+    const expectedId = `beat-${hashCanonical({sourceRange: beat.sourceRange, text: beat.text}).slice(0, 12)}`;
+    if (beat.id !== expectedId)
+      context.addIssue({code: "custom", message: "Beat ID is not derived from its exact source span and text.", path: ["scenes"]});
     if (index > 0 && start < previousEnd)
       context.addIssue({code: "custom", message: "Beat source spans must remain ordered and non-overlapping.", path: ["scenes"]});
     if (/\S/.test(graph.sourceText.slice(previousEnd, start)))
@@ -68,9 +73,18 @@ export const cv002StoryGraphSchema = z.object({...graphFields, contentHash: hash
   graph.scenes.forEach((scene, index) => {
     const first = scene.beats[0]!;
     const last = scene.beats.at(-1)!;
+    if (scene.sourceRange.end > graph.sourceText.length)
+      context.addIssue({code: "custom", message: "Scene source span exceeds the source text length.", path: ["scenes", index, "sourceRange"]});
     if (scene.sourceRange.start !== first.sourceRange.start || scene.sourceRange.end !== last.sourceRange.end)
       context.addIssue({code: "custom", message: "Scene source span must cover its beats exactly.", path: ["scenes", index, "sourceRange"]});
+    const expectedId = `scene-${hashCanonical({sourceRange: scene.sourceRange, beatIds: scene.beats.map((beat) => beat.id)}).slice(0, 12)}`;
+    if (scene.id !== expectedId)
+      context.addIssue({code: "custom", message: "Scene ID is not derived from its exact span and beat IDs.", path: ["scenes", index, "id"]});
   });
+  if (new Set(beats.map((beat) => beat.id)).size !== beats.length)
+    context.addIssue({code: "custom", message: "Story graph beat IDs must be unique.", path: ["scenes"]});
+  if (new Set(graph.scenes.map((scene) => scene.id)).size !== graph.scenes.length)
+    context.addIssue({code: "custom", message: "Story graph scene IDs must be unique.", path: ["scenes"]});
 });
 
 export type Cv002Grammar = z.infer<typeof cv002GrammarSchema>;
@@ -174,7 +188,7 @@ function classifyRole(text: string, isFirst: boolean, isLast: boolean): Cv002Bea
   if (/^(meanwhile|then|later|years? later|afterward|next)\b/.test(normalized)) return "transition";
   if (/\b(reveal(?:ed|s)?|discover(?:ed|s)?|turned out|in fact|secret|actually)\b/.test(normalized)) return "reveal";
   if (/[!]|\b(gasp(?:ed|s)?|stunned|shocked|laughed|cried|could not believe|couldn't believe)\b/.test(normalized)) return "reaction";
-  if (isLast && /\b(but|ironically|absurdly|ridiculously|unfortunately|of course|somehow)\b/.test(normalized)) return "punchline";
+  if (isLast && /\b(but|ironically|absurdly|ridiculously|unfortunately|of course|somehow|accidentally|jokes?|punchline)\b/.test(normalized)) return "punchline";
   if (/\b(ran|walked|jumped|lifted|opened|closed|grabbed|carried|built|fought|escaped|reached|moved|threw|pulled|pushed)\b/.test(normalized)) return "action";
   if (!isFirst && /\b(because|therefore|means|meant|was|were|is|are|had|has)\b/.test(normalized)) return "explanation";
   return isFirst ? "setup" : "explanation";
@@ -377,6 +391,15 @@ export const cv002ProjectSchema = z.object({...projectFields, contentHash: hashS
     context.addIssue({code: "custom", message: "Project direction draft does not match its story graph.", path: ["directionDraft"]});
   if (project.historyCursor > project.history.length)
     context.addIssue({code: "custom", message: "Story edit cursor exceeds history.", path: ["historyCursor"]});
+  try {
+    const initialGraph = createCv002StoryGraph(project.sourceText, project.grammar);
+    if (project.history.length === 0 && project.graph.contentHash !== initialGraph.contentHash)
+      context.addIssue({code: "custom", message: "Project graph is not anchored to the deterministic initial breakdown.", path: ["graph"]});
+    if (project.history.length > 0 && project.history[0]!.beforeGraph.contentHash !== initialGraph.contentHash)
+      context.addIssue({code: "custom", message: "Story edit history is not anchored to the deterministic initial breakdown.", path: ["history", 0, "beforeGraph"]});
+  } catch {
+    context.addIssue({code: "custom", message: "Project source cannot reproduce a bounded initial breakdown.", path: ["sourceText"]});
+  }
   let expected = project.history[0]?.beforeGraph;
   project.history.forEach((transaction, index) => {
     if (transaction.sequence !== index + 1 || transaction.id !== `edit-${String(index + 1).padStart(4, "0")}`)
