@@ -15,6 +15,7 @@ export * from "./motion-program";
 export * from "./cv001-rig-kinematics";
 export * from "./cv001-scene-compiler";
 export * from "./cv001-proof-fixture";
+export * from "./cv001-creator-direction";
 export * from "./pipeline";
 export * from "./pilots/rook-pilot-001";
 export * from "./production-policy";
