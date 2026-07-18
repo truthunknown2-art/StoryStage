@@ -12,7 +12,7 @@ import {
   verifyPreparationReportHash,
   verifyRigValidationReportHash,
 } from "@storystage/story-engine";
-import {CandidateStagingError, createPreparedCandidateComparisonSheet, prepareCandidateSets, stageCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "./index";
+import {CandidateStagingError, createPreparedCandidateComparisonSheet, prepareCandidateSets, stageCandidateBundle, stageLooseCandidateFiles, verifyLoggedCandidateBytes, verifyStagedCandidates} from "./index";
 
 const rgbaPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAF/gL+Avz9WQAAAABJRU5ErkJggg==", "base64");
 
@@ -99,6 +99,15 @@ const characterBrief = generationBriefSchema.parse({
 });
 
 describe("secure candidate staging", () => {
+  it("rejects a same-size source replacement that does not match the provenance hash", async () => {
+    const logged = await sharp({create: {width: 320, height: 180, channels: 3, background: {r: 68, g: 91, b: 122}}}).png().toBuffer();
+    const replacement = await sharp({create: {width: 320, height: 180, channels: 3, background: {r: 122, g: 68, b: 91}}}).png().toBuffer();
+    const expected = {candidateId: "logged-candidate", expectedContentHash: hash(logged), expectedMediaType: "image/png" as const, expectedWidth: 320, expectedHeight: 180};
+
+    expect(verifyLoggedCandidateBytes({...expected, bytes: logged})).toMatchObject({contentHash: hash(logged), mediaType: "image/png", width: 320, height: 180});
+    expect(() => verifyLoggedCandidateBytes({...expected, bytes: replacement})).toThrowError(expect.objectContaining({code: "hash-mismatch"}));
+  });
+
   it("verifies real bytes and chooses a deterministic private staging path", async () => {
     const {sourceRoot, trustedStagingRoot, stagingRoot} = await fixture();
     const [staged] = await stageCandidateBundle({bundle: bundle(), sourceRoot, trustedStagingRoot, stagingRoot});

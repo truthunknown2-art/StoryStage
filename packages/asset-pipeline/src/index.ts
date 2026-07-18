@@ -89,6 +89,13 @@ export type PreparedCandidateComparisonSheet = {
   cells: Array<{candidateId: string; candidateSetId: string; left: number; top: number; width: number; height: number}>;
 };
 
+export type LoggedCandidateVerification = {
+  contentHash: string;
+  mediaType: SupportedMediaType;
+  width: number;
+  height: number;
+};
+
 export class CandidateStagingError extends Error {
   public constructor(
     public readonly code:
@@ -277,6 +284,15 @@ function detectImage(bytes: Uint8Array): DetectedImage {
   const detected = detectPng(bytes) ?? detectJpeg(bytes) ?? detectWebp(bytes);
   if (!detected) throw new CandidateStagingError("unsupported-media", "Candidate bytes are not a supported PNG, JPEG, or WebP image.");
   return detected;
+}
+
+export function verifyLoggedCandidateBytes(input: {candidateId: string; bytes: Uint8Array; expectedContentHash: string; expectedMediaType: SupportedMediaType; expectedWidth: number; expectedHeight: number}): LoggedCandidateVerification {
+  const detected = detectImage(input.bytes);
+  if (detected.mediaType !== input.expectedMediaType) throw new CandidateStagingError("media-mismatch", `Logged candidate codec does not match its provenance record: ${input.candidateId}`);
+  if (detected.width !== input.expectedWidth || detected.height !== input.expectedHeight) throw new CandidateStagingError("dimension-mismatch", `Logged candidate dimensions do not match its provenance record: ${input.candidateId}`);
+  const contentHash = sha256(input.bytes);
+  if (contentHash !== input.expectedContentHash) throw new CandidateStagingError("hash-mismatch", `Logged candidate bytes do not match their provenance record: ${input.candidateId}`);
+  return {contentHash, mediaType: detected.mediaType, width: detected.width, height: detected.height};
 }
 
 export async function stageCandidateBundle(input: StageCandidateBundleInput): Promise<StagedCandidate[]> {

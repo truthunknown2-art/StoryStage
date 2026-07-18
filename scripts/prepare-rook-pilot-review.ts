@@ -1,4 +1,3 @@
-import {createHash} from "node:crypto";
 import {copyFile, mkdir, readFile, rm, writeFile} from "node:fs/promises";
 import {isAbsolute, relative, resolve} from "node:path";
 import {
@@ -6,6 +5,7 @@ import {
   createPreparedCandidateComparisonSheet,
   prepareCandidateSets,
   stageCandidateBundle,
+  verifyLoggedCandidateBytes,
 } from "../packages/asset-pipeline/src/index.ts";
 import {createImportRecordFromStagedCandidates} from "../packages/asset-pipeline/src/import-record-builder.ts";
 import {
@@ -43,23 +43,23 @@ const exchangeJobId = "job-rook-pilot-001-review";
 const importId = "import-rook-pilot-001-review";
 
 const candidateGroups = [
-  {shot: "1.03", slug: "shot-1-03-dancing-alone", briefId: "brief-requirement-reconstruction-shot-shot-3-shot-3-reconstruction"},
-  {shot: "1.05", slug: "shot-1-05-public-emergency", briefId: "brief-requirement-reconstruction-shot-shot-5-shot-5-reconstruction"},
-  {shot: "1.08", slug: "shot-1-08-exhaustion-theory", briefId: "brief-requirement-reconstruction-shot-shot-8-shot-8-reconstruction"},
+  {shot: "1.03", slug: "shot-1-03-dancing-alone", briefId: "brief-requirement-reconstruction-shot-shot-3-shot-3-reconstruction", sets: [
+    {number: 1, expectedContentHash: "9fb05276b39049db8e13615b4127a6a84b4f4cda24008edac64c39c3b0da2000"},
+    {number: 2, expectedContentHash: "1b926e74921ba48a8b6cf6cc20ca6cc389b03301a15e305fd5853da239c455e5"},
+  ]},
+  {shot: "1.05", slug: "shot-1-05-public-emergency", briefId: "brief-requirement-reconstruction-shot-shot-5-shot-5-reconstruction", sets: [
+    {number: 1, expectedContentHash: "5bf09b87fd824b290457556511a61e2ebc37477db7d1922df20cd23127f75efa"},
+    {number: 2, expectedContentHash: "1e9713f1df40f625a46d6109e0f4067520abe01ef3692bd857f76f2aee5df520"},
+  ]},
+  {shot: "1.08", slug: "shot-1-08-exhaustion-theory", briefId: "brief-requirement-reconstruction-shot-shot-8-shot-8-reconstruction", sets: [
+    {number: 1, expectedContentHash: "03e5dc12c4d8f92563b7b032a82391f1a6a09a97bcb16cf5b55211b0b14a68c9"},
+    {number: 2, expectedContentHash: "9b2cdcf3eafb9e59585e838c1f52c57cc8c0f5a0ba7560a1d017b2280ebf7746"},
+  ]},
 ] as const;
-
-const sha256 = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 
 function assertWorkspaceOutput(path: string): void {
   const fromWorkspace = relative(workspaceRoot, path);
   if (fromWorkspace === "" || fromWorkspace.startsWith("..") || isAbsolute(fromWorkspace)) throw new Error(`Refusing to replace a review packet outside the workspace: ${path}`);
-}
-
-function pngDimensions(bytes: Uint8Array): {width: number; height: number} {
-  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-  if (bytes.length < 26 || !signature.every((value, index) => bytes[index] === value)) throw new Error("A logged Rook candidate is not a PNG.");
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  return {width: view.getUint32(16), height: view.getUint32(20)};
 }
 
 async function writeJson(path: string, value: unknown): Promise<void> {
@@ -101,20 +101,21 @@ async function main(): Promise<void> {
   for (const group of candidateGroups) {
     const brief = job.briefs.find((candidate) => candidate.id === group.briefId);
     if (!brief) throw new Error(`The authoritative Rook job is missing ${group.briefId}.`);
-    for (const setNumber of [1, 2] as const) {
+    for (const set of group.sets) {
+      const setNumber = set.number;
       const relativeFile = `${group.slug}/set-${setNumber}/candidate.png`;
       const bytes = await readFile(resolve(sourceRoot, ...relativeFile.split("/")));
-      const dimensions = pngDimensions(bytes);
+      const verified = verifyLoggedCandidateBytes({candidateId: `rook-${group.slug}-set-${setNumber}`, bytes, expectedContentHash: set.expectedContentHash, expectedMediaType: "image/png", expectedWidth: 1672, expectedHeight: 941});
       assets.push({
         candidateId: `rook-${group.slug}-set-${setNumber}`,
         candidateSetId: `set-rook-${group.slug}-${setNumber}`,
         briefId: brief.id,
         fileRole: "candidate.png",
         relativeFile,
-        contentHash: sha256(bytes),
-        mediaType: "image/png",
-        width: dimensions.width,
-        height: dimensions.height,
+        contentHash: verified.contentHash,
+        mediaType: verified.mediaType,
+        width: verified.width,
+        height: verified.height,
         rights: {sourceType: "generated", provider: "ChatGPT Images", usageNotes: "Original StoryStage Rook Pilot 001 reconstruction candidate; human approval required before production use."},
       });
     }
