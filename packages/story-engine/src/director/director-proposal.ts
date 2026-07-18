@@ -33,6 +33,11 @@ export const directorCameraMovementSchema = z.enum([
   "reframe",
 ]);
 
+export type DirectorShotSize = z.infer<typeof directorShotSizeSchema>;
+export type DirectorCameraMovement = z.infer<
+  typeof directorCameraMovementSchema
+>;
+
 export const directorShotOverrideSchema = z
   .object({
     beatId: identifierSchema,

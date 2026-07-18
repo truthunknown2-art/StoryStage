@@ -330,6 +330,26 @@ describe("Director patch", () => {
     ).toBe(edited.contentHash);
   });
 
+  it("rejects the current visual values as a no-op", () => {
+    const storyProject = createCv002Project(
+      "Visual no-op proof",
+      script,
+      "kids-adventure",
+    );
+    const base = compileDirectorProject({ storyProject });
+    const shot = base.directorPlan.shots[0]!;
+
+    expect(() =>
+      proposeDirectorVisualPatch({
+        baseDirectorProject: base,
+        targetBeatId: shot.beatIds[0]!,
+        shotId: shot.id,
+        shotSize: shot.camera.size,
+        cameraMovement: shot.camera.movement,
+      }),
+    ).toThrow("Choose a different shot size or camera movement.");
+  });
+
   it("rejects a visual patch when the shot belongs to another beat", () => {
     const storyProject = createCv002Project(
       "Wrong visual target proof",

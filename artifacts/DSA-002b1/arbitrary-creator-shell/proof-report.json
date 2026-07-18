@@ -3,7 +3,7 @@
   "status": "cv002-arbitrary-creator-shell-proof",
   "results": {
     "kids": {
-      "episodeHash": "3534fa2c21f409d73bd30c02dced32e79a74cf1a30e7c47ee79c11e06b26cd4a",
+      "episodeHash": "c7d1ded26a5b64dad526dbcf2593bb74f75b4b24041043686811a0e6375b71d3",
       "railThumbnailCount": 9,
       "stripThumbnailCount": 9,
       "audit": {
@@ -14,7 +14,7 @@
       }
     },
     "history": {
-      "episodeHash": "083ea0373427f89489debfef20eeb3077219ca4c6a6032f87be1815809d17208",
+      "episodeHash": "78d6d562b905b99586ab4747d7dd50dac8bb02a7dd9ea5ffbb16238759fe533d",
       "railThumbnailCount": 9,
       "stripThumbnailCount": 9,
       "audit": {
@@ -26,8 +26,8 @@
     }
   },
   "visualPatch": {
-    "originalHash": "083ea0373427f89489debfef20eeb3077219ca4c6a6032f87be1815809d17208",
-    "editedHash": "0307599b3ea64d4168c761615dabc441b2dde1508004b74b42d198b0cf5c2e06"
+    "originalHash": "78d6d562b905b99586ab4747d7dd50dac8bb02a7dd9ea5ffbb16238759fe533d",
+    "editedHash": "bcae6a733850c9a23c7a18ff96dfe7fd2cad11ca92c03e9f9ca6504e38688946"
   },
   "responsive": {
     "serious": [],

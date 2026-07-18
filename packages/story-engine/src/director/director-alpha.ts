@@ -18,10 +18,12 @@ export {
   sealDirectorProposal,
 } from "./director-proposal";
 export type {
+  DirectorCameraMovement,
   DirectorPlanner,
   DirectorPlanningContext,
   DirectorProposal,
   DirectorProposalDraft,
+  DirectorShotSize,
 } from "./director-proposal";
 export { directorProjectSchema } from "./director-project";
 export type {

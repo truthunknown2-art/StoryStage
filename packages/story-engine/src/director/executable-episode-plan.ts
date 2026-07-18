@@ -158,7 +158,49 @@ export const proxyCameraProgramSchema = z
     contentHash: hashSchema,
   })
   .strict()
-  .superRefine(validateExecutableProgramHash);
+  .superRefine(validateExecutableProgramHash)
+  .superRefine((program, context) => {
+    const first = program.keyframes[0]!;
+    const last = program.keyframes.at(-1)!;
+    const xChanges = program.keyframes.some(
+      (keyframe) => keyframe.x !== first.x,
+    );
+    const yChanges = program.keyframes.some(
+      (keyframe) => keyframe.y !== first.y,
+    );
+    const positionChanges = xChanges || yChanges;
+    const scaleChanges = program.keyframes.some(
+      (keyframe) => keyframe.scale !== first.scale,
+    );
+    const reject = (message: string) =>
+      context.addIssue({
+        code: "custom",
+        path: ["keyframes"],
+        message,
+      });
+
+    if (program.movement === "locked" && (positionChanges || scaleChanges))
+      reject("A locked camera must keep a constant transform.");
+    if (program.movement === "pan" && (!xChanges || yChanges || scaleChanges))
+      reject("A pan must visibly change horizontal position without zooming.");
+    if (
+      ["track", "reframe"].includes(program.movement) &&
+      (!positionChanges || scaleChanges)
+    )
+      reject(
+        `${program.movement} must visibly change position without changing scale.`,
+      );
+    if (
+      program.movement === "push" &&
+      (!scaleChanges || last.scale <= first.scale)
+    )
+      reject("A push must end at a visibly larger scale.");
+    if (
+      program.movement === "pull" &&
+      (!scaleChanges || last.scale >= first.scale)
+    )
+      reject("A pull must end at a visibly smaller scale.");
+  });
 
 export const proxyEntityProgramSchema = z
   .object({

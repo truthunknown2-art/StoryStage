@@ -929,51 +929,6 @@ function buildExecutable(
       ),
     });
   });
-  const proxyCameraPrograms = plan.shots.map((shot, index) => {
-    const duration =
-      executableShots[index]!.endFrameExclusive -
-      executableShots[index]!.startFrame;
-    const scale =
-      shot.camera.size === "close-up"
-        ? 1.22
-        : shot.camera.size === "insert"
-          ? 1.16
-          : shot.camera.size === "medium"
-            ? 1.08
-            : 1;
-    const shift =
-      shot.composition.focalRegion === "left-third"
-        ? -2
-        : shot.composition.focalRegion === "right-third"
-          ? 2
-          : 0;
-    const moving =
-      shot.camera.movement === "push" ||
-      shot.camera.movement === "reframe" ||
-      shot.camera.movement === "track";
-    return sealExecutableProgram({
-      id: `proxy-camera-${shot.id}`,
-      sourceSceneIds: [shot.sceneId],
-      sourceBeatIds: shot.beatIds,
-      sourceShotIds: [shot.id],
-      rendererId: "director-proxy-camera",
-      rendererVersion: "1.0.0",
-      shotId: shot.id,
-      purpose: shot.storyFunction,
-      size: shot.camera.size,
-      focalRegion: shot.composition.focalRegion,
-      movement: shot.camera.movement,
-      keyframes: [
-        { frame: 0, x: shift, y: 0, scale },
-        {
-          frame: duration - 1,
-          x: moving ? shift * 0.4 : shift,
-          y: 0,
-          scale: moving ? scale + 0.05 : scale,
-        },
-      ],
-    });
-  });
   const proxyEntityPrograms = plan.shots.flatMap((shot, shotIndex) => {
     const duration =
       executableShots[shotIndex]!.endFrameExclusive -
@@ -1100,6 +1055,144 @@ function buildExecutable(
           },
         ],
       });
+    });
+  });
+  const proxyCameraPrograms = plan.shots.map((shot, index) => {
+    const duration =
+      executableShots[index]!.endFrameExclusive -
+      executableShots[index]!.startFrame;
+    const scaleBySize = {
+      "extreme-wide": 1,
+      wide: 1.08,
+      medium: 1.2,
+      "close-up": 1.38,
+      insert: 1.62,
+    } as const;
+    const scale = scaleBySize[shot.camera.size];
+    const focalX =
+      shot.composition.focalRegion === "left-third"
+        ? -6
+        : shot.composition.focalRegion === "right-third"
+          ? 6
+          : 0;
+    const focalY =
+      shot.composition.focalRegion === "upper-third"
+        ? -4
+        : shot.composition.focalRegion === "lower-third"
+          ? 4
+          : 0;
+    const endFrame = duration - 1;
+    const constantScale = (value: number) => ({ scale: value });
+    const movementKeyframes = (() => {
+      switch (shot.camera.movement) {
+        case "locked":
+          return [
+            {
+              frame: 0,
+              x: focalX,
+              y: focalY,
+              ...constantScale(scale),
+            },
+            {
+              frame: endFrame,
+              x: focalX,
+              y: focalY,
+              ...constantScale(scale),
+            },
+          ];
+        case "pan":
+          return [
+            {
+              frame: 0,
+              x: focalX - 5,
+              y: focalY,
+              ...constantScale(scale),
+            },
+            {
+              frame: endFrame,
+              x: focalX + 5,
+              y: focalY,
+              ...constantScale(scale),
+            },
+          ];
+        case "track": {
+          const subject =
+            proxyEntityPrograms.find(
+              (program) =>
+                program.shotId === shot.id &&
+                program.entityId === shot.camera.subjectIds[0],
+            ) ??
+            proxyEntityPrograms.find((program) => program.shotId === shot.id);
+          if (!subject)
+            throw new Error(`${shot.id} cannot track without a proxy subject.`);
+          const origin = subject.keyframes[0]!.transform;
+          return subject.keyframes.map((keyframe) => ({
+            frame: keyframe.frame,
+            x: focalX - (keyframe.transform.x - origin.x) * 100,
+            y: focalY - (keyframe.transform.y - origin.y) * 100,
+            ...constantScale(scale),
+          }));
+        }
+        case "push":
+          return [
+            {
+              frame: 0,
+              x: focalX,
+              y: focalY,
+              scale: scale * 0.96,
+            },
+            {
+              frame: endFrame,
+              x: focalX,
+              y: focalY,
+              scale: scale * 1.04,
+            },
+          ];
+        case "pull":
+          return [
+            {
+              frame: 0,
+              x: focalX,
+              y: focalY,
+              scale: scale * 1.04,
+            },
+            {
+              frame: endFrame,
+              x: focalX,
+              y: focalY,
+              scale: scale * 0.96,
+            },
+          ];
+        case "reframe":
+          return [
+            {
+              frame: 0,
+              x: focalX >= 0 ? focalX - 5 : focalX + 5,
+              y: focalY >= 0 ? focalY + 3 : focalY - 3,
+              ...constantScale(scale),
+            },
+            {
+              frame: endFrame,
+              x: focalX,
+              y: focalY,
+              ...constantScale(scale),
+            },
+          ];
+      }
+    })();
+    return sealExecutableProgram({
+      id: `proxy-camera-${shot.id}`,
+      sourceSceneIds: [shot.sceneId],
+      sourceBeatIds: shot.beatIds,
+      sourceShotIds: [shot.id],
+      rendererId: "director-proxy-camera",
+      rendererVersion: "1.0.0",
+      shotId: shot.id,
+      purpose: shot.storyFunction,
+      size: shot.camera.size,
+      focalRegion: shot.composition.focalRegion,
+      movement: shot.camera.movement,
+      keyframes: movementKeyframes,
     });
   });
   const proxyCaptionPrograms = plan.shots

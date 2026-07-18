@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
 import {
   compileDirectorProject,
   tryCompileDirectorProject,
 } from "./director-compiler";
+import {
+  Cv002AlphaDirectorPlanner,
+  type DirectorCameraMovement,
+  type DirectorPlanner,
+  type DirectorProposalDraft,
+  type DirectorShotSize,
+} from "./director-proposal";
+import { proxyCameraProgramSchema } from "./executable-episode-plan";
 
 const sentence =
   "A curious traveler follows a bright clue and pauses when the hidden answer changes everything.";
@@ -15,6 +24,57 @@ const exactWords = (count: number) =>
   Array.from({ length: count }, (_, index) =>
     index % 17 === 16 ? `word${index}.` : `word${index}`,
   ).join(" ");
+
+const cameraSizes = [
+  "extreme-wide",
+  "wide",
+  "medium",
+  "close-up",
+  "insert",
+] as const satisfies readonly DirectorShotSize[];
+const cameraMovements = [
+  "locked",
+  "pan",
+  "track",
+  "push",
+  "pull",
+  "reframe",
+] as const satisfies readonly DirectorCameraMovement[];
+
+const compileCameraSemantics = (
+  size: DirectorShotSize,
+  movement: DirectorCameraMovement,
+) => {
+  const storyProject = createCv002Project(
+    "Camera semantics",
+    script,
+    "kids-adventure",
+  );
+  const base = compileDirectorProject({ storyProject });
+  const targetShot = base.directorPlan.shots[0]!;
+  const beatId = targetShot.beatIds[0]!;
+  const defaultPlanner = new Cv002AlphaDirectorPlanner();
+  const planner: DirectorPlanner = {
+    propose(context): DirectorProposalDraft {
+      return {
+        ...defaultPlanner.propose(context),
+        plannerId: "camera-semantics-test",
+        shotOverrides: [
+          {
+            beatId,
+            shotId: targetShot.id,
+            shotSize: size,
+            cameraMovement: movement,
+          },
+        ],
+      };
+    },
+  };
+  const project = compileDirectorProject({ storyProject, planner });
+  return project.executableEpisodePlan.proxyCameraPrograms!.find(
+    (program) => program.shotId === targetShot.id,
+  )!;
+};
 
 describe("Director Studio Alpha compiler", () => {
   it("compiles one deterministic canonical project and executable proxy plan", () => {
@@ -134,6 +194,101 @@ describe("Director Studio Alpha compiler", () => {
           ).length === 2,
       ),
     ).toBe(true);
+  });
+
+  it("compiles every exposed shot size to a distinct renderer-consumed scale", () => {
+    const programs = cameraSizes.map((size) =>
+      compileCameraSemantics(size, "locked"),
+    );
+    const scales = programs.map((program) => program.keyframes[0]!.scale);
+
+    expect(new Set(scales).size).toBe(cameraSizes.length);
+    expect(scales).toEqual([...scales].sort((left, right) => left - right));
+    programs.forEach((program) => {
+      expect(
+        program.keyframes.every(
+          (keyframe) => keyframe.scale === program.keyframes[0]!.scale,
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it("compiles every exposed camera movement to truthful, non-collapsing keyframes", () => {
+    const programs = new Map(
+      cameraMovements.map((movement) => [
+        movement,
+        compileCameraSemantics("medium", movement),
+      ]),
+    );
+    const values = (movement: DirectorCameraMovement) =>
+      programs
+        .get(movement)!
+        .keyframes.map(({ x, y, scale }) => ({ x, y, scale }));
+    const changes = (
+      movement: DirectorCameraMovement,
+      key: "x" | "y" | "scale",
+    ) => new Set(values(movement).map((value) => value[key])).size > 1;
+
+    expect(changes("locked", "x")).toBe(false);
+    expect(changes("locked", "y")).toBe(false);
+    expect(changes("locked", "scale")).toBe(false);
+
+    expect(changes("pan", "x")).toBe(true);
+    expect(changes("pan", "y")).toBe(false);
+    expect(changes("pan", "scale")).toBe(false);
+
+    expect(changes("track", "x") || changes("track", "y")).toBe(true);
+    expect(changes("track", "scale")).toBe(false);
+
+    expect(changes("push", "x")).toBe(false);
+    expect(changes("push", "y")).toBe(false);
+    expect(values("push").at(-1)!.scale).toBeGreaterThan(
+      values("push")[0]!.scale,
+    );
+
+    expect(changes("pull", "x")).toBe(false);
+    expect(changes("pull", "y")).toBe(false);
+    expect(values("pull").at(-1)!.scale).toBeLessThan(values("pull")[0]!.scale);
+
+    expect(changes("reframe", "x") || changes("reframe", "y")).toBe(true);
+    expect(changes("reframe", "scale")).toBe(false);
+
+    expect(
+      new Set(
+        cameraMovements.map((movement) => JSON.stringify(values(movement))),
+      ).size,
+    ).toBe(cameraMovements.length);
+  });
+
+  it("rejects camera programs whose movement label is not executed by keyframes", () => {
+    cameraMovements.forEach((movement) => {
+      const valid = compileCameraSemantics("medium", movement);
+      const draft = Object.fromEntries(
+        Object.entries(valid).filter(([key]) => key !== "contentHash"),
+      ) as Omit<typeof valid, "contentHash">;
+      const first = draft.keyframes[0]!;
+      const dishonestKeyframes =
+        movement === "locked"
+          ? draft.keyframes.map((keyframe, index) => ({
+              ...keyframe,
+              x: first.x + index,
+            }))
+          : draft.keyframes.map((keyframe) => ({
+              ...keyframe,
+              x: first.x,
+              y: first.y,
+              scale: first.scale,
+            }));
+      const dishonestDraft = { ...draft, keyframes: dishonestKeyframes };
+
+      expect(
+        proxyCameraProgramSchema.safeParse({
+          ...dishonestDraft,
+          contentHash: hashCanonical(dishonestDraft),
+        }).success,
+        movement,
+      ).toBe(false);
+    });
   });
 
   it("enforces the Director Studio 100 to 300 word contract", () => {
