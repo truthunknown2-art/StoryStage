@@ -400,7 +400,11 @@ export function DirectorAnimaticPreview({
                   {capabilities.supported} final-ready ·{" "}
                   {capabilities.proxyOnly} proxy-only
                 </strong>
-                <span>Final motion capability not assigned.</span>
+                <span>
+                  {capabilities.supported
+                    ? `${capabilities.supported} approved performance ${capabilities.supported === 1 ? "is" : "are"} render-ready; ${capabilities.proxyOnly} still need final motion.`
+                    : "Final motion capability not assigned."}
+                </span>
               </div>
             </div>
           </footer>

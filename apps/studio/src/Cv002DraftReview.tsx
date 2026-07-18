@@ -239,6 +239,7 @@ export function Cv002DraftReview({
   const studioDirector = directorWorkspace
     ? currentDirectorWorkspaceProject(directorWorkspace)
     : directorCompilation.directorProject;
+  const studioCapabilitySummary = studioDirector?.capabilityReport.summary;
   const setSelectedBeatId = (beatId: string) => {
     setDirectorWorkspace((current) => {
       if (
@@ -711,7 +712,10 @@ export function Cv002DraftReview({
               <h1>{project.title}</h1>
               <span>
                 First cut · {project.graph.scenes.length} scenes ·{" "}
-                {allBeats.length} beats · honest proxy animation
+                {allBeats.length} beats · honest{" "}
+                {studioCapabilitySummary?.supported
+                  ? "hybrid animation"
+                  : "proxy animation"}
               </span>
             </div>
             <GrammarBadge grammar={project.grammar} />
@@ -721,8 +725,10 @@ export function Cv002DraftReview({
             <Check size={15} />
             <strong>Draft animatic ready</strong>
             <span>
-              Real direction, timing, blocking, and camera intent · final art
-              and motion still needed
+              Real direction, timing, blocking, and camera intent
+              {studioCapabilitySummary?.supported
+                ? ` · ${studioCapabilitySummary.supported} approved performance ${studioCapabilitySummary.supported === 1 ? "is" : "are"} render-ready`
+                : " · final art and motion still needed"}
             </span>
           </div>
 
