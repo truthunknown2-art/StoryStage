@@ -34,8 +34,22 @@ const performanceProgramSchema = z
     eventIds: z.array(identifierSchema).min(1),
     assetIds: z.array(identifierSchema),
     manifestContentHash: hashSchema,
+    sourceSceneIds: z.array(identifierSchema).optional(),
+    sourceBeatIds: z.array(identifierSchema).optional(),
+    sourceShotIds: z.array(identifierSchema).optional(),
+    contentHash: hashSchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((program, context) => {
+    if (!program.contentHash) return;
+    const { contentHash, ...draft } = program;
+    if (hashCanonical(draft) !== contentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["contentHash"],
+        message: "Performance program hash is invalid.",
+      });
+  });
 
 const approvedAssetBindingSchema = z
   .object({
@@ -45,6 +59,155 @@ const approvedAssetBindingSchema = z
     status: z.enum(["approved", "proxy"]),
   })
   .strict();
+
+const executableProgramLineageFields = {
+  sourceSceneIds: z.array(identifierSchema),
+  sourceBeatIds: z.array(identifierSchema),
+  sourceShotIds: z.array(identifierSchema),
+  rendererId: identifierSchema,
+  rendererVersion: z.string().min(1),
+};
+
+const validateExecutableProgramHash = (
+  program: { contentHash: string } & Record<string, unknown>,
+  context: z.RefinementCtx,
+) => {
+  const { contentHash, ...draft } = program;
+  if (hashCanonical(draft) !== contentHash)
+    context.addIssue({
+      code: "custom",
+      path: ["contentHash"],
+      message: "Executable program hash is invalid.",
+    });
+};
+
+const proxyTransformSchema = z
+  .object({
+    x: z.number(),
+    y: z.number(),
+    z: z.number(),
+    scale: z.number().positive(),
+    rotation: z.number(),
+  })
+  .strict();
+
+const proxyKeyframeSchema = z
+  .object({
+    frame: z.number().int().nonnegative(),
+    transform: proxyTransformSchema,
+    facing: z.enum(["left", "right", "front", "three-quarter", "away"]),
+    actionPhase: z.enum([
+      "anticipation",
+      "action",
+      "impact",
+      "reaction",
+      "settle",
+      "hold",
+    ]),
+  })
+  .strict();
+
+export const proxyStageProgramSchema = z
+  .object({
+    id: identifierSchema,
+    ...executableProgramLineageFields,
+    stageId: identifierSchema,
+    sceneId: identifierSchema,
+    title: z.string().min(1),
+    palette: z
+      .object({
+        sky: z.string().min(1),
+        ground: z.string().min(1),
+        ink: z.string().min(1),
+        accent: z.string().min(1),
+      })
+      .strict(),
+    landmarkLabels: z.array(z.string().min(1)),
+    contentHash: hashSchema,
+  })
+  .strict()
+  .superRefine(validateExecutableProgramHash);
+
+export const proxyCameraProgramSchema = z
+  .object({
+    id: identifierSchema,
+    ...executableProgramLineageFields,
+    shotId: identifierSchema,
+    purpose: z.string().min(1),
+    size: z.enum(["extreme-wide", "wide", "medium", "close-up", "insert"]),
+    focalRegion: z.enum([
+      "left-third",
+      "center",
+      "right-third",
+      "upper-third",
+      "lower-third",
+    ]),
+    movement: z.enum(["locked", "pan", "track", "push", "pull", "reframe"]),
+    keyframes: z
+      .array(
+        z
+          .object({
+            frame: z.number().int().nonnegative(),
+            x: z.number(),
+            y: z.number(),
+            scale: z.number().positive(),
+          })
+          .strict(),
+      )
+      .min(2),
+    contentHash: hashSchema,
+  })
+  .strict()
+  .superRefine(validateExecutableProgramHash);
+
+export const proxyEntityProgramSchema = z
+  .object({
+    id: identifierSchema,
+    ...executableProgramLineageFields,
+    shotId: identifierSchema,
+    entityId: identifierSchema,
+    appearance: z
+      .object({
+        shape: z.enum(["person", "presenter", "creature", "prop", "evidence"]),
+        label: z.string().min(1),
+        color: z.string().min(1),
+      })
+      .strict(),
+    keyframes: z.array(proxyKeyframeSchema).min(2),
+    contentHash: hashSchema,
+  })
+  .strict()
+  .superRefine(validateExecutableProgramHash);
+
+export const proxyCaptionProgramSchema = z
+  .object({
+    id: identifierSchema,
+    ...executableProgramLineageFields,
+    shotId: identifierSchema,
+    beatId: identifierSchema,
+    text: z.string().min(1),
+    emphasis: z.enum(["none", "keyword", "date", "quote", "full-phrase"]),
+    contentHash: hashSchema,
+  })
+  .strict()
+  .superRefine(validateExecutableProgramHash);
+
+export const proxyTransitionProgramSchema = z
+  .object({
+    id: identifierSchema,
+    ...executableProgramLineageFields,
+    shotId: identifierSchema,
+    kind: z.enum([
+      "hard-cut",
+      "match-cut",
+      "camera-carry",
+      "foreground-wipe",
+      "dissolve",
+    ]),
+    contentHash: hashSchema,
+  })
+  .strict()
+  .superRefine(validateExecutableProgramHash);
 
 const executableEpisodePlanFields = {
   schemaVersion: z.literal("1.0"),
@@ -93,6 +256,26 @@ const executableEpisodePlanFields = {
       })
       .strict(),
   ),
+  /**
+   * Concrete proxy programs are the executable rendering boundary for
+   * Director Studio Alpha. They are optional only so sealed legacy/final
+   * fixtures remain readable while the old pipeline is retired.
+   */
+  proxyStagePrograms: z.array(proxyStageProgramSchema).optional(),
+  proxyCameraPrograms: z.array(proxyCameraProgramSchema).optional(),
+  proxyEntityPrograms: z.array(proxyEntityProgramSchema).optional(),
+  proxyCaptionPrograms: z.array(proxyCaptionProgramSchema).optional(),
+  proxyTransitionPrograms: z.array(proxyTransitionProgramSchema).optional(),
+  resolvedEventFrames: z
+    .array(
+      z
+        .object({
+          eventId: identifierSchema,
+          frame: z.number().int().nonnegative(),
+        })
+        .strict(),
+    )
+    .optional(),
 };
 
 export const executableEpisodePlanDraftSchema = z
@@ -118,6 +301,21 @@ export const executableEpisodePlanSchema = z
         code: "custom",
         path: ["approvedAssets"],
         message: "Final renders may not consume proxy assets.",
+      });
+    if (
+      episode.renderMode === "final" &&
+      [
+        episode.proxyStagePrograms,
+        episode.proxyCameraPrograms,
+        episode.proxyEntityPrograms,
+        episode.proxyCaptionPrograms,
+        episode.proxyTransitionPrograms,
+      ].some((programs) => (programs?.length ?? 0) > 0)
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["renderMode"],
+        message: "Final renders may not consume proxy executable programs.",
       });
   });
 
@@ -183,6 +381,67 @@ export function sealExecutableEpisodePlan(
     if (stage.assetIds.some((assetId) => !assetIds.has(assetId)))
       throw new Error(`${stage.id} references an unresolved asset.`);
   });
+  if (draft.renderMode === "proxy-animatic") {
+    const directorShotIds = new Set(
+      draft.shots.map((shot) => shot.directorShotId),
+    );
+    const directorStageIds = new Set(draft.stageKits.map((stage) => stage.id));
+    if (!draft.proxyStagePrograms?.length || !draft.proxyCameraPrograms?.length)
+      throw new Error(
+        "Proxy animatics need concrete stage and camera programs.",
+      );
+    draft.proxyStagePrograms.forEach((program) => {
+      if (!directorStageIds.has(program.stageId))
+        throw new Error(`${program.id} references an unknown proxy stage.`);
+    });
+    draft.proxyCameraPrograms.forEach((program) => {
+      if (!directorShotIds.has(program.shotId))
+        throw new Error(`${program.id} references an unknown proxy shot.`);
+    });
+    draft.proxyEntityPrograms?.forEach((program) => {
+      if (!directorShotIds.has(program.shotId))
+        throw new Error(`${program.id} references an unknown proxy shot.`);
+    });
+    draft.proxyCaptionPrograms?.forEach((program) => {
+      if (!directorShotIds.has(program.shotId))
+        throw new Error(`${program.id} references an unknown proxy shot.`);
+    });
+    draft.proxyTransitionPrograms?.forEach((program) => {
+      if (!directorShotIds.has(program.shotId))
+        throw new Error(`${program.id} references an unknown proxy shot.`);
+    });
+    const allPrograms = [
+      ...(draft.proxyStagePrograms ?? []),
+      ...(draft.proxyCameraPrograms ?? []),
+      ...(draft.proxyEntityPrograms ?? []),
+      ...(draft.proxyCaptionPrograms ?? []),
+      ...(draft.proxyTransitionPrograms ?? []),
+    ];
+    if (
+      new Set(allPrograms.map((program) => program.id)).size !==
+      allPrograms.length
+    )
+      throw new Error("Executable proxy program IDs must be globally unique.");
+    draft.performancePrograms.forEach((program) => {
+      if (
+        !program.contentHash ||
+        !program.sourceSceneIds ||
+        !program.sourceBeatIds ||
+        !program.sourceShotIds
+      )
+        throw new Error(
+          `${program.id} is missing executable source lineage or its content hash.`,
+        );
+    });
+    if (
+      !draft.resolvedEventFrames ||
+      hashCanonical(draft.resolvedEventFrames) !==
+        hashCanonical(timing.resolvedEvents)
+    )
+      throw new Error(
+        "Executable proxy event bindings must exactly match the Timing Solution.",
+      );
+  }
 
   return executableEpisodePlanSchema.parse({
     ...draft,

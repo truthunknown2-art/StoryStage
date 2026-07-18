@@ -104,13 +104,25 @@ export const StoryStageRoot: React.FC = () => {
         height={defaultProductionProps.plan.height}
         defaultProps={defaultProductionProps}
         calculateMetadata={({ props }) => ({
-          durationInFrames: Math.min(
-            props.sliceDurationInFrames,
-            props.plan.durationInFrames,
-          ),
-          fps: props.plan.fps,
-          width: props.plan.width,
-          height: props.plan.height,
+          durationInFrames:
+            props.mode === "director-episode"
+              ? props.episodePlan.format.durationInFrames
+              : Math.min(
+                  props.sliceDurationInFrames,
+                  props.plan.durationInFrames,
+                ),
+          fps:
+            props.mode === "director-episode"
+              ? props.episodePlan.format.fps
+              : props.plan.fps,
+          width:
+            props.mode === "director-episode"
+              ? props.episodePlan.format.width
+              : props.plan.width,
+          height:
+            props.mode === "director-episode"
+              ? props.episodePlan.format.height
+              : props.plan.height,
         })}
       />
     </>
@@ -122,8 +134,11 @@ export type { StoryStageCompositionProps } from "./StoryStageComposition";
 export { ProductionComposition };
 export type {
   ProductionCompositionProps,
+  LegacyProductionCompositionProps,
+  DirectorEpisodeProductionProps,
   PlaybackAsset,
 } from "./ProductionComposition";
+export { DirectorEpisodeRenderer } from "./director/DirectorEpisodeRenderer";
 export { RigDiagnosticComposition };
 export type { RigDiagnosticCompositionProps } from "./RigDiagnosticComposition";
 export { Cv001RigProofComposition };

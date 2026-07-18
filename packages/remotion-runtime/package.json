@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.tsx",
     "./entry": "./src/remotion-entry.ts",
-    "./manifest": "./src/manifest.ts"
+    "./manifest": "./src/manifest.ts",
+    "./director": "./src/director/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

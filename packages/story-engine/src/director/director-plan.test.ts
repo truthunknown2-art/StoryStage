@@ -13,6 +13,10 @@ const createDraft = () => ({
   schemaVersion: "1.0" as const,
   id: "director-plan-fixture",
   storyGraphContentHash: hash,
+  planningAuthority: {
+    plannerId: "test-director",
+    plannerVersion: "1.0",
+  },
   grammarProfileContentHash: grammarProfiles.kidsAdventure.contentHash,
   sceneWorldContentHashes: [hash],
   initialWorldState: {

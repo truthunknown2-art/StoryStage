@@ -127,8 +127,8 @@ export function Cv001CreatorApp({
   const scriptWords = countWords(script);
   const scriptParagraphs = countParagraphs(script);
   const draftScriptError = useMemo(() => {
-    if (scriptWords < 80 || scriptWords > 400)
-      return `Paste 80 to 400 words for a direction draft. This script has ${scriptWords}.`;
+    if (scriptWords < 100 || scriptWords > 300)
+      return `Paste 100 to 300 words for a directed animatic. This script has ${scriptWords}.`;
     if (scriptParagraphs < 1 || scriptParagraphs > 6)
       return `Use one to six non-empty paragraphs. This script has ${scriptParagraphs}.`;
     return null;
@@ -303,7 +303,7 @@ export function Cv001CreatorApp({
             <small>
               {isLanternRoute
                 ? "This exact scene has an assigned rig and motion template."
-                : "New scripts stop at an editable direction draft until animation templates are assigned."}
+                : "New scripts compile into an honest directed proxy animatic before final animation capabilities are assigned."}
             </small>
           </div>
           {grammar === "weird-history" && script === CV001_DEFAULT_SCRIPT ? (

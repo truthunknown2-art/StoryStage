@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProductionComposition } from "@storystage/remotion-runtime";
+import { DirectorProductionComposition } from "@storystage/remotion-runtime/director";
 import { App } from "./App";
 
 const playerHarness = vi.hoisted(() => ({
@@ -56,6 +57,9 @@ async function openKidsBreakdown() {
 async function assignKidsTemplate(user: ReturnType<typeof userEvent.setup>) {
   await user.click(
     screen.getByRole("button", { name: /Review direction draft/ }),
+  );
+  await user.click(
+    screen.getByText(/Advanced.*legacy animation capability prototype/),
   );
   const scene = screen.getByLabelText("Three-beat scene") as HTMLSelectElement;
   await user.selectOptions(scene, scene.options[1]!.value);
@@ -130,10 +134,13 @@ describe("CV-002 editable script breakdown", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Split beat");
   });
 
-  it("shows the nine-field Weird History direction grammar and the exact production boundary", async () => {
+  it("shows the Weird History direction grammar and mounts the canonical directed animatic", async () => {
     const user = await openHistoryBreakdown();
     await user.click(
       screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    await user.click(
+      screen.getByText(/Advanced.*legacy animation capability prototype/),
     );
 
     expect(
@@ -142,7 +149,7 @@ describe("CV-002 editable script breakdown", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Direction draft ready. Animation templates have not been assigned yet.",
+      "Directed proxy animatic ready. Final animation capabilities are not fully assigned.",
     );
     expect(screen.getAllByText("Visual treatment").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Camera").length).toBeGreaterThan(0);
@@ -150,12 +157,20 @@ describe("CV-002 editable script breakdown", () => {
     expect(screen.getAllByText("Music").length).toBeGreaterThan(0);
     expect(screen.getAllByText("hard cut").length).toBeGreaterThan(0);
     expect(screen.getAllByText("editorial pulse").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("Remotion animation")).toBeInTheDocument();
+    expect(playerHarness.lastProps?.component).toBe(
+      DirectorProductionComposition,
+    );
     expect(
-      screen.getByRole("button", { name: "Build first cut" }),
-    ).toBeDisabled();
-    expect(
-      screen.queryByLabelText("Remotion animation"),
-    ).not.toBeInTheDocument();
+      (
+        playerHarness.lastProps?.inputProps as {
+          episodePlan?: { renderMode: string };
+        }
+      ).episodePlan?.renderMode,
+    ).toBe("proxy-animatic");
+    expect(screen.getByLabelText("Directed animatic draft")).toHaveAttribute(
+      "data-episode-hash",
+    );
   });
 
   it("restores a verified local direction draft without routing into ProductionComposition", async () => {
@@ -200,6 +215,9 @@ describe("CV-002 editable script breakdown", () => {
     await user.click(
       screen.getByRole("button", { name: /Review direction draft/ }),
     );
+    await user.click(
+      screen.getByText(/Advanced.*legacy animation capability prototype/),
+    );
     const directionAudit = await axe.run(document, {
       runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa"] },
     });
@@ -211,7 +229,7 @@ describe("CV-002 editable script breakdown", () => {
     ).toEqual([]);
   });
 
-  it("requires explicit Kids slot and asset mapping before mounting the real articulated preview", async () => {
+  it("mounts the Kids canonical animatic while keeping the legacy articulated template behind explicit assignment", async () => {
     const user = await openKidsBreakdown();
     await user.click(
       screen.getByRole("button", { name: /Review direction draft/ }),
@@ -223,7 +241,9 @@ describe("CV-002 editable script breakdown", () => {
     expect(
       screen.getByRole("button", { name: "Verify and assign template" }),
     ).toBeDisabled();
-    expect(playerHarness.lastProps).toBeNull();
+    expect(playerHarness.lastProps?.component).toBe(
+      DirectorProductionComposition,
+    );
     expect(
       screen.queryByLabelText("Assigned animated scene preview"),
     ).not.toBeInTheDocument();
@@ -265,7 +285,9 @@ describe("CV-002 editable script breakdown", () => {
     expect(
       screen.getByRole("button", { name: "Preview animated scene" }),
     ).toBeEnabled();
-    expect(playerHarness.lastProps).toBeNull();
+    expect(playerHarness.lastProps?.component).toBe(
+      DirectorProductionComposition,
+    );
     await user.click(
       screen.getByRole("button", { name: "Preview animated scene" }),
     );
@@ -298,8 +320,11 @@ describe("CV-002 editable script breakdown", () => {
       "template assignment was invalidated",
     );
     await user.click(screen.getByRole("button", { name: /Direction draft/ }));
+    await user.click(
+      screen.getByText(/Advanced.*legacy animation capability prototype/),
+    );
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Direction draft ready. Animation templates have not been assigned yet.",
+      "Directed proxy animatic ready. Final animation capabilities are not fully assigned.",
     );
     expect(
       screen.queryByRole("button", { name: "Preview animated scene" }),
@@ -321,13 +346,18 @@ describe("CV-002 editable script breakdown", () => {
       }),
     );
     await user.click(screen.getByRole("button", { name: /Direction draft/ }));
+    await user.click(
+      screen.getByText(/Advanced.*legacy animation capability prototype/),
+    );
 
     expect(
       screen.getByRole("heading", {
         name: "Object discovery template assigned",
       }),
     ).toBeInTheDocument();
-    expect(playerHarness.lastProps).toBeNull();
+    expect(
+      (playerHarness.lastProps as Record<string, unknown> | null)?.component,
+    ).toBe(DirectorProductionComposition);
     await user.click(
       screen.getByRole("button", { name: "Preview animated scene" }),
     );

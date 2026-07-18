@@ -4,6 +4,7 @@ import type {
   AudioMix,
   Cv001CompiledSceneMotion,
   DirectedBeatProgram,
+  ExecutableEpisodePlan,
   FrameAccurateRenderPlan,
   KidsShowcaseDirection,
   KidsShowcaseProgram,
@@ -31,6 +32,7 @@ import {
   type Cv001WorldTransform,
 } from "./cv001-rig-kinematics";
 import { assertDirectedSceneMotion } from "./production-motion-binding";
+import { DirectorEpisodeRenderer } from "./director/DirectorEpisodeRenderer";
 
 export type CharacterPlaybackAsset = {
   type: "character-rig";
@@ -57,7 +59,8 @@ export type PlaybackAsset =
   | BackgroundPlaybackAsset
   | PropPlaybackAsset;
 
-export type ProductionCompositionProps = {
+export type LegacyProductionCompositionProps = {
+  mode?: "legacy";
   plan: FrameAccurateRenderPlan;
   playbackAssets: Record<string, PlaybackAsset>;
   sliceDurationInFrames: number;
@@ -73,6 +76,15 @@ export type ProductionCompositionProps = {
   kidsShowcaseProgram?: KidsShowcaseProgram;
   kidsShowcaseDirection?: KidsShowcaseDirection;
 };
+export type DirectorEpisodeProductionProps = {
+  mode: "director-episode";
+  episodePlan: ExecutableEpisodePlan;
+  previewWatermark?: string;
+  directedSceneMotion?: never;
+};
+export type ProductionCompositionProps =
+  | LegacyProductionCompositionProps
+  | DirectorEpisodeProductionProps;
 type RenderShot = FrameAccurateRenderPlan["shots"][number];
 
 const fallbackPalette = (
@@ -362,7 +374,7 @@ const ShotScene: React.FC<{
   lanternPickupTransform?: Cv001WorldTransform;
   plan: FrameAccurateRenderPlan;
   playbackAssets: Record<string, PlaybackAsset>;
-  previewAssetStatus?: ProductionCompositionProps["previewAssetStatus"];
+  previewAssetStatus?: LegacyProductionCompositionProps["previewAssetStatus"];
   showMotionDiagnostics?: boolean;
   shot: RenderShot;
 }> = ({
@@ -531,22 +543,27 @@ const ShotScene: React.FC<{
   );
 };
 
-export const ProductionComposition: React.FC<ProductionCompositionProps> = ({
-  plan,
-  playbackAssets,
-  sliceDurationInFrames,
-  voiceTrackDataUrl,
-  musicTrackDataUrl,
-  soundEffectDataUrls = {},
-  soundEffectCues = [],
-  audioMix,
-  previewWatermark,
-  previewAssetStatus,
-  directedSceneMotion,
-  showMotionDiagnostics = false,
-  kidsShowcaseProgram,
-  kidsShowcaseDirection,
-}) => {
+export const ProductionComposition: React.FC<ProductionCompositionProps> = (
+  props,
+) => {
+  if (props.mode === "director-episode")
+    return <DirectorEpisodeRenderer episodePlan={props.episodePlan} />;
+  const {
+    plan,
+    playbackAssets,
+    sliceDurationInFrames,
+    voiceTrackDataUrl,
+    musicTrackDataUrl,
+    soundEffectDataUrls = {},
+    soundEffectCues = [],
+    audioMix,
+    previewWatermark,
+    previewAssetStatus,
+    directedSceneMotion,
+    showMotionDiagnostics = false,
+    kidsShowcaseProgram,
+    kidsShowcaseDirection,
+  } = props;
   const duration = Math.min(sliceDurationInFrames, plan.durationInFrames);
   const showcaseProgram = kidsShowcaseProgram
     ? kidsShowcaseProgramSchema.parse(kidsShowcaseProgram)

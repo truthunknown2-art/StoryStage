@@ -172,6 +172,12 @@ const directorPlanFields = {
   schemaVersion: z.literal("1.0"),
   id: identifierSchema,
   storyGraphContentHash: hashSchema,
+  planningAuthority: z
+    .object({
+      plannerId: identifierSchema,
+      plannerVersion: z.string().min(1),
+    })
+    .strict(),
   grammarProfileContentHash: hashSchema,
   sceneWorldContentHashes: z.array(hashSchema).min(1),
   initialWorldState: directorWorldStateSchema,
