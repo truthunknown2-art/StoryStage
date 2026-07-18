@@ -14,6 +14,8 @@ The creator-first Create and Studio mocks are in `docs/design/creator-first-rese
 
 The former SS-009 pilot remains a valid infrastructure and content test, but incremental SS-009 gate work is paused until CV-001 proves the front door and the actual animation kernel.
 
+`CV-001-A` is implemented locally for audit: a validated 120-frame deterministic rig proof now evaluates root, torso, head, upper arm, forearm, hand, gaze, blink, mouth, camera, parallax, and bounded lantern attachment tracks at the requested frame. A new motion-program schema rejects root sliding without articulated motion and cannot represent a full-body pose-swap track. The proof renders through Remotion to a local MP4 and exact-frame contact sheet; it remains engineering art and is not yet the creator-facing product.
+
 `SS-002: Two-Profile Script-to-Animatic + Generated Asset Seam` is active.
 
 `SS-004: Verified Delivery Bundle + Durable Render Receipt` was accepted by Pro at `b6c9a1d`. Full renders now produce a probed content-hashed receipt and an atomic seven-file delivery binding the exact production, master, captions, rights/provenance, and toolchain. Delivery status survives restart and is re-verified before open/reveal; imported audio cannot pass the final gate without explicit content-bound clearance.

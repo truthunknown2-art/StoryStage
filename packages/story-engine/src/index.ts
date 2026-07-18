@@ -11,6 +11,7 @@ export * from "./generation-exchange";
 export * from "./import-record";
 export * from "./model";
 export * from "./metrics";
+export * from "./motion-program";
 export * from "./pipeline";
 export * from "./pilots/rook-pilot-001";
 export * from "./production-policy";

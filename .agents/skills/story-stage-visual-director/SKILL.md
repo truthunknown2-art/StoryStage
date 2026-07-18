@@ -38,6 +38,7 @@ Load only the references required by the current task.
 - Generate rig-ready kits to a role specification. Treat slicing an arbitrary finished character as a fallback.
 - Never call a full-body pose swap, root-position tween, or camera move "character animation." Pose swaps may accent continuous rig motion but must not carry the performance.
 - Require frame-evaluated motion. Preview and final render must resolve the same scene graph and tracks at the requested frame without wall-clock state.
+- Parse every new beat motion program through `directedBeatProgramSchema` and reject it with `getMotionProgramIssues()` before preview or render. Prose quality rules do not substitute for the machine validator.
 - Keep prompts and provider metadata upstream of the frozen render plan.
 - Never call a paid image, stock, voice, or music provider without explicit authorization.
 - Never claim temporary lab art is a final channel identity.

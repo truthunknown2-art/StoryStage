@@ -9,12 +9,12 @@ This study derives production grammar only. StoryStage must not copy the referen
 - Captured 100 full-work samples at two-second intervals.
 - Captured 108 successive samples across five five-second windows at roughly four to five observations per second.
 - Chose windows for two-character locomotion and acting (10–15s), water traversal (40–45s), quicksand interaction (80–85s), cave staging and transition (145–150s), and the dragon payoff (170–175s).
-- Stored frames and contact sheets under ignored `artifacts/reference-analysis`; only this derived analysis is committed.
+- Stored frames and contact sheets under ignored `artifacts/reference-analysis`; committed the aggregated classifications in `mister-kipley-animation-classification.csv`.
 - Separated cuts and camera reframes from character-root motion, internal articulation, facial change, prop or layer motion, and effects.
 
 ## What the animation actually does
 
-The reference is limited cutout animation, but it is not a pose slideshow. It combines reusable rigs and cycles with aggressive editorial direction.
+The reference is limited animation, but it is not a pose slideshow. The observed layered motion is consistent with reusable cutout rigs and animation cycles combined with aggressive editorial direction; sampled frames cannot prove the original production mechanism.
 
 ### 10–15s: run cycle and reaction
 

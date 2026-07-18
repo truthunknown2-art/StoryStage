@@ -41,6 +41,8 @@ Require a hierarchical rig with stable pivots and attachment sockets:
 
 Evaluate the hierarchy at the requested output frame. Support animation curves, constraints, inverse kinematics, clip blending, attachments, and procedural secondary motion. Render the same evaluated scene in preview and export.
 
+For StoryStage code, `packages/story-engine/src/motion-program.ts` is the enforceable source of truth. New programs must parse through `directedBeatProgramSchema`; primary performance must pass `getMotionProgramIssues()`. The schema intentionally has no full-body pose-swap track. Root movement without changing tracks on at least three bones is rejected, and the CV-001 proof additionally requires facial, camera, and prop-attachment tracks.
+
 ## Compile semantic actions
 
 Translate direction into layered tracks, not a pose name. For example, `notice prop and recoil` may compile to:
