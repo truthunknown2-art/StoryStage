@@ -1,11 +1,11 @@
-import {execFile, spawn} from "node:child_process";
-import {mkdir, writeFile} from "node:fs/promises";
-import {get} from "node:http";
-import {resolve} from "node:path";
+import { execFile, spawn } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
+import { get } from "node:http";
+import { resolve } from "node:path";
 import process from "node:process";
-import {setTimeout as delay} from "node:timers/promises";
-import {promisify} from "node:util";
-import {fileURLToPath, URL} from "node:url";
+import { setTimeout as delay } from "node:timers/promises";
+import { promisify } from "node:util";
+import { fileURLToPath, URL } from "node:url";
 
 const execFileAsync = promisify(execFile);
 const workspaceRoot = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -14,19 +14,23 @@ const codeFile = resolve(outputDir, "browser-proof.playwright.js");
 const reportFile = resolve(outputDir, "proof-report.json");
 const url = "http://127.0.0.1:5173/";
 const session = `cv001-creator-proof-${process.pid}`;
-const cli = process.platform === "win32"
-  ? resolve(workspaceRoot, "node_modules/.bin/playwright-cli.CMD")
-  : resolve(workspaceRoot, "node_modules/.bin/playwright-cli");
-
-const runCli = async (args, options = {}) => execFileAsync(
-  process.platform === "win32" ? (process.env.ComSpec ?? "cmd.exe") : cli,
+const cli =
   process.platform === "win32"
-    ? ["/d", "/s", "/c", cli, `-s=${session}`, ...args]
-    : [`-s=${session}`, ...args], {
-  cwd: outputDir,
-  maxBuffer: 20 * 1024 * 1024,
-  ...options,
-});
+    ? resolve(workspaceRoot, "node_modules/.bin/playwright-cli.CMD")
+    : resolve(workspaceRoot, "node_modules/.bin/playwright-cli");
+
+const runCli = async (args, options = {}) =>
+  execFileAsync(
+    process.platform === "win32" ? (process.env.ComSpec ?? "cmd.exe") : cli,
+    process.platform === "win32"
+      ? ["/d", "/s", "/c", cli, `-s=${session}`, ...args]
+      : [`-s=${session}`, ...args],
+    {
+      cwd: outputDir,
+      maxBuffer: 20 * 1024 * 1024,
+      ...options,
+    },
+  );
 
 async function isStudioRunning() {
   return new Promise((resolveRunning) => {
@@ -51,7 +55,7 @@ async function waitForStudio() {
 }
 
 async function main() {
-  await mkdir(outputDir, {recursive: true});
+  await mkdir(outputDir, { recursive: true });
   let server = null;
   if (!(await isStudioRunning())) {
     const command = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
@@ -64,7 +68,10 @@ async function main() {
   }
 
   const config = JSON.stringify({
-    axePath: resolve(workspaceRoot, "node_modules/axe-core/axe.min.js").replaceAll("\\", "/"),
+    axePath: resolve(
+      workspaceRoot,
+      "node_modules/axe-core/axe.min.js",
+    ).replaceAll("\\", "/"),
     outputDir: outputDir.replaceAll("\\", "/"),
     url,
   });
@@ -196,7 +203,7 @@ async function main() {
     await page.getByRole("button", {name: "Close Advanced"}).click();
 
     await page.reload({waitUntil: "networkidle"});
-    await page.getByRole("button", {name: /Continue The Lantern Discovery/}).click();
+    await page.getByRole("button", {name: /Continue animated prototype The Lantern Discovery/}).click();
     await page.getByRole("heading", {name: "Show the lantern"}).waitFor();
     const continueStart = Number(await page.getByRole("slider", {name: "Scene playhead"}).inputValue());
     await page.waitForTimeout(350);
@@ -236,7 +243,10 @@ async function main() {
   try {
     await runCli(["open", url]);
     await runCli(["snapshot"]);
-    const {stdout} = await runCli(["--raw", "run-code", "--filename", codeFile], {timeout: 120_000});
+    const { stdout } = await runCli(
+      ["--raw", "run-code", "--filename", codeFile],
+      { timeout: 120_000 },
+    );
     let report;
     try {
       report = JSON.parse(stdout.trim());
@@ -244,7 +254,9 @@ async function main() {
       throw new Error(`Browser proof did not return a JSON report:\n${stdout}`);
     }
     await writeFile(reportFile, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-    process.stdout.write(`CV-001 creator browser proof passed: ${reportFile}\n`);
+    process.stdout.write(
+      `CV-001 creator browser proof passed: ${reportFile}\n`,
+    );
   } finally {
     await runCli(["close"]).catch(() => undefined);
     if (server) server.kill();
@@ -252,6 +264,8 @@ async function main() {
 }
 
 void main().catch((error) => {
-  process.stderr.write(`${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`);
+  process.stderr.write(
+    `${error instanceof Error ? (error.stack ?? error.message) : String(error)}\n`,
+  );
   process.exitCode = 1;
 });

@@ -56,13 +56,15 @@ export const directorProjectSchema = z
       project.planningArtifact.plannerId !==
         project.directorPlan.planningAuthority.plannerId ||
       project.planningArtifact.plannerVersion !==
-        project.directorPlan.planningAuthority.plannerVersion
+        project.directorPlan.planningAuthority.plannerVersion ||
+      project.planningArtifact.contentHash !==
+        project.directorPlan.planningArtifactContentHash
     )
       context.addIssue({
         code: "custom",
         path: ["planningArtifact"],
         message:
-          "Director project planning artifact does not match the compiled plan authority.",
+          "Director project planning artifact does not match the exact compiled plan authority and content.",
       });
     if (
       project.timingSolution.directorPlanContentHash !==

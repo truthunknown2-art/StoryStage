@@ -4,6 +4,7 @@ import { createCv002Project } from "../cv002-story-draft";
 import { applyDirectorPatch } from "./apply-director-patch";
 import { compileDirectorProject } from "./director-compiler";
 import { describeDirectorPatch, proposeDirectorPatch } from "./director-patch";
+import { directorProjectSchema } from "./director-project";
 import type {
   DirectorPlanner,
   DirectorProposalDraft,
@@ -241,6 +242,41 @@ describe("Director patch", () => {
         frames: 8,
       },
     ]);
+  });
+
+  it("rejects a self-rehashed planning artifact when the compiled plan still names the original artifact", () => {
+    const storyProject = createCv002Project(
+      "Artifact binding proof",
+      script,
+      "kids-adventure",
+    );
+    const base = compileDirectorProject({ storyProject });
+    const forged = structuredClone(base);
+    const originalDirection = forged.planningArtifact.beatDirections[0]!;
+    const directionDraft = structuredClone(originalDirection);
+    delete (directionDraft as Partial<typeof originalDirection>).contentHash;
+    const changedDirectionDraft = {
+      ...directionDraft,
+      musicIntent:
+        directionDraft.musicIntent === "wonder-rise"
+          ? ("playful-bed" as const)
+          : ("wonder-rise" as const),
+    };
+    forged.planningArtifact.beatDirections[0] = {
+      ...changedDirectionDraft,
+      contentHash: hashCanonical(changedDirectionDraft),
+    };
+    const artifactDraft = structuredClone(forged.planningArtifact);
+    delete (artifactDraft as Partial<typeof forged.planningArtifact>)
+      .contentHash;
+    forged.planningArtifact.contentHash = hashCanonical(artifactDraft);
+    const projectDraft = structuredClone(forged);
+    delete (projectDraft as Partial<typeof forged>).contentHash;
+    forged.contentHash = hashCanonical(projectDraft);
+
+    expect(() => directorProjectSchema.parse(forged)).toThrow(
+      /exact compiled plan authority and content/i,
+    );
   });
 
   it("rejects a reaction-delay note when the selected beat has no reaction event", () => {

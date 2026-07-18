@@ -73,9 +73,7 @@ async function openHistoryBreakdown() {
   await user.click(
     screen.getByRole("button", { name: "Load a Weird History sample" }),
   );
-  await user.click(
-    screen.getByRole("button", { name: "Break script into scenes" }),
-  );
+  await user.click(screen.getByRole("button", { name: "Create first cut" }));
   return user;
 }
 
@@ -85,9 +83,7 @@ async function openKidsBreakdown() {
   await user.click(
     screen.getByRole("button", { name: "Load a longer Kids script sample" }),
   );
-  await user.click(
-    screen.getByRole("button", { name: "Break script into scenes" }),
-  );
+  await user.click(screen.getByRole("button", { name: "Create first cut" }));
   return user;
 }
 

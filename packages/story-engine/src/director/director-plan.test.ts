@@ -17,6 +17,7 @@ const createDraft = () => ({
     plannerId: "test-director",
     plannerVersion: "1.0",
   },
+  planningArtifactContentHash: hash,
   grammarProfileContentHash: grammarProfiles.kidsAdventure.contentHash,
   sceneWorldContentHashes: [hash],
   initialWorldState: {

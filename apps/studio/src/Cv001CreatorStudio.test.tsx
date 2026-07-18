@@ -92,7 +92,9 @@ describe("CV-001 creator shell", () => {
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { name: /Start with the words/ }),
+      screen.getByRole("heading", {
+        name: /Turn your script into an animated first cut/,
+      }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText("Title")).toHaveValue("The Lantern Discovery");
     expect(
@@ -103,11 +105,9 @@ describe("CV-001 creator shell", () => {
     ).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: /Weird History/ })).toBeEnabled();
     expect(
-      screen.getByRole("button", { name: /Cut-paper forest/ }),
+      screen.getByRole("button", { name: /Storybook Cutout/ }),
     ).toHaveAttribute("aria-pressed", "true");
-    expect(
-      screen.getByRole("button", { name: /Storybook ink/ }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Ink & Wash/ })).toBeDisabled();
     expect(
       screen.queryByText("Production confidence", { exact: false }),
     ).not.toBeInTheDocument();
@@ -123,7 +123,7 @@ describe("CV-001 creator shell", () => {
 
     expect(screen.getByText(/Paste 100 to 300 words/)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Break script into scenes" }),
+      screen.getByRole("button", { name: "Create first cut" }),
     ).toBeDisabled();
     expect(
       screen.queryByRole("button", { name: "Create animated first cut" }),
@@ -350,11 +350,15 @@ describe("CV-001 creator shell", () => {
     cleanup();
     render(<App />);
     expect(
-      screen.getByRole("button", { name: /ContinueThe Lantern Discovery/ }),
+      screen.getByRole("button", {
+        name: /Continue animated prototypeThe Lantern Discovery/,
+      }),
     ).toBeInTheDocument();
     vi.clearAllMocks();
     await user.click(
-      screen.getByRole("button", { name: /ContinueThe Lantern Discovery/ }),
+      screen.getByRole("button", {
+        name: /Continue animated prototypeThe Lantern Discovery/,
+      }),
     );
     expect(
       (

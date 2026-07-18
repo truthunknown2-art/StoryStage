@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { cv002ProjectSchema, type Cv002Project } from "../cv002-story-draft";
 import { hashSchema, identifierSchema } from "../model";
+import { applyDirectorPatch } from "./apply-director-patch";
 import {
   canRedoDirectorHistory,
   canUndoDirectorHistory,
@@ -16,8 +18,11 @@ import {
   type DirectorProject,
 } from "./director-project";
 
-export const DIRECTOR_WORKSPACE_STORAGE_KEY =
+export const DIRECTOR_WORKSPACE_STORAGE_KEY_PREFIX =
   "storystage.director-workspace.v1";
+
+export const directorWorkspaceStorageKey = (storyProjectContentHash: string) =>
+  `${DIRECTOR_WORKSPACE_STORAGE_KEY_PREFIX}:${hashSchema.parse(storyProjectContentHash)}`;
 
 const directorHistoryEntrySchema = z
   .object({
@@ -117,13 +122,32 @@ export function createDirectorWorkspaceState(
 
 export function restoreDirectorWorkspaceState(
   serialized: string,
-  expectedStoryProjectContentHash: string,
+  expectedStoryProject: Cv002Project,
 ): DirectorWorkspaceState {
   const workspace = directorWorkspaceStateSchema.parse(JSON.parse(serialized));
-  if (workspace.storyProjectContentHash !== expectedStoryProjectContentHash)
+  const storyProject = cv002ProjectSchema.parse(expectedStoryProject);
+  if (workspace.storyProjectContentHash !== storyProject.contentHash)
     throw new Error(
       "Saved Director workspace belongs to another story project.",
     );
+  let replayed = workspace.history.entries[0]!.directorProject;
+  for (let index = 1; index < workspace.history.entries.length; index += 1) {
+    const entry = workspace.history.entries[index]!;
+    if (!entry.patch)
+      throw new Error(
+        "Saved Director workspace revision is missing its patch.",
+      );
+    const computed = applyDirectorPatch({
+      storyProject,
+      baseDirectorProject: replayed,
+      patch: entry.patch,
+    });
+    if (computed.contentHash !== entry.directorProject.contentHash)
+      throw new Error(
+        `Saved Director workspace revision ${index} failed semantic replay.`,
+      );
+    replayed = computed;
+  }
   return workspace;
 }
 

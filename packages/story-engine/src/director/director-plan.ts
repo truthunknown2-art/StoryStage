@@ -186,6 +186,7 @@ const directorPlanFields = {
       plannerVersion: z.string().min(1),
     })
     .strict(),
+  planningArtifactContentHash: hashSchema,
   grammarProfileContentHash: hashSchema,
   sceneWorldContentHashes: z.array(hashSchema).min(1),
   initialWorldState: directorWorldStateSchema,

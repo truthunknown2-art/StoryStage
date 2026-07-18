@@ -755,6 +755,7 @@ function buildDirectorPlan(
       plannerId: proposal.plannerId,
       plannerVersion: proposal.plannerVersion,
     },
+    planningArtifactContentHash: proposal.contentHash,
     grammarProfileContentHash: grammar.contentHash,
     sceneWorldContentHashes: worlds.map((world) => world.contentHash),
     initialWorldState: worlds[0]!.initialWorldState,

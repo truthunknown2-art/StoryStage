@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
 import { applyDirectorPatch } from "./apply-director-patch";
 import { compileDirectorProject } from "./director-compiler";
@@ -54,10 +55,7 @@ describe("Director workspace", () => {
     workspace = selectDirectorWorkspaceBeat(workspace, selectedBeatId);
     workspace = recordDirectorWorkspaceRevision(workspace, patch, revisedCut);
     const serialized = serializeDirectorWorkspaceState(workspace);
-    const restored = restoreDirectorWorkspaceState(
-      serialized,
-      storyProject.contentHash,
-    );
+    const restored = restoreDirectorWorkspaceState(serialized, storyProject);
 
     expect(restored.selectedBeatId).toBe(selectedBeatId);
     expect(restored.history.cursor).toBe(1);
@@ -84,10 +82,41 @@ describe("Director workspace", () => {
       "f".repeat(64);
 
     expect(() =>
-      restoreDirectorWorkspaceState(
-        JSON.stringify(forged),
-        storyProject.contentHash,
-      ),
+      restoreDirectorWorkspaceState(JSON.stringify(forged), storyProject),
     ).toThrow();
+  });
+
+  it("rejects a self-rehashed revision that the stored patch did not produce", () => {
+    const { storyProject, firstCut, selectedBeatId, patch, revisedCut } =
+      fixture();
+    const alternatePatch = proposeDirectorPatch({
+      baseDirectorProject: firstCut,
+      targetBeatId: selectedBeatId,
+      command: "Make the reaction 8 frames later",
+    });
+    const alternateCut = applyDirectorPatch({
+      storyProject,
+      baseDirectorProject: firstCut,
+      patch: alternatePatch,
+    });
+    const workspace = recordDirectorWorkspaceRevision(
+      createDirectorWorkspaceState(firstCut, selectedBeatId),
+      patch,
+      revisedCut,
+    );
+    const forged = structuredClone(workspace);
+    const forgedProject = structuredClone(alternateCut);
+    forgedProject.revision = {
+      baseDirectorProjectContentHash: firstCut.contentHash,
+      directorPatchContentHash: patch.contentHash,
+    };
+    const forgedDraft = structuredClone(forgedProject);
+    delete (forgedDraft as Partial<typeof forgedProject>).contentHash;
+    forgedProject.contentHash = hashCanonical(forgedDraft);
+    forged.history.entries[1]!.directorProject = forgedProject;
+
+    expect(() =>
+      restoreDirectorWorkspaceState(JSON.stringify(forged), storyProject),
+    ).toThrow(/semantic replay/i);
   });
 });

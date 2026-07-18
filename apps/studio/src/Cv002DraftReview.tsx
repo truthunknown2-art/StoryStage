@@ -16,7 +16,7 @@ import {
   compileDirectorProject,
   createDirectorWorkspaceState,
   currentDirectorWorkspaceProject,
-  DIRECTOR_WORKSPACE_STORAGE_KEY,
+  directorWorkspaceStorageKey,
   restoreDirectorWorkspaceState,
   selectDirectorWorkspaceBeat,
   serializeDirectorWorkspaceState,
@@ -57,20 +57,17 @@ const ROLE_OPTIONS: Array<{ value: Cv002BeatRole; label: string }> = [
 const humanize = (value: string) => value.replaceAll("-", " ");
 
 const loadDirectorWorkspace = (
+  storyProject: Cv002Project,
   directorProject: DirectorProject,
   selectedBeatId: string,
 ) => {
-  const serialized = window.localStorage.getItem(
-    DIRECTOR_WORKSPACE_STORAGE_KEY,
-  );
+  const storageKey = directorWorkspaceStorageKey(storyProject.contentHash);
+  const serialized = window.localStorage.getItem(storageKey);
   if (serialized)
     try {
-      return restoreDirectorWorkspaceState(
-        serialized,
-        directorProject.storyProjectContentHash,
-      );
+      return restoreDirectorWorkspaceState(serialized, storyProject);
     } catch {
-      window.localStorage.removeItem(DIRECTOR_WORKSPACE_STORAGE_KEY);
+      window.localStorage.removeItem(storageKey);
     }
   return createDirectorWorkspaceState(directorProject, selectedBeatId);
 };
@@ -145,6 +142,7 @@ export function Cv002DraftReview({
     useState<DirectorWorkspaceState | null>(() =>
       directorCompilation.directorProject
         ? loadDirectorWorkspace(
+            project,
             directorCompilation.directorProject,
             allBeats[0]!.id,
           )
@@ -187,17 +185,17 @@ export function Cv002DraftReview({
       )
         ? requestedBeatId
         : allBeats[0]!.id;
-      return loadDirectorWorkspace(directorProject, selectedBeatId);
+      return loadDirectorWorkspace(project, directorProject, selectedBeatId);
     });
-  }, [allBeats, directorCompilation.directorProject, project.contentHash]);
+  }, [allBeats, directorCompilation.directorProject, project]);
 
   useEffect(() => {
     if (!directorWorkspace) return;
     window.localStorage.setItem(
-      DIRECTOR_WORKSPACE_STORAGE_KEY,
+      directorWorkspaceStorageKey(project.contentHash),
       serializeDirectorWorkspaceState(directorWorkspace),
     );
-  }, [directorWorkspace]);
+  }, [directorWorkspace, project.contentHash]);
 
   const selectedBeatId = directorWorkspace?.selectedBeatId ?? allBeats[0]!.id;
   const setSelectedBeatId = (beatId: string) => {
