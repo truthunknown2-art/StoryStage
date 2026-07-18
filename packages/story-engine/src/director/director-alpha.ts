@@ -32,6 +32,7 @@ export {
   describeDirectorPatch,
   directorPatchSchema,
   proposeDirectorPatch,
+  proposeDirectorVisualPatch,
   sealDirectorPatch,
 } from "./director-patch";
 export type { DirectorPatch, DirectorPatchOperation } from "./director-patch";

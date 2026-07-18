@@ -152,15 +152,20 @@ export function Cv001CreatorApp({
     return null;
   }, [scriptParagraphs, scriptWords]);
   const scriptError = isLanternRoute ? lanternScriptError : draftScriptError;
-  const beatPreview = useMemo(
-    () =>
-      script
-        .trim()
-        .split(/(?<=[.!?])\s+/)
-        .filter(Boolean)
-        .slice(0, 4),
-    [script],
-  );
+  const draftPreviewProject = useMemo(() => {
+    if (isLanternRoute || draftScriptError) return null;
+    try {
+      return createCv002Project(title, script, grammar);
+    } catch {
+      return null;
+    }
+  }, [draftScriptError, grammar, isLanternRoute, script, title]);
+  const beatPreview = isLanternRoute
+    ? parseCv001ThreeBeatScript(script)
+    : (draftPreviewProject?.graph.scenes
+        .flatMap((scene) => scene.beats)
+        .slice(0, 4)
+        .map((beat) => beat.text) ?? []);
   const styleReferences =
     grammar === "kids-adventure"
       ? KIDS_STYLE_REFERENCES
@@ -375,7 +380,13 @@ export function Cv001CreatorApp({
               </header>
               <div>
                 {beatPreview.map((beat, index) => (
-                  <article key={`${index}-${beat}`}>
+                  <article
+                    data-beat-id={
+                      draftPreviewProject?.graph.scenes
+                        .flatMap((scene) => scene.beats)[index]?.id
+                    }
+                    key={`${index}-${beat}`}
+                  >
                     {/* Creator-workspace thumbnail, not Remotion composition media. */}
                     {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
                     <img alt="" src={styleReferences[index]} />
@@ -433,7 +444,7 @@ export function Cv001CreatorApp({
 
             <fieldset className="cv-create-choice-panel cv-style-panel">
               <legend>
-                <span>3</span> Choose an art style
+                <span>3</span> Style reference
               </legend>
               <div className="cv-choice-grid is-three">
                 <button

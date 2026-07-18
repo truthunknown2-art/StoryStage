@@ -33,6 +33,7 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { CreatorStudioShell } from "./creator-studio-components";
 import "./cv001-creator-studio.css";
 
 const beatPresentation = [
@@ -352,7 +353,7 @@ export function Cv001CreatorStudio({
         </div>
       </header>
 
-      <div className="cv-workspace">
+      <CreatorStudioShell className="cv-workspace">
         <nav aria-label="Scenes and beats" className="cv-beats-panel">
           <details open>
             <summary>
@@ -696,7 +697,7 @@ export function Cv001CreatorStudio({
             )}
           </section>
         </aside>
-      </div>
+      </CreatorStudioShell>
 
       {advancedOpen ? (
         <aside aria-label="Advanced" className="cv-advanced-drawer">

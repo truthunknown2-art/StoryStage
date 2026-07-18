@@ -16,6 +16,37 @@ export const directorEventTimingAdjustmentSchema = z
   })
   .strict();
 
+export const directorShotSizeSchema = z.enum([
+  "extreme-wide",
+  "wide",
+  "medium",
+  "close-up",
+  "insert",
+]);
+
+export const directorCameraMovementSchema = z.enum([
+  "locked",
+  "pan",
+  "track",
+  "push",
+  "pull",
+  "reframe",
+]);
+
+export const directorShotOverrideSchema = z
+  .object({
+    beatId: identifierSchema,
+    shotId: identifierSchema,
+    shotSize: directorShotSizeSchema.nullable(),
+    cameraMovement: directorCameraMovementSchema.nullable(),
+  })
+  .strict()
+  .refine(
+    (override) =>
+      override.shotSize !== null || override.cameraMovement !== null,
+    { message: "A shot override must change size or camera movement." },
+  );
+
 const directorProposalFields = {
   schemaVersion: z.literal("1.0"),
   plannerId: identifierSchema,
@@ -24,6 +55,7 @@ const directorProposalFields = {
   grammar: cv002GrammarSchema,
   beatDirections: z.array(cv002BeatDirectionSchema).min(1),
   eventTimingAdjustments: z.array(directorEventTimingAdjustmentSchema),
+  shotOverrides: z.array(directorShotOverrideSchema),
 };
 
 /** AI-judgment boundary. A future GPT/Codex skill emits this draft contract;
@@ -76,6 +108,7 @@ export class Cv002AlphaDirectorPlanner implements DirectorPlanner {
       grammar: storyProject.grammar,
       beatDirections: storyProject.directionDraft.directions,
       eventTimingAdjustments: [],
+      shotOverrides: [],
     };
   }
 }

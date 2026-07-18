@@ -131,6 +131,15 @@ export function restoreDirectorWorkspaceState(
       "Saved Director workspace belongs to another story project.",
     );
   let replayed = workspace.history.entries[0]!.directorProject;
+  if (
+    replayed.directorPlan.storyGraphContentHash !== storyProject.graph.contentHash ||
+    replayed.planningArtifact.storyGraphContentHash !==
+      storyProject.graph.contentHash ||
+    replayed.planningArtifact.grammar !== storyProject.grammar
+  )
+    throw new Error(
+      "Saved Director first cut belongs to another story graph.",
+    );
   for (let index = 1; index < workspace.history.entries.length; index += 1) {
     const entry = workspace.history.entries[index]!;
     if (!entry.patch)

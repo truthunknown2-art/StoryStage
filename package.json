@@ -33,6 +33,7 @@
     "render:cv001-creator-locality-proof": "pnpm --filter @storystage/render-worker render:cv001-creator-locality-proof",
     "proof:cv001-creator": "node scripts/proof-cv001-creator.mjs",
     "proof:cv002-draft": "node scripts/proof-cv002-draft.mjs",
+    "proof:cv002-creator-shell": "node scripts/proof-cv002-creator-shell.mjs",
     "proof:cv002-template": "node scripts/proof-cv002-template.mjs",
     "render:kids-showcase-proof": "pnpm --filter @storystage/render-worker render:kids-showcase-proof",
     "render:director-alpha-proof": "pnpm --filter @storystage/render-worker render:director-alpha-proof"

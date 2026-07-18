@@ -1938,6 +1938,337 @@
   padding: 0 14px;
 }
 
+/* DSA-002c: only real, patch-backed departments and timeline lanes. */
+.director-selected-beat-copy {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: #aebbb4;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 11px 14px;
+}
+
+.director-department-tabs {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  padding: 12px 14px 0;
+}
+
+.director-department-tabs button {
+  align-items: center;
+  background: #18211d;
+  border: 1px solid #303d36;
+  border-radius: 8px;
+  color: #8f9c95;
+  display: flex;
+  font-size: 11px;
+  gap: 7px;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.director-department-tabs button.is-active {
+  background: #203129;
+  border-color: #70bb8d;
+  color: #b8efcb;
+}
+
+.director-department-panel {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.director-department-panel > header {
+  align-items: center;
+  display: flex;
+  gap: 9px;
+}
+
+.director-department-panel > header > span {
+  align-items: center;
+  background: #24352c;
+  border: 1px solid #3a5144;
+  border-radius: 8px;
+  color: #9ce8b7;
+  display: flex;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.director-department-panel > header small,
+.director-department-panel > header strong {
+  display: block;
+}
+
+.director-department-panel > header small {
+  color: #82b493;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.director-department-panel > header strong {
+  color: #e5ebe7;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.director-department-panel label {
+  color: #9eaba4;
+  display: grid;
+  font-size: 10px;
+  gap: 5px;
+}
+
+.director-department-panel select,
+.director-motion-command input {
+  background: #0c1210;
+  border: 1px solid #344139;
+  border-radius: 7px;
+  color: #d9e0dc;
+  font-size: 11px;
+  min-height: 39px;
+  padding: 0 9px;
+  width: 100%;
+}
+
+.director-control-pair {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.director-department-panel > p {
+  color: #7f8d86;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.director-department-panel > p[role="alert"] {
+  background: #2b1d18;
+  border-radius: 7px;
+  color: #eda28f;
+  padding: 8px;
+}
+
+.director-department-panel > button,
+.director-motion-command button {
+  align-items: center;
+  background: #9ce8b7;
+  border: 0;
+  border-radius: 8px;
+  color: #102019;
+  display: flex;
+  font-size: 11px;
+  font-weight: 800;
+  gap: 7px;
+  justify-content: center;
+  min-height: 42px;
+  width: 100%;
+}
+
+.director-department-panel > button:disabled,
+.director-motion-command button:disabled {
+  background: #28332d;
+  color: #657269;
+}
+
+.director-motion-facts {
+  border: 1px solid #2b3731;
+  border-radius: 8px;
+  display: grid;
+  overflow: hidden;
+}
+
+.director-motion-facts > div {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 8px 9px;
+}
+
+.director-motion-facts > div + div {
+  border-top: 1px solid #26312b;
+}
+
+.director-motion-facts dt,
+.director-motion-facts dd {
+  font-size: 10px;
+}
+
+.director-motion-facts dt {
+  color: #7f8d86;
+}
+
+.director-motion-facts dd {
+  color: #b9c4be;
+  margin: 0;
+  text-align: right;
+}
+
+.director-motion-command {
+  display: grid;
+  gap: 7px;
+}
+
+.director-timeline-drawer {
+  background: #0b1110;
+  border-top: 1px solid #2d3933;
+}
+
+.director-timeline-drawer > summary {
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  list-style: none;
+  min-height: 46px;
+  padding: 0 15px;
+}
+
+.director-timeline-drawer > summary::-webkit-details-marker {
+  display: none;
+}
+
+.director-timeline-drawer > summary span {
+  align-items: center;
+  color: #b4c0b9;
+  display: flex;
+  font-size: 11px;
+  font-weight: 750;
+  gap: 7px;
+}
+
+.director-timeline-drawer > summary small {
+  color: #728078;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 10px;
+  margin-right: 9px;
+}
+
+.director-timeline-drawer[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.director-timeline-grid {
+  border-top: 1px solid #27312c;
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  padding: 9px 14px 14px;
+  row-gap: 6px;
+}
+
+.director-timeline-label {
+  align-items: center;
+  color: #819087;
+  display: flex;
+  font-size: 10px;
+  gap: 6px;
+  padding-left: 3px;
+}
+
+.director-timeline-lane {
+  background: #111916;
+  border: 1px solid #27332d;
+  border-radius: 6px;
+  height: 38px;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.director-timeline-lane > button {
+  background: #1b2922;
+  border: 1px solid #345040;
+  color: #a9b8af;
+  height: 100%;
+  min-width: 2px;
+  overflow: hidden;
+  padding: 4px 7px;
+  position: absolute;
+  text-align: left;
+  top: 0;
+}
+
+.director-timeline-lane > button.is-active {
+  background: #274335;
+  border-color: #7cc69a;
+  color: #d8f1e1;
+}
+
+.director-timeline-lane > button strong,
+.director-timeline-lane > button span {
+  display: block;
+  font-size: 9px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.director-timeline-lane > button span {
+  color: #7f9c89;
+  margin-top: 2px;
+}
+
+.director-timeline-lane.is-events {
+  overflow: visible;
+}
+
+.director-timeline-lane.is-events > button {
+  background: #d6b35e;
+  border: 2px solid #0f1512;
+  border-radius: 50%;
+  height: 14px;
+  overflow: visible;
+  padding: 0;
+  top: 11px;
+  transform: translateX(-7px);
+  width: 14px;
+}
+
+.director-timeline-lane.is-events > button span {
+  background: #1d251f;
+  border-radius: 4px;
+  color: #b8c1bb;
+  display: none;
+  left: 11px;
+  padding: 3px 5px;
+  position: absolute;
+  top: -5px;
+  width: max-content;
+}
+
+.director-timeline-lane.is-events > button:hover span,
+.director-timeline-lane.is-events > button:focus-visible span {
+  display: block;
+}
+
+.director-timeline-lane.is-camera > button > i {
+  background: #bd91e8;
+  border-radius: 50%;
+  height: 7px;
+  position: absolute;
+  top: 4px;
+  transform: translateX(-3px);
+  width: 7px;
+}
+
+.director-timeline-playhead {
+  background: #e9f0eb;
+  bottom: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.38);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 1px;
+  z-index: 4;
+}
+
 .cv2-beat-strip {
   align-items: stretch;
   background: #0e1412;
@@ -2172,4 +2503,292 @@
   .cv2-studio-footer button {
     justify-content: center;
   }
+}
+
+/* Canonical episode thumbnails: every still is evaluated from the same sealed
+   stage, camera, entity, and caption programs consumed by the main Player. */
+.director-frame-thumbnail,
+.director-frame-thumbnail-world {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.director-frame-thumbnail {
+  background: #111916;
+}
+
+.director-frame-thumbnail-world {
+  transform-origin: center;
+}
+
+.director-frame-thumbnail-sun {
+  border-radius: 50%;
+  height: 44%;
+  opacity: 0.32;
+  position: absolute;
+  right: 8%;
+  top: 8%;
+  width: 26%;
+}
+
+.director-frame-thumbnail-land {
+  bottom: -12%;
+  clip-path: polygon(0 78%, 18% 44%, 34% 73%, 52% 35%, 72% 68%, 86% 45%, 100% 72%, 100% 100%, 0 100%);
+  height: 58%;
+  left: 0;
+  opacity: 0.28;
+  position: absolute;
+  width: 100%;
+}
+
+.director-frame-thumbnail-entity {
+  border: 2px solid rgba(12, 23, 21, 0.78);
+  border-radius: 50% 50% 38% 38%;
+  box-shadow: inset -5px -4px rgba(0, 0, 0, 0.09), 0 4px 7px rgba(0, 0, 0, 0.18);
+  height: 31%;
+  position: absolute;
+  transform-origin: 50% 100%;
+  width: 14%;
+}
+
+.director-frame-thumbnail-entity::before {
+  background: inherit;
+  border: 2px solid rgba(12, 23, 21, 0.78);
+  border-radius: 50%;
+  content: "";
+  height: 58%;
+  left: 15%;
+  position: absolute;
+  top: -42%;
+  width: 70%;
+}
+
+.director-frame-thumbnail-entity.is-evidence,
+.director-frame-thumbnail-entity.is-prop {
+  border-radius: 8%;
+  height: 24%;
+  width: 21%;
+}
+
+.director-frame-thumbnail-entity.is-evidence::before,
+.director-frame-thumbnail-entity.is-prop::before {
+  display: none;
+}
+
+.director-frame-thumbnail-caption {
+  background: rgba(9, 18, 17, 0.88);
+  bottom: 5%;
+  color: #e4ebe6;
+  display: block;
+  font-size: 10px;
+  font-weight: 750;
+  left: 7%;
+  line-height: 1.15;
+  max-height: 28px;
+  overflow: hidden;
+  padding: 4px 6px;
+  position: absolute;
+  right: 7%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cv2-direction-rail nav section > button {
+  background: #151d19;
+  border-color: #2a3630;
+  display: block;
+  margin-top: 6px;
+  min-height: 132px;
+  padding: 5px;
+}
+
+.cv2-direction-rail nav section > button[aria-pressed="true"] {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cv2-accent) 65%, transparent);
+}
+
+.cv2-direction-rail-thumbnail {
+  aspect-ratio: 16 / 9;
+  border-radius: 7px;
+  display: block;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.cv2-direction-rail-thumbnail > i {
+  align-items: center;
+  background: rgba(7, 15, 13, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 5px;
+  color: #e3ebe6;
+  display: flex;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 850;
+  height: 25px;
+  justify-content: center;
+  left: 7px;
+  min-width: 28px;
+  padding: 0 5px;
+  position: absolute;
+  top: 7px;
+}
+
+.cv2-direction-rail-copy {
+  background: transparent !important;
+  display: block;
+  padding: 8px 7px 6px;
+}
+
+.cv2-direction-rail nav .cv2-direction-rail-copy strong {
+  color: #d1dad4;
+  font-size: 10px;
+}
+
+.cv2-direction-rail nav .cv2-direction-rail-copy small {
+  color: #aebbb3;
+  font-size: 10px;
+  -webkit-line-clamp: 2;
+}
+
+.cv2-direction-rail .director-frame-thumbnail-caption,
+.cv2-beat-strip .director-frame-thumbnail-caption {
+  display: none;
+}
+
+.cv2-beat-strip {
+  grid-template-columns: 118px minmax(0, 1fr);
+}
+
+.cv2-beat-strip > div {
+  gap: 8px;
+  padding: 10px;
+}
+
+.cv2-beat-strip button {
+  flex-basis: 145px;
+  max-width: 180px;
+  min-height: 103px;
+  padding: 5px;
+}
+
+.cv2-beat-strip button > .director-frame-thumbnail {
+  aspect-ratio: 16 / 9;
+  border-radius: 5px;
+  height: auto;
+}
+
+.cv2-beat-strip button > span:not(.director-frame-thumbnail) {
+  display: inline-block;
+  font-size: 10px;
+  margin: 6px 5px 0 4px;
+}
+
+.cv2-beat-strip button > small {
+  display: inline-block;
+  font-size: 10px;
+  margin-top: 6px;
+}
+
+@media (max-width: 860px) {
+  .cv2-direction-rail nav section {
+    flex-basis: 255px;
+  }
+
+  .cv2-direction-rail nav section > button {
+    min-height: 126px;
+  }
+}
+
+/* Creator-facing ergonomics for the arbitrary-script Studio. */
+.cv2-direction-page .cv2-studio-heading p,
+.cv2-direction-page .cv2-studio-heading div > span,
+.cv2-direction-page .cv2-direction-rail > header small,
+.cv2-direction-page .cv2-direction-rail nav section > header span,
+.cv2-direction-page .cv2-direction-rail nav section > header small,
+.cv2-direction-page .cv2-direction-rail button,
+.cv2-direction-page .cv2-direction-rail span,
+.cv2-direction-page .director-frame-thumbnail,
+.cv2-direction-page .cv2-beat-strip span,
+.cv2-direction-page .director-stage-caption small,
+.cv2-direction-page .director-stage-caption > span,
+.cv2-direction-page .director-revision-bar small,
+.cv2-direction-page .director-department-panel > header small,
+.cv2-direction-page .cv2-director-capability span,
+.cv2-direction-page .director-timeline-lane > button strong,
+.cv2-direction-page .director-timeline-lane > button span,
+.cv2-direction-page .cv2-beat-strip > header small,
+.cv2-direction-page .cv2-studio-footer span {
+  font-size: 10px;
+}
+
+.cv2-direction-page .cv2-director-player button {
+  min-height: 44px !important;
+  min-width: 44px !important;
+}
+
+.cv2-direction-page .director-department-tabs button,
+.cv2-direction-page .director-history-actions button,
+.cv2-direction-page .director-department-panel select,
+.cv2-direction-page .director-department-panel input,
+.cv2-direction-page .director-department-panel button,
+.cv2-direction-page .cv2-studio-footer button {
+  min-height: 44px;
+}
+
+.cv2-direction-page .director-history-actions button {
+  height: 44px;
+  min-width: 44px;
+}
+
+.cv2-direction-page .director-timeline-lane {
+  height: 46px;
+}
+
+.cv2-direction-page .director-timeline-lane:not(.is-events) > button {
+  min-height: 44px;
+}
+
+.cv2-direction-page .director-timeline-lane.is-events > button {
+  background: transparent;
+  border: 0;
+  height: 44px;
+  top: 0;
+  transform: translateX(-22px);
+  width: 44px;
+}
+
+.cv2-direction-page .director-timeline-lane.is-events > button::before {
+  background: #d6b35e;
+  border: 2px solid #0f1512;
+  border-radius: 50%;
+  content: "";
+  height: 14px;
+  left: 15px;
+  position: absolute;
+  top: 13px;
+  width: 14px;
+}
+
+.cv2-direction-page .director-timeline-lane.is-events > button span {
+  left: 27px;
+  top: 9px;
+}
+
+.cv2-direction-page .cv2-direction-rail > header small,
+.cv2-direction-page .cv2-direction-rail nav section > header small,
+.cv2-direction-page .director-revision-bar small,
+.cv2-direction-page .cv2-beat-strip > header small {
+  color: #a1afa7;
+}
+
+.cv2-direction-page .director-timeline-lane > button.is-active span {
+  color: #d3e4da;
+}
+
+.cv2-direction-page .cv2-direction-rail nav .cv2-direction-rail-copy strong {
+  color: #eef4f0;
 }

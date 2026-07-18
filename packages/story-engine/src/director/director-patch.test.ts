@@ -3,7 +3,11 @@ import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
 import { applyDirectorPatch } from "./apply-director-patch";
 import { compileDirectorProject } from "./director-compiler";
-import { describeDirectorPatch, proposeDirectorPatch } from "./director-patch";
+import {
+  describeDirectorPatch,
+  proposeDirectorPatch,
+  proposeDirectorVisualPatch,
+} from "./director-patch";
 import { directorProjectSchema } from "./director-project";
 import type {
   DirectorPlanner,
@@ -33,6 +37,13 @@ const reactionTarget = (base: ReturnType<typeof compileDirectorProject>) => {
   return beat.beatId;
 };
 
+const delayOperation = (patch: ReturnType<typeof proposeDirectorPatch>) => {
+  const operation = patch.operations[0];
+  if (!operation || operation.kind !== "delay-event")
+    throw new Error("Expected a delay-event operation.");
+  return operation;
+};
+
 class CustomDirectorPlanner implements DirectorPlanner {
   propose({
     storyProject,
@@ -59,6 +70,7 @@ class CustomDirectorPlanner implements DirectorPlanner {
       grammar: storyProject.grammar,
       beatDirections,
       eventTimingAdjustments: [],
+      shotOverrides: [],
     };
   }
 }
@@ -150,7 +162,7 @@ describe("Director patch", () => {
       base.sceneWorlds.map((world) => world.contentHash),
     );
 
-    const delayedShotId = patch.operations[0]!.sourceShotId;
+    const delayedShotId = delayOperation(patch).sourceShotId;
     const untouchedTargetShotIds = base.directorPlan.shots
       .filter(
         (shot) =>
@@ -237,11 +249,107 @@ describe("Director patch", () => {
     expect(edited.planningArtifact.eventTimingAdjustments).toEqual([
       {
         beatId: targetBeatId,
-        eventId: patch.operations[0]!.eventId,
-        sourceShotId: patch.operations[0]!.sourceShotId,
+        eventId: delayOperation(patch).eventId,
+        sourceShotId: delayOperation(patch).sourceShotId,
         frames: 8,
       },
     ]);
+  });
+
+  it("recompiles one shot for patch-backed size and camera movement", () => {
+    const storyProject = createCv002Project(
+      "Visual patch proof",
+      script,
+      "kids-adventure",
+    );
+    const base = compileDirectorProject({ storyProject });
+    const shot = base.directorPlan.shots[0]!;
+    const targetBeatId = shot.beatIds[0]!;
+    const patch = proposeDirectorVisualPatch({
+      baseDirectorProject: base,
+      targetBeatId,
+      shotId: shot.id,
+      shotSize: shot.camera.size === "close-up" ? "wide" : "close-up",
+      cameraMovement: shot.camera.movement === "track" ? "push" : "track",
+    });
+    const edited = applyDirectorPatch({
+      storyProject,
+      baseDirectorProject: base,
+      patch,
+    });
+    const editedShot = edited.directorPlan.shots.find(
+      (candidate) => candidate.id === shot.id,
+    )!;
+
+    expect(patch.operations.map((operation) => operation.kind)).toEqual([
+      "set-shot-size",
+      "set-camera-movement",
+    ]);
+    expect(editedShot.camera.size).toBe(
+      shot.camera.size === "close-up" ? "wide" : "close-up",
+    );
+    expect(editedShot.camera.movement).toBe(
+      shot.camera.movement === "track" ? "push" : "track",
+    );
+    expect(edited.planningArtifact.shotOverrides).toEqual([
+      {
+        beatId: targetBeatId,
+        shotId: shot.id,
+        shotSize: editedShot.camera.size,
+        cameraMovement: editedShot.camera.movement,
+      },
+    ]);
+    const editedCameraPrograms = new Map(
+      (edited.executableEpisodePlan.proxyCameraPrograms ?? []).map(
+        (program) => [program.shotId, program],
+      ),
+    );
+    expect(
+      (base.executableEpisodePlan.proxyCameraPrograms ?? [])
+        .filter((program) => program.shotId !== shot.id)
+        .every(
+          (program) =>
+            editedCameraPrograms.get(program.shotId)?.contentHash ===
+            program.contentHash,
+        ),
+    ).toBe(true);
+    expect(editedCameraPrograms.get(shot.id)?.contentHash).not.toBe(
+      (base.executableEpisodePlan.proxyCameraPrograms ?? []).find(
+        (program) => program.shotId === shot.id,
+      )?.contentHash,
+    );
+
+    let history = createDirectorHistory(base);
+    history = recordDirectorRevision(history, patch, edited);
+    expect(
+      currentDirectorProject(undoDirectorHistory(history)).contentHash,
+    ).toBe(base.contentHash);
+    expect(
+      currentDirectorProject(redoDirectorHistory(undoDirectorHistory(history)))
+        .contentHash,
+    ).toBe(edited.contentHash);
+  });
+
+  it("rejects a visual patch when the shot belongs to another beat", () => {
+    const storyProject = createCv002Project(
+      "Wrong visual target proof",
+      script,
+      "kids-adventure",
+    );
+    const base = compileDirectorProject({ storyProject });
+    const shot = base.directorPlan.shots[0]!;
+    const otherBeatId = base.directorPlan.beats.find(
+      (beat) => !shot.beatIds.includes(beat.beatId),
+    )!.beatId;
+
+    expect(() =>
+      proposeDirectorVisualPatch({
+        baseDirectorProject: base,
+        targetBeatId: otherBeatId,
+        shotId: shot.id,
+        shotSize: "close-up",
+      }),
+    ).toThrow(/does not belong/i);
   });
 
   it("rejects a self-rehashed planning artifact when the compiled plan still names the original artifact", () => {

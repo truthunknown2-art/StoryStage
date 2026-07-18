@@ -5,8 +5,12 @@ import {
   directorProjectSchema,
   type DirectorProject,
 } from "./director-project";
+import {
+  directorCameraMovementSchema,
+  directorShotSizeSchema,
+} from "./director-proposal";
 
-export const directorPatchOperationSchema = z
+const delayEventOperationSchema = z
   .object({
     id: identifierSchema,
     kind: z.literal("delay-event"),
@@ -16,6 +20,32 @@ export const directorPatchOperationSchema = z
     frames: z.number().int().min(1).max(30),
   })
   .strict();
+
+const setShotSizeOperationSchema = z
+  .object({
+    id: identifierSchema,
+    kind: z.literal("set-shot-size"),
+    beatId: identifierSchema,
+    shotId: identifierSchema,
+    shotSize: directorShotSizeSchema,
+  })
+  .strict();
+
+const setCameraMovementOperationSchema = z
+  .object({
+    id: identifierSchema,
+    kind: z.literal("set-camera-movement"),
+    beatId: identifierSchema,
+    shotId: identifierSchema,
+    movement: directorCameraMovementSchema,
+  })
+  .strict();
+
+export const directorPatchOperationSchema = z.discriminatedUnion("kind", [
+  delayEventOperationSchema,
+  setShotSizeOperationSchema,
+  setCameraMovementOperationSchema,
+]);
 
 const directorPatchFields = {
   schemaVersion: z.literal("1.0"),
@@ -157,12 +187,71 @@ export function proposeDirectorPatch(input: {
   });
 }
 
+export function proposeDirectorVisualPatch(input: {
+  baseDirectorProject: DirectorProject;
+  targetBeatId: string;
+  shotId: string;
+  shotSize?: z.infer<typeof directorShotSizeSchema>;
+  cameraMovement?: z.infer<typeof directorCameraMovementSchema>;
+}): DirectorPatch {
+  const base = directorProjectSchema.parse(input.baseDirectorProject);
+  const shot = base.directorPlan.shots.find(
+    (candidate) => candidate.id === input.shotId,
+  );
+  if (!shot || !shot.beatIds.includes(input.targetBeatId))
+    throw new Error(
+      "The selected shot is stale or does not belong to the selected beat.",
+    );
+  const operations: DirectorPatchOperation[] = [];
+  if (input.shotSize && input.shotSize !== shot.camera.size)
+    operations.push({
+      id: `set-shot-size-${shot.id}`,
+      kind: "set-shot-size",
+      beatId: input.targetBeatId,
+      shotId: shot.id,
+      shotSize: input.shotSize,
+    });
+  if (input.cameraMovement && input.cameraMovement !== shot.camera.movement)
+    operations.push({
+      id: `set-camera-movement-${shot.id}`,
+      kind: "set-camera-movement",
+      beatId: input.targetBeatId,
+      shotId: shot.id,
+      movement: input.cameraMovement,
+    });
+  if (!operations.length)
+    throw new Error("Choose a different shot size or camera movement.");
+  const sourceCommand = [
+    input.shotSize ? `size ${input.shotSize}` : null,
+    input.cameraMovement ? `camera ${input.cameraMovement}` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const identity = hashCanonical({
+    baseDirectorProjectContentHash: base.contentHash,
+    sourceCommand,
+    operations,
+  });
+  return sealDirectorPatch({
+    schemaVersion: "1.0",
+    id: `director-patch-${identity.slice(0, 12)}`,
+    baseDirectorProjectContentHash: base.contentHash,
+    targetBeatId: input.targetBeatId,
+    sourceCommand,
+    operations,
+  });
+}
+
 export function describeDirectorPatch(patch: DirectorPatch): string[] {
   return directorPatchSchema
     .parse(patch)
     .operations.map((operation) =>
       operation.kind === "delay-event"
         ? `Delay the reaction by ${operation.frames} frames`
-        : "Apply the direction change",
+        : operation.kind === "set-shot-size"
+          ? `Set ${operation.shotId} to ${operation.shotSize}`
+          : operation.kind === "set-camera-movement"
+            ? `Set ${operation.shotId} camera to ${operation.movement}`
+            : "Apply the direction change",
     );
 }

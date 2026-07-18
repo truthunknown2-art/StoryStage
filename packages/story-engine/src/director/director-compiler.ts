@@ -275,6 +275,18 @@ function assertProposal(project: Cv002Project, proposal: DirectorProposal) {
     throw new Error(
       "Director proposal timing adjustments must target unique events on known beats.",
     );
+  const shotOverrideIds = proposal.shotOverrides.map(
+    (override) => override.shotId,
+  );
+  if (
+    new Set(shotOverrideIds).size !== shotOverrideIds.length ||
+    proposal.shotOverrides.some(
+      (override) => !beatIds.includes(override.beatId),
+    )
+  )
+    throw new Error(
+      "Director proposal shot overrides must target unique shots on known beats.",
+    );
 }
 
 function buildSceneWorlds(project: Cv002Project) {
@@ -437,6 +449,9 @@ function buildDirectorPlan(
       ...(timingAdjustmentsByBeat.get(adjustment.beatId) ?? []),
       adjustment,
     ]),
+  );
+  const unusedShotOverrides = new Map(
+    proposal.shotOverrides.map((override) => [override.shotId, override]),
   );
   const isKids = project.grammar === "kids-adventure";
   let eventOrder = 0;
@@ -617,6 +632,12 @@ function buildDirectorPlan(
         const suffix =
           shotCount === 1 ? "main" : shotIndex === 0 ? "primary" : "response";
         const shotId = `shot-${globalIndex + 1}-${suffix}`;
+        const shotOverride = unusedShotOverrides.get(shotId);
+        if (shotOverride && shotOverride.beatId !== beat.id)
+          throw new Error(
+            `${shotId} override is bound to the wrong story beat.`,
+          );
+        unusedShotOverrides.delete(shotId);
         const secondary = shotIndex === 1;
         const shotSubjectId = secondary ? secondarySubjectId : subjectId;
         const shotPurpose = secondary
@@ -647,7 +668,9 @@ function buildDirectorPlan(
           entryEventId,
           exitEventId,
           camera: {
-            size: secondary ? (isKids ? "close-up" : "insert") : cameraSize,
+            size:
+              shotOverride?.shotSize ??
+              (secondary ? (isKids ? "close-up" : "insert") : cameraSize),
             angle:
               secondary && !isKids
                 ? "overhead"
@@ -656,7 +679,9 @@ function buildDirectorPlan(
                   : beat.role === "action" && isKids
                     ? "profile"
                     : "eye-level",
-            movement: secondary ? (isKids ? "push" : "locked") : cameraMovement,
+            movement:
+              shotOverride?.cameraMovement ??
+              (secondary ? (isKids ? "push" : "locked") : cameraMovement),
             subjectIds: [shotSubjectId],
             axisId: `axis-${sceneIndex + 1}`,
             motivation: secondary
@@ -747,6 +772,10 @@ function buildDirectorPlan(
       shotIds,
     });
   });
+  if (unusedShotOverrides.size)
+    throw new Error(
+      `Director proposal references unknown shot ${[...unusedShotOverrides.keys()][0]}.`,
+    );
   return sealDirectorPlan({
     schemaVersion: "1.0",
     id: `director-${project.graph.contentHash.slice(0, 12)}`,

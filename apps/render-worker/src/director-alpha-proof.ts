@@ -159,8 +159,13 @@ async function renderFixture(serveUrl: string, fixture: Fixture) {
     id: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
     inputProps: patchedInputProps,
   });
+  const delayOperation = patch.operations.find(
+    (operation) => operation.kind === "delay-event",
+  );
+  if (!delayOperation)
+    throw new Error(`${fixture.slug} patch is missing its delay operation.`);
   const patchedRange = patched.timingSolution.resolvedShots.find(
-    (range) => range.shotId === patch.operations[0]!.sourceShotId,
+    (range) => range.shotId === delayOperation.sourceShotId,
   )!;
   const patchedStill = resolve(fixtureRoot, "patched-beat-start.png");
   const patchedRepeatStill = resolve(
@@ -290,7 +295,7 @@ async function renderFixture(serveUrl: string, fixture: Fixture) {
       editedExecutableEpisodePlanContentHash:
         patched.executableEpisodePlan.contentHash,
       targetBeatId: patch.targetBeatId,
-      reactionDelayFrames: patch.operations[0]!.frames,
+      reactionDelayFrames: delayOperation.frames,
       preservedUntouchedPrograms,
       untouchedProgramCount: baseUntouchedPrograms.length,
       deterministicStill: {

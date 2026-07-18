@@ -9,6 +9,7 @@ import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProductionComposition } from "@storystage/remotion-runtime";
+import { createCv002Project } from "@storystage/story-engine";
 import { App } from "./App";
 
 const playerHarness = vi.hoisted(() => ({
@@ -128,6 +129,31 @@ describe("CV-001 creator shell", () => {
     expect(
       screen.queryByRole("button", { name: "Create animated first cut" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("previews the canonical CV-002 beats for a valid arbitrary script", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(
+      screen.getByRole("button", { name: "Load a longer Kids script sample" }),
+    );
+    const title = (screen.getByLabelText("Title") as HTMLInputElement).value;
+    const script = (screen.getByLabelText("Script") as HTMLTextAreaElement)
+      .value;
+    const expectedIds = createCv002Project(
+      title,
+      script,
+      "kids-adventure",
+    ).graph.scenes
+      .flatMap((scene) => scene.beats)
+      .slice(0, 4)
+      .map((beat) => beat.id);
+    const preview = screen.getByLabelText("Preview of natural beats");
+    const cards = Array.from(
+      preview.querySelectorAll<HTMLElement>("[data-beat-id]"),
+    );
+
+    expect(cards.map((card) => card.dataset.beatId)).toEqual(expectedIds);
   });
 
   it("opens a real preview with exactly three creator-facing beat cards", async () => {

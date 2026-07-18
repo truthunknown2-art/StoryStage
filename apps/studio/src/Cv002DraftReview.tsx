@@ -39,6 +39,11 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Cv002TemplateAssignmentPanel } from "./Cv002TemplateAssignmentPanel";
+import {
+  CreatorBeatStrip,
+  CreatorSceneRail,
+  CreatorStudioShell,
+} from "./creator-studio-components";
 import { DirectorAnimaticPreview } from "./director/DirectorPreview";
 import "./cv002-draft-review.css";
 
@@ -198,6 +203,9 @@ export function Cv002DraftReview({
   }, [directorWorkspace, project.contentHash]);
 
   const selectedBeatId = directorWorkspace?.selectedBeatId ?? allBeats[0]!.id;
+  const studioDirector = directorWorkspace
+    ? currentDirectorWorkspaceProject(directorWorkspace)
+    : directorCompilation.directorProject;
   const setSelectedBeatId = (beatId: string) => {
     setDirectorWorkspace((current) => {
       if (
@@ -685,45 +693,15 @@ export function Cv002DraftReview({
             </span>
           </div>
 
-          <section className="cv2-studio-workspace">
-            <aside
-              className="cv2-direction-rail"
-              aria-label="Studio scenes and beats"
-            >
-              <header>
-                <div>
-                  <small>Your story</small>
-                  <strong>Scenes & beats</strong>
-                </div>
-                <span>{allBeats.length}</span>
-              </header>
-              <nav aria-label="Choose a scene or beat">
-                {project.graph.scenes.map((scene, sceneIndex) => (
-                  <section key={scene.id}>
-                    <header>
-                      <span>Scene {sceneIndex + 1}</span>
-                      <small>{scene.beats.length} beats</small>
-                    </header>
-                    {scene.beats.map((beat, beatIndex) => (
-                      <button
-                        aria-pressed={beat.id === selectedBeatId}
-                        key={beat.id}
-                        onClick={() => setSelectedBeatId(beat.id)}
-                        type="button"
-                      >
-                        <span>
-                          {sceneIndex + 1}.{beatIndex + 1}
-                        </span>
-                        <div>
-                          <strong>{humanize(beat.role)}</strong>
-                          <small>{beat.text}</small>
-                        </div>
-                      </button>
-                    ))}
-                  </section>
-                ))}
-              </nav>
-            </aside>
+          <CreatorStudioShell className="cv2-studio-workspace">
+            {studioDirector ? (
+              <CreatorSceneRail
+                director={studioDirector}
+                onSelectBeat={setSelectedBeatId}
+                project={project}
+                selectedBeatId={selectedBeatId}
+              />
+            ) : null}
 
             <DirectorAnimaticPreview
               compileError={directorCompilation.error}
@@ -732,31 +710,15 @@ export function Cv002DraftReview({
               workspace={directorWorkspace}
             />
 
-            <nav className="cv2-beat-strip" aria-label="Compact beat strip">
-              <header>
-                <small>First cut</small>
-                <strong>Beat strip</strong>
-              </header>
-              <div>
-                {project.graph.scenes.flatMap((scene, sceneIndex) =>
-                  scene.beats.map((beat, beatIndex) => (
-                    <button
-                      aria-label={`Scene ${sceneIndex + 1}, beat ${beatIndex + 1}: ${beat.text}`}
-                      aria-pressed={beat.id === selectedBeatId}
-                      key={beat.id}
-                      onClick={() => setSelectedBeatId(beat.id)}
-                      type="button"
-                    >
-                      <span>
-                        {sceneIndex + 1}.{beatIndex + 1}
-                      </span>
-                      <small>{humanize(beat.role)}</small>
-                    </button>
-                  )),
-                )}
-              </div>
-            </nav>
-          </section>
+            {studioDirector ? (
+              <CreatorBeatStrip
+                director={studioDirector}
+                onSelectBeat={setSelectedBeatId}
+                project={project}
+                selectedBeatId={selectedBeatId}
+              />
+            ) : null}
+          </CreatorStudioShell>
 
           <details className="cv2-studio-advanced">
             <summary>Advanced production details</summary>

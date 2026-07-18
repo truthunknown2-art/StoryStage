@@ -201,10 +201,23 @@ describe("CV-002 editable script breakdown", () => {
     expect(
       (
         playerHarness.lastProps?.inputProps as {
-          episodePlan?: { renderMode: string };
+          episodePlan?: { contentHash: string; renderMode: string };
         }
       ).episodePlan?.renderMode,
     ).toBe("proxy-animatic");
+    const episodeHash = (
+      playerHarness.lastProps?.inputProps as {
+        episodePlan?: { contentHash: string };
+      }
+    ).episodePlan?.contentHash;
+    expect(
+      within(screen.getByLabelText("Studio scenes and beats"))
+        .getAllByRole("img", { name: /Canonical frame/ })
+        .every(
+          (thumbnail) =>
+            thumbnail.getAttribute("data-episode-hash") === episodeHash,
+        ),
+    ).toBe(true);
     expect(screen.getByLabelText("Directed animatic draft")).toHaveAttribute(
       "data-episode-hash",
     );
@@ -223,6 +236,7 @@ describe("CV-002 editable script breakdown", () => {
 
     await user.click(targetBeat);
     expect(targetBeat).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("tab", { name: "Motion" }));
     await user.type(
       screen.getByLabelText("Direction for selected beat"),
       "Make the reaction 6 frames later",
@@ -241,6 +255,14 @@ describe("CV-002 editable script breakdown", () => {
 
     const editedHash = animatic.getAttribute("data-episode-hash");
     expect(editedHash).not.toBe(originalHash);
+    expect(
+      within(screen.getByLabelText("Studio scenes and beats"))
+        .getAllByRole("img", { name: /Canonical frame/ })
+        .every(
+          (thumbnail) =>
+            thumbnail.getAttribute("data-episode-hash") === editedHash,
+        ),
+    ).toBe(true);
     expect(screen.getByText(/Beat updated\. New canonical cut/)).toBeVisible();
     expect(
       screen.getByRole("button", { name: "Undo direction" }),
@@ -301,6 +323,39 @@ describe("CV-002 editable script breakdown", () => {
     expect(
       within(strip).getByRole("button", { name: /Scene 3, beat 1/i }),
     ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("applies patch-backed Visual controls and exposes genuine selected-beat lanes", async () => {
+    const user = await openHistoryBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const animatic = screen.getByLabelText("Directed animatic draft");
+    const originalHash = animatic.getAttribute("data-episode-hash");
+    const visualTab = screen.getByRole("tab", { name: "Visual" });
+    expect(visualTab).toHaveAttribute("aria-selected", "true");
+
+    const shotSize = screen.getByLabelText("Shot size") as HTMLSelectElement;
+    const nextSize = shotSize.value === "close-up" ? "wide" : "close-up";
+    await user.selectOptions(shotSize, nextSize);
+    await user.click(
+      screen.getByRole("button", { name: "Preview visual change" }),
+    );
+    expect(screen.getByLabelText("Proposed change")).toHaveTextContent(
+      `Set shot-1-main to ${nextSize}`,
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Apply and replay this beat" }),
+    );
+    expect(animatic.getAttribute("data-episode-hash")).not.toBe(originalHash);
+
+    const timeline = screen.getByLabelText("Selected-beat timeline");
+    expect(within(timeline).getByText("Shots")).toBeVisible();
+    expect(within(timeline).getByText("Events")).toBeVisible();
+    expect(within(timeline).getByText("Camera")).toBeVisible();
+    playerHarness.lastSeek = null;
+    await user.click(within(timeline).getAllByRole("button")[0]!);
+    expect(playerHarness.lastSeek).not.toBeNull();
   });
 
   it("restores a verified local direction draft without routing into ProductionComposition", async () => {

@@ -30,6 +30,7 @@ const proposalDraftFrom = (
   grammar: artifact.grammar,
   beatDirections: structuredClone(artifact.beatDirections),
   eventTimingAdjustments: structuredClone(artifact.eventTimingAdjustments),
+  shotOverrides: structuredClone(artifact.shotOverrides),
 });
 
 export function applyDirectorPatch(input: {
@@ -50,7 +51,44 @@ export function applyDirectorPatch(input: {
   const adjustments = base.planningArtifact.eventTimingAdjustments.map(
     (adjustment) => ({ ...adjustment }),
   );
+  const shotOverrides = base.planningArtifact.shotOverrides.map((override) => ({
+    ...override,
+  }));
   patch.operations.forEach((operation) => {
+    if (operation.kind !== "delay-event") {
+      const shot = base.directorPlan.shots.find(
+        (candidate) => candidate.id === operation.shotId,
+      );
+      if (!shot || !shot.beatIds.includes(operation.beatId))
+        throw new Error(
+          "Director visual patch is stale or targets a shot on another beat.",
+        );
+      if (
+        (operation.kind === "set-shot-size" &&
+          operation.shotSize === shot.camera.size) ||
+        (operation.kind === "set-camera-movement" &&
+          operation.movement === shot.camera.movement)
+      )
+        throw new Error("Director visual patch would not change the shot.");
+      const existingIndex = shotOverrides.findIndex(
+        (override) => override.shotId === shot.id,
+      );
+      const nextOverride = {
+        beatId: operation.beatId,
+        shotId: shot.id,
+        shotSize:
+          operation.kind === "set-shot-size"
+            ? operation.shotSize
+            : (shotOverrides[existingIndex]?.shotSize ?? null),
+        cameraMovement:
+          operation.kind === "set-camera-movement"
+            ? operation.movement
+            : (shotOverrides[existingIndex]?.cameraMovement ?? null),
+      };
+      if (existingIndex >= 0) shotOverrides[existingIndex] = nextOverride;
+      else shotOverrides.push(nextOverride);
+      return;
+    }
     const event = base.directorPlan.events.find(
       (candidate) => candidate.id === operation.eventId,
     );
@@ -58,7 +96,6 @@ export function applyDirectorPatch(input: {
       (candidate) => candidate.id === operation.sourceShotId,
     );
     if (
-      operation.kind !== "delay-event" ||
       !event ||
       event.kind !== "reaction" ||
       event.beatId !== operation.beatId ||
@@ -99,6 +136,7 @@ export function applyDirectorPatch(input: {
   const planningArtifact = sealDirectorProposal({
     ...baseProposalDraft,
     eventTimingAdjustments: adjustments,
+    shotOverrides,
   });
   const next = compileDirectorProject({
     storyProject,

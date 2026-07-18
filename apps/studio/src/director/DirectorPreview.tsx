@@ -17,8 +17,10 @@ import {
 } from "@storystage/story-engine/director-alpha";
 import {
   AlertTriangle,
+  Activity,
   Check,
   Clapperboard,
+  Eye,
   Film,
   Redo2,
   ShieldCheck,
@@ -26,13 +28,17 @@ import {
 } from "lucide-react";
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
   type SetStateAction,
 } from "react";
 import { DirectorChangePreview } from "./DirectorChangePreview";
-import { DirectorCommandPanel } from "./DirectorCommandPanel";
+import { DirectorMotionPanel } from "./DirectorMotionPanel";
+import { DirectorTimelineDrawer } from "./DirectorTimelineDrawer";
+import { DirectorVisualPanel } from "./DirectorVisualPanel";
+import { createDirectorTimelineViewModel } from "./director-timeline-view-model";
 
 const beatRange = (director: DirectorProject, beatId: string) => {
   const shotIds = new Set(
@@ -68,6 +74,10 @@ export function DirectorAnimaticPreview({
   const [proposal, setProposal] = useState<DirectorPatch | null>(null);
   const [commandError, setCommandError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [activeDepartment, setActiveDepartment] = useState<"visual" | "motion">(
+    "visual",
+  );
+  const [frame, setFrame] = useState(0);
   const playerRef = useRef<PlayerRef>(null);
   const replayEndFrame = useRef<number | null>(null);
   const replayOnNextPlan = useRef(false);
@@ -81,6 +91,7 @@ export function DirectorAnimaticPreview({
     const range = beatRange(director, selectedBeatId);
     if (!range) return;
     player.seekTo(range.startFrame);
+    setFrame(range.startFrame);
     if (replayOnNextPlan.current) {
       replayOnNextPlan.current = false;
       replayEndFrame.current = range.endFrameExclusive;
@@ -94,6 +105,7 @@ export function DirectorAnimaticPreview({
     const player = playerRef.current;
     if (!player) return;
     const syncPlaybackState = (event: { detail: { frame: number } }) => {
+      setFrame(event.detail.frame);
       const end = replayEndFrame.current;
       if (end !== null && event.detail.frame >= end - 1) {
         player.pause();
@@ -125,6 +137,14 @@ export function DirectorAnimaticPreview({
     setCommandError(null);
     setFeedback(null);
   }, [selectedBeatId]);
+
+  const timeline = useMemo(
+    () =>
+      director
+        ? createDirectorTimelineViewModel(director, selectedBeatId)
+        : null,
+    [director, selectedBeatId],
+  );
 
   if (!director)
     return (
@@ -167,6 +187,11 @@ export function DirectorAnimaticPreview({
           : "That direction is not ready.",
       );
     }
+  };
+
+  const previewPatch = (patch: DirectorPatch) => {
+    setProposal(patch);
+    setCommandError(null);
   };
 
   const applyProposal = () => {
@@ -298,14 +323,47 @@ export function DirectorAnimaticPreview({
               </button>
             </div>
           </div>
-          <DirectorCommandPanel
-            beatLabel={`${selectedBeatIndex + 1}`}
-            beatText={selectedBeat.text}
-            command={command}
-            error={commandError}
-            onCommandChange={setCommand}
-            onPreview={previewCommand}
-          />
+          <p className="director-selected-beat-copy">{selectedBeat.text}</p>
+          <div
+            className="director-department-tabs"
+            role="tablist"
+            aria-label="Director departments"
+          >
+            <button
+              aria-selected={activeDepartment === "visual"}
+              className={activeDepartment === "visual" ? "is-active" : ""}
+              onClick={() => setActiveDepartment("visual")}
+              role="tab"
+              type="button"
+            >
+              <Eye size={15} /> Visual
+            </button>
+            <button
+              aria-selected={activeDepartment === "motion"}
+              className={activeDepartment === "motion" ? "is-active" : ""}
+              onClick={() => setActiveDepartment("motion")}
+              role="tab"
+              type="button"
+            >
+              <Activity size={15} /> Motion
+            </button>
+          </div>
+          {activeDepartment === "visual" ? (
+            <DirectorVisualPanel
+              beatId={selectedBeatId}
+              director={director}
+              onPreview={previewPatch}
+            />
+          ) : (
+            <DirectorMotionPanel
+              beatId={selectedBeatId}
+              command={command}
+              director={director}
+              error={commandError}
+              onCommandChange={setCommand}
+              onPreview={previewCommand}
+            />
+          )}
           {proposal ? (
             <DirectorChangePreview
               patch={proposal}
@@ -355,6 +413,16 @@ export function DirectorAnimaticPreview({
           </details>
         </aside>
       </div>
+      {timeline ? (
+        <DirectorTimelineDrawer
+          activeFrame={frame}
+          onSeek={(nextFrame) => {
+            playerRef.current?.seekTo(nextFrame);
+            setFrame(nextFrame);
+          }}
+          timeline={timeline}
+        />
+      ) : null}
     </section>
   );
 }

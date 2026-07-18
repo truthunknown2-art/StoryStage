@@ -119,4 +119,32 @@ describe("Director workspace", () => {
       restoreDirectorWorkspaceState(JSON.stringify(forged), storyProject),
     ).toThrow(/semantic replay/i);
   });
+
+  it("rejects a self-rehashed H0 bound to another story graph", () => {
+    const { storyProject: expectedStoryProject } = fixture();
+    const otherStoryProject = createCv002Project(
+      "Another workspace",
+      script.replaceAll("traveler", "inventor"),
+      "weird-history",
+    );
+    const otherFirstCut = compileDirectorProject({
+      storyProject: otherStoryProject,
+    });
+    const forgedFirstCut = structuredClone(otherFirstCut);
+    forgedFirstCut.storyProjectContentHash = expectedStoryProject.contentHash;
+    const forgedFirstCutDraft = structuredClone(forgedFirstCut);
+    delete (forgedFirstCutDraft as Partial<typeof forgedFirstCut>).contentHash;
+    forgedFirstCut.contentHash = hashCanonical(forgedFirstCutDraft);
+    const forgedWorkspace = createDirectorWorkspaceState(
+      forgedFirstCut,
+      forgedFirstCut.directorPlan.beats[0]!.beatId,
+    );
+
+    expect(() =>
+      restoreDirectorWorkspaceState(
+        JSON.stringify(forgedWorkspace),
+        expectedStoryProject,
+      ),
+    ).toThrow(/another story graph/i);
+  });
 });
