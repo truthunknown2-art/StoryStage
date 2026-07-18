@@ -12,6 +12,8 @@ export * from "./director/director-plan";
 export * from "./director/event-constraint-solver";
 export * from "./director/executable-episode-plan";
 export * from "./director/grammar-profile";
+export * from "./director/quality-report";
+export * from "./director/scene-world";
 export * from "./director/timing-solution";
 export * from "./director/world-state";
 export * from "./directed-sequence-plan";

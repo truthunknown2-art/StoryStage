@@ -3,6 +3,8 @@ import { hashCanonical } from "../canonical-hash";
 import { directorPlanDraftSchema, sealDirectorPlan } from "./director-plan";
 import { sealExecutableEpisodePlan } from "./executable-episode-plan";
 import { grammarProfiles } from "./grammar-profile";
+import { analyzeDirectorQuality } from "./quality-report";
+import { sealSceneWorldPlan } from "./scene-world";
 import { sealTimingSolution } from "./timing-solution";
 
 const hash = hashCanonical("fixture");
@@ -12,6 +14,7 @@ const createDraft = () => ({
   id: "director-plan-fixture",
   storyGraphContentHash: hash,
   grammarProfileContentHash: grammarProfiles.kidsAdventure.contentHash,
+  sceneWorldContentHashes: [hash],
   initialWorldState: {
     frame: 0,
     entities: {
@@ -141,6 +144,72 @@ const createDraft = () => ({
 });
 
 describe("Director plan", () => {
+  it("seals persistent geography before any shot is designed", () => {
+    const world = sealSceneWorldPlan({
+      schemaVersion: "1.0",
+      id: "forest-world",
+      sceneId: "scene-one",
+      sourceSceneContentHash: hash,
+      coordinateSystem: {
+        width: 100,
+        height: 56.25,
+        depthMinimum: -10,
+        depthMaximum: 10,
+      },
+      stages: [
+        {
+          id: "forest-stage",
+          stageKitRequirementId: "forest-kit",
+          walkableSurfaces: [
+            {
+              id: "forest-floor",
+              boundary: [
+                { x: 0, y: 0, z: 0 },
+                { x: 100, y: 0, z: 0 },
+                { x: 100, y: 56.25, z: 0 },
+              ],
+              elevation: 0,
+            },
+          ],
+          depthPlanes: [
+            {
+              id: "forest-background",
+              role: "background",
+              depth: -5,
+              layerRequirementId: "forest-background-art",
+            },
+            {
+              id: "forest-performance",
+              role: "performance",
+              depth: 0,
+              layerRequirementId: "character-plane",
+            },
+            {
+              id: "forest-foreground",
+              role: "foreground",
+              depth: 5,
+              layerRequirementId: "forest-foreground-art",
+            },
+          ],
+          landmarks: [
+            {
+              id: "forest-entry",
+              kind: "entrance",
+              position: { x: 10, y: 0, z: 0 },
+              facing: "right",
+            },
+          ],
+          occluders: [],
+          cameraZones: [],
+        },
+      ],
+      portals: [],
+      initialWorldState: createDraft().initialWorldState,
+    });
+
+    expect(world.stages[0]?.depthPlanes).toHaveLength(3);
+  });
+
   it("seals an untimed causal plan before frame solving", () => {
     const plan = sealDirectorPlan(createDraft());
     expect(plan.contentHash).toHaveLength(64);
@@ -254,5 +323,12 @@ describe("Director plan", () => {
 
     expect(episode.format.durationInFrames).toBe(61);
     expect(episode.shots[0]?.cutEventId).toBe("mara-reacts");
+    expect(
+      analyzeDirectorQuality(
+        directorPlan,
+        grammarProfiles.kidsAdventure,
+        timing,
+      ).status,
+    ).toBe("clear");
   });
 });

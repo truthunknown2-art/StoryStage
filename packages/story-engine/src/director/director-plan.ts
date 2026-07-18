@@ -173,6 +173,7 @@ const directorPlanFields = {
   id: identifierSchema,
   storyGraphContentHash: hashSchema,
   grammarProfileContentHash: hashSchema,
+  sceneWorldContentHashes: z.array(hashSchema).min(1),
   initialWorldState: directorWorldStateSchema,
   events: z.array(causalEventSchema).min(1),
   beats: z.array(beatPlanSchema).min(1),
