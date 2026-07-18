@@ -707,7 +707,7 @@ export async function createPreparedCandidateComparisonSheet(input: {trustedStag
 export async function prepareCandidateSets(input: PrepareCandidateSetsInput): Promise<PreparationReport> {
   const request = prepareCandidateSetsRequestSchema.parse(input.request);
   const stagingRoot = await ensureTrustedStagingRoot(input.trustedStagingRoot, input.stagingRoot);
-  const verifiedCandidates = await readVerifiedStagedCandidateBytes({candidates: request.candidates.map((candidate) => candidate.stagedCandidate), trustedStagingRoot: input.trustedStagingRoot, stagingRoot});
+  const verifiedCandidates = await readVerifiedStagedCandidateBytes({candidates: request.candidates.map((candidate) => candidate.stagedCandidate), trustedStagingRoot: input.trustedStagingRoot, stagingRoot: input.stagingRoot});
   const verifiedById = new Map(verifiedCandidates.map((verified) => [verified.candidate.candidateId, verified]));
   await mkdir(resolve(stagingRoot, "prepared"), {recursive: true});
   const grouped = new Map<string, CandidatePreparationInput[]>();
