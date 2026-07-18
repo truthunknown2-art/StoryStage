@@ -35,11 +35,14 @@ Run `pnpm render:rook-motion-review` after rebuilding the preparation packet to 
 
 - Production render-plan hash: `2c60f72c984bb13d5392b8065972a501a0e47b4e43ab2a610c7c9f86eed0f9a4`.
 - Preparation-report hash: `4e38f6e0929159ac1e57a91747457b52227d323680d634fa323d86ae3ba8fa7d`.
-- Motion-review manifest hash: `21ddb2d0421b3e501ad55cd31dd7c6d75e94c018b98974211483f30c1949e77f`.
+- Source-production hash: `51caf57a94e74ce9c91f87729d044e7c8ece320de59ed801de84959fc4d5b448`.
+- Generation-job hash: `b9b4049b002b3179d800ca4ceaf5a821311ec73b95bb69e0208a9799b87ec101`.
+- Motion-review manifest hash: `ab8a845d331e71d5cb2efee54658f5d08361082984c48da20fc364d2fa3cbc20`.
 - Shot 1.03: 73 frames, `cameraPush`, paired MP4 SHA-256 `792c4d1ef4abc8c3bd32984326a9d7570c59fdd6c8d8fc6ec9ab02e0381c0bf8`.
 - Shot 1.05: 61 frames, `pan`, paired MP4 SHA-256 `19fd5b5a7a352467c89f82021ab215060c1545271e8358ec72c65ac5c8ddc61c`.
 - Shot 1.08: 73 frames, `cameraPush`, paired MP4 SHA-256 `7ff6240cd451bb6c45c175ed4ebad267351e0fea47ef8a5f1cdfff9e4e224e23`.
 - Human decisions recorded: zero. The exchange remains `needs-review`; the reels are comparison evidence, never production approval or binding.
+- Before rendering, the command hash-verifies the packet source production and generation job, requires job-to-production and exchange-to-job binding, and requires the current compiled render-plan hash to equal the prepared source snapshot. A same-ID/revision direction change therefore fails closed instead of reusing stale candidates.
 
 ## Exact prompts
 

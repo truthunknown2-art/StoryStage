@@ -13,12 +13,12 @@ import type {ProductionCompositionProps} from "@storystage/remotion-runtime";
 import {
   buildAnimaticSync,
   createRookPilot001Fixture,
-  generationExchangeStateSchema,
   hashCanonical,
   preparationReportSchema,
   verifyPreparationReportHash,
   type PreparedCandidate,
 } from "@storystage/story-engine";
+import {verifyRookMotionReviewLineage} from "./rook-pilot-motion-review-lineage";
 
 const execFileAsync = promisify(execFile);
 const workspaceRoot = resolve(fileURLToPath(new URL("../../..", import.meta.url)));
@@ -78,18 +78,19 @@ async function extractReviewFrame(video: string, frame: number, output: string):
 
 async function main(): Promise<void> {
   if (!inside(packetRoot, motionRoot)) throw new Error("Refusing to replace a motion-review folder outside its private packet.");
-  const [report, exchangeState, diagnostics] = await Promise.all([
+  const [report, exchangeStateInput, diagnostics, sourceProductionInput, generationJobInput] = await Promise.all([
     readFile(resolve(packetRoot, "technical/preparation-report.json"), "utf8").then((value) => preparationReportSchema.parse(JSON.parse(value))),
-    readFile(resolve(packetRoot, "technical/generation-exchange-state.json"), "utf8").then((value) => generationExchangeStateSchema.parse(JSON.parse(value))),
+    readFile(resolve(packetRoot, "technical/generation-exchange-state.json"), "utf8").then((value) => JSON.parse(value) as unknown),
     readFile(resolve(packetRoot, "technical/technical-diagnostics.json"), "utf8").then((value) => JSON.parse(value) as {humanDecisions?: {selectedCandidateSetIds?: unknown[]; rejectedCandidateSetIds?: unknown[]; approvedAssetVersions?: unknown[]}}),
+    readFile(resolve(packetRoot, "technical/source-production.json"), "utf8").then((value) => JSON.parse(value) as unknown),
+    readFile(resolve(packetRoot, "technical/generation-job.json"), "utf8").then((value) => JSON.parse(value) as unknown),
   ]);
-  if (!verifyPreparationReportHash(report) || exchangeState.status !== "needs-review" || exchangeState.importId !== report.importId || exchangeState.exchangeJobId !== report.exchangeJobId) throw new Error("The reconstruction preparation packet is missing, stale, or no longer awaiting review.");
-  const decisionCounts = [diagnostics.humanDecisions?.selectedCandidateSetIds?.length ?? -1, diagnostics.humanDecisions?.rejectedCandidateSetIds?.length ?? -1, diagnostics.humanDecisions?.approvedAssetVersions?.length ?? -1];
-  if (decisionCounts.some((count) => count !== 0)) throw new Error("Motion review can only run before selection, rejection, or approval.");
-
   const fixture = createRookPilot001Fixture();
   const build = buildAnimaticSync(fixture);
-  if (exchangeState.production.id !== build.draft.productionId || exchangeState.production.revision !== build.draft.revision) throw new Error("The review packet does not match the exact frozen Rook production.");
+  const {sourceProduction, generationJob, exchangeState} = verifyRookMotionReviewLineage({sourceProduction: sourceProductionInput, generationJob: generationJobInput, exchangeState: exchangeStateInput, currentProduction: {id: build.draft.productionId, revision: build.draft.revision}, currentRenderPlanContentHash: build.renderPlan.contentHash});
+  if (!verifyPreparationReportHash(report) || exchangeState.importId !== report.importId || exchangeState.exchangeJobId !== report.exchangeJobId) throw new Error("The reconstruction preparation packet is missing, stale, or no longer awaiting review.");
+  const decisionCounts = [diagnostics.humanDecisions?.selectedCandidateSetIds?.length ?? -1, diagnostics.humanDecisions?.rejectedCandidateSetIds?.length ?? -1, diagnostics.humanDecisions?.approvedAssetVersions?.length ?? -1];
+  if (decisionCounts.some((count) => count !== 0)) throw new Error("Motion review can only run before selection, rejection, or approval.");
   await rm(motionRoot, {recursive: true, force: true});
   await Promise.all([mkdir(sourceClipRoot, {recursive: true}), mkdir(frameRoot, {recursive: true})]);
   const serveUrl = await bundle({entryPoint: resolve(workspaceRoot, "packages/remotion-runtime/src/remotion-entry.ts"), publicDir: resolve(workspaceRoot, "packages/remotion-runtime/public")});
@@ -154,6 +155,8 @@ async function main(): Promise<void> {
     status: "needs-review",
     production: exchangeState.production,
     renderPlanContentHash: build.renderPlan.contentHash,
+    sourceProductionContentHash: sourceProduction.contentHash,
+    generationJobContentHash: generationJob.contentHash,
     preparationReportContentHash: report.contentHash,
     preparationCompletedAt: report.preparedAt,
     reviews,

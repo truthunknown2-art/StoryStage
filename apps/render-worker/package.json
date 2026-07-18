@@ -12,7 +12,7 @@
     "render:proof": "tsx src/cli.ts proof",
     "render:determinism": "tsx src/cli.ts determinism",
     "render:audio": "tsx src/cli.ts audio",
-    "test": "vitest run src/worker-protocol.test.ts",
+    "test": "vitest run src/worker-protocol.test.ts src/rook-pilot-motion-review-lineage.test.ts",
     "typecheck": "tsc --noEmit",
     "render:production-proof": "tsx src/production-proof.ts",
     "render:rook-preview": "tsx src/rook-pilot-visual-preview.ts",
