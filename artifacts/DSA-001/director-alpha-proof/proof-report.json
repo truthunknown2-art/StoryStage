@@ -8,10 +8,10 @@
       "grammar": "kids-adventure",
       "compositionId": "StoryStageProduction",
       "storyProjectContentHash": "6a6adb4e04db8477eab10da7642492d6cfd17c11fa6b7f7809b58ba9e3bbce4e",
-      "directorProjectContentHash": "5bb9e593b5320909fe1b3c6f8871a1a6b358d09be51318f244dbcac8c7043963",
-      "directorPlanContentHash": "9db982316bdbb49dd23794f7ae3ccd5635431c17605e3f8ad04f7719632342fd",
-      "timingSolutionContentHash": "38778140b002cba843ca7d511cccb244e31e341e534e02b61106cc892c01f0e6",
-      "executableEpisodePlanContentHash": "89852b024ad52ba9c80d7bd1558d42a40255922f17d970c275339fd9e8662f4f",
+      "directorProjectContentHash": "b4316a3caf434d9012a13150e8d130b67efc6c0b3b0dc28c8bc266c03a5213ee",
+      "directorPlanContentHash": "6917784de8e973fcfcc4c982a04fc793d4aa1309a1355558176b57046f572e24",
+      "timingSolutionContentHash": "cd9eacd2e91b12fe86af61773c1572bb146a102a034e151fb72e4f8bd08a4f88",
+      "executableEpisodePlanContentHash": "0e08f4040da3b2ca31e71ec951b306734bf17e67549c96e3f424ee0b023714ce",
       "capabilitySummary": {
         "supported": 0,
         "proxyOnly": 11,
@@ -24,6 +24,21 @@
           "shot-1-response"
         ],
         "contiguous": true
+      },
+      "directorPatch": {
+        "contentHash": "b84773c24cce0d3ac5965d4c778ff8ffdd323f7e5d55710c603fd89d2be68389",
+        "baseDirectorProjectContentHash": "b4316a3caf434d9012a13150e8d130b67efc6c0b3b0dc28c8bc266c03a5213ee",
+        "editedDirectorProjectContentHash": "ff7adbe9d8040415bc4d610bc96bc3b9b4a5e73bc132957a414b1e06e8e63317",
+        "editedExecutableEpisodePlanContentHash": "c48c7d84e767457f930292e8e23159192feb5e9bea2b5ab6ebede6a6a1724cd2",
+        "targetBeatId": "beat-79b11a73ddca",
+        "reactionDelayFrames": 6,
+        "preservedUntouchedPrograms": true,
+        "untouchedProgramCount": 47,
+        "deterministicStill": {
+          "frame": 0,
+          "contentHash": "283c049fc8877519aa588bd0a4728d56286a0a93c7a336b34227502d4abd8d32",
+          "repeatContentHash": "283c049fc8877519aa588bd0a4728d56286a0a93c7a336b34227502d4abd8d32"
+        }
       },
       "movingShot": {
         "shotId": "shot-1-response",
@@ -101,10 +116,10 @@
       "grammar": "weird-history",
       "compositionId": "StoryStageProduction",
       "storyProjectContentHash": "ccf2e1b05f6937dfb57c64f133917eb932e91b200195cc2bbf5b917c4e7329b4",
-      "directorProjectContentHash": "b23b06c892805fdf69a9280c1476fd821c7ba04447b2b532ed3d9e450d309c95",
-      "directorPlanContentHash": "9298e6d0cbcb0acc9f6e4b2e79245e12a6f7203297b3b2a539804ec176529267",
-      "timingSolutionContentHash": "b5f9d2f29695e1e015000698c2d619293c7750252738a4be012a9eca21928f75",
-      "executableEpisodePlanContentHash": "117b92c09214d302a7095a218717dd55f2ec2b67cd1d44849641df061f86432b",
+      "directorProjectContentHash": "135ec65b7aeb480bfe919a7df04ab85d29809888bf35937173ec676d5f51b731",
+      "directorPlanContentHash": "317bfaeb8d4a6f1d8c77fe694355cdcb93e0b4de4a31bcf796b165cc406b36e0",
+      "timingSolutionContentHash": "6a38c0df39034450bc054989ba9a3cc66e9ee3952c2b1fbb284f34e66c40b793",
+      "executableEpisodePlanContentHash": "f3efba0e39c55c570b85dbcb42531d570f94f27ac821ac83a337231b05f22108",
       "capabilitySummary": {
         "supported": 0,
         "proxyOnly": 10,
@@ -117,6 +132,21 @@
           "shot-2-response"
         ],
         "contiguous": true
+      },
+      "directorPatch": {
+        "contentHash": "1ba4bca0af60c491f0097ec23717f6d22984c068b706f36c71a375baac7efb80",
+        "baseDirectorProjectContentHash": "135ec65b7aeb480bfe919a7df04ab85d29809888bf35937173ec676d5f51b731",
+        "editedDirectorProjectContentHash": "c9c69302d582fe125756e403a39dc4472101c73e637df97278a5df3eb322da55",
+        "editedExecutableEpisodePlanContentHash": "bf0e0fbe611242c6a910023e956ef469d303003b9a40311717ed5b57a7f70cd4",
+        "targetBeatId": "beat-8f7cd2ccf0ed",
+        "reactionDelayFrames": 6,
+        "preservedUntouchedPrograms": true,
+        "untouchedProgramCount": 42,
+        "deterministicStill": {
+          "frame": 49,
+          "contentHash": "bda9d3986d262cbc58eb4ee4964f8bd26d3a1416b7d7386bd9c0fe7306706bf6",
+          "repeatContentHash": "bda9d3986d262cbc58eb4ee4964f8bd26d3a1416b7d7386bd9c0fe7306706bf6"
+        }
       },
       "movingShot": {
         "shotId": "shot-3-main",
