@@ -1,15 +1,33 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `19`
+Inbox-Version: `20`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-SCENECRAFT-V11-EVIDENCE-LEDGER`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`
 Required-Work-Branch: `agent/kimi-scenecraft-v11-evidence-ledger`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger-v19.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger-v20-corrections.md`
 
 ## Current instruction
+
+Exact-head review of draft PR #22 at
+`864b82deb9a53d92b7c66f3a503a99068da395dd` found that the useful Scene Craft
+classification content was delivered in the superseded Version 18 JSON shape
+instead of the binding Version 19 Markdown contract. Apply only the exact
+documentation corrections in the Version 20 brief on the existing required
+work branch. Replace the JSON ledger with the canonical Markdown ledger, add
+every required per-rule field and exact vocabulary, correct the narrative
+status and the handback path/version, and remove blocking language from every
+soft-class row. Commit and push one immutable successor to PR #22, update the
+PR body, then wait. Do not change product code or broaden scope.
+
+Version 20 supersedes Version 19 as the active correction. Version 19 remains
+below as historical traceability.
+
+---
+
+Previous Version 19 instruction:
 
 PR #17 is accepted and merged at
 `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`. Stop the UI Slice C polish lane.
