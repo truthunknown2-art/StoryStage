@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { hashCanonical } from "../canonical-hash";
+import { cv002ArtDirectionSelectionSchema } from "../cv002-art-direction";
 import { hashSchema, identifierSchema } from "../model";
 import { capabilityReportSchema } from "./capability-report";
 import { directorPlanSchema } from "./director-plan";
@@ -13,6 +14,7 @@ const directorProjectFields = {
   schemaVersion: z.literal("1.0"),
   id: identifierSchema,
   storyProjectContentHash: hashSchema,
+  artDirectionSelection: cv002ArtDirectionSelectionSchema,
   planningArtifact: directorProposalSchema,
   sceneWorlds: z.array(sceneWorldPlanSchema).min(1),
   directorPlan: directorPlanSchema,
@@ -49,6 +51,16 @@ export const directorProjectSchema = z
         code: "custom",
         path: ["directorPlan"],
         message: "Director plan is not bound to a story graph.",
+      });
+    if (
+      project.artDirectionSelection.grammar !==
+      project.planningArtifact.grammar
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["artDirectionSelection", "grammar"],
+        message:
+          "Director project art direction does not match its planning grammar.",
       });
     if (
       project.planningArtifact.storyGraphContentHash !==
