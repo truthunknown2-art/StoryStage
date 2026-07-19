@@ -69,7 +69,10 @@ const checking = process.argv.includes("--check");
 
 if (checking) {
   const actualCatalog = await readFile(catalogFile, "utf8");
-  if (actualCatalog !== expectedCatalog)
+  // GitHub's Windows runners may check text files out with CRLF even though the
+  // generator deliberately emits LF. Line-ending conversion is not catalog
+  // drift; every semantic byte binding below still has to match exactly.
+  if (actualCatalog.replace(/\r\n/g, "\n") !== expectedCatalog)
     throw new Error(
       "Generated Director capability asset catalog is stale. Run pnpm generate:director-capability-assets.",
     );

@@ -24,6 +24,32 @@ const pngDimensions = (bytes: Buffer, assetId: string) => {
   return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
 };
 
+type VerifiedDirectorCapabilityAsset = Awaited<
+  ReturnType<typeof verifyApprovedDirectorCapabilityAsset>
+>;
+
+const expectedExecutionDimensions = (
+  execution: NonNullable<
+    ExecutableEpisodePlan["performancePrograms"][number]["execution"]
+  >,
+) =>
+  execution.kind === "articulated-rig"
+    ? { width: execution.sheetWidth, height: execution.sheetHeight }
+    : { width: execution.atlasWidth, height: execution.atlasHeight };
+
+const assertExecutionDimensions = (
+  asset: VerifiedDirectorCapabilityAsset,
+  execution: NonNullable<
+    ExecutableEpisodePlan["performancePrograms"][number]["execution"]
+  >,
+) => {
+  const expected = expectedExecutionDimensions(execution);
+  if (asset.width !== expected.width || asset.height !== expected.height)
+    throw new Error(
+      `Approved Director asset ${asset.assetId} dimensions no longer match its executable program.`,
+    );
+};
+
 export async function verifyApprovedDirectorCapabilityAsset(
   publicRoot: string,
   rawBinding: ApprovedAssetBinding,
@@ -111,30 +137,28 @@ export async function verifyDirectorEpisodeCapabilityAssets(
   );
   const verified = new Map<
     string,
-    Awaited<ReturnType<typeof verifyApprovedDirectorCapabilityAsset>>
+    VerifiedDirectorCapabilityAsset
   >();
   for (const program of executablePrograms) {
     const execution = program.execution!;
-    if (verified.has(execution.assetId)) continue;
-    const binding = episode.approvedAssets.find(
-      (asset) => asset.assetId === execution.assetId,
-    );
-    if (!binding)
-      throw new Error(
-        `Executable Director asset binding is missing: ${execution.assetId}`,
+    let actual = verified.get(execution.assetId);
+    if (!actual) {
+      const binding = episode.approvedAssets.find(
+        (asset) => asset.assetId === execution.assetId,
       );
-    const expectedDimensions =
-      execution.kind === "articulated-rig"
-        ? { width: execution.sheetWidth, height: execution.sheetHeight }
-        : { width: execution.atlasWidth, height: execution.atlasHeight };
-    verified.set(
-      execution.assetId,
-      await verifyApprovedDirectorCapabilityAsset(
+      if (!binding)
+        throw new Error(
+          `Executable Director asset binding is missing: ${execution.assetId}`,
+        );
+      actual = await verifyApprovedDirectorCapabilityAsset(
         publicRoot,
         binding,
-        expectedDimensions,
-      ),
-    );
+      );
+      verified.set(execution.assetId, actual);
+    }
+    // Byte verification is safely cached by immutable asset ID, but execution
+    // claims are program-local. Every consumer must match the actual sheet.
+    assertExecutionDimensions(actual, execution);
   }
   return [...verified.values()];
 }
