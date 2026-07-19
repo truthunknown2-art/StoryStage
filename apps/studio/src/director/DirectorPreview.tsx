@@ -403,8 +403,9 @@ export function DirectorAnimaticPreview({
         ) : (
           <p className="director-command-unavailable">
             <strong>Multiple reaction targets on this beat.</strong>
-            More than one reaction event could be retimed, and explicit target
-            selection is not supported yet.
+            More than one eligible reaction target — a reaction event and shot
+            pair — could be retimed, and explicit target selection is not
+            supported yet.
           </p>
         )}
         <div

@@ -543,6 +543,12 @@ describe("CV-002 editable script breakdown", () => {
       screen.getByText(/Multiple reaction targets on this beat/),
     ).toBeInTheDocument();
     expect(
+      screen.getByText(/More than one eligible reaction target/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/More than one reaction event could be retimed/),
+    ).not.toBeInTheDocument();
+    expect(
       screen.getByText(/explicit target selection is not supported yet/),
     ).toBeInTheDocument();
 
