@@ -1,18 +1,34 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `16`
+Inbox-Version: `17`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-C-CORRECTIONS`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `04e2a534e896f002f34895c545afa7089cefbf3a`
+Accepted-Root-Base: `f11dcaa11208e8b5bdf87590b26ec1ea8a7fce41`
 Required-Work-Branch: `agent/kimi-ui-slice-c-visual-polish`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-corrections.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-handback-correction.md`
 
 ## Current instruction
 
-Resume the existing correction now. The remote required-work branch is still at
-`04e2a534e896f002f34895c545afa7089cefbf3a`; no successor handback has been
+Exact-head review at `f11dcaa11208e8b5bdf87590b26ec1ea8a7fce41`
+accepts correction 10: frame 340 is truthfully rejected as uniform, frame 342
+is proven through the real Player ref, the composition-only PNG hash
+independently matches, the clip excludes the detected chrome strip, and hosted
+verification is green. Make only the two handback-truthfulness corrections in
+the referenced brief, rerun the documentation checks, commit and push the
+immutable successor on `agent/kimi-ui-slice-c-visual-polish`, then wait. Do not
+change product code, screenshots, proof JSON, or the accepted proof harness.
+
+Version 17 supersedes Version 16 as the active task. Version 16 remains below
+as historical traceability.
+
+---
+
+Previous Version 16 instruction:
+
+Resume the existing correction now. The remote required-work branch was still
+at `04e2a534e896f002f34895c545afa7089cefbf3a`; no successor handback had been
 pushed. Finish only correction 10 from the brief: clip the actual composition
 viewport rather than `.__remotion-player`, persist the clipped PNG plus exact
 SHA-256, bounds, pixel counts, nonblack ratio, luminance/variance/color and
