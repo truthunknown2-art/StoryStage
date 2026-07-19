@@ -5,6 +5,7 @@ import sharp from "sharp";
 export * from "./import-evidence-store";
 export * from "./sprite-atlas";
 export * from "./character-rig-staging";
+export * from "./character-rig-preparation";
 import {
   candidateBundleSchema,
   candidateSetContactSheetSchema,

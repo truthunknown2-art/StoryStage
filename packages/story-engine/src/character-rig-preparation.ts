@@ -320,15 +320,19 @@ const characterRigPreparationRecipeFields = {
   requestContentHash: hashSchema,
   bundleContentHash: hashSchema,
   stagingReportContentHash: hashSchema,
+  importReceiptContentHash: hashSchema.nullable(),
   identityLockContentHash: hashSchema,
   templateContentHash: hashSchema,
   processor: z
     .object({
       extractionAlgorithm: z
-        .object({ id: identifierSchema, version: z.string().min(1) })
+        .object({
+          id: z.literal("character-rig-component-preparation"),
+          version: z.literal("1.0.0"),
+        })
         .strict(),
       imageLibrary: z
-        .object({ id: z.literal("sharp"), version: z.string().min(1) })
+        .object({ id: z.literal("sharp"), version: z.literal("0.34.5") })
         .strict(),
     })
     .strict(),
@@ -372,6 +376,7 @@ const refinePreparationRecipe = (
   const zIndexes = recipe.parts.map((part) => part.zIndex);
   if (new Set(zIndexes).size !== zIndexes.length)
     context.addIssue({ code: "custom", path: ["parts"], message: "Recipe z-order values must be unique and deterministic." });
+  const globalSocketIds = new Set<string>();
 
   const roots = recipe.parts.filter((part) => part.parentId === null);
   if (roots.length !== 1 || roots[0]?.role !== "torso")
@@ -384,9 +389,12 @@ const refinePreparationRecipe = (
     for (const [socketIndex, socket] of part.sockets.entries()) {
       if (socketIds.has(socket.id))
         context.addIssue({ code: "custom", path: ["parts", index, "sockets", socketIndex, "id"], message: `Part ${part.id} repeats socket ${socket.id}.` });
+      if (globalSocketIds.has(socket.id))
+        context.addIssue({ code: "custom", path: ["parts", index, "sockets", socketIndex, "id"], message: `Recipe socket id ${socket.id} must be globally unique.` });
       if (!pointInsideOutput(socket.position, part.output))
         context.addIssue({ code: "custom", path: ["parts", index, "sockets", socketIndex, "position"], message: `Socket ${socket.id} leaves part ${part.id}.` });
       socketIds.add(socket.id);
+      globalSocketIds.add(socket.id);
     }
     if (part.parentId === null) {
       if (part.parentSocketId !== null || part.parentJoint !== null)
@@ -459,12 +467,232 @@ export const characterRigPreparationRecipeDraftSchema = z
   .superRefine(refinePreparationRecipe);
 
 export const characterRigPreparationRecipeSchema = z
-  .object({ ...characterRigPreparationRecipeFields, contentHash: hashSchema })
+  .object({
+    ...characterRigPreparationRecipeFields,
+    importReceiptContentHash: hashSchema,
+    contentHash: hashSchema,
+  })
   .strict()
   .superRefine((recipe, context) => {
     refinePreparationRecipe(recipe, context);
     if (hashCanonical(withoutContentHash(recipe)) !== recipe.contentHash)
       context.addIssue({ code: "custom", path: ["contentHash"], message: "Character rig preparation recipe hash is invalid." });
+  });
+
+const preparedCharacterRigOutputSchema = z
+  .object({
+    plannedRelativeFile: characterRigSafeRelativePathSchema,
+    relativeFile: z
+      .string()
+      .regex(
+        /^character-rig\/prepared\/(front|profile-left|profile-right)\/[a-f0-9]{64}\.png$/,
+      ),
+    contentHash: hashSchema,
+    immutableLocationId: z.string().regex(/^sha256:[a-f0-9]{64}$/),
+    byteLength: z.number().int().positive().max(50 * 1024 * 1024),
+    mediaType: z.literal("image/png"),
+    width: z.number().int().positive().max(8192),
+    height: z.number().int().positive().max(8192),
+    padding: z.number().int().min(1).max(512),
+    contentBounds: z
+      .object({
+        x: z.number().int().nonnegative(),
+        y: z.number().int().nonnegative(),
+        width: z.number().int().positive(),
+        height: z.number().int().positive(),
+      })
+      .strict(),
+    alphaClass: z.literal("mixed-alpha"),
+  })
+  .strict()
+  .superRefine((output, context) => {
+    if (!output.relativeFile.endsWith(`/${output.contentHash}.png`))
+      context.addIssue({ code: "custom", path: ["relativeFile"], message: "Prepared output filename must equal its content hash." });
+    if (output.immutableLocationId !== `sha256:${output.contentHash}`)
+      context.addIssue({ code: "custom", path: ["immutableLocationId"], message: "Prepared output immutable id must equal its content hash." });
+    const right = output.contentBounds.x + output.contentBounds.width;
+    const bottom = output.contentBounds.y + output.contentBounds.height;
+    if (
+      output.contentBounds.x <= output.padding ||
+      output.contentBounds.y <= output.padding ||
+      right >= output.width - output.padding ||
+      bottom >= output.height - output.padding
+    )
+      context.addIssue({ code: "custom", path: ["contentBounds"], message: "Prepared output foreground must retain transparent safety gutter and crop-boundary clearance." });
+  });
+
+const preparedCharacterRigChecksSchema = z
+  .object({
+    exactSourceLineage: z.literal(true),
+    normalizedRgbaPng: z.literal(true),
+    safetyGutter: z.literal(true),
+    nonemptyForeground: z.literal(true),
+    noBoundaryTouch: z.literal(true),
+    noClipping: z.literal(true),
+    pivotBounds: z.literal(true),
+    socketBounds: z.literal(true),
+  })
+  .strict();
+
+const preparedCharacterRigPartSchema = z
+  .object({
+    id: identifierSchema,
+    role: characterRigPartRoleSchema,
+    source: extractionSourceSchema,
+    output: preparedCharacterRigOutputSchema,
+    parentId: identifierSchema.nullable(),
+    parentSocketId: identifierSchema.nullable(),
+    childPivot: localPointSchema,
+    parentJoint: localPointSchema.nullable(),
+    restTransform: characterRigRecipePartSchema.shape.restTransform,
+    sockets: characterRigRecipePartSchema.shape.sockets,
+    zIndex: z.number().int().min(-128).max(128),
+    checks: preparedCharacterRigChecksSchema,
+  })
+  .strict();
+
+const preparedCharacterRigExposureSchema = z
+  .object({
+    id: identifierSchema,
+    role: characterRigExposureRoleSchema,
+    targetPartId: identifierSchema,
+    source: extractionSourceSchema,
+    output: preparedCharacterRigOutputSchema,
+    childPivot: localPointSchema,
+    checks: preparedCharacterRigChecksSchema,
+  })
+  .strict();
+
+const preparedCharacterRigViewManifestFields = {
+  schemaVersion: z.literal("1.0"),
+  manifestId: identifierSchema,
+  requestId: identifierSchema,
+  requestContentHash: hashSchema,
+  candidateBundleContentHash: hashSchema,
+  stagingReportContentHash: hashSchema,
+  importReceiptContentHash: hashSchema,
+  preparationRecipeContentHash: hashSchema,
+  identityLockContentHash: hashSchema,
+  templateContentHash: hashSchema,
+  processor: z
+    .object({
+      extractionAlgorithm: z
+        .object({
+          id: z.literal("character-rig-component-preparation"),
+          version: z.literal("1.0.0"),
+        })
+        .strict(),
+      imageLibrary: z
+        .object({ id: z.literal("sharp"), version: z.literal("0.34.5") })
+        .strict(),
+      pngNormalizer: z
+        .object({ id: z.literal("rgba8-png"), version: z.literal("1.0.0") })
+        .strict(),
+    })
+    .strict(),
+  view: z.enum(["front", "profile-left", "profile-right"]),
+  parts: z.array(preparedCharacterRigPartSchema).min(2).max(40),
+  exposures: z.array(preparedCharacterRigExposureSchema).max(40),
+  providerAuthority: z.literal(false),
+  approvalRequired: z.literal(true),
+  preparedAt: z.string().datetime(),
+};
+
+const refinePreparedCharacterRigViewManifest = (
+  manifest: {
+    manifestId: string;
+    preparationRecipeContentHash: string;
+    view: "front" | "profile-left" | "profile-right";
+    parts: Array<z.infer<typeof preparedCharacterRigPartSchema>>;
+    exposures: Array<z.infer<typeof preparedCharacterRigExposureSchema>>;
+  },
+  context: z.RefinementCtx,
+) => {
+  const components = [...manifest.parts, ...manifest.exposures];
+  if (new Set(components.map((component) => component.id)).size !== components.length)
+    context.addIssue({ code: "custom", message: "Prepared component ids must be unique." });
+  if (new Set(components.map((component) => component.role)).size !== components.length)
+    context.addIssue({ code: "custom", message: "Prepared component roles must be unique." });
+  if (manifest.manifestId !== `prepared-${manifest.view}-${manifest.preparationRecipeContentHash.slice(0, 20)}`)
+    context.addIssue({ code: "custom", path: ["manifestId"], message: "Prepared view manifest id must derive from its sealed recipe." });
+  const totalPixels = components.reduce(
+    (sum, component) => sum + component.output.width * component.output.height,
+    0,
+  );
+  if (components.some((component) => component.output.width * component.output.height > 64_000_000) || totalPixels > 128_000_000)
+    context.addIssue({ code: "custom", message: "Prepared view exceeds deterministic pixel budgets." });
+  for (const [index, component] of components.entries()) {
+    if (!component.output.relativeFile.startsWith(`character-rig/prepared/${manifest.view}/`))
+      context.addIssue({ code: "custom", path: ["components", index, "output", "relativeFile"], message: "Prepared output path must match its view." });
+    if (!pointInsideOutput(component.childPivot, component.output))
+      context.addIssue({ code: "custom", path: ["components", index, "childPivot"], message: `Prepared component ${component.id} pivot leaves its output.` });
+  }
+  const partById = new Map(manifest.parts.map((part) => [part.id, part]));
+  if (new Set(manifest.parts.map((part) => part.zIndex)).size !== manifest.parts.length)
+    context.addIssue({ code: "custom", path: ["parts"], message: "Prepared part z-order values must be unique." });
+  const globalSocketIds = new Set<string>();
+  const roots = manifest.parts.filter((part) => part.parentId === null);
+  if (roots.length !== 1 || roots[0]?.role !== "torso")
+    context.addIssue({ code: "custom", path: ["parts"], message: "Prepared view must have exactly one torso root." });
+  for (const [index, part] of manifest.parts.entries()) {
+    for (const [socketIndex, socket] of part.sockets.entries()) {
+      if (globalSocketIds.has(socket.id))
+        context.addIssue({ code: "custom", path: ["parts", index, "sockets", socketIndex, "id"], message: `Prepared socket id ${socket.id} must be globally unique.` });
+      globalSocketIds.add(socket.id);
+      if (!pointInsideOutput(socket.position, part.output))
+        context.addIssue({ code: "custom", path: ["parts", index, "sockets", socketIndex], message: `Prepared socket ${socket.id} leaves part ${part.id}.` });
+    }
+    if (part.parentId !== null) {
+      const parent = partById.get(part.parentId);
+      if (!parent)
+        context.addIssue({ code: "custom", path: ["parts", index, "parentId"], message: `Prepared part ${part.id} references a missing parent.` });
+      else {
+        const socket = parent.sockets.find((candidate) => candidate.id === part.parentSocketId);
+        if (!socket)
+          context.addIssue({ code: "custom", path: ["parts", index, "parentSocketId"], message: `Prepared part ${part.id} references a missing parent socket.` });
+        else if (!part.parentJoint || part.parentJoint.x !== socket.position.x || part.parentJoint.y !== socket.position.y)
+          context.addIssue({ code: "custom", path: ["parts", index, "parentJoint"], message: `Prepared part ${part.id} parent joint must equal its parent socket.` });
+      }
+    }
+  }
+  for (const part of manifest.parts) {
+    const visited = new Set<string>();
+    let cursor: typeof part | undefined = part;
+    while (cursor) {
+      if (visited.has(cursor.id)) {
+        context.addIssue({ code: "custom", path: ["parts"], message: `Prepared hierarchy contains a cycle at ${cursor.id}.` });
+        break;
+      }
+      visited.add(cursor.id);
+      cursor = cursor.parentId ? partById.get(cursor.parentId) : undefined;
+    }
+  }
+  for (const [index, exposure] of manifest.exposures.entries()) {
+    const target = partById.get(exposure.targetPartId);
+    if (!target)
+      context.addIssue({ code: "custom", path: ["exposures", index, "targetPartId"], message: `Prepared exposure ${exposure.id} references a missing target.` });
+    else if (
+      target.output.width !== exposure.output.width ||
+      target.output.height !== exposure.output.height ||
+      target.childPivot.x !== exposure.childPivot.x ||
+      target.childPivot.y !== exposure.childPivot.y
+    )
+      context.addIssue({ code: "custom", path: ["exposures", index], message: `Prepared exposure ${exposure.id} registration must match ${target.id}.` });
+  }
+};
+
+export const preparedCharacterRigViewManifestDraftSchema = z
+  .object(preparedCharacterRigViewManifestFields)
+  .strict()
+  .superRefine(refinePreparedCharacterRigViewManifest);
+
+export const preparedCharacterRigViewManifestSchema = z
+  .object({ ...preparedCharacterRigViewManifestFields, contentHash: hashSchema })
+  .strict()
+  .superRefine((manifest, context) => {
+    refinePreparedCharacterRigViewManifest(manifest, context);
+    if (hashCanonical(withoutContentHash(manifest)) !== manifest.contentHash)
+      context.addIssue({ code: "custom", path: ["contentHash"], message: "Prepared character rig view manifest hash is invalid." });
   });
 
 export type StagedCharacterRigCandidate = z.infer<typeof stagedCharacterRigCandidateSchema>;
@@ -473,6 +701,8 @@ export type CharacterRigStagingReport = z.infer<typeof characterRigStagingReport
 export type CharacterRigImportReceipt = z.infer<typeof characterRigImportReceiptSchema>;
 export type CharacterRigPreparationRecipeDraft = z.infer<typeof characterRigPreparationRecipeDraftSchema>;
 export type CharacterRigPreparationRecipe = z.infer<typeof characterRigPreparationRecipeSchema>;
+export type PreparedCharacterRigViewManifestDraft = z.infer<typeof preparedCharacterRigViewManifestDraftSchema>;
+export type PreparedCharacterRigViewManifest = z.infer<typeof preparedCharacterRigViewManifestSchema>;
 
 export const createCharacterRigStagingReport = (
   rawDraft: CharacterRigStagingReportDraft,
@@ -484,10 +714,19 @@ export const createCharacterRigStagingReport = (
   });
 };
 
+export const createCharacterRigPreparationRecipeDraft = (
+  rawDraft: CharacterRigPreparationRecipeDraft,
+): CharacterRigPreparationRecipeDraft =>
+  characterRigPreparationRecipeDraftSchema.parse(rawDraft);
+
 export const createCharacterRigPreparationRecipe = (
   rawDraft: CharacterRigPreparationRecipeDraft,
 ): CharacterRigPreparationRecipe => {
   const draft = characterRigPreparationRecipeDraftSchema.parse(rawDraft);
+  if (!draft.importReceiptContentHash)
+    throw new Error(
+      "A sealed character rig preparation recipe requires a verified import receipt.",
+    );
   return characterRigPreparationRecipeSchema.parse({
     ...draft,
     contentHash: hashCanonical(draft),
@@ -538,16 +777,69 @@ export const validateCharacterRigStagingReport = (
   return report;
 };
 
-export const validateCharacterRigPreparationRecipe = (
+export const validateCharacterRigImportReceipt = (
   rawRequest: CharacterRigAssetRequest,
   rawBundle: CharacterRigCandidateBundle,
   rawReport: CharacterRigStagingReport,
-  rawRecipe: CharacterRigPreparationRecipe,
+  rawReceipt: CharacterRigImportReceipt,
 ) => {
   const request = characterRigAssetRequestSchema.parse(rawRequest);
   const bundle = characterRigCandidateBundleSchema.parse(rawBundle);
   const report = validateCharacterRigStagingReport(request, bundle, rawReport);
-  const recipe = characterRigPreparationRecipeSchema.parse(rawRecipe);
+  const receipt = characterRigImportReceiptSchema.parse(rawReceipt);
+  if (
+    report.status !== "complete" ||
+    report.missingItems.length !== 0 ||
+    report.unknownItems.length !== 0
+  )
+    throw new Error(
+      "A character rig import receipt cannot authorize incomplete staging.",
+    );
+  if (
+    receipt.requestContentHash !== request.contentHash ||
+    receipt.candidateBundleContentHash !== bundle.contentHash ||
+    receipt.stagingReportContentHash !== report.contentHash
+  )
+    throw new Error(
+      "Character rig import receipt is not bound to the exact request, bundle, and staging report.",
+    );
+  const stagedByCandidate = new Map(
+    report.assets.map((asset) => [asset.candidateId, asset]),
+  );
+  for (const file of receipt.files) {
+    const staged = stagedByCandidate.get(file.candidateId);
+    if (
+      !staged ||
+      file.requestItemId !== staged.requestItemId ||
+      file.sourceContentHash !== staged.sourceContentHash ||
+      file.byteLength !== staged.byteLength ||
+      file.mediaType !== staged.mediaType ||
+      file.width !== staged.width ||
+      file.height !== staged.height ||
+      file.immutableLocationId !== staged.immutableLocationId ||
+      file.stagedRelativeFile !== staged.relativeFile
+    )
+      throw new Error(
+        `Character rig import receipt file ${file.candidateId} is stale or forged.`,
+      );
+  }
+  if (receipt.files.length !== report.assets.length)
+    throw new Error(
+      "Character rig import receipt must account for every staged candidate exactly once.",
+    );
+  return receipt;
+};
+
+export const validateCharacterRigPreparationRecipeDraft = (
+  rawRequest: CharacterRigAssetRequest,
+  rawBundle: CharacterRigCandidateBundle,
+  rawReport: CharacterRigStagingReport,
+  rawRecipe: CharacterRigPreparationRecipeDraft,
+) => {
+  const request = characterRigAssetRequestSchema.parse(rawRequest);
+  const bundle = characterRigCandidateBundleSchema.parse(rawBundle);
+  const report = validateCharacterRigStagingReport(request, bundle, rawReport);
+  const recipe = characterRigPreparationRecipeDraftSchema.parse(rawRecipe);
   if (
     recipe.requestId !== request.requestId ||
     recipe.requestContentHash !== request.contentHash ||
@@ -597,10 +889,158 @@ export const validateCharacterRigPreparationRecipe = (
   if (hashCanonical(expectedRoles) !== hashCanonical(actualRoles))
     throw new Error(`Recipe for ${recipe.view} must account for every requested component exactly once.`);
   return {
-    recipeContentHash: recipe.contentHash,
     componentCount: components.length,
     providerAuthority: false as const,
     approvalRequired: true as const,
     state: "proposed" as const,
+  };
+};
+
+export const validateCharacterRigPreparationRecipe = (
+  rawRequest: CharacterRigAssetRequest,
+  rawBundle: CharacterRigCandidateBundle,
+  rawReport: CharacterRigStagingReport,
+  rawReceipt: CharacterRigImportReceipt,
+  rawRecipe: CharacterRigPreparationRecipe,
+) => {
+  const receipt = validateCharacterRigImportReceipt(
+    rawRequest,
+    rawBundle,
+    rawReport,
+    rawReceipt,
+  );
+  const recipe = characterRigPreparationRecipeSchema.parse(rawRecipe);
+  if (recipe.importReceiptContentHash !== receipt.contentHash)
+    throw new Error(
+      "Character rig preparation recipe is not bound to the exact verified import receipt.",
+    );
+  const validation = validateCharacterRigPreparationRecipeDraft(
+    rawRequest,
+    rawBundle,
+    rawReport,
+    withoutContentHash(recipe),
+  );
+  return {
+    recipeContentHash: recipe.contentHash,
+    ...validation,
+  };
+};
+
+export const validatePreparedCharacterRigViewManifest = (
+  rawRequest: CharacterRigAssetRequest,
+  rawBundle: CharacterRigCandidateBundle,
+  rawReport: CharacterRigStagingReport,
+  rawReceipt: CharacterRigImportReceipt,
+  rawRecipe: CharacterRigPreparationRecipe,
+  rawManifest: PreparedCharacterRigViewManifest,
+) => {
+  const recipeValidation = validateCharacterRigPreparationRecipe(
+    rawRequest,
+    rawBundle,
+    rawReport,
+    rawReceipt,
+    rawRecipe,
+  );
+  const request = characterRigAssetRequestSchema.parse(rawRequest);
+  const bundle = characterRigCandidateBundleSchema.parse(rawBundle);
+  const report = characterRigStagingReportSchema.parse(rawReport);
+  const receipt = characterRigImportReceiptSchema.parse(rawReceipt);
+  const recipe = characterRigPreparationRecipeSchema.parse(rawRecipe);
+  const manifest = preparedCharacterRigViewManifestSchema.parse(rawManifest);
+  if (
+    manifest.requestId !== request.requestId ||
+    manifest.requestContentHash !== request.contentHash ||
+    manifest.candidateBundleContentHash !== bundle.contentHash ||
+    manifest.stagingReportContentHash !== report.contentHash ||
+    manifest.importReceiptContentHash !== receipt.contentHash ||
+    manifest.preparationRecipeContentHash !== recipe.contentHash ||
+    manifest.identityLockContentHash !== request.identityLock.contentHash ||
+    manifest.templateContentHash !== request.rigProfile.templateContentHash ||
+    manifest.view !== recipe.view
+  )
+    throw new Error(
+      "Prepared character rig view manifest is not bound to the exact preparation lineage.",
+    );
+  const recipeParts = new Map(recipe.parts.map((part) => [part.id, part]));
+  for (const prepared of manifest.parts) {
+    const planned = recipeParts.get(prepared.id);
+    if (
+      !planned ||
+      hashCanonical({
+        id: planned.id,
+        role: planned.role,
+        source: planned.source,
+        parentId: planned.parentId,
+        parentSocketId: planned.parentSocketId,
+        childPivot: planned.childPivot,
+        parentJoint: planned.parentJoint,
+        restTransform: planned.restTransform,
+        sockets: planned.sockets,
+        zIndex: planned.zIndex,
+      }) !==
+        hashCanonical({
+          id: prepared.id,
+          role: prepared.role,
+          source: prepared.source,
+          parentId: prepared.parentId,
+          parentSocketId: prepared.parentSocketId,
+          childPivot: prepared.childPivot,
+          parentJoint: prepared.parentJoint,
+          restTransform: prepared.restTransform,
+          sockets: prepared.sockets,
+          zIndex: prepared.zIndex,
+        }) ||
+      planned.output.relativeFile !== prepared.output.plannedRelativeFile ||
+      planned.output.width !== prepared.output.width ||
+      planned.output.height !== prepared.output.height ||
+      planned.output.padding !== prepared.output.padding
+    )
+      throw new Error(
+        `Prepared part ${prepared.id} does not match its sealed recipe lineage.`,
+      );
+  }
+  const recipeExposures = new Map(
+    recipe.exposures.map((exposure) => [exposure.id, exposure]),
+  );
+  for (const prepared of manifest.exposures) {
+    const planned = recipeExposures.get(prepared.id);
+    if (
+      !planned ||
+      hashCanonical({
+        id: planned.id,
+        role: planned.role,
+        targetPartId: planned.targetPartId,
+        source: planned.source,
+        childPivot: planned.childPivot,
+      }) !==
+        hashCanonical({
+          id: prepared.id,
+          role: prepared.role,
+          targetPartId: prepared.targetPartId,
+          source: prepared.source,
+          childPivot: prepared.childPivot,
+        }) ||
+      planned.output.relativeFile !== prepared.output.plannedRelativeFile ||
+      planned.output.width !== prepared.output.width ||
+      planned.output.height !== prepared.output.height ||
+      planned.output.padding !== prepared.output.padding
+    )
+      throw new Error(
+        `Prepared exposure ${prepared.id} does not match its sealed recipe lineage.`,
+      );
+  }
+  if (
+    manifest.parts.length !== recipe.parts.length ||
+    manifest.exposures.length !== recipe.exposures.length
+  )
+    throw new Error(
+      "Prepared view manifest must account for every sealed recipe component exactly once.",
+    );
+  return {
+    manifestContentHash: manifest.contentHash,
+    recipeContentHash: recipeValidation.recipeContentHash,
+    componentCount: manifest.parts.length + manifest.exposures.length,
+    providerAuthority: false as const,
+    approvalRequired: true as const,
   };
 };

@@ -1,4 +1,4 @@
-import {CandidateStagingError, CharacterRigStagingError, createVerifiedCharacterRigImportReceipt, prepareCandidateSets, stageCandidateBundle, stageCharacterRigCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "@storystage/asset-pipeline";
+import {CandidateStagingError, CharacterRigPreparationError, CharacterRigStagingError, createVerifiedCharacterRigImportReceipt, prepareCandidateSets, prepareCharacterRigView, stageCandidateBundle, stageCharacterRigCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "@storystage/asset-pipeline";
 import {
   assetWorkerCommandSchema,
   assetWorkerMessageSchema,
@@ -17,6 +17,11 @@ export async function runAssetWorkerCommand(rawCommand: unknown, emit: (message:
   }
 
   try {
+    if (parsed.data.type === "prepare-character-rig-view") {
+      const manifest = await prepareCharacterRigView({recipe: JSON.parse(parsed.data.serializedPreparationRecipe), trustedStagingRoot: parsed.data.trustedStagingRoot, stagingRoot: parsed.data.stagingRoot, preparedAt: parsed.data.preparedAt});
+      emit(assetWorkerMessageSchema.parse({type: "character-rig-prepared", requestId: parsed.data.requestId, serializedPreparedViewManifest: JSON.stringify(manifest)}));
+      return;
+    }
     if (parsed.data.type === "stage-character-rig-candidates") {
       const request = JSON.parse(parsed.data.serializedRigRequest);
       const bundle = JSON.parse(parsed.data.serializedRigBundle);
@@ -63,7 +68,7 @@ export async function runAssetWorkerCommand(rawCommand: unknown, emit: (message:
       type: "failed",
       requestId: parsed.data.requestId,
       error: {
-        code: error instanceof CandidateStagingError || error instanceof CharacterRigStagingError ? error.code.toUpperCase().replaceAll("-", "_") : "ASSET_STAGING_FAILED",
+        code: error instanceof CandidateStagingError || error instanceof CharacterRigStagingError || error instanceof CharacterRigPreparationError ? error.code.toUpperCase().replaceAll("-", "_") : "ASSET_STAGING_FAILED",
         message: error instanceof Error ? error.message : "Candidate staging failed.",
       },
     }));

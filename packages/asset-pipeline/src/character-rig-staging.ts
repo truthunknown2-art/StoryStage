@@ -469,6 +469,26 @@ export const stageCharacterRigCandidateBundle = async (
     ["character-rig", "candidates"],
     true,
   );
+  const requestFile = await resolveSafePublicationTarget(
+    stagingRoot,
+    ["character-rig"],
+    `request-${request.contentHash}.json`,
+  );
+  await writeImmutable(
+    requestFile,
+    Buffer.from(`${JSON.stringify(request, null, 2)}\n`, "utf8"),
+    "Character rig request evidence path contains conflicting bytes.",
+  );
+  const bundleFile = await resolveSafePublicationTarget(
+    stagingRoot,
+    ["character-rig"],
+    `candidate-bundle-${bundle.contentHash}.json`,
+  );
+  await writeImmutable(
+    bundleFile,
+    Buffer.from(`${JSON.stringify(bundle, null, 2)}\n`, "utf8"),
+    "Character rig candidate bundle evidence path contains conflicting bytes.",
+  );
   const stagedAssets: StagedCharacterRigCandidate[] = [];
   for (const entry of validated) {
     const relativeFile = `character-rig/candidates/${entry.asset.contentHash}.png`;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as characterRigPreparation from "./character-rig-preparation";
+import { hashCanonical } from "./canonical-hash";
 import {
   createCharacterRigAssetRequest,
   createCharacterRigCandidateBundle,
@@ -9,10 +10,13 @@ import {
 } from "./character-rig-acquisition";
 import {
   characterRigExposureRoleSchema,
+  characterRigImportReceiptSchema,
   characterRigPartRoleSchema,
   createCharacterRigPreparationRecipe,
+  createCharacterRigPreparationRecipeDraft,
   createCharacterRigStagingReport,
   validateCharacterRigPreparationRecipe,
+  validateCharacterRigPreparationRecipeDraft,
 } from "./character-rig-preparation";
 
 const repeatedHash = (digit: string) => digit.repeat(64);
@@ -206,26 +210,62 @@ const fixture = (complete = false) => {
       },
       childPivot: { x: 32, y: 32 },
     }));
-  const recipe = createCharacterRigPreparationRecipe({
-    schemaVersion: "1.0",
+  const receiptDraft = complete
+    ? {
+        schemaVersion: "1.0" as const,
+        importId: "import-ollo-complete-v1",
+        requestContentHash: request.contentHash,
+        candidateBundleContentHash: bundle.contentHash,
+        stagingReportContentHash: report.contentHash,
+        files: report.assets.map((asset) => ({
+          requestItemId: asset.requestItemId,
+          candidateId: asset.candidateId,
+          sourceContentHash: asset.sourceContentHash,
+          byteLength: asset.byteLength,
+          mediaType: "image/png" as const,
+          width: asset.width,
+          height: asset.height,
+          immutableLocationId: asset.immutableLocationId,
+          stagedRelativeFile: asset.relativeFile,
+        })),
+        providerAuthority: false as const,
+        approvalRequired: true as const,
+        importedAt: "2026-07-18T20:06:00.000Z",
+      }
+    : null;
+  const receipt = receiptDraft
+    ? characterRigImportReceiptSchema.parse({
+        ...receiptDraft,
+        contentHash: hashCanonical(receiptDraft),
+      })
+    : null;
+  const recipeDraft = {
+    schemaVersion: "1.0" as const,
     recipeId: "recipe-ollo-front-v1",
     requestId: request.requestId,
     requestContentHash: request.contentHash,
     bundleContentHash: bundle.contentHash,
     stagingReportContentHash: report.contentHash,
+    importReceiptContentHash: receipt?.contentHash ?? null,
     identityLockContentHash: request.identityLock.contentHash,
     templateContentHash: request.rigProfile.templateContentHash,
     processor: {
-      extractionAlgorithm: { id: "rect-crop-chroma-v1", version: "1.0.0" },
-      imageLibrary: { id: "sharp", version: "0.34.5" },
+      extractionAlgorithm: {
+        id: "character-rig-component-preparation" as const,
+        version: "1.0.0" as const,
+      },
+      imageLibrary: { id: "sharp" as const, version: "0.34.5" as const },
     },
-    view: "front",
-    state: "proposed",
+    view: "front" as const,
+    state: "proposed" as const,
     parts,
     exposures,
-    approvalRequired: true,
-  });
-  return { request, bundle, report, recipe };
+    approvalRequired: true as const,
+  };
+  const recipe = receipt
+    ? createCharacterRigPreparationRecipe(recipeDraft)
+    : createCharacterRigPreparationRecipeDraft(recipeDraft);
+  return { request, bundle, report, receipt, recipe };
 };
 
 describe("character rig preparation ledger", () => {
@@ -233,18 +273,24 @@ describe("character rig preparation ledger", () => {
     expect(characterRigPreparation).not.toHaveProperty(
       "createCharacterRigImportReceipt",
     );
+    expect(characterRigPreparation).not.toHaveProperty(
+      "createPreparedCharacterRigViewManifest",
+    );
   });
 
-  it("binds a complete front-view component recipe to partial staged lineage", () => {
+  it("allows a non-executable front-view recipe draft against incomplete staging", () => {
     const { request, bundle, report, recipe } = fixture();
     expect(report.status).toBe("incomplete");
-    expect(validateCharacterRigPreparationRecipe(request, bundle, report, recipe)).toEqual({
-      recipeContentHash: recipe.contentHash,
+    expect(recipe).not.toHaveProperty("contentHash");
+    expect(validateCharacterRigPreparationRecipeDraft(request, bundle, report, recipe)).toEqual({
       componentCount: recipe.parts.length + recipe.exposures.length,
       providerAuthority: false,
       approvalRequired: true,
       state: "proposed",
     });
+    expect(() => createCharacterRigPreparationRecipe(recipe)).toThrow(
+      /verified import receipt/i,
+    );
   });
 
   it("rejects existing-alpha claims for an opaque parts source", () => {
@@ -257,28 +303,28 @@ describe("character rig preparation ledger", () => {
           : asset,
       ),
     });
-    const rebound = createCharacterRigPreparationRecipe({
-      ...withoutHash(recipe),
+    const rebound = createCharacterRigPreparationRecipeDraft({
+      ...recipe,
       stagingReportContentHash: opaqueReport.contentHash,
     });
     expect(() =>
-      validateCharacterRigPreparationRecipe(request, bundle, opaqueReport, rebound),
+      validateCharacterRigPreparationRecipeDraft(request, bundle, opaqueReport, rebound),
     ).toThrow(/cannot claim existing-alpha/i);
   });
 
   it("rejects duplicate z-order and exposure registration drift", () => {
     const { recipe } = fixture();
     expect(() =>
-      createCharacterRigPreparationRecipe({
-        ...withoutHash(recipe),
+      createCharacterRigPreparationRecipeDraft({
+        ...recipe,
         parts: recipe.parts.map((part, index) =>
           index === 1 ? { ...part, zIndex: recipe.parts[0]!.zIndex } : part,
         ),
       }),
     ).toThrow(/z-order values must be unique/i);
     expect(() =>
-      createCharacterRigPreparationRecipe({
-        ...withoutHash(recipe),
+      createCharacterRigPreparationRecipeDraft({
+        ...recipe,
         exposures: recipe.exposures.map((exposure, index) =>
           index === 0
             ? { ...exposure, output: { ...exposure.output, width: 65 } }
@@ -290,8 +336,8 @@ describe("character rig preparation ledger", () => {
 
   it("rejects a crop outside the staged image and stale staging lineage", () => {
     const { request, bundle, report, recipe } = fixture();
-    const outside = createCharacterRigPreparationRecipe({
-      ...withoutHash(recipe),
+    const outside = createCharacterRigPreparationRecipeDraft({
+      ...recipe,
       parts: recipe.parts.map((part, index) =>
         index === 0
           ? { ...part, source: { ...part.source, rect: { x: 2040, y: 0, width: 64, height: 64 } } }
@@ -299,13 +345,58 @@ describe("character rig preparation ledger", () => {
       ),
     });
     expect(() =>
-      validateCharacterRigPreparationRecipe(request, bundle, report, outside),
+      validateCharacterRigPreparationRecipeDraft(request, bundle, report, outside),
     ).toThrow(/crop leaves its staged source/i);
     expect(() =>
-      validateCharacterRigPreparationRecipe(request, bundle, report, {
+      validateCharacterRigPreparationRecipeDraft(request, bundle, report, {
         ...recipe,
         stagingReportContentHash: repeatedHash("f"),
       }),
     ).toThrow(/hash is invalid|exact staged lineage/i);
+  });
+
+  it("seals execution only to the exact complete verified import receipt", () => {
+    const { request, bundle, report, receipt, recipe } = fixture(true);
+    expect(receipt).not.toBeNull();
+    expect(recipe).toHaveProperty("contentHash");
+    expect(
+      validateCharacterRigPreparationRecipe(
+        request,
+        bundle,
+        report,
+        receipt!,
+        recipe as ReturnType<typeof createCharacterRigPreparationRecipe>,
+      ),
+    ).toEqual(
+      expect.objectContaining({
+        recipeContentHash: expect.any(String),
+        componentCount: recipe.parts.length + recipe.exposures.length,
+      }),
+    );
+    expect(() =>
+      validateCharacterRigPreparationRecipe(
+        request,
+        bundle,
+        report,
+        { ...receipt!, contentHash: repeatedHash("f") },
+        recipe as ReturnType<typeof createCharacterRigPreparationRecipe>,
+      ),
+    ).toThrow(/hash is invalid|receipt/i);
+  });
+
+  it("rejects missing exact role coverage", () => {
+    const { request, bundle, report, recipe } = fixture();
+    const incomplete = createCharacterRigPreparationRecipeDraft({
+      ...recipe,
+      exposures: recipe.exposures.slice(1),
+    });
+    expect(() =>
+      validateCharacterRigPreparationRecipeDraft(
+        request,
+        bundle,
+        report,
+        incomplete,
+      ),
+    ).toThrow(/every requested component/i);
   });
 });
