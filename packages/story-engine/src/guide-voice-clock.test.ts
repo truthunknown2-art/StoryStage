@@ -25,6 +25,105 @@ const writeAscii = (bytes: Uint8Array, offset: number, value: string) =>
     bytes[offset + index] = character.charCodeAt(0);
   });
 
+const concatenateBytes = (...parts: Uint8Array[]) => {
+  const bytes = new Uint8Array(
+    parts.reduce((length, part) => length + part.byteLength, 0),
+  );
+  let offset = 0;
+  parts.forEach((part) => {
+    bytes.set(part, offset);
+    offset += part.byteLength;
+  });
+  return bytes;
+};
+
+function makeWavChunk(
+  chunkId: string,
+  payload: Uint8Array,
+  {
+    includePadding = true,
+    paddingByte = 0,
+  }: { includePadding?: boolean; paddingByte?: number } = {},
+): Uint8Array {
+  const padding = payload.byteLength % 2 === 1 && includePadding ? 1 : 0;
+  const chunk = new Uint8Array(8 + payload.byteLength + padding);
+  const view = new DataView(chunk.buffer);
+  writeAscii(chunk, 0, chunkId);
+  view.setUint32(4, payload.byteLength, true);
+  chunk.set(payload, 8);
+  if (padding) chunk[chunk.byteLength - 1] = paddingByte;
+  return chunk;
+}
+
+function makePcmFormatChunk({
+  sampleRate = 48_000,
+  channels = 1,
+  bitsPerSample = 16,
+  audioFormat = 1,
+  byteRate,
+  blockAlign,
+}: {
+  sampleRate?: number;
+  channels?: 1 | 2;
+  bitsPerSample?: 16 | 24 | 32;
+  audioFormat?: number;
+  byteRate?: number;
+  blockAlign?: number;
+} = {}): Uint8Array {
+  const payload = new Uint8Array(16);
+  const view = new DataView(payload.buffer);
+  const derivedBlockAlign = (channels * bitsPerSample) / 8;
+  view.setUint16(0, audioFormat, true);
+  view.setUint16(2, channels, true);
+  view.setUint32(4, sampleRate, true);
+  view.setUint32(8, byteRate ?? sampleRate * derivedBlockAlign, true);
+  view.setUint16(12, blockAlign ?? derivedBlockAlign, true);
+  view.setUint16(14, bitsPerSample, true);
+  return makeWavChunk("fmt ", payload);
+}
+
+function makePcmDataChunk({
+  durationSamples = 48_000,
+  channels = 1,
+  bitsPerSample = 16,
+  seed = 0,
+}: {
+  durationSamples?: number;
+  channels?: 1 | 2;
+  bitsPerSample?: 16 | 24 | 32;
+  seed?: number;
+} = {}): Uint8Array {
+  const dataBytes = durationSamples * channels * (bitsPerSample / 8);
+  const payload = new Uint8Array(dataBytes);
+  for (let index = 0; index < payload.length; index += 1)
+    payload[index] = (index + seed) % 251;
+  return makeWavChunk("data", payload);
+}
+
+function makeRiffWave(
+  chunks: readonly Uint8Array[],
+  declaredRiffSize?: number,
+): Uint8Array {
+  const chunkBytes = concatenateBytes(...chunks);
+  const bytes = new Uint8Array(12 + chunkBytes.byteLength);
+  const view = new DataView(bytes.buffer);
+  writeAscii(bytes, 0, "RIFF");
+  view.setUint32(4, declaredRiffSize ?? bytes.byteLength - 8, true);
+  writeAscii(bytes, 8, "WAVE");
+  bytes.set(chunkBytes, 12);
+  return bytes;
+}
+
+function withDeclaredRiffSize(bytes: Uint8Array, riffSize: number) {
+  const altered = bytes.slice();
+  new DataView(
+    altered.buffer,
+    altered.byteOffset,
+    altered.byteLength,
+  ).setUint32(4, riffSize, true);
+  return altered;
+}
+
 function makePcmWav({
   sampleRate = 48_000,
   durationSamples = 48_000,
@@ -36,26 +135,10 @@ function makePcmWav({
   channels?: 1 | 2;
   seed?: number;
 } = {}): Uint8Array {
-  const bytesPerSample = 2;
-  const dataBytes = durationSamples * channels * bytesPerSample;
-  const bytes = new Uint8Array(44 + dataBytes);
-  const view = new DataView(bytes.buffer);
-  writeAscii(bytes, 0, "RIFF");
-  view.setUint32(4, 36 + dataBytes, true);
-  writeAscii(bytes, 8, "WAVE");
-  writeAscii(bytes, 12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, channels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * channels * bytesPerSample, true);
-  view.setUint16(32, channels * bytesPerSample, true);
-  view.setUint16(34, 16, true);
-  writeAscii(bytes, 36, "data");
-  view.setUint32(40, dataBytes, true);
-  for (let index = 44; index < bytes.length; index += 1)
-    bytes[index] = (index + seed) % 251;
-  return bytes;
+  return makeRiffWave([
+    makePcmFormatChunk({ sampleRate, channels }),
+    makePcmDataChunk({ durationSamples, channels, seed }),
+  ]);
 }
 
 const script = "Ollo finds the light. Tix listens carefully.";
@@ -89,6 +172,18 @@ const resealClock = (clock: ReturnType<typeof sealGuideVoiceClock>) => {
   const draft: Partial<typeof clock> = { ...clock };
   delete draft.contentHash;
   return guideVoiceClockSchema.parse({
+    ...draft,
+    contentHash: hashCanonical(draft),
+  });
+};
+
+const resealBasis = (
+  basis: ReturnType<typeof sealGuideVoiceTimingBasis>,
+  overrides: Partial<typeof basis>,
+) => {
+  const draft: Partial<typeof basis> = { ...basis, ...overrides };
+  delete draft.contentHash;
+  return guideVoiceTimingBasisSchema.parse({
     ...draft,
     contentHash: hashCanonical(draft),
   });
@@ -128,6 +223,145 @@ describe("GuideVoiceClockV1", () => {
         expectClock(clock),
       ),
     ).toEqual(clock);
+  });
+
+  it("hashes and inspects one copied audio snapshot", () => {
+    const firstAudio = makePcmWav();
+    const secondAudio = makePcmWav({
+      sampleRate: 44_100,
+      durationSamples: 44_100,
+      seed: 9,
+    });
+    let audioReads = 0;
+    const changingSources = {
+      script,
+      get audioBytes() {
+        audioReads += 1;
+        return audioReads === 1 ? firstAudio : secondAudio;
+      },
+    } as GuideVoiceClockSources;
+
+    const clock = sealGuideVoiceClock(changingSources, clauses);
+    expect(audioReads).toBe(1);
+    expect(clock.audioContentHash).toBe(hashGuideAudioBytes(firstAudio));
+    expect(clock).toMatchObject({
+      sampleRate: 48_000,
+      channels: 1,
+      durationSamples: 48_000,
+    });
+
+    audioReads = 0;
+    expect(() =>
+      assertGuideVoiceClockMatchesSources(
+        clock,
+        changingSources,
+        expectClock(clock),
+      ),
+    ).not.toThrow();
+    expect(audioReads).toBe(1);
+  });
+
+  it("accepts an in-RIFF metadata chunk without deriving timing from it", () => {
+    const fakeTiming = new Uint8Array(16);
+    const fakeView = new DataView(fakeTiming.buffer);
+    fakeView.setUint16(0, 3, true);
+    fakeView.setUint16(2, 2, true);
+    fakeView.setUint32(4, 8_000, true);
+    fakeView.setUint32(8, 64_000, true);
+    fakeView.setUint16(12, 8, true);
+    fakeView.setUint16(14, 32, true);
+    const audioBytes = makeRiffWave([
+      makeWavChunk("JUNK", fakeTiming),
+      makePcmFormatChunk(),
+      makePcmDataChunk(),
+    ]);
+
+    const clock = sealGuideVoiceClock({ script, audioBytes }, clauses);
+    expect(clock).toMatchObject({
+      sampleRate: 48_000,
+      channels: 1,
+      durationSamples: 48_000,
+    });
+  });
+
+  it("rejects malformed RIFF structure, duplicate timing chunks, and inconsistent PCM metadata", () => {
+    const format = makePcmFormatChunk();
+    const data = makePcmDataChunk();
+    const valid = makeRiffWave([format, data]);
+    const declaredSize = valid.byteLength - 8;
+    const trailingFormat = concatenateBytes(valid, format);
+    const missingPadding = makeRiffWave([
+      makeWavChunk("JUNK", Uint8Array.of(1), { includePadding: false }),
+      format,
+      data,
+    ]);
+    const outOfBoundsChunk = valid.slice();
+    new DataView(
+      outOfBoundsChunk.buffer,
+      outOfBoundsChunk.byteOffset,
+      outOfBoundsChunk.byteLength,
+    ).setUint32(40, 96_002, true);
+
+    const cases: Array<[string, Uint8Array, RegExp]> = [
+      ["trailing fmt beyond RIFF", trailingFormat, /RIFF size/],
+      [
+        "duplicate fmt",
+        makeRiffWave([format, format, data]),
+        /exactly one format chunk/,
+      ],
+      [
+        "duplicate data",
+        makeRiffWave([format, data, data]),
+        /exactly one audio-data chunk/,
+      ],
+      [
+        "fmt after data",
+        makeRiffWave([data, format]),
+        /format chunk must precede/,
+      ],
+      [
+        "stale short RIFF size",
+        withDeclaredRiffSize(valid, declaredSize - 2),
+        /RIFF size/,
+      ],
+      [
+        "stale long RIFF size",
+        withDeclaredRiffSize(valid, declaredSize + 2),
+        /RIFF size/,
+      ],
+      ["missing odd-chunk padding", missingPadding, /padding/],
+      ["chunk beyond RIFF bounds", outOfBoundsChunk, /RIFF bounds/],
+      [
+        "non-PCM format",
+        makeRiffWave([makePcmFormatChunk({ audioFormat: 3 }), data]),
+        /integer PCM/,
+      ],
+      [
+        "inconsistent byte rate",
+        makeRiffWave([makePcmFormatChunk({ byteRate: 1 }), data]),
+        /byte rate and block alignment/,
+      ],
+      [
+        "inconsistent block align",
+        makeRiffWave([makePcmFormatChunk({ blockAlign: 4 }), data]),
+        /byte rate and block alignment/,
+      ],
+      [
+        "partial sample frame",
+        makeRiffWave([
+          makePcmFormatChunk({ channels: 2 }),
+          makeWavChunk("data", new Uint8Array(6)),
+        ]),
+        /complete sample frame/,
+      ],
+    ];
+
+    cases.forEach(([label, audioBytes, expected]) => {
+      expect(
+        () => sealGuideVoiceClock({ script, audioBytes }, clauses),
+        label,
+      ).toThrow(expected);
+    });
   });
 
   it("rejects altered hashes, scripts, WAV bytes, and WAV metadata", () => {
@@ -418,5 +652,40 @@ describe("blind A/B guide-clock equality", () => {
     expect(() =>
       assertGuideClockAbEquality(cut24, { ...cut24 }, frozen),
     ).toThrow(/frozen expected basis hash/);
+  });
+
+  it("rejects two colluding cuts with the same self-consistent malformed WAV", () => {
+    const fixture = createFixture();
+    const validBasis = sealGuideVoiceTimingBasis(
+      fixture.clock,
+      fixture.sources,
+      30,
+    );
+    const malformedAudio = concatenateBytes(
+      fixture.sources.audioBytes,
+      makePcmFormatChunk({ sampleRate: 8_000 }),
+    );
+    const forgedClock = resealClock({
+      ...fixture.clock,
+      audioContentHash: hashGuideAudioBytes(malformedAudio),
+    });
+    const forgedBasis = resealBasis(validBasis, {
+      guideVoiceClockContentHash: forgedClock.contentHash,
+      audioContentHash: forgedClock.audioContentHash,
+    });
+    const colludingCut = {
+      script,
+      audioBytes: malformedAudio,
+      clock: forgedClock,
+      timingBasis: forgedBasis,
+    };
+
+    expect(() =>
+      assertGuideClockAbEquality(
+        colludingCut,
+        { ...colludingCut, audioBytes: malformedAudio.slice() },
+        expectFrameBinding(forgedClock, forgedBasis),
+      ),
+    ).toThrow(/RIFF size/);
   });
 });

@@ -4,7 +4,6 @@ import { z } from "zod";
 import { canonicalJson, hashCanonical } from "./canonical-hash";
 import { hashSchema, identifierSchema } from "./model";
 import { getScriptContentHash } from "./script-approval";
-import { inspectPcmWav } from "./wav-audio";
 
 const safeIntegerSchema = z.number().int().nonnegative().safe();
 const positiveSafeIntegerSchema = z.number().int().positive().safe();
@@ -132,6 +131,23 @@ export function hashGuideAudioBytes(audioBytes: Uint8Array): string {
   return bytesToHex(sha256(audioBytes));
 }
 
+type GuideVoiceSourceSnapshot = Readonly<{
+  script: string;
+  audioBytes: Uint8Array;
+}>;
+
+function snapshotGuideVoiceSources(
+  sources: GuideVoiceClockSources,
+): GuideVoiceSourceSnapshot {
+  const script = sources.script;
+  const sourceAudioBytes = sources.audioBytes;
+  if (!(sourceAudioBytes instanceof Uint8Array))
+    throw new Error("Guide audio must be supplied as WAV bytes.");
+  const audioBytes = new Uint8Array(sourceAudioBytes.byteLength);
+  audioBytes.set(sourceAudioBytes);
+  return { script, audioBytes };
+}
+
 function assertClauseSourceCoverage(
   clauses: readonly GuideVoiceClause[],
   script: string,
@@ -156,17 +172,120 @@ function assertClauseSourceCoverage(
     );
 }
 
+const readGuideWavChunkId = (bytes: Uint8Array, offset: number) =>
+  String.fromCharCode(
+    bytes[offset]!,
+    bytes[offset + 1]!,
+    bytes[offset + 2]!,
+    bytes[offset + 3]!,
+  );
+
 function inspectGuideWav(audioBytes: Uint8Array) {
-  const metadata = inspectPcmWav(audioBytes);
-  const blockAlign = (metadata.channels * metadata.bitsPerSample) / 8;
-  if (!Number.isSafeInteger(blockAlign) || blockAlign <= 0)
-    throw new Error("Guide WAV block alignment is invalid.");
-  if (metadata.dataBytes % blockAlign !== 0)
+  if (
+    audioBytes.byteLength < 12 ||
+    readGuideWavChunkId(audioBytes, 0) !== "RIFF" ||
+    readGuideWavChunkId(audioBytes, 8) !== "WAVE"
+  )
+    throw new Error("Guide audio must be a valid RIFF/WAVE file.");
+
+  const view = new DataView(
+    audioBytes.buffer,
+    audioBytes.byteOffset,
+    audioBytes.byteLength,
+  );
+  const riffEnd = 8 + view.getUint32(4, true);
+  if (riffEnd !== audioBytes.byteLength)
+    throw new Error(
+      "Guide WAV RIFF size must exactly match the supplied byte snapshot.",
+    );
+
+  let format: {
+    audioFormat: number;
+    channels: number;
+    sampleRate: number;
+    byteRate: number;
+    blockAlign: number;
+    bitsPerSample: number;
+  } | null = null;
+  let dataBytes: number | null = null;
+  let offset = 12;
+
+  while (offset < riffEnd) {
+    if (offset + 8 > riffEnd)
+      throw new Error("Guide WAV contains an incomplete chunk header.");
+    const chunkId = readGuideWavChunkId(audioBytes, offset);
+    const chunkSize = view.getUint32(offset + 4, true);
+    const chunkStart = offset + 8;
+    const chunkEnd = chunkStart + chunkSize;
+    if (chunkEnd > riffEnd)
+      throw new Error("Guide WAV contains a chunk outside its RIFF bounds.");
+    const paddedChunkEnd = chunkEnd + (chunkSize % 2);
+    if (paddedChunkEnd > riffEnd)
+      throw new Error("Guide WAV contains a chunk without required padding.");
+    if (chunkSize % 2 === 1 && audioBytes[chunkEnd] !== 0)
+      throw new Error("Guide WAV chunk padding must be a zero byte.");
+
+    if (chunkId === "fmt ") {
+      if (format)
+        throw new Error("Guide WAV must contain exactly one format chunk.");
+      if (dataBytes !== null)
+        throw new Error("Guide WAV format chunk must precede audio data.");
+      if (chunkSize < 16)
+        throw new Error("Guide WAV has an incomplete format chunk.");
+      format = {
+        audioFormat: view.getUint16(chunkStart, true),
+        channels: view.getUint16(chunkStart + 2, true),
+        sampleRate: view.getUint32(chunkStart + 4, true),
+        byteRate: view.getUint32(chunkStart + 8, true),
+        blockAlign: view.getUint16(chunkStart + 12, true),
+        bitsPerSample: view.getUint16(chunkStart + 14, true),
+      };
+    } else if (chunkId === "data") {
+      if (!format)
+        throw new Error("Guide WAV format chunk must precede audio data.");
+      if (dataBytes !== null)
+        throw new Error("Guide WAV must contain exactly one audio-data chunk.");
+      dataBytes = chunkSize;
+    }
+
+    offset = paddedChunkEnd;
+  }
+
+  if (!format || dataBytes === null)
+    throw new Error(
+      "Guide WAV must contain exactly one format and one audio-data chunk.",
+    );
+  if (format.audioFormat !== 1)
+    throw new Error("Guide WAV must use uncompressed integer PCM samples.");
+  if (format.channels !== 1 && format.channels !== 2)
+    throw new Error("Guide WAV must be mono or stereo.");
+  if (![16, 24, 32].includes(format.bitsPerSample))
+    throw new Error("Guide WAV must use 16, 24, or 32 bits per sample.");
+  if (format.sampleRate < 8_000 || format.sampleRate > 192_000)
+    throw new Error(
+      "Guide WAV sample rate is outside the supported 8-192 kHz range.",
+    );
+  const blockAlign = (format.channels * format.bitsPerSample) / 8;
+  if (
+    !Number.isSafeInteger(blockAlign) ||
+    blockAlign <= 0 ||
+    format.blockAlign !== blockAlign ||
+    format.byteRate !== format.sampleRate * blockAlign
+  )
+    throw new Error(
+      "Guide WAV byte rate and block alignment must match its PCM format.",
+    );
+  if (dataBytes <= 0)
+    throw new Error("Guide WAV audio-data chunk must not be empty.");
+  if (dataBytes % blockAlign !== 0)
     throw new Error("Guide WAV data does not end on a complete sample frame.");
+  const durationSamples = dataBytes / blockAlign;
+  if (durationSamples / format.sampleRate > 14_400)
+    throw new Error("Guide WAV duration exceeds four hours.");
   return {
-    sampleRate: metadata.sampleRate,
-    channels: metadata.channels,
-    durationSamples: metadata.dataBytes / blockAlign,
+    sampleRate: format.sampleRate,
+    channels: format.channels,
+    durationSamples,
   };
 }
 
@@ -174,54 +293,65 @@ export function sealGuideVoiceClock(
   sources: GuideVoiceClockSources,
   clauses: readonly GuideVoiceClause[],
 ): GuideVoiceClockV1 {
-  if (!sources.script.length)
+  const snapshot = snapshotGuideVoiceSources(sources);
+  if (!snapshot.script.length)
     throw new Error("Guide script must not be empty.");
-  const wav = inspectGuideWav(sources.audioBytes);
+  const wav = inspectGuideWav(snapshot.audioBytes);
   const draft = guideVoiceClockDraftSchema.parse({
     schemaVersion: "1.0",
-    scriptContentHash: getScriptContentHash(sources.script),
-    audioContentHash: hashGuideAudioBytes(sources.audioBytes),
+    scriptContentHash: getScriptContentHash(snapshot.script),
+    audioContentHash: hashGuideAudioBytes(snapshot.audioBytes),
     codec: "wav",
     ...wav,
     clauses,
     authority: "guide-timing-only",
     productionBindable: false,
   });
-  assertClauseSourceCoverage(draft.clauses, sources.script);
+  assertClauseSourceCoverage(draft.clauses, snapshot.script);
   return guideVoiceClockSchema.parse({
     ...draft,
     contentHash: hashCanonical(draft),
   });
 }
 
-function assertGuideVoiceClockSources(
+function assertGuideVoiceClockSnapshot(
   rawClock: GuideVoiceClockV1,
-  sources: GuideVoiceClockSources,
+  snapshot: GuideVoiceSourceSnapshot,
 ): GuideVoiceClockV1 {
   const clock = guideVoiceClockSchema.parse(rawClock);
-  if (clock.scriptContentHash !== getScriptContentHash(sources.script))
+  if (clock.scriptContentHash !== getScriptContentHash(snapshot.script))
     throw new Error(
       "Guide voice clock does not match the exact source script.",
     );
-  if (clock.audioContentHash !== hashGuideAudioBytes(sources.audioBytes))
+  if (clock.audioContentHash !== hashGuideAudioBytes(snapshot.audioBytes))
     throw new Error("Guide voice clock does not match the exact WAV bytes.");
-  const wav = inspectGuideWav(sources.audioBytes);
+  const wav = inspectGuideWav(snapshot.audioBytes);
   if (
     clock.sampleRate !== wav.sampleRate ||
     clock.channels !== wav.channels ||
     clock.durationSamples !== wav.durationSamples
   )
     throw new Error("Guide voice clock does not match the WAV metadata.");
-  assertClauseSourceCoverage(clock.clauses, sources.script);
+  assertClauseSourceCoverage(clock.clauses, snapshot.script);
   return clock;
 }
 
-export function assertGuideVoiceClockMatchesSources(
+function assertGuideVoiceClockSources(
   rawClock: GuideVoiceClockV1,
   sources: GuideVoiceClockSources,
+): GuideVoiceClockV1 {
+  return assertGuideVoiceClockSnapshot(
+    rawClock,
+    snapshotGuideVoiceSources(sources),
+  );
+}
+
+function assertGuideVoiceClockMatchesSnapshot(
+  rawClock: GuideVoiceClockV1,
+  snapshot: GuideVoiceSourceSnapshot,
   rawExpectation: GuideVoiceClockExpectation,
 ): GuideVoiceClockV1 {
-  const clock = assertGuideVoiceClockSources(rawClock, sources);
+  const clock = assertGuideVoiceClockSnapshot(rawClock, snapshot);
   const expectation = guideVoiceClockExpectationSchema.parse(rawExpectation);
   if (
     "expectedContentHash" in expectation &&
@@ -238,6 +368,18 @@ export function assertGuideVoiceClockMatchesSources(
       "Guide voice clock does not match the frozen expected clause grid.",
     );
   return clock;
+}
+
+export function assertGuideVoiceClockMatchesSources(
+  rawClock: GuideVoiceClockV1,
+  sources: GuideVoiceClockSources,
+  rawExpectation: GuideVoiceClockExpectation,
+): GuideVoiceClockV1 {
+  return assertGuideVoiceClockMatchesSnapshot(
+    rawClock,
+    snapshotGuideVoiceSources(sources),
+    rawExpectation,
+  );
 }
 
 export function serializeGuideVoiceClock(clock: GuideVoiceClockV1): string {
@@ -498,6 +640,8 @@ export function assertGuideClockAbEquality(
   right: GuideClockAbCut,
   rawExpectation: GuideClockAbExpectation,
 ): void {
+  const leftSnapshot = snapshotGuideVoiceSources(left);
+  const rightSnapshot = snapshotGuideVoiceSources(right);
   const expectation =
     guideVoiceFrameBindingExpectationSchema.parse(rawExpectation);
   const clockExpectation = {
@@ -506,14 +650,14 @@ export function assertGuideClockAbEquality(
   const basisExpectation = {
     expectedContentHash: expectation.expectedTimingBasisContentHash,
   } as const;
-  const leftClock = assertGuideVoiceClockMatchesSources(
+  const leftClock = assertGuideVoiceClockMatchesSnapshot(
     left.clock,
-    left,
+    leftSnapshot,
     clockExpectation,
   );
-  const rightClock = assertGuideVoiceClockMatchesSources(
+  const rightClock = assertGuideVoiceClockMatchesSnapshot(
     right.clock,
-    right,
+    rightSnapshot,
     clockExpectation,
   );
   const leftBasis = assertGuideVoiceTimingBasisMatchesClock(
@@ -535,7 +679,7 @@ export function assertGuideClockAbEquality(
     mismatches.push("clock hash");
   if (
     leftClock.audioContentHash !== rightClock.audioContentHash ||
-    !equalBytes(left.audioBytes, right.audioBytes)
+    !equalBytes(leftSnapshot.audioBytes, rightSnapshot.audioBytes)
   )
     mismatches.push("exact guide WAV bytes/audio hash");
   if (canonicalJson(leftClock.clauses) !== canonicalJson(rightClock.clauses))
