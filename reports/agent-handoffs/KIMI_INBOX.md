@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `4`
+Inbox-Version: `5`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-B-STUDIO-SHELL`
 Status: `START-NOW`
@@ -29,8 +29,35 @@ Run the full repository-root `pnpm verify`, not only Studio tests. Update the
 handoff/proof report with the exact corrected SHA, push the same branch, and
 leave PR #12 draft for Codex/Pro review. All existing truthfulness, real-control,
 responsive-capture, accessibility, and no-fake-media requirements remain in
-force. Do not wait for another message; Inbox Version 4 with `START-NOW` is the
-approval to fix the PR.
+force.
+
+An independent exact-head review found two additional introduced defects that
+must be fixed in the same successor SHA:
+
+1. **P1 — unusable global Director command.** `DirectorCommandPanel` is mounted
+   for every selected beat, but the current `proposeDirectorPatch` interpreter
+   accepts only reaction-delay wording and rejects beats without a concrete
+   reaction event. The default setup beat therefore presents a prominent
+   control that cannot work. Do not fake broader natural-language support.
+   Either gate the command control to beats with a supported reaction-edit
+   contract and show an honest unavailable explanation elsewhere, or add a
+   genuinely supported patch path within the existing Director Alpha boundary.
+   Add a test for the default/non-reaction beat.
+2. **P2 — stale command crosses beat ownership.** Selection changes clear the
+   proposal/error/feedback but retain `command`. A direction typed for beat A
+   can be previewed against beat B after click- or playback-driven selection.
+   Clear or bind command state to its beat ID on every selection change and add
+   a regression test.
+
+Correct the handoff wording too: `DirectorFrameThumbnail` is a deterministic
+proxy approximation, not a full canonical executable-performance frame, so do
+not call it a canonical frame. The capability labels themselves were audited
+and are genuinely capability/execution-derived. The Kids empty-alt and
+`EncodingError` findings were confirmed pre-existing in the unchanged Remotion
+runtime and may remain a clearly filed limitation for this slice.
+
+Do not wait for another message; Inbox Version 5 with `START-NOW` authorizes
+these corrections together with the hosted boundary fix.
 
 ## Polling contract
 
