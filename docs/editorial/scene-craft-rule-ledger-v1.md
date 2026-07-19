@@ -334,7 +334,7 @@ quotas.
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi
-- **Notes:** Label honesty is mechanical (SC-005); the v1 "never stack" phrasing is recorded as superseded (SC-034).
+- **Notes:** Label honesty is mechanical (SC-005); the superseded v1 compound-camera restriction is recorded as a preference, not a rule, in SC-034.
 
 ### SC-016 — Scene energy shapes: flat-comic, sustained-tension, rising, falling, breather, button, bridge, reveal
 
@@ -678,7 +678,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **v1 `[PLAN]`/`[CHECK]`/`[RIG]`/`[AUDIO]` tags are fully classified:** plan
   tags map to planner priors and hypotheses; check tags map to hard invariants
   (mechanical only) or hypotheses (graded); rig tags map to rig priors,
-  hypotheses, and the two project-regression invariants; audio tags map to the
+  hypotheses, and the two project regression invariants; audio tags map to the
   timing-authority invariant and audio priors.
 - **Storylight external-intent examples are deliberately absent** pending the
   exact accepted Editorial Director contract head and a frozen host-issued

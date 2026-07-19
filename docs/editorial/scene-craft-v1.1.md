@@ -34,20 +34,20 @@ type SceneCraftRule = {
   grammarScope: Array<"kids-adventure" | "weird-history">;
   domain: "plan" | "continuity" | "quality" | "rig" | "audio";
   enforcement:
-    | "hard-invariant"
+    | "hard invariant"
     | "warning"
     | "information"
-    | "planner-prior"
+    | "planner prior"
     | "hypothesis"
-    | "example-only";
+    | "example only";
   minimumSampleSize: number | null;
   exceptionCodes: string[];
   sourceContentHashes: string[];
   evidenceKind:
-    | "measured-reference"
-    | "project-regression"
-    | "established-practice"
-    | "unvalidated-hypothesis";
+    | "measured reference"
+    | "project regression"
+    | "established editorial practice"
+    | "unvalidated hypothesis";
   confidence: "low" | "medium" | "high";
 };
 ```
@@ -86,7 +86,7 @@ These inform planning and human review but do not veto a cut by themselves:
 
 _Ledger rules: SC-025, SC-026, SC-027, SC-028, SC-029, SC-030, SC-031,
 SC-032, SC-033, SC-034, SC-035, SC-036, SC-037, SC-039 (all hypothesis or
-example-only, low confidence, pending calibration)._
+example only, low confidence, pending calibration)._
 
 ### Unvalidated hypotheses
 
@@ -133,8 +133,8 @@ when it has no primary purpose, declares contradictory purposes, or cannot
 satisfy its purposes inside the exact timing and capability envelope. Multiple
 useful functions are not themselves a reason to split a shot.
 
-_Ledger rules: SC-010 (hard-invariant rejection cases), SC-011 (purpose
-vocabulary, planner-prior)._
+_Ledger rules: SC-010 (hard invariant rejection cases), SC-011 (purpose
+vocabulary, planner prior)._
 
 ## 2. Coverage and shot mix
 
@@ -155,7 +155,7 @@ target without a valid semantic justification. Any target must bind the exact
 grammar-profile, show-pack, reference-analysis, sample-size, confidence, and
 evaluation-window hashes.
 
-_Ledger rules: SC-012, SC-013 (planner-prior vocabulary), SC-030 (mix prior,
+_Ledger rules: SC-012, SC-013 (planner prior vocabulary), SC-030 (mix prior,
 unvalidated)._
 
 ## 3. Motivated cuts and continuity
@@ -175,7 +175,7 @@ incompatible action phases, across a gait discontinuity, before contact or
 causal response is readable, or across an unexplained axis/geography reversal.
 A cut on a hold is not inherently defective.
 
-_Ledger rules: SC-014 (planner-prior vocabulary), SC-042 (hard-invariant
+_Ledger rules: SC-014 (planner prior vocabulary), SC-042 (hard invariant
 mechanical cut failures)._
 
 ## 4. Motivated camera
@@ -190,7 +190,7 @@ blocking. A motivated pan-plus-push is not rejected merely because it combines
 two components. A camera label that does not match its actual samples is a hard
 failure.
 
-_Ledger rules: SC-015 (planner-prior vocabulary), SC-005 (hard-invariant
+_Ledger rules: SC-015 (planner prior vocabulary), SC-005 (hard invariant
 label honesty), SC-034 (v1 claim recorded as hypothesis and superseded)._
 
 ## 5. Pacing and holds
@@ -210,8 +210,8 @@ resolved shots, the sequence is not an intentional montage, audio does not
 prescribe regular intervals, and the sample offers enough opportunity for
 variation. Mechanical failures remain outside the taste report.
 
-_Ledger rules: SC-016 (energy shapes, planner-prior), SC-017 (pre-reveal hold
-device, planner-prior), SC-024 (8–16f hold, hypothesis), SC-025 (CV floor,
+_Ledger rules: SC-016 (energy shapes, planner prior), SC-017 (pre-reveal hold
+device, planner prior), SC-024 (8–16f hold, hypothesis), SC-025 (CV floor,
 hypothesis)._
 
 ## 6. Variety and meaningful change
@@ -230,7 +230,7 @@ rejection.
 A six-second locked close-up with excellent acting is not a static tableau.
 
 _Ledger rules: SC-026 (static-idea limit, hypothesis), SC-027 (gesture
-repeat, project-regression observation with hypothesis status), SC-028
+repeat, project regression observation with hypothesis status), SC-028
 (same-size streaks, hypothesis), SC-033 (focal staging, hypothesis)._
 
 ## 7. Transition grammar
@@ -249,7 +249,7 @@ block only when:
 An identical-pose dissolve can be an intentional graphic rhyme, time
 transition, or emotional suspension; it is not universally banned.
 
-_Ledger rules: SC-018 (planner-prior vocabulary), SC-041 (hard-invariant
+_Ledger rules: SC-018 (planner prior vocabulary), SC-041 (hard invariant
 mechanical transition failures), SC-032 (dissolve pose-change claim,
 hypothesis), SC-033 (occlusion wipe timing, hypothesis)._
 
@@ -270,8 +270,8 @@ type RevealImportance = "micro" | "beat" | "major" | "set-piece";
 The hard failure is unreadable causality: the audience cannot identify what
 was noticed, who reacted, or what changed.
 
-_Ledger rules: SC-019 (importance-scaled palette, planner-prior), SC-043
-(unreadable causality, hard-invariant), SC-029 (three-of-four coverage,
+_Ledger rules: SC-019 (importance-scaled palette, planner prior), SC-043
+(unreadable causality, hard invariant), SC-029 (three-of-four coverage,
 hypothesis)._
 
 ## 9. Rig and performance capability knowledge
@@ -300,11 +300,11 @@ counts:
 Approved smear drawings may eventually be a valid style capability.
 Accidental semi-transparent whole-body crossfades remain prohibited.
 
-_Ledger rules: SC-020 (capability knowledge, planner-prior), SC-035 (pose
+_Ledger rules: SC-020 (capability knowledge, planner prior), SC-035 (pose
 evolution interval, hypothesis), SC-036 (gaze-lead offsets, hypothesis),
 SC-037 (blink cadence, hypothesis), SC-038 (accidental smear prohibition,
-hard-invariant, project-regression), SC-007 (pose-swap prohibition,
-hard-invariant)._
+hard invariant, project regression), SC-007 (pose-swap prohibition,
+hard invariant)._
 
 ## 10. Audio-led timing
 
@@ -318,9 +318,9 @@ is editorial: the system does not require an effect for every footfall, reveal,
 whoosh, or magical event. Exact synchronization is required for cues the plan
 actually requests.
 
-_Ledger rules: SC-021 (timing authority hierarchy, hard-invariant), SC-022
-(requested-cue synchronization, planner-prior), SC-023 (J/L-cut bridges,
-planner-prior)._
+_Ledger rules: SC-021 (timing authority hierarchy, hard invariant), SC-022
+(requested-cue synchronization, planner prior), SC-023 (J/L-cut bridges,
+planner prior)._
 
 ## Illustrative high-energy treatment
 
@@ -343,8 +343,8 @@ The blind pilot is scored independently:
 
 It must not reward matching a proposed shot list.
 
-_Ledger rules: SC-039 (15-shot density, example-only), SC-040 (blind-pilot
-rubric, example-only evaluation contract for human review — authorizes no
+_Ledger rules: SC-039 (15-shot density, example only), SC-040 (blind-pilot
+rubric, example only evaluation contract for human review — authorizes no
 validator or hard gate)._
 
 ## Adoption path
