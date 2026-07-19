@@ -39,6 +39,14 @@ eligible reaction targets or exact event/shot pairs. Pin the corrected visible
 copy in the focused Studio regression and update the handback evidence. Keep
 all other Version 7 behavior and boundaries unchanged.
 
+## Handback metadata correction (Inbox Version 9)
+
+The UI correction at `ce60efb8fef4d98027b02d194c0cd6ef60b24d51` and evidence
+head `d423d2df623cf8499beeb6cddb584bbbe7546e99` are accepted for exact-head Pro
+review once hosted verification completes. Correct only stale handback metadata:
+Inbox version, both implementation SHAs, exact evidence head/four-commit history,
+and the obsolete Remotion-fix limitation. Do not change Studio behavior.
+
 ## Proof required
 
 - Focused Studio tests cover 0, 1, and 2+ exact candidate-pair counts.

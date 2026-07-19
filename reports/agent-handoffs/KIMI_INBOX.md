@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `8`
+Inbox-Version: `9`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-B-COPY-PARITY`
 Status: `START-NOW`
@@ -10,6 +10,24 @@ Required-Work-Branch: `agent/kimi-ui-slice-b-copy-parity`
 Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-b-copy-parity.md`
 
 ## Current instruction
+
+Exact-head code review at PR #15 head
+`d423d2df623cf8499beeb6cddb584bbbe7546e99` accepts the pair-accurate UI and
+regression. Before Pro review, correct the handback metadata only: its heading
+still says Inbox v7, its implementation line names only `b90ba71`, and its
+integration paragraph says the branch is one implementation commit plus the
+handback. Record Inbox v8, implementation SHAs `b90ba71` and `ce60efb`, evidence
+head `d423d2d`, and the exact four-commit branch history. Remove the stale known
+limitation claiming the Kids image-alt/EncodingError fix is still on a separate
+branch; that Remotion fix was already accepted and integrated in PR #13.
+Do not change Studio code, copy, tests, or scope. Commit and push the corrected
+handback on the same branch.
+
+Version 9 supersedes Version 8 only for this handback metadata correction.
+
+---
+
+Previous Version 8 instruction:
 
 Exact-head review of draft PR #15 at
 `f93837232af54fe47b6601aa68d2df46c8878c40` found one remaining truthfulness
