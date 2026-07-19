@@ -316,7 +316,7 @@ export function Cv001CreatorStudio({
         <div className="cv-top-actions">
           <span className="cv-prototype-badge">
             <Sparkles size={13} />
-            Prototype
+            Engineering demo
           </span>
           <button
             aria-label="Undo direction"

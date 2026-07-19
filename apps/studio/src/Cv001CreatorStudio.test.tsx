@@ -322,6 +322,11 @@ describe("CV-001 creator shell", () => {
     expect(screen.queryByText("Saved on this device")).not.toBeInTheDocument();
   });
 
+  it("labels the Mara demo visibly as an engineering demo", async () => {
+    await openStudio();
+    expect(screen.getByText("Engineering demo")).toBeInTheDocument();
+  });
+
   it("opens a real preview with exactly three creator-facing beat cards", async () => {
     await openStudio();
     const rail = screen.getByRole("navigation", { name: "Scenes and beats" });
