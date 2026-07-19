@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cv002ArtDirectionSelectionsMatch } from "../cv002-art-direction";
 import { cv002ProjectSchema, type Cv002Project } from "../cv002-story-draft";
 import { hashSchema, identifierSchema } from "../model";
 import { applyDirectorPatch } from "./apply-director-patch";
@@ -155,6 +156,17 @@ export function restoreDirectorWorkspaceState(
     replayed.planningArtifact.grammar !== storyProject.grammar
   )
     throw new Error("Saved Director first cut belongs to another story graph.");
+  workspace.history.entries.forEach((entry, index) => {
+    if (
+      !cv002ArtDirectionSelectionsMatch(
+        entry.directorProject.artDirectionSelection,
+        storyProject.artDirectionSelection,
+      )
+    )
+      throw new Error(
+        `Saved Director workspace revision ${index} belongs to another art direction.`,
+      );
+  });
   for (let index = 1; index < workspace.history.entries.length; index += 1) {
     const entry = workspace.history.entries[index]!;
     if (!entry.patch)

@@ -1,4 +1,5 @@
 import { cv002ProjectSchema, type Cv002Project } from "../cv002-story-draft";
+import { cv002ArtDirectionSelectionsMatch } from "../cv002-art-direction";
 import {
   alphaCapabilityRegistry,
   capabilityRegistrySchema,
@@ -55,6 +56,15 @@ export function applyDirectorPatch(input: {
   if (base.storyProjectContentHash !== storyProject.contentHash)
     throw new Error(
       "Director patch story source does not match its first cut.",
+    );
+  if (
+    !cv002ArtDirectionSelectionsMatch(
+      base.artDirectionSelection,
+      storyProject.artDirectionSelection,
+    )
+  )
+    throw new Error(
+      "Director patch art direction does not match its source story project.",
     );
   if (
     base.capabilityReport.registryContentHash !== capabilityRegistry.contentHash

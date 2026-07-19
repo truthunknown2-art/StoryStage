@@ -1,4 +1,5 @@
 import { createCv002Project } from "../cv002-story-draft";
+import { createCv002ArtDirectionSelection } from "../cv002-art-direction";
 import {
   Cv002AlphaDirectorPlanner,
   type DirectorPlanner,
@@ -61,6 +62,10 @@ export const createKvp001ProofFixture = () => ({
     "KVP exact first shot",
     kvp001KidsScript,
     "kids-adventure",
+    createCv002ArtDirectionSelection(
+      "kids-adventure",
+      "cut-paper-collage-mixed-media",
+    ),
   ),
   planner: new Kvp001ProofDirectorPlanner(),
   limitation: KVP001_PROOF_LIMITATION,

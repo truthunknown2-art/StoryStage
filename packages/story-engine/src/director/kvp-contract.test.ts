@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
+import { createCv002ArtDirectionSelection } from "../cv002-art-direction";
 import {
   articulatedCharacterRigManifestSchema,
   type ArticulatedCharacterRigManifest,
@@ -283,6 +284,10 @@ describe("KVP-001 local-parts-v1 execution contract", () => {
         " ",
       ),
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const project = compileDirectorProject({ storyProject });
     expect(

@@ -19,6 +19,7 @@ import {
   compileDirectorProject,
   createCapabilityRegistry,
   createCv002Project,
+  createCv002ArtDirectionSelection,
   listArticulatedRigAssetReferences,
   type PerformanceCapabilityDraft,
   type ExecutableEpisodePlan,
@@ -52,6 +53,10 @@ const localPartsFixture = () => {
     "Local-parts asset verification",
     `${firstSentence} ${remainder}`,
     "kids-adventure",
+    createCv002ArtDirectionSelection(
+      "kids-adventure",
+      "cut-paper-collage-mixed-media",
+    ),
   );
   const proxy = compileDirectorProject({ storyProject });
   const requirement = proxy.directorPlan.beats[0]!.performanceRequirements[0]!;
@@ -128,6 +133,10 @@ Mara ran across the clearing, jumped over a narrow stream, and carried the lante
 
 Behind the gate, Mara discovers a painted marker and reveals that the missing bell is tucked inside silver grass. She reaches toward it, pauses when the grass rustles, and smiles as a sleepy moth lifts the bell into the air.`,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const proxy = compileDirectorProject({ storyProject });
     const target = proxy.directorPlan.beats

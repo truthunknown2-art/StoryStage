@@ -13,6 +13,7 @@ import { STORY_STAGE_PRODUCTION_COMPOSITION_ID } from "@storystage/remotion-runt
 import {
   compileDirectorProject,
   createCv002Project,
+  createCv002ArtDirectionSelection,
 } from "@storystage/story-engine/director-alpha";
 import { verifyDirectorEpisodeCapabilityAssets } from "./director-capability-assets";
 
@@ -41,6 +42,10 @@ async function main() {
     "Arbitrary Kids capability proof",
     script,
     "kids-adventure",
+    createCv002ArtDirectionSelection(
+      "kids-adventure",
+      "cut-paper-collage-mixed-media",
+    ),
   );
   const format = { width: 960, height: 540, fps: 30 };
   const proxyProject = compileDirectorProject({ storyProject, format });

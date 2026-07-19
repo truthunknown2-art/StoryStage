@@ -8,6 +8,7 @@ import {
   cv002WeirdHistoryReferenceSetManifestSchema,
   type Cv002ArtDirectionGrammar,
   type Cv002ArtDirectionOptionId,
+  type Cv002ArtDirectionSelection,
 } from "./cv002-art-direction";
 import {
   commitCv002Operation,
@@ -41,7 +42,24 @@ const withoutHash = <T extends { contentHash: string }>(value: T) => {
   return draft;
 };
 
+type CanonicalCreationRequiresArtDirection = Parameters<
+  typeof createCv002Project
+> extends [
+  title: string,
+  sourceText: string,
+  grammar: Cv002ArtDirectionGrammar,
+  artDirectionSelection: Cv002ArtDirectionSelection,
+]
+  ? true
+  : false;
+
 describe("ADRREF-001 canonical art-direction selection", () => {
+  it("requires an explicit creator selection at the canonical creation boundary", () => {
+    const requiresSelection: CanonicalCreationRequiresArtDirection = true;
+    expect(requiresSelection).toBe(true);
+    expect(createCv002Project.length).toBe(4);
+  });
+
   it("binds Weird History to the pinned directing study and Rook identity authority", () => {
     expect(cv002WeirdHistoryReferenceSetManifest.contentHash).toBe(
       "d9e18d925f733e5556afac192923ce5a6c79c511a101a1eed2977596ca109be0",

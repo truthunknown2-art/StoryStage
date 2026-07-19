@@ -9,7 +9,10 @@ import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProductionComposition } from "@storystage/remotion-runtime";
-import { createCv002Project } from "@storystage/story-engine";
+import {
+  createCv002ArtDirectionSelection,
+  createCv002Project,
+} from "@storystage/story-engine";
 import { App } from "./App";
 
 const playerHarness = vi.hoisted(() => ({
@@ -149,7 +152,15 @@ describe("CV-001 creator shell", () => {
     const title = (screen.getByLabelText("Title") as HTMLInputElement).value;
     const script = (screen.getByLabelText("Script") as HTMLTextAreaElement)
       .value;
-    const expectedIds = createCv002Project(title, script, "kids-adventure")
+    const expectedIds = createCv002Project(
+      title,
+      script,
+      "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
+    )
       .graph.scenes.flatMap((scene) => scene.beats)
       .slice(0, 4)
       .map((beat) => beat.id);

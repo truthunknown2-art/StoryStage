@@ -245,16 +245,21 @@ export function validateCv002ArtDirectionSelection(
   return cv002ArtDirectionSelectionSchema.parse(selection);
 }
 
-export function createDefaultCv002ArtDirectionSelection(
-  grammar: Cv002ArtDirectionGrammar,
-): Cv002ArtDirectionSelection {
-  return grammar === "kids-adventure"
-    ? createCv002ArtDirectionSelection(
-        grammar,
-        "cut-paper-collage-mixed-media",
-      )
-    : createCv002ArtDirectionSelection(
-        grammar,
-        "weird-history-editorial-collage",
-      );
+export function cv002ArtDirectionSelectionsMatch(
+  left: Cv002ArtDirectionSelection,
+  right: Cv002ArtDirectionSelection,
+): boolean {
+  const first = validateCv002ArtDirectionSelection(left);
+  const second = validateCv002ArtDirectionSelection(right);
+  return (
+    first.contentHash === second.contentHash &&
+    first.schemaVersion === second.schemaVersion &&
+    first.grammar === second.grammar &&
+    first.optionId === second.optionId &&
+    first.referenceSet.id === second.referenceSet.id &&
+    first.referenceSet.version === second.referenceSet.version &&
+    first.referenceSet.contentHash === second.referenceSet.contentHash &&
+    first.selectedBy === second.selectedBy &&
+    first.usage === second.usage
+  );
 }

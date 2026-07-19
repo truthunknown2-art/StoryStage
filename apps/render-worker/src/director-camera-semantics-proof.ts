@@ -9,6 +9,7 @@ import { STORY_STAGE_PRODUCTION_COMPOSITION_ID } from "@storystage/remotion-runt
 import {
   compileDirectorProject,
   createCv002Project,
+  createCv002ArtDirectionSelection,
   Cv002AlphaDirectorPlanner,
   type DirectorCameraMovement,
   type DirectorPlanner,
@@ -54,6 +55,10 @@ async function main() {
     "Camera semantic closure",
     script,
     "kids-adventure",
+    createCv002ArtDirectionSelection(
+      "kids-adventure",
+      "cut-paper-collage-mixed-media",
+    ),
   );
   const base = compileDirectorProject({
     storyProject,

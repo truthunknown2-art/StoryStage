@@ -1,7 +1,6 @@
 import {z} from "zod";
 import {hashCanonical} from "./canonical-hash";
 import {
-  createDefaultCv002ArtDirectionSelection,
   cv002ArtDirectionSelectionSchema,
   validateCv002ArtDirectionSelection,
   type Cv002ArtDirectionSelection,
@@ -444,13 +443,11 @@ export function createCv002Project(
   title: string,
   sourceText: string,
   grammar: Cv002Grammar,
-  artDirectionSelection?: Cv002ArtDirectionSelection,
+  artDirectionSelection: Cv002ArtDirectionSelection,
 ): Cv002Project {
   const graph = createCv002StoryGraph(sourceText, grammar);
   const directionDraft = compileCv002DirectionDraft(graph);
-  const selection = artDirectionSelection
-    ? validateCv002ArtDirectionSelection(artDirectionSelection)
-    : createDefaultCv002ArtDirectionSelection(grammar);
+  const selection = validateCv002ArtDirectionSelection(artDirectionSelection);
   return sealProject(cv002ProjectDraftSchema.parse({schemaVersion: "1.0", title, sourceText, grammar, artDirectionSelection: selection, graph, directionDraft, history: [], historyCursor: 0}));
 }
 
