@@ -29,6 +29,16 @@ mock target picker, broaden natural-language support, duplicate the eligibility
 predicate, weaken the Director Alpha import boundary, or alter canonical
 planning/timing/continuity authority.
 
+## Exact-head review correction (Inbox Version 8)
+
+Draft PR #15 at `f93837232af54fe47b6601aa68d2df46c8878c40` still says
+"More than one reaction event could be retimed" in the 2+ state. That is not
+necessarily true: one reaction event linked to two eligible shots also creates
+two exact candidates. Replace that sentence with wording about multiple
+eligible reaction targets or exact event/shot pairs. Pin the corrected visible
+copy in the focused Studio regression and update the handback evidence. Keep
+all other Version 7 behavior and boundaries unchanged.
+
 ## Proof required
 
 - Focused Studio tests cover 0, 1, and 2+ exact candidate-pair counts.

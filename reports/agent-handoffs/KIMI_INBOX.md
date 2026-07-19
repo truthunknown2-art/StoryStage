@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `7`
+Inbox-Version: `8`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-B-COPY-PARITY`
 Status: `START-NOW`
@@ -10,6 +10,23 @@ Required-Work-Branch: `agent/kimi-ui-slice-b-copy-parity`
 Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-b-copy-parity.md`
 
 ## Current instruction
+
+Exact-head review of draft PR #15 at
+`f93837232af54fe47b6601aa68d2df46c8878c40` found one remaining truthfulness
+defect. The 2+ state currently says, "More than one reaction event could be
+retimed." Candidate cardinality is the exact `(reaction event, eligible shot)`
+pair count, so one reaction event linked to two eligible shots is also a 2+
+state. Correct the sentence to describe multiple eligible reaction targets or
+event/shot pairs without claiming multiple reaction events. Add an assertion
+that pins the corrected wording, update the handback, run the focused Studio
+suite and root verification, then commit and push the same required branch.
+Do not broaden the task or change the accepted eligibility/interpreter logic.
+
+Version 8 supersedes Version 7 while retaining all of its other requirements.
+
+---
+
+Previous Version 7 instruction:
 
 PR #12 was accepted by ChatGPT Pro at exact head
 `76fd7ae91c53dd191a49fd0732ce60fb26349ad7` and merged into the integration
