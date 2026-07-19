@@ -1,27 +1,44 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `17`
+Inbox-Version: `18`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-UI-SLICE-C-CORRECTIONS`
+Current-Task: `KIMI-SCENECRAFT-V11-EVIDENCE-LEDGER`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `f11dcaa11208e8b5bdf87590b26ec1ea8a7fce41`
-Required-Work-Branch: `agent/kimi-ui-slice-c-visual-polish`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-handback-correction.md`
+Accepted-Root-Base: `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`
+Required-Work-Branch: `agent/kimi-scenecraft-v11-evidence-ledger`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger.md`
 
 ## Current instruction
 
+PR #17 is accepted and merged at
+`c7618f06c96bd52a866e87dadaaea7a4cf991e4c`. Stop the UI Slice C polish lane.
+Create the required Scene Craft branch from that exact accepted base and build
+the non-normative v1.1 numbered rule/evidence ledger in the referenced brief.
+This is editorial knowledge and evidence classification only: no product code,
+validators, thresholds, compiler/runtime behavior, UI, or production authority.
+Commit and push the exact successor, open a draft PR to
+`agent/kcast001-provider-neutral-rig`, leave the required handback, then wait.
+
+Version 18 supersedes Version 17 as the active task. Version 17 remains below
+as historical traceability.
+
+---
+
+Previous Version 17 instruction:
+
 Exact-head review at `f11dcaa11208e8b5bdf87590b26ec1ea8a7fce41`
-accepts correction 10: frame 340 is truthfully rejected as uniform, frame 342
-is proven through the real Player ref, the composition-only PNG hash
-independently matches, the clip excludes the detected chrome strip, and hosted
-verification is green. Make only the two handback-truthfulness corrections in
+accepted correction 10: frame 340 was truthfully rejected as uniform, frame
+342 was proven through the real Player ref, the composition-only PNG hash
+independently matched, the clip excluded the detected chrome strip, and hosted
+verification was green. Make only the two handback-truthfulness corrections in
 the referenced brief, rerun the documentation checks, commit and push the
 immutable successor on `agent/kimi-ui-slice-c-visual-polish`, then wait. Do not
 change product code, screenshots, proof JSON, or the accepted proof harness.
 
-Version 17 supersedes Version 16 as the active task. Version 16 remains below
-as historical traceability.
+Kimi delivered exact successor
+`e9a5f4dd6a01813174f24e31ec5d7c069bd71321`; PR #17 passed hosted verify and
+merged as `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`.
 
 ---
 
