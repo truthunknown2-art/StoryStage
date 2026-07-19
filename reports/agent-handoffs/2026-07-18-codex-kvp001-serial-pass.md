@@ -1,14 +1,14 @@
-# KVP-001 serial determinism checkpoint
+# KVP-001 strict determinism checkpoint
 
 - Branch: `agent/kvp001-production-proof-wip`
 - Base: `cc5f8a55e32d727a2a1636d9146d394f64050e52`
-- Status: **serial production path PASS; Pro acceptance still pending**
+- Status: **strict determinism evidence PASS; Pro/Player acceptance pending**
 
 ## What changed
 
 - Replaced the single clipped puppet sheet at render time with 17 independently content-addressed and browser-verified rig assets.
 - Every part and facial exposure is resolved by its sealed manifest candidate ID.
-- Asset verification is atomic: no local-parts visual mounts until the full set passes byte length and SHA-256 checks.
+- Asset verification is atomic: no local-parts visual mounts until the full set passes byte length, SHA-256, and browser decode checks plus `document.fonts.ready`.
 - Replaced compositor-sensitive CSS eyes with sealed raster eye and pupil exposures while retaining deterministic blink and quantized gaze animation.
 - Removed transformed crop boxes from limb rendering, eliminating the invisible sprite-edge failure class.
 
@@ -18,10 +18,26 @@
 - Lossless sequence pass 1: `db188bcc86e5bf97f151f408e94de1722d35872a517b7134f9aae6cb88633596`
 - Lossless sequence pass 2: `db188bcc86e5bf97f151f408e94de1722d35872a517b7134f9aae6cb88633596`
 - Lossless comparison: 140/140 exact PNG matches, 0 mismatches.
-- Fresh-page still comparison: 11/11 exact matches, 0 mismatches.
+- Isolated fresh-browser comparison: 11/11 exact matches, 0 mismatches.
+- Shared-browser ascending comparison: 11/11 exact matches, 0 mismatches.
+- Shared-browser descending comparison: 11/11 exact matches, 0 mismatches.
+- Shared-browser deterministic-shuffle comparison: 11/11 exact matches, 0 mismatches.
 - Encoded-pass decoded comparison: 11/11 exact matches, 0 mismatches.
 - Encoded MP4 pass hashes: `81f1c66ee22eb861f46001771c97a6acb293883d073768e1fa2024b567815f9d` for both passes.
-- Output contract: 1920×1080, 30 fps, 140 frames, H.264/yuv420p.
+- Output contract: 1920x1080, 30 fps, 140 frames, H.264/yuv420p.
+
+Pinned environment receipt:
+
+- Windows: `win32 10.0.26200`
+- Node: `24.13.0`
+- Remotion / Renderer / Bundler: `4.0.490`
+- Chromium: `Google Chrome for Testing 149.0.7790.0`
+- Chromium executable SHA-256: `ec76dc3e69ffab9daddf0bbe7bf0a9e0a034b2d086741a0ae2ef6358a597537b`
+- Chrome mode: `headless-shell`; GL override: `null`; device scale: `1`; concurrency: `1`
+- Bundle: 127 files, aggregate hash `d24a1061192b81a2d13d41ccf1445167d75f3eb38758897c4330a395bac31253`
+- Arial regular: `b3658eadae55e682b5f69eb64c439c1ecc8f196c0bb8d4756d145d13bc86476a`
+- Arial bold: `e8f4e3baf6cc35fed6fcce3a540e8b39e8f6cda1d22a28f2ec8f526fef7a43f5`
+- Arial Black: `10df702864b1f89cb29ba0d6b97c04228338d16807e13e8d8c74b91aba5e5f23`
 
 Evidence files:
 
@@ -39,4 +55,4 @@ Evidence files:
 
 ## Acceptance still required
 
-This checkpoint does not yet claim Pro acceptance. The next proof revision must record the pinned OS/Chromium/Node/Remotion/font/device-scale/GPU environment and add selected-frame order independence for isolated, ascending, descending, and deterministic-shuffle evaluation. The real Player visual review also remains a separate gate.
+This checkpoint does not self-award Pro acceptance. The pinned environment and selected-frame order matrix are now present and green. The real Player visual review remains a separate gate, and the fixture still does not prove general arbitrary-script synthesis of compound locomotion-to-acting performances.

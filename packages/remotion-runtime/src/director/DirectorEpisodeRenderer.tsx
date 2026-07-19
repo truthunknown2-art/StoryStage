@@ -217,13 +217,21 @@ const useVerifiedPartsRigAssets = (
               throw new Error(
                 `Approved Director asset ${binding.assetId} failed browser byte verification.`,
               );
-            const verifiedUrl = URL.createObjectURL(
-              new Blob([bytes], { type: "image/png" }),
-            );
+            const verifiedBlob = new Blob([bytes], { type: "image/png" });
+            try {
+              const decoded = await createImageBitmap(verifiedBlob);
+              decoded.close();
+            } catch {
+              throw new Error(
+                `Approved Director asset ${binding.assetId} failed browser decode.`,
+              );
+            }
+            const verifiedUrl = URL.createObjectURL(verifiedBlob);
             objectUrls.push(verifiedUrl);
             return { binding, verifiedUrl };
           }),
         );
+        await document.fonts.ready;
         if (active) setVerifiedAssets(verified);
         else objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
         settled = true;

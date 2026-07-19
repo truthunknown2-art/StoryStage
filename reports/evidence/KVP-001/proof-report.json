@@ -4,6 +4,710 @@
   "verified": "canonical local-parts execution and authority isolation",
   "notYetVerified": "general arbitrary-script synthesis of compound locomotion → plant → acting performances",
   "fixtureLimitation": "KVP-001 proves that an explicit upstream Director locomotion decision compiles through the canonical production path. It does not claim that the ordinary planner infers this performance from arbitrary scripts.",
+  "environment": {
+    "os": {
+      "platform": "win32",
+      "release": "10.0.26200",
+      "version": "Windows 11 Pro",
+      "arch": "x64"
+    },
+    "node": {
+      "version": "24.13.0",
+      "executable": {
+        "file": "node.exe",
+        "byteLength": 89953280,
+        "sha256": "d14ba95cdce1ef7dc9ad3ac74949ca5db38b27378ee30f30a23cf26f9e875a11"
+      }
+    },
+    "packages": {
+      "remotion": "4.0.490",
+      "renderer": "4.0.490",
+      "bundler": "4.0.490"
+    },
+    "chromium": {
+      "version": "Google Chrome for Testing 149.0.7790.0",
+      "executable": {
+        "file": "chrome-headless-shell.exe",
+        "byteLength": 202939392,
+        "sha256": "ec76dc3e69ffab9daddf0bbe7bf0a9e0a034b2d086741a0ae2ef6358a597537b"
+      },
+      "chromeMode": "headless-shell",
+      "options": {
+        "darkMode": false,
+        "gl": null
+      },
+      "forceDeviceScaleFactor": 1,
+      "concurrency": 1
+    },
+    "fonts": [
+      {
+        "file": "arial.ttf",
+        "byteLength": 1045720,
+        "sha256": "b3658eadae55e682b5f69eb64c439c1ecc8f196c0bb8d4756d145d13bc86476a"
+      },
+      {
+        "file": "arialbd.ttf",
+        "byteLength": 989780,
+        "sha256": "e8f4e3baf6cc35fed6fcce3a540e8b39e8f6cda1d22a28f2ec8f526fef7a43f5"
+      },
+      {
+        "file": "ariblk.ttf",
+        "byteLength": 167592,
+        "sha256": "10df702864b1f89cb29ba0d6b97c04228338d16807e13e8d8c74b91aba5e5f23"
+      }
+    ],
+    "composition": {
+      "id": "StoryStageProduction",
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "proofFrameRange": [
+        0,
+        139
+      ]
+    },
+    "bundle": {
+      "fileCount": 127,
+      "contentHash": "d24a1061192b81a2d13d41ccf1445167d75f3eb38758897c4330a395bac31253",
+      "files": [
+        {
+          "relativeFile": "134.bundle.js",
+          "byteLength": 10468,
+          "sha256": "e8e5f1ec58f6cfdd96560ae39c2aadc102438c267791ab350378556b21312898"
+        },
+        {
+          "relativeFile": "134.bundle.js.map",
+          "byteLength": 9102,
+          "sha256": "beb9151f666e88e54290bb884ee2ecbfb83bcf3d9d5e73c62d03cbb6b7cd2ecc"
+        },
+        {
+          "relativeFile": "237.bundle.js",
+          "byteLength": 1232422,
+          "sha256": "d45178b9d66480f0b0972d1f68b3391f45944ac1db60855123db7f2b2aaa20cf"
+        },
+        {
+          "relativeFile": "237.bundle.js.map",
+          "byteLength": 1418200,
+          "sha256": "828aacef5f0aae1208ee586b58439830131ff9b38bbc8a4d5487e5a997b8f779"
+        },
+        {
+          "relativeFile": "264.bundle.js",
+          "byteLength": 209,
+          "sha256": "cf2b0bed607d98876a4342c6ff4f7375eb93b1bcbd6f7f05a9c9118f6d28fa35"
+        },
+        {
+          "relativeFile": "264.bundle.js.map",
+          "byteLength": 311,
+          "sha256": "2ab8bb66356fd4fb31e282f9e092bbe6a3181d0397ec81eac09cffe5f06d1113"
+        },
+        {
+          "relativeFile": "340.bundle.js",
+          "byteLength": 157228,
+          "sha256": "3ff64a2c6b0c680405a00834a18ca00266789bec5098f2c6056bb0b1a15ea93d"
+        },
+        {
+          "relativeFile": "340.bundle.js.map",
+          "byteLength": 177344,
+          "sha256": "4b8be79307586dc236530b78b7488d1e79c8488250d6c3d2cda01f064e22e2eb"
+        },
+        {
+          "relativeFile": "464.bundle.js",
+          "byteLength": 327501,
+          "sha256": "608165937123189cfc98663df2f1caf132607f6c2b75acc58559b64d29934117"
+        },
+        {
+          "relativeFile": "464.bundle.js.map",
+          "byteLength": 654311,
+          "sha256": "ebf38cc4a94204cd12a6b266e8e4828621513739d3a75aa10b290939332deba3"
+        },
+        {
+          "relativeFile": "547.bundle.js",
+          "byteLength": 998029,
+          "sha256": "fb219a8882f14b0f21a2c4ba84db791a49c17d6063612b40732b7f630bd99745"
+        },
+        {
+          "relativeFile": "547.bundle.js.map",
+          "byteLength": 1915862,
+          "sha256": "598daa7f92e138926f9a749afd749f98f70a1e09f9241d0747a6a15dddbbb5e3"
+        },
+        {
+          "relativeFile": "660.bundle.js",
+          "byteLength": 209,
+          "sha256": "ae8d223ff82aa9a8edf3ec7933cfdb880006df41dba243b917136f5c0f3dcc8d"
+        },
+        {
+          "relativeFile": "660.bundle.js.map",
+          "byteLength": 311,
+          "sha256": "425373a81fb5b99a6296a4ab82b02dccf8842f02464e333d103e56cf235ece82"
+        },
+        {
+          "relativeFile": "702.bundle.js",
+          "byteLength": 274797,
+          "sha256": "8896504cc3c3247fe741f7afb74f01b6f7771145f6f3efa18c4b02d5d2fe47a6"
+        },
+        {
+          "relativeFile": "702.bundle.js.map",
+          "byteLength": 322138,
+          "sha256": "59e7a36bf425491babaac96fd180b995bb08d1ed329c529e4e3e950f1f2b3a05"
+        },
+        {
+          "relativeFile": "758.bundle.js",
+          "byteLength": 64385,
+          "sha256": "0d4cac263965df429f6fa2eca01bea0d2a05683d81210c6dc69c754517de2478"
+        },
+        {
+          "relativeFile": "758.bundle.js.map",
+          "byteLength": 69324,
+          "sha256": "96534ac92cb53df973757765f0fc56aa604d74c7dc9819b16310868712aa3295"
+        },
+        {
+          "relativeFile": "82.bundle.js",
+          "byteLength": 207,
+          "sha256": "3948960eb469375ce5c162cb6bd33240c9866a73373bd5e3484df5c3039254cf"
+        },
+        {
+          "relativeFile": "82.bundle.js.map",
+          "byteLength": 312,
+          "sha256": "f8e1583c84ec3050eb6de27f6f83a3f6a82985693febd04617b5f22601dda6fd"
+        },
+        {
+          "relativeFile": "948.bundle.js",
+          "byteLength": 317506,
+          "sha256": "982f39230d682f058a9291d75562ceb1218ff0f0a3ffa169b14cd8fba90f6cbf"
+        },
+        {
+          "relativeFile": "948.bundle.js.map",
+          "byteLength": 319719,
+          "sha256": "f770c176ab561a25d67eba55f7c60e851374eb1ac5ff20626036e246b85068c1"
+        },
+        {
+          "relativeFile": "965.bundle.js",
+          "byteLength": 3704876,
+          "sha256": "eada7fcb271860d59a34afcfb744768d68d76864cfc72ccc7ac991b87ab65c30"
+        },
+        {
+          "relativeFile": "965.bundle.js.map",
+          "byteLength": 4072708,
+          "sha256": "c1841721003e60a0d66b7a428b0fee0d883c51355ac803ac91a60b1eee2ee161"
+        },
+        {
+          "relativeFile": "992.bundle.js",
+          "byteLength": 770,
+          "sha256": "117bc58e14af287675c572fdc65bf7f5ea60d15d9917ef9478a0ae57dbec563e"
+        },
+        {
+          "relativeFile": "992.bundle.js.map",
+          "byteLength": 333,
+          "sha256": "694c5d9116c555798a4fbca14714733668597b30a70eb9503abc3597d8a7001e"
+        },
+        {
+          "relativeFile": "bundle.js",
+          "byteLength": 4158653,
+          "sha256": "9158a722f173e71a0aefc8cceb17f67db0c56a5b5e6eacb222f7852c1f0b3baf"
+        },
+        {
+          "relativeFile": "bundle.js.map",
+          "byteLength": 4693225,
+          "sha256": "c6c9ce21e4d7388ba1caae822b24ae1a996037ffd3edbfdb2474d666dac84a67"
+        },
+        {
+          "relativeFile": "favicon.ico",
+          "byteLength": 104640,
+          "sha256": "4b00984723c2fed999967eebf9b59f88350f7ab38716f2faf3587829e0f9be77"
+        },
+        {
+          "relativeFile": "index.html",
+          "byteLength": 22903,
+          "sha256": "2595a524db2ee47ca996d83fd34e471dd81768ecec0f5f7b7af3d3bab504473e"
+        },
+        {
+          "relativeFile": "public/audio/kids-showcase/footstep.wav",
+          "byteLength": 19448,
+          "sha256": "48272e65921734733827046e72be2b7c045b5344e50caf18861faae7925b52ae"
+        },
+        {
+          "relativeFile": "public/audio/kids-showcase/moth-chime.wav",
+          "byteLength": 79424,
+          "sha256": "8f35458e4efddc419e2076d3132f2984dd1bc2ec8abcc66a8f59b68fbace2fb7"
+        },
+        {
+          "relativeFile": "public/audio/kids-showcase/music-bed.wav",
+          "byteLength": 2646044,
+          "sha256": "e9fb51660cc3f1e80cd90d93b0f52d3374465fcd8c8432bff481ad474dfd67bd"
+        },
+        {
+          "relativeFile": "public/audio/kids-showcase/resolve.wav",
+          "byteLength": 158804,
+          "sha256": "0d5e7411d40ab0fbd9331ff0fec708747ee856a74a3c66b089177c420ae56100"
+        },
+        {
+          "relativeFile": "public/audio/kids-showcase/rustle.wav",
+          "byteLength": 52964,
+          "sha256": "cd23eac9f39d437e98ea991cfc945252318249c9095f6ba515d1a6f0d4f067d9"
+        },
+        {
+          "relativeFile": "public/audio/kids-showcase/sneeze.wav",
+          "byteLength": 92656,
+          "sha256": "f6709cd77ba3e9fb831d10dcc14a77162a03877e14b9940bb3c9237967f2b87e"
+        },
+        {
+          "relativeFile": "public/audio/kids-showcase/spark.wav",
+          "byteLength": 88244,
+          "sha256": "13532ab3a17ae9d8285208cf083f734f13a99fe855fb78ed02933ea56e1f05b3"
+        },
+        {
+          "relativeFile": "public/audio/kids-showcase/wake.wav",
+          "byteLength": 110296,
+          "sha256": "b3c3d539938f609dd4f0e806fe8fe89c9f222e7415e142d423c11140e7d5238b"
+        },
+        {
+          "relativeFile": "public/audio/paper-flip.wav",
+          "byteLength": 42380,
+          "sha256": "c5296a415c386b8502dbe9517602b22e6b9d671038f032af6aa5b2c8fdbe7754"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/13d12e9a0eff9b58f6bf7d62403cf9c27a6da9f8626f8086f8a170806d7091d6.png",
+          "byteLength": 65515,
+          "sha256": "13d12e9a0eff9b58f6bf7d62403cf9c27a6da9f8626f8086f8a170806d7091d6"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/417e00775f4feba7698b619d44605d33f0da442b499fd10ae3142b9c6e40487b.png",
+          "byteLength": 294566,
+          "sha256": "417e00775f4feba7698b619d44605d33f0da442b499fd10ae3142b9c6e40487b"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/43a4443ed1e62722b029eea47983fd0ed6fb89d5d6c37a240c0ba6ab21bd1cf3.png",
+          "byteLength": 26619,
+          "sha256": "43a4443ed1e62722b029eea47983fd0ed6fb89d5d6c37a240c0ba6ab21bd1cf3"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/49421dd6a269ff3fb87e435cbeafedd11eb31bf8e24609f6f10d0f0a8b27c171.png",
+          "byteLength": 636474,
+          "sha256": "49421dd6a269ff3fb87e435cbeafedd11eb31bf8e24609f6f10d0f0a8b27c171"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/4fc16fac6c126b2f82172d725423746dfde7d0ddb89f0d7aa8a476235299cd9a.png",
+          "byteLength": 37077,
+          "sha256": "4fc16fac6c126b2f82172d725423746dfde7d0ddb89f0d7aa8a476235299cd9a"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/5e456ab12ea97aa948dd4d1a723073cf5ef0eaf0caec44d8269078f0563fd61d.png",
+          "byteLength": 5805,
+          "sha256": "5e456ab12ea97aa948dd4d1a723073cf5ef0eaf0caec44d8269078f0563fd61d"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/705489814db0acadf9b42b988a4531ca8daaf46059deb42e975a23b3aa798823.png",
+          "byteLength": 34152,
+          "sha256": "705489814db0acadf9b42b988a4531ca8daaf46059deb42e975a23b3aa798823"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/7d8086fcfd7b203ec8bafa439a5633b38847c01feb6541e4f01d9f7320feb20f.png",
+          "byteLength": 64401,
+          "sha256": "7d8086fcfd7b203ec8bafa439a5633b38847c01feb6541e4f01d9f7320feb20f"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/809608100f018c0150a71a2dc759ba0b674d108d7d7f43529fdb0587adb8150c.png",
+          "byteLength": 34302,
+          "sha256": "809608100f018c0150a71a2dc759ba0b674d108d7d7f43529fdb0587adb8150c"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/8da63e531829d70ea7587e5752c016d9dcfadab780c2b875e3fe9c034a43dbb9.png",
+          "byteLength": 938808,
+          "sha256": "8da63e531829d70ea7587e5752c016d9dcfadab780c2b875e3fe9c034a43dbb9"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f.png",
+          "byteLength": 2905,
+          "sha256": "a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/b13742f7e5a0b8db9569d8c43feadbf3b3aede93c18ea79981eb58b7af08c140.png",
+          "byteLength": 35017,
+          "sha256": "b13742f7e5a0b8db9569d8c43feadbf3b3aede93c18ea79981eb58b7af08c140"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/b58ce5234e85d87e078c1f677304a2d47d846ad8db8d4d0dbebe65b8bf004ade.png",
+          "byteLength": 213673,
+          "sha256": "b58ce5234e85d87e078c1f677304a2d47d846ad8db8d4d0dbebe65b8bf004ade"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/c1c43437188de96408ab807b1fb4fac9ff302405f41f0c34f902ba631597299b.png",
+          "byteLength": 29247,
+          "sha256": "c1c43437188de96408ab807b1fb4fac9ff302405f41f0c34f902ba631597299b"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9.png",
+          "byteLength": 742576,
+          "sha256": "d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/d763c700c00597bcd67a94ad1080acbaf31da1510aba3cf282fac0b8219bc17c.png",
+          "byteLength": 11955,
+          "sha256": "d763c700c00597bcd67a94ad1080acbaf31da1510aba3cf282fac0b8219bc17c"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41.png",
+          "byteLength": 1810,
+          "sha256": "e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253.png",
+          "byteLength": 4160,
+          "sha256": "f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253"
+        },
+        {
+          "relativeFile": "public/capability-assets/sha256/fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c.png",
+          "byteLength": 2316,
+          "sha256": "fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c"
+        },
+        {
+          "relativeFile": "public/cv001/notice.png",
+          "byteLength": 337309,
+          "sha256": "15073a4e37614cb4b44ba1098f2bd8b94d8d1dbf397d5f85dc552e5bc826fe9e"
+        },
+        {
+          "relativeFile": "public/cv001/pickup.png",
+          "byteLength": 320214,
+          "sha256": "804beec338475cbdb571b06c4f454f76ec37d0aef7c2b36be08ba21d375a8a2d"
+        },
+        {
+          "relativeFile": "public/cv001/present.png",
+          "byteLength": 319863,
+          "sha256": "df394a4feb481fdba4c8733e2f8e1cfa37768da48923b63b225999915d8cf76e"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/concepts/mara-milo-model-sheet-v1.png",
+          "byteLength": 2560888,
+          "sha256": "c16272ecb31d3376bd0f32e4ae96749bf944c57aa59654d887ad7ab2b07c2416"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/eyes-closed.png",
+          "byteLength": 1810,
+          "sha256": "e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/eyes-half.png",
+          "byteLength": 2905,
+          "sha256": "a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/eyes-open.png",
+          "byteLength": 4160,
+          "sha256": "f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/head.png",
+          "byteLength": 294566,
+          "sha256": "417e00775f4feba7698b619d44605d33f0da442b499fd10ae3142b9c6e40487b"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/leg-left.png",
+          "byteLength": 65515,
+          "sha256": "13d12e9a0eff9b58f6bf7d62403cf9c27a6da9f8626f8086f8a170806d7091d6"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/leg-right.png",
+          "byteLength": 64401,
+          "sha256": "7d8086fcfd7b203ec8bafa439a5633b38847c01feb6541e4f01d9f7320feb20f"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/lower-arm-left.png",
+          "byteLength": 26619,
+          "sha256": "43a4443ed1e62722b029eea47983fd0ed6fb89d5d6c37a240c0ba6ab21bd1cf3"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/lower-arm-right.png",
+          "byteLength": 29247,
+          "sha256": "c1c43437188de96408ab807b1fb4fac9ff302405f41f0c34f902ba631597299b"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/mouth-open.png",
+          "byteLength": 11955,
+          "sha256": "d763c700c00597bcd67a94ad1080acbaf31da1510aba3cf282fac0b8219bc17c"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/mouth-rest.png",
+          "byteLength": 5805,
+          "sha256": "5e456ab12ea97aa948dd4d1a723073cf5ef0eaf0caec44d8269078f0563fd61d"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/pupils.png",
+          "byteLength": 2316,
+          "sha256": "fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/thigh-left.png",
+          "byteLength": 34302,
+          "sha256": "809608100f018c0150a71a2dc759ba0b674d108d7d7f43529fdb0587adb8150c"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/thigh-right.png",
+          "byteLength": 34152,
+          "sha256": "705489814db0acadf9b42b988a4531ca8daaf46059deb42e975a23b3aa798823"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/torso.png",
+          "byteLength": 213673,
+          "sha256": "b58ce5234e85d87e078c1f677304a2d47d846ad8db8d4d0dbebe65b8bf004ade"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/upper-arm-left.png",
+          "byteLength": 37077,
+          "sha256": "4fc16fac6c126b2f82172d725423746dfde7d0ddb89f0d7aa8a476235299cd9a"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/upper-arm-right.png",
+          "byteLength": 35017,
+          "sha256": "b13742f7e5a0b8db9569d8c43feadbf3b3aede93c18ea79981eb58b7af08c140"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/payoff-puppet-v1/puppet-parts.png",
+          "byteLength": 742576,
+          "sha256": "d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/performance-v1/atlas-manifest.json",
+          "byteLength": 2954,
+          "sha256": "e6c36b8005def77e6fc9b2b489d4684a061bde8038ac4a842a2699a8ef128de9"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/performance-v1/atlas.png",
+          "byteLength": 636474,
+          "sha256": "49421dd6a269ff3fb87e435cbeafedd11eb31bf8e24609f6f10d0f0a8b27c171"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/reaction-v1/atlas-manifest.json",
+          "byteLength": 2948,
+          "sha256": "9fab692cb2601cd4046013545e5f86d05fdbe8d94e4330c5c8459a0974bc47ad"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/reaction-v1/atlas.png",
+          "byteLength": 776092,
+          "sha256": "54dfaa1f3261f88875a713980a5e7f68cbcdd869edab921cffa9fcae4319a26d"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/run-right-v1/atlas-manifest.json",
+          "byteLength": 2955,
+          "sha256": "f2ef7f2b796b07517dafa237e78f94c3b17b1530129501447360d9f08af9d962"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/run-right-v1/atlas.png",
+          "byteLength": 938808,
+          "sha256": "8da63e531829d70ea7587e5752c016d9dcfadab780c2b875e3fe9c034a43dbb9"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/sneak-v1/atlas-manifest.json",
+          "byteLength": 2947,
+          "sha256": "d044d2cf8e769c8b6eb9a7e87c0256a69a91cd0240a5c7979d6e47e812586ba5"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/mara/sneak-v1/atlas.png",
+          "byteLength": 724037,
+          "sha256": "5a6bc60db20eee4e651c42ac2a26b74f2abf5425dd8016bae3e0c824a14e50b2"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/milo/payoff-puppet-v1/puppet-parts.png",
+          "byteLength": 780230,
+          "sha256": "e9892507a1d07de2afe69917af295ac546ab721be2c8a911e365365ff41903ba"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/milo/performance-v1/atlas-manifest.json",
+          "byteLength": 2954,
+          "sha256": "7c2651238dd6a43f573ac4a91a8eff6110c071ab5c469668fe75bc593cb85352"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/milo/performance-v1/atlas.png",
+          "byteLength": 1025174,
+          "sha256": "62e70ced346652bc1bccf8d8d397176955225c3385d4289f17710de1ad582a3d"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/milo/reaction-v1/atlas-manifest.json",
+          "byteLength": 2946,
+          "sha256": "6b7540f341db652080857cec1bab50905e8ff06641a57b0db1f64cd60a040fc8"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/milo/reaction-v1/atlas.png",
+          "byteLength": 878736,
+          "sha256": "546f5c755c1f3746b243f1cde73858cbb42c399a762ab935af67985069fa3a88"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/milo/run-right-v1/atlas-manifest.json",
+          "byteLength": 2954,
+          "sha256": "7478662327466667de50c4cc4e2262fd30e347868c4085f1079d334bf7329f37"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/milo/run-right-v1/atlas.png",
+          "byteLength": 869118,
+          "sha256": "33968b8fecdc394ff80637238cd4ec6b4fb5b8a6ff062dc6dcfbc584ebf3cfa5"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/milo/sneak-v1/atlas-manifest.json",
+          "byteLength": 2946,
+          "sha256": "5587f948fbcdede63cf12b2d19dbc4ca3010a32123cc91297dc7821da6079d0e"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/milo/sneak-v1/atlas.png",
+          "byteLength": 691199,
+          "sha256": "325a7ef4858e6ece5f47a937a46c6545e21e739f76081e0a9ad6402985fd07f5"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/chase-v1/atlas-manifest.json",
+          "byteLength": 2962,
+          "sha256": "f7ba715f14f673a0a6f94f9497f68e38d627aa3d0d372105bfc920f9d2f98560"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/chase-v1/atlas.png",
+          "byteLength": 977888,
+          "sha256": "2e465a0da510b6cbb15b49962bf378482f260f7ce44d224ca48a7ce143c41e0b"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/closeup-v1/atlas-manifest.json",
+          "byteLength": 2958,
+          "sha256": "28cd3ef916cd0b506f8b5e1df776bcba8e7bbddfcb05d7d2aec3297a41ee4302"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/closeup-v1/atlas.png",
+          "byteLength": 1806216,
+          "sha256": "deb05ec6995db488d7c963b128aafb186eda1fa63c2b498bad08ebab3ca8f536"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/payoff-puppet-v1/puppet-parts.png",
+          "byteLength": 1338295,
+          "sha256": "11996c64a02ee27a0125a287d716a567bb7618c527d08e3afcad83fb1d122697"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/performance-v1/atlas-manifest.json",
+          "byteLength": 2963,
+          "sha256": "12b1fd74f46808dacddd8b505d7eb36c8ca546d6603cf29b19eb1598f62dbeed"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/performance-v1/atlas.png",
+          "byteLength": 560781,
+          "sha256": "3562c2acd6f8a256154bfe5cb1f27fc485b993cf0f455ee55928dd2c1b63139b"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/sneeze-v1/atlas-manifest.json",
+          "byteLength": 2959,
+          "sha256": "2e6dfa8ff6623f451c4d86798c0b17f3e4d237c63e37fac2de84a6029b380d3f"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/rigs/moss-guardian/sneeze-v1/atlas.png",
+          "byteLength": 966384,
+          "sha256": "923b24804edf0d6c8dec0dd7528752a4302ae53623ad7ed9149c55c297067192"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/sets/dawn-clearing/background-v1.png",
+          "byteLength": 2853947,
+          "sha256": "4e5c847a71139a79e477a781bb3158c8e9df5af1fd6b71411c1e1605fb6effc0"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/sets/dawn-clearing/foreground-v1.png",
+          "byteLength": 1098761,
+          "sha256": "aa34e937bd3e24248dae7c7c775cdd349da7eabaa737676eb06d31a108b937ef"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/sets/moon-hall/background-v1.png",
+          "byteLength": 2715146,
+          "sha256": "8ef898e3fd6280901cc57b68261f8285295e787c3263f99e0ee6ada6f31aa7d3"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/sets/moon-hall/foreground-v1.png",
+          "byteLength": 1255099,
+          "sha256": "af3ea1ce5806b0be1a4cbcf1167fdea814fdcb1ad31e9fd19de965bd8be79231"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/sets/moonlit-forest/background-v1.png",
+          "byteLength": 2720378,
+          "sha256": "8b6c9571afc68a06cef0e22be01ab1280d41b2076b43d2e4e40756063258719b"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/sets/moonlit-forest/foreground-v1.png",
+          "byteLength": 1126912,
+          "sha256": "defd36119fd7d4b00d1becc29b1c1e54dc929f01a3101c0ce17bcb10a0c7dd20"
+        },
+        {
+          "relativeFile": "public/show-packs/kids/moonlit-ruins/v1/show-pack.json",
+          "byteLength": 10155,
+          "sha256": "208dd9e0566a9afddf44c009886b61315d308bc6c30cb30191e8d2d1c1ef0761"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/candidate-manifest.json",
+          "byteLength": 4517,
+          "sha256": "a599e72c11c2cee4088cb1eaff8558db5e6171e49c927c78f7b3a02d21925a40"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/identity-sheet.png",
+          "byteLength": 2228717,
+          "sha256": "13c11517c519bf7615ebae1ff5e1c7b5f4dbd99375a0b84b205ea1116461528b"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/neutral-pose.png",
+          "byteLength": 752308,
+          "sha256": "dbfcd957da466367e5a07fe4ccc0ad1e2a26c3ea86b9d1791c9fed639f6095da"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/prepared/contact-sheet-rook-v1.png",
+          "byteLength": 80122,
+          "sha256": "bf333af2f722ffdcae861e91bd9537a8febce1730b92c5b6ab77d7d78f355374"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/prepared/rig-diagnostic-rook-v1.json",
+          "byteLength": 642,
+          "sha256": "90b02a62eba320e5a03deb206ce68244fef76918ef9034c90b41eefeab59c914"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/prepared/rig-diagnostic-rook-v1.mp4",
+          "byteLength": 783801,
+          "sha256": "a3e868d31b222e723dfbefc48349cd3549318dd3e4b3806c5b9a207487e40f29"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/prepared/rig-manifest-rook-v1.json",
+          "byteLength": 2187,
+          "sha256": "da3cc1160312438f104081c3c0e3862062551498fea1042c2b0f90598a1a7b3a"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/prepared/rig-validation-rook-v1.json",
+          "byteLength": 922,
+          "sha256": "45c14eccbed920ec3939a44038cb5de45c19cd12d7f186c2774e80fb71f347f5"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/prepared/rook-v1-identity.png",
+          "byteLength": 2282940,
+          "sha256": "91aae474f5e0f4472f8ae366f464b1dec8ff8eb22837bf853848e63317349db6"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/prepared/rook-v1-neutral.png",
+          "byteLength": 1026366,
+          "sha256": "f3f402762a6aa7e72932018fb3a241dd2eeabf67680703eeb4c20240ca56cf14"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/prepared/rook-v1-reaction.png",
+          "byteLength": 1045859,
+          "sha256": "744746bb23a6f10bad4b3386d9e75b7d79fbb4e7f3ed1e3adc7c62bdbfb6be82"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/prepared/rook-v1-talk.png",
+          "byteLength": 990278,
+          "sha256": "0d4558e5bafd70cbc662f28323ab27101762999f34225f5ed41d2182f1617fb8"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/PROMPTS.md",
+          "byteLength": 3337,
+          "sha256": "ef897bfcec57fe3571ada5701618db5f65b8bceb53ad34a0686544fa1505363a"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/reaction-pose.png",
+          "byteLength": 855019,
+          "sha256": "82836c092dc924e5e0c2d75445a774965d851c56cef9f48e5d60e3eedec70433"
+        },
+        {
+          "relativeFile": "public/show-packs/weird-history/rook/v1/talk-pose.png",
+          "byteLength": 780059,
+          "sha256": "3997a7596c54e5d31c32b0e8391539d8ca47a6fcd8e9ec8b57425eeec944fa6c"
+        }
+      ]
+    }
+  },
   "canonicalRebuildsMatch": true,
   "canonicalHashes": {
     "storyProject": "8f2e9613e3119362c931001d5a7b15f7c0171d2ffedd1379cd15548300049e24",
@@ -2939,210 +3643,683 @@
       }
     ]
   },
-  "stills": [
-    {
-      "frame": 0,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-00.png",
-      "byteLength": 34427,
-      "sha256": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e"
+  "selectedFrameOrderEvidence": {
+    "orders": {
+      "ascending": [
+        0,
+        36,
+        61,
+        71,
+        72,
+        96,
+        101,
+        102,
+        109,
+        110,
+        139
+      ],
+      "descending": [
+        139,
+        110,
+        109,
+        102,
+        101,
+        96,
+        72,
+        71,
+        61,
+        36,
+        0
+      ],
+      "shuffled": [
+        72,
+        0,
+        139,
+        36,
+        110,
+        61,
+        101,
+        71,
+        102,
+        96,
+        109
+      ]
     },
-    {
-      "frame": 36,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-01.png",
-      "byteLength": 348298,
-      "sha256": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559"
-    },
-    {
-      "frame": 61,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-02.png",
-      "byteLength": 343473,
-      "sha256": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb"
-    },
-    {
-      "frame": 71,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-03.png",
-      "byteLength": 322101,
-      "sha256": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa"
-    },
-    {
-      "frame": 72,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-04.png",
-      "byteLength": 322828,
-      "sha256": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090"
-    },
-    {
-      "frame": 96,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-05.png",
-      "byteLength": 328923,
-      "sha256": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5"
-    },
-    {
-      "frame": 101,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-06.png",
-      "byteLength": 324745,
-      "sha256": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4"
-    },
-    {
-      "frame": 102,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-07.png",
-      "byteLength": 325670,
-      "sha256": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78"
-    },
-    {
-      "frame": 109,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-08.png",
-      "byteLength": 325041,
-      "sha256": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7"
-    },
-    {
-      "frame": 110,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-09.png",
-      "byteLength": 324627,
-      "sha256": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5"
-    },
-    {
-      "frame": 139,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-10.png",
-      "byteLength": 325061,
-      "sha256": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9"
+    "isolated": [
+      {
+        "frame": 0,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-00.png",
+        "byteLength": 34427,
+        "sha256": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e"
+      },
+      {
+        "frame": 36,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-01.png",
+        "byteLength": 348298,
+        "sha256": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559"
+      },
+      {
+        "frame": 61,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-02.png",
+        "byteLength": 343473,
+        "sha256": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb"
+      },
+      {
+        "frame": 71,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-03.png",
+        "byteLength": 322101,
+        "sha256": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa"
+      },
+      {
+        "frame": 72,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-04.png",
+        "byteLength": 322828,
+        "sha256": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090"
+      },
+      {
+        "frame": 96,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-05.png",
+        "byteLength": 328923,
+        "sha256": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5"
+      },
+      {
+        "frame": 101,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-06.png",
+        "byteLength": 324745,
+        "sha256": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4"
+      },
+      {
+        "frame": 102,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-07.png",
+        "byteLength": 325670,
+        "sha256": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78"
+      },
+      {
+        "frame": 109,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-08.png",
+        "byteLength": 325041,
+        "sha256": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7"
+      },
+      {
+        "frame": 110,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-09.png",
+        "byteLength": 324627,
+        "sha256": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5"
+      },
+      {
+        "frame": 139,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-isolated\\still-10.png",
+        "byteLength": 325061,
+        "sha256": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9"
+      }
+    ],
+    "ascending": [
+      {
+        "frame": 0,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-00.png",
+        "byteLength": 34427,
+        "sha256": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e"
+      },
+      {
+        "frame": 36,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-01.png",
+        "byteLength": 348298,
+        "sha256": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559"
+      },
+      {
+        "frame": 61,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-02.png",
+        "byteLength": 343473,
+        "sha256": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb"
+      },
+      {
+        "frame": 71,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-03.png",
+        "byteLength": 322101,
+        "sha256": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa"
+      },
+      {
+        "frame": 72,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-04.png",
+        "byteLength": 322828,
+        "sha256": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090"
+      },
+      {
+        "frame": 96,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-05.png",
+        "byteLength": 328923,
+        "sha256": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5"
+      },
+      {
+        "frame": 101,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-06.png",
+        "byteLength": 324745,
+        "sha256": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4"
+      },
+      {
+        "frame": 102,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-07.png",
+        "byteLength": 325670,
+        "sha256": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78"
+      },
+      {
+        "frame": 109,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-08.png",
+        "byteLength": 325041,
+        "sha256": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7"
+      },
+      {
+        "frame": 110,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-09.png",
+        "byteLength": 324627,
+        "sha256": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5"
+      },
+      {
+        "frame": 139,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-ascending\\still-10.png",
+        "byteLength": 325061,
+        "sha256": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9"
+      }
+    ],
+    "descending": [
+      {
+        "frame": 139,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-00.png",
+        "byteLength": 325061,
+        "sha256": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9"
+      },
+      {
+        "frame": 110,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-01.png",
+        "byteLength": 324627,
+        "sha256": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5"
+      },
+      {
+        "frame": 109,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-02.png",
+        "byteLength": 325041,
+        "sha256": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7"
+      },
+      {
+        "frame": 102,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-03.png",
+        "byteLength": 325670,
+        "sha256": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78"
+      },
+      {
+        "frame": 101,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-04.png",
+        "byteLength": 324745,
+        "sha256": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4"
+      },
+      {
+        "frame": 96,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-05.png",
+        "byteLength": 328923,
+        "sha256": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5"
+      },
+      {
+        "frame": 72,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-06.png",
+        "byteLength": 322828,
+        "sha256": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090"
+      },
+      {
+        "frame": 71,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-07.png",
+        "byteLength": 322101,
+        "sha256": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa"
+      },
+      {
+        "frame": 61,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-08.png",
+        "byteLength": 343473,
+        "sha256": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb"
+      },
+      {
+        "frame": 36,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-09.png",
+        "byteLength": 348298,
+        "sha256": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559"
+      },
+      {
+        "frame": 0,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-descending\\still-10.png",
+        "byteLength": 34427,
+        "sha256": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e"
+      }
+    ],
+    "shuffled": [
+      {
+        "frame": 72,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-00.png",
+        "byteLength": 322828,
+        "sha256": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090"
+      },
+      {
+        "frame": 0,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-01.png",
+        "byteLength": 34427,
+        "sha256": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e"
+      },
+      {
+        "frame": 139,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-02.png",
+        "byteLength": 325061,
+        "sha256": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9"
+      },
+      {
+        "frame": 36,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-03.png",
+        "byteLength": 348298,
+        "sha256": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559"
+      },
+      {
+        "frame": 110,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-04.png",
+        "byteLength": 324627,
+        "sha256": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5"
+      },
+      {
+        "frame": 61,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-05.png",
+        "byteLength": 343473,
+        "sha256": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb"
+      },
+      {
+        "frame": 101,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-06.png",
+        "byteLength": 324745,
+        "sha256": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4"
+      },
+      {
+        "frame": 71,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-07.png",
+        "byteLength": 322101,
+        "sha256": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa"
+      },
+      {
+        "frame": 102,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-08.png",
+        "byteLength": 325670,
+        "sha256": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78"
+      },
+      {
+        "frame": 96,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-09.png",
+        "byteLength": 328923,
+        "sha256": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5"
+      },
+      {
+        "frame": 109,
+        "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-shuffled\\still-10.png",
+        "byteLength": 325041,
+        "sha256": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7"
+      }
+    ],
+    "comparisons": {
+      "isolated": [
+        {
+          "label": "isolated",
+          "orderIndex": 0,
+          "frame": 0,
+          "expected": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+          "actual": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 1,
+          "frame": 36,
+          "expected": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+          "actual": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 2,
+          "frame": 61,
+          "expected": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+          "actual": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 3,
+          "frame": 71,
+          "expected": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+          "actual": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 4,
+          "frame": 72,
+          "expected": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+          "actual": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 5,
+          "frame": 96,
+          "expected": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+          "actual": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 6,
+          "frame": 101,
+          "expected": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+          "actual": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 7,
+          "frame": 102,
+          "expected": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+          "actual": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 8,
+          "frame": 109,
+          "expected": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+          "actual": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 9,
+          "frame": 110,
+          "expected": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+          "actual": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+          "matches": true
+        },
+        {
+          "label": "isolated",
+          "orderIndex": 10,
+          "frame": 139,
+          "expected": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+          "actual": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+          "matches": true
+        }
+      ],
+      "ascending": [
+        {
+          "label": "ascending",
+          "orderIndex": 0,
+          "frame": 0,
+          "expected": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+          "actual": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 1,
+          "frame": 36,
+          "expected": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+          "actual": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 2,
+          "frame": 61,
+          "expected": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+          "actual": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 3,
+          "frame": 71,
+          "expected": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+          "actual": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 4,
+          "frame": 72,
+          "expected": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+          "actual": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 5,
+          "frame": 96,
+          "expected": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+          "actual": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 6,
+          "frame": 101,
+          "expected": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+          "actual": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 7,
+          "frame": 102,
+          "expected": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+          "actual": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 8,
+          "frame": 109,
+          "expected": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+          "actual": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 9,
+          "frame": 110,
+          "expected": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+          "actual": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+          "matches": true
+        },
+        {
+          "label": "ascending",
+          "orderIndex": 10,
+          "frame": 139,
+          "expected": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+          "actual": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+          "matches": true
+        }
+      ],
+      "descending": [
+        {
+          "label": "descending",
+          "orderIndex": 0,
+          "frame": 139,
+          "expected": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+          "actual": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 1,
+          "frame": 110,
+          "expected": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+          "actual": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 2,
+          "frame": 109,
+          "expected": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+          "actual": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 3,
+          "frame": 102,
+          "expected": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+          "actual": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 4,
+          "frame": 101,
+          "expected": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+          "actual": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 5,
+          "frame": 96,
+          "expected": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+          "actual": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 6,
+          "frame": 72,
+          "expected": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+          "actual": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 7,
+          "frame": 71,
+          "expected": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+          "actual": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 8,
+          "frame": 61,
+          "expected": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+          "actual": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 9,
+          "frame": 36,
+          "expected": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+          "actual": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+          "matches": true
+        },
+        {
+          "label": "descending",
+          "orderIndex": 10,
+          "frame": 0,
+          "expected": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+          "actual": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+          "matches": true
+        }
+      ],
+      "shuffled": [
+        {
+          "label": "shuffled",
+          "orderIndex": 0,
+          "frame": 72,
+          "expected": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+          "actual": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 1,
+          "frame": 0,
+          "expected": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+          "actual": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 2,
+          "frame": 139,
+          "expected": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+          "actual": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 3,
+          "frame": 36,
+          "expected": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+          "actual": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 4,
+          "frame": 110,
+          "expected": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+          "actual": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 5,
+          "frame": 61,
+          "expected": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+          "actual": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 6,
+          "frame": 101,
+          "expected": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+          "actual": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 7,
+          "frame": 71,
+          "expected": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+          "actual": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 8,
+          "frame": 102,
+          "expected": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+          "actual": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 9,
+          "frame": 96,
+          "expected": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+          "actual": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+          "matches": true
+        },
+        {
+          "label": "shuffled",
+          "orderIndex": 10,
+          "frame": 109,
+          "expected": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+          "actual": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+          "matches": true
+        }
+      ]
     }
-  ],
-  "repeatedStills": [
-    {
-      "frame": 0,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-00.png",
-      "byteLength": 34427,
-      "sha256": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e"
-    },
-    {
-      "frame": 36,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-01.png",
-      "byteLength": 348298,
-      "sha256": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559"
-    },
-    {
-      "frame": 61,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-02.png",
-      "byteLength": 343473,
-      "sha256": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb"
-    },
-    {
-      "frame": 71,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-03.png",
-      "byteLength": 322101,
-      "sha256": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa"
-    },
-    {
-      "frame": 72,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-04.png",
-      "byteLength": 322828,
-      "sha256": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090"
-    },
-    {
-      "frame": 96,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-05.png",
-      "byteLength": 328923,
-      "sha256": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5"
-    },
-    {
-      "frame": 101,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-06.png",
-      "byteLength": 324745,
-      "sha256": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4"
-    },
-    {
-      "frame": 102,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-07.png",
-      "byteLength": 325670,
-      "sha256": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78"
-    },
-    {
-      "frame": 109,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-08.png",
-      "byteLength": 325041,
-      "sha256": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7"
-    },
-    {
-      "frame": 110,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-09.png",
-      "byteLength": 324627,
-      "sha256": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5"
-    },
-    {
-      "frame": 139,
-      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-10.png",
-      "byteLength": 325061,
-      "sha256": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9"
-    }
-  ],
-  "rawStillComparisons": [
-    {
-      "frame": 0,
-      "first": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
-      "second": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
-      "matches": true
-    },
-    {
-      "frame": 36,
-      "first": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
-      "second": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
-      "matches": true
-    },
-    {
-      "frame": 61,
-      "first": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
-      "second": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
-      "matches": true
-    },
-    {
-      "frame": 71,
-      "first": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
-      "second": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
-      "matches": true
-    },
-    {
-      "frame": 72,
-      "first": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
-      "second": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
-      "matches": true
-    },
-    {
-      "frame": 96,
-      "first": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
-      "second": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
-      "matches": true
-    },
-    {
-      "frame": 101,
-      "first": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
-      "second": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
-      "matches": true
-    },
-    {
-      "frame": 102,
-      "first": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
-      "second": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
-      "matches": true
-    },
-    {
-      "frame": 109,
-      "first": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
-      "second": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
-      "matches": true
-    },
-    {
-      "frame": 110,
-      "first": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
-      "second": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
-      "matches": true
-    },
-    {
-      "frame": 139,
-      "first": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
-      "second": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
-      "matches": true
-    }
-  ],
+  },
   "contactSheet": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\contact-sheet.png",
   "arbitraryScriptSmoke": {
     "episodePlanContentHash": "ae4eb2bfff62780c984849f218dadddbc54742b720b8ff9f8d7e24bedce0e85c",

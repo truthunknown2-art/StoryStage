@@ -1,11 +1,20 @@
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { createRequire } from "node:module";
+import {
+  arch as osArch,
+  platform as osPlatform,
+  release as osRelease,
+  version as osVersion,
+} from "node:os";
+import { basename, relative, resolve } from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
 import {
+  ensureBrowser,
+  openBrowser,
   renderFrames,
   renderStill,
   selectComposition,
@@ -39,10 +48,128 @@ const workspaceRoot = resolve(
 const outputRoot = resolve(workspaceRoot, "artifacts/KVP-001");
 const publicRoot = resolve(workspaceRoot, "packages/remotion-runtime/public");
 const execFileAsync = promisify(execFile);
+const require = createRequire(import.meta.url);
 const sha256 = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 
+const CHROME_MODE = "headless-shell" as const;
+const CHROMIUM_OPTIONS = { darkMode: false, gl: null };
+const DEVICE_SCALE_FACTOR = 1;
+
+const packageVersion = (packageName: string) => {
+  const manifest = require(`${packageName}/package.json`) as {
+    version?: unknown;
+  };
+  if (typeof manifest.version !== "string")
+    throw new Error(`${packageName} does not expose an exact version.`);
+  return manifest.version;
+};
+
+const openPinnedBrowser = (browserExecutable: string) =>
+  openBrowser("chrome", {
+    browserExecutable,
+    chromeMode: CHROME_MODE,
+    chromiumOptions: CHROMIUM_OPTIONS,
+    forceDeviceScaleFactor: DEVICE_SCALE_FACTOR,
+    logLevel: "error",
+  });
+
 const selectedFrames = [0, 36, 61, 71, 72, 96, 101, 102, 109, 110, 139];
+const selectedFrameOrders = {
+  ascending: [...selectedFrames],
+  descending: [...selectedFrames].reverse(),
+  shuffled: [72, 0, 139, 36, 110, 61, 101, 71, 102, 96, 109],
+} as const;
+
+const hashFileReceipt = async (file: string) => {
+  const bytes = await readFile(file);
+  return {
+    file: basename(file),
+    byteLength: bytes.byteLength,
+    sha256: sha256(bytes),
+  };
+};
+
+const hashDirectoryReceipt = async (root: string) => {
+  const files: Array<{
+    relativeFile: string;
+    byteLength: number;
+    sha256: string;
+  }> = [];
+  const visit = async (directory: string): Promise<void> => {
+    const entries = await readdir(directory, { withFileTypes: true });
+    for (const entry of entries.sort((left, right) =>
+      left.name.localeCompare(right.name),
+    )) {
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) await visit(path);
+      else if (entry.isFile()) {
+        const bytes = await readFile(path);
+        files.push({
+          relativeFile: relative(root, path).replaceAll("\\", "/"),
+          byteLength: bytes.byteLength,
+          sha256: sha256(bytes),
+        });
+      }
+    }
+  };
+  await visit(root);
+  return { fileCount: files.length, contentHash: hashCanonical(files), files };
+};
+
+const createEnvironmentReceipt = async ({
+  browserExecutable,
+  bundleReceipt,
+  composition,
+}: {
+  browserExecutable: string;
+  bundleReceipt: Awaited<ReturnType<typeof hashDirectoryReceipt>>;
+  composition: Awaited<ReturnType<typeof selectComposition>>;
+}) => {
+  const { stdout: chromiumVersion } = await execFileAsync(browserExecutable, [
+    "--version",
+  ]);
+  const windowsRoot = process.env.WINDIR ?? "C:/Windows";
+  const fontFiles = ["arial.ttf", "arialbd.ttf", "ariblk.ttf"];
+  return {
+    os: {
+      platform: osPlatform(),
+      release: osRelease(),
+      version: osVersion(),
+      arch: osArch(),
+    },
+    node: {
+      version: process.versions.node,
+      executable: await hashFileReceipt(process.execPath),
+    },
+    packages: {
+      remotion: packageVersion("remotion"),
+      renderer: packageVersion("@remotion/renderer"),
+      bundler: packageVersion("@remotion/bundler"),
+    },
+    chromium: {
+      version: chromiumVersion.trim(),
+      executable: await hashFileReceipt(browserExecutable),
+      chromeMode: CHROME_MODE,
+      options: CHROMIUM_OPTIONS,
+      forceDeviceScaleFactor: DEVICE_SCALE_FACTOR,
+      concurrency: 1,
+    },
+    fonts: await Promise.all(
+      fontFiles.map((file) =>
+        hashFileReceipt(resolve(windowsRoot, "Fonts", file)),
+      ),
+    ),
+    composition: {
+      id: composition.id,
+      width: composition.width,
+      height: composition.height,
+      fps: composition.fps,
+      proofFrameRange: [0, 139],
+    },
+    bundle: bundleReceipt,
+  };
+};
 
 const compileProofBuild = () => {
   const fixture = createKvp001ProofFixture();
@@ -250,31 +377,64 @@ const createContactSheet = async (stillsRoot: string, output: string) => {
 };
 
 const renderSelectedStills = async ({
+  browserExecutable,
   composition,
   directory,
+  frameOrder,
   inputProps,
+  isolation,
   serveUrl,
 }: {
+  browserExecutable: string;
   composition: Awaited<ReturnType<typeof selectComposition>>;
   directory: string;
+  frameOrder: readonly number[];
   inputProps: ProductionCompositionProps;
+  isolation: "fresh-browser-per-frame" | "shared-browser";
   serveUrl: string;
 }) => {
+  await rm(directory, {
+    force: true,
+    maxRetries: 12,
+    recursive: true,
+    retryDelay: 100,
+  });
   await mkdir(directory, { recursive: true });
   const stills = [];
-  for (const [index, frame] of selectedFrames.entries()) {
-    const output = resolve(
-      directory,
-      `still-${String(index).padStart(2, "0")}.png`,
-    );
-    await renderStill({ composition, frame, inputProps, output, serveUrl });
-    const bytes = await readFile(output);
-    stills.push({
-      frame,
-      output,
-      byteLength: bytes.length,
-      sha256: sha256(bytes),
-    });
+  const sharedBrowser =
+    isolation === "shared-browser"
+      ? await openPinnedBrowser(browserExecutable)
+      : null;
+  try {
+    for (const [index, frame] of frameOrder.entries()) {
+      const output = resolve(
+        directory,
+        `still-${String(index).padStart(2, "0")}.png`,
+      );
+      const browser =
+        sharedBrowser ?? (await openPinnedBrowser(browserExecutable));
+      try {
+        await renderStill({
+          composition,
+          frame,
+          inputProps,
+          output,
+          puppeteerInstance: browser,
+          serveUrl,
+        });
+      } finally {
+        if (!sharedBrowser) await browser.close({ silent: true });
+      }
+      const bytes = await readFile(output);
+      stills.push({
+        frame,
+        output,
+        byteLength: bytes.length,
+        sha256: sha256(bytes),
+      });
+    }
+  } finally {
+    if (sharedBrowser) await sharedBrowser.close({ silent: true });
   }
   return stills;
 };
@@ -291,11 +451,13 @@ const deterministicFfmpegOverride = ({
 };
 
 const renderDeterministicFrameSequence = async ({
+  browserExecutable,
   composition,
   directory,
   inputProps,
   serveUrl,
 }: {
+  browserExecutable: string;
   composition: Awaited<ReturnType<typeof selectComposition>>;
   directory: string;
   inputProps: ProductionCompositionProps;
@@ -308,19 +470,27 @@ const renderDeterministicFrameSequence = async ({
     retryDelay: 100,
   });
   await mkdir(directory, { recursive: true });
-  const result = await renderFrames({
-    composition,
-    concurrency: 1,
-    frameRange: [0, 139],
-    imageFormat: "png",
-    imageSequencePattern: "frame-[frame].[ext]",
-    inputProps,
-    muted: true,
-    onFrameUpdate: () => undefined,
-    onStart: () => undefined,
-    outputDir: directory,
-    serveUrl,
-  });
+  const browser = await openPinnedBrowser(browserExecutable);
+  const result = await (async () => {
+    try {
+      return await renderFrames({
+        composition,
+        concurrency: 1,
+        frameRange: [0, 139],
+        imageFormat: "png",
+        imageSequencePattern: "frame-[frame].[ext]",
+        inputProps,
+        muted: true,
+        onFrameUpdate: () => undefined,
+        onStart: () => undefined,
+        outputDir: directory,
+        puppeteerInstance: browser,
+        serveUrl,
+      });
+    } finally {
+      await browser.close({ silent: true });
+    }
+  })();
   const files = (await readdir(directory))
     .filter((file) => file.endsWith(".png"))
     .sort();
@@ -469,24 +639,49 @@ async function main() {
     ),
     publicDir: publicRoot,
   });
+  const browserStatus = await ensureBrowser({
+    chromeMode: CHROME_MODE,
+    logLevel: "error",
+  });
+  if (!("path" in browserStatus))
+    throw new Error(
+      `Pinned Chromium is unavailable: ${JSON.stringify(browserStatus)}`,
+    );
+  const browserExecutable = browserStatus.path;
+  const bundleReceipt = await hashDirectoryReceipt(serveUrl);
   const inputProps: ProductionCompositionProps = {
     mode: "director-episode",
     episodePlan,
   };
-  const composition = await selectComposition({
-    serveUrl,
-    id: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
-    inputProps,
+  const metadataBrowser = await openPinnedBrowser(browserExecutable);
+  const composition = await (async () => {
+    try {
+      return await selectComposition({
+        serveUrl,
+        id: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
+        inputProps,
+        puppeteerInstance: metadataBrowser,
+      });
+    } finally {
+      await metadataBrowser.close({ silent: true });
+    }
+  })();
+  const environment = await createEnvironmentReceipt({
+    browserExecutable,
+    bundleReceipt,
+    composition,
   });
   const passOne = resolve(outputRoot, "kvp001-pass-1.mp4");
   const passTwo = resolve(outputRoot, "kvp001-pass-2.mp4");
   const sequenceOne = await renderDeterministicFrameSequence({
+    browserExecutable,
     composition,
     directory: resolve(outputRoot, "frames-pass-1"),
     inputProps,
     serveUrl,
   });
   const sequenceTwo = await renderDeterministicFrameSequence({
+    browserExecutable,
     composition,
     directory: resolve(outputRoot, "frames-pass-2"),
     inputProps,
@@ -521,27 +716,66 @@ async function main() {
       x264Preset: "veryslow",
     });
 
-  const stillsRoot = resolve(outputRoot, "stills-pass-1");
+  const stillsRoot = resolve(outputRoot, "stills-isolated");
   const stills = await renderSelectedStills({
+    browserExecutable,
     composition,
     directory: stillsRoot,
+    frameOrder: selectedFrameOrders.ascending,
     inputProps,
+    isolation: "fresh-browser-per-frame",
     serveUrl,
   });
-  const repeatedStills = await renderSelectedStills({
+  const ascendingStills = await renderSelectedStills({
+    browserExecutable,
     composition,
-    directory: resolve(outputRoot, "stills-pass-2"),
+    directory: resolve(outputRoot, "stills-ascending"),
+    frameOrder: selectedFrameOrders.ascending,
     inputProps,
+    isolation: "shared-browser",
     serveUrl,
   });
-  const rawStillComparisons = stills.map((first, index) => ({
-    frame: first.frame,
-    first: first.sha256,
-    second: repeatedStills[index]!.sha256,
-    matches: first.sha256 === repeatedStills[index]!.sha256,
-  }));
+  const descendingStills = await renderSelectedStills({
+    browserExecutable,
+    composition,
+    directory: resolve(outputRoot, "stills-descending"),
+    frameOrder: selectedFrameOrders.descending,
+    inputProps,
+    isolation: "shared-browser",
+    serveUrl,
+  });
+  const shuffledStills = await renderSelectedStills({
+    browserExecutable,
+    composition,
+    directory: resolve(outputRoot, "stills-shuffled"),
+    frameOrder: selectedFrameOrders.shuffled,
+    inputProps,
+    isolation: "shared-browser",
+    serveUrl,
+  });
+  const serialByFrame = new Map(
+    sequenceOne.frames.map((frame) => [frame.frame, frame.sha256]),
+  );
+  const compareFrameOrder = (label: string, frames: typeof stills) =>
+    frames.map((candidate, orderIndex) => ({
+      label,
+      orderIndex,
+      frame: candidate.frame,
+      expected: serialByFrame.get(candidate.frame),
+      actual: candidate.sha256,
+      matches: serialByFrame.get(candidate.frame) === candidate.sha256,
+    }));
+  const frameOrderComparisons = {
+    isolated: compareFrameOrder("isolated", stills),
+    ascending: compareFrameOrder("ascending", ascendingStills),
+    descending: compareFrameOrder("descending", descendingStills),
+    shuffled: compareFrameOrder("shuffled", shuffledStills),
+  };
+  const rawStillComparisons = Object.values(frameOrderComparisons).flat();
   if (rawStillComparisons.some((comparison) => !comparison.matches))
-    throw new Error("KVP raw rendered stills differ across passes.");
+    throw new Error(
+      "KVP selected frames depend on browser isolation or evaluation order.",
+    );
   const contactSheet = resolve(outputRoot, "contact-sheet.png");
   await createContactSheet(stillsRoot, contactSheet);
 
@@ -590,19 +824,29 @@ async function main() {
     mode: "director-episode",
     episodePlan: arbitraryProject.executableEpisodePlan,
   };
-  const arbitraryComposition = await selectComposition({
-    serveUrl,
-    id: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
-    inputProps: arbitraryInputProps,
-  });
   const arbitraryStill = resolve(outputRoot, "arbitrary-reaction-smoke.png");
-  await renderStill({
-    composition: arbitraryComposition,
-    frame: arbitraryFrame,
-    inputProps: arbitraryInputProps,
-    output: arbitraryStill,
-    serveUrl,
-  });
+  const arbitraryBrowser = await openPinnedBrowser(browserExecutable);
+  await (async () => {
+    try {
+      const selected = await selectComposition({
+        serveUrl,
+        id: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
+        inputProps: arbitraryInputProps,
+        puppeteerInstance: arbitraryBrowser,
+      });
+      await renderStill({
+        composition: selected,
+        frame: arbitraryFrame,
+        inputProps: arbitraryInputProps,
+        output: arbitraryStill,
+        puppeteerInstance: arbitraryBrowser,
+        serveUrl,
+      });
+      return selected;
+    } finally {
+      await arbitraryBrowser.close({ silent: true });
+    }
+  })();
 
   const report = {
     proof: "KVP-001 canonical local-parts execution and authority isolation",
@@ -611,6 +855,7 @@ async function main() {
     notYetVerified:
       "general arbitrary-script synthesis of compound locomotion → plant → acting performances",
     fixtureLimitation: KVP001_PROOF_LIMITATION,
+    environment,
     canonicalRebuildsMatch: true,
     canonicalHashes,
     repeatedCanonicalHashes,
@@ -653,9 +898,14 @@ async function main() {
       ),
       frameSequenceComparisons,
     },
-    stills,
-    repeatedStills,
-    rawStillComparisons,
+    selectedFrameOrderEvidence: {
+      orders: selectedFrameOrders,
+      isolated: stills,
+      ascending: ascendingStills,
+      descending: descendingStills,
+      shuffled: shuffledStills,
+      comparisons: frameOrderComparisons,
+    },
     contactSheet,
     arbitraryScriptSmoke: {
       episodePlanContentHash:
