@@ -209,6 +209,11 @@ export const approvedAssetBindingSchema = z
     contentHash: hashSchema,
     status: z.enum(["approved", "proxy"]),
     relativeFile: z.string().min(1).optional(),
+    byteLength: z.number().int().positive().optional(),
+    immutableLocationId: z
+      .string()
+      .regex(/^sha256:[a-f0-9]{64}$/)
+      .optional(),
   })
   .strict();
 
@@ -582,7 +587,11 @@ export function sealExecutableEpisodePlan(
         program.kind !== program.execution.kind ||
         !program.assetIds.includes(program.execution.assetId) ||
         executionAsset?.status !== "approved" ||
-        !executionAsset.relativeFile
+        !executionAsset.relativeFile ||
+        !executionAsset.byteLength ||
+        executionAsset.immutableLocationId !==
+          `sha256:${executionAsset.contentHash}` ||
+        !executionAsset.relativeFile.includes(executionAsset.contentHash)
       )
         throw new Error(
           `${program.id} executable performance is not bound to an approved renderable asset.`,

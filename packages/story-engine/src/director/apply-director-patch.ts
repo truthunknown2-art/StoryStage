@@ -1,5 +1,9 @@
 import { cv002ProjectSchema, type Cv002Project } from "../cv002-story-draft";
-import type { CapabilityRegistry } from "./capability-report";
+import {
+  alphaCapabilityRegistry,
+  capabilityRegistrySchema,
+  type CapabilityRegistry,
+} from "./capability-report";
 import { compileDirectorProject } from "./director-compiler";
 import { directorPatchSchema, type DirectorPatch } from "./director-patch";
 import {
@@ -43,11 +47,20 @@ export function applyDirectorPatch(input: {
   const storyProject = cv002ProjectSchema.parse(input.storyProject);
   const base = directorProjectSchema.parse(input.baseDirectorProject);
   const patch = directorPatchSchema.parse(input.patch);
+  const capabilityRegistry = capabilityRegistrySchema.parse(
+    input.capabilities ?? alphaCapabilityRegistry,
+  );
   if (patch.baseDirectorProjectContentHash !== base.contentHash)
     throw new Error("Director patch is stale for the selected first cut.");
   if (base.storyProjectContentHash !== storyProject.contentHash)
     throw new Error(
       "Director patch story source does not match its first cut.",
+    );
+  if (
+    base.capabilityReport.registryContentHash !== capabilityRegistry.contentHash
+  )
+    throw new Error(
+      "Director patch capability registry changed without an explicit migration artifact.",
     );
 
   const adjustments = base.planningArtifact.eventTimingAdjustments.map(
@@ -143,7 +156,7 @@ export function applyDirectorPatch(input: {
   const next = compileDirectorProject({
     storyProject,
     planner: new FixedDirectorProposalPlanner(planningArtifact),
-    capabilities: input.capabilities,
+    capabilities: capabilityRegistry,
     revision: {
       baseDirectorProjectContentHash: base.contentHash,
       directorPatchContentHash: patch.contentHash,

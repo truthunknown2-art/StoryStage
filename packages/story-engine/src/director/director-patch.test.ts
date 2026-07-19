@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
 import { applyDirectorPatch } from "./apply-director-patch";
+import { createCapabilityRegistry } from "./capability-report";
 import { compileDirectorProject } from "./director-compiler";
 import {
   describeDirectorPatch,
@@ -76,6 +77,105 @@ class CustomDirectorPlanner implements DirectorPlanner {
 }
 
 describe("Director patch", () => {
+  it("preserves exact capability authority and rejects silent registry migration", () => {
+    const storyProject = createCv002Project(
+      "Capability patch locality",
+      script,
+      "kids-adventure",
+    );
+    const probe = compileDirectorProject({ storyProject });
+    const requirement =
+      probe.directorPlan.beats[0]!.performanceRequirements[0]!;
+    expect(requirement.source).toBe("living-hold");
+    const contentHash = "a".repeat(64);
+    const registry = createCapabilityRegistry({
+      version: "patch-capability-registry-a",
+      capabilities: [
+        {
+          id: "patch-living-hold-capability",
+          requirementId: requirement.id,
+          entityId: requirement.entityId,
+          kind: "living-hold",
+          rendererId: "test-living-hold-renderer",
+          rendererVersion: "1.0.0",
+          assets: [
+            {
+              assetId: "patch-living-hold-asset",
+              version: "1.0.0",
+              contentHash,
+              status: "approved",
+              relativeFile: `capability-assets/${contentHash}.png`,
+              byteLength: 128,
+              immutableLocationId: `sha256:${contentHash}`,
+            },
+          ],
+          execution: {
+            kind: "living-hold",
+            assetId: "patch-living-hold-asset",
+            atlasWidth: 100,
+            atlasHeight: 100,
+            frames: [
+              {
+                source: { x: 0, y: 0, width: 50, height: 100 },
+                anchor: { x: 25, y: 100 },
+              },
+              {
+                source: { x: 50, y: 0, width: 50, height: 100 },
+                anchor: { x: 25, y: 100 },
+              },
+            ],
+            poseSequence: [0, 1],
+            cycleFrames: 24,
+            breathingAmplitude: 0.01,
+          },
+        },
+      ],
+    });
+    const otherRegistry = createCapabilityRegistry({
+      version: "patch-capability-registry-b",
+      capabilities: [],
+    });
+    const base = compileDirectorProject({
+      storyProject,
+      capabilities: registry,
+    });
+    const targetBeatId = reactionTarget(base);
+    const patch = proposeDirectorPatch({
+      baseDirectorProject: base,
+      targetBeatId,
+      command: "Make the reaction later",
+    });
+    const originalProgram = base.executableEpisodePlan.performancePrograms.find(
+      (program) => program.id === requirement.id,
+    )!;
+    const edited = applyDirectorPatch({
+      storyProject,
+      baseDirectorProject: base,
+      patch,
+      capabilities: registry,
+    });
+    const editedProgram = edited.executableEpisodePlan.performancePrograms.find(
+      (program) => program.id === requirement.id,
+    )!;
+
+    expect(originalProgram.execution?.kind).toBe("living-hold");
+    expect(editedProgram.contentHash).toBe(originalProgram.contentHash);
+    expect(edited.capabilityReport.registryContentHash).toBe(
+      registry.contentHash,
+    );
+    expect(() =>
+      applyDirectorPatch({
+        storyProject,
+        baseDirectorProject: base,
+        patch,
+        capabilities: otherRegistry,
+      }),
+    ).toThrow(/explicit migration artifact/i);
+    expect(() =>
+      applyDirectorPatch({ storyProject, baseDirectorProject: base, patch }),
+    ).toThrow(/explicit migration artifact/i);
+  });
+
   it("proposes a hash-bound structured reaction delay", () => {
     const storyProject = createCv002Project(
       "Patch proof",

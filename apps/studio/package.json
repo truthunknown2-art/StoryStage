@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit && vite build",
-    "dev": "vite --host 127.0.0.1",
+    "build": "pnpm --filter @storystage/remotion-runtime verify:director-capability-assets && tsc --noEmit && vite build",
+    "dev": "pnpm --filter @storystage/remotion-runtime verify:director-capability-assets && vite --host 127.0.0.1",
     "test": "vitest run src/App.test.tsx src/Cv001CreatorStudio.test.tsx src/Cv002DraftReview.test.tsx src/KidsShowcaseStudio.test.tsx src/AppErrorBoundary.test.tsx src/host.test.ts",
     "typecheck": "tsc --noEmit"
   },

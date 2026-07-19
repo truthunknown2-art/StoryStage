@@ -5,13 +5,7 @@ import {
 } from "@storystage/story-engine/director-alpha";
 import maraPerformanceAtlas from "../../public/show-packs/kids/moonlit-ruins/v1/rigs/mara/performance-v1/atlas-manifest.json";
 import maraRunAtlas from "../../public/show-packs/kids/moonlit-ruins/v1/rigs/mara/run-right-v1/atlas-manifest.json";
-
-const PERFORMANCE_ATLAS_PATH =
-  "show-packs/kids/moonlit-ruins/v1/rigs/mara/performance-v1/atlas.png";
-const RUN_ATLAS_PATH =
-  "show-packs/kids/moonlit-ruins/v1/rigs/mara/run-right-v1/atlas.png";
-const PUPPET_PATH =
-  "show-packs/kids/moonlit-ruins/v1/rigs/mara/payoff-puppet-v1/puppet-parts.png";
+import capabilityAssetCatalog from "./generated-capability-asset-catalog.json";
 
 export type BundledKidsCapabilityTarget = {
   kind: "atlas-cycle" | "articulated-rig" | "living-hold";
@@ -26,15 +20,35 @@ const measuredFrames = (atlas: typeof maraPerformanceAtlas) =>
     anchor: frame.anchor,
   }));
 
-const asset = (input: {
-  assetId: string;
-  contentHash: string;
-  relativeFile: string;
-}) => ({
-  ...input,
-  version: "1.0.0",
-  status: "approved" as const,
-});
+const asset = (assetId: string) => {
+  const entry = capabilityAssetCatalog.assets.find(
+    (candidate) => candidate.assetId === assetId,
+  );
+  if (!entry)
+    throw new Error(`Bundled capability asset is missing: ${assetId}`);
+  return {
+    assetId: entry.assetId,
+    contentHash: entry.contentHash,
+    byteLength: entry.byteLength,
+    immutableLocationId: entry.immutableLocationId,
+    relativeFile: entry.relativeFile,
+    version: "1.0.0",
+    status: "approved" as const,
+  };
+};
+
+const assertAtlasCatalogBinding = (
+  atlas: typeof maraPerformanceAtlas,
+  assetId: string,
+) => {
+  if (asset(assetId).contentHash !== atlas.sourceContentHash)
+    throw new Error(
+      `${assetId} atlas metadata is stale against its byte catalog.`,
+    );
+};
+
+assertAtlasCatalogBinding(maraPerformanceAtlas, "mara-performance-v1");
+assertAtlasCatalogBinding(maraRunAtlas, "mara-run-right-v1");
 
 const capabilityFor = (
   target: BundledKidsCapabilityTarget,
@@ -45,13 +59,7 @@ const capabilityFor = (
       ...target,
       rendererId: "director-atlas-cycle",
       rendererVersion: "1.0.0",
-      assets: [
-        asset({
-          assetId: "mara-run-right-v1",
-          contentHash: maraRunAtlas.sourceContentHash,
-          relativeFile: RUN_ATLAS_PATH,
-        }),
-      ],
+      assets: [asset("mara-run-right-v1")],
       execution: {
         kind: "atlas-cycle",
         assetId: "mara-run-right-v1",
@@ -70,13 +78,7 @@ const capabilityFor = (
       ...target,
       rendererId: "director-living-hold",
       rendererVersion: "1.0.0",
-      assets: [
-        asset({
-          assetId: "mara-performance-v1",
-          contentHash: maraPerformanceAtlas.sourceContentHash,
-          relativeFile: PERFORMANCE_ATLAS_PATH,
-        }),
-      ],
+      assets: [asset("mara-performance-v1")],
       execution: {
         kind: "living-hold",
         assetId: "mara-performance-v1",
@@ -94,14 +96,7 @@ const capabilityFor = (
     ...target,
     rendererId: "director-articulated-rig",
     rendererVersion: "1.0.0",
-    assets: [
-      asset({
-        assetId: "mara-payoff-puppet-v1",
-        contentHash:
-          "d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9",
-        relativeFile: PUPPET_PATH,
-      }),
-    ],
+    assets: [asset("mara-payoff-puppet-v1")],
     execution: {
       kind: "articulated-rig",
       assetId: "mara-payoff-puppet-v1",
@@ -226,7 +221,7 @@ export const createBundledKidsCapabilityRegistry = (
   targets: BundledKidsCapabilityTarget[],
 ): CapabilityRegistry =>
   createCapabilityRegistry({
-    version: "bundled-kids-performance-v1",
+    version: `bundled-kids-performance-v1@${capabilityAssetCatalog.contentHash.slice(0, 12)}`,
     capabilities: targets.map(capabilityFor),
   });
 

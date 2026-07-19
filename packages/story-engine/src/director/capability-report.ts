@@ -23,6 +23,8 @@ export type DirectorPerformanceKind = z.infer<
 const capabilityAssetSchema = approvedAssetBindingSchema.extend({
   status: z.literal("approved"),
   relativeFile: z.string().min(1),
+  byteLength: z.number().int().positive(),
+  immutableLocationId: z.string().regex(/^sha256:[a-f0-9]{64}$/),
 });
 
 const performanceCapabilityFields = {
@@ -57,6 +59,18 @@ export const performanceCapabilityDraftSchema = z
         message:
           "Executable performance must consume an approved capability asset.",
       });
+    capability.assets.forEach((asset, index) => {
+      if (
+        asset.immutableLocationId !== `sha256:${asset.contentHash}` ||
+        !asset.relativeFile.includes(asset.contentHash)
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["assets", index],
+          message:
+            "Capability assets must use a content-addressed immutable location.",
+        });
+    });
   });
 
 export const performanceCapabilitySchema = z
@@ -112,7 +126,9 @@ export const capabilityRegistrySchema = z
         existing &&
         (existing.contentHash !== asset.contentHash ||
           existing.version !== asset.version ||
-          existing.relativeFile !== asset.relativeFile)
+          existing.relativeFile !== asset.relativeFile ||
+          existing.byteLength !== asset.byteLength ||
+          existing.immutableLocationId !== asset.immutableLocationId)
       )
         context.addIssue({
           code: "custom",
@@ -303,5 +319,7 @@ export function resolveDirectorCapabilities(
 export type ConcreteCapabilityAsset = ApprovedAssetBinding & {
   status: "approved";
   relativeFile: string;
+  byteLength: number;
+  immutableLocationId: `sha256:${string}`;
 };
 export type ConcretePerformanceExecution = PerformanceExecution;

@@ -11,7 +11,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run src/cv001-rig-contract.test.ts src/director/bundledKidsCapabilities.test.ts"
+    "test": "vitest run src/cv001-rig-contract.test.ts src/director/bundledKidsCapabilities.test.ts",
+    "verify:director-capability-assets": "node ../../scripts/generate-director-capability-asset-catalog.mjs --check"
   },
   "dependencies": {
     "@remotion/captions": "4.0.490",

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
 import { applyDirectorPatch } from "./apply-director-patch";
+import { createCapabilityRegistry } from "./capability-report";
 import { compileDirectorProject } from "./director-compiler";
 import { proposeDirectorPatch } from "./director-patch";
 import {
@@ -45,6 +46,42 @@ const fixture = () => {
 };
 
 describe("Director workspace", () => {
+  it("binds an unpatched H0 workspace to the exact supplied capability registry", () => {
+    const storyProject = createCv002Project(
+      "Registry continuity",
+      script,
+      "kids-adventure",
+    );
+    const registryA = createCapabilityRegistry({
+      version: "workspace-registry-a",
+      capabilities: [],
+    });
+    const registryB = createCapabilityRegistry({
+      version: "workspace-registry-b",
+      capabilities: [],
+    });
+    const firstCut = compileDirectorProject({
+      storyProject,
+      capabilities: registryA,
+    });
+    const serialized = serializeDirectorWorkspaceState(
+      createDirectorWorkspaceState(
+        firstCut,
+        firstCut.directorPlan.beats[0]!.beatId,
+      ),
+    );
+
+    expect(() =>
+      restoreDirectorWorkspaceState(serialized, storyProject, registryA),
+    ).not.toThrow();
+    expect(() =>
+      restoreDirectorWorkspaceState(serialized, storyProject, registryB),
+    ).toThrow(/another capability registry/i);
+    expect(() =>
+      restoreDirectorWorkspaceState(serialized, storyProject),
+    ).toThrow(/another capability registry/i);
+  });
+
   it("restores the exact current project, history cursor, and selected beat", () => {
     const { storyProject, firstCut, selectedBeatId, patch, revisedCut } =
       fixture();

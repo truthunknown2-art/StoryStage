@@ -80,6 +80,7 @@ export type {
   PerformanceCapabilityDraft,
 } from "./capability-report";
 export {
+  approvedAssetBindingSchema,
   executableEpisodePlanSchema,
   performanceExecutionSchema,
 } from "./executable-episode-plan";

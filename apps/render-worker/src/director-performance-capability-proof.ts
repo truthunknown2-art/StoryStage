@@ -14,6 +14,7 @@ import {
   compileDirectorProject,
   createCv002Project,
 } from "@storystage/story-engine/director-alpha";
+import { verifyDirectorEpisodeCapabilityAssets } from "./director-capability-assets";
 
 const workspaceRoot = resolve(
   fileURLToPath(new URL("../../..", import.meta.url)),
@@ -22,6 +23,7 @@ const outputRoot = resolve(
   workspaceRoot,
   "artifacts/ACP-001/generic-performance",
 );
+const publicRoot = resolve(workspaceRoot, "packages/remotion-runtime/public");
 const sha256 = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 
@@ -78,19 +80,27 @@ async function main() {
     throw new Error(
       "Unmatched requirements were not kept honestly proxy-only.",
     );
+  const verifiedAssets = await verifyDirectorEpisodeCapabilityAssets(
+    finalProject.executableEpisodePlan,
+    publicRoot,
+  );
 
   const serveUrl = await bundle({
     entryPoint: resolve(
       workspaceRoot,
       "packages/remotion-runtime/src/remotion-entry.ts",
     ),
-    publicDir: resolve(workspaceRoot, "packages/remotion-runtime/public"),
+    publicDir: publicRoot,
   });
   const renderProject = async (
     project: typeof finalProject,
     output: string,
     frame: number,
   ) => {
+    await verifyDirectorEpisodeCapabilityAssets(
+      project.executableEpisodePlan,
+      publicRoot,
+    );
     const inputProps: ProductionCompositionProps = {
       mode: "director-episode",
       episodePlan: project.executableEpisodePlan,
@@ -178,11 +188,15 @@ async function main() {
   }
 
   const report = {
-    proof: "ACP-001 Generic Performance Capability",
+    proof: "ACP-001.1 Capability Asset and Registry Authority Closure",
     storyProjectContentHash: storyProject.contentHash,
     registryContentHash: registry.contentHash,
     episodePlanContentHash: finalProject.executableEpisodePlan.contentHash,
     capabilitySummary: finalProject.capabilityReport.summary,
+    assetAuthority: {
+      mode: "sha256-and-byte-length-verified-before-render",
+      verifiedAssets,
+    },
     supportedKinds: kinds,
     rendererPath:
       "StoryStageProduction -> DirectorEpisodeRenderer -> generic executable performance",

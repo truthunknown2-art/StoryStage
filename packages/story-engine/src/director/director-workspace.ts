@@ -2,7 +2,11 @@ import { z } from "zod";
 import { cv002ProjectSchema, type Cv002Project } from "../cv002-story-draft";
 import { hashSchema, identifierSchema } from "../model";
 import { applyDirectorPatch } from "./apply-director-patch";
-import type { CapabilityRegistry } from "./capability-report";
+import {
+  alphaCapabilityRegistry,
+  capabilityRegistrySchema,
+  type CapabilityRegistry,
+} from "./capability-report";
 import {
   canRedoDirectorHistory,
   canUndoDirectorHistory,
@@ -128,11 +132,21 @@ export function restoreDirectorWorkspaceState(
 ): DirectorWorkspaceState {
   const workspace = directorWorkspaceStateSchema.parse(JSON.parse(serialized));
   const storyProject = cv002ProjectSchema.parse(expectedStoryProject);
+  const capabilityRegistry = capabilityRegistrySchema.parse(
+    capabilities ?? alphaCapabilityRegistry,
+  );
   if (workspace.storyProjectContentHash !== storyProject.contentHash)
     throw new Error(
       "Saved Director workspace belongs to another story project.",
     );
   let replayed = workspace.history.entries[0]!.directorProject;
+  if (
+    replayed.capabilityReport.registryContentHash !==
+    capabilityRegistry.contentHash
+  )
+    throw new Error(
+      "Saved Director first cut belongs to another capability registry. An explicit capability migration is required.",
+    );
   if (
     replayed.directorPlan.storyGraphContentHash !==
       storyProject.graph.contentHash ||
@@ -147,11 +161,18 @@ export function restoreDirectorWorkspaceState(
       throw new Error(
         "Saved Director workspace revision is missing its patch.",
       );
+    if (
+      entry.directorProject.capabilityReport.registryContentHash !==
+      capabilityRegistry.contentHash
+    )
+      throw new Error(
+        `Saved Director workspace revision ${index} belongs to another capability registry.`,
+      );
     const computed = applyDirectorPatch({
       storyProject,
       baseDirectorProject: replayed,
       patch: entry.patch,
-      capabilities,
+      capabilities: capabilityRegistry,
     });
     if (computed.contentHash !== entry.directorProject.contentHash)
       throw new Error(

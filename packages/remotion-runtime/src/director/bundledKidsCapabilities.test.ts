@@ -28,8 +28,15 @@ describe("bundled Kids performance capabilities", () => {
         expect.objectContaining({
           status: "approved",
           relativeFile: expect.stringMatching(/\.png$/),
+          byteLength: expect.any(Number),
         }),
       ]);
+      const binding = first.capabilities[0]!.assets[0]!;
+      expect(binding.immutableLocationId).toBe(`sha256:${binding.contentHash}`);
+      expect(binding.relativeFile).toContain(binding.contentHash);
+      expect(first.version).toMatch(
+        /^bundled-kids-performance-v1@[a-f0-9]{12}$/,
+      );
     },
   );
 

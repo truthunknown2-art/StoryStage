@@ -54,6 +54,7 @@ const capabilityFor = (
   index: number,
 ): PerformanceCapabilityDraft => {
   const assetId = `performance-asset-${index}`;
+  const contentHash = `${index + 1}`.repeat(64);
   const common = {
     id: `concrete-capability-${index}`,
     requirementId: requirement.id,
@@ -65,9 +66,11 @@ const capabilityFor = (
       {
         assetId,
         version: "1.0.0",
-        contentHash: `${index + 1}`.repeat(64),
+        contentHash,
         status: "approved" as const,
-        relativeFile: `approved/${assetId}.png`,
+        relativeFile: `approved/${contentHash}.png`,
+        byteLength: 1,
+        immutableLocationId: `sha256:${contentHash}`,
       },
     ],
   };
