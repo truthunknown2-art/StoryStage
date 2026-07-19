@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `11`
+Inbox-Version: `12`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-C-CORRECTIONS`
 Status: `START-NOW`
@@ -11,14 +11,25 @@ Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-corrections
 
 ## Current instruction
 
-Exact-head review of Slice C at
-`55873d2b489c8c69e2110817bb6c4accb91e50d0` found three P2 defects and one
-invalid visual-proof capture. Continue on the existing required work branch
-and execute the correction brief. Do not broaden the task or touch engine,
-runtime, renderer, timing, continuity, or asset-authority code.
+ChatGPT Pro's exact-head review of Slice C at
+`55873d2b489c8c69e2110817bb6c4accb91e50d0` found two P1 blockers plus two P2
+follow-ups and an invalid visual-proof capture. Continue on the existing
+required work branch and execute the expanded correction brief. The ordinary
+Ollo/Mara capability truth fix must stay inside Studio composition/registry
+selection and tests; do not broaden into engine, runtime, renderer, timing,
+continuity, or asset-authority changes.
 
-Version 11 supersedes Version 10 as the active task. Version 10 remains below
+Version 12 supersedes Version 11 as the active task. Version 11 remains below
 as historical traceability.
+
+---
+
+Previous Version 11 instruction:
+
+Exact-head review found the first three UI defects and invalid Player proof
+listed in the same correction brief. Pro's completed review added the ordinary
+Ollo/Mara identity gate, the 44px target requirement, and the narrow topbar
+case now required by Version 12.
 
 ---
 

@@ -8,21 +8,31 @@ history and do not broaden this Studio-only correction.
 
 ## Required corrections
 
-1. **Make the rail capability label exact.**
-   `beatIsRenderReady()` only evaluates performance-capability resolution while
-   the ordinary renderer is still proxy-only. Rename the creator-facing state
-   to `Performance ready` / `Performance proxy`, or derive a genuine full
-   production-readiness gate. The smaller performance-specific wording is the
-   intended correction for this slice. Update tests, handback text, and visual
-   evidence so the UI cannot imply final media or full-beat render readiness.
+1. **P1: never present Mara engineering art as ordinary Ollo readiness.**
+   Every Kids Adventure project currently creates
+   `createBundledKidsPilotCapabilityRegistry(...)`, whose executable character
+   identity is the Mara engineering fixture (`mara-performance-v1`,
+   `mara-run-right-v1`, `createBundledMaraLocalPartsRigManifest()`, and
+   `bundled-mara-*` capability IDs). Therefore renaming the current rail chip is
+   not sufficient. For an ordinary Ollo project, report `Performance ready`
+   only when an approved Ollo capability exists; otherwise report
+   `Proxy performance`. Mara may remain only behind the explicit Engineering
+   demo action and must be visibly labeled `Engineering demo`, never ordinary
+   readiness. Add regressions proving: ordinary Ollo has zero performance-ready
+   beats before Ollo approval; ordinary Ollo never binds an asset ID beginning
+   `mara-`; named engineering-demo mode may bind Mara and visibly says demo;
+   Weird History behavior is unchanged. Keep the fix Studio-local and do not
+   create or claim Ollo approval.
 
-2. **Make timeline zoom geometry truthful.**
+2. **P1: make timeline zoom geometry truthful and targets usable.**
    `minWidth: ${zoom * 100}%` does not shrink an auto-width grid below 100%, so
-   the current 60-90% controls change the number without changing the lanes.
-   Use a real geometry-affecting width and define the intended below-100%
-   behavior, or clamp the minimum to 100% and remove inert zoom-out states.
-   Add a focused assertion that pins the rendered geometry/style at the minimum,
-   default, and an above-100% value. Do not alter canonical frames or timing.
+   the current 60-90% controls are inert. Use honest zoom-in plus return-to-fit:
+   minimum 1.0, maximum 2.5, label 100% as `Fit width`, and disable minus at
+   100%. Both zoom buttons require at least a 44x44 hit area while retaining the
+   small icon. Add a browser proof that measures lane/scroll geometry at 100%,
+   zooms to 160% and observes increased width, seeks a shot/event/camera item
+   without changing the exact resolved frame, then returns to 100%. Do not alter
+   canonical frames or timing.
 
 3. **Expose the new metadata to assistive technology.**
    The scene-rail button has an explicit `aria-label`, which replaces descendant
@@ -39,6 +49,20 @@ history and do not broaden this Studio-only correction.
    pre-existing runtime blocker precisely, and avoid claiming visual Player
    acceptance. Do not modify runtime code in this Kimi lane.
 
+5. **P2: repair the narrow topbar cascade.**
+   Slice C's later global four-column `.cv2-topbar` rule overrides the earlier
+   760px two-column layout. Add a final narrow override equivalent to:
+   `.cv2-topbar { grid-template-columns: auto 1fr; }` and
+   `.cv2-history-actions { grid-column: 2; justify-self: end; }`. Capture and
+   test a 760px-or-smaller state in addition to the requested desktop and
+   mid-width evidence.
+
+6. **P2: keep duration wording honest about the current compiler.**
+   The current duration sum is correct because Director Alpha emits one beat ID
+   per shot. The generic schema permits shared-beat shots, so do not describe
+   the calculation as a generic interval-union solution. No engine change is
+   required in this slice; record the limitation in the handback.
+
 ## Preserve
 
 - Exact 0 / 1 / 2+ reaction-target behavior and command ownership.
@@ -49,7 +73,10 @@ history and do not broaden this Studio-only correction.
 
 ## Verification and handback
 
-Run focused Studio tests, Studio typecheck/lint, and root `pnpm verify`. Replace
-the handback with the exact successor SHA, changed files, test results, known
-limitations, and corrected screenshots. Commit and push the same required
-branch, update PR #17, then wait for Codex/Pro review.
+Run focused Studio tests, Studio typecheck/lint, and root `pnpm verify`. Capture
+1440 desktop, 1024 or 820 responsive, and 760-or-smaller topbar evidence plus
+the measured zoom proof and deterministic paused Player evidence (episode hash,
+absolute frame, shot ID, beat ID, paused=true). Replace the handback with the
+exact successor SHA, changed files, test results, known limitations, and
+corrected screenshots. Commit and push the same required branch, update PR #17,
+then wait for Codex/Pro review.
