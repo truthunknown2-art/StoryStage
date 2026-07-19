@@ -5,10 +5,15 @@ import sharp from "sharp";
 import {
   characterRigAssetRequestSchema,
   characterRigCandidateBundleSchema,
+  characterRigImportReceiptSchema,
   createCharacterRigStagingReport,
+  hashCanonical,
   inspectCharacterRigCandidateBundle,
+  validateCharacterRigCandidateBundle,
+  validateCharacterRigStagingReport,
   type CharacterRigAssetRequest,
   type CharacterRigCandidateBundle,
+  type CharacterRigImportReceipt,
   type CharacterRigStagingReport,
   type StagedCharacterRigCandidate,
 } from "@storystage/story-engine";
@@ -54,6 +59,16 @@ export type StageCharacterRigCandidateBundleInput = {
   trustedStagingRoot: string;
   stagingRoot: string;
   stagedAt?: string;
+};
+
+export type CreateVerifiedCharacterRigImportReceiptInput = {
+  request: CharacterRigAssetRequest | unknown;
+  bundle: CharacterRigCandidateBundle | unknown;
+  report: CharacterRigStagingReport | unknown;
+  trustedStagingRoot: string;
+  stagingRoot: string;
+  importId: string;
+  importedAt: string;
 };
 
 const sha256 = (bytes: Uint8Array) =>
@@ -172,6 +187,69 @@ const ensureTrustedStagingRoot = async (
       "Character rig staging root resolves outside the host-owned trusted root.",
     );
   return canonicalTarget;
+};
+
+const ensureRealDerivedDirectory = async (
+  stagingRoot: string,
+  segments: string[],
+  createMissing: boolean,
+) => {
+  const canonicalRoot = await realpath(stagingRoot);
+  let cursor = canonicalRoot;
+  for (const segment of segments) {
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(segment))
+      throw new CharacterRigStagingError(
+        "untrusted-staging-root",
+        "Character rig staging derived an unsafe directory name.",
+      );
+    const next = resolve(cursor, segment);
+    if (!isWithin(canonicalRoot, next))
+      throw new CharacterRigStagingError(
+        "untrusted-staging-root",
+        "Character rig staging derived a directory outside its staging root.",
+      );
+    if (createMissing) {
+      try {
+        await mkdir(next, { mode: 0o700 });
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      }
+    }
+    const info = await lstat(next);
+    if (info.isSymbolicLink() || !info.isDirectory())
+      throw new CharacterRigStagingError(
+        "symlink-rejected",
+        "Character rig staging derived path contains a symbolic link, junction, or non-directory.",
+      );
+    const canonicalNext = await realpath(next);
+    if (!isWithin(canonicalRoot, canonicalNext))
+      throw new CharacterRigStagingError(
+        "untrusted-staging-root",
+        "Character rig staging derived directory resolves outside its staging root.",
+      );
+    cursor = canonicalNext;
+  }
+  return cursor;
+};
+
+const resolveSafePublicationTarget = async (
+  stagingRoot: string,
+  directorySegments: string[],
+  fileName: string,
+) => {
+  const canonicalRoot = await realpath(stagingRoot);
+  const canonicalParent = await ensureRealDerivedDirectory(
+    canonicalRoot,
+    directorySegments,
+    false,
+  );
+  const target = resolve(canonicalParent, fileName);
+  if (!isWithin(canonicalRoot, target))
+    throw new CharacterRigStagingError(
+      "untrusted-staging-root",
+      "Character rig publication target escapes its staging root.",
+    );
+  return target;
 };
 
 type PngHeader = {
@@ -385,17 +463,20 @@ export const stageCharacterRigCandidateBundle = async (
     input.trustedStagingRoot,
     input.stagingRoot,
   );
-  const candidateRoot = resolve(stagingRoot, "character-rig", "candidates");
-  await mkdir(candidateRoot, { recursive: true, mode: 0o700 });
+  await ensureRealDerivedDirectory(stagingRoot, ["character-rig"], true);
+  await ensureRealDerivedDirectory(
+    stagingRoot,
+    ["character-rig", "candidates"],
+    true,
+  );
   const stagedAssets: StagedCharacterRigCandidate[] = [];
   for (const entry of validated) {
     const relativeFile = `character-rig/candidates/${entry.asset.contentHash}.png`;
-    const output = resolve(stagingRoot, ...relativeFile.split("/"));
-    if (!isWithin(stagingRoot, output))
-      throw new CharacterRigStagingError(
-        "untrusted-staging-root",
-        `Derived character rig output escaped its staging root: ${entry.asset.candidateId}.`,
-      );
+    const output = await resolveSafePublicationTarget(
+      stagingRoot,
+      ["character-rig", "candidates"],
+      `${entry.asset.contentHash}.png`,
+    );
     await writeImmutable(
       output,
       entry.bytes,
@@ -440,9 +521,9 @@ export const stageCharacterRigCandidateBundle = async (
     approvalRequired: true,
     stagedAt: input.stagedAt ?? new Date().toISOString(),
   });
-  const reportFile = resolve(
+  const reportFile = await resolveSafePublicationTarget(
     stagingRoot,
-    "character-rig",
+    ["character-rig"],
     `staging-report-${report.contentHash}.json`,
   );
   await writeImmutable(
@@ -451,4 +532,184 @@ export const stageCharacterRigCandidateBundle = async (
     "Character rig staging report path contains conflicting bytes.",
   );
   return report;
+};
+
+const sealCharacterRigImportReceipt = (
+  report: CharacterRigStagingReport,
+  importId: string,
+  importedAt: string,
+): CharacterRigImportReceipt => {
+  const draft = {
+    schemaVersion: "1.0" as const,
+    importId,
+    requestContentHash: report.requestContentHash,
+    candidateBundleContentHash: report.bundleContentHash,
+    stagingReportContentHash: report.contentHash,
+    files: report.assets.map((asset) => ({
+      requestItemId: asset.requestItemId,
+      candidateId: asset.candidateId,
+      sourceContentHash: asset.sourceContentHash,
+      byteLength: asset.byteLength,
+      mediaType: asset.mediaType,
+      width: asset.width,
+      height: asset.height,
+      immutableLocationId: asset.immutableLocationId,
+      stagedRelativeFile: asset.relativeFile,
+    })),
+    providerAuthority: false as const,
+    approvalRequired: true as const,
+    importedAt,
+  };
+  return characterRigImportReceiptSchema.parse({
+    ...draft,
+    contentHash: hashCanonical(draft),
+  });
+};
+
+const readVerifiedPublishedFile = async (
+  stagingRoot: string,
+  directorySegments: string[],
+  fileName: string,
+  maximumBytes: number,
+) => {
+  const target = await resolveSafePublicationTarget(
+    stagingRoot,
+    directorySegments,
+    fileName,
+  );
+  const info = await lstat(target);
+  if (info.isSymbolicLink() || !info.isFile())
+    throw new CharacterRigStagingError(
+      "symlink-rejected",
+      "Character rig published evidence must be a real regular file.",
+    );
+  if (info.size > maximumBytes)
+    throw new CharacterRigStagingError(
+      "file-too-large",
+      "Character rig published evidence exceeds its size limit.",
+    );
+  const canonicalRoot = await realpath(stagingRoot);
+  const canonicalTarget = await realpath(target);
+  if (!isWithin(canonicalRoot, canonicalTarget))
+    throw new CharacterRigStagingError(
+      "untrusted-staging-root",
+      "Character rig published evidence resolves outside its staging root.",
+    );
+  return readFile(canonicalTarget);
+};
+
+export const createVerifiedCharacterRigImportReceipt = async (
+  input: CreateVerifiedCharacterRigImportReceiptInput,
+): Promise<CharacterRigImportReceipt> => {
+  const request = characterRigAssetRequestSchema.parse(input.request);
+  const bundle = characterRigCandidateBundleSchema.parse(input.bundle);
+  validateCharacterRigCandidateBundle(request, bundle);
+  const report = validateCharacterRigStagingReport(
+    request,
+    bundle,
+    input.report as CharacterRigStagingReport,
+  );
+  if (
+    report.status !== "complete" ||
+    report.missingItems.length ||
+    report.unknownItems.length
+  )
+    throw new Error(
+      "A character rig import receipt requires exact request-item coverage.",
+    );
+
+  const stagingRoot = await ensureTrustedStagingRoot(
+    input.trustedStagingRoot,
+    input.stagingRoot,
+  );
+  const persistedReportBytes = await readVerifiedPublishedFile(
+    stagingRoot,
+    ["character-rig"],
+    `staging-report-${report.contentHash}.json`,
+    8_000_000,
+  );
+  const persistedReport = validateCharacterRigStagingReport(
+    request,
+    bundle,
+    JSON.parse(persistedReportBytes.toString("utf8")) as CharacterRigStagingReport,
+  );
+  if (hashCanonical(persistedReport) !== hashCanonical(report))
+    throw new Error(
+      "Character rig import receipt requires the exact persisted staging report.",
+    );
+
+  const sources = new Map(
+    bundle.assets.map((asset) => [asset.candidateId, asset]),
+  );
+  for (const asset of report.assets) {
+    const source = sources.get(asset.candidateId);
+    if (!source)
+      throw new Error(
+        `Character rig staging report names an unknown candidate: ${asset.candidateId}.`,
+      );
+    const expectedRelativeFile = `character-rig/candidates/${source.contentHash}.png`;
+    if (asset.relativeFile !== expectedRelativeFile)
+      throw new Error(
+        `Character rig staged candidate is not at its content-addressed path: ${asset.candidateId}.`,
+      );
+    const bytes = await readVerifiedPublishedFile(
+      stagingRoot,
+      ["character-rig", "candidates"],
+      `${source.contentHash}.png`,
+      MAX_FILE_BYTES,
+    );
+    if (bytes.length !== source.byteLength || bytes.length !== asset.byteLength)
+      throw new CharacterRigStagingError(
+        "byte-length-mismatch",
+        `Character rig staged bytes changed: ${asset.candidateId}.`,
+      );
+    const contentHash = sha256(bytes);
+    if (
+      contentHash !== source.contentHash ||
+      contentHash !== asset.sourceContentHash ||
+      contentHash !== asset.stagedContentHash
+    )
+      throw new CharacterRigStagingError(
+        "hash-mismatch",
+        `Character rig staged bytes changed: ${asset.candidateId}.`,
+      );
+    const header = parsePngHeader(bytes);
+    if (
+      header.width !== source.width ||
+      header.height !== source.height ||
+      header.width !== asset.width ||
+      header.height !== asset.height
+    )
+      throw new CharacterRigStagingError(
+        "dimension-mismatch",
+        `Character rig staged dimensions changed: ${asset.candidateId}.`,
+      );
+    const decoded = await decodeSinglePagePng(bytes, asset.candidateId);
+    if (
+      decoded.width !== header.width ||
+      decoded.height !== header.height ||
+      decoded.alphaClass !== asset.alphaClass
+    )
+      throw new CharacterRigStagingError(
+        "dimension-mismatch",
+        `Character rig staged decode evidence changed: ${asset.candidateId}.`,
+      );
+  }
+
+  const receipt = sealCharacterRigImportReceipt(
+    report,
+    input.importId,
+    input.importedAt,
+  );
+  const receiptFile = await resolveSafePublicationTarget(
+    stagingRoot,
+    ["character-rig"],
+    `import-receipt-${receipt.contentHash}.json`,
+  );
+  await writeImmutable(
+    receiptFile,
+    Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`, "utf8"),
+    "Character rig import receipt path contains conflicting bytes.",
+  );
+  return receipt;
 };

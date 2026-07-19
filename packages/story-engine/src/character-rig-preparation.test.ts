@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import * as characterRigPreparation from "./character-rig-preparation";
 import {
   createCharacterRigAssetRequest,
   createCharacterRigCandidateBundle,
@@ -9,7 +10,6 @@ import {
 import {
   characterRigExposureRoleSchema,
   characterRigPartRoleSchema,
-  createCharacterRigImportReceipt,
   createCharacterRigPreparationRecipe,
   createCharacterRigStagingReport,
   validateCharacterRigPreparationRecipe,
@@ -229,24 +229,10 @@ const fixture = (complete = false) => {
 };
 
 describe("character rig preparation ledger", () => {
-  it("creates a complete-only immutable import receipt", () => {
-    const complete = fixture(true);
-    const receipt = createCharacterRigImportReceipt(
-      complete.report,
-      "import-ollo-family-source-v1",
-      "2026-07-18T20:06:00.000Z",
+  it("does not export a report-only import receipt constructor", () => {
+    expect(characterRigPreparation).not.toHaveProperty(
+      "createCharacterRigImportReceipt",
     );
-    expect(receipt.files).toHaveLength(7);
-    expect(receipt.providerAuthority).toBe(false);
-    expect(receipt.approvalRequired).toBe(true);
-    const partial = fixture();
-    expect(() =>
-      createCharacterRigImportReceipt(
-        partial.report,
-        "import-incomplete",
-        "2026-07-18T20:06:00.000Z",
-      ),
-    ).toThrow(/exact request-item coverage/i);
   });
 
   it("binds a complete front-view component recipe to partial staged lineage", () => {

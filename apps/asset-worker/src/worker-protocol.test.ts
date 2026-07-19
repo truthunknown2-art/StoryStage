@@ -17,6 +17,7 @@ describe("asset worker protocol", () => {
     await runAssetWorkerCommand({
       type: "stage-character-rig-candidates",
       requestId: "rig-intake-one",
+      importId: "rig-import-one",
       sourceRoot: "C:\\source",
       trustedStagingRoot: "C:\\trusted",
       stagingRoot: "C:\\trusted\\rig-intake-one",
@@ -36,6 +37,7 @@ describe("asset worker protocol", () => {
     await runAssetWorkerCommand({
       type: "stage-character-rig-candidates",
       requestId: "rig-intake-one",
+      importId: "rig-import-one",
       sourceRoot: "C:\\source",
       trustedStagingRoot: "C:\\trusted",
       stagingRoot: "C:\\trusted\\rig-intake-one",

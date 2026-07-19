@@ -174,11 +174,6 @@ const refineCharacterRigImportReceipt = (
       context.addIssue({ code: "custom", path: ["files"], message: `Character rig import receipt ${key} values must be unique.` });
 };
 
-export const characterRigImportReceiptDraftSchema = z
-  .object(characterRigImportReceiptFields)
-  .strict()
-  .superRefine(refineCharacterRigImportReceipt);
-
 export const characterRigImportReceiptSchema = z
   .object({ ...characterRigImportReceiptFields, contentHash: hashSchema })
   .strict()
@@ -484,41 +479,6 @@ export const createCharacterRigStagingReport = (
 ): CharacterRigStagingReport => {
   const draft = characterRigStagingReportDraftSchema.parse(rawDraft);
   return characterRigStagingReportSchema.parse({
-    ...draft,
-    contentHash: hashCanonical(draft),
-  });
-};
-
-export const createCharacterRigImportReceipt = (
-  rawReport: CharacterRigStagingReport,
-  importId: string,
-  importedAt: string,
-): CharacterRigImportReceipt => {
-  const report = characterRigStagingReportSchema.parse(rawReport);
-  if (report.status !== "complete" || report.missingItems.length || report.unknownItems.length)
-    throw new Error("A character rig import receipt requires exact request-item coverage.");
-  const draft = characterRigImportReceiptDraftSchema.parse({
-    schemaVersion: "1.0",
-    importId,
-    requestContentHash: report.requestContentHash,
-    candidateBundleContentHash: report.bundleContentHash,
-    stagingReportContentHash: report.contentHash,
-    files: report.assets.map((asset) => ({
-      requestItemId: asset.requestItemId,
-      candidateId: asset.candidateId,
-      sourceContentHash: asset.sourceContentHash,
-      byteLength: asset.byteLength,
-      mediaType: asset.mediaType,
-      width: asset.width,
-      height: asset.height,
-      immutableLocationId: asset.immutableLocationId,
-      stagedRelativeFile: asset.relativeFile,
-    })),
-    providerAuthority: false,
-    approvalRequired: true,
-    importedAt,
-  });
-  return characterRigImportReceiptSchema.parse({
     ...draft,
     contentHash: hashCanonical(draft),
   });

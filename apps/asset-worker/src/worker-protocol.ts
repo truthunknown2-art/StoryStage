@@ -1,4 +1,4 @@
-import {CandidateStagingError, CharacterRigStagingError, prepareCandidateSets, stageCandidateBundle, stageCharacterRigCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "@storystage/asset-pipeline";
+import {CandidateStagingError, CharacterRigStagingError, createVerifiedCharacterRigImportReceipt, prepareCandidateSets, stageCandidateBundle, stageCharacterRigCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "@storystage/asset-pipeline";
 import {
   assetWorkerCommandSchema,
   assetWorkerMessageSchema,
@@ -18,15 +18,18 @@ export async function runAssetWorkerCommand(rawCommand: unknown, emit: (message:
 
   try {
     if (parsed.data.type === "stage-character-rig-candidates") {
+      const request = JSON.parse(parsed.data.serializedRigRequest);
+      const bundle = JSON.parse(parsed.data.serializedRigBundle);
       const report = await stageCharacterRigCandidateBundle({
-        request: JSON.parse(parsed.data.serializedRigRequest),
-        bundle: JSON.parse(parsed.data.serializedRigBundle),
+        request,
+        bundle,
         sourceRoot: parsed.data.sourceRoot,
         trustedStagingRoot: parsed.data.trustedStagingRoot,
         stagingRoot: parsed.data.stagingRoot,
         stagedAt: parsed.data.stagedAt,
       });
-      emit(assetWorkerMessageSchema.parse({type: "character-rig-staged", requestId: parsed.data.requestId, serializedStagingReport: JSON.stringify(report)}));
+      const receipt = report.status === "complete" ? await createVerifiedCharacterRigImportReceipt({request, bundle, report, trustedStagingRoot: parsed.data.trustedStagingRoot, stagingRoot: parsed.data.stagingRoot, importId: parsed.data.importId, importedAt: parsed.data.stagedAt}) : null;
+      emit(assetWorkerMessageSchema.parse({type: "character-rig-staged", requestId: parsed.data.requestId, serializedStagingReport: JSON.stringify(report), serializedImportReceipt: receipt ? JSON.stringify(receipt) : null}));
       return;
     }
     if (parsed.data.type === "prepare-candidate-sets") {
