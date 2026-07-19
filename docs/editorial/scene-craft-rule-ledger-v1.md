@@ -27,13 +27,13 @@ SHA-256 values below are of the referenced file bytes.
 | --------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `docs/editorial/scene-craft-v1.md`                              | `0a4f25d` / blob `5ca8a0d763f75188e7b8bcb469d96b251971c005`      | `74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138` | established editorial practice | Creative vocabulary, section structure, candidate numeric claims                      | Validating any numeric claim                                                                         |
 | `docs/editorial/scene-craft-v1.1.md`                            | `3f07a61` / blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`      | `8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2` | established editorial practice | The accepted hard-versus-soft ruling, taxonomy, softened text, illustrative treatment | Granting authority                                                                                   |
-| `docs/PRODUCT_ROADMAP.md`                                       | base `c7618f0` / blob `2392b9ff14ddc2be68f834c502c8235edb54a4fa` | `428b8af5a8232ff09c2e27cd787e7c14c89f6448f7d7deb84f1b951411c98388` | established editorial practice | Milestone scope and ownership                                                         | Rule evidence                                                                                        |
-| `docs/REFERENCE-DIRECTION-STUDY.md`                             | base `c7618f0` / blob `fcadbec974e6de88fdde1977c289de2b2260efa3` | `8626e859ebb83541ff903722728d27a22a39d18c84fc6050ee6e1a661f4b9dd1` | established editorial practice | Direction-study context for priors                                                    | Exact StoryStage thresholds                                                                          |
-| `docs/reference-analysis/kids-dragon-hunt-2-analysis.json`      | base `c7618f0` / blob `918678ab0a1ed6397e086aa721b2e3f35bb26361` | `f0bfd8e2f4f65b6681be46164abc92d5402230f8d63c8818e9c91e34bd6fbf8d` | measured reference             | Existence of established editorial patterns in reference kids content                 | Exact StoryStage numeric thresholds or mixes                                                         |
-| `docs/reference-analysis/sticko-teen-analysis.json`             | base `c7618f0` / blob `02cf995b9c17589b18d7ec97268e006c92bac037` | `7c7366d919dac8de8fb7d9b3a304165cae3f440fc43a533e30a15e5553697f2a` | measured reference             | Reference-content coverage/reaction/pacing patterns                                   | Exact StoryStage numeric thresholds                                                                  |
-| `docs/reference-analysis/profile-comparison.md`                 | base `c7618f0` / blob `00800a224fee21ae381a5fbaaeedeab90082b782` | `8bd4aef3d1621d5ae5712a87739d507da2a901605679f08d31639ebed777ff11` | measured reference             | Cross-profile grammar context                                                         | Exact numeric rules                                                                                  |
-| `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` | base `c7618f0` / blob `e9cc015cd9f8f05f414d431f05055f70f02ab53c` | `7c614aa6d41087359f6d3860b0b3befb0b58d9a27299124112472eeab883c28f` | project regression             | One project-observed repeated gesture and smear ghosting in one 30s render            | Universal numeric limits (a regression proves one failure looked bad in one render, not a threshold) |
-| `docs/design/kids-showcase-proof/proof-report.json`             | base `c7618f0` / blob `8f7c9e44e82f66ede0269dad94d77af8d31929f4` | `75599bdef8b1970daca8a3904ceec3a9b3b9b4892221d83ab64c1e32ba0bbde0` | project regression             | Proof-run provenance                                                                  | Rule evidence                                                                                        |
+| `docs/PRODUCT_ROADMAP.md`                                       | base `c7618f0` / blob `2392b9ff14ddc2be68f834c502c8235edb54a4fa` | `776a4ed213763578b4f6d8b0d4aa912cf7609f0484fa5c9f70c9e654f8e3deeb` | established editorial practice | Milestone scope and ownership                                                         | Rule evidence                                                                                        |
+| `docs/REFERENCE-DIRECTION-STUDY.md`                             | base `c7618f0` / blob `fcadbec974e6de88fdde1977c289de2b2260efa3` | `2268f8ffe7646d8e868ea6cb72d9624903137104355ef6547ccbf56ef9b5c6a5` | established editorial practice | Direction-study context for priors                                                    | Exact StoryStage thresholds                                                                          |
+| `docs/reference-analysis/kids-dragon-hunt-2-analysis.json`      | base `c7618f0` / blob `918678ab0a1ed6397e086aa721b2e3f35bb26361` | `ab39eee3b4be2082049b71fa49ac305382e75ad6d3b7c5c2fbf36feddad5dd43` | measured reference             | Existence of established editorial patterns in reference kids content                 | Exact StoryStage numeric thresholds or mixes                                                         |
+| `docs/reference-analysis/sticko-teen-analysis.json`             | base `c7618f0` / blob `02cf995b9c17589b18d7ec97268e006c92bac037` | `4fc0a1a0b7300689767b734745ee89e5f13fb0b1495ad5d58d0c2bbf23d07d6e` | measured reference             | Reference-content coverage/reaction/pacing patterns                                   | Exact StoryStage numeric thresholds                                                                  |
+| `docs/reference-analysis/profile-comparison.md`                 | base `c7618f0` / blob `00800a224fee21ae381a5fbaaeedeab90082b782` | `1dcd91ce2f51c6bdcb3e8561df878bdeb58c207faf37eb914be248d45cfa73d1` | measured reference             | Cross-profile grammar context                                                         | Exact numeric rules                                                                                  |
+| `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` | base `c7618f0` / blob `e9cc015cd9f8f05f414d431f05055f70f02ab53c` | `7702342648cad9eb7080db1efaa6fe26a2d2b92a09e0f21c583cf0506075791c` | project regression             | One project-observed repeated gesture and smear ghosting in one 30s render            | Universal numeric limits (a regression proves one failure looked bad in one render, not a threshold) |
+| `docs/design/kids-showcase-proof/proof-report.json`             | base `c7618f0` / blob `8f7c9e44e82f66ede0269dad94d77af8d31929f4` | `edb98aedebdaa342352c205a6165d081194812502dfc0a53c4384bfe0f011657` | project regression             | Proof-run provenance                                                                  | Rule evidence                                                                                        |
 | `docs/design/kids-showcase-proof/frame-024.png`                 | base `c7618f0` / blob `f87e505fdcd747cae9ac4849d2d80cd597dcfc44` | `cffdaa0022ee6e11d05637215b287b6ec219f459999f079a32265f31f6fd68ee` | project regression             | Frame-level audit artifact                                                            | Rule evidence                                                                                        |
 | `docs/design/kids-showcase-proof/frame-069.png`                 | base `c7618f0` / blob `e1bc8c55d9b4dd6eacd05b059a5958718412ea65` | `49decff83688b5cae450be47ead3a674b6ea59de60c3554463a9ba277f2f53c4` | project regression             | Frame-level audit artifact                                                            | Rule evidence                                                                                        |
 | `docs/design/kids-showcase-proof/frame-108.png`                 | base `c7618f0` / blob `e5864b6117519937e42174157a1d2311cc9cd8ae` | `ad6130f43f3465e1f65ce823dc3782c95260ea4055cd5c7a137b6415246ccc55` | project regression             | Frame-level audit artifact                                                            | Rule evidence                                                                                        |
@@ -57,7 +57,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every compiled plan
 - **Minimum sample:** n/a — a single instance proves the failure
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`, sha-256 `8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`, sha-256 `8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned; no calibration pending)
 - **Future consumer:** compiler & continuity validators · **Implementation owner:** Codex
@@ -71,7 +71,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every cut boundary and action phrase
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §3, §5 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard invariant classes, §3, §5 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** timing solver & read-window validation · **Implementation owner:** Codex
@@ -85,7 +85,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every shot boundary and scene transition
 - **Minimum sample:** n/a
 - **Exception codes:** `declared-transition-logic`
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §3, §7 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard invariant classes, §3, §7 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** continuity validation · **Implementation owner:** Codex
@@ -99,7 +99,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every shot containing a tracked prop
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** continuity validation · **Implementation owner:** Codex
@@ -113,7 +113,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every camera program and transition boundary
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §4, §7 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard invariant classes, §4, §7 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** deterministic sample validation · **Implementation owner:** Codex
@@ -127,7 +127,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every action phrase and cut boundary
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §3 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard invariant classes, §3 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** continuity validation · **Implementation owner:** Codex
@@ -141,7 +141,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every render
 - **Minimum sample:** n/a
 - **Exception codes:** `approved-style-capability`
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §9 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (blob `e9cc015cd9f8f05f414d431f05055f70f02ab53c`, sha-256 `7c614aa6d41087359f6d3860b0b3befb0b58d9a27299124112472eeab883c28f`) · project regression
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard invariant classes, §9 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (blob `e9cc015cd9f8f05f414d431f05055f70f02ab53c`, sha-256 `7702342648cad9eb7080db1efaa6fe26a2d2b92a09e0f21c583cf0506075791c`) · project regression
 - **Measured sample:** 1 render (30s kids showcase proof; ghosting observed around 0:16/0:20)
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** renderer & rig validation · **Implementation owner:** Codex
@@ -155,7 +155,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every render and delivery
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** renderer authority & media verification · **Implementation owner:** Codex
@@ -169,7 +169,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every planning pass and preview
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** planner authority · **Implementation owner:** Codex
@@ -490,7 +490,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** `semantic-variation-present`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §6 + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (the hand-to-ear listen repeated twice in 6s) (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, e9cc015cd9f8f05f414d431f05055f70f02ab53c) · project regression
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §6 + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (the hand-to-ear listen repeated twice in 6s) (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, e9cc015cd9f8f05f414d431f05055f70f02ab53c) · unvalidated hypothesis
 - **Measured sample:** 1 render (30s kids showcase proof; one observed repetition)
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today

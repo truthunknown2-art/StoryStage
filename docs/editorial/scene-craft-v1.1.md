@@ -47,7 +47,8 @@ type SceneCraftRule = {
     | "measured reference"
     | "project regression"
     | "established editorial practice"
-    | "unvalidated hypothesis";
+    | "unvalidated hypothesis"
+    | "worked example";
   confidence: "low" | "medium" | "high";
 };
 ```
@@ -56,7 +57,7 @@ Hard invariants belong in deterministic compilers and continuity validators.
 Soft taste findings belong in the quality report. Priors guide a planner but do
 not become quotas. Hypotheses remain non-normative until measured.
 
-### Hard-invariant classes
+### Hard invariant classes
 
 Only these classes may block:
 
