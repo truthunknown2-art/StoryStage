@@ -1,27 +1,37 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `18`
+Inbox-Version: `19`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-SCENECRAFT-V11-EVIDENCE-LEDGER`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`
 Required-Work-Branch: `agent/kimi-scenecraft-v11-evidence-ledger`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger-v19.md`
 
 ## Current instruction
 
 PR #17 is accepted and merged at
 `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`. Stop the UI Slice C polish lane.
 Create the required Scene Craft branch from that exact accepted base and build
-the non-normative v1.1 numbered rule/evidence ledger in the referenced brief.
-This is editorial knowledge and evidence classification only: no product code,
-validators, thresholds, compiler/runtime behavior, UI, or production authority.
-Commit and push the exact successor, open a draft PR to
-`agent/kcast001-provider-neutral-rig`, leave the required handback, then wait.
+the non-normative v1.1 narrative plus numbered Markdown rule/evidence ledger in
+the Version 19 brief. This is editorial knowledge and evidence classification
+only: no product code, validators, thresholds, compiler/runtime behavior, UI,
+or production authority. Commit and push the exact successor, open a draft PR
+to `agent/kcast001-provider-neutral-rig`, leave the required handback, then
+wait.
 
-Version 18 supersedes Version 17 as the active task. Version 17 remains below
-as historical traceability.
+Version 19 supersedes Version 18 before its work branch existed. Version 18
+remains below as historical traceability.
+
+---
+
+Previous Version 18 instruction:
+
+Create the Scene Craft branch from merged PR #17 and produce v1.1 narrative
+plus a complete numbered evidence ledger. ChatGPT Pro's completed response
+subsequently fixed the ledger's canonical filename, Markdown format, additional
+row fields, and evidence vocabulary; Version 19 contains that binding shape.
 
 ---
 
