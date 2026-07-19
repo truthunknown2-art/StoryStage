@@ -47,4 +47,4 @@ Source documents were read without changing branches from `origin/agent/kimi-fro
 
 ## Integration instructions
 
-Branch is one commit (`<SHA>`) plus this handback on top of the accepted merge `c7618f0`. Draft PR targets `agent/kcast001-provider-neutral-rig`. Do not merge — Codex and Pro review the immutable head. Codex will decide later whether any accepted ledger entry becomes compiler, continuity, quality-report, capability, or planner behavior.
+Branch is one commit (`7171036`) plus this handback on top of the accepted merge `c7618f0`. Draft PR targets `agent/kcast001-provider-neutral-rig`. Do not merge — Codex and Pro review the immutable head. Codex will decide later whether any accepted ledger entry becomes compiler, continuity, quality-report, capability, or planner behavior.
