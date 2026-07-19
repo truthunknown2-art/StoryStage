@@ -121,6 +121,8 @@ const wrapGait = (value: number) => ((value % 1) + 1) % 1;
 const gaitAfterFrames = (start: number, frames: number) =>
   wrapGait(start + frames / 12);
 
+const gaitAdvanceForFrames = (frames: number) => frames / 12;
+
 const guideVisemeProgramFor = (
   shot: DirectorPlan["shots"][number],
   startFrame: number,
@@ -838,7 +840,7 @@ export function compileContinuitySequencePlan(
           motionMode: ContinuityPerformanceSegment["motionMode"],
           actionPhase: ContinuityPerformanceSegment["actionPhase"],
           startGait: number | null,
-          endGait: number | null,
+          gaitAdvanceCycles: number | null,
         ): ContinuityPerformanceSegment | null =>
           endFrameExclusive <= startFrame
             ? null
@@ -849,7 +851,7 @@ export function compileContinuitySequencePlan(
                 motionMode,
                 actionPhase,
                 gaitStart: startGait,
-                gaitEnd: endGait,
+                gaitAdvanceCycles,
                 performanceProgramId: program?.id ?? null,
                 performanceProgramContentHash: program?.contentHash ?? null,
               };
@@ -867,10 +869,6 @@ export function compileContinuitySequencePlan(
             gaitStart,
             deceleration - resolved.startFrame,
           );
-          const gaitAtPlant = gaitAfterFrames(
-            gaitStart,
-            plantFrame - resolved.startFrame,
-          );
           push(
             segment(
               resolved.startFrame,
@@ -878,7 +876,7 @@ export function compileContinuitySequencePlan(
               program?.kind === "atlas-cycle" ? "running" : "walking",
               "action",
               gaitStart,
-              gaitAtDeceleration,
+              gaitAdvanceForFrames(deceleration - resolved.startFrame),
             ),
           );
           push(
@@ -888,7 +886,7 @@ export function compileContinuitySequencePlan(
               "decelerating",
               "action",
               gaitAtDeceleration,
-              gaitAtPlant,
+              gaitAdvanceForFrames(plantFrame - deceleration),
             ),
           );
           const settleEnd = Math.min(
@@ -914,7 +912,7 @@ export function compileContinuitySequencePlan(
               program?.kind === "atlas-cycle" ? "running" : "walking",
               "action",
               gaitStart,
-              gaitAfterFrames(gaitStart, shotDuration),
+              gaitAdvanceForFrames(shotDuration),
             ),
           );
         } else {
@@ -951,7 +949,10 @@ export function compileContinuitySequencePlan(
         Object.assign(exit, {
           motionMode: last.motionMode,
           actionPhase: last.actionPhase,
-          gaitPhase: last.gaitEnd,
+          gaitPhase:
+            last.gaitStart === null || last.gaitAdvanceCycles === null
+              ? null
+              : wrapGait(last.gaitStart + last.gaitAdvanceCycles),
           performanceProgramId: last.performanceProgramId,
           performanceProgramContentHash: last.performanceProgramContentHash,
         });

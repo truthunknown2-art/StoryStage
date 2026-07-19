@@ -52,7 +52,7 @@ export const continuityPerformanceSegmentSchema = z
     motionMode: continuityMotionModeSchema,
     actionPhase: continuityActionPhaseSchema,
     gaitStart: z.number().min(0).max(1).nullable(),
-    gaitEnd: z.number().min(0).max(1).nullable(),
+    gaitAdvanceCycles: z.number().nonnegative().nullable(),
     performanceProgramId: identifierSchema.nullable(),
     performanceProgramContentHash: hashSchema.nullable(),
   })
@@ -67,12 +67,15 @@ export const continuityPerformanceSegmentSchema = z
       "running",
       "decelerating",
     ].includes(segment.motionMode);
-    if ((segment.gaitStart === null) !== (segment.gaitEnd === null))
+    if (
+      (segment.gaitStart === null) !==
+      (segment.gaitAdvanceCycles === null)
+    )
       context.addIssue({
         code: "custom",
         path: ["gaitStart"],
         message:
-          "Performance segment gait boundaries must both be present or both be null.",
+          "Performance segment gait start and unwrapped advance must both be present or both be null.",
       });
     if (
       (segment.performanceProgramId === null) !==

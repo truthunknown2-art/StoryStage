@@ -853,10 +853,61 @@ function buildExecutable(
   const directionByBeat = new Map(
     proposal.beatDirections.map((direction) => [direction.beatId, direction]),
   );
-  const programsByBeat = new Map(
-    plan.beats.map((beat) => [
-      beat.beatId,
-      beat.performanceRequirements.map((requirement) => requirement.id),
+  const eventOrderById = new Map(
+    plan.events.map((event) => [event.id, event.order]),
+  );
+  const sourceShotIdsByRequirement = new Map(
+    plan.beats.flatMap((beat) =>
+      beat.performanceRequirements.map((requirement) => {
+        const requiredOrders = requirement.requiredEventIds.map((eventId) => {
+          const order = eventOrderById.get(eventId);
+          if (order === undefined)
+            throw new Error(
+              `${requirement.id} references unknown event ${eventId}.`,
+            );
+          return order;
+        });
+        const requirementStart = Math.min(...requiredOrders);
+        const requirementEnd = Math.max(...requiredOrders);
+        const candidateShots = plan.shots.filter((shot) =>
+          shot.beatIds.includes(beat.beatId),
+        );
+        const sourceShotIds = candidateShots
+          .filter((shot) => {
+            const shotStart = eventOrderById.get(shot.entryEventId);
+            const shotEnd = eventOrderById.get(shot.exitEventId);
+            if (shotStart === undefined || shotEnd === undefined)
+              throw new Error(`${shot.id} has an unresolved event interval.`);
+            if (requirementStart === requirementEnd)
+              return (
+                shot.entryEventId === requirement.requiredEventIds[0] ||
+                shot.exitEventId === requirement.requiredEventIds[0]
+              );
+            return requirementStart < shotEnd && requirementEnd > shotStart;
+          })
+          .map((shot) => shot.id);
+        if (sourceShotIds.length === 0)
+          throw new Error(
+            `${requirement.id} does not overlap a shot event interval.`,
+          );
+        if (requirementStart === requirementEnd && sourceShotIds.length !== 1)
+          throw new Error(
+            `${requirement.id} has an ambiguous single-event shot lineage.`,
+          );
+        return [requirement.id, sourceShotIds] as const;
+      }),
+    ),
+  );
+  const programsByShot = new Map(
+    plan.shots.map((shot) => [
+      shot.id,
+      plan.beats.flatMap((beat) =>
+        beat.performanceRequirements
+          .filter((requirement) =>
+            sourceShotIdsByRequirement.get(requirement.id)?.includes(shot.id),
+          )
+          .map((requirement) => requirement.id),
+      ),
     ]),
   );
   const resolvedByShot = new Map(
@@ -880,7 +931,7 @@ function buildExecutable(
       stageKitId: shot.stageId,
       treatmentRendererId: "director-proxy-treatment",
       transitionRendererId: shot.transition.kind,
-      performanceProgramIds: programsByBeat.get(shot.beatIds[0]!)!,
+      performanceProgramIds: programsByShot.get(shot.id)!,
       layerIds: stageKits.find((stage) => stage.id === shot.stageId)!.layerIds,
     };
   });
@@ -890,9 +941,7 @@ function buildExecutable(
         throw new Error(
           "Director plans may not request proxy as a creative performance source.",
         );
-      const sourceShotIds = plan.shots
-        .filter((shot) => shot.beatIds.includes(beat.beatId))
-        .map((shot) => shot.id);
+      const sourceShotIds = sourceShotIdsByRequirement.get(requirement.id)!;
       const sourceSceneIds = [
         ...new Set(
           plan.shots

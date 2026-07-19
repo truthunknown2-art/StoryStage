@@ -107,6 +107,7 @@ export const resolvedContinuityFrameSchema = z
 const rigVisualProgramFields = {
   schemaVersion: z.literal("1.0"),
   id: identifierSchema,
+  sourcePerformanceProgramContentHash: hashSchema,
   rigManifestContentHash: hashSchema,
   partIds: z.array(identifierSchema).min(2),
   socketIds: z.array(identifierSchema),
@@ -184,6 +185,7 @@ export const localPerformanceInputSchema = z
     episodePlanContentHash: hashSchema,
     continuitySequencePlanContentHash: hashSchema,
     performanceProgramContentHash: hashSchema,
+    rigVisualProgramContentHash: hashSchema,
     rigManifestContentHash: hashSchema,
     entityId: identifierSchema,
     shotId: identifierSchema,
@@ -274,16 +276,22 @@ export interface VisualPerformanceRenderer {
 
 /**
  * Compiles the renderer-facing id allowlists from a sealed articulated rig.
- * There are deliberately no override arguments: local visual authority can
- * only come from identifiers already bound by the manifest content hash.
+ * Local visual authority can only come from identifiers already bound by the
+ * manifest content hash. The separately sealed performance-program hash is an
+ * explicit lineage input; it cannot be confused with this program's own hash.
  */
 export const compileRigVisualProgram = (
   rawManifest: unknown,
+  rawSourcePerformanceProgramContentHash: unknown,
 ): RigVisualProgram => {
   const manifest = articulatedCharacterRigManifestSchema.parse(rawManifest);
+  const sourcePerformanceProgramContentHash = hashSchema.parse(
+    rawSourcePerformanceProgramContentHash,
+  );
   const draft = {
     schemaVersion: "1.0" as const,
     id: `${manifest.manifestId}-visual`,
+    sourcePerformanceProgramContentHash,
     rigManifestContentHash: manifest.contentHash,
     partIds: manifest.parts.map((part) => part.id),
     socketIds: manifest.parts.flatMap((part) =>
@@ -305,9 +313,16 @@ const assertLocalPerformanceInputBindings = (
     throw new Error(
       "Local performance input rig manifest hash does not match its rig visual program.",
     );
-  if (input.performanceProgramContentHash !== input.program.contentHash)
+  if (
+    input.performanceProgramContentHash !==
+    input.program.sourcePerformanceProgramContentHash
+  )
     throw new Error(
-      "Local performance input program hash does not match its rig visual program.",
+      "Local performance input performance program hash does not match its rig visual program source.",
+    );
+  if (input.rigVisualProgramContentHash !== input.program.contentHash)
+    throw new Error(
+      "Local performance input rig visual program hash does not match its rig visual program.",
     );
   if (
     input.visemeId !== null &&

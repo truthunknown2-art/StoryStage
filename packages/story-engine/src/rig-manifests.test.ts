@@ -122,10 +122,17 @@ describe("articulated character rig manifests", () => {
     const manifest = articulatedCharacterRigManifestSchema.parse(
       seal(articulatedDraft()),
     );
-    const program = compileRigVisualProgram(manifest);
+    const performanceProgramContentHash = hashCanonical(
+      "performance-program",
+    );
+    const program = compileRigVisualProgram(
+      manifest,
+      performanceProgramContentHash,
+    );
 
     expect(program).toMatchObject({
       id: "manifest-lead-rig-visual",
+      sourcePerformanceProgramContentHash: performanceProgramContentHash,
       rigManifestContentHash: manifest.contentHash,
       partIds: ["torso", "head", "right-upper-arm"],
       socketIds: ["neck", "right-shoulder", "mouth", "right-elbow"],
@@ -136,7 +143,12 @@ describe("articulated character rig manifests", () => {
 
     const staleManifest = structuredClone(manifest);
     staleManifest.parts[1]!.id = "forged-head";
-    expect(() => compileRigVisualProgram(staleManifest)).toThrow(
+    expect(() =>
+      compileRigVisualProgram(
+        staleManifest,
+        performanceProgramContentHash,
+      ),
+    ).toThrow(
       /hash is invalid/,
     );
   });

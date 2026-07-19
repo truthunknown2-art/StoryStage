@@ -780,7 +780,7 @@ export function sealExecutableEpisodePlan(
             plant?.motionMode !== "idle" ||
             !["settle", "hold"].includes(plant.actionPhase) ||
             plant.gaitStart !== null ||
-            plant.gaitEnd !== null
+            plant.gaitAdvanceCycles !== null
           )
             throw new Error(
               `${continuityShot.shotId}/${entityId} does not stop on its named plant contact.`,

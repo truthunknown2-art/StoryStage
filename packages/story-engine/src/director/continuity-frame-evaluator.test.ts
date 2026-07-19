@@ -5,6 +5,7 @@ import { compileContinuitySequencePlan } from "./continuity-compiler";
 import { sealContinuitySequencePlan } from "./continuity-sequence-plan";
 import { compileDirectorProject } from "./director-compiler";
 import {
+  continuityGaitPhaseAt,
   continuityMotionProgressAt,
   evaluateContinuityFrame,
 } from "./continuity-frame-evaluator";
@@ -22,6 +23,36 @@ const script = Array.from(
 ).join(" ");
 
 describe("canonical continuity frame evaluation", () => {
+  it.each([8, 12, 24, 30])(
+    "preserves forward gait across an unwrapped %i-frame cycle span",
+    (durationInFrames) => {
+      const advanceCycles = durationInFrames / 12;
+      const phases = Array.from({ length: durationInFrames }, (_, frame) =>
+        continuityGaitPhaseAt(
+          0,
+          advanceCycles,
+          frame / Math.max(1, durationInFrames - 1),
+        ),
+      ) as number[];
+      const forwardDeltas = phases.slice(1).map((phase, index) => {
+        const previous = phases[index]!;
+        return (((phase - previous) % 1) + 1) % 1;
+      });
+      const sampledAtlasFrames = new Set(
+        phases.map((phase) => Math.floor(phase * 4) % 4),
+      );
+
+      expect(phases[0]).toBe(0);
+      expect(phases.at(-1)).toBeCloseTo(advanceCycles % 1, 10);
+      expect(forwardDeltas.every((delta) => delta > 0)).toBe(true);
+      expect(forwardDeltas.reduce((sum, delta) => sum + delta, 0)).toBeCloseTo(
+        advanceCycles,
+        10,
+      );
+      expect(sampledAtlasFrames.size).toBeGreaterThan(1);
+    },
+  );
+
   it("resolves exact root boundaries plus camera and transition samples", () => {
     const project = compileDirectorProject({
       storyProject: createCv002Project(
@@ -127,7 +158,7 @@ describe("canonical continuity frame evaluation", () => {
         motionMode: "running",
         actionPhase: "action",
         gaitStart: 0,
-        gaitEnd: 0.5,
+        gaitAdvanceCycles: 0.5,
         performanceProgramId: boundSegment.performanceProgramId,
         performanceProgramContentHash:
           boundSegment.performanceProgramContentHash,
@@ -139,7 +170,7 @@ describe("canonical continuity frame evaluation", () => {
         motionMode: "decelerating",
         actionPhase: "action",
         gaitStart: 0.5,
-        gaitEnd: 0.75,
+        gaitAdvanceCycles: 0.25,
         performanceProgramId: boundSegment.performanceProgramId,
         performanceProgramContentHash:
           boundSegment.performanceProgramContentHash,
@@ -151,7 +182,7 @@ describe("canonical continuity frame evaluation", () => {
         motionMode: "idle",
         actionPhase: "settle",
         gaitStart: null,
-        gaitEnd: null,
+        gaitAdvanceCycles: null,
         performanceProgramId: boundSegment.performanceProgramId,
         performanceProgramContentHash:
           boundSegment.performanceProgramContentHash,
@@ -285,11 +316,25 @@ describe("canonical continuity frame evaluation", () => {
       ),
     });
     const episode = project.executableEpisodePlan;
-    const spanning = episode.performancePrograms.find(
-      (program) => (program.sourceShotIds?.length ?? 0) > 1,
+    const multiShotBeat = project.directorPlan.beats.find(
+      (beat) =>
+        project.directorPlan.shots.filter((shot) =>
+          shot.beatIds.includes(beat.beatId),
+        ).length === 2,
     )!;
-    const allowedShotId = spanning.sourceShotIds![0]!;
-    const forbiddenShotId = spanning.sourceShotIds![1]!;
+    const [allowedShot, forbiddenShot] = project.directorPlan.shots.filter(
+      (shot) => shot.beatIds.includes(multiShotBeat.beatId),
+    );
+    const primaryRequirement = multiShotBeat.performanceRequirements.find(
+      (requirement) =>
+        requirement.requiredEventIds[0] === allowedShot!.entryEventId &&
+        requirement.requiredEventIds.at(-1) === allowedShot!.exitEventId,
+    )!;
+    const primaryProgram = episode.performancePrograms.find(
+      (program) => program.id === primaryRequirement.id,
+    )!;
+
+    expect(primaryProgram.sourceShotIds).toEqual([allowedShot!.id]);
     const recompiled = compileContinuitySequencePlan({
       directorPlan: project.directorPlan,
       timingSolution: project.timingSolution,
@@ -300,17 +345,43 @@ describe("canonical continuity frame evaluation", () => {
         entityId: program.entityId,
         kind: program.kind,
         contentHash: program.contentHash!,
-        sourceShotIds:
-          program.id === spanning.id ? [allowedShotId] : program.sourceShotIds!,
+        sourceShotIds: program.sourceShotIds!,
       })),
     });
-    const forbiddenShot = recompiled.shots.find(
-      (shot) => shot.shotId === forbiddenShotId,
+    const forbiddenContinuityShot = recompiled.shots.find(
+      (shot) => shot.shotId === forbiddenShot!.id,
     )!;
     expect(
-      forbiddenShot.performanceSegments
-        .filter((segment) => segment.entityId === spanning.entityId)
-        .every((segment) => segment.performanceProgramId !== spanning.id),
+      forbiddenContinuityShot.performanceSegments
+        .filter((segment) => segment.entityId === primaryProgram.entityId)
+        .every((segment) => segment.performanceProgramId !== primaryProgram.id),
+    ).toBe(true);
+
+    const explicitlyShared = compileContinuitySequencePlan({
+      directorPlan: project.directorPlan,
+      timingSolution: project.timingSolution,
+      sceneWorlds: project.sceneWorlds,
+      fps: episode.format.fps,
+      performancePrograms: episode.performancePrograms.map((program) => ({
+        id: program.id,
+        entityId: program.entityId,
+        kind: program.kind,
+        contentHash: program.contentHash!,
+        sourceShotIds:
+          program.id === primaryProgram.id
+            ? [allowedShot!.id, forbiddenShot!.id]
+            : program.sourceShotIds!,
+      })),
+    });
+    const explicitlySharedShot = explicitlyShared.shots.find(
+      (shot) => shot.shotId === forbiddenShot!.id,
+    )!;
+    expect(
+      explicitlySharedShot.performanceSegments.some(
+        (segment) =>
+          segment.entityId === primaryProgram.entityId &&
+          segment.performanceProgramId === primaryProgram.id,
+      ),
     ).toBe(true);
   });
 });
@@ -320,6 +391,7 @@ describe("visual performance contract", () => {
     const draft = {
       schemaVersion: "1.0" as const,
       id: "generic-kids-rig",
+      sourcePerformanceProgramContentHash: hashCanonical("performance-program"),
       rigManifestContentHash: hashCanonical("rig-manifest"),
       partIds: ["torso", "head", "upper-arm"],
       socketIds: ["right-hand"],

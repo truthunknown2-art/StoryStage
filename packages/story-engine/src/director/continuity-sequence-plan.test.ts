@@ -91,7 +91,7 @@ const performanceSegments = (
   startFrame: number,
   endFrameExclusive: number,
   gaitStart: number,
-  gaitEnd: number,
+  gaitAdvanceCycles: number,
 ) => [
   {
     entityId: "lead",
@@ -100,7 +100,7 @@ const performanceSegments = (
     motionMode: "running" as const,
     actionPhase: "action" as const,
     gaitStart,
-    gaitEnd,
+    gaitAdvanceCycles,
     performanceProgramId: "lead-run",
     performanceProgramContentHash: hash,
   },
@@ -111,7 +111,7 @@ const performanceSegments = (
     motionMode: "idle" as const,
     actionPhase: "hold" as const,
     gaitStart: null,
-    gaitEnd: null,
+    gaitAdvanceCycles: null,
     performanceProgramId: "support-hold",
     performanceProgramContentHash: hash,
   },
@@ -181,7 +181,7 @@ const draft = (): ContinuitySequencePlanDraft => ({
       exitWorldState: world(59, 0.55),
       entryPerformanceState: performance("running", "action", 0.25),
       exitPerformanceState: performance("running", "action", 0.75),
-      performanceSegments: performanceSegments(30, 60, 0.25, 0.75),
+      performanceSegments: performanceSegments(30, 60, 0.25, 0.5),
       pictureEvents: [
         {
           source: "director-event",

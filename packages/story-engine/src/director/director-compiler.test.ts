@@ -249,6 +249,38 @@ describe("Director Studio Alpha compiler", () => {
     expect(multiShots[0]!.storyFunction).not.toBe(multiShots[1]!.storyFunction);
     expect(multiShots[0]!.exitEventId).not.toBe(multiShots[1]!.exitEventId);
     expect(ranges[0]!.endFrameExclusive).toBe(ranges[1]!.startFrame);
+    const [primaryRequirement, responseRequirement] =
+      multiShotBeat.performanceRequirements;
+    const primaryProgram = first.executableEpisodePlan.performancePrograms.find(
+      (program) => program.id === primaryRequirement!.id,
+    )!;
+    const responseProgram =
+      first.executableEpisodePlan.performancePrograms.find(
+        (program) => program.id === responseRequirement!.id,
+      )!;
+    const primaryExecutableShot = first.executableEpisodePlan.shots.find(
+      (shot) => shot.directorShotId === multiShots[0]!.id,
+    )!;
+    const responseExecutableShot = first.executableEpisodePlan.shots.find(
+      (shot) => shot.directorShotId === multiShots[1]!.id,
+    )!;
+
+    expect(primaryRequirement!.requiredEventIds).toEqual([
+      multiShots[0]!.entryEventId,
+      multiShots[0]!.exitEventId,
+    ]);
+    expect(responseRequirement!.requiredEventIds).toEqual([
+      multiShots[1]!.entryEventId,
+      multiShots[1]!.exitEventId,
+    ]);
+    expect(primaryProgram.sourceShotIds).toEqual([multiShots[0]!.id]);
+    expect(responseProgram.sourceShotIds).toEqual([multiShots[1]!.id]);
+    expect(primaryExecutableShot.performanceProgramIds).toEqual([
+      primaryRequirement!.id,
+    ]);
+    expect(responseExecutableShot.performanceProgramIds).toEqual([
+      responseRequirement!.id,
+    ]);
     expect(
       first.executableEpisodePlan.proxyCaptionPrograms?.filter(
         (caption) => caption.beatId === multiShotBeat.beatId,

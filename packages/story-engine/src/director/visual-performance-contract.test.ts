@@ -14,6 +14,7 @@ const createProgram = () => {
   const draft = {
     schemaVersion: "1.0" as const,
     id: "generic-kids-rig",
+    sourcePerformanceProgramContentHash: hash("performance-program"),
     rigManifestContentHash: hash("rig-manifest"),
     partIds: ["torso", "head"],
     socketIds: ["right-hand"],
@@ -32,7 +33,9 @@ const createInput = (): LocalPerformanceInput => {
     schemaVersion: "1.0",
     episodePlanContentHash: hash("episode"),
     continuitySequencePlanContentHash: hash("continuity"),
-    performanceProgramContentHash: program.contentHash,
+    performanceProgramContentHash:
+      program.sourcePerformanceProgramContentHash,
+    rigVisualProgramContentHash: program.contentHash,
     rigManifestContentHash: program.rigManifestContentHash,
     entityId: "lead",
     shotId: "shot-001",
@@ -228,7 +231,45 @@ describe("fail-closed local performance evaluation", () => {
         ...createInput(),
         performanceProgramContentHash: hash("stale-program"),
       }),
-    ).toThrow(/program hash/);
+    ).toThrow(/performance program hash/);
+    expect(renderer.evaluate).not.toHaveBeenCalled();
+
+    expect(() =>
+      evaluateLocalPerformance(renderer, {
+        ...createInput(),
+        rigVisualProgramContentHash: hash("stale-rig-visual-program"),
+      }),
+    ).toThrow(/rig visual program hash/);
+    expect(renderer.evaluate).not.toHaveBeenCalled();
+  });
+
+  it("never accepts a hash from a different artifact domain", () => {
+    const input = createInput();
+    expect(input.performanceProgramContentHash).not.toBe(
+      input.rigVisualProgramContentHash,
+    );
+    expect(input.rigVisualProgramContentHash).not.toBe(
+      input.rigManifestContentHash,
+    );
+
+    expect(() =>
+      evaluateLocalPerformance(rendererReturning(createOutput()), {
+        ...input,
+        performanceProgramContentHash: input.rigVisualProgramContentHash,
+      }),
+    ).toThrow(/performance program hash/);
+    expect(() =>
+      evaluateLocalPerformance(rendererReturning(createOutput()), {
+        ...input,
+        rigVisualProgramContentHash: input.rigManifestContentHash,
+      }),
+    ).toThrow(/rig visual program hash/);
+    expect(() =>
+      evaluateLocalPerformance(rendererReturning(createOutput()), {
+        ...input,
+        rigManifestContentHash: input.rigVisualProgramContentHash,
+      }),
+    ).toThrow(/rig manifest hash/);
   });
 
   it("rejects reserved root parts and whole-actor opacity", () => {

@@ -35,16 +35,13 @@ const lifecycleVisible = (lifecycle: ResolvedEntityFrame["lifecycle"]) =>
   lifecycle === "onstage" ||
   lifecycle === "exiting";
 
-const gaitAt = (
+export const continuityGaitPhaseAt = (
   entry: number | null,
-  exit: number | null,
+  advanceCycles: number | null,
   progress: number,
 ) => {
-  if (entry === null || exit === null) return progress < 0.5 ? entry : exit;
-  const direct = exit - entry;
-  const delta =
-    Math.abs(direct) <= 0.5 ? direct : direct > 0 ? direct - 1 : direct + 1;
-  return (entry + delta * progress + 1) % 1;
+  if (entry === null || advanceCycles === null) return null;
+  return ((entry + advanceCycles * progress) % 1 + 1) % 1;
 };
 
 export const continuityMotionProgressAt = (
@@ -337,9 +334,9 @@ export function evaluateContinuityFrame(
             motionMode: performanceSegment.motionMode,
             actionPhase: performanceSegment.actionPhase,
             phaseProgress,
-            gaitPhase: gaitAt(
+            gaitPhase: continuityGaitPhaseAt(
               performanceSegment.gaitStart,
-              performanceSegment.gaitEnd,
+              performanceSegment.gaitAdvanceCycles,
               phaseProgress,
             ),
             visemeId,
