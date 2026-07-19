@@ -38,6 +38,10 @@ type CreatorScreen =
   | "draft-review"
   | "kids-showcase";
 type StudioEntryMode = "new-first-cut" | "continue-saved";
+type EngineeringDemoConfirmation =
+  | "discard-setup"
+  | "replace-demo"
+  | "discard-setup-and-replace-demo";
 type KidsArtDirection =
   | "storybook-watercolor"
   | "cut-paper-collage"
@@ -192,6 +196,8 @@ export function Cv001CreatorApp({
     restored.notice ?? restoredDraft.notice,
   );
   const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false);
+  const [engineeringDemoConfirmation, setEngineeringDemoConfirmation] =
+    useState<EngineeringDemoConfirmation | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -348,18 +354,13 @@ export function Cv001CreatorApp({
   const submitProject = () =>
     isLanternRoute ? createFirstCut() : createDraft();
 
-  const openEngineeringAnimationDemo = () => {
+  const launchEngineeringAnimationDemo = () => {
     const demoTitle = "The Lantern Discovery";
     setTitle(demoTitle);
     setTitleIsAutomatic(true);
     setScript(CV001_DEFAULT_SCRIPT);
     setGrammar("kids-adventure");
     setArtDirection("storybook-watercolor");
-    if (project && project.history.length > 0) {
-      setSetupChanged(true);
-      setReplaceConfirmOpen(true);
-      return;
-    }
     const next = createCv001CreatorProject({
       title: demoTitle,
       script: CV001_DEFAULT_SCRIPT,
@@ -374,10 +375,28 @@ export function Cv001CreatorApp({
       }),
     );
     setSetupChanged(false);
+    setEngineeringDemoConfirmation(null);
     setReplaceConfirmOpen(false);
     setNotice(null);
     setStudioEntryMode("new-first-cut");
     setScreen("creator-studio");
+  };
+
+  const openEngineeringAnimationDemo = () => {
+    const replacesEditedDemo = Boolean(project && project.history.length > 0);
+    if (hasUnsavedSetupChanges && replacesEditedDemo) {
+      setEngineeringDemoConfirmation("discard-setup-and-replace-demo");
+      return;
+    }
+    if (hasUnsavedSetupChanges) {
+      setEngineeringDemoConfirmation("discard-setup");
+      return;
+    }
+    if (replacesEditedDemo) {
+      setEngineeringDemoConfirmation("replace-demo");
+      return;
+    }
+    launchEngineeringAnimationDemo();
   };
 
   const importScriptFile = (file: File) => {
@@ -773,7 +792,7 @@ export function Cv001CreatorApp({
             <p className="cv-create-boundary">
               {isLanternRoute
                 ? "Engineering prototype art · articulated motion demo · no voice or export"
-                : "Draft breakdown only · no generated art, voice, animation, or export"}
+                : "Draft breakdown only · proxy animatic only, no final character animation, voice, or export"}
             </p>
           </aside>
 
@@ -828,6 +847,44 @@ export function Cv001CreatorApp({
               </button>
               <button onClick={() => createFirstCut(true)} type="button">
                 Replace and create
+              </button>
+            </div>
+          ) : null}
+
+          {engineeringDemoConfirmation ? (
+            <div
+              aria-label="Confirm opening engineering animation demo"
+              className="cv-replace-confirm"
+              role="alertdialog"
+            >
+              <p>
+                <strong>
+                  {engineeringDemoConfirmation ===
+                  "discard-setup-and-replace-demo"
+                    ? "Discard setup and replace the edited demo?"
+                    : engineeringDemoConfirmation === "discard-setup"
+                      ? "Discard unsaved setup changes?"
+                      : "Replace the edited engineering demo?"}
+                </strong>
+                <span>
+                  {engineeringDemoConfirmation ===
+                  "discard-setup-and-replace-demo"
+                    ? "Opening the engineering demo replaces this unsaved setup and clears the demo's direction history."
+                    : engineeringDemoConfirmation === "discard-setup"
+                      ? "Opening the engineering demo replaces the title, script, grammar, and art direction currently in this form."
+                      : "Opening a fresh engineering demo clears its saved direction history."}
+                </span>
+              </p>
+              <button
+                onClick={() => setEngineeringDemoConfirmation(null)}
+                type="button"
+              >
+                Keep editing
+              </button>
+              <button onClick={launchEngineeringAnimationDemo} type="button">
+                {engineeringDemoConfirmation === "replace-demo"
+                  ? "Replace and open demo"
+                  : "Discard and open demo"}
               </button>
             </div>
           ) : null}

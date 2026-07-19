@@ -226,6 +226,90 @@ describe("CV-001 creator shell", () => {
     expect(screen.getByText("Unsaved setup changes")).toBeInTheDocument();
   });
 
+  it("does not discard dirty setup when opening the demo without an existing prototype", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "The Protected Draft" },
+    });
+    fireEvent.change(screen.getByLabelText("Script"), {
+      target: { value: ARBITRARY_SCRIPT },
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Open engineering animation demo" }),
+    );
+
+    expect(
+      screen.getByRole("alertdialog", {
+        name: "Confirm opening engineering animation demo",
+      }),
+    ).toHaveTextContent("Discard unsaved setup changes?");
+    expect(screen.getByLabelText("Title")).toHaveValue("The Protected Draft");
+    expect(screen.getByLabelText("Script")).toHaveValue(ARBITRARY_SCRIPT);
+    expect(screen.queryByLabelText("Animated preview")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Keep editing" }));
+
+    expect(
+      screen.queryByRole("alertdialog", {
+        name: "Confirm opening engineering animation demo",
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toHaveValue("The Protected Draft");
+    expect(screen.getByLabelText("Script")).toHaveValue(ARBITRARY_SCRIPT);
+  });
+
+  it("keeps exact dirty setup when an edited demo exists and confirmation is cancelled", async () => {
+    const user = await openStudio();
+    await user.type(
+      screen.getByLabelText("What should change?"),
+      "Make the reaction bigger.",
+    );
+    await user.click(screen.getByRole("button", { name: "Update beat" }));
+    await user.click(screen.getByRole("button", { name: "Back to Create" }));
+
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "The Exact Protected Setup" },
+    });
+    fireEvent.change(screen.getByLabelText("Script"), {
+      target: { value: ARBITRARY_SCRIPT },
+    });
+    await user.click(screen.getByRole("button", { name: /Cut Paper Collage/ }));
+    await user.click(screen.getByRole("button", { name: /Weird History/ }));
+
+    await user.click(
+      screen.getByRole("button", { name: "Open engineering animation demo" }),
+    );
+
+    expect(
+      screen.getByRole("alertdialog", {
+        name: "Confirm opening engineering animation demo",
+      }),
+    ).toHaveTextContent("Discard setup and replace the edited demo?");
+    expect(screen.getByLabelText("Title")).toHaveValue(
+      "The Exact Protected Setup",
+    );
+    expect(screen.getByLabelText("Script")).toHaveValue(ARBITRARY_SCRIPT);
+    expect(
+      screen.getByRole("button", { name: /^Weird History Explainer/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "Keep editing" }));
+
+    expect(screen.getByLabelText("Title")).toHaveValue(
+      "The Exact Protected Setup",
+    );
+    expect(screen.getByLabelText("Script")).toHaveValue(ARBITRARY_SCRIPT);
+    expect(
+      screen.getByRole("button", { name: /^Weird History Explainer/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: /Kids Adventure/ }));
+    expect(
+      screen.getByRole("button", { name: /Cut Paper Collage/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("does not call a fresh Ollo setup saved merely because older work reloads", async () => {
     const user = userEvent.setup();
     render(<App />);
