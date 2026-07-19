@@ -128,6 +128,7 @@ export type {
   VisualPerformanceRenderer,
 } from "./visual-performance-contract";
 export { createCv002Project, restoreCv002Project } from "../cv002-story-draft";
+export { createCv002ArtDirectionSelection } from "../cv002-art-direction";
 export type { Cv002Project, Cv002Grammar } from "../cv002-story-draft";
 export { hashCanonical } from "../canonical-hash";
 export { articulatedCharacterRigManifestSchema } from "../rig-manifests";

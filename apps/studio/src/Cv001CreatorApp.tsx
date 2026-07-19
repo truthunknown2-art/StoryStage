@@ -1,4 +1,5 @@
 import {
+  createCv002ArtDirectionSelection,
   createCv002Project,
   createCv001CreatorProject,
   createCv001ThreeBeatProofFixture,
@@ -42,6 +43,12 @@ type KidsArtDirection =
   | "storybook-watercolor"
   | "cut-paper-collage"
   | "soft-2d-illustration";
+
+const KIDS_ART_DIRECTION_OPTION_IDS = {
+  "storybook-watercolor": "storybook-watercolor-paper-cutout",
+  "cut-paper-collage": "cut-paper-collage-mixed-media",
+  "soft-2d-illustration": "soft-2d-digital-illustration",
+} as const satisfies Record<KidsArtDirection, string>;
 
 const CV002_DRAFT_STORAGE_KEY = "storystage.cv002.draft.v1";
 const HISTORY_SAMPLE = `In 1867, Alaska was sold to the United States for 7.2 million dollars. Newspapers mocked the deal as a frozen mistake, because many editors imagined nothing but ice, fog, and very expensive polar bears. The purchase looked like a punchline waiting for history to finish it.
@@ -192,11 +199,21 @@ export function Cv001CreatorApp({
   const draftPreviewProject = useMemo(() => {
     if (isLanternRoute || draftScriptError) return null;
     try {
-      return createCv002Project(title, script, grammar);
+      return createCv002Project(
+        title,
+        script,
+        grammar,
+        createCv002ArtDirectionSelection(
+          grammar,
+          grammar === "kids-adventure"
+            ? KIDS_ART_DIRECTION_OPTION_IDS[artDirection]
+            : "weird-history-editorial-collage",
+        ),
+      );
     } catch {
       return null;
     }
-  }, [draftScriptError, grammar, isLanternRoute, script, title]);
+  }, [artDirection, draftScriptError, grammar, isLanternRoute, script, title]);
   const allDraftBeats = useMemo(
     () =>
       draftPreviewProject?.graph.scenes.flatMap((scene) => scene.beats) ?? [],
@@ -247,7 +264,17 @@ export function Cv001CreatorApp({
 
   const createDraft = () => {
     try {
-      const next = createCv002Project(title, script, grammar);
+      const next = createCv002Project(
+        title,
+        script,
+        grammar,
+        createCv002ArtDirectionSelection(
+          grammar,
+          grammar === "kids-adventure"
+            ? KIDS_ART_DIRECTION_OPTION_IDS[artDirection]
+            : "weird-history-editorial-collage",
+        ),
+      );
       saveDraftProject(next);
       setNotice(null);
       setScreen("draft-review");
