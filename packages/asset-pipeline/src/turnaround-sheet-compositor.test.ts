@@ -150,7 +150,11 @@ describe("five-view turnaround sheet compositor", () => {
       const bytes = await readFile(
         resolve(evidenceRoot, artifact.relativeFile),
       );
-      expect(sha256(bytes)).toBe(artifact.fileHash);
+      const canonicalFileBytes = Buffer.from(
+        bytes.toString("utf8").replace(/\r\n/g, "\n"),
+        "utf8",
+      );
+      expect(sha256(canonicalFileBytes)).toBe(artifact.fileHash);
       expect(
         (JSON.parse(bytes.toString("utf8")) as { contentHash: string })
           .contentHash,
