@@ -1026,6 +1026,73 @@ export function restoreEditorialPlanningRequest(
   return restored;
 }
 
+export const editorialPlanningLaneSchema = z.enum([
+  "heuristic-control",
+  "external-candidate",
+  "manual-candidate",
+]);
+
+const editorialPlanningRunSpecFields = {
+  schemaVersion: z.literal("1.0"),
+  authority: z.literal("editorial-planning-run-spec-diagnostic-only"),
+  productionBindable: z.literal(false),
+  requestContentHash: hashSchema,
+  lane: editorialPlanningLaneSchema,
+  fallbackAllowed: z.literal(false),
+};
+
+export const editorialPlanningRunSpecSchema = sealedSchema(
+  editorialPlanningRunSpecFields,
+  "Editorial planning run spec hash is invalid.",
+);
+
+export type EditorialPlanningRunSpec = z.infer<
+  typeof editorialPlanningRunSpecSchema
+>;
+
+export function sealEditorialPlanningRunSpec(input: {
+  request: EditorialPlanningRequest;
+  lane: z.infer<typeof editorialPlanningLaneSchema>;
+}): EditorialPlanningRunSpec {
+  const request = editorialPlanningRequestSchema.parse(input.request);
+  const draft = {
+    schemaVersion: "1.0" as const,
+    authority: "editorial-planning-run-spec-diagnostic-only" as const,
+    productionBindable: false as const,
+    requestContentHash: request.contentHash,
+    lane: editorialPlanningLaneSchema.parse(input.lane),
+    fallbackAllowed: false as const,
+  };
+  return editorialPlanningRunSpecSchema.parse(seal(draft));
+}
+
+export function assertEditorialPlanningRunSpecMatchesRequest(input: {
+  request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
+}): EditorialPlanningRunSpec {
+  const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = editorialPlanningRunSpecSchema.parse(input.runSpec);
+  if (runSpec.requestContentHash !== request.contentHash)
+    throw new Error("Editorial planning run spec is stale for its request.");
+  const expected = sealEditorialPlanningRunSpec({
+    request,
+    lane: runSpec.lane,
+  });
+  if (!same(runSpec, expected))
+    throw new Error("Editorial planning run spec does not match its request.");
+  return runSpec;
+}
+
+export function restoreEditorialPlanningRunSpec(input: {
+  serialized: string;
+  request: EditorialPlanningRequest;
+}): EditorialPlanningRunSpec {
+  return assertEditorialPlanningRunSpecMatchesRequest({
+    request: input.request,
+    runSpec: editorialPlanningRunSpecSchema.parse(JSON.parse(input.serialized)),
+  });
+}
+
 const purposeSchema = z
   .object({
     primaryPurpose: editorialPrimaryPurposeSchema,
@@ -1050,7 +1117,7 @@ const externalEditorialShotSchema = z
     beatRefs: z.array(identifierSchema).min(1),
     coverageRole: editorialCoverageRoleSchema,
     stageRef: identifierSchema,
-    subjectBlocking: z.array(subjectBlockingSchema).min(1),
+    subjectBlocking: z.array(subjectBlockingSchema),
     propRefs: z.array(identifierSchema),
     causalActionRefs: z.array(identifierSchema).min(1),
     purpose: purposeSchema,
@@ -1389,6 +1456,8 @@ export function bindEditorialDirectorProposalV1(input: {
       const stageByRef = new Map(
         requestScene.stages.map((stage) => [stage.stageRef, stage] as const),
       );
+      let previousFirstBeatIndex = -1;
+      let previousLastBeatIndex = -1;
       const editorialShots = scene.editorialShots.map((shot, shotIndex) => {
         if (shot.localOrdinal !== shotIndex)
           throw new Error(
@@ -1408,6 +1477,17 @@ export function bindEditorialDirectorProposalV1(input: {
           throw new Error(
             "Editorial shot beat refs must be forward and contiguous.",
           );
+        const firstBeatIndex = beatIndexes[0]!;
+        const lastBeatIndex = beatIndexes[beatIndexes.length - 1]!;
+        if (
+          firstBeatIndex < previousFirstBeatIndex ||
+          lastBeatIndex < previousLastBeatIndex
+        )
+          throw new Error(
+            "Editorial shots must preserve nondecreasing first and last source beat order.",
+          );
+        previousFirstBeatIndex = firstBeatIndex;
+        previousLastBeatIndex = lastBeatIndex;
         const stage = stageByRef.get(shot.stageRef);
         if (!stage)
           throw new Error(`Foreign editorial stage ${shot.stageRef}.`);
@@ -1457,15 +1537,32 @@ export function bindEditorialDirectorProposalV1(input: {
           throw new Error(
             "Editorial subject blocking must be unique per subject.",
           );
+        if (
+          shot.subjectBlocking.length === 0 &&
+          (shot.coverageRole === "primary-performance" ||
+            shot.coverageRole === "listener-reaction" ||
+            shot.purpose.primaryPurpose === "feel")
+        )
+          throw new Error(
+            "Editorial performance, listener reaction, and feeling shots require a blocked subject.",
+          );
+        if (
+          shot.subjectBlocking.length === 0 &&
+          shot.requestedCapabilityRefs.length > 0
+        )
+          throw new Error(
+            "A subjectless editorial shot cannot request subject capabilities.",
+          );
         shot.propRefs.forEach((propRef) =>
           requireMember(propRefs, propRef, "prop ref"),
         );
-        const expectedActionRefs = new Set(
+        const expectedActionRefs = canonicalSet(
           shot.beatRefs.map((beatRef) => actionRefByBeat.get(beatRef)!),
         );
-        shot.causalActionRefs.forEach((actionRef) =>
-          requireMember(expectedActionRefs, actionRef, "causal action ref"),
-        );
+        if (!same(shot.causalActionRefs, expectedActionRefs))
+          throw new Error(
+            "Editorial causal action refs must equal the canonical action set of every covered beat.",
+          );
         const depthIndexes = shot.compositionIntent.depthPlaneRefs.map(
           (depthPlaneRef) => {
             const depthIndex = depthIndexByRef.get(depthPlaneRef);
@@ -1711,6 +1808,8 @@ const editorialPlanningInvocationReceiptFields = {
   authority: z.literal("editorial-planning-invocation-provenance"),
   productionBindable: z.literal(false),
   requestContentHash: hashSchema,
+  runSpecContentHash: hashSchema,
+  lane: z.literal("external-candidate"),
   proposalContentHash: hashSchema,
   providerId: identifierSchema,
   modelId: identifierSchema,
@@ -1746,6 +1845,7 @@ export type EditorialPlanningInvocationReceipt = z.infer<
 
 export function sealEditorialPlanningInvocationReceipt(input: {
   request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
   proposal: EditorialDirectorProposalV1;
   providerId: string;
   modelId: string;
@@ -1757,6 +1857,14 @@ export function sealEditorialPlanningInvocationReceipt(input: {
   completedAt: string;
 }): EditorialPlanningInvocationReceipt {
   const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.runSpec,
+  });
+  if (runSpec.lane !== "external-candidate")
+    throw new Error(
+      "External invocation receipts require the external-candidate lane.",
+    );
   const proposal = assertEditorialProposalMatchesRequest({
     request,
     proposal: input.proposal,
@@ -1766,6 +1874,8 @@ export function sealEditorialPlanningInvocationReceipt(input: {
     authority: "editorial-planning-invocation-provenance" as const,
     productionBindable: false as const,
     requestContentHash: request.contentHash,
+    runSpecContentHash: runSpec.contentHash,
+    lane: "external-candidate" as const,
     proposalContentHash: proposal.contentHash,
     providerId: identifierSchema.parse(input.providerId),
     modelId: identifierSchema.parse(input.modelId),
@@ -1787,8 +1897,13 @@ export function sealEditorialPlanningInvocationReceipt(input: {
 export function restoreEditorialPlanningInvocationReceipt(input: {
   serialized: string;
   request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
   proposal: EditorialDirectorProposalV1;
 }): EditorialPlanningInvocationReceipt {
+  assertEditorialPlanningRunSpecMatchesRequest({
+    request: input.request,
+    runSpec: input.runSpec,
+  });
   assertEditorialProposalMatchesRequest({
     request: input.request,
     proposal: input.proposal,
@@ -1798,6 +1913,7 @@ export function restoreEditorialPlanningInvocationReceipt(input: {
   );
   const expected = sealEditorialPlanningInvocationReceipt({
     request: input.request,
+    runSpec: input.runSpec,
     proposal: input.proposal,
     providerId: restored.providerId,
     modelId: restored.modelId,
@@ -1815,14 +1931,266 @@ export function restoreEditorialPlanningInvocationReceipt(input: {
   return restored;
 }
 
-const diagnosticFindingSchema = z
-  .object({
-    id: identifierSchema,
-    severity: z.enum(["hard", "warning", "information"]),
-    code: identifierSchema,
-    message: z.string().trim().min(1).max(500),
-  })
-  .strict();
+const editorialHeuristicPlanningReceiptFields = {
+  schemaVersion: z.literal("1.0"),
+  authority: z.literal("editorial-planning-heuristic-provenance"),
+  productionBindable: z.literal(false),
+  requestContentHash: hashSchema,
+  runSpecContentHash: hashSchema,
+  lane: z.literal("heuristic-control"),
+  proposalContentHash: hashSchema,
+  plannerId: identifierSchema,
+  plannerVersion: z.string().trim().min(1).max(120),
+  startedAt: z.string().datetime(),
+  completedAt: z.string().datetime(),
+};
+
+export const editorialHeuristicPlanningReceiptSchema = sealedSchema(
+  editorialHeuristicPlanningReceiptFields,
+  "Editorial heuristic planning receipt hash is invalid.",
+).superRefine((receipt, context) => {
+  if (Date.parse(receipt.completedAt) < Date.parse(receipt.startedAt))
+    context.addIssue({
+      code: "custom",
+      path: ["completedAt"],
+      message: "Heuristic planning completion cannot precede its start.",
+    });
+});
+
+export type EditorialHeuristicPlanningReceipt = z.infer<
+  typeof editorialHeuristicPlanningReceiptSchema
+>;
+
+export function sealEditorialHeuristicPlanningReceipt(input: {
+  request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
+  proposal: EditorialDirectorProposalV1;
+  plannerId: string;
+  plannerVersion: string;
+  startedAt: string;
+  completedAt: string;
+}): EditorialHeuristicPlanningReceipt {
+  const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.runSpec,
+  });
+  if (runSpec.lane !== "heuristic-control")
+    throw new Error(
+      "Heuristic planning receipts require the heuristic-control lane.",
+    );
+  const proposal = assertEditorialProposalMatchesRequest({
+    request,
+    proposal: input.proposal,
+  });
+  const draft = {
+    schemaVersion: "1.0" as const,
+    authority: "editorial-planning-heuristic-provenance" as const,
+    productionBindable: false as const,
+    requestContentHash: request.contentHash,
+    runSpecContentHash: runSpec.contentHash,
+    lane: "heuristic-control" as const,
+    proposalContentHash: proposal.contentHash,
+    plannerId: identifierSchema.parse(input.plannerId),
+    plannerVersion: input.plannerVersion,
+    startedAt: input.startedAt,
+    completedAt: input.completedAt,
+  };
+  return editorialHeuristicPlanningReceiptSchema.parse(seal(draft));
+}
+
+export function restoreEditorialHeuristicPlanningReceipt(input: {
+  serialized: string;
+  request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
+  proposal: EditorialDirectorProposalV1;
+}): EditorialHeuristicPlanningReceipt {
+  const restored = editorialHeuristicPlanningReceiptSchema.parse(
+    JSON.parse(input.serialized),
+  );
+  const expected = sealEditorialHeuristicPlanningReceipt({
+    request: input.request,
+    runSpec: input.runSpec,
+    proposal: input.proposal,
+    plannerId: restored.plannerId,
+    plannerVersion: restored.plannerVersion,
+    startedAt: restored.startedAt,
+    completedAt: restored.completedAt,
+  });
+  if (!same(restored, expected))
+    throw new Error(
+      "Heuristic receipt does not restore against exact artifacts.",
+    );
+  return restored;
+}
+
+const editorialManualPlanningReceiptFields = {
+  schemaVersion: z.literal("1.0"),
+  authority: z.literal("editorial-planning-manual-authorship"),
+  productionBindable: z.literal(false),
+  requestContentHash: hashSchema,
+  runSpecContentHash: hashSchema,
+  lane: z.literal("manual-candidate"),
+  proposalContentHash: hashSchema,
+  authorId: identifierSchema,
+  authorshipEvidenceContentHash: hashSchema,
+  authoredAt: z.string().datetime(),
+};
+
+export const editorialManualPlanningReceiptSchema = sealedSchema(
+  editorialManualPlanningReceiptFields,
+  "Editorial manual planning receipt hash is invalid.",
+);
+
+export type EditorialManualPlanningReceipt = z.infer<
+  typeof editorialManualPlanningReceiptSchema
+>;
+
+export function sealEditorialManualPlanningReceipt(input: {
+  request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
+  proposal: EditorialDirectorProposalV1;
+  authorId: string;
+  authorshipEvidenceContentHash: string;
+  authoredAt: string;
+}): EditorialManualPlanningReceipt {
+  const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.runSpec,
+  });
+  if (runSpec.lane !== "manual-candidate")
+    throw new Error(
+      "Manual planning receipts require the manual-candidate lane.",
+    );
+  const proposal = assertEditorialProposalMatchesRequest({
+    request,
+    proposal: input.proposal,
+  });
+  const draft = {
+    schemaVersion: "1.0" as const,
+    authority: "editorial-planning-manual-authorship" as const,
+    productionBindable: false as const,
+    requestContentHash: request.contentHash,
+    runSpecContentHash: runSpec.contentHash,
+    lane: "manual-candidate" as const,
+    proposalContentHash: proposal.contentHash,
+    authorId: identifierSchema.parse(input.authorId),
+    authorshipEvidenceContentHash: hashSchema.parse(
+      input.authorshipEvidenceContentHash,
+    ),
+    authoredAt: input.authoredAt,
+  };
+  return editorialManualPlanningReceiptSchema.parse(seal(draft));
+}
+
+export function restoreEditorialManualPlanningReceipt(input: {
+  serialized: string;
+  request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
+  proposal: EditorialDirectorProposalV1;
+}): EditorialManualPlanningReceipt {
+  const restored = editorialManualPlanningReceiptSchema.parse(
+    JSON.parse(input.serialized),
+  );
+  const expected = sealEditorialManualPlanningReceipt({
+    request: input.request,
+    runSpec: input.runSpec,
+    proposal: input.proposal,
+    authorId: restored.authorId,
+    authorshipEvidenceContentHash: restored.authorshipEvidenceContentHash,
+    authoredAt: restored.authoredAt,
+  });
+  if (!same(restored, expected))
+    throw new Error("Manual receipt does not restore against exact artifacts.");
+  return restored;
+}
+
+export const editorialPlanningReceiptSchema = z.union([
+  editorialHeuristicPlanningReceiptSchema,
+  editorialPlanningInvocationReceiptSchema,
+  editorialManualPlanningReceiptSchema,
+]);
+
+export type EditorialPlanningReceipt = z.infer<
+  typeof editorialPlanningReceiptSchema
+>;
+
+export function assertEditorialPlanningReceiptMatchesArtifacts(input: {
+  request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
+  proposal: EditorialDirectorProposalV1;
+  receipt: EditorialPlanningReceipt;
+}): EditorialPlanningReceipt {
+  const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.runSpec,
+  });
+  const proposal = assertEditorialProposalMatchesRequest({
+    request,
+    proposal: input.proposal,
+  });
+  const receipt = editorialPlanningReceiptSchema.parse(input.receipt);
+  if (
+    receipt.requestContentHash !== request.contentHash ||
+    receipt.runSpecContentHash !== runSpec.contentHash ||
+    receipt.proposalContentHash !== proposal.contentHash
+  )
+    throw new Error("Planning receipt is stale for its exact artifacts.");
+  if (receipt.lane !== runSpec.lane)
+    throw new Error("Planning receipt lane does not match its run spec.");
+  return receipt;
+}
+
+export const editorialHardDiagnosticCodeSchema = z.enum([
+  "schema-invalid",
+  "stale-request",
+  "foreign-reference",
+  "coverage-invalid",
+  "vocabulary-invalid",
+  "continuity-invalid",
+  "capability-invalid",
+  "timing-budget-invalid",
+]);
+
+const editorialHardDiagnosticCodes = new Set<string>(
+  editorialHardDiagnosticCodeSchema.options,
+);
+
+const editorialQualityDiagnosticCodeSchema = identifierSchema.refine(
+  (code) => !editorialHardDiagnosticCodes.has(code),
+  "Hard diagnostic codes are reserved for hard findings.",
+);
+
+const diagnosticFindingBase = {
+  id: identifierSchema,
+  message: z.string().trim().min(1).max(500),
+};
+
+const diagnosticFindingSchema = z.discriminatedUnion("severity", [
+  z
+    .object({
+      ...diagnosticFindingBase,
+      severity: z.literal("hard"),
+      code: editorialHardDiagnosticCodeSchema,
+    })
+    .strict(),
+  z
+    .object({
+      ...diagnosticFindingBase,
+      severity: z.literal("warning"),
+      code: editorialQualityDiagnosticCodeSchema,
+    })
+    .strict(),
+  z
+    .object({
+      ...diagnosticFindingBase,
+      severity: z.literal("information"),
+      code: editorialQualityDiagnosticCodeSchema,
+    })
+    .strict(),
+]);
 
 const editorialPlanningDiagnosticsFields = {
   schemaVersion: z.literal("1.0"),
@@ -1882,6 +2250,7 @@ const planningResultBase = {
   authority: z.literal("editorial-pilot-diagnostic-only"),
   productionBindable: z.literal(false),
   requestContentHash: hashSchema,
+  runSpecContentHash: hashSchema,
 };
 
 const acceptedResultFields = {
@@ -1889,7 +2258,7 @@ const acceptedResultFields = {
   status: z.literal("accepted"),
   proposalContentHash: hashSchema,
   diagnosticsContentHash: hashSchema,
-  invocationReceiptContentHash: hashSchema.nullable(),
+  planningReceiptContentHash: hashSchema,
   revisionRound: z.union([z.literal(0), z.literal(1)]),
   fallbackUsed: z.literal(false),
   contentHash: hashSchema,
@@ -1901,7 +2270,7 @@ const rejectedResultFields = {
   rejectedProposalContentHash: hashSchema.nullable(),
   rejectedIntentContentHash: hashSchema.nullable(),
   diagnosticsContentHash: hashSchema,
-  invocationReceiptContentHash: hashSchema.nullable(),
+  planningReceiptContentHash: hashSchema,
   reasonCodes: z
     .array(
       z.enum([
@@ -1929,7 +2298,7 @@ const revisionResultFields = {
   qualityDiagnosticsContentHash: hashSchema,
   addressedFindingIds: z.array(identifierSchema).min(1),
   successorProposalContentHash: hashSchema,
-  successorInvocationReceiptContentHash: hashSchema.nullable(),
+  successorPlanningReceiptContentHash: hashSchema,
   revisionRound: z.literal(1),
   fallbackUsed: z.literal(false),
   contentHash: hashSchema,
@@ -1965,21 +2334,19 @@ export type EditorialPlanningResult = z.infer<
 >;
 
 const assertReceipt = (
-  receipt: EditorialPlanningInvocationReceipt | null,
+  receipt: EditorialPlanningReceipt,
   request: EditorialPlanningRequest,
+  runSpec: EditorialPlanningRunSpec,
   proposal: EditorialDirectorProposalV1,
 ) => {
-  const requestBoundProposal = assertEditorialProposalMatchesRequest({
+  if (!receipt)
+    throw new Error("Every editorial planning result requires a lane receipt.");
+  return assertEditorialPlanningReceiptMatchesArtifacts({
     request,
+    runSpec,
     proposal,
+    receipt,
   });
-  if (!receipt) return;
-  const parsed = editorialPlanningInvocationReceiptSchema.parse(receipt);
-  if (
-    parsed.requestContentHash !== request.contentHash ||
-    parsed.proposalContentHash !== requestBoundProposal.contentHash
-  )
-    throw new Error("Invocation receipt is stale for its result artifacts.");
 };
 
 const assertDiagnostics = (
@@ -2001,12 +2368,17 @@ const assertDiagnostics = (
 
 export function sealEditorialAcceptedResult(input: {
   request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
   proposal: EditorialDirectorProposalV1;
   diagnostics: EditorialPlanningDiagnostics;
-  invocationReceipt: EditorialPlanningInvocationReceipt | null;
+  planningReceipt: EditorialPlanningReceipt;
   revisionRound: 0 | 1;
 }): EditorialPlanningResult {
   const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.runSpec,
+  });
   const proposal = assertEditorialProposalMatchesRequest({
     request,
     proposal: input.proposal,
@@ -2014,16 +2386,22 @@ export function sealEditorialAcceptedResult(input: {
   const diagnostics = assertDiagnostics(input.diagnostics, request, proposal);
   if (diagnostics.findings.some((finding) => finding.severity === "hard"))
     throw new Error("A proposal with hard diagnostics cannot be accepted.");
-  assertReceipt(input.invocationReceipt, request, proposal);
+  const receipt = assertReceipt(
+    input.planningReceipt,
+    request,
+    runSpec,
+    proposal,
+  );
   const draft = {
     schemaVersion: "1.0" as const,
     authority: "editorial-pilot-diagnostic-only" as const,
     productionBindable: false as const,
     requestContentHash: request.contentHash,
+    runSpecContentHash: runSpec.contentHash,
     status: "accepted" as const,
     proposalContentHash: proposal.contentHash,
     diagnosticsContentHash: diagnostics.contentHash,
-    invocationReceiptContentHash: input.invocationReceipt?.contentHash ?? null,
+    planningReceiptContentHash: receipt.contentHash,
     revisionRound: input.revisionRound,
     fallbackUsed: false as const,
   };
@@ -2032,16 +2410,21 @@ export function sealEditorialAcceptedResult(input: {
 
 export function sealEditorialRejectedResult(input: {
   request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
   rejectedProposal: EditorialDirectorProposalV1 | null;
   rejectedIntent: ExternalEditorialIntentDraft | null;
   diagnostics: EditorialPlanningDiagnostics;
-  invocationReceipt: EditorialPlanningInvocationReceipt | null;
+  planningReceipt: EditorialPlanningReceipt;
   reasonCodes: readonly z.infer<
     typeof rejectedResultFields.reasonCodes.element
   >[];
   revisionRound: 0 | 1;
 }): EditorialPlanningResult {
   const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.runSpec,
+  });
   const proposal = input.rejectedProposal
     ? assertEditorialProposalMatchesRequest({
         request,
@@ -2066,23 +2449,29 @@ export function sealEditorialRejectedResult(input: {
   if (!proposal && !rejectedIntent)
     throw new Error("Rejection must bind a proposal or external intent.");
   const diagnostics = assertDiagnostics(input.diagnostics, request, proposal);
-  if (input.invocationReceipt) {
-    if (!proposal)
-      throw new Error("A receipt cannot bind an unsealed rejected intent.");
-    assertReceipt(input.invocationReceipt, request, proposal);
-  }
+  if (!proposal)
+    throw new Error(
+      "A lane receipt cannot bind an unsealed rejected intent without a proposal.",
+    );
+  const receipt = assertReceipt(
+    input.planningReceipt,
+    request,
+    runSpec,
+    proposal,
+  );
   const draft = {
     schemaVersion: "1.0" as const,
     authority: "editorial-pilot-diagnostic-only" as const,
     productionBindable: false as const,
     requestContentHash: request.contentHash,
+    runSpecContentHash: runSpec.contentHash,
     status: "rejected" as const,
     rejectedProposalContentHash: proposal?.contentHash ?? null,
     rejectedIntentContentHash: rejectedIntent
       ? hashCanonical(canonicalizeExternalIntent(rejectedIntent))
       : null,
     diagnosticsContentHash: diagnostics.contentHash,
-    invocationReceiptContentHash: input.invocationReceipt?.contentHash ?? null,
+    planningReceiptContentHash: receipt.contentHash,
     reasonCodes: canonicalSet(input.reasonCodes),
     revisionRound: input.revisionRound,
     fallbackUsed: false as const,
@@ -2092,13 +2481,18 @@ export function sealEditorialRejectedResult(input: {
 
 export function sealEditorialRevisionResult(input: {
   request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
   priorProposal: EditorialDirectorProposalV1;
   qualityDiagnostics: EditorialPlanningDiagnostics;
   addressedFindingIds: readonly string[];
   successorProposal: EditorialDirectorProposalV1;
-  successorInvocationReceipt: EditorialPlanningInvocationReceipt | null;
+  successorPlanningReceipt: EditorialPlanningReceipt;
 }): EditorialPlanningResult {
   const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.runSpec,
+  });
   const prior = assertEditorialProposalMatchesRequest({
     request,
     proposal: input.priorProposal,
@@ -2121,19 +2515,24 @@ export function sealEditorialRevisionResult(input: {
     if (!findingIds.has(findingId))
       throw new Error(`Revision addresses unknown finding ${findingId}.`);
   });
-  assertReceipt(input.successorInvocationReceipt, request, successor);
+  const successorReceipt = assertReceipt(
+    input.successorPlanningReceipt,
+    request,
+    runSpec,
+    successor,
+  );
   const draft = {
     schemaVersion: "1.0" as const,
     authority: "editorial-pilot-diagnostic-only" as const,
     productionBindable: false as const,
     requestContentHash: request.contentHash,
+    runSpecContentHash: runSpec.contentHash,
     status: "revision" as const,
     priorProposalContentHash: prior.contentHash,
     qualityDiagnosticsContentHash: diagnostics.contentHash,
     addressedFindingIds,
     successorProposalContentHash: successor.contentHash,
-    successorInvocationReceiptContentHash:
-      input.successorInvocationReceipt?.contentHash ?? null,
+    successorPlanningReceiptContentHash: successorReceipt.contentHash,
     revisionRound: 1 as const,
     fallbackUsed: false as const,
   };
@@ -2142,18 +2541,30 @@ export function sealEditorialRevisionResult(input: {
 
 export function sealEditorialFallbackResult(
   request: EditorialPlanningRequest,
+  runSpec: EditorialPlanningRunSpec,
 ): never {
   const parsed = editorialPlanningRequestSchema.parse(request);
-  if (!parsed.fallbackAllowed)
+  const parsedRunSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request: parsed,
+    runSpec,
+  });
+  if (!parsed.fallbackAllowed || !parsedRunSpec.fallbackAllowed)
     throw new Error("Editorial fallback is forbidden for this pilot request.");
   throw new Error("No diagnostic-only fallback sealer is authorized.");
 }
 
+const missingReceipt = (resultKind: string): never => {
+  throw new Error(
+    `Editorial ${resultKind} result restore is missing its exact lane receipt.`,
+  );
+};
+
 export function restoreEditorialPlanningResult(input: {
   serialized: string;
   request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
   proposals: readonly EditorialDirectorProposalV1[];
-  receipts: readonly EditorialPlanningInvocationReceipt[];
+  receipts: readonly EditorialPlanningReceipt[];
   diagnostics: readonly EditorialPlanningDiagnostics[];
   rejectedIntents?: readonly ExternalEditorialIntentDraft[];
 }): EditorialPlanningResult {
@@ -2161,6 +2572,12 @@ export function restoreEditorialPlanningResult(input: {
     JSON.parse(input.serialized),
   );
   const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.runSpec,
+  });
+  if (restored.runSpecContentHash !== runSpec.contentHash)
+    throw new Error("Editorial planning result is stale for its run spec.");
   const proposals = input.proposals.map((proposal) =>
     assertEditorialProposalMatchesRequest({ request, proposal }),
   );
@@ -2183,11 +2600,12 @@ export function restoreEditorialPlanningResult(input: {
       throw new Error("Accepted result restore is missing bound artifacts.");
     expected = sealEditorialAcceptedResult({
       request,
+      runSpec,
       proposal,
       diagnostics,
-      invocationReceipt: restored.invocationReceiptContentHash
-        ? (receiptByHash.get(restored.invocationReceiptContentHash) ?? null)
-        : null,
+      planningReceipt:
+        receiptByHash.get(restored.planningReceiptContentHash) ??
+        missingReceipt("accepted"),
       revisionRound: restored.revisionRound,
     });
   } else if (restored.status === "rejected") {
@@ -2206,12 +2624,13 @@ export function restoreEditorialPlanningResult(input: {
       throw new Error("Rejected result restore is missing diagnostics.");
     expected = sealEditorialRejectedResult({
       request,
+      runSpec,
       rejectedProposal: proposal,
       rejectedIntent: intent,
       diagnostics,
-      invocationReceipt: restored.invocationReceiptContentHash
-        ? (receiptByHash.get(restored.invocationReceiptContentHash) ?? null)
-        : null,
+      planningReceipt:
+        receiptByHash.get(restored.planningReceiptContentHash) ??
+        missingReceipt("rejected"),
       reasonCodes: restored.reasonCodes,
       revisionRound: restored.revisionRound,
     });
@@ -2225,14 +2644,14 @@ export function restoreEditorialPlanningResult(input: {
       throw new Error("Revision result restore is missing bound artifacts.");
     expected = sealEditorialRevisionResult({
       request,
+      runSpec,
       priorProposal: prior,
       qualityDiagnostics: diagnostics,
       addressedFindingIds: restored.addressedFindingIds,
       successorProposal: successor,
-      successorInvocationReceipt: restored.successorInvocationReceiptContentHash
-        ? (receiptByHash.get(restored.successorInvocationReceiptContentHash) ??
-          null)
-        : null,
+      successorPlanningReceipt:
+        receiptByHash.get(restored.successorPlanningReceiptContentHash) ??
+        missingReceipt("revision successor"),
     });
   }
   if (!same(restored, expected))
