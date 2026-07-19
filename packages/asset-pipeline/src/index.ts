@@ -4,6 +4,7 @@ import {basename, isAbsolute, join, relative, resolve} from "node:path";
 import sharp from "sharp";
 export * from "./import-evidence-store";
 export * from "./sprite-atlas";
+export * from "./chroma-key";
 export * from "./character-rig-staging";
 export * from "./character-rig-preparation";
 import {
