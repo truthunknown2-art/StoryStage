@@ -1,15 +1,28 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `10`
+Inbox-Version: `11`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-UI-SLICE-C-VISUAL-POLISH`
+Current-Task: `KIMI-UI-SLICE-C-CORRECTIONS`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `2de764c27640657a97f90eef2c630ff171e9176f`
+Accepted-Root-Base: `55873d2b489c8c69e2110817bb6c4accb91e50d0`
 Required-Work-Branch: `agent/kimi-ui-slice-c-visual-polish`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-visual-polish.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-corrections.md`
 
 ## Current instruction
+
+Exact-head review of Slice C at
+`55873d2b489c8c69e2110817bb6c4accb91e50d0` found three P2 defects and one
+invalid visual-proof capture. Continue on the existing required work branch
+and execute the correction brief. Do not broaden the task or touch engine,
+runtime, renderer, timing, continuity, or asset-authority code.
+
+Version 11 supersedes Version 10 as the active task. Version 10 remains below
+as historical traceability.
+
+---
+
+Previous Version 10 instruction:
 
 PR #15 was accepted by Pro at exact head
 `f8726b2b2d08f8cdf9f7b1238639720f49a9d0b7` and merged into the provider-neutral
@@ -23,9 +36,6 @@ controls, truth labels, exact 0/1/2+ reaction-target behavior, Director Alpha
 boundary, and all engine/runtime/asset authority. Run the full Studio suite and
 root verification, capture the requested actual-app screenshots, commit and
 push the required branch, and leave a handback plus draft PR for Codex/Pro.
-
-Version 10 supersedes Version 9 as the active task. Version 9 remains below as
-historical traceability.
 
 ---
 
