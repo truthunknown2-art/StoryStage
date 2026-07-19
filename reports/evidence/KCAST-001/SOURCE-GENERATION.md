@@ -548,26 +548,26 @@ Three final edits also used built-in-generation intermediate images. They are
 not rig evidence and are deliberately not copied into StoryStage, but their
 immutable generation-store identifiers and hashes are recorded for provenance:
 
-| Role | Generation-store source | SHA-256 | Bytes |
-| --- | --- | --- | ---: |
-| profile-left core edit target | `exec-e2ba045f-07b3-4e40-8e9a-93cdd2951b9f.png` | `ab408427774bef27e0dea0f23eb112ca41db1ba485672fb4e97964f5d99348fa` | 1690371 |
-| profile-left limb edit target | `exec-f3ffe960-b320-40d7-b25e-4e7e6cc91934.png` | `860ceb07a4f9f9ea8e41e55f2ad9c35c2c8f5b0806a239bc4c232b3d148c4f5e` | 1314530 |
+| Role                                 | Generation-store source                         | SHA-256                                                            |   Bytes |
+| ------------------------------------ | ----------------------------------------------- | ------------------------------------------------------------------ | ------: |
+| profile-left core edit target        | `exec-e2ba045f-07b3-4e40-8e9a-93cdd2951b9f.png` | `ab408427774bef27e0dea0f23eb112ca41db1ba485672fb4e97964f5d99348fa` | 1690371 |
+| profile-left limb edit target        | `exec-f3ffe960-b320-40d7-b25e-4e7e6cc91934.png` | `860ceb07a4f9f9ea8e41e55f2ad9c35c2c8f5b0806a239bc4c232b3d148c4f5e` | 1314530 |
 | profile-right lower-face edit target | `exec-752d75b7-68ea-4327-b75b-341ed3aa6857.png` | `650b02ee09f6f0ada5e57c2e8e2c85ea1a56d31fc6eb54cb827562357c16eaf7` | 1353338 |
 
 Exact final outputs:
 
-| File | SHA-256 | Dimensions | Bytes | Gate |
-| --- | --- | --- | ---: | --- |
-| `candidates/ollo-parts-profile-left-core-candidate-g-chroma.png` | `152e5b8fc7036b96f584c785ce6461a245781f81a829fd2a3d2ef0f9701724b1` | `1536x1024` | 1857848 | reject |
-| `candidates/ollo-parts-profile-left-limbs-candidate-g-chroma.png` | `b0e744c349af9c1d18d55d0b6886f24bfdee76c14540ecd3fb2e1295b0e21749` | `1672x941` | 1555960 | reject |
-| `candidates/ollo-face-profile-left-eyes-candidate-g-chroma.png` | `ab827cdb3b9682549f25d165ad9e95b40fa17cc8d7cfd938670e75449638d067` | `1774x887` | 1202538 | source-only conditional; bundle rejected |
-| `candidates/ollo-face-profile-left-lower-base-candidate-g-chroma.png` | `269094a84b3b73fb5542b6203648764bca4491cef0bb8644d5f3c021e71ca880` | `1448x1086` | 1160237 | source-only conditional; bundle rejected |
-| `candidates/ollo-face-profile-left-mouth-overlays-candidate-g-chroma.png` | `e9dcdd519b16e48f38d7712102c34432293b1eacd1e1bb76daa16c5f966929aa` | `1672x941` | 1059258 | source-only conditional; bundle rejected |
-| `candidates/ollo-parts-profile-right-core-candidate-g-chroma.png` | `899cf650e9b847ff05c68f9b24cf125e0663716c62852b15009fd3e475980465` | `1536x1024` | 1650640 | reject |
-| `candidates/ollo-parts-profile-right-limbs-candidate-g-chroma.png` | `fc7fca59c9354216e36352c46501a0378ed06e51a3658a3d20c6edd8968e5a99` | `1672x941` | 1519625 | reject |
-| `candidates/ollo-face-profile-right-eyes-candidate-g-chroma.png` | `3ab91e167a2d05701c646f1ec2740ce7b3412a3b2e470dda022694a4893f0b8c` | `1774x887` | 1192449 | reject |
-| `candidates/ollo-face-profile-right-lower-base-candidate-g-chroma.png` | `0ce49c0b8928936b7d7d940f6787751e217f3c705a2701a0bd887ffb3462c8f1` | `1448x1086` | 1259131 | reject |
-| `candidates/ollo-face-profile-right-mouth-overlays-candidate-g-chroma.png` | `ec150581a072088765094f35157505c6aab677441b1ff8e5d45ae21a8f491a16` | `1672x941` | 1064917 | reject |
+| File                                                                       | SHA-256                                                            | Dimensions  |   Bytes | Gate                                     |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------ | ----------- | ------: | ---------------------------------------- |
+| `candidates/ollo-parts-profile-left-core-candidate-g-chroma.png`           | `152e5b8fc7036b96f584c785ce6461a245781f81a829fd2a3d2ef0f9701724b1` | `1536x1024` | 1857848 | reject                                   |
+| `candidates/ollo-parts-profile-left-limbs-candidate-g-chroma.png`          | `b0e744c349af9c1d18d55d0b6886f24bfdee76c14540ecd3fb2e1295b0e21749` | `1672x941`  | 1555960 | reject                                   |
+| `candidates/ollo-face-profile-left-eyes-candidate-g-chroma.png`            | `ab827cdb3b9682549f25d165ad9e95b40fa17cc8d7cfd938670e75449638d067` | `1774x887`  | 1202538 | source-only conditional; bundle rejected |
+| `candidates/ollo-face-profile-left-lower-base-candidate-g-chroma.png`      | `269094a84b3b73fb5542b6203648764bca4491cef0bb8644d5f3c021e71ca880` | `1448x1086` | 1160237 | source-only conditional; bundle rejected |
+| `candidates/ollo-face-profile-left-mouth-overlays-candidate-g-chroma.png`  | `e9dcdd519b16e48f38d7712102c34432293b1eacd1e1bb76daa16c5f966929aa` | `1672x941`  | 1059258 | source-only conditional; bundle rejected |
+| `candidates/ollo-parts-profile-right-core-candidate-g-chroma.png`          | `899cf650e9b847ff05c68f9b24cf125e0663716c62852b15009fd3e475980465` | `1536x1024` | 1650640 | reject                                   |
+| `candidates/ollo-parts-profile-right-limbs-candidate-g-chroma.png`         | `fc7fca59c9354216e36352c46501a0378ed06e51a3658a3d20c6edd8968e5a99` | `1672x941`  | 1519625 | reject                                   |
+| `candidates/ollo-face-profile-right-eyes-candidate-g-chroma.png`           | `3ab91e167a2d05701c646f1ec2740ce7b3412a3b2e470dda022694a4893f0b8c` | `1774x887`  | 1192449 | reject                                   |
+| `candidates/ollo-face-profile-right-lower-base-candidate-g-chroma.png`     | `0ce49c0b8928936b7d7d940f6787751e217f3c705a2701a0bd887ffb3462c8f1` | `1448x1086` | 1259131 | reject                                   |
+| `candidates/ollo-face-profile-right-mouth-overlays-candidate-g-chroma.png` | `ec150581a072088765094f35157505c6aab677441b1ff8e5d45ae21a8f491a16` | `1672x941`  | 1064917 | reject                                   |
 
 ### Profile-left core final edit prompt
 
@@ -703,3 +703,19 @@ Candidate G has no provider authority, preparation authority, approval, import
 receipt, prepared manifest, or production binding. Its intentionally preserved
 failure prevents a later regeneration from silently inheriting old crop or
 approval claims.
+
+## Candidate H five-view turnaround sources
+
+The built-in ChatGPT image tool first generated the two views Candidate B does
+not contain, then generated a new front and two independently authored profiles
+to form a coordinated five-source Candidate H family. Exact references,
+prompts, output hashes, chroma measurements, and the no-authority boundary are
+recorded in `CANDIDATE-H-MISSING-TURNAROUND-VIEWS.md`.
+
+These five rasters were composed deterministically into a new Candidate H sheet;
+Candidate B was not edited or extended. Candidate H has sealed source hashes,
+registration cells, derived view bytes, complete five-view coverage evidence,
+and a real staging report. The turnaround item is complete, but the overall rig
+request remains incomplete because all six face/parts kits are still absent.
+No import receipt, prepared manifest, approval, rig authority, or production
+binding exists.

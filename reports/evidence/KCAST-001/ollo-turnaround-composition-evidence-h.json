@@ -1,0 +1,372 @@
+{
+  "schemaVersion": "1.0",
+  "evidenceId": "kcast-001f-ollo-turnaround-candidate-h",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "sources": [
+    {
+      "view": "front",
+      "relativeFile": "candidates/ollo-turnaround-front-candidate-h-chroma.png",
+      "contentHash": "43aa02a2951e46020269390c5ec8494d12719dff5eedd9d46ce10ffdaf26fc12",
+      "byteLength": 1246656,
+      "dimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "keyedSourceContentHash": "8f3881446dcb1bf4bdcdc2061f3cdf55b59411ba0835c75a2dab6b68c22df50c",
+      "measuredKey": {
+        "red": 243,
+        "green": 7,
+        "blue": 243,
+        "hex": "#f307f3"
+      },
+      "measuredKeyDistance": 18.35755975068582,
+      "sourceContentBounds": {
+        "x": 665,
+        "y": 45,
+        "width": 444,
+        "height": 749
+      }
+    },
+    {
+      "view": "three-quarter",
+      "relativeFile": "candidates/ollo-turnaround-three-quarter-candidate-h-chroma.png",
+      "contentHash": "cc5c35b8251e0b9308a5868849a33bcbb9196e0fa606f7189b4d6e6778acb480",
+      "byteLength": 1266087,
+      "dimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "keyedSourceContentHash": "02151a3f714caa69ea6254e75bf453c9dc6f96899772bf8d6446079b420ca28f",
+      "measuredKey": {
+        "red": 249,
+        "green": 5,
+        "blue": 248,
+        "hex": "#f905f8"
+      },
+      "measuredKeyDistance": 10.488088481701515,
+      "sourceContentBounds": {
+        "x": 657,
+        "y": 34,
+        "width": 435,
+        "height": 789
+      }
+    },
+    {
+      "view": "profile-left",
+      "relativeFile": "candidates/ollo-turnaround-profile-left-candidate-h-chroma.png",
+      "contentHash": "9b1064bccf5c223b1e7d0b10085c565d24c085fc12ed5722eedd4966c854f214",
+      "byteLength": 1185220,
+      "dimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "keyedSourceContentHash": "b9919be1a5b1dc36c62bdfce08c415316ff3fb560e04d2f20d0c5a3ab79b8fd4",
+      "measuredKey": {
+        "red": 246,
+        "green": 6,
+        "blue": 234,
+        "hex": "#f606ea"
+      },
+      "measuredKeyDistance": 23.62202362203543,
+      "sourceContentBounds": {
+        "x": 692,
+        "y": 55,
+        "width": 367,
+        "height": 776
+      }
+    },
+    {
+      "view": "profile-right",
+      "relativeFile": "candidates/ollo-turnaround-profile-right-candidate-h-chroma.png",
+      "contentHash": "a4103e0118c2099913e549f953414e674f798d099ed9c9f99b1555c9c2150905",
+      "byteLength": 1192993,
+      "dimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "keyedSourceContentHash": "46700b8c4a57f06da8f71ea73fb6de16565e39d2de5d68d114d8dc41bf198e49",
+      "measuredKey": {
+        "red": 241,
+        "green": 8,
+        "blue": 235,
+        "hex": "#f108eb"
+      },
+      "measuredKeyDistance": 25.69046515733026,
+      "sourceContentBounds": {
+        "x": 710,
+        "y": 34,
+        "width": 359,
+        "height": 794
+      }
+    },
+    {
+      "view": "rear",
+      "relativeFile": "candidates/ollo-turnaround-rear-candidate-h-chroma.png",
+      "contentHash": "97e9137ce09215f5a52b2df9ef755d70eda0ddfe024fcf2f7dcea42e60ed3455",
+      "byteLength": 1264099,
+      "dimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "keyedSourceContentHash": "6131b2da8f59e69669ea97d13ba4b1dba273a3b24ee9193b097228583c41d58b",
+      "measuredKey": {
+        "red": 247,
+        "green": 6,
+        "blue": 246,
+        "hex": "#f706f6"
+      },
+      "measuredKeyDistance": 13.45362404707371,
+      "sourceContentBounds": {
+        "x": 627,
+        "y": 47,
+        "width": 500,
+        "height": 775
+      }
+    }
+  ],
+  "composition": {
+    "processor": {
+      "id": "kids-biped-v1-five-view-turnaround-compositor",
+      "version": "1.0.0",
+      "canonicalOrder": [
+        "front",
+        "three-quarter",
+        "profile-left",
+        "profile-right",
+        "rear"
+      ],
+      "expectedKey": "#ff00ff",
+      "maximumMeasuredKeyDistance": 32,
+      "registration": {
+        "cellWidth": 576,
+        "cellHeight": 832,
+        "characterHeight": 768,
+        "footBaseline": 800,
+        "horizontalSafetyInset": 32,
+        "horizontalAlignment": "content-bounds-center",
+        "verticalAlignment": "content-bounds-foot-baseline",
+        "transform": "none"
+      },
+      "imageLibrary": {
+        "id": "sharp",
+        "version": "0.34.5"
+      },
+      "resizeKernel": "lanczos3",
+      "png": {
+        "compressionLevel": 9,
+        "adaptiveFiltering": false,
+        "palette": false,
+        "effort": 10
+      }
+    },
+    "output": {
+      "candidateId": "ollo-turnaround-candidate-h-five-view-alpha",
+      "relativeFile": "candidates/ollo-turnaround-candidate-h-five-view-alpha.png",
+      "contentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "byteLength": 2574902,
+      "width": 2880,
+      "height": 832,
+      "alphaClass": "mixed-alpha"
+    },
+    "views": [
+      {
+        "view": "front",
+        "sourceContentHash": "43aa02a2951e46020269390c5ec8494d12719dff5eedd9d46ce10ffdaf26fc12",
+        "keyedSourceContentHash": "8f3881446dcb1bf4bdcdc2061f3cdf55b59411ba0835c75a2dab6b68c22df50c",
+        "sourceContentBounds": {
+          "x": 665,
+          "y": 45,
+          "width": 444,
+          "height": 749
+        },
+        "normalizedContentHash": "28d41f35cda5e4758b50ac2a77f40217181bca12747d97c66b626b82d9adeefc",
+        "normalizedByteLength": 526191,
+        "normalizedWidth": 455,
+        "normalizedHeight": 768,
+        "sheetSourceRect": {
+          "x": 0,
+          "y": 0,
+          "width": 576,
+          "height": 832
+        },
+        "sheetContentBounds": {
+          "x": 60,
+          "y": 32,
+          "width": 455,
+          "height": 768
+        },
+        "derivedContentHash": "9179be1665aa88e86ddede71cce064c37714f00962317681f221291349f5fccd",
+        "derivedByteLength": 537546,
+        "transform": "none"
+      },
+      {
+        "view": "three-quarter",
+        "sourceContentHash": "cc5c35b8251e0b9308a5868849a33bcbb9196e0fa606f7189b4d6e6778acb480",
+        "keyedSourceContentHash": "02151a3f714caa69ea6254e75bf453c9dc6f96899772bf8d6446079b420ca28f",
+        "sourceContentBounds": {
+          "x": 657,
+          "y": 34,
+          "width": 435,
+          "height": 789
+        },
+        "normalizedContentHash": "302e6ab6ad4fd4f38b015007816409febe4fe775e15a3e65fd0f0fac91293a1f",
+        "normalizedByteLength": 524667,
+        "normalizedWidth": 423,
+        "normalizedHeight": 768,
+        "sheetSourceRect": {
+          "x": 576,
+          "y": 0,
+          "width": 576,
+          "height": 832
+        },
+        "sheetContentBounds": {
+          "x": 652,
+          "y": 32,
+          "width": 423,
+          "height": 768
+        },
+        "derivedContentHash": "ccfaea3bc3d64f8d600ee0b0758a6149a604c9a520b34949d81ce07b8bea97b6",
+        "derivedByteLength": 539390,
+        "transform": "none"
+      },
+      {
+        "view": "profile-left",
+        "sourceContentHash": "9b1064bccf5c223b1e7d0b10085c565d24c085fc12ed5722eedd4966c854f214",
+        "keyedSourceContentHash": "b9919be1a5b1dc36c62bdfce08c415316ff3fb560e04d2f20d0c5a3ab79b8fd4",
+        "sourceContentBounds": {
+          "x": 692,
+          "y": 55,
+          "width": 367,
+          "height": 776
+        },
+        "normalizedContentHash": "7121d5cde907e9e90898ca75768cbca75731a81e2f3995ff04de9d9c277bfbfe",
+        "normalizedByteLength": 418095,
+        "normalizedWidth": 363,
+        "normalizedHeight": 768,
+        "sheetSourceRect": {
+          "x": 1152,
+          "y": 0,
+          "width": 576,
+          "height": 832
+        },
+        "sheetContentBounds": {
+          "x": 1258,
+          "y": 32,
+          "width": 363,
+          "height": 768
+        },
+        "derivedContentHash": "02a728955134f6664487343974a90bb225b21903665d44fcc68d61ea7b57b139",
+        "derivedByteLength": 434799,
+        "transform": "none"
+      },
+      {
+        "view": "profile-right",
+        "sourceContentHash": "a4103e0118c2099913e549f953414e674f798d099ed9c9f99b1555c9c2150905",
+        "keyedSourceContentHash": "46700b8c4a57f06da8f71ea73fb6de16565e39d2de5d68d114d8dc41bf198e49",
+        "sourceContentBounds": {
+          "x": 710,
+          "y": 34,
+          "width": 359,
+          "height": 794
+        },
+        "normalizedContentHash": "98fcd14d3db4082c864802a7a184c73ac3cab612c7d7e881ea47d1034b0a9b65",
+        "normalizedByteLength": 401614,
+        "normalizedWidth": 347,
+        "normalizedHeight": 768,
+        "sheetSourceRect": {
+          "x": 1728,
+          "y": 0,
+          "width": 576,
+          "height": 832
+        },
+        "sheetContentBounds": {
+          "x": 1842,
+          "y": 32,
+          "width": 347,
+          "height": 768
+        },
+        "derivedContentHash": "1e09db7a87799bc419935ee3d76bc5c58600acfb513065c182dc9dcfba4f61ce",
+        "derivedByteLength": 419260,
+        "transform": "none"
+      },
+      {
+        "view": "rear",
+        "sourceContentHash": "97e9137ce09215f5a52b2df9ef755d70eda0ddfe024fcf2f7dcea42e60ed3455",
+        "keyedSourceContentHash": "6131b2da8f59e69669ea97d13ba4b1dba273a3b24ee9193b097228583c41d58b",
+        "sourceContentBounds": {
+          "x": 627,
+          "y": 47,
+          "width": 500,
+          "height": 775
+        },
+        "normalizedContentHash": "e0eb39505fb6f329042475f380e2c22f2c5a331b11f7b083003e39991d820c13",
+        "normalizedByteLength": 531288,
+        "normalizedWidth": 495,
+        "normalizedHeight": 768,
+        "sheetSourceRect": {
+          "x": 2304,
+          "y": 0,
+          "width": 576,
+          "height": 832
+        },
+        "sheetContentBounds": {
+          "x": 2344,
+          "y": 32,
+          "width": 495,
+          "height": 768
+        },
+        "derivedContentHash": "21f766af57ca2648f760a6e0a11efa9d10566e53addffb489994329211f2c5a8",
+        "derivedByteLength": 539388,
+        "transform": "none"
+      }
+    ]
+  },
+  "lineage": {
+    "turnaroundViewCoverageEvidenceContentHash": "c9e70319de980a0045d04ef8a2897b88d55a974c89d9aa098bb7dc982449946c",
+    "turnaroundViewCoverageEvidenceFileContentHash": "598cd00e26aecce5002554134ca66903ebe11e17670a809360f858cb6650b4d6",
+    "candidateBundleContentHash": "40e91d0f5dce0cdefc964cd55e3b56110b0d13082e5ffd7f5605ce2e9ed4c55a",
+    "stagingReportContentHash": "099f0e606a8bb2b173865449f2617e3bece819d6d05cb8cdf2de7088c76c32aa"
+  },
+  "stage": {
+    "status": "incomplete",
+    "returnedItems": [
+      "turnaround-sheet"
+    ],
+    "partialItems": [],
+    "missingItems": [
+      "face-front",
+      "face-profile-left",
+      "face-profile-right",
+      "parts-front",
+      "parts-profile-left",
+      "parts-profile-right"
+    ],
+    "missingSubitems": [],
+    "turnaroundCoverageStatus": "complete"
+  },
+  "gate": {
+    "exactFiveViewInventoryComplete": true,
+    "deterministicRegistrationComplete": true,
+    "turnaroundItemComplete": true,
+    "completeRigRequest": false,
+    "missingRigKits": [
+      "face-front",
+      "face-profile-left",
+      "face-profile-right",
+      "parts-front",
+      "parts-profile-left",
+      "parts-profile-right"
+    ],
+    "importReceiptCreated": false,
+    "importReceiptAttemptRejected": true,
+    "preparedRigViewsCreated": false,
+    "providerAuthority": false,
+    "preparationAuthority": false,
+    "approvalAuthority": false,
+    "productionBindable": false,
+    "approvalRequired": true
+  },
+  "stagedAt": "2026-07-19T11:45:00.000Z",
+  "contentHash": "22cc098ec0f61e8e4f5c2569b871f79feb15473bfbca2113b90c5fdca6cf2e8b"
+}

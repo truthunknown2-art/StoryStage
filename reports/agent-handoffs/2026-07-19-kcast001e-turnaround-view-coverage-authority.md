@@ -1,6 +1,7 @@
 # KCAST-001E — Turnaround View-Coverage Authority Closure
 
-Status: implemented and verified locally; not committed or pushed by this handoff.
+Status: implemented, verified, committed, pushed, and accepted by Pro at exact
+head `7cf0de4560fd529fb6001f5e23d44ed232673796`.
 
 ## Authority change
 
