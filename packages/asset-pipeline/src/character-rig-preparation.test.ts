@@ -21,7 +21,9 @@ import {
   createCharacterRigCandidateBundle,
   createCharacterRigPreparationRecipe,
   createKidsBipedRigRequestItems,
+  createTurnaroundViewCoverageEvidence,
   hashCanonical,
+  kidsBipedV1RequiredTurnaroundViews,
   kidsBipedV1TopologyTemplate,
   type CharacterRigAssetRequestDraft,
   type CharacterRigPreparationRecipe,
@@ -83,6 +85,63 @@ const requestDraft = (): CharacterRigAssetRequestDraft => ({
 const CELL = 32;
 const PITCH = 40;
 const SHEET_SIZE = 256;
+const turnaroundPlans = [
+  { view: "front" as const, x: 0, width: 40, semanticDirection: "neutral-front" as const },
+  { view: "three-quarter" as const, x: 40, width: 41, semanticDirection: "three-quarter" as const },
+  { view: "profile-left" as const, x: 81, width: 42, semanticDirection: "faces-screen-left" as const },
+  { view: "profile-right" as const, x: 123, width: 43, semanticDirection: "faces-screen-right" as const },
+  { view: "rear" as const, x: 166, width: 44, semanticDirection: "neutral-rear" as const },
+] as const;
+
+const createCoverageReference = async (
+  sourceRoot: string,
+  request: ReturnType<typeof createCharacterRigAssetRequest>,
+  candidateId: string,
+  sourceBytes: Buffer,
+) => {
+  const sourceContentHash = sha256(sourceBytes);
+  const views = [];
+  for (const plan of turnaroundPlans) {
+    const sourceRect = { x: plan.x, y: 0, width: plan.width, height: SHEET_SIZE };
+    const derived = await sharp(sourceBytes)
+      .extract({ left: sourceRect.x, top: 0, width: sourceRect.width, height: sourceRect.height })
+      .ensureAlpha()
+      .png({ compressionLevel: 9, adaptiveFiltering: false, palette: false, effort: 10 })
+      .toBuffer();
+    views.push({
+      view: plan.view,
+      sourceContentHash,
+      sourceRect,
+      derivedContentHash: sha256(derived),
+      byteLength: derived.length,
+      width: sourceRect.width,
+      height: sourceRect.height,
+      semanticDirection: plan.semanticDirection,
+      transform: "none" as const,
+    });
+  }
+  const evidence = createTurnaroundViewCoverageEvidence({
+    schemaVersion: "1.0",
+    requestId: request.requestId,
+    requestContentHash: request.contentHash,
+    requestItemId: "turnaround-sheet",
+    candidateId,
+    candidateContentHash: sourceContentHash,
+    requiredViews: [...kidsBipedV1RequiredTurnaroundViews],
+    views,
+  });
+  const evidenceBytes = Buffer.from(`${JSON.stringify(evidence, null, 2)}\n`, "utf8");
+  const relativeFile = `evidence/${evidence.contentHash}.json`;
+  await mkdir(join(sourceRoot, "evidence"), { recursive: true });
+  await writeFile(join(sourceRoot, ...relativeFile.split("/")), evidenceBytes);
+  return {
+    schemaVersion: "1.0" as const,
+    relativeFile,
+    contentHash: evidence.contentHash,
+    fileContentHash: sha256(evidenceBytes),
+    byteLength: evidenceBytes.length,
+  };
+};
 
 const componentRect = (index: number) => ({
   x: (index % 6) * PITCH,
@@ -285,6 +344,15 @@ const setup = async () => {
               .toBuffer();
     const relativeFile = `candidates/${item.id}.png`;
     await writeFile(join(sourceRoot, ...relativeFile.split("/")), bytes);
+    const coverage =
+      item.kind === "turnaround-sheet"
+        ? await createCoverageReference(
+            sourceRoot,
+            request,
+            `candidate-${item.id}`,
+            bytes,
+          )
+        : null;
     assets.push({
       candidateId: `candidate-${item.id}`,
       requestItemId: item.id,
@@ -294,6 +362,7 @@ const setup = async () => {
       mediaType: "image/png" as const,
       width: SHEET_SIZE,
       height: SHEET_SIZE,
+      ...(coverage ? { turnaroundViewCoverageEvidence: coverage } : {}),
     });
   }
   const bundle = createCharacterRigCandidateBundle({

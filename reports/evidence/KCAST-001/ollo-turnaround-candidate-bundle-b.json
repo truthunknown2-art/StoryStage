@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "1.0",
+  "acquisitionMode": "manual-file-import",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "provenance": {
+    "sourceType": "generated",
+    "providerLabel": "OpenAI built-in image generation",
+    "sourceReference": "Codex task 019f6dc3-6859-79d1-960a-fc69c9e275d9",
+    "createdAt": "2026-07-19T08:30:00.000Z",
+    "rightsStatement": "Original generated candidate created from the user-supplied Ollo identity and environment boards for this project; unapproved source art."
+  },
+  "assets": [
+    {
+      "candidateId": "ollo-turnaround-candidate-b-alpha-repo",
+      "requestItemId": "turnaround-sheet",
+      "relativeFile": "candidates/ollo-turnaround-candidate-b-alpha-repo.png",
+      "contentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "byteLength": 1131309,
+      "mediaType": "image/png",
+      "width": 1774,
+      "height": 887,
+      "turnaroundViewCoverageEvidence": {
+        "schemaVersion": "1.0",
+        "relativeFile": "ollo-turnaround-coverage-evidence-b-v1.json",
+        "contentHash": "b0b7c8a0d52e0a8e960e067cb9f3b723d26ed0668e176a31566b745d74d586a0",
+        "fileContentHash": "91860ac41e83e2bdc1e4653f3e6781db541f0bc35e9681ba2ebf5523a831f4a1",
+        "byteLength": 2027
+      }
+    }
+  ],
+  "contentHash": "d402889f59b483add770b58f9f1b619822a388a7a5d0b02632777d4ea99afc84"
+}

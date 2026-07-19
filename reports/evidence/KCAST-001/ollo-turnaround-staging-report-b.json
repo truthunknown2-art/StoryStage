@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "1.0",
+  "reportId": "rig-staging-d402889f59b483add770",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "bundleContentHash": "d402889f59b483add770b58f9f1b619822a388a7a5d0b02632777d4ea99afc84",
+  "identityLockContentHash": "0950d7043347528a302de5d70f36736dcfbec1f9e0177296756e91b96fbc846f",
+  "templateContentHash": "6ab97203293ff1736587a224b515d9ce5562825442d02e8cd31b98c4db588c83",
+  "status": "incomplete",
+  "returnedItems": [],
+  "partialItems": [
+    "turnaround-sheet"
+  ],
+  "missingItems": [
+    "face-front",
+    "face-profile-left",
+    "face-profile-right",
+    "parts-front",
+    "parts-profile-left",
+    "parts-profile-right"
+  ],
+  "missingSubitems": [
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "three-quarter"
+    },
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "rear"
+    }
+  ],
+  "unknownItems": [],
+  "turnaroundViewCoverageEvidence": [
+    {
+      "schemaVersion": "1.0",
+      "requestItemId": "turnaround-sheet",
+      "candidateId": "ollo-turnaround-candidate-b-alpha-repo",
+      "candidateContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "evidenceContentHash": "b0b7c8a0d52e0a8e960e067cb9f3b723d26ed0668e176a31566b745d74d586a0",
+      "evidenceFileContentHash": "91860ac41e83e2bdc1e4653f3e6781db541f0bc35e9681ba2ebf5523a831f4a1",
+      "sourceRelativeFile": "ollo-turnaround-coverage-evidence-b-v1.json",
+      "stagedRelativeFile": "character-rig/coverage-evidence/91860ac41e83e2bdc1e4653f3e6781db541f0bc35e9681ba2ebf5523a831f4a1.json",
+      "requiredViews": [
+        "front",
+        "three-quarter",
+        "profile-left",
+        "profile-right",
+        "rear"
+      ],
+      "views": [
+        {
+          "view": "front",
+          "derivedContentHash": "4e4dc1a16caf4ff5f0bad85979921db1c14cc01969a8406648efefd778417ce7",
+          "byteLength": 564350,
+          "width": 528,
+          "height": 832,
+          "stagedRelativeFile": "character-rig/coverage-views/4e4dc1a16caf4ff5f0bad85979921db1c14cc01969a8406648efefd778417ce7.png"
+        },
+        {
+          "view": "profile-left",
+          "derivedContentHash": "c91d7319470e6786750c78ab9cf23824a272fbd08d5238ed21107a2e83b37214",
+          "byteLength": 408912,
+          "width": 448,
+          "height": 832,
+          "stagedRelativeFile": "character-rig/coverage-views/c91d7319470e6786750c78ab9cf23824a272fbd08d5238ed21107a2e83b37214.png"
+        },
+        {
+          "view": "profile-right",
+          "derivedContentHash": "0204f3b83e731b4d914020a360f943001102b539f8d265343525a675e9614314",
+          "byteLength": 407145,
+          "width": 448,
+          "height": 832,
+          "stagedRelativeFile": "character-rig/coverage-views/0204f3b83e731b4d914020a360f943001102b539f8d265343525a675e9614314.png"
+        }
+      ],
+      "status": "incomplete"
+    }
+  ],
+  "assets": [
+    {
+      "candidateId": "ollo-turnaround-candidate-b-alpha-repo",
+      "requestItemId": "turnaround-sheet",
+      "sourceContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "stagedContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "immutableLocationId": "sha256:38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "relativeFile": "character-rig/candidates/38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec.png",
+      "byteLength": 1131309,
+      "mediaType": "image/png",
+      "width": 1774,
+      "height": 887,
+      "alphaClass": "mixed-alpha",
+      "checks": {
+        "byteLength": true,
+        "contentHash": true,
+        "codec": true,
+        "dimensions": true,
+        "decodedSinglePage": true
+      }
+    }
+  ],
+  "providerAuthority": false,
+  "approvalRequired": true,
+  "stagedAt": "2026-07-19T08:45:00.000Z",
+  "contentHash": "832e0bcad358939c3f46209b3beb8736452013f7cba1d96182a7a6e0fcc0fd76"
+}

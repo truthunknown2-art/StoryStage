@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "1.0",
+  "reportId": "rig-staging-40e91d0f5dce0cdefc96",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "bundleContentHash": "40e91d0f5dce0cdefc964cd55e3b56110b0d13082e5ffd7f5605ce2e9ed4c55a",
+  "identityLockContentHash": "0950d7043347528a302de5d70f36736dcfbec1f9e0177296756e91b96fbc846f",
+  "templateContentHash": "6ab97203293ff1736587a224b515d9ce5562825442d02e8cd31b98c4db588c83",
+  "status": "incomplete",
+  "returnedItems": [
+    "turnaround-sheet"
+  ],
+  "partialItems": [],
+  "missingItems": [
+    "face-front",
+    "face-profile-left",
+    "face-profile-right",
+    "parts-front",
+    "parts-profile-left",
+    "parts-profile-right"
+  ],
+  "missingSubitems": [],
+  "unknownItems": [],
+  "turnaroundViewCoverageEvidence": [
+    {
+      "schemaVersion": "1.0",
+      "requestItemId": "turnaround-sheet",
+      "candidateId": "ollo-turnaround-candidate-h-five-view-alpha",
+      "candidateContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "evidenceContentHash": "c9e70319de980a0045d04ef8a2897b88d55a974c89d9aa098bb7dc982449946c",
+      "evidenceFileContentHash": "598cd00e26aecce5002554134ca66903ebe11e17670a809360f858cb6650b4d6",
+      "sourceRelativeFile": "ollo-turnaround-coverage-evidence-h-v1.json",
+      "stagedRelativeFile": "character-rig/coverage-evidence/598cd00e26aecce5002554134ca66903ebe11e17670a809360f858cb6650b4d6.json",
+      "requiredViews": [
+        "front",
+        "three-quarter",
+        "profile-left",
+        "profile-right",
+        "rear"
+      ],
+      "views": [
+        {
+          "view": "front",
+          "derivedContentHash": "9179be1665aa88e86ddede71cce064c37714f00962317681f221291349f5fccd",
+          "byteLength": 537546,
+          "width": 576,
+          "height": 832,
+          "stagedRelativeFile": "character-rig/coverage-views/9179be1665aa88e86ddede71cce064c37714f00962317681f221291349f5fccd.png"
+        },
+        {
+          "view": "three-quarter",
+          "derivedContentHash": "ccfaea3bc3d64f8d600ee0b0758a6149a604c9a520b34949d81ce07b8bea97b6",
+          "byteLength": 539390,
+          "width": 576,
+          "height": 832,
+          "stagedRelativeFile": "character-rig/coverage-views/ccfaea3bc3d64f8d600ee0b0758a6149a604c9a520b34949d81ce07b8bea97b6.png"
+        },
+        {
+          "view": "profile-left",
+          "derivedContentHash": "02a728955134f6664487343974a90bb225b21903665d44fcc68d61ea7b57b139",
+          "byteLength": 434799,
+          "width": 576,
+          "height": 832,
+          "stagedRelativeFile": "character-rig/coverage-views/02a728955134f6664487343974a90bb225b21903665d44fcc68d61ea7b57b139.png"
+        },
+        {
+          "view": "profile-right",
+          "derivedContentHash": "1e09db7a87799bc419935ee3d76bc5c58600acfb513065c182dc9dcfba4f61ce",
+          "byteLength": 419260,
+          "width": 576,
+          "height": 832,
+          "stagedRelativeFile": "character-rig/coverage-views/1e09db7a87799bc419935ee3d76bc5c58600acfb513065c182dc9dcfba4f61ce.png"
+        },
+        {
+          "view": "rear",
+          "derivedContentHash": "21f766af57ca2648f760a6e0a11efa9d10566e53addffb489994329211f2c5a8",
+          "byteLength": 539388,
+          "width": 576,
+          "height": 832,
+          "stagedRelativeFile": "character-rig/coverage-views/21f766af57ca2648f760a6e0a11efa9d10566e53addffb489994329211f2c5a8.png"
+        }
+      ],
+      "status": "complete"
+    }
+  ],
+  "assets": [
+    {
+      "candidateId": "ollo-turnaround-candidate-h-five-view-alpha",
+      "requestItemId": "turnaround-sheet",
+      "sourceContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "stagedContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "immutableLocationId": "sha256:732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "relativeFile": "character-rig/candidates/732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec.png",
+      "byteLength": 2574902,
+      "mediaType": "image/png",
+      "width": 2880,
+      "height": 832,
+      "alphaClass": "mixed-alpha",
+      "checks": {
+        "byteLength": true,
+        "contentHash": true,
+        "codec": true,
+        "dimensions": true,
+        "decodedSinglePage": true
+      }
+    }
+  ],
+  "providerAuthority": false,
+  "approvalRequired": true,
+  "stagedAt": "2026-07-19T11:45:00.000Z",
+  "contentHash": "099f0e606a8bb2b173865449f2617e3bece819d6d05cb8cdf2de7088c76c32aa"
+}

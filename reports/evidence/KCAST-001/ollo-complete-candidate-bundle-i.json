@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "1.0",
+  "acquisitionMode": "manual-file-import",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "provenance": {
+    "sourceType": "generated",
+    "providerLabel": "OpenAI built-in image generation plus deterministic repository composition",
+    "sourceReference": "Codex task 019f6dc3-6859-79d1-960a-fc69c9e275d9 / KCAST-001G",
+    "createdAt": "2026-07-19T13:00:00.000Z",
+    "rightsStatement": "Original generated Ollo candidates created for this project and composed by deterministic repository code; unapproved source art."
+  },
+  "assets": [
+    {
+      "candidateId": "ollo-turnaround-candidate-h-five-view-alpha",
+      "requestItemId": "turnaround-sheet",
+      "relativeFile": "candidates/ollo-turnaround-candidate-h-five-view-alpha.png",
+      "contentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "byteLength": 2574902,
+      "mediaType": "image/png",
+      "width": 2880,
+      "height": 832,
+      "turnaroundViewCoverageEvidence": {
+        "schemaVersion": "1.0",
+        "relativeFile": "ollo-turnaround-coverage-evidence-h-v1.json",
+        "contentHash": "c9e70319de980a0045d04ef8a2897b88d55a974c89d9aa098bb7dc982449946c",
+        "fileContentHash": "598cd00e26aecce5002554134ca66903ebe11e17670a809360f858cb6650b4d6",
+        "byteLength": 2986
+      }
+    },
+    {
+      "candidateId": "ollo-parts-front-source-set-f-alpha",
+      "requestItemId": "parts-front",
+      "relativeFile": "derived/ollo-parts-front-source-set-f-alpha.png",
+      "contentHash": "a8c74ff89094a4169be9b19f7d9c0e251f0059aa6d13a9075994d74ba11efe30",
+      "byteLength": 1077007,
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 1248
+    },
+    {
+      "candidateId": "ollo-face-front-source-set-f-alpha",
+      "requestItemId": "face-front",
+      "relativeFile": "derived/ollo-face-front-source-set-f-alpha.png",
+      "contentHash": "b9564f7fd1a30e470ea62e9d85d430dcb2d437f4b9e9a5ef01cc1507cb6925c7",
+      "byteLength": 1657956,
+      "mediaType": "image/png",
+      "width": 4896,
+      "height": 2112
+    },
+    {
+      "candidateId": "ollo-parts-profile-left-source-set-i-alpha",
+      "requestItemId": "parts-profile-left",
+      "relativeFile": "derived/ollo-parts-profile-left-source-set-i-alpha.png",
+      "contentHash": "7fbb40653a0ef6598fc8c96f55f84b4ee9e28da18b9e96778ac3ebd9e8e9ba81",
+      "byteLength": 1667276,
+      "mediaType": "image/png",
+      "width": 1845,
+      "height": 1652
+    },
+    {
+      "candidateId": "ollo-face-profile-left-source-set-i-alpha",
+      "requestItemId": "face-profile-left",
+      "relativeFile": "derived/ollo-face-profile-left-source-set-i-alpha.png",
+      "contentHash": "46e3f51ee56d4dff0a1b86dbecd773e22d1ea9a27543bdf6383d9b140debab78",
+      "byteLength": 1373881,
+      "mediaType": "image/png",
+      "width": 4008,
+      "height": 1832
+    },
+    {
+      "candidateId": "ollo-parts-profile-right-source-set-i-alpha",
+      "requestItemId": "parts-profile-right",
+      "relativeFile": "derived/ollo-parts-profile-right-source-set-i-alpha.png",
+      "contentHash": "97321741fdf6ec482893a6050a0fbc6ec9ee0a243310fe44325295ac995e6a06",
+      "byteLength": 1764642,
+      "mediaType": "image/png",
+      "width": 1860,
+      "height": 1620
+    },
+    {
+      "candidateId": "ollo-face-profile-right-source-set-i-alpha",
+      "requestItemId": "face-profile-right",
+      "relativeFile": "derived/ollo-face-profile-right-source-set-i-alpha.png",
+      "contentHash": "2574cf00a897e03641c56a1fd007b21507baf93f4ec0067ce9997b2879ed84ce",
+      "byteLength": 1779215,
+      "mediaType": "image/png",
+      "width": 5328,
+      "height": 2052
+    }
+  ],
+  "contentHash": "ffc0d8186be2559466b84d0c8daeb46ea13085f13cc781416f0cd5eb8648b40c"
+}
