@@ -3038,3 +3038,25 @@
     grid-template-columns: auto auto minmax(0, 1fr) auto;
   }
 }
+
+/* Zoom targets: 44x44 hit area, small icon retained */
+.director-timeline-zoom button {
+  height: 44px;
+  width: 44px;
+}
+
+/* Narrow topbar cascade: two-column layout at <=760px (final override) */
+@media (max-width: 760px) {
+  .cv2-topbar {
+    grid-template-columns: auto 1fr;
+    height: auto;
+    min-height: 56px;
+    padding: 6px 14px;
+    row-gap: 4px;
+  }
+
+  .cv2-topbar .cv2-history-actions {
+    grid-column: 2;
+    justify-self: end;
+  }
+}

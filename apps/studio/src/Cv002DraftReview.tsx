@@ -25,7 +25,6 @@ import {
   type DirectorProject,
   type DirectorWorkspaceState,
 } from "@storystage/story-engine/director-alpha";
-import { createBundledKidsPilotCapabilityRegistry } from "@storystage/remotion-runtime/director";
 import {
   ArrowLeft,
   ArrowRight,
@@ -141,17 +140,13 @@ export function Cv002DraftReview({
     () => project.graph.scenes.flatMap((scene) => scene.beats),
     [project.graph],
   );
-  const firstBeatRole = allBeats[0]!.role;
-  const capabilityRegistry = useMemo(() => {
-    if (project.grammar !== "kids-adventure") return alphaCapabilityRegistry;
-    const kind =
-      firstBeatRole === "setup" || firstBeatRole === "explanation"
-        ? "living-hold"
-        : firstBeatRole === "action"
-          ? "atlas-cycle"
-          : "articulated-rig";
-    return createBundledKidsPilotCapabilityRegistry(kind);
-  }, [firstBeatRole, project.grammar]);
+  // Ordinary Ollo & Friends projects compile against the empty Director Alpha
+  // registry: zero Mara engineering fixtures bind, every performance
+  // requirement resolves proxy-only, and nothing can read as ordinary Ollo
+  // readiness. Mara art remains only in the explicit engineering-demo
+  // surfaces (the Cv001 demo and the verified template preview), which carry
+  // their own fixtures and are visibly labeled as demos.
+  const capabilityRegistry = alphaCapabilityRegistry;
   const directorCompilation = useMemo<{
     directorProject: DirectorProject | null;
     error: string | null;

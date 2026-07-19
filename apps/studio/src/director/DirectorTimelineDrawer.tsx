@@ -36,8 +36,12 @@ export function DirectorTimelineDrawer({
   onSeek: (frame: number) => void;
   timeline: DirectorTimelineViewModel;
 }) {
-  // Zoom only rescales the lanes visually (horizontal scroll); it never
-  // alters timing data. Range kept coarse so labels stay legible.
+  // Zoom rescales the lanes visually (horizontal scroll); it never alters
+  // timing data. The grid gets a real width (not min-width, which cannot
+  // shrink an auto-width grid): 100% is the honest fit-width state, and
+  // zooming in expands the lanes beyond the container with horizontal
+  // scroll. There is no zoom-out — below 100% would pretend to shrink what
+  // already fits. Range: 1.0 (Fit width) to 2.5.
   const [zoom, setZoom] = useState(1);
   const ticks = rulerTicks(timeline, fps);
   return (
@@ -65,8 +69,12 @@ export function DirectorTimelineDrawer({
         >
           <button
             aria-label="Zoom timeline out"
-            disabled={zoom <= 0.6}
-            onClick={() => setZoom((value) => Math.max(0.6, value - 0.2))}
+            disabled={zoom <= 1}
+            onClick={() =>
+              setZoom((value) =>
+                Math.max(1, Math.round((value - 0.2) * 10) / 10),
+              )
+            }
             type="button"
           >
             <Minus size={13} />
@@ -74,7 +82,7 @@ export function DirectorTimelineDrawer({
           <input
             aria-label="Timeline zoom level"
             max={2.5}
-            min={0.6}
+            min={1}
             onChange={(event) => setZoom(Number(event.target.value))}
             step={0.1}
             type="range"
@@ -83,18 +91,25 @@ export function DirectorTimelineDrawer({
           <button
             aria-label="Zoom timeline in"
             disabled={zoom >= 2.5}
-            onClick={() => setZoom((value) => Math.min(2.5, value + 0.2))}
+            onClick={() =>
+              setZoom((value) =>
+                Math.min(2.5, Math.round((value + 0.2) * 10) / 10),
+              )
+            }
             type="button"
           >
             <Plus size={13} />
           </button>
-          <small>{Math.round(zoom * 100)}%</small>
+          <small>
+            {zoom <= 1 ? "Fit width" : `${Math.round(zoom * 100)}%`}
+          </small>
         </div>
       </div>
       <div className="director-timeline-scroll">
         <div
           className="director-timeline-grid"
-          style={{ minWidth: `${zoom * 100}%` }}
+          data-testid="director-timeline-grid"
+          style={{ width: `${Math.round(zoom * 100)}%` }}
         >
           <div aria-hidden className="director-timeline-ruler-spacer" />
           <div className="director-timeline-lane is-ruler">

@@ -11,6 +11,14 @@ import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProductionComposition } from "@storystage/remotion-runtime";
 import { DirectorProductionComposition } from "@storystage/remotion-runtime/director";
+import {
+  createCv002Project,
+  createCv002ArtDirectionSelection,
+} from "@storystage/story-engine";
+import {
+  alphaCapabilityRegistry,
+  compileDirectorProject,
+} from "@storystage/story-engine/director-alpha";
 import { App } from "./App";
 
 const playerHarness = vi.hoisted(() => ({
@@ -449,7 +457,7 @@ describe("CV-002 editable script breakdown", () => {
     );
 
     expect(screen.getAllByText("Draft animatic").length).toBeGreaterThan(0);
-    expect(screen.getByText("Proxy performance")).toBeInTheDocument();
+    expect(screen.getAllByText("Proxy performance").length).toBeGreaterThan(0);
     expect(
       screen.getByText(/Final character rig unavailable/),
     ).toBeInTheDocument();
@@ -584,6 +592,89 @@ describe("CV-002 editable script breakdown", () => {
     expect(
       within(motionPanel()).getByText(/Use “Direct this beat” above/),
     ).toBeInTheDocument();
+  });
+
+  it("exposes rail duration and proxy performance state to assistive technology with exact wording", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const rail = screen.getByLabelText("Studio scenes and beats");
+
+    // Accessible names carry duration + performance-capability wording (the
+    // explicit aria-label replaces the visible descendants for AT). Ordinary
+    // Ollo binds no Mara fixture, so every beat reports proxy performance.
+    expect(
+      within(rail).getByRole("button", {
+        name: /1\.1 setup.*2\.5 seconds, Proxy performance/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(rail).getByRole("button", {
+        name: /2\.2 reaction.*3\.2 seconds, Proxy performance/i,
+      }),
+    ).toBeInTheDocument();
+
+    // No readiness wording may appear anywhere in the ordinary Ollo shell.
+    expect(screen.queryByText("Performance ready")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Render-ready performance"),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText("Proxy performance").length).toBeGreaterThan(0);
+  });
+
+  it("binds zero Mara engineering fixtures and zero ready performances on ordinary Ollo projects", () => {
+    const director = compileDirectorProject({
+      storyProject: createCv002Project(
+        "Mara boundary proof",
+        `Ollo bounces down the forest path, certain that today hides an adventure. Tix flutters beside him, asking him to slow down and look carefully. A soft golden glow drifts between the ferns, and Dot floats after it without a sound.
+
+The glow slips under the roots of an old oak and becomes a tiny leaf-shaped lantern. Ollo gasps, then reaches for it with both paws before Tix can whisper a warning. The lantern flickers awake, and a gentle voice introduces itself as the Storylight, a guide who loves stories and lights the way.
+
+Ollo gasps with delight, then promises to carry the Storylight carefully while Tix sighs with relief. The lantern glows brighter, drawing a warm trail through the trees. Dot lands on Ollo's scarf, and together the friends follow the light toward the oldest story in the Little Wood.`,
+        "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
+      ),
+      capabilities: alphaCapabilityRegistry,
+    });
+
+    // The ordinary Ollo registry selection never binds Mara engineering art.
+    expect(JSON.stringify(director)).not.toMatch(/mara-/i);
+    expect(
+      director.capabilityReport.items.filter(
+        (item) => item.resolution === "supported",
+      ),
+    ).toHaveLength(0);
+    expect(director.capabilityReport.summary.proxyOnly).toBe(
+      director.capabilityReport.items.length,
+    );
+  });
+
+  it("zooms timeline lanes honestly from fit width and back", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const timeline = screen.getByLabelText("Selected-beat timeline");
+    await user.click(within(timeline).getByText("Selected-beat timeline"));
+
+    const grid = screen.getByTestId("director-timeline-grid");
+    expect(grid.style.width).toBe("100%");
+    expect(screen.getByText("Fit width")).toBeInTheDocument();
+    const minus = screen.getByRole("button", { name: "Zoom timeline out" });
+    expect(minus).toBeDisabled();
+
+    const range = screen.getByLabelText("Timeline zoom level");
+    fireEvent.change(range, { target: { value: "1.6" } });
+    expect(grid.style.width).toBe("160%");
+    expect(minus).toBeEnabled();
+
+    fireEvent.change(range, { target: { value: "1" } });
+    expect(grid.style.width).toBe("100%");
+    expect(minus).toBeDisabled();
   });
 
   it("clears a typed direction when the selected beat changes", async () => {
@@ -730,6 +821,7 @@ describe("CV-002 editable script breakdown", () => {
     expect(
       screen.getByLabelText("Assigned animated scene preview"),
     ).toBeInTheDocument();
+    expect(screen.getByText(/Engineering demo/)).toBeInTheDocument();
     expect(
       (playerHarness.lastProps as Record<string, unknown> | null)?.component,
     ).toBe(ProductionComposition);
