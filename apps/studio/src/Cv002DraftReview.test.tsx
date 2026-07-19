@@ -21,13 +21,33 @@ import {
 } from "@storystage/story-engine/director-alpha";
 import { App } from "./App";
 
-const playerHarness = vi.hoisted(() => ({
-  lastProps: null as Record<string, unknown> | null,
-  lastSeek: null as number | null,
-  frameListener: null as
-    | ((event: { detail: { frame: number } }) => void)
-    | null,
-}));
+const playerHarness = vi.hoisted(() => {
+  const listeners = new Map<
+    string,
+    Set<(event: { detail: unknown }) => void>
+  >();
+  return {
+    lastProps: null as Record<string, unknown> | null,
+    lastSeek: null as number | null,
+    currentFrame: 0,
+    playing: false,
+    frameListener: null as
+      | ((event: { detail: { frame: number } }) => void)
+      | null,
+    listeners,
+    emit(name: string, detail: unknown) {
+      listeners.get(name)?.forEach((listener) => listener({ detail }));
+    },
+    reset() {
+      this.lastProps = null;
+      this.lastSeek = null;
+      this.currentFrame = 0;
+      this.playing = false;
+      this.frameListener = null;
+      this.listeners.clear();
+    },
+  };
+});
 
 vi.mock("@remotion/player", async () => {
   const React = await import("react");
@@ -40,20 +60,31 @@ vi.mock("@remotion/player", async () => {
       React.useImperativeHandle(ref, () => ({
         addEventListener: (
           name: string,
-          listener: typeof playerHarness.frameListener,
+          listener: (event: { detail: unknown }) => void,
         ) => {
-          if (name === "frameupdate") playerHarness.frameListener = listener;
+          // The last-registered frameupdate listener is the shell's playback
+          // sync (registered after the proof observer); legacy tests fire it
+          // directly. All listeners remain reachable via emit().
+          if (name === "frameupdate")
+            playerHarness.frameListener = listener as
+              | ((event: { detail: { frame: number } }) => void)
+              | null;
+          const set =
+            playerHarness.listeners.get(name) ??
+            new Set<(event: { detail: unknown }) => void>();
+          set.add(listener);
+          playerHarness.listeners.set(name, set);
         },
         removeEventListener: (
           name: string,
-          listener: typeof playerHarness.frameListener,
+          listener: (event: { detail: unknown }) => void,
         ) => {
-          if (
-            name === "frameupdate" &&
-            playerHarness.frameListener === listener
-          )
+          if (playerHarness.frameListener === listener)
             playerHarness.frameListener = null;
+          playerHarness.listeners.get(name)?.delete(listener);
         },
+        getCurrentFrame: () => playerHarness.currentFrame,
+        isPlaying: () => playerHarness.playing,
         seekTo: (frame: number) => {
           playerHarness.lastSeek = frame;
         },
@@ -87,9 +118,7 @@ vi.mock("@storystage/story-engine/director-alpha", async () => {
 
 afterEach(() => {
   cleanup();
-  playerHarness.lastProps = null;
-  playerHarness.lastSeek = null;
-  playerHarness.frameListener = null;
+  playerHarness.reset();
   candidateCountOverride.count = null;
   window.localStorage.clear();
   delete window.storyStage;
@@ -657,6 +686,43 @@ Ollo gasps with delight, then promises to carry the Storylight carefully while T
     expect(director.capabilityReport.summary.proxyOnly).toBe(
       director.capabilityReport.items.length,
     );
+  });
+
+  it("observes the real Player state, never the optimistic timeline state", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const container = screen.getByTestId("director-player-proof");
+
+    // The mock Player sits at frame 0. Selecting a beat moves the optimistic
+    // timeline seek to 340 — the proof surface must NOT follow it; only the
+    // Player's own report counts.
+    await user.click(
+      within(screen.getByLabelText("Studio scenes and beats")).getByRole(
+        "button",
+        { name: /2\.2 reaction/i },
+      ),
+    );
+    expect(playerHarness.lastSeek).toBe(340);
+    expect(container.getAttribute("data-proof-frame")).not.toBe("340");
+    expect(container.getAttribute("data-proof-frame")).toBe("0");
+
+    // When the real Player reports reaching the frame, the observation
+    // matches it exactly.
+    playerHarness.currentFrame = 340;
+    act(() => {
+      playerHarness.emit("seeked", { frame: 340 });
+    });
+    expect(container.getAttribute("data-proof-frame")).toBe("340");
+
+    // And the paused state comes from the Player, not the UI.
+    expect(container.getAttribute("data-proof-playing")).toBe("false");
+    playerHarness.playing = true;
+    act(() => {
+      playerHarness.emit("play", {});
+    });
+    expect(container.getAttribute("data-proof-playing")).toBe("true");
   });
 
   it("hides Mara behind the named Engineering demo action on ordinary Ollo projects", async () => {

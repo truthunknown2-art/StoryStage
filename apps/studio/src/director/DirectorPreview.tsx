@@ -89,12 +89,43 @@ export function DirectorAnimaticPreview({
     "visual",
   );
   const [frame, setFrame] = useState(0);
+  // Read-only Director proof surface: reflects the actual PlayerRef state via
+  // real Player events, independent of the optimistic timeline `frame` state
+  // used for styling. Exposed as stable data attributes so browser proofs can
+  // assert the Player's exact frame and paused state.
+  const [playerObservation, setPlayerObservation] = useState<{
+    frame: number | null;
+    playing: boolean;
+  }>({ frame: null, playing: false });
   const playerRef = useRef<PlayerRef>(null);
   const replayEndFrame = useRef<number | null>(null);
   const replayOnNextPlan = useRef(false);
 
   const director = workspace ? currentDirectorProject(workspace.history) : null;
   const selectedBeatId = workspace?.selectedBeatId ?? "";
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    const observe = () =>
+      setPlayerObservation({
+        frame: player.getCurrentFrame(),
+        playing: player.isPlaying(),
+      });
+    observe();
+    player.addEventListener("seeked", observe);
+    player.addEventListener("frameupdate", observe);
+    player.addEventListener("play", observe);
+    player.addEventListener("pause", observe);
+    player.addEventListener("ended", observe);
+    return () => {
+      player.removeEventListener("seeked", observe);
+      player.removeEventListener("frameupdate", observe);
+      player.removeEventListener("play", observe);
+      player.removeEventListener("pause", observe);
+      player.removeEventListener("ended", observe);
+    };
+  }, []);
 
   useEffect(() => {
     const player = playerRef.current;
@@ -322,7 +353,12 @@ export function DirectorAnimaticPreview({
             Draft animatic
           </span>
         </header>
-        <div className="cv2-director-player">
+        <div
+          className="cv2-director-player"
+          data-proof-frame={playerObservation.frame ?? undefined}
+          data-proof-playing={playerObservation.playing}
+          data-testid="director-player-proof"
+        >
           <Player
             acknowledgeRemotionLicense
             allowFullscreen
