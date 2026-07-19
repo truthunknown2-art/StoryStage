@@ -78,7 +78,13 @@
     "lint": "corepack pnpm exec eslint apps/studio -> clean",
     "format": "prettier --check clean on all touched files",
     "build": "verify:director-capability-assets OK; tsc --noEmit OK; vite build OK (pre-existing >500kB chunk note unchanged)",
-    "diffCheck": "git diff --check clean"
+    "diffCheck": "git diff --check clean",
+    "rootVerify": "pnpm verify (repository root, at ffee66e) -> exit 0: 19 capability assets verified; privacy 580 files passed; eslint . 0 errors (2 pre-existing render-worker flicker warnings, outside scope); typecheck clean across 10 projects; all tests green incl. director-alpha-boundary and studio 79/79"
+  },
+  "blockerResolution": {
+    "blocker": "PR #12 hosted blocker at 767669f: director-alpha-boundary audit failed — DirectorPreview imported CreatorSceneRail/CreatorBeatStrip from ../creator-studio-components, pulling ten legacy CV-001/showcase files into the audited Director surface via the story-engine index",
+    "fix": "ffee66e: boundary-safe DirectorSceneBeatRail inside apps/studio/src/director/ (director-alpha contracts + DirectorFrameThumbnail only); legacy components removed from creator-studio-components (no remaining consumers); no markup, aria-label, or behavior change",
+    "boundaryTest": "packages/story-engine director-alpha-boundary.test.ts -> passed"
   },
   "screenshots": [
     "kids-1440x900.png",

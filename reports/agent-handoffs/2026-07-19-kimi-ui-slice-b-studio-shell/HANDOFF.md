@@ -18,7 +18,9 @@ Behavior verified: rail/strip selection seeks the Player to the exact beat start
 
 Nothing was fabricated: no waveforms, trim handles, keyframe editors, Audio/Assets/Export controls, or production-authority pretense. No Mara artwork relabeled. `Cv001CreatorApp.tsx`, `story-engine`, `asset-pipeline`, `remotion-runtime`, `render-worker`, and KCAST contracts untouched.
 
-## Changed files (commit 60cd50f)
+## Changed files
+
+Commit `60cd50f` (initial implementation):
 
 - `apps/studio/src/director/DirectorPreview.tsx` — `DirectorAnimaticPreview` rewritten as the shell (rail / dominant Player / Director panel / bottom timeline; seek sync, playhead tracking, replay-after-patch, undo/redo)
 - `apps/studio/src/director/DirectorMotionPanel.tsx` — duplicated command input removed (the command panel now owns structured direction); keeps real motion facts
@@ -28,6 +30,12 @@ Nothing was fabricated: no waveforms, trim handles, keyframe editors, Audio/Asse
 - `apps/studio/src/Cv002DraftReview.test.tsx` — updated to the shell UX and extended: strip/rail seek parity, event-marker seek + playhead tracking, shell honesty labels, advanced closed by default, no Export/Audio/Assets pretense; no behavior assertions weakened
 
 Side effect to note: `Kvp001PlayerEvidence.tsx` (unmodified, outside scope) reuses `DirectorAnimaticPreview` and therefore now renders the shell; its tests still pass.
+
+Commit `ffee66e` — Hosted blocker resolution (PR #12 feedback, inbox v4):
+
+- `apps/studio/src/director/DirectorSceneBeatRail.tsx` — **new**: boundary-safe `DirectorSceneRail` / `DirectorBeatStrip` importing only `@storystage/story-engine/director-alpha` contracts + `./DirectorFrameThumbnail`, so the Director Alpha import-boundary audit can no longer reach legacy CV-001/showcase code
+- `apps/studio/src/director/DirectorPreview.tsx` — rail/strip imports switched to `./DirectorSceneBeatRail` (no markup or behavior change; same aria labels and CSS classes)
+- `apps/studio/src/creator-studio-components.tsx` — `CreatorSceneRail` / `CreatorBeatStrip` / `firstFrameForBeat` removed (no remaining consumers); `CreatorStudioShell` unchanged
 
 ## Commands and results
 
@@ -39,8 +47,9 @@ Side effect to note: `Kvp001PlayerEvidence.tsx` (unmodified, outside scope) reus
 | `prettier --check` (touched files) | clean |
 | `verify:director-capability-assets` + `tsc --noEmit` + `vite build` | succeeded (pre-existing >500 kB chunk note unchanged) |
 | `git diff --check` | clean |
+| **`pnpm verify` (repository root, after the boundary fix)** | **exit 0** — 19 capability assets verified; privacy 580 files passed; `eslint .` 0 errors (2 pre-existing render-worker flicker warnings in `kvp001-proof.ts`, outside slice scope); typecheck clean across 10 projects; all tests green: story-engine 253/253 (incl. `director-alpha-boundary`), studio 79/79, contracts/fixtures/orchestration/asset-pipeline/remotion-runtime/desktop/asset-worker/render-worker all passed |
 
-Note: bare `pnpm` is not on this machine's PATH, so the wrapped studio scripts (`build`, `dev`) were run as their exact constituent steps via `corepack pnpm` / local bins. Root `pnpm verify` / `pnpm lint` / `pnpm build` cover packages this slice cannot touch (story-engine, remotion-runtime, render-worker); the studio-scoped equivalents above all pass.
+Note: bare `pnpm` is not on this machine's PATH; root commands were run through corepack shims pinned to the repo's `pnpm@11.9.0`.
 
 ## Responsive and accessibility gates (Chromium + axe-core 4.10.3, dev server on port 5174*)
 
