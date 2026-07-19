@@ -24,25 +24,30 @@ import {
   editorialTargetsSchema,
   externalEditorialIntentDraftSchema,
   restoreEditorialDirectorProposalV1,
-  restoreEditorialHeuristicPlanningReceipt,
-  restoreEditorialManualPlanningReceipt,
-  restoreEditorialPlanningInvocationReceipt,
+  restoreEditorialExternalPlanningAttemptReceipt,
+  restoreEditorialHeuristicPlanningAttemptReceipt,
+  restoreEditorialManualPlanningAttemptReceipt,
   restoreEditorialPlanningRequest,
   restoreEditorialPlanningResult,
   restoreEditorialPlanningRunSpec,
+  restoreEditorialProposalBindingReceipt,
   restoreEditorialTargets,
   sealEditorialAcceptedResult,
   sealEditorialFallbackResult,
-  sealEditorialHeuristicPlanningReceipt,
-  sealEditorialManualPlanningReceipt,
+  sealEditorialExternalPlanningAttemptReceipt,
+  sealEditorialHeuristicPlanningAttemptReceipt,
+  sealEditorialManualPlanningAttemptReceipt,
   sealEditorialPlanningDiagnostics,
-  sealEditorialPlanningInvocationReceipt,
+  sealEditorialProposalBindingReceipt,
   sealEditorialRejectedResult,
   sealEditorialRevisionResult,
   sealEditorialPlanningRunSpec,
   sealEstimatedEditorialTimingBudget,
   type EditorialPlanningRequest,
   type EditorialPlanningRequestSources,
+  type EditorialPlanningRunSpec,
+  type EditorialPlanningAttemptReceipt,
+  type EditorialDirectorProposalV1,
   type ExternalEditorialIntentDraft,
 } from "./editorial-director-contracts";
 import { grammarProfiles } from "./grammar-profile";
@@ -289,6 +294,37 @@ const runSpecFor = (
     | "external-candidate"
     | "manual-candidate" = "external-candidate",
 ) => sealEditorialPlanningRunSpec({ request, lane });
+
+const externalAttemptFor = (
+  request: EditorialPlanningRequest,
+  runSpec: EditorialPlanningRunSpec = runSpecFor(request),
+  rawResponseContentHash = hash("response"),
+) =>
+  sealEditorialExternalPlanningAttemptReceipt({
+    request,
+    runSpec,
+    providerId: "openai",
+    modelId: "gpt-pro",
+    modelVersion: "2026-07-19",
+    promptTemplateContentHash: hash("prompt"),
+    contextContentHashes: [hash("context")],
+    rawResponseContentHash,
+    startedAt: "2026-07-19T08:00:00.000Z",
+    completedAt: "2026-07-19T08:00:01.000Z",
+  });
+
+const bindingFor = (
+  request: EditorialPlanningRequest,
+  runSpec: EditorialPlanningRunSpec,
+  attemptReceipt: EditorialPlanningAttemptReceipt,
+  proposal: EditorialDirectorProposalV1,
+) =>
+  sealEditorialProposalBindingReceipt({
+    request,
+    runSpec,
+    attemptReceipt,
+    proposal,
+  });
 
 describe("AI Editorial Director planning boundary", () => {
   it("derives real non-blocking EditorialTargets from exact Show Packs and GrammarProfiles", () => {
@@ -717,19 +753,24 @@ describe("AI Editorial Director planning boundary", () => {
       startedAt: "2026-07-19T08:00:00.000Z",
       completedAt: "2026-07-19T08:00:01.000Z",
     } as const;
-    const receipt = sealEditorialPlanningInvocationReceipt({
+    const attempt = sealEditorialExternalPlanningAttemptReceipt({
       request,
       runSpec,
-      proposal,
       ...receiptEvidence,
     });
-    const successorReceipt = sealEditorialPlanningInvocationReceipt({
+    const proposalBinding = bindingFor(request, runSpec, attempt, proposal);
+    const successorAttempt = sealEditorialExternalPlanningAttemptReceipt({
       request,
       runSpec,
-      proposal: successor,
       ...receiptEvidence,
       rawResponseContentHash: hash("successor-response"),
     });
+    const successorProposalBinding = bindingFor(
+      request,
+      runSpec,
+      successorAttempt,
+      successor,
+    );
     const clean = sealEditorialPlanningDiagnostics({
       request,
       proposal,
@@ -752,7 +793,8 @@ describe("AI Editorial Director planning boundary", () => {
       runSpec,
       proposal,
       diagnostics: clean,
-      planningReceipt: receipt,
+      attemptReceipt: attempt,
+      proposalBindingReceipt: proposalBinding,
       revisionRound: 0,
     });
     const rejected = sealEditorialRejectedResult({
@@ -761,7 +803,8 @@ describe("AI Editorial Director planning boundary", () => {
       rejectedProposal: proposal,
       rejectedIntent: externalIntentFor(request),
       diagnostics: hard,
-      planningReceipt: receipt,
+      attemptReceipt: attempt,
+      proposalBindingReceipt: proposalBinding,
       reasonCodes: ["continuity-invalid"],
       revisionRound: 0,
     });
@@ -772,7 +815,8 @@ describe("AI Editorial Director planning boundary", () => {
       qualityDiagnostics: hard,
       addressedFindingIds: ["hard-one"],
       successorProposal: successor,
-      successorPlanningReceipt: successorReceipt,
+      successorAttemptReceipt: successorAttempt,
+      successorProposalBindingReceipt: successorProposalBinding,
     });
     const requestBindingError = /exact request-bound external intent/i;
     const firstShot =
@@ -792,18 +836,19 @@ describe("AI Editorial Director planning boundary", () => {
       }),
     ).toThrow(requestBindingError);
     expect(() =>
-      sealEditorialPlanningInvocationReceipt({
+      sealEditorialProposalBindingReceipt({
         request,
         runSpec,
+        attemptReceipt: attempt,
         proposal: forged,
-        ...receiptEvidence,
       }),
     ).toThrow(requestBindingError);
     expect(() =>
-      restoreEditorialPlanningInvocationReceipt({
-        serialized: JSON.stringify(receipt),
+      restoreEditorialProposalBindingReceipt({
+        serialized: JSON.stringify(proposalBinding),
         request,
         runSpec,
+        attemptReceipt: attempt,
         proposal: forged,
       }),
     ).toThrow(requestBindingError);
@@ -820,7 +865,8 @@ describe("AI Editorial Director planning boundary", () => {
         runSpec,
         proposal: forged,
         diagnostics: clean,
-        planningReceipt: receipt,
+        attemptReceipt: attempt,
+        proposalBindingReceipt: proposalBinding,
         revisionRound: 0,
       }),
     ).toThrow(requestBindingError);
@@ -831,7 +877,8 @@ describe("AI Editorial Director planning boundary", () => {
         rejectedProposal: forged,
         rejectedIntent: externalIntentFor(request),
         diagnostics: hard,
-        planningReceipt: receipt,
+        attemptReceipt: attempt,
+        proposalBindingReceipt: proposalBinding,
         reasonCodes: ["continuity-invalid"],
         revisionRound: 0,
       }),
@@ -844,7 +891,8 @@ describe("AI Editorial Director planning boundary", () => {
         qualityDiagnostics: hard,
         addressedFindingIds: ["hard-one"],
         successorProposal: successor,
-        successorPlanningReceipt: successorReceipt,
+        successorAttemptReceipt: successorAttempt,
+        successorProposalBindingReceipt: successorProposalBinding,
       }),
     ).toThrow(requestBindingError);
     expect(() =>
@@ -855,7 +903,8 @@ describe("AI Editorial Director planning boundary", () => {
         qualityDiagnostics: hard,
         addressedFindingIds: ["hard-one"],
         successorProposal: forgedSuccessor,
-        successorPlanningReceipt: successorReceipt,
+        successorAttemptReceipt: successorAttempt,
+        successorProposalBindingReceipt: successorProposalBinding,
       }),
     ).toThrow(requestBindingError);
 
@@ -865,7 +914,8 @@ describe("AI Editorial Director planning boundary", () => {
         request,
         runSpec,
         proposals: [forged],
-        receipts: [receipt],
+        attemptReceipts: [attempt],
+        proposalBindingReceipts: [proposalBinding],
         diagnostics: [clean],
       }),
     ).toThrow(requestBindingError);
@@ -875,7 +925,8 @@ describe("AI Editorial Director planning boundary", () => {
         request,
         runSpec,
         proposals: [forged],
-        receipts: [receipt],
+        attemptReceipts: [attempt],
+        proposalBindingReceipts: [proposalBinding],
         diagnostics: [hard],
         rejectedIntents: [externalIntentFor(request)],
       }),
@@ -886,7 +937,8 @@ describe("AI Editorial Director planning boundary", () => {
         request,
         runSpec,
         proposals: [proposal, forgedSuccessor],
-        receipts: [successorReceipt],
+        attemptReceipts: [successorAttempt],
+        proposalBindingReceipts: [successorProposalBinding],
         diagnostics: [hard],
       }),
     ).toThrow(requestBindingError);
@@ -1004,14 +1056,13 @@ describe("AI Editorial Director planning boundary", () => {
     ).toThrow(/foreign editorial capability/i);
   });
 
-  it("keeps semantic proposal identity separate from provider invocation receipts", () => {
+  it("keeps semantic proposal identity separate from provider attempt receipts", () => {
     const { request } = fixture();
     const proposal = proposalFor(request);
     const runSpec = runSpecFor(request);
     const shared = {
       request,
       runSpec,
-      proposal,
       modelVersion: "2026-07-19",
       promptTemplateContentHash: hash("prompt"),
       contextContentHashes: [hash("context")],
@@ -1019,26 +1070,29 @@ describe("AI Editorial Director planning boundary", () => {
       startedAt: "2026-07-19T08:00:00.000Z",
       completedAt: "2026-07-19T08:00:01.000Z",
     };
-    const openai = sealEditorialPlanningInvocationReceipt({
+    const openai = sealEditorialExternalPlanningAttemptReceipt({
       ...shared,
       providerId: "openai",
       modelId: "gpt-pro",
     });
-    const kimi = sealEditorialPlanningInvocationReceipt({
+    const kimi = sealEditorialExternalPlanningAttemptReceipt({
       ...shared,
       providerId: "moonshot",
       modelId: "kimi-k3",
     });
 
-    expect(openai.proposalContentHash).toBe(proposal.contentHash);
-    expect(kimi.proposalContentHash).toBe(proposal.contentHash);
+    expect(openai).not.toHaveProperty("proposalContentHash");
+    expect(kimi).not.toHaveProperty("proposalContentHash");
+    expect(bindingFor(request, runSpec, openai, proposal)).toMatchObject({
+      attemptReceiptContentHash: openai.contentHash,
+      proposalContentHash: proposal.contentHash,
+    });
     expect(openai.contentHash).not.toBe(kimi.contentHash);
     expect(
-      restoreEditorialPlanningInvocationReceipt({
+      restoreEditorialExternalPlanningAttemptReceipt({
         serialized: JSON.stringify(openai),
         request,
         runSpec,
-        proposal,
       }),
     ).toEqual(openai);
   });
@@ -1058,90 +1112,81 @@ describe("AI Editorial Director planning boundary", () => {
       }),
     ).toEqual(externalRun);
 
-    const externalReceipt = sealEditorialPlanningInvocationReceipt({
-      request,
-      runSpec: externalRun,
-      proposal,
-      providerId: "openai",
-      modelId: "gpt-pro",
-      modelVersion: "2026-07-19",
-      promptTemplateContentHash: hash("prompt"),
-      contextContentHashes: [hash("context")],
-      rawResponseContentHash: hash("response"),
-      startedAt: "2026-07-19T08:00:00.000Z",
-      completedAt: "2026-07-19T08:00:01.000Z",
-    });
-    const heuristicReceipt = sealEditorialHeuristicPlanningReceipt({
+    const externalAttempt = externalAttemptFor(request, externalRun);
+    const heuristicAttempt = sealEditorialHeuristicPlanningAttemptReceipt({
       request,
       runSpec: heuristicRun,
-      proposal,
       plannerId: "heuristic-editorial-planner",
       plannerVersion: "1.0.0",
-      startedAt: "2026-07-19T08:00:00.000Z",
-      completedAt: "2026-07-19T08:00:01.000Z",
+      rawIntentContentHash: proposal.externalIntentContentHash,
     });
-    const manualReceipt = sealEditorialManualPlanningReceipt({
+    const manualAttempt = sealEditorialManualPlanningAttemptReceipt({
       request,
       runSpec: manualRun,
-      proposal,
       authorId: "editor-pbirc",
       authorshipEvidenceContentHash: hash("manual-authorship-evidence"),
-      authoredAt: "2026-07-19T08:00:00.000Z",
+      rawIntentContentHash: proposal.externalIntentContentHash,
     });
 
-    expect(heuristicReceipt).toMatchObject({
+    expect(heuristicAttempt).toMatchObject({
       lane: "heuristic-control",
       plannerId: "heuristic-editorial-planner",
       plannerVersion: "1.0.0",
     });
-    expect(externalReceipt).toMatchObject({
+    expect(externalAttempt).toMatchObject({
       lane: "external-candidate",
       providerId: "openai",
       modelId: "gpt-pro",
     });
-    expect(manualReceipt).toMatchObject({
+    expect(manualAttempt).toMatchObject({
       lane: "manual-candidate",
       authorId: "editor-pbirc",
       authorshipEvidenceContentHash: hash("manual-authorship-evidence"),
     });
     expect(
-      restoreEditorialHeuristicPlanningReceipt({
-        serialized: JSON.stringify(heuristicReceipt),
+      restoreEditorialHeuristicPlanningAttemptReceipt({
+        serialized: JSON.stringify(heuristicAttempt),
         request,
         runSpec: heuristicRun,
-        proposal,
       }),
-    ).toEqual(heuristicReceipt);
+    ).toEqual(heuristicAttempt);
     expect(
-      restoreEditorialManualPlanningReceipt({
-        serialized: JSON.stringify(manualReceipt),
+      restoreEditorialManualPlanningAttemptReceipt({
+        serialized: JSON.stringify(manualAttempt),
         request,
         runSpec: manualRun,
-        proposal,
       }),
-    ).toEqual(manualReceipt);
+    ).toEqual(manualAttempt);
 
     const clean = sealEditorialPlanningDiagnostics({
       request,
       proposal,
       findings: [],
     });
-    for (const [runSpec, planningReceipt] of [
-      [externalRun, externalReceipt],
-      [heuristicRun, heuristicReceipt],
-      [manualRun, manualReceipt],
+    for (const [runSpec, attemptReceipt] of [
+      [externalRun, externalAttempt],
+      [heuristicRun, heuristicAttempt],
+      [manualRun, manualAttempt],
     ] as const) {
+      const proposalBindingReceipt = bindingFor(
+        request,
+        runSpec,
+        attemptReceipt,
+        proposal,
+      );
       const accepted = sealEditorialAcceptedResult({
         request,
         runSpec,
         proposal,
         diagnostics: clean,
-        planningReceipt,
+        attemptReceipt,
+        proposalBindingReceipt,
         revisionRound: 0,
       });
       expect(accepted).toMatchObject({
         runSpecContentHash: runSpec.contentHash,
-        planningReceiptContentHash: planningReceipt.contentHash,
+        attemptReceiptContentHash: attemptReceipt.contentHash,
+        proposalBindingReceiptContentHash: proposalBindingReceipt.contentHash,
       });
     }
 
@@ -1151,7 +1196,13 @@ describe("AI Editorial Director planning boundary", () => {
         runSpec: externalRun,
         proposal,
         diagnostics: clean,
-        planningReceipt: heuristicReceipt,
+        attemptReceipt: heuristicAttempt,
+        proposalBindingReceipt: bindingFor(
+          request,
+          heuristicRun,
+          heuristicAttempt,
+          proposal,
+        ),
         revisionRound: 0,
       }),
     ).toThrow(/stale for its exact artifacts|lane does not match/i);
@@ -1161,15 +1212,20 @@ describe("AI Editorial Director planning boundary", () => {
         runSpec: externalRun,
         proposal,
         diagnostics: clean,
-        planningReceipt: null as never,
+        attemptReceipt: null as never,
+        proposalBindingReceipt: bindingFor(
+          request,
+          externalRun,
+          externalAttempt,
+          proposal,
+        ),
         revisionRound: 0,
       }),
     ).toThrow(/requires a lane receipt/i);
     expect(() =>
-      sealEditorialPlanningInvocationReceipt({
+      sealEditorialExternalPlanningAttemptReceipt({
         request,
         runSpec: heuristicRun,
-        proposal,
         providerId: "openai",
         modelId: "gpt-pro",
         modelVersion: "2026-07-19",
@@ -1180,6 +1236,318 @@ describe("AI Editorial Director planning boundary", () => {
         completedAt: "2026-07-19T08:00:01.000Z",
       }),
     ).toThrow(/external-candidate lane/i);
+    const substitutedHeuristicIntent =
+      sealEditorialHeuristicPlanningAttemptReceipt({
+        request,
+        runSpec: heuristicRun,
+        plannerId: "heuristic-editorial-planner",
+        plannerVersion: "1.0.0",
+        rawIntentContentHash: hash("substituted-raw-intent"),
+      });
+    expect(() =>
+      bindingFor(request, heuristicRun, substitutedHeuristicIntent, proposal),
+    ).toThrow(/raw intent does not match/i);
+  });
+
+  it("seals and restores rejection evidence at raw, intent, and proposal stages", () => {
+    const { request } = fixture();
+    const runSpec = runSpecFor(request);
+    const attempt = externalAttemptFor(
+      request,
+      runSpec,
+      hash("schema-invalid-raw-response"),
+    );
+    const diagnostic = (
+      code:
+        | "schema-invalid"
+        | "stale-request"
+        | "foreign-reference"
+        | "coverage-invalid",
+    ) =>
+      sealEditorialPlanningDiagnostics({
+        request,
+        proposal: null,
+        findings: [
+          {
+            id: `hard-${code}`,
+            severity: "hard",
+            code,
+            message: `Rejected before proposal binding: ${code}.`,
+          },
+        ],
+      });
+
+    const rawRejected = sealEditorialRejectedResult({
+      request,
+      runSpec,
+      rejectedProposal: null,
+      rejectedIntent: null,
+      diagnostics: diagnostic("schema-invalid"),
+      attemptReceipt: attempt,
+      proposalBindingReceipt: null,
+      reasonCodes: ["schema-invalid"],
+      revisionRound: 0,
+    });
+    expect(rawRejected).toMatchObject({
+      rejectedIntentContentHash: null,
+      rejectedProposalContentHash: null,
+      attemptReceiptContentHash: attempt.contentHash,
+      proposalBindingReceiptContentHash: null,
+    });
+    expect(
+      restoreEditorialPlanningResult({
+        serialized: JSON.stringify(rawRejected),
+        request,
+        runSpec,
+        proposals: [],
+        attemptReceipts: [attempt],
+        proposalBindingReceipts: [],
+        diagnostics: [diagnostic("schema-invalid")],
+      }),
+    ).toEqual(rawRejected);
+
+    const staleIntent = externalIntentFor(request);
+    staleIntent.requestContentHash = hash("stale-request");
+    const foreignIntent = externalIntentFor(request);
+    foreignIntent.episode.sequences[0]!.scenes[0]!.editorialShots[0]!.stageRef =
+      "stage-ref-foreign";
+    const coverageIntent = externalIntentFor(request);
+    coverageIntent.episode.sequences[0]!.scenes[0]!.beats[0]!.editorialShotOrdinals =
+      [1];
+
+    for (const [intent, code] of [
+      [staleIntent, "stale-request"],
+      [foreignIntent, "foreign-reference"],
+      [coverageIntent, "coverage-invalid"],
+    ] as const) {
+      expect(() =>
+        bindEditorialDirectorProposalV1({ request, externalIntent: intent }),
+      ).toThrow();
+      const diagnostics = diagnostic(code);
+      const rejected = sealEditorialRejectedResult({
+        request,
+        runSpec,
+        rejectedProposal: null,
+        rejectedIntent: intent,
+        diagnostics,
+        attemptReceipt: attempt,
+        proposalBindingReceipt: null,
+        reasonCodes: [code],
+        revisionRound: 0,
+      });
+      expect(rejected).toMatchObject({
+        rejectedProposalContentHash: null,
+        proposalBindingReceiptContentHash: null,
+      });
+      expect(
+        restoreEditorialPlanningResult({
+          serialized: JSON.stringify(rejected),
+          request,
+          runSpec,
+          proposals: [],
+          attemptReceipts: [attempt],
+          proposalBindingReceipts: [],
+          diagnostics: [diagnostics],
+          rejectedIntents: [intent],
+        }),
+      ).toEqual(rejected);
+    }
+
+    const proposal = proposalFor(request);
+    const proposalBindingReceipt = bindingFor(
+      request,
+      runSpec,
+      attempt,
+      proposal,
+    );
+    const postProposalDiagnostics = sealEditorialPlanningDiagnostics({
+      request,
+      proposal,
+      findings: [
+        {
+          id: "hard-continuity",
+          severity: "hard",
+          code: "continuity-invalid",
+          message: "Rejected after a proposal was bound.",
+        },
+      ],
+    });
+    const postProposalRejected = sealEditorialRejectedResult({
+      request,
+      runSpec,
+      rejectedProposal: proposal,
+      rejectedIntent: externalIntentFor(request),
+      diagnostics: postProposalDiagnostics,
+      attemptReceipt: attempt,
+      proposalBindingReceipt,
+      reasonCodes: ["continuity-invalid"],
+      revisionRound: 0,
+    });
+    expect(postProposalRejected).toMatchObject({
+      rejectedProposalContentHash: proposal.contentHash,
+      rejectedIntentContentHash: proposal.externalIntentContentHash,
+      proposalBindingReceiptContentHash: proposalBindingReceipt.contentHash,
+    });
+  });
+
+  it("rejects missing or substituted attempt, intent, binding, and run artifacts", () => {
+    const { request } = fixture();
+    const runSpec = runSpecFor(request);
+    const proposal = proposalFor(request);
+    const attempt = externalAttemptFor(request, runSpec);
+    const proposalBindingReceipt = bindingFor(
+      request,
+      runSpec,
+      attempt,
+      proposal,
+    );
+    const diagnostics = sealEditorialPlanningDiagnostics({
+      request,
+      proposal,
+      findings: [],
+    });
+    const accepted = sealEditorialAcceptedResult({
+      request,
+      runSpec,
+      proposal,
+      diagnostics,
+      attemptReceipt: attempt,
+      proposalBindingReceipt,
+      revisionRound: 0,
+    });
+    const substitutedAttempt = structuredClone(attempt);
+    substitutedAttempt.rawResponseContentHash = hash("substituted-response");
+    const { contentHash: _attemptHash, ...attemptDraft } = substitutedAttempt;
+    void _attemptHash;
+    substitutedAttempt.contentHash = hashCanonical(attemptDraft);
+    const wrongLane = runSpecFor(request, "heuristic-control");
+
+    expect(() =>
+      restoreEditorialPlanningResult({
+        serialized: JSON.stringify(accepted),
+        request,
+        runSpec,
+        proposals: [proposal],
+        attemptReceipts: [],
+        proposalBindingReceipts: [proposalBindingReceipt],
+        diagnostics: [diagnostics],
+      }),
+    ).toThrow(/missing its exact attempt receipt/i);
+    expect(() =>
+      restoreEditorialPlanningResult({
+        serialized: JSON.stringify(accepted),
+        request,
+        runSpec,
+        proposals: [proposal],
+        attemptReceipts: [substitutedAttempt],
+        proposalBindingReceipts: [proposalBindingReceipt],
+        diagnostics: [diagnostics],
+      }),
+    ).toThrow(/missing its exact attempt receipt/i);
+    expect(() =>
+      restoreEditorialPlanningResult({
+        serialized: JSON.stringify(accepted),
+        request,
+        runSpec,
+        proposals: [proposal],
+        attemptReceipts: [attempt],
+        proposalBindingReceipts: [],
+        diagnostics: [diagnostics],
+      }),
+    ).toThrow(/missing its exact proposal binding receipt/i);
+    expect(() =>
+      sealEditorialAcceptedResult({
+        request,
+        runSpec,
+        proposal,
+        diagnostics,
+        attemptReceipt: attempt,
+        proposalBindingReceipt: null as never,
+        revisionRound: 0,
+      }),
+    ).toThrow(/requires an exact proposal binding receipt/i);
+    expect(() =>
+      sealEditorialAcceptedResult({
+        request,
+        runSpec: wrongLane,
+        proposal,
+        diagnostics,
+        attemptReceipt: attempt,
+        proposalBindingReceipt,
+        revisionRound: 0,
+      }),
+    ).toThrow(/lane does not match|stale for its exact artifacts/i);
+
+    const successor = revisedProposalFor(request);
+    const successorAttempt = externalAttemptFor(
+      request,
+      runSpec,
+      hash("successor-attempt"),
+    );
+    const revisionDiagnostics = sealEditorialPlanningDiagnostics({
+      request,
+      proposal,
+      findings: [
+        {
+          id: "quality-revision",
+          severity: "warning",
+          code: "shot-mix-prior",
+          message: "Revise the shot mix.",
+        },
+      ],
+    });
+    expect(() =>
+      sealEditorialRevisionResult({
+        request,
+        runSpec,
+        priorProposal: proposal,
+        qualityDiagnostics: revisionDiagnostics,
+        addressedFindingIds: ["quality-revision"],
+        successorProposal: successor,
+        successorAttemptReceipt: successorAttempt,
+        successorProposalBindingReceipt: proposalBindingReceipt,
+      }),
+    ).toThrow(/proposal binding receipt does not match/i);
+
+    const staleIntent = externalIntentFor(request);
+    staleIntent.requestContentHash = hash("stale-request");
+    const staleDiagnostics = sealEditorialPlanningDiagnostics({
+      request,
+      proposal: null,
+      findings: [
+        {
+          id: "hard-stale-request",
+          severity: "hard",
+          code: "stale-request",
+          message: "Stale intent.",
+        },
+      ],
+    });
+    const rejected = sealEditorialRejectedResult({
+      request,
+      runSpec,
+      rejectedProposal: null,
+      rejectedIntent: staleIntent,
+      diagnostics: staleDiagnostics,
+      attemptReceipt: attempt,
+      proposalBindingReceipt: null,
+      reasonCodes: ["stale-request"],
+      revisionRound: 0,
+    });
+    const substitutedIntent = structuredClone(staleIntent);
+    substitutedIntent.requestContentHash = hash("another-stale-request");
+    expect(() =>
+      restoreEditorialPlanningResult({
+        serialized: JSON.stringify(rejected),
+        request,
+        runSpec,
+        proposals: [],
+        attemptReceipts: [attempt],
+        proposalBindingReceipts: [],
+        diagnostics: [staleDiagnostics],
+        rejectedIntents: [substitutedIntent],
+      }),
+    ).toThrow();
   });
 
   it("reserves structural diagnostic codes for hard findings", () => {
@@ -1247,32 +1615,19 @@ describe("AI Editorial Director planning boundary", () => {
     const proposal = proposalFor(request);
     const successor = revisedProposalFor(request);
     const runSpec = runSpecFor(request);
-    const receipt = sealEditorialPlanningInvocationReceipt({
+    const attempt = externalAttemptFor(request, runSpec);
+    const proposalBinding = bindingFor(request, runSpec, attempt, proposal);
+    const successorAttempt = externalAttemptFor(
       request,
       runSpec,
-      proposal,
-      providerId: "openai",
-      modelId: "gpt-pro",
-      modelVersion: "2026-07-19",
-      promptTemplateContentHash: hash("prompt"),
-      contextContentHashes: [hash("context")],
-      rawResponseContentHash: hash("response"),
-      startedAt: "2026-07-19T08:00:00.000Z",
-      completedAt: "2026-07-19T08:00:01.000Z",
-    });
-    const successorReceipt = sealEditorialPlanningInvocationReceipt({
+      hash("successor-response"),
+    );
+    const successorProposalBinding = bindingFor(
       request,
       runSpec,
-      proposal: successor,
-      providerId: "openai",
-      modelId: "gpt-pro",
-      modelVersion: "2026-07-19",
-      promptTemplateContentHash: hash("prompt"),
-      contextContentHashes: [hash("context")],
-      rawResponseContentHash: hash("successor-response"),
-      startedAt: "2026-07-19T08:00:01.000Z",
-      completedAt: "2026-07-19T08:00:02.000Z",
-    });
+      successorAttempt,
+      successor,
+    );
     const clean = sealEditorialPlanningDiagnostics({
       request,
       proposal,
@@ -1290,7 +1645,8 @@ describe("AI Editorial Director planning boundary", () => {
       runSpec,
       proposal,
       diagnostics: clean,
-      planningReceipt: receipt,
+      attemptReceipt: attempt,
+      proposalBindingReceipt: proposalBinding,
       revisionRound: 0,
     });
     expect(
@@ -1299,7 +1655,8 @@ describe("AI Editorial Director planning boundary", () => {
         request,
         runSpec,
         proposals: [proposal],
-        receipts: [receipt],
+        attemptReceipts: [attempt],
+        proposalBindingReceipts: [proposalBinding],
         diagnostics: [clean],
       }),
     ).toEqual(accepted);
@@ -1322,7 +1679,8 @@ describe("AI Editorial Director planning boundary", () => {
       rejectedProposal: proposal,
       rejectedIntent: externalIntentFor(request),
       diagnostics: hard,
-      planningReceipt: receipt,
+      attemptReceipt: attempt,
+      proposalBindingReceipt: proposalBinding,
       reasonCodes: ["continuity-invalid"],
       revisionRound: 0,
     });
@@ -1332,7 +1690,8 @@ describe("AI Editorial Director planning boundary", () => {
         request,
         runSpec,
         proposals: [proposal],
-        receipts: [receipt],
+        attemptReceipts: [attempt],
+        proposalBindingReceipts: [proposalBinding],
         diagnostics: [hard],
         rejectedIntents: [externalIntentFor(request)],
       }),
@@ -1345,7 +1704,8 @@ describe("AI Editorial Director planning boundary", () => {
       qualityDiagnostics: hard,
       addressedFindingIds: ["hard-one"],
       successorProposal: successor,
-      successorPlanningReceipt: successorReceipt,
+      successorAttemptReceipt: successorAttempt,
+      successorProposalBindingReceipt: successorProposalBinding,
     });
     expect(
       restoreEditorialPlanningResult({
@@ -1353,7 +1713,8 @@ describe("AI Editorial Director planning boundary", () => {
         request,
         runSpec,
         proposals: [proposal, successor],
-        receipts: [successorReceipt],
+        attemptReceipts: [successorAttempt],
+        proposalBindingReceipts: [successorProposalBinding],
         diagnostics: [hard],
       }),
     ).toEqual(revision);
@@ -1363,19 +1724,8 @@ describe("AI Editorial Director planning boundary", () => {
     const { request } = fixture();
     const proposal = proposalFor(request);
     const runSpec = runSpecFor(request);
-    const receipt = sealEditorialPlanningInvocationReceipt({
-      request,
-      runSpec,
-      proposal,
-      providerId: "openai",
-      modelId: "gpt-pro",
-      modelVersion: "2026-07-19",
-      promptTemplateContentHash: hash("prompt"),
-      contextContentHashes: [],
-      rawResponseContentHash: hash("response"),
-      startedAt: "2026-07-19T08:00:00.000Z",
-      completedAt: "2026-07-19T08:00:01.000Z",
-    });
+    const attempt = externalAttemptFor(request, runSpec);
+    const proposalBinding = bindingFor(request, runSpec, attempt, proposal);
     const hard = sealEditorialPlanningDiagnostics({
       request,
       proposal,
@@ -1397,7 +1747,8 @@ describe("AI Editorial Director planning boundary", () => {
         runSpec,
         proposal,
         diagnostics: hard,
-        planningReceipt: receipt,
+        attemptReceipt: attempt,
+        proposalBindingReceipt: proposalBinding,
         revisionRound: 0,
       }),
     ).toThrow(/hard diagnostics/i);
