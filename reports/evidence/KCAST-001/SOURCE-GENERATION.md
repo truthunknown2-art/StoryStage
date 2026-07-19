@@ -721,3 +721,65 @@ request remains incomplete because all six face/parts kits are still absent.
 Identity consistency, semantic-view review, and registration readiness remain
 false. No import receipt, prepared manifest, approval, rig authority, or
 production binding exists.
+
+## Candidate I profile rig-source family
+
+Candidate I is a new, independently generated profile-left/profile-right
+source family intended to replace Candidate G's rejected profile attempt. It
+does **not** overwrite or rehabilitate Candidate G. Candidate G remains sealed
+negative evidence under its original hashes.
+
+The ten source rasters were produced with the built-in ChatGPT image tool using
+the role contracts and layout constraints recorded in the Candidate G prompts
+above, while referencing the Ollo identity board, the Candidate H matching
+profile view, and the approved mixed-media art-direction board. Candidate I's
+two directions were generated independently; neither direction was created by
+flipping the other. Three initially returned profile-right sheets did not pass
+the unchanged chroma-key distance threshold, so the image tool regenerated
+only their flat background. No validator threshold was weakened and no
+programmatic recolouring was applied to the committed candidates.
+
+Immutable generation-store identifiers for the exact source bytes:
+
+| Role                                                              | Generation-store source                         |
+| ----------------------------------------------------------------- | ----------------------------------------------- |
+| profile-left core                                                 | `exec-e168f5d8-bda7-4b82-a82e-fb4bc358e807.png` |
+| profile-left limbs                                                | `exec-6aead09f-cb8f-47b0-b4f9-b082447dbf7f.png` |
+| profile-left eyes/lids/brows                                      | `exec-aae34a42-4ba4-4972-a3b7-a00086ce4561.png` |
+| profile-left lower-face base                                      | `exec-46e07009-c92f-40a8-863e-6fc8e9ba56c6.png` |
+| profile-left mouth overlays                                       | `exec-7936c2a7-c441-4b82-8317-fb19a339453d.png` |
+| profile-right core                                                | `exec-c5329e23-4f1f-4897-8db6-ab40633200b2.png` |
+| profile-right limbs, final background-only regeneration           | `exec-a30c4983-e2fc-43a1-b280-64deb655257f.png` |
+| profile-right eyes/lids/brows, final background-only regeneration | `exec-6c11ff02-5b08-435b-9a5f-d6694c93869c.png` |
+| profile-right lower-face base, final background-only regeneration | `exec-6b36352d-35a3-410c-8e7c-14ce010791f1.png` |
+| profile-right mouth overlays                                      | `exec-33194b06-f424-4176-a569-d42e8189c68a.png` |
+
+Exact repository candidates at source generation:
+
+| File                                                                       | SHA-256                                                            |  Dimensions |   Bytes | Measured key | Distance from `#ff00ff` |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------ | ----------: | ------: | ------------ | ----------------------: |
+| `candidates/ollo-face-profile-left-eyes-candidate-i-chroma.png`            | `6dcb91b435d1f45a9e29ee0a7148b2b24ab628bba5f7519386841767483b5e3e` |  `1774x887` | 1153967 | `#f10ae8`    |                  28.723 |
+| `candidates/ollo-face-profile-left-lower-base-candidate-i-chroma.png`      | `5b3a26b527c982cfcdfa0541b1aa870b35dbbd562c37a3dc5e0bc9aae64b949f` | `1254x1254` | 1108027 | `#f608e5`    |                  28.653 |
+| `candidates/ollo-face-profile-left-mouth-overlays-candidate-i-chroma.png`  | `2cfecd2fb72f0490c6578f19a5b2b68bd934b921cdee16536753ed64800bdda2` |  `1672x941` | 1010358 | `#f607e4`    |                  29.309 |
+| `candidates/ollo-face-profile-right-eyes-candidate-i-chroma.png`           | `3e15208cacc0af31a587b87cb3ac24d3733f41f01e6e52fa1c982bafa74882f2` |  `1774x887` | 1186347 | `#f40cef`    |                  22.825 |
+| `candidates/ollo-face-profile-right-lower-base-candidate-i-chroma.png`     | `1428225cc23c6ead2424ad07ab158ada58a210c4e5f2fbd152151585da68e286` | `1448x1086` | 1028892 | `#f511ef`    |                  25.397 |
+| `candidates/ollo-face-profile-right-mouth-overlays-candidate-i-chroma.png` | `7f125ebdcf5d8096ba9b2e6e001e10dc4c88bbf0d271ec99a76bed11a7f93592` |  `1672x941` | 1067868 | `#f107e5`    |                  30.348 |
+| `candidates/ollo-parts-profile-left-core-candidate-i-chroma.png`           | `7a813648051c7b76af20557d61d5595e901a4046f15186718ed55a74026889ee` | `1536x1024` | 1833039 | `#f106e7`    |                  28.425 |
+| `candidates/ollo-parts-profile-left-limbs-candidate-i-chroma.png`          | `d6f44d516f4813bbdf16b7e41cd4ddec162a12ee8254919fdbb5c031fe1d716a` |  `1672x941` | 1366144 | `#f107ea`    |                  26.192 |
+| `candidates/ollo-parts-profile-right-core-candidate-i-chroma.png`          | `9df006173d380b62874c47cad57a69e3f2a57f05d019de79a3907a2a4271530a` | `1536x1024` | 1665621 | `#f108ed`    |                  24.166 |
+| `candidates/ollo-parts-profile-right-limbs-candidate-i-chroma.png`         | `d35451eba6c0d0ca918851e07ce80b32374a19007173e87052709a2d7b0049c5` |  `1672x941` | 1424701 | `#f50af0`    |                  20.616 |
+
+Every measured key is within the unchanged maximum Euclidean RGB distance of
+32 from `#ff00ff`. That is only a mechanical source-input gate. At source
+generation time there was no verified import receipt, and human identity, view
+semantics, component-role correctness, contact-sheet review, registration,
+provider, preparation, approval, rig, and production authority were all false.
+The source rasters alone cannot change any of those gates.
+
+Subsequent KCAST-001G evidence completed the deterministic composition and
+created a verified **mechanical import receipt** for the exact seven-item
+bundle. That receipt has `providerAuthority:false` and
+`approvalRequired:true`. Human identity, semantic-view, visual-role, and
+registration gates remain false, as do preparation, approval, rig, and
+production authority. See `PROFILE-ATLAS-COMPOSITION.md` and
+`../../agent-handoffs/2026-07-19-kcast001g-candidate-i-complete-intake.md`.

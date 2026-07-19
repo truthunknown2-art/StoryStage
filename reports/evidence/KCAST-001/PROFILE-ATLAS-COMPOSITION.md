@@ -1,6 +1,7 @@
 # KCAST-001D profile atlas composition gate
 
-Status: **candidate G rejected; deterministic compositor ready for regenerated sources**.
+Status: **candidate G remains rejected; candidate I passes deterministic
+composition and mechanical import, with human review still required**.
 
 ## What the code now proves
 
@@ -53,10 +54,50 @@ Evidence:
 - evidence content hash:
   `6c296121f7eaa00567ca3f6b743006e0300597f0f2abfb819d7d061c611a4d4e`
 
-## Regeneration contract
+## Candidate G regeneration contract
 
 Regenerate the four chroma-failing rasters against a clean canonical magenta
 background, reauthor both foreshortened profile apron layers, and reauthor the
 right-facing eye/lid/brow and mouth sets. New bytes must receive new source
 hashes and rectangles; the rejected G coordinates are diagnostic observations,
 not reusable approval.
+
+## Candidate I result
+
+Candidate I supplies ten new independently generated profile sources. The
+deterministic proof reopens those exact bytes, extracts fresh 8-connected
+content bounds, composes both profile atlases through the existing compositor,
+and reconciles them with the Candidate H turnaround and Candidate F front kits.
+Candidate G is not overwritten or promoted.
+
+The unmodified profile-right lower-face base cannot satisfy the unchanged
+exclusive mouth-patch alpha-plane contract. The proof preserves that failure,
+then applies one explicit deterministic normalization to the raw source:
+uniform `1.5x` Sharp/Lanczos3 resize with sealed input, processor, dimensions,
+and output hashes. No chroma threshold or patch invariant is weakened.
+
+Candidate I now proves:
+
+- all ten raw sources pass the unchanged 32px chroma gate;
+- both profiles contain the canonical 20 part roles and 22 face roles;
+- all 42 corresponding foreground roles are non-identical and are not exact
+  horizontal pixel flips after chroma key, connected-bound cropping,
+  transparent-RGB zeroing, and pairwise centered registration; this remains
+  byte evidence rather than semantic-view approval;
+- atlas, lower-face diagnostic, seven-item staging, and import-receipt reruns
+  are byte-identical;
+- the exact seven requested files create a verified mechanical import receipt
+  with `providerAuthority:false` and `approvalRequired:true`.
+
+That receipt is byte/coverage evidence only. Identity consistency, semantic
+handedness, visual-role correctness, assembled registration, preparation,
+approval, and production binding remain false until human-reviewed profile
+pose composites and motion diagnostics exist.
+
+Evidence:
+
+- `ollo-profile-atlas-evidence-i.json`
+- `ollo-complete-candidate-bundle-i.json`
+- `ollo-complete-staging-report-i.json`
+- `ollo-complete-import-receipt-i.json`
+- handoff: `../../agent-handoffs/2026-07-19-kcast001g-candidate-i-complete-intake.md`

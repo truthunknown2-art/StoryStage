@@ -21,6 +21,7 @@
     "proof:kcast001d-front-atlas": "tsx scripts/kcast001d-ollo-front-atlas-composition-proof.ts",
     "proof:kcast001d-profile-atlas": "tsx scripts/kcast001d-ollo-profile-atlas-composition-proof.ts",
     "proof:kcast001f-turnaround-sheet": "tsx scripts/kcast001f-ollo-turnaround-sheet-proof.ts",
+    "proof:kcast001g-complete-intake": "tsx scripts/kcast001g-ollo-complete-intake-proof.ts",
     "test": "vitest run src/index.test.ts src/chroma-key.test.ts src/fixed-grid-front-atlas.test.ts src/fixed-grid-profile-atlas.test.ts src/turnaround-sheet-compositor.test.ts src/character-rig-staging.test.ts src/character-rig-preparation.test.ts src/import-evidence-store.test.ts src/approved-asset-workflow.test.ts src/public-show-pack-promotion.test.ts src/public-show-pack-review-store.test.ts src/sprite-atlas.test.ts",
     "typecheck": "tsc --noEmit"
   },
