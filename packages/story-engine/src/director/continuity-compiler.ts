@@ -635,7 +635,53 @@ export function compileContinuitySequencePlan(
         return;
       }
 
-      if (program.kind === "atlas-cycle") {
+      if (blocking.locomotion) {
+        const target = normalizedLandmark(
+          world,
+          plannedShot.stageId,
+          blocking.exitLandmarkId,
+        );
+        const duration = resolved.endFrameExclusive - resolved.startFrame;
+        const travelFrames =
+          duration -
+          blocking.locomotion.decelerationFrames -
+          blocking.locomotion.impactFrames -
+          blocking.locomotion.settleFrames;
+        if (travelFrames <= 0)
+          throw new Error(
+            `${plannedShot.id} locomotion phases leave no readable travel frames.`,
+          );
+        const decelerationFrame = resolved.startFrame + travelFrames;
+        const plantFrame =
+          decelerationFrame + blocking.locomotion.decelerationFrames;
+        worldEntity.transform.x = target.x;
+        worldEntity.transform.y = target.y;
+        worldEntity.transform.z = target.z;
+        performancePictureEvents.push(
+          {
+            source: "performance-event",
+            id: `${plannedShot.id}-${blocking.entityId}-directed-decelerate`,
+            parentDirectorEventId: plannedShot.entryEventId,
+            sourceProgramContentHash: program.contentHash,
+            frame: decelerationFrame,
+            subjectIds: [blocking.entityId],
+            kind: "deceleration",
+          },
+          {
+            source: "performance-event",
+            id: `${plannedShot.id}-${blocking.entityId}-directed-plant`,
+            parentDirectorEventId: plannedShot.entryEventId,
+            sourceProgramContentHash: program.contentHash,
+            frame: plantFrame,
+            subjectIds: [blocking.entityId],
+            kind: "plant",
+          },
+        );
+        performanceState.motionMode = "idle";
+        performanceState.actionPhase = "settle";
+        performanceState.gaitPhase = null;
+        worldEntity.velocity = { x: 0, y: 0, z: 0 };
+      } else if (program.kind === "atlas-cycle") {
         const target = normalizedLandmark(
           world,
           plannedShot.stageId,
@@ -811,6 +857,9 @@ export function compileContinuitySequencePlan(
           entityId,
           input.performancePrograms,
         );
+        const locomotion = plannedShot.blocking.find(
+          (blocking) => blocking.entityId === entityId,
+        )?.locomotion;
         const moved =
           Math.hypot(
             exitWorld.transform.x - entryWorld.transform.x,
@@ -873,7 +922,8 @@ export function compileContinuitySequencePlan(
             segment(
               resolved.startFrame,
               deceleration,
-              program?.kind === "atlas-cycle" ? "running" : "walking",
+              locomotion?.mode ??
+                (program?.kind === "atlas-cycle" ? "running" : "walking"),
               "action",
               gaitStart,
               gaitAdvanceForFrames(deceleration - resolved.startFrame),
@@ -889,21 +939,38 @@ export function compileContinuitySequencePlan(
               gaitAdvanceForFrames(plantFrame - deceleration),
             ),
           );
-          const settleEnd = Math.min(
-            resolved.endFrameExclusive,
-            plantFrame + 6,
-          );
-          push(segment(plantFrame, settleEnd, "idle", "settle", null, null));
-          push(
-            segment(
-              settleEnd,
+          if (locomotion) {
+            const settleStart = plantFrame + locomotion.impactFrames;
+            push(
+              segment(plantFrame, settleStart, "idle", "impact", null, null),
+            );
+            push(
+              segment(
+                settleStart,
+                resolved.endFrameExclusive,
+                "idle",
+                "settle",
+                null,
+                null,
+              ),
+            );
+          } else {
+            const settleEnd = Math.min(
               resolved.endFrameExclusive,
-              "idle",
-              "hold",
-              null,
-              null,
-            ),
-          );
+              plantFrame + 6,
+            );
+            push(segment(plantFrame, settleEnd, "idle", "settle", null, null));
+            push(
+              segment(
+                settleEnd,
+                resolved.endFrameExclusive,
+                "idle",
+                "hold",
+                null,
+                null,
+              ),
+            );
+          }
         } else if (moved) {
           push(
             segment(

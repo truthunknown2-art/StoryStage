@@ -82,6 +82,8 @@ export type {
 export {
   approvedAssetBindingSchema,
   executableEpisodePlanSchema,
+  isLocalPartsV1Execution,
+  listArticulatedRigAssetReferences,
   performanceExecutionSchema,
 } from "./executable-episode-plan";
 export {
@@ -95,6 +97,7 @@ export {
   continuityTransitionLinkSchema,
 } from "./continuity-sequence-plan";
 export {
+  compileRigVisualProgram,
   evaluateLocalPerformance,
   localPerformanceFrameSchema,
   localPerformanceInputSchema,
@@ -105,6 +108,7 @@ export {
 export type {
   ApprovedAssetBinding,
   ExecutableEpisodePlan,
+  LocalPartsV1Execution,
   PerformanceExecution,
   PerformanceProgram,
 } from "./executable-episode-plan";
@@ -125,3 +129,15 @@ export type {
 } from "./visual-performance-contract";
 export { createCv002Project, restoreCv002Project } from "../cv002-story-draft";
 export type { Cv002Project, Cv002Grammar } from "../cv002-story-draft";
+export { hashCanonical } from "../canonical-hash";
+export { articulatedCharacterRigManifestSchema } from "../rig-manifests";
+export type {
+  ArticulatedCharacterRigManifest,
+  AssetRigManifest,
+} from "../rig-manifests";
+export {
+  createKvp001ProofFixture,
+  KVP001_PROOF_LIMITATION,
+  Kvp001ProofDirectorPlanner,
+  kvp001KidsScript,
+} from "./kvp001-proof-fixture";

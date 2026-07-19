@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { hashCanonical } from "../canonical-hash";
 import { hashSchema, identifierSchema } from "../model";
+import {
+  articulatedCharacterRigManifestSchema,
+  type ArticulatedCharacterRigManifest,
+  type RigAssetBinding,
+} from "../rig-manifests";
 import { assertContinuitySequenceMatchesSources } from "./continuity-compiler";
 import { continuitySequencePlanSchema } from "./continuity-sequence-plan";
 import { directorPlanSchema, type DirectorPlan } from "./director-plan";
@@ -165,11 +170,66 @@ const articulatedRigExecutionSchema = z
     });
   });
 
-export const performanceExecutionSchema = z.discriminatedUnion("kind", [
+const localPartsV1ExecutionSchema = z
+  .object({
+    kind: z.literal("articulated-rig"),
+    mode: z.literal("local-parts-v1"),
+    assetId: identifierSchema,
+    displayScale: z.number().positive(),
+    rigManifest: articulatedCharacterRigManifestSchema,
+  })
+  .strict()
+  .superRefine((execution, context) => {
+    if (
+      execution.assetId !== execution.rigManifest.identityReference.candidateId
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["assetId"],
+        message:
+          "Local-parts execution asset ID must be the sealed rig identity reference.",
+      });
+  });
+
+export const performanceExecutionSchema = z.union([
   atlasCycleExecutionSchema,
+  localPartsV1ExecutionSchema,
   articulatedRigExecutionSchema,
   livingHoldExecutionSchema,
 ]);
+
+export type LocalPartsV1Execution = z.infer<typeof localPartsV1ExecutionSchema>;
+
+export const isLocalPartsV1Execution = (
+  execution: z.infer<typeof performanceExecutionSchema>,
+): execution is LocalPartsV1Execution =>
+  execution.kind === "articulated-rig" &&
+  "mode" in execution &&
+  execution.mode === "local-parts-v1";
+
+export const listArticulatedRigAssetReferences = (
+  manifest: ArticulatedCharacterRigManifest,
+): RigAssetBinding[] => {
+  const references = [
+    manifest.identityReference,
+    ...manifest.parts.map((part) => part.asset),
+    ...manifest.exposures.map((exposure) => exposure.asset),
+  ];
+  const byId = new Map<string, RigAssetBinding>();
+  for (const reference of references) {
+    const existing = byId.get(reference.candidateId);
+    if (
+      existing &&
+      (existing.contentHash !== reference.contentHash ||
+        existing.relativeFile !== reference.relativeFile)
+    )
+      throw new Error(
+        `Rig asset ${reference.candidateId} is bound to conflicting immutable files.`,
+      );
+    byId.set(reference.candidateId, reference);
+  }
+  return [...byId.values()];
+};
 
 export const performanceProgramSchema = z
   .object({
@@ -186,6 +246,7 @@ export const performanceProgramSchema = z
     eventIds: z.array(identifierSchema).min(1),
     assetIds: z.array(identifierSchema),
     manifestContentHash: hashSchema,
+    capabilityContentHash: hashSchema.optional(),
     sourceSceneIds: z.array(identifierSchema).optional(),
     sourceBeatIds: z.array(identifierSchema).optional(),
     sourceShotIds: z.array(identifierSchema).optional(),
@@ -194,6 +255,52 @@ export const performanceProgramSchema = z
   })
   .strict()
   .superRefine((program, context) => {
+    if (program.execution && isLocalPartsV1Execution(program.execution)) {
+      const { rigManifest } = program.execution;
+      const assetIds = listArticulatedRigAssetReferences(rigManifest).map(
+        (asset) => asset.candidateId,
+      );
+      if (program.id !== rigManifest.requirementId)
+        context.addIssue({
+          code: "custom",
+          path: ["id"],
+          message:
+            "Local-parts program ID does not match its sealed rig requirement.",
+        });
+      if (program.entityId !== rigManifest.entityId)
+        context.addIssue({
+          code: "custom",
+          path: ["entityId"],
+          message: "Local-parts program entity does not match its sealed rig.",
+        });
+      if (
+        program.rendererId !== rigManifest.renderer.id ||
+        program.rendererVersion !== rigManifest.renderer.version
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["rendererId"],
+          message:
+            "Local-parts program renderer does not match its sealed rig.",
+        });
+      if (program.manifestContentHash !== rigManifest.contentHash)
+        context.addIssue({
+          code: "custom",
+          path: ["manifestContentHash"],
+          message:
+            "Local-parts program manifest hash does not match its sealed rig.",
+        });
+      if (
+        program.assetIds.length !== assetIds.length ||
+        program.assetIds.some((assetId, index) => assetId !== assetIds[index])
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["assetIds"],
+          message:
+            "Local-parts program assets must exactly match the sealed rig references.",
+        });
+    }
     if (!program.contentHash) return;
     const { contentHash, ...draft } = program;
     if (hashCanonical(draft) !== contentHash)
@@ -656,6 +763,29 @@ export function sealExecutableEpisodePlan(
         throw new Error(
           `${program.id} executable performance is not bound to an approved renderable asset.`,
         );
+      if (isLocalPartsV1Execution(program.execution)) {
+        const references = listArticulatedRigAssetReferences(
+          program.execution.rigManifest,
+        );
+        const approvedById = new Map(
+          draft.approvedAssets.map((asset) => [asset.assetId, asset]),
+        );
+        if (
+          references.some((reference) => {
+            const approved = approvedById.get(reference.candidateId);
+            return (
+              !approved ||
+              approved.status !== "approved" ||
+              approved.contentHash !== reference.contentHash ||
+              approved.relativeFile !== reference.relativeFile ||
+              approved.immutableLocationId !== `sha256:${reference.contentHash}`
+            );
+          })
+        )
+          throw new Error(
+            `${program.id} local-parts execution is not bound to the exact approved immutable rig assets.`,
+          );
+      }
     }
   });
   draft.continuitySequencePlan.shots.forEach((continuityShot) => {
@@ -778,7 +908,7 @@ export function sealExecutableEpisodePlan(
           );
           if (
             plant?.motionMode !== "idle" ||
-            !["settle", "hold"].includes(plant.actionPhase) ||
+            !["impact", "settle", "hold"].includes(plant.actionPhase) ||
             plant.gaitStart !== null ||
             plant.gaitAdvanceCycles !== null
           )

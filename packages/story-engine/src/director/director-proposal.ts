@@ -33,6 +33,17 @@ export const directorCameraMovementSchema = z.enum([
   "reframe",
 ]);
 
+export const directorLocomotionDirectiveSchema = z
+  .object({
+    entityId: identifierSchema,
+    destinationLandmarkId: identifierSchema,
+    mode: z.enum(["walking", "sneaking", "running"]),
+    decelerationFrames: z.number().int().positive(),
+    impactFrames: z.number().int().positive(),
+    settleFrames: z.number().int().positive(),
+  })
+  .strict();
+
 export type DirectorShotSize = z.infer<typeof directorShotSizeSchema>;
 export type DirectorCameraMovement = z.infer<
   typeof directorCameraMovementSchema
@@ -44,12 +55,18 @@ export const directorShotOverrideSchema = z
     shotId: identifierSchema,
     shotSize: directorShotSizeSchema.nullable(),
     cameraMovement: directorCameraMovementSchema.nullable(),
+    locomotion: directorLocomotionDirectiveSchema.nullable().optional(),
   })
   .strict()
   .refine(
     (override) =>
-      override.shotSize !== null || override.cameraMovement !== null,
-    { message: "A shot override must change size or camera movement." },
+      override.shotSize !== null ||
+      override.cameraMovement !== null ||
+      override.locomotion != null,
+    {
+      message:
+        "A shot override must change size, camera movement, or locomotion.",
+    },
   );
 
 const directorProposalFields = {

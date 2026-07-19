@@ -25,7 +25,8 @@
     "render:kids-cut-review": "tsx src/kids-cut-review.ts",
     "render:director-alpha-proof": "tsx src/director-alpha-proof.ts",
     "render:director-camera-semantics-proof": "tsx src/director-camera-semantics-proof.ts",
-    "render:director-performance-capability-proof": "tsx src/director-performance-capability-proof.ts"
+    "render:director-performance-capability-proof": "tsx src/director-performance-capability-proof.ts",
+    "render:kvp001-proof": "tsx src/kvp001-proof.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.490",

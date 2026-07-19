@@ -24,6 +24,19 @@ describe("bundled Kids performance capabilities", () => {
         kind,
         execution: { kind },
       });
+      if (kind === "articulated-rig") {
+        expect(first.capabilities[0]!.execution).toMatchObject({
+          kind: "articulated-rig",
+          mode: "local-parts-v1",
+          assetId: "mara-payoff-puppet-v1",
+          rigManifest: {
+            animationMode: "articulated-2d",
+            entityId: "lead",
+            requirementId: "performance-1-primary",
+            renderer: { id: "director-local-parts", version: "1.0.0" },
+          },
+        });
+      }
       expect(first.capabilities[0]!.assets).toEqual([
         expect.objectContaining({
           status: "approved",
@@ -54,5 +67,30 @@ describe("bundled Kids performance capabilities", () => {
       entityId: "support",
       kind: "atlas-cycle",
     });
+  });
+
+  it("reseals the reusable Mara rig to the exact capability target", () => {
+    const registry = createBundledKidsCapabilityRegistry([
+      {
+        kind: "articulated-rig",
+        requirementId: "performance-4-primary",
+        entityId: "support",
+      },
+    ]);
+    const capability = registry.capabilities[0]!;
+
+    expect(capability).toMatchObject({
+      requirementId: "performance-4-primary",
+      entityId: "support",
+      rendererId: "director-local-parts",
+      execution: {
+        mode: "local-parts-v1",
+        rigManifest: {
+          requirementId: "performance-4-primary",
+          entityId: "support",
+        },
+      },
+    });
+    expect(capability.assets).toHaveLength(1);
   });
 });

@@ -16,6 +16,11 @@ import {
   useDelayRender,
 } from "remotion";
 import { useEffect, useState } from "react";
+import {
+  PartsRigLocalVisual,
+  partsRigRuntime,
+  type LocalPartsV1Execution,
+} from "./partsRigRuntime";
 
 type ProxyEntity = NonNullable<
   ExecutableEpisodePlan["proxyEntityPrograms"]
@@ -32,8 +37,16 @@ type AtlasPerformanceExecution = Extract<
 >;
 type ArticulatedPerformanceExecution = Extract<
   NonNullable<PerformanceProgram["execution"]>,
-  { kind: "articulated-rig" }
+  { kind: "articulated-rig"; mode?: never }
 >;
+
+const isLocalPartsV1Execution = (
+  execution: NonNullable<PerformanceProgram["execution"]>,
+): execution is NonNullable<PerformanceProgram["execution"]> &
+  LocalPartsV1Execution =>
+  execution.kind === "articulated-rig" &&
+  "mode" in execution &&
+  execution.mode === "local-parts-v1";
 
 const resolvedPerformanceProgram = (
   performancePrograms: PerformanceProgram[],
@@ -373,23 +386,98 @@ const ArticulatedPerformanceRenderer: React.FC<{
   ) : null;
 };
 
+const LocalPartsPerformanceRenderer: React.FC<{
+  approvedAssets: ApprovedAssetBinding[];
+  episodePlan: ExecutableEpisodePlan;
+  execution: LocalPartsV1Execution;
+  formatWidth: number;
+  localFrame: number;
+  performance: PerformanceProgram;
+  resolved: ResolvedEntityFrame;
+  shotId: string;
+}> = ({
+  approvedAssets,
+  episodePlan,
+  execution,
+  formatWidth,
+  localFrame,
+  performance,
+  resolved,
+  shotId,
+}) => {
+  const verifiedAsset = approvedAsset(approvedAssets, execution.assetId);
+  const verifiedUrl = useVerifiedAssetUrl(verifiedAsset);
+  if (!verifiedUrl) return null;
+  const input = partsRigRuntime.createInput({
+    episodePlan,
+    execution,
+    localFrame,
+    performance,
+    resolved,
+    shotId,
+    verifiedAsset,
+    verifiedUrl,
+  });
+  const scale =
+    resolved.rootTransform.scale *
+    execution.displayScale *
+    (formatWidth / 1920);
+  const horizontalScale = resolved.facing === "left" ? -scale : scale;
+  return (
+    <div
+      data-performance-kind="local-parts-v1"
+      data-performance-program={performance.id}
+      style={{
+        left: `${resolved.rootTransform.x * 100}%`,
+        position: "absolute",
+        rotate: `${resolved.rootTransform.rotation}deg`,
+        scale: `${horizontalScale} ${scale}`,
+        top: `${resolved.rootTransform.y * 100}%`,
+        transformOrigin: "0 0",
+        zIndex: Math.round(resolved.rootTransform.z + 4),
+      }}
+    >
+      <PartsRigLocalVisual input={input} rigManifest={execution.rigManifest} />
+    </div>
+  );
+};
+
 const ExecutablePerformanceRenderer: React.FC<{
   approvedAssets: ApprovedAssetBinding[];
   durationInFrames: number;
+  episodePlan: ExecutableEpisodePlan;
   formatWidth: number;
+  localFrame: number;
   performance: PerformanceProgram;
   proxy: ProxyEntity;
   resolved: ResolvedEntityFrame;
+  shotId: string;
 }> = ({
   approvedAssets,
   durationInFrames,
+  episodePlan,
   formatWidth,
+  localFrame,
   performance,
   proxy,
   resolved,
+  shotId,
 }) => {
   if (!performance.execution)
     return <ProxyEntityRenderer program={proxy} resolved={resolved} />;
+  if (isLocalPartsV1Execution(performance.execution))
+    return (
+      <LocalPartsPerformanceRenderer
+        approvedAssets={approvedAssets}
+        episodePlan={episodePlan}
+        execution={performance.execution}
+        formatWidth={formatWidth}
+        localFrame={localFrame}
+        performance={performance}
+        resolved={resolved}
+        shotId={shotId}
+      />
+    );
   if (performance.execution.kind === "articulated-rig")
     return (
       <ArticulatedPerformanceRenderer
@@ -722,9 +810,12 @@ const ProxyShot: React.FC<{
               }
               formatWidth={formatWidth}
               key={entity.id}
+              episodePlan={episodePlan}
+              localFrame={canonicalFrame.shotFrame}
               performance={performance}
               proxy={entity}
               resolved={resolved}
+              shotId={canonicalFrame.shotId}
             />
           ) : (
             <ProxyEntityRenderer

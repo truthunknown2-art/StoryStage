@@ -1,0 +1,102 @@
+body {
+  margin: 0;
+  min-width: 1180px;
+  background: #07100f;
+}
+
+.kvp-player-evidence {
+  min-height: 100vh;
+  padding: 24px;
+  color: #edf5f1;
+}
+
+.kvp-player-evidence__header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 32px;
+  max-width: 1560px;
+  margin: 0 auto 18px;
+  padding: 22px 24px;
+  border: 1px solid rgba(142, 235, 194, 0.24);
+  border-radius: 18px;
+  background: rgba(10, 23, 21, 0.96);
+}
+
+.kvp-player-evidence__header small {
+  color: #83d9b3;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kvp-player-evidence__header h1 {
+  margin: 7px 0 5px;
+  font-size: clamp(24px, 2.5vw, 38px);
+}
+
+.kvp-player-evidence__header p {
+  max-width: 760px;
+  margin: 0;
+  color: #aabcb6;
+}
+
+.kvp-player-evidence__header dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(128px, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.kvp-player-evidence__header dl > div {
+  padding: 11px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.kvp-player-evidence__header dt {
+  color: #80938c;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kvp-player-evidence__header dd {
+  margin: 5px 0 0;
+  color: #dff9eb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+.kvp-player-evidence > .cv2-director-preview,
+.kvp-player-evidence__limitation {
+  max-width: 1560px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.kvp-player-evidence__limitation {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px 18px;
+  border: 1px solid rgba(246, 183, 93, 0.25);
+  border-radius: 12px;
+  background: rgba(50, 37, 18, 0.42);
+  color: #d7c7a9;
+  font-size: 13px;
+}
+
+.kvp-player-evidence__limitation strong {
+  flex: 0 0 auto;
+  color: #f3d89f;
+}
+
+@media (max-width: 1320px) {
+  .kvp-player-evidence__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

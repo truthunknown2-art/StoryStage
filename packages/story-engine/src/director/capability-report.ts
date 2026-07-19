@@ -3,6 +3,8 @@ import { hashCanonical } from "../canonical-hash";
 import { hashSchema, identifierSchema } from "../model";
 import {
   approvedAssetBindingSchema,
+  isLocalPartsV1Execution,
+  listArticulatedRigAssetReferences,
   performanceExecutionSchema,
   type ApprovedAssetBinding,
   type PerformanceExecution,
@@ -59,6 +61,50 @@ export const performanceCapabilityDraftSchema = z
         message:
           "Executable performance must consume an approved capability asset.",
       });
+    if (isLocalPartsV1Execution(capability.execution)) {
+      const { rigManifest } = capability.execution;
+      const references = listArticulatedRigAssetReferences(rigManifest);
+      const assetsById = new Map(
+        capability.assets.map((asset) => [asset.assetId, asset]),
+      );
+      if (
+        capability.entityId !== rigManifest.entityId ||
+        capability.requirementId !== rigManifest.requirementId
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["entityId"],
+          message:
+            "Local-parts capability identity does not match its sealed rig.",
+        });
+      if (
+        capability.rendererId !== rigManifest.renderer.id ||
+        capability.rendererVersion !== rigManifest.renderer.version
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["rendererId"],
+          message:
+            "Local-parts capability renderer does not match its sealed rig.",
+        });
+      if (
+        capability.assets.length !== references.length ||
+        references.some((reference) => {
+          const approved = assetsById.get(reference.candidateId);
+          return (
+            !approved ||
+            approved.contentHash !== reference.contentHash ||
+            approved.relativeFile !== reference.relativeFile
+          );
+        })
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["assets"],
+          message:
+            "Local-parts capability assets must exactly match every immutable rig reference.",
+        });
+    }
     capability.assets.forEach((asset, index) => {
       if (
         asset.immutableLocationId !== `sha256:${asset.contentHash}` ||

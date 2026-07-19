@@ -464,6 +464,9 @@ export const rigDiagnosticReportSchema = z
   .strict();
 
 export type RigAssetBinding = z.infer<typeof rigAssetBindingSchema>;
+export type ArticulatedCharacterRigManifest = z.infer<
+  typeof articulatedCharacterRigManifestSchema
+>;
 export type AssetRigManifestDraft = z.infer<typeof assetRigManifestDraftSchema>;
 export type AssetRigManifest = z.infer<typeof assetRigManifestSchema>;
 export type RigValidationReport = z.infer<typeof rigValidationReportSchema>;
