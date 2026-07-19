@@ -35,6 +35,14 @@ Real-data visual polish of the accepted Director Studio shell: production header
 
 The committed `browser-proof.mjs` now: performs the real timeline seek to frame 340 and **waits for the Player-ref observation to report exactly 340** (integer equality, zero tolerance); pauses and asserts `isPlaying() === false` from the same Player-ref state; proves the rendered composition area nonblank via **clipped composition pixels with explicit statistics** (clip `.__remotion-player`, 7508 samples → mean luminance 22.2, stddev 24.15, 13 unique 4-bit colors — dark-but-rendered transition content, controls excluded by construction); captures both the 1440 and 1920 screenshots while that same exact paused frame 340 is still observed (re-asserted immediately before each capture); and records episode/shot/beat/frame/paused from that same app state into `browser-proofs.json`.
 
+## Successor corrections (inbox v15/v16, evidence this directory)
+
+**P2 — composition pixels measured from the composition viewport only.** Codex's exact-head review was right: the v14 clip was the whole `.__remotion-player` box, whose bottom strip carries Remotion transport chrome (time label, progress bar) — that chrome, not the composition, supplied the recorded variance and colors. The frame-340 composition beneath it is a uniform dark wash.
+
+The rewritten committed `browser-proof.mjs` now locates the actual composition viewport deterministically: the stage `.​__remotion-player` box **minus the transport-overlay strip** (computed from the DOM positions of the time label, sliders, and transport buttons; the strip geometry is recorded as `chromeStrip`). It asserts the composition subtree has zero button descendants, proves the clip does not intersect the transport-controls rectangle (`controlsBounds` recorded), clips that viewport alone, and persists the clipped PNG as an artifact with: **SHA-256, integer bounds, total pixel count, nonblack pixel count and ratio, luminance mean and variance/stddev, unique-color count, and an explicit uniform/blank rejection result** (all pixels, no sampling; rule: `stddev <= 4 AND uniqueColors16 <= 4` rejects uniform frames of any shade, dark teal exactly as black).
+
+Applied honestly, frame 340 measures stddev 0.62 / 3 colors → **uniform, rejected** (the v14 "dark-but-rendered" claim was chrome contamination). The harness then selected the named exact resolved event frame **342 (`Seek to anticipation, frame 342`)** through the real Player-ref: exact-frame wait, paused assertion, and captures for both 1440 and 1920 use that same exact paused frame 342 — the composition there shows the proxy characters rising into frame (mean 58.48, stddev 9.87, 24 unique colors, 85,655 pixels, SHA-256 `be58b569…`). Protocol label corrected to `player-ref-exact-frame` throughout.
+
 ## Changed files
 
 Commit `206ff36`: `Cv002DraftReview.tsx` (header tags), `DirectorSceneBeatRail.tsx` (durations/chips), `DirectorTimelineDrawer.tsx` (tools/ruler/dots), `DirectorPreview.tsx` (fps), `cv002-draft-review.css` (polish block), `Cv002DraftReview.test.tsx`.
@@ -69,8 +77,10 @@ Commit `1daf540` + `f6ebf6d` (corrections):
 ## Screenshots (this directory, actual app)
 
 - `studio-1440x900-setup-beat-no-target.png` — 0-target beat, honest unavailable note, `PROXY PERFORMANCE` chips
-- `studio-1440x900-direct-command-one-target.png` — exactly-one-target beat (2.2), real `Direct this beat` command, nonblank paused proxy frame
-- `studio-1920x1080-full-hierarchy.png` — full Player/Director/beat-strip/timeline hierarchy at 1920, drawer open with ruler + zoom + lanes
+- `studio-1440x900-direct-command-one-target.png` — exactly-one-target beat (2.2), real `Direct this beat` command, nonblank paused composition at exact frame 342
+- `studio-1920x1080-full-hierarchy.png` — full Player/Director/beat-strip/timeline hierarchy at 1920 on the same exact paused frame 342, drawer open with ruler + zoom + lanes
+- `composition-viewport-frame-342.png` — the chrome-free composition clip (463×185) with SHA-256 `be58b569…`, proving nonblank composition at frame 342 with controls excluded
+- `composition-viewport-frame-340.png` — superseded clip kept for traceability: the uniform dark field at shot-start frame 340 that the corrected protocol rejects
 - `studio-820x900-stacked.png` — narrow stacked layout
 - `studio-740x900-narrow-topbar.png` — ≤760px two-row topbar cascade
 - `engineering-demo-mara-labeled-1440x900.png` — Mara confined to the visibly labeled Engineering demo surface

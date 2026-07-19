@@ -1,6 +1,11 @@
 {
   "harness": "browser-proof.mjs",
-  "protocol": "playhead-geometry",
+  "protocol": "player-ref-exact-frame",
+  "pixelRules": {
+    "blackPixel": "max(r,g,b) <= 8",
+    "uniformBlankRejection": "stddev <= 4 AND uniqueColors16 <= 4",
+    "sampling": "all pixels (no sampling)"
+  },
   "seek": {
     "title": "Seek to reaction, frame 340",
     "expectedFrame": 340,
@@ -10,21 +15,46 @@
     "shotId": "shot-5-main",
     "beatId": "beat-a3f3e65ef08a"
   },
-  "compositionAtExactFrame": {
-    "clip": {
-      "x": 438.31597900390625,
-      "y": 141,
-      "width": 462.5555419921875,
-      "height": 260.1875
+  "composition": {
+    "frame": 342,
+    "frameSource": {
+      "kind": "event",
+      "title": "Seek to anticipation, frame 342"
     },
-    "meanLuminance": 22.2,
-    "stddev": 24.15,
-    "uniqueColors16": 13,
-    "samples": 7508
+    "artifact": "composition-viewport-frame-342.png",
+    "sha256": "be58b569707367a2c10a8c31fd957d67dee781d49f82800de39f5e1f12bf7a61",
+    "bounds": {
+      "x": 438,
+      "y": 141,
+      "width": 463,
+      "height": 185
+    },
+    "controlsBounds": {
+      "x": 359,
+      "y": 326,
+      "width": 44,
+      "height": 44
+    },
+    "chromeStrip": {
+      "x": 438,
+      "y": 326,
+      "width": 463,
+      "height": 75
+    },
+    "intersectsControls": false,
+    "buttonDescendantsInViewport": 0,
+    "totalPixels": 85655,
+    "nonblackPixels": 85655,
+    "nonblackRatio": 1,
+    "meanLuminance": 58.48,
+    "variance": 97.42,
+    "stddev": 9.87,
+    "uniqueColors16": 24,
+    "uniformBlank": false
   },
   "pausedPlayer": {
     "episodeHash": "cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966",
-    "exactFrame": 340,
+    "exactFrame": 342,
     "paused": true,
     "shotId": "shot-5-main",
     "beatId": "beat-a3f3e65ef08a"
@@ -53,7 +83,7 @@
     }
   },
   "hierarchy1920": {
-    "frame": 340,
+    "frame": 342,
     "beatId": "beat-a3f3e65ef08a",
     "shotId": "shot-5-main",
     "paused": true
