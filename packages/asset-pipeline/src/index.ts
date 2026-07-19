@@ -9,6 +9,8 @@ export * from "./fixed-grid-front-atlas";
 export * from "./turnaround-sheet-compositor";
 export * from "./character-rig-staging";
 export * from "./character-rig-preparation";
+export * from "./candidate-rig-review-input";
+export * from "./ollo-candidate-i-review-recipes";
 import {
   candidateBundleSchema,
   candidateSetContactSheetSchema,
