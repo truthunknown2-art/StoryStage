@@ -5,6 +5,7 @@ import {
   currentDirectorProject,
   canRedoDirectorWorkspace,
   canUndoDirectorWorkspace,
+  listDirectorReactionDelayCandidates,
   proposeDirectorPatch,
   recordDirectorWorkspaceRevision,
   redoDirectorWorkspace,
@@ -193,30 +194,13 @@ export function DirectorAnimaticPreview({
   const selectedCapabilityItems = director.capabilityReport.items.filter(
     (item) => item.beatId === selectedBeatId,
   );
-  // Mirrors the acceptance predicate in proposeDirectorPatch
-  // (packages/story-engine/src/director/director-patch.ts): the Alpha
-  // interpreter can only delay exactly one concrete reaction event linked to
-  // a shot of the target beat. The command control is offered only when that
-  // contract exists for the selected beat.
-  const selectedBeatReactionEdit = (() => {
-    const reactionEvents = director.directorPlan.events.filter(
-      (event) => event.beatId === selectedBeatId && event.kind === "reaction",
-    );
-    const candidates = reactionEvents.filter((event) =>
-      director.directorPlan.shots.some(
-        (shot) =>
-          shot.beatIds.includes(selectedBeatId) &&
-          [
-            shot.entryEventId,
-            shot.exitEventId,
-            shot.timingEnvelope.earliestCutEventId,
-            shot.timingEnvelope.preferredCutEventId,
-            shot.timingEnvelope.latestCutEventId,
-          ].includes(event.id),
-      ),
-    );
-    return candidates.length === 1;
-  })();
+  // Shared with the Alpha interpreter via
+  // listDirectorReactionDelayCandidates (packages/story-engine
+  // director-patch.ts): the command control is offered only when the selected
+  // beat has exactly one concrete (reaction event, eligible shot) pair — the
+  // exact cardinality the interpreter accepts, so the two paths cannot drift.
+  const selectedBeatReactionEdit =
+    listDirectorReactionDelayCandidates(director, selectedBeatId).length === 1;
   const selectedBeatRenderReady =
     selectedCapabilityItems.length > 0 &&
     selectedCapabilityItems.every((item) => item.resolution === "supported");

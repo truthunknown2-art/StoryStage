@@ -7,6 +7,7 @@ import { createCapabilityRegistry } from "./capability-report";
 import { compileDirectorProject } from "./director-compiler";
 import {
   describeDirectorPatch,
+  listDirectorReactionDelayCandidates,
   proposeDirectorPatch,
   proposeDirectorVisualPatch,
 } from "./director-patch";
@@ -613,5 +614,70 @@ describe("Director patch", () => {
         command: "Make the reaction 6 frames later",
       }),
     ).toThrow(/no concrete reaction event/i);
+  });
+
+  it("counts one reaction event linked by two eligible shots as ambiguous through the shared eligibility list", () => {
+    const storyProject = createCv002Project(
+      "Ambiguous reaction proof",
+      script,
+      "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
+    );
+    const base = compileDirectorProject({ storyProject });
+    const targetBeatId = base.directorPlan.beats.find(
+      (beat) =>
+        listDirectorReactionDelayCandidates(base, beat.beatId).length === 1,
+    )!.beatId;
+    const sourceShot = listDirectorReactionDelayCandidates(
+      base,
+      targetBeatId,
+    )[0]!.shot;
+
+    // Forge a second shot linking the same reaction event, then reseal every
+    // hash the project schema binds, so the fixture stays schema-valid.
+    const forged = structuredClone(base);
+    const forgedShot = forged.directorPlan.shots.find(
+      (shot) => shot.id === sourceShot.id,
+    )!;
+    forged.directorPlan.shots.push({
+      ...structuredClone(forgedShot),
+      id: `${forgedShot.id}-twin`,
+    });
+    forged.directorPlan = reseal(forged.directorPlan);
+    forged.timingSolution = reseal({
+      ...forged.timingSolution,
+      directorPlanContentHash: forged.directorPlan.contentHash,
+    });
+    forged.executableEpisodePlan = reseal({
+      ...forged.executableEpisodePlan,
+      directorPlanContentHash: forged.directorPlan.contentHash,
+      timingSolutionContentHash: forged.timingSolution.contentHash,
+    });
+    forged.capabilityReport = reseal({
+      ...forged.capabilityReport,
+      directorPlanContentHash: forged.directorPlan.contentHash,
+    });
+    forged.qualityReport = reseal({
+      ...forged.qualityReport,
+      directorPlanContentHash: forged.directorPlan.contentHash,
+    });
+    forged.contentHash = reseal(forged).contentHash;
+    directorProjectSchema.parse(forged);
+
+    // The shared list and the interpreter now agree on pair cardinality:
+    // one event linked by two eligible shots is two candidates — ambiguous.
+    expect(
+      listDirectorReactionDelayCandidates(forged, targetBeatId),
+    ).toHaveLength(2);
+    expect(() =>
+      proposeDirectorPatch({
+        baseDirectorProject: forged,
+        targetBeatId,
+        command: "Make the reaction 6 frames later",
+      }),
+    ).toThrow(/more than one possible reaction event/i);
   });
 });
