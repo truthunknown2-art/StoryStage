@@ -1,8 +1,10 @@
 # [KIMI] UI Slice B copy parity handback
 
-Task: `KIMI-UI-SLICE-B-COPY-PARITY` (inbox v7, START-NOW)
+Task: `KIMI-UI-SLICE-B-COPY-PARITY` (inbox v8, START-NOW; v9 = this handback metadata correction)
 Work branch: `agent/kimi-ui-slice-b-copy-parity`, from exact accepted integration base `04f794a5db3226d51e23235e2c488ae89d9fca0f` (PR #12 merged)
-Implementation commit: `b90ba71` — `fix(studio): truthful Director command copy for 0, 1, and 2+ reaction targets`
+Implementation commits: `b90ba71` (copy parity) + `ce60efb` (inbox v8 pair-accuracy)
+Evidence head: `d423d2d`
+Branch history (oldest → newest): `b90ba71` implementation, `f938372` handback, `ce60efb` v8 correction, `d423d2d` handback update (followed by this v9 metadata-correction commit)
 
 ## What changed
 
@@ -57,9 +59,8 @@ Note: bare `pnpm` is not on this machine's PATH; root commands ran through corep
 ## Known limitations
 
 1. Ambiguous (2+) beats have no target-selection UI — stated plainly in copy; adding real explicit target selection would be a future slice with an interpreter path.
-2. The Kids-route `image-alt`/`EncodingError` findings from the unchanged Remotion runtime remain pre-existing; Codex has a dedicated `agent/remotion-kids-image-a11y` branch addressing them.
-3. The recurring load-sensitive `apps/desktop delivery-store` timeout is documented above for the flake lane.
+2. The recurring load-sensitive `apps/desktop delivery-store` timeout is documented above for the flake lane.
 
 ## Integration instructions
 
-Branch is one commit (`b90ba71`) plus this handback on top of the accepted merge `04f794a5`. Draft PR targets `agent/integrate-kimi-ui-slice-a`. Do not merge — Codex and Pro perform the authority and integration review. After integration, `corepack pnpm --filter @storystage/studio test` should remain 82/82.
+Branch is four commits on top of the accepted merge `04f794a5` — implementation `b90ba71` + `ce60efb`, evidence `f938372` + `d423d2d`. Draft PR targets `agent/integrate-kimi-ui-slice-a`. Do not merge — Codex and Pro perform the authority and integration review. After integration, `corepack pnpm --filter @storystage/studio test` should remain 82/82.
