@@ -976,6 +976,9 @@
 .cv-create-save-state svg {
   color: #a7e7bd;
 }
+.cv-create-save-state.is-unsaved {
+  color: #e6bd72;
+}
 .cv-open-showcase {
   align-items: center;
   background: transparent;
@@ -1068,6 +1071,7 @@
   margin: 12px 0 6px;
   text-transform: uppercase;
 }
+.cv-create-script-column > input,
 .cv-create-script-column > textarea,
 .cv-more-options input {
   background: #0a1215;
@@ -1083,6 +1087,10 @@
 .cv-create-script-column > textarea {
   min-height: 250px;
 }
+.cv-create-script-column > input {
+  min-height: 44px;
+}
+.cv-create-script-column > input:focus,
 .cv-create-script-column > textarea:focus,
 .cv-more-options input:focus {
   border-color: #64b98b;

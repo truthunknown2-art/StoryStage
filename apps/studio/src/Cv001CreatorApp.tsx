@@ -15,7 +15,6 @@ import {
 import {
   ArrowRight,
   Check,
-  ChevronDown,
   Clapperboard,
   FileText,
   Layers,
@@ -39,6 +38,10 @@ type CreatorScreen =
   | "draft-review"
   | "kids-showcase";
 type StudioEntryMode = "new-first-cut" | "continue-saved";
+type EngineeringDemoConfirmation =
+  | "discard-setup"
+  | "replace-demo"
+  | "discard-setup-and-replace-demo";
 type KidsArtDirection =
   | "storybook-watercolor"
   | "cut-paper-collage"
@@ -108,19 +111,44 @@ const beatCaption = (text: string) => {
   return words.length > 7 ? `${words.slice(0, 7).join(" ")}…` : text;
 };
 
+const deriveTitleFromScript = (value: string) => {
+  const firstLine = value
+    .trim()
+    .split(/(?:\r?\n)+|(?<=[.!?])\s+/)
+    .find((line) => line.trim())
+    ?.trim();
+  if (!firstLine) return "";
+  const proposed = firstLine
+    .replace(/^(?:INT\.|EXT\.)\s*/i, "")
+    .replace(/[.!?]+$/, "")
+    .split(/\s+/)
+    .slice(0, 8)
+    .join(" ")
+    .slice(0, 72)
+    .trim();
+  return proposed
+    ? `${proposed.charAt(0).toUpperCase()}${proposed.slice(1)}`
+    : "";
+};
+
 export function Cv001CreatorApp({
   onOpenLegacy,
 }: {
   onOpenLegacy: () => void;
 }) {
   const [screen, setScreen] = useState<CreatorScreen>("creator-create");
-  const [title, setTitle] = useState("The Lantern Discovery");
-  const [script, setScript] = useState(CV001_DEFAULT_SCRIPT);
+  const [title, setTitle] = useState("The Storylight in the Little Wood");
+  const [titleIsAutomatic, setTitleIsAutomatic] = useState(true);
+  const [script, setScript] = useState(OLLO_FRIENDS_SAMPLE);
   const [grammar, setGrammar] = useState<Cv002Grammar>("kids-adventure");
   const [artDirection, setArtDirection] = useState<KidsArtDirection>(
     "storybook-watercolor",
   );
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [savedSetupFingerprint, setSavedSetupFingerprint] = useState<
+    string | null
+  >(null);
+  const [setupChanged, setSetupChanged] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const restored = useMemo(() => {
     const serialized = window.localStorage.getItem(CV001_CREATOR_STORAGE_KEY);
@@ -168,6 +196,8 @@ export function Cv001CreatorApp({
     restored.notice ?? restoredDraft.notice,
   );
   const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false);
+  const [engineeringDemoConfirmation, setEngineeringDemoConfirmation] =
+    useState<EngineeringDemoConfirmation | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -233,6 +263,36 @@ export function Cv001CreatorApp({
   const totalBeatCount = isLanternRoute
     ? beatPreview.length
     : allDraftBeats.length;
+  const setupFingerprint = JSON.stringify({
+    artDirection,
+    grammar,
+    script,
+    title,
+  });
+  const hasUnsavedSetupChanges =
+    setupChanged ||
+    (savedSetupFingerprint !== null
+      ? savedSetupFingerprint !== setupFingerprint
+      : Boolean(project || draftProject));
+
+  const updateScript = (nextScript: string) => {
+    setScript(nextScript);
+    if (titleIsAutomatic) setTitle(deriveTitleFromScript(nextScript));
+    setSetupChanged(true);
+  };
+
+  const loadSetup = (
+    nextTitle: string,
+    nextScript: string,
+    nextGrammar: Cv002Grammar,
+  ) => {
+    setTitle(nextTitle);
+    setTitleIsAutomatic(true);
+    setScript(nextScript);
+    setGrammar(nextGrammar);
+    setSetupChanged(true);
+    setNotice(null);
+  };
 
   const saveProject = (next: Cv001CreatorProjectState) => {
     window.localStorage.setItem(
@@ -256,6 +316,8 @@ export function Cv001CreatorApp({
     }
     const next = createCv001CreatorProject({ title, script });
     saveProject(next);
+    setSavedSetupFingerprint(setupFingerprint);
+    setSetupChanged(false);
     setReplaceConfirmOpen(false);
     setNotice(null);
     setStudioEntryMode("new-first-cut");
@@ -276,6 +338,8 @@ export function Cv001CreatorApp({
         ),
       );
       saveDraftProject(next);
+      setSavedSetupFingerprint(setupFingerprint);
+      setSetupChanged(false);
       setNotice(null);
       setScreen("draft-review");
     } catch (caught) {
@@ -290,6 +354,51 @@ export function Cv001CreatorApp({
   const submitProject = () =>
     isLanternRoute ? createFirstCut() : createDraft();
 
+  const launchEngineeringAnimationDemo = () => {
+    const demoTitle = "The Lantern Discovery";
+    setTitle(demoTitle);
+    setTitleIsAutomatic(true);
+    setScript(CV001_DEFAULT_SCRIPT);
+    setGrammar("kids-adventure");
+    setArtDirection("storybook-watercolor");
+    const next = createCv001CreatorProject({
+      title: demoTitle,
+      script: CV001_DEFAULT_SCRIPT,
+    });
+    saveProject(next);
+    setSavedSetupFingerprint(
+      JSON.stringify({
+        artDirection: "storybook-watercolor",
+        grammar: "kids-adventure",
+        script: CV001_DEFAULT_SCRIPT,
+        title: demoTitle,
+      }),
+    );
+    setSetupChanged(false);
+    setEngineeringDemoConfirmation(null);
+    setReplaceConfirmOpen(false);
+    setNotice(null);
+    setStudioEntryMode("new-first-cut");
+    setScreen("creator-studio");
+  };
+
+  const openEngineeringAnimationDemo = () => {
+    const replacesEditedDemo = Boolean(project && project.history.length > 0);
+    if (hasUnsavedSetupChanges && replacesEditedDemo) {
+      setEngineeringDemoConfirmation("discard-setup-and-replace-demo");
+      return;
+    }
+    if (hasUnsavedSetupChanges) {
+      setEngineeringDemoConfirmation("discard-setup");
+      return;
+    }
+    if (replacesEditedDemo) {
+      setEngineeringDemoConfirmation("replace-demo");
+      return;
+    }
+    launchEngineeringAnimationDemo();
+  };
+
   const importScriptFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -299,7 +408,9 @@ export function Cv001CreatorApp({
       }
       setScript(reader.result);
       const baseName = file.name.replace(/\.[^.]+$/, "").trim();
-      if (baseName) setTitle(baseName);
+      setTitle(baseName || deriveTitleFromScript(reader.result));
+      setTitleIsAutomatic(true);
+      setSetupChanged(true);
       setNotice(null);
     };
     reader.onerror = () =>
@@ -348,15 +459,14 @@ export function Cv001CreatorApp({
           <em>New project</em>
         </div>
         <div className="cv-create-top-actions">
-          {lastSavedAt ? (
+          {hasUnsavedSetupChanges ? (
+            <span className="cv-create-save-state is-unsaved">
+              Unsaved setup changes
+            </span>
+          ) : lastSavedAt && savedSetupFingerprint === setupFingerprint ? (
             <span className="cv-create-save-state">
               <Check size={13} />
               Saved just now
-            </span>
-          ) : project || draftProject ? (
-            <span className="cv-create-save-state">
-              <Check size={13} />
-              Saved on this device
             </span>
           ) : null}
           <button
@@ -396,13 +506,25 @@ export function Cv001CreatorApp({
               </div>
             </header>
 
+            <label className="cv-create-label" htmlFor="cv-title">
+              Title
+            </label>
+            <input
+              id="cv-title"
+              onChange={(event) => {
+                setTitle(event.target.value);
+                setTitleIsAutomatic(false);
+                setSetupChanged(true);
+              }}
+              value={title}
+            />
             <label className="cv-create-label" htmlFor="cv-script">
               Script
             </label>
             <textarea
               aria-describedby="cv-script-help"
               id="cv-script"
-              onChange={(event) => setScript(event.target.value)}
+              onChange={(event) => updateScript(event.target.value)}
               rows={11}
               value={script}
             />
@@ -445,13 +567,15 @@ export function Cv001CreatorApp({
                 <Upload size={14} />
                 Import .txt
               </button>
-              {grammar === "weird-history" &&
-              script === CV001_DEFAULT_SCRIPT ? (
+              {grammar === "weird-history" && script !== HISTORY_SAMPLE ? (
                 <button
                   className="cv-load-sample"
                   onClick={() => {
-                    setTitle("The Alaska Bargain");
-                    setScript(HISTORY_SAMPLE);
+                    loadSetup(
+                      "The Alaska Bargain",
+                      HISTORY_SAMPLE,
+                      "weird-history",
+                    );
                   }}
                   type="button"
                 >
@@ -459,12 +583,16 @@ export function Cv001CreatorApp({
                   Load a Weird History sample
                 </button>
               ) : null}
-              {grammar === "kids-adventure" && isLanternRoute ? (
+              {grammar === "kids-adventure" &&
+              script !== OLLO_FRIENDS_SAMPLE ? (
                 <button
                   className="cv-load-sample"
                   onClick={() => {
-                    setTitle("The Storylight in the Little Wood");
-                    setScript(OLLO_FRIENDS_SAMPLE);
+                    loadSetup(
+                      "The Storylight in the Little Wood",
+                      OLLO_FRIENDS_SAMPLE,
+                      "kids-adventure",
+                    );
                   }}
                   type="button"
                 >
@@ -472,6 +600,14 @@ export function Cv001CreatorApp({
                   Load an Ollo & Friends sample script
                 </button>
               ) : null}
+              <button
+                className="cv-load-sample"
+                onClick={openEngineeringAnimationDemo}
+                type="button"
+              >
+                <Clapperboard size={14} />
+                Open engineering animation demo
+              </button>
             </div>
 
             <section
@@ -525,7 +661,11 @@ export function Cv001CreatorApp({
                 <button
                   aria-pressed={grammar === "kids-adventure"}
                   className={grammar === "kids-adventure" ? "is-selected" : ""}
-                  onClick={() => setGrammar("kids-adventure")}
+                  onClick={() => {
+                    if (grammar === "kids-adventure") return;
+                    setGrammar("kids-adventure");
+                    setSetupChanged(true);
+                  }}
                   type="button"
                 >
                   {/* Creator-workspace thumbnail, not Remotion composition media. */}
@@ -547,7 +687,11 @@ export function Cv001CreatorApp({
                 <button
                   aria-pressed={grammar === "weird-history"}
                   className={grammar === "weird-history" ? "is-selected" : ""}
-                  onClick={() => setGrammar("weird-history")}
+                  onClick={() => {
+                    if (grammar === "weird-history") return;
+                    setGrammar("weird-history");
+                    setSetupChanged(true);
+                  }}
                   type="button"
                 >
                   {/* Creator-workspace thumbnail, not Remotion composition media. */}
@@ -573,7 +717,11 @@ export function Cv001CreatorApp({
                         artDirection === direction.id ? "is-selected" : ""
                       }
                       key={direction.id}
-                      onClick={() => setArtDirection(direction.id)}
+                      onClick={() => {
+                        if (artDirection === direction.id) return;
+                        setArtDirection(direction.id);
+                        setSetupChanged(true);
+                      }}
                       type="button"
                     >
                       {/* Creator-workspace thumbnail, not Remotion composition media. */}
@@ -641,27 +789,11 @@ export function Cv001CreatorApp({
               </small>
             </section>
 
-            <details className="cv-more-options">
-              <summary>
-                More options
-                <ChevronDown aria-hidden size={15} />
-              </summary>
-              <div>
-                <label className="cv-create-label" htmlFor="cv-title">
-                  Title
-                </label>
-                <input
-                  id="cv-title"
-                  onChange={(event) => setTitle(event.target.value)}
-                  value={title}
-                />
-                <p className="cv-create-boundary">
-                  {isLanternRoute
-                    ? "Prototype art · real articulated motion · no voice or export yet"
-                    : "Draft breakdown only · no generated art, voice, animation, or export"}
-                </p>
-              </div>
-            </details>
+            <p className="cv-create-boundary">
+              {isLanternRoute
+                ? "Engineering prototype art · articulated motion demo · no voice or export"
+                : "Draft breakdown only · proxy animatic only, no final character animation, voice, or export"}
+            </p>
           </aside>
 
           <footer className="cv-create-footer">
@@ -715,6 +847,44 @@ export function Cv001CreatorApp({
               </button>
               <button onClick={() => createFirstCut(true)} type="button">
                 Replace and create
+              </button>
+            </div>
+          ) : null}
+
+          {engineeringDemoConfirmation ? (
+            <div
+              aria-label="Confirm opening engineering animation demo"
+              className="cv-replace-confirm"
+              role="alertdialog"
+            >
+              <p>
+                <strong>
+                  {engineeringDemoConfirmation ===
+                  "discard-setup-and-replace-demo"
+                    ? "Discard setup and replace the edited demo?"
+                    : engineeringDemoConfirmation === "discard-setup"
+                      ? "Discard unsaved setup changes?"
+                      : "Replace the edited engineering demo?"}
+                </strong>
+                <span>
+                  {engineeringDemoConfirmation ===
+                  "discard-setup-and-replace-demo"
+                    ? "Opening the engineering demo replaces this unsaved setup and clears the demo's direction history."
+                    : engineeringDemoConfirmation === "discard-setup"
+                      ? "Opening the engineering demo replaces the title, script, grammar, and art direction currently in this form."
+                      : "Opening a fresh engineering demo clears its saved direction history."}
+                </span>
+              </p>
+              <button
+                onClick={() => setEngineeringDemoConfirmation(null)}
+                type="button"
+              >
+                Keep editing
+              </button>
+              <button onClick={launchEngineeringAnimationDemo} type="button">
+                {engineeringDemoConfirmation === "replace-demo"
+                  ? "Replace and open demo"
+                  : "Discard and open demo"}
               </button>
             </div>
           ) : null}

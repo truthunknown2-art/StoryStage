@@ -1,5 +1,6 @@
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -29,6 +30,12 @@ const playerHarness = vi.hoisted(() => ({
   >,
   lastProps: null as Record<string, unknown> | null,
 }));
+
+const ARBITRARY_SCRIPT = Array.from(
+  { length: 12 },
+  () =>
+    "A curious fox discovers a brass key beside the river and asks three friends to help identify the tiny carved stars on it.",
+).join(" ");
 
 vi.mock("@remotion/player", async () => {
   const React = await import("react");
@@ -74,7 +81,7 @@ async function openStudio() {
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    screen.getByRole("button", { name: "Create animated first cut" }),
+    screen.getByRole("button", { name: "Open engineering animation demo" }),
   );
   return user;
 }
@@ -100,10 +107,18 @@ describe("CV-001 creator shell", () => {
         name: /Turn your script into an animated first cut/,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Title")).toHaveValue("The Lantern Discovery");
+    expect(screen.getByLabelText("Title")).toHaveValue(
+      "The Storylight in the Little Wood",
+    );
     expect(
       (screen.getByLabelText("Script") as HTMLTextAreaElement).value,
-    ).toContain("Mara notices");
+    ).toContain("Ollo bounces down the forest path");
+    expect(screen.queryByDisplayValue(/Mara notices/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Open engineering animation demo",
+      }),
+    ).toBeEnabled();
     expect(
       screen.getByRole("button", { name: /Kids Adventure/ }),
     ).toHaveAttribute("aria-pressed", "true");
@@ -142,13 +157,7 @@ describe("CV-001 creator shell", () => {
   });
 
   it("previews the canonical CV-002 beats for a valid arbitrary script", async () => {
-    const user = userEvent.setup();
     render(<App />);
-    await user.click(
-      screen.getByRole("button", {
-        name: "Load an Ollo & Friends sample script",
-      }),
-    );
     const title = (screen.getByLabelText("Title") as HTMLInputElement).value;
     const script = (screen.getByLabelText("Script") as HTMLTextAreaElement)
       .value;
@@ -158,7 +167,7 @@ describe("CV-001 creator shell", () => {
       "kids-adventure",
       createCv002ArtDirectionSelection(
         "kids-adventure",
-        "cut-paper-collage-mixed-media",
+        "storybook-watercolor-paper-cutout",
       ),
     )
       .graph.scenes.flatMap((scene) => scene.beats)
@@ -170,6 +179,147 @@ describe("CV-001 creator shell", () => {
     );
 
     expect(cards.map((card) => card.dataset.beatId)).toEqual(expectedIds);
+  });
+
+  it("derives a visible honest title when an arbitrary script is pasted, then creates with that title", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    fireEvent.change(screen.getByLabelText("Script"), {
+      target: { value: ARBITRARY_SCRIPT },
+    });
+
+    expect(screen.getByLabelText("Title")).toHaveValue(
+      "A curious fox discovers a brass key beside",
+    );
+    expect(screen.getByText("Unsaved setup changes")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Create first cut" }));
+    expect(
+      screen.getByText("A curious fox discovers a brass key beside"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("The Lantern Discovery")).not.toBeInTheDocument();
+  });
+
+  it("marks title, script, grammar, and art-direction setup edits as unsaved", async () => {
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "A Different Ollo Story" },
+    });
+    expect(screen.getByText("Unsaved setup changes")).toBeInTheDocument();
+
+    cleanup();
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Script"), {
+      target: { value: ARBITRARY_SCRIPT },
+    });
+    expect(screen.getByText("Unsaved setup changes")).toBeInTheDocument();
+
+    cleanup();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Weird History/ }));
+    expect(screen.getByText("Unsaved setup changes")).toBeInTheDocument();
+
+    cleanup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Cut Paper Collage/ }));
+    expect(screen.getByText("Unsaved setup changes")).toBeInTheDocument();
+  });
+
+  it("does not discard dirty setup when opening the demo without an existing prototype", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "The Protected Draft" },
+    });
+    fireEvent.change(screen.getByLabelText("Script"), {
+      target: { value: ARBITRARY_SCRIPT },
+    });
+
+    await user.click(
+      screen.getByRole("button", { name: "Open engineering animation demo" }),
+    );
+
+    expect(
+      screen.getByRole("alertdialog", {
+        name: "Confirm opening engineering animation demo",
+      }),
+    ).toHaveTextContent("Discard unsaved setup changes?");
+    expect(screen.getByLabelText("Title")).toHaveValue("The Protected Draft");
+    expect(screen.getByLabelText("Script")).toHaveValue(ARBITRARY_SCRIPT);
+    expect(screen.queryByLabelText("Animated preview")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Keep editing" }));
+
+    expect(
+      screen.queryByRole("alertdialog", {
+        name: "Confirm opening engineering animation demo",
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toHaveValue("The Protected Draft");
+    expect(screen.getByLabelText("Script")).toHaveValue(ARBITRARY_SCRIPT);
+  });
+
+  it("keeps exact dirty setup when an edited demo exists and confirmation is cancelled", async () => {
+    const user = await openStudio();
+    await user.type(
+      screen.getByLabelText("What should change?"),
+      "Make the reaction bigger.",
+    );
+    await user.click(screen.getByRole("button", { name: "Update beat" }));
+    await user.click(screen.getByRole("button", { name: "Back to Create" }));
+
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "The Exact Protected Setup" },
+    });
+    fireEvent.change(screen.getByLabelText("Script"), {
+      target: { value: ARBITRARY_SCRIPT },
+    });
+    await user.click(screen.getByRole("button", { name: /Cut Paper Collage/ }));
+    await user.click(screen.getByRole("button", { name: /Weird History/ }));
+
+    await user.click(
+      screen.getByRole("button", { name: "Open engineering animation demo" }),
+    );
+
+    expect(
+      screen.getByRole("alertdialog", {
+        name: "Confirm opening engineering animation demo",
+      }),
+    ).toHaveTextContent("Discard setup and replace the edited demo?");
+    expect(screen.getByLabelText("Title")).toHaveValue(
+      "The Exact Protected Setup",
+    );
+    expect(screen.getByLabelText("Script")).toHaveValue(ARBITRARY_SCRIPT);
+    expect(
+      screen.getByRole("button", { name: /^Weird History Explainer/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "Keep editing" }));
+
+    expect(screen.getByLabelText("Title")).toHaveValue(
+      "The Exact Protected Setup",
+    );
+    expect(screen.getByLabelText("Script")).toHaveValue(ARBITRARY_SCRIPT);
+    expect(
+      screen.getByRole("button", { name: /^Weird History Explainer/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByRole("button", { name: /Kids Adventure/ }));
+    expect(
+      screen.getByRole("button", { name: /Cut Paper Collage/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("does not call a fresh Ollo setup saved merely because older work reloads", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: "Create first cut" }));
+
+    cleanup();
+    render(<App />);
+
+    expect(screen.getByText("Unsaved setup changes")).toBeInTheDocument();
+    expect(screen.queryByText("Saved on this device")).not.toBeInTheDocument();
   });
 
   it("opens a real preview with exactly three creator-facing beat cards", async () => {
@@ -435,7 +585,12 @@ describe("CV-001 creator shell", () => {
       screen.queryByRole("button", { name: /Continue/ }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Create animated first cut" }),
+      screen.getByRole("button", { name: "Create first cut" }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", {
+        name: "Open engineering animation demo",
+      }),
     ).toBeEnabled();
   });
 });
