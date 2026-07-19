@@ -4,7 +4,8 @@ Date: 2026-07-19
 Owner: Codex  
 Branch: `agent/adrref001-art-direction-contract`  
 Integrated UI base: `e876f5f0f7b825a680718e7bff0270dd22459318`  
-Exact implementation commit: `d7675641e42c8755c8c181a826e3eec198b19023`
+Initial implementation commit: `d7675641e42c8755c8c181a826e3eec198b19023`
+Pro P1 correction commit: `cbabc52219592b42a3bcb53d5b40c4abee6f964f`
 
 ## Outcome
 
@@ -50,3 +51,22 @@ The only lint output is the two pre-existing KVP Remotion non-pure-animation war
 ## Integration boundary
 
 This is the contract commit requested by Pro. Kimi's separate Create-screen truthfulness branch must supply the visible title, explicit dirty state, Ollo/blank front door, Mara engineering-demo action, reload display, and truthful selected-reference copy before corrected PR #5 is accepted.
+
+## Pro P1 rejection and correction
+
+Pro rejected the initial implementation for two semantic-authority defects:
+
+1. a re-sealed `DirectorProject` could substitute a different legal same-grammar selection because restore and patch boundaries checked grammar but not the exact source selection;
+2. `createCv002Project()` could omit the selection and silently stamp an engine-created default as `selectedBy: "creator"`.
+
+Correction commit `cbabc52219592b42a3bcb53d5b40c4abee6f964f` closes both:
+
+- canonical project creation requires an explicit `Cv002ArtDirectionSelection` fourth argument;
+- the implicit creator-default helper is removed;
+- the Studio maps the visibly active UI choice to an explicit canonical selection for both preview and Create confirmation;
+- `applyDirectorPatch()` independently requires the base Director selection to match the source story selection exactly;
+- `restoreDirectorWorkspaceState()` requires every history entry, including H0, to match the source story selection exactly before replay;
+- regressions reject zero-patch and patched-history same-grammar substitutions, plus a direct patch substitution;
+- public proof/test/fixture call sites now pass an explicit legal selection.
+
+Independent Codex verification at the correction passed `pnpm verify` in 48.4 seconds: Story Engine 253 tests across 26 files, Studio 72, asset pipeline 54, contracts 11, runtime 16, desktop 11, and render worker 15. All typechecks and privacy verification passed for 566 tracked and publishable files. Only the two pre-existing KVP Remotion warnings remain.
