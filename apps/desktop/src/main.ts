@@ -775,6 +775,14 @@ async function promoteCandidateSet(exchange: GenerationExchangeRecord, report: P
   return promotePreparedCandidateSet({stagingRoot: importStagingRoot(exchange), assetsRoot, report, importRecord, candidateSetId, approvedAt});
 }
 
+const rigManifestBindings = (manifest: AssetRigManifest) => manifest.type === "character-rig"
+  ? manifest.animationMode === "pose-swap-2d"
+    ? [manifest.identityReference, ...Object.values(manifest.poses)]
+    : [manifest.identityReference, ...manifest.parts.map((part) => part.asset), ...manifest.exposures.map((exposure) => exposure.asset)]
+  : manifest.type === "background-layers"
+    ? manifest.layers.map((layer) => layer.asset)
+    : [manifest.cutout];
+
 async function verifyApprovedAssetVersionOnDisk(approved: ApprovedAssetVersion): Promise<boolean> {
   try {
     const assetsRoot = join(app.getPath("userData"), ".storystage-local", "assets");
@@ -783,7 +791,7 @@ async function verifyApprovedAssetVersionOnDisk(approved: ApprovedAssetVersion):
     const versionRoot = dirname(manifestFile);
     const manifest = assetRigManifestSchema.parse(await readBoundJsonFile(manifestFile, 2_000_000));
     if (!verifyAssetRigManifestHash(manifest) || manifest.contentHash !== approved.contentHash) return false;
-    const bindings = manifest.type === "character-rig" ? [manifest.identityReference, ...Object.values(manifest.poses)] : manifest.type === "background-layers" ? manifest.layers.map((layer) => layer.asset) : [manifest.cutout];
+    const bindings = rigManifestBindings(manifest);
     for (const binding of bindings) await readVerifiedPrivateBytes(versionRoot, binding.relativeFile, binding.contentHash, 50 * 1024 * 1024);
     const validation = rigValidationReportSchema.parse(await readBoundJsonFile(join(versionRoot, "rig-validation.json"), 2_000_000));
     if (!verifyRigValidationReportHash(validation) || validation.status !== "passed" || validation.manifestContentHash !== manifest.contentHash) return false;
@@ -1322,7 +1330,9 @@ function installRenderedMediaProtocol() {
         const versionRoot = dirname(manifestFile);
         const manifest = assetRigManifestSchema.parse(await readBoundJsonFile(manifestFile, 2_000_000));
         const binding = manifest.type === "character-rig"
-          ? role === "neutral" || role === "talk" || role === "reaction" ? manifest.poses[role] : null
+          ? manifest.animationMode === "pose-swap-2d"
+            ? role === "neutral" || role === "talk" || role === "reaction" ? manifest.poses[role] : null
+            : role === "identity" ? manifest.identityReference : manifest.parts.find((part) => part.id === role)?.asset ?? manifest.exposures.find((exposure) => exposure.id === role)?.asset ?? null
           : manifest.type === "background-layers"
             ? manifest.layers.find((layer) => layer.role === role)?.asset ?? null
             : role === "cutout" ? manifest.cutout : null;

@@ -61,11 +61,21 @@ function rebasePublicManifest(input: {manifest: AssetRigManifest; requirementId:
   const binding = <T extends {candidateId: string; relativeFile: string}>(asset: T): T => ({...asset, relativeFile: `files/${asset.candidateId}.png`});
   const identity = {schemaVersion: "1.0" as const, manifestId: `manifest-${input.candidateId}-${input.requirementId}`, candidateSetId: input.manifest.candidateSetId, briefId: `brief-${input.candidateId}-${input.requirementId}`, requirementId: input.requirementId, entityId: input.entityId, entityName: input.entityName, createdAt: input.manifest.createdAt};
   let draft: AssetRigManifestDraft;
-  if (input.manifest.type === "character-rig") draft = {...identity, type: "character-rig", animationMode: "pose-swap-2d", identityReference: binding(input.manifest.identityReference), poses: {neutral: binding(input.manifest.poses.neutral), talk: binding(input.manifest.poses.talk), reaction: binding(input.manifest.poses.reaction)}};
+  if (input.manifest.type === "character-rig") draft = input.manifest.animationMode === "pose-swap-2d"
+    ? {...identity, type: "character-rig", animationMode: "pose-swap-2d", identityReference: binding(input.manifest.identityReference), poses: {neutral: binding(input.manifest.poses.neutral), talk: binding(input.manifest.poses.talk), reaction: binding(input.manifest.poses.reaction)}}
+    : {...identity, type: "character-rig", animationMode: "articulated-2d", identityReference: binding(input.manifest.identityReference), renderer: input.manifest.renderer, template: input.manifest.template, parts: input.manifest.parts.map((part) => ({...part, asset: binding(part.asset)})), exposures: input.manifest.exposures.map((exposure) => ({...exposure, asset: binding(exposure.asset)})), visemeIds: input.manifest.visemeIds, visemeMappings: input.manifest.visemeMappings};
   else if (input.manifest.type === "background-layers") draft = {...identity, type: "background-layers", layers: input.manifest.layers.map((layer) => ({...layer, asset: binding(layer.asset)})) as typeof input.manifest.layers};
   else draft = {...identity, type: "prop", assetClass: input.manifest.assetClass, cutout: binding(input.manifest.cutout)};
   return assetRigManifestSchema.parse({...draft, contentHash: hashCanonical(draft)});
 }
+
+const manifestBindings = (manifest: AssetRigManifest) => manifest.type === "character-rig"
+  ? manifest.animationMode === "pose-swap-2d"
+    ? [manifest.identityReference, ...Object.values(manifest.poses)]
+    : [manifest.identityReference, ...manifest.parts.map((part) => part.asset), ...manifest.exposures.map((exposure) => exposure.asset)]
+  : manifest.type === "background-layers"
+    ? manifest.layers.map((layer) => layer.asset)
+    : [manifest.cutout];
 
 export type PromotePublicShowPackCandidateInput = {
   candidateRoot: string;
@@ -98,7 +108,7 @@ export async function verifyPublicShowPackCandidate(input: Pick<PromotePublicSho
   const rigManifest = assetRigManifestSchema.parse(JSON.parse(rigManifestBytes.toString("utf8")));
   if (!verifyAssetRigManifestHash(rigManifest) || rigManifest.contentHash !== candidate.evidence.rigManifest.contentHash) throw new Error("The packaged rig manifest failed its domain hash.");
   const preparedByFile = new Map(candidate.preparedFiles.map((file) => [file.file, file]));
-  const bindings = rigManifest.type === "character-rig" ? [rigManifest.identityReference, ...Object.values(rigManifest.poses)] : rigManifest.type === "background-layers" ? rigManifest.layers.map((layer) => layer.asset) : [rigManifest.cutout];
+  const bindings = manifestBindings(rigManifest);
   if (bindings.some((binding) => preparedByFile.get(binding.relativeFile)?.contentHash !== binding.contentHash)) throw new Error("Prepared pixels do not match the packaged rig bindings.");
 
   const validationBytes = await readContainedBytes(input.candidateRoot, candidate.evidence.rigValidation.file, candidate.evidence.rigValidation.fileContentHash, 2_000_000);
@@ -119,7 +129,7 @@ export async function promotePublicShowPackCandidate(input: PromotePublicShowPac
   const assetId = `approved-${candidate.candidateId}-${input.requirementId}`;
   const version = `sha256-${manifest.contentHash.slice(0, 16)}`;
   const versionRoot = join(input.assetsRoot, assetId, version);
-  const publicBindings = publicManifest.type === "character-rig" ? [publicManifest.identityReference, ...Object.values(publicManifest.poses)] : publicManifest.type === "background-layers" ? publicManifest.layers.map((layer) => layer.asset) : [publicManifest.cutout];
+  const publicBindings = manifestBindings(publicManifest);
   for (const binding of publicBindings) {
     const bytes = await readContainedBytes(input.candidateRoot, binding.relativeFile, binding.contentHash, 50 * 1024 * 1024);
     await writeImmutable(join(versionRoot, "files", `${binding.candidateId}.png`), bytes, binding.contentHash);

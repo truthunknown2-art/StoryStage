@@ -109,9 +109,15 @@ export function rebaseRigManifest(manifest: AssetRigManifest): AssetRigManifest 
   const rebaseBinding = <T extends {candidateId: string; relativeFile: string}>(binding: T): T => ({...binding, relativeFile: `files/${binding.candidateId}.png`});
   let draft: AssetRigManifestDraft;
   if (manifest.type === "character-rig") {
-    const {contentHash: _contentHash, ...identity} = manifest;
-    void _contentHash;
-    draft = {...identity, identityReference: rebaseBinding(manifest.identityReference), poses: {neutral: rebaseBinding(manifest.poses.neutral), talk: rebaseBinding(manifest.poses.talk), reaction: rebaseBinding(manifest.poses.reaction)}};
+    if (manifest.animationMode === "pose-swap-2d") {
+      const {contentHash: _contentHash, ...identity} = manifest;
+      void _contentHash;
+      draft = {...identity, identityReference: rebaseBinding(manifest.identityReference), poses: {neutral: rebaseBinding(manifest.poses.neutral), talk: rebaseBinding(manifest.poses.talk), reaction: rebaseBinding(manifest.poses.reaction)}};
+    } else {
+      const {contentHash: _contentHash, ...identity} = manifest;
+      void _contentHash;
+      draft = {...identity, identityReference: rebaseBinding(manifest.identityReference), parts: manifest.parts.map((part) => ({...part, asset: rebaseBinding(part.asset)})), exposures: manifest.exposures.map((exposure) => ({...exposure, asset: rebaseBinding(exposure.asset)}))};
+    }
   } else if (manifest.type === "background-layers") {
     const {contentHash: _contentHash, ...identity} = manifest;
     void _contentHash;

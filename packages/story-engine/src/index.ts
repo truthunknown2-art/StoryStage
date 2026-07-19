@@ -11,6 +11,7 @@ export * from "./director-timeline";
 export * from "./director/director-plan";
 export * from "./director/director-proposal";
 export * from "./director/director-project";
+export * from "./director/director-production-bundle";
 export * from "./director/director-compiler";
 export * from "./director/director-patch";
 export * from "./director/apply-director-patch";

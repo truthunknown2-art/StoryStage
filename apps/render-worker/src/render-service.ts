@@ -96,6 +96,7 @@ async function playbackAsset(assetsRoot: string, approved: ApprovedAssetVersion)
   const diagnosticVideo = await trustedFile(versionRoot, resolve(versionRoot, diagnostic.videoRelativeFile), 18 * 1024 * 1024);
   if (createHash("sha256").update(diagnosticVideo).digest("hex") !== diagnostic.videoContentHash) throw new Error("Approved moving diagnostic bytes changed after human review.");
   if (manifest.type === "character-rig") {
+    if (manifest.animationMode !== "pose-swap-2d") throw new Error("Articulated character rigs require the Director local-performance renderer and cannot enter the legacy pose-swap playback path.");
     await imageDataUrl(versionRoot, manifest.identityReference, false);
     return {type: "character-rig", assetId: approved.assetId, neutral: await imageDataUrl(versionRoot, manifest.poses.neutral, true), talk: await imageDataUrl(versionRoot, manifest.poses.talk, true), reaction: await imageDataUrl(versionRoot, manifest.poses.reaction, true)};
   }
@@ -152,6 +153,7 @@ export async function renderRigDiagnostic(options: RenderRigDiagnosticOptions): 
   if (!verifyAssetRigManifestHash(manifest)) throw new Error("Selected rig manifest failed its content hash.");
   let asset: PlaybackAsset;
   if (manifest.type === "character-rig") {
+    if (manifest.animationMode !== "pose-swap-2d") throw new Error("Articulated character diagnostics require the Director local-performance renderer and cannot enter the legacy pose-swap diagnostic path.");
     await imageDataUrl(options.importRoot, manifest.identityReference, false);
     asset = {type: "character-rig", assetId: manifest.requirementId, neutral: await imageDataUrl(options.importRoot, manifest.poses.neutral, true), talk: await imageDataUrl(options.importRoot, manifest.poses.talk, true), reaction: await imageDataUrl(options.importRoot, manifest.poses.reaction, true)};
   }
