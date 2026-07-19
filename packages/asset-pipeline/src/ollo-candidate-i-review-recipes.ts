@@ -6,7 +6,6 @@ import {
   characterRigImportReceiptSchema,
   characterRigPartRoleSchema,
   characterRigStagingReportSchema,
-  compileCandidateRigReviewMotionProgram,
   compileCandidateRigReviewRenderInput,
   compileCandidateRigReviewVisualProgram,
   createCharacterRigPreparationRecipe,
@@ -14,7 +13,6 @@ import {
   kidsBipedV1TopologyTemplate,
   validateCharacterRigImportReceipt,
   type CandidateRigReviewRegistrationPlan,
-  type CandidateRigReviewMotionProgram,
   type CandidateRigReviewRenderInput,
   type CandidateRigReviewVisualProgram,
   type CharacterRigPreparationRecipe,
@@ -499,16 +497,16 @@ export const createOlloCandidateIProposedReviewRecipes = (
 
 export type OlloCandidateISourceReviewPlanView = {
   view: ReviewView;
+  registrationPlanContentHash: string;
+  registrationPlan: OlloCandidateIRegistrationPlan;
   recipe: CharacterRigPreparationRecipe;
   program: CandidateRigReviewVisualProgram;
-  motionProgram: CandidateRigReviewMotionProgram;
   cleanRenderInput: CandidateRigReviewRenderInput;
   overlayRenderInput: CandidateRigReviewRenderInput;
-  motionRenderInput: CandidateRigReviewRenderInput;
 };
 
 export type OlloCandidateISourceReviewPlan = {
-  status: "blocked-awaiting-verified-artifact-route";
+  status: "ready-for-private-source-review-render";
   views: OlloCandidateISourceReviewPlanView[];
   providerAuthority: false;
   approvalAuthority: false;
@@ -521,13 +519,20 @@ export type OlloCandidateISourceReviewPlan = {
  * atlas maps, and proposed registrations. Recipes/programs are deliberately not
  * accepted as inputs, so they cannot become a parallel caller-authored truth.
  *
- * This is not a packet constructor. It remains blocked until asset-pipeline has
- * a private route that renders and then verifies actual artifact bytes.
+ * This is not a packet constructor. Its output is accepted only by the private
+ * worker route that renders and verifies actual artifact bytes; it grants no
+ * approval or production authority.
  */
 export const createOlloCandidateISourceReviewPlan = (
   input: OlloCandidateIReviewRecipeInput,
 ): OlloCandidateISourceReviewPlan => {
   const recipes = createOlloCandidateIProposedReviewRecipes(input);
+  const registrationPlanHashByView = new Map(
+    input.registrationPlans!.map((plan) => [plan.view, plan.contentHash]),
+  );
+  const registrationPlanByView = new Map(
+    input.registrationPlans!.map((plan) => [plan.view, plan]),
+  );
   const views = recipes.map((recipe) => {
     const program = compileCandidateRigReviewVisualProgram(
       input.request,
@@ -536,26 +541,21 @@ export const createOlloCandidateISourceReviewPlan = (
       input.importReceipt,
       recipe,
     );
-    const motionProgram = compileCandidateRigReviewMotionProgram(program);
     return {
       view: recipe.view,
+      registrationPlanContentHash: registrationPlanHashByView.get(recipe.view)!,
+      registrationPlan: registrationPlanByView.get(recipe.view)!,
       recipe,
       program,
-      motionProgram,
       cleanRenderInput: compileCandidateRigReviewRenderInput("clean", program),
       overlayRenderInput: compileCandidateRigReviewRenderInput(
         "overlay",
         program,
       ),
-      motionRenderInput: compileCandidateRigReviewRenderInput(
-        "motion",
-        program,
-        motionProgram,
-      ),
     };
   });
   return {
-    status: "blocked-awaiting-verified-artifact-route",
+    status: "ready-for-private-source-review-render",
     views,
     providerAuthority: false,
     approvalAuthority: false,
