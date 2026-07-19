@@ -45,12 +45,16 @@
   },
   "responsive": {
     "kids-1024x768": {
-      "criticalSerious": ["image-alt (same single pre-existing remotion-player img)"],
+      "criticalSerious": [
+        "image-alt (same single pre-existing remotion-player img)"
+      ],
       "scrollWidth": 1024,
       "innerWidth": 1024
     },
     "kids-820x900": {
-      "criticalSerious": ["image-alt (same single pre-existing remotion-player img)"],
+      "criticalSerious": [
+        "image-alt (same single pre-existing remotion-player img)"
+      ],
       "scrollWidth": 820,
       "innerWidth": 820
     }
@@ -73,18 +77,26 @@
     "undoRedoHashes": "covered by unit test: undo restores original hash, redo reapplies edited hash, selection retained"
   },
   "verification": {
-    "test": "corepack pnpm --filter @storystage/studio test -> 79/79 passed (7 files)",
+    "test": "corepack pnpm --filter @storystage/studio test -> 81/81 passed (7 files)",
     "typecheck": "corepack pnpm --filter @storystage/studio typecheck -> clean",
     "lint": "corepack pnpm exec eslint apps/studio -> clean",
     "format": "prettier --check clean on all touched files",
     "build": "verify:director-capability-assets OK; tsc --noEmit OK; vite build OK (pre-existing >500kB chunk note unchanged)",
     "diffCheck": "git diff --check clean",
-    "rootVerify": "pnpm verify (repository root, at ffee66e) -> exit 0: 19 capability assets verified; privacy 580 files passed; eslint . 0 errors (2 pre-existing render-worker flicker warnings, outside scope); typecheck clean across 10 projects; all tests green incl. director-alpha-boundary and studio 79/79"
+    "rootVerify": "pnpm verify (repository root, at e13292a) -> exit 0: 19 capability assets verified; privacy 580 files passed; eslint . 0 errors (2 pre-existing render-worker flicker warnings, outside scope); typecheck clean across 10 projects; all tests green incl. director-alpha-boundary and studio 81/81 (first run flaked on unrelated apps/desktop delivery-store timeout; green on rerun)"
   },
   "blockerResolution": {
     "blocker": "PR #12 hosted blocker at 767669f: director-alpha-boundary audit failed — DirectorPreview imported CreatorSceneRail/CreatorBeatStrip from ../creator-studio-components, pulling ten legacy CV-001/showcase files into the audited Director surface via the story-engine index",
     "fix": "ffee66e: boundary-safe DirectorSceneBeatRail inside apps/studio/src/director/ (director-alpha contracts + DirectorFrameThumbnail only); legacy components removed from creator-studio-components (no remaining consumers); no markup, aria-label, or behavior change",
     "boundaryTest": "packages/story-engine director-alpha-boundary.test.ts -> passed"
+  },
+  "inboxV5Resolution": {
+    "successorSha": "e13292a",
+    "p1": "DirectorCommandPanel gated to beats with exactly one concrete reaction event (same acceptance predicate as proposeDirectorPatch); honest unavailability note elsewhere — regression test covers the default/non-reaction beat",
+    "p2": "command state clears on every selection change — regression test covers click-driven beat switch",
+    "wording": "DirectorFrameThumbnail described as deterministic proxy approximation, not canonical frame",
+    "studioTests": "81/81 (includes both regression tests)",
+    "rootVerify": "pnpm verify at e13292a -> exit 0 on rerun (first run flaked on unrelated apps/desktop delivery-store 5000ms timeout under parallel load; test left untouched per Codex guidance and flagged for the flake lane)"
   },
   "screenshots": [
     "kids-1440x900.png",
