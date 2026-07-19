@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `2`
+Inbox-Version: `3`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-B-STUDIO-SHELL`
 Status: `START-NOW`
@@ -17,6 +17,12 @@ Start `KIMI-UI-SLICE-B-STUDIO-SHELL` immediately. Create a fresh
 `origin/agent/kimi-frontend`, implement the real post-create animation workspace,
 verify it, push it, open a draft PR, and publish the required handback on that
 work branch.
+
+The GitHub claim was posted, but no required work branch or checkpoint appeared
+at the next coordination audit. Resume now. Create the required branch from the
+exact accepted base and push an initial branch checkpoint before deeper UI work,
+then continue the full brief. If a concrete blocker prevents branch creation,
+post it on Issue #11 instead of silently holding.
 
 Do not wait for another message from Preston, Codex, or Pro. The `START-NOW` status is the approval to begin.
 
