@@ -19,7 +19,10 @@ The compositor does not mirror any source. It normalizes every extracted
 foreground to a `768px` character height, places every foot baseline at sheet
 row `799` (the declared baseline is `800`), horizontally centers the content
 bounds in a `576x832` transparent cell, and seals five non-overlapping source
-rectangles in a `2880x832` transparent sheet.
+rectangles in a `2880x832` transparent sheet. A separately self-hashed receipt
+records the exact crop bounds, scale, global translations, target height,
+baseline, Lanczos3 resampler, processor version, and `scale-and-translate`
+operation for every raw view.
 
 Output:
 
@@ -41,17 +44,26 @@ The chroma gate remains exactly `32px` from `#ff00ff`; it was not relaxed.
 | profile-right | `a4103e0118c2099913e549f953414e674f798d099ed9c9f99b1555c9c2150905` | `#f108eb`    |   25.690 | `710,34 359x794`   |              347 | `1728,0 576x832` | `1e09db7a87799bc419935ee3d76bc5c58600acfb513065c182dc9dcfba4f61ce` |
 | rear          | `97e9137ce09215f5a52b2df9ef755d70eda0ddfe024fcf2f7dcea42e60ed3455` | `#f706f6`    |   13.454 | `627,47 500x775`   |              495 | `2304,0 576x832` | `21f766af57ca2648f760a6e0a11efa9d10566e53addffb489994329211f2c5a8` |
 
-Every derived cell is `576x832`, uses `transform: none`, has unique bytes, and
-is rederived from the composed sheet by the real staging worker.
+Every derived cell is `576x832`, has unique bytes, and is rederived from the
+composed sheet by the real staging worker. Coverage evidence uses
+`transform: none` because it performs exact cell extraction from the already
+composed sheet; the earlier raw-source normalization receipt separately records
+`transform: scale-and-translate`.
 
 ## Self-hashed coverage lineage
 
 - Ollo request: `82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310`
+- normalization receipt: `08ff2f61b6b1c4a65dea29f42935aee9050cfd743445b424affd70ef63c041fa`
+- exact normalization JSON bytes: `4826f000f4e3b4494e49ec2fe575a0cf6df8cfa83403212ff47582116d104118`
 - coverage evidence: `c9e70319de980a0045d04ef8a2897b88d55a974c89d9aa098bb7dc982449946c`
 - exact coverage JSON bytes: `598cd00e26aecce5002554134ca66903ebe11e17670a809360f858cb6650b4d6`
 - Candidate H bundle: `40e91d0f5dce0cdefc964cd55e3b56110b0d13082e5ffd7f5605ce2e9ed4c55a`
 - staging report: `099f0e606a8bb2b173865449f2617e3bece819d6d05cb8cdf2de7088c76c32aa`
-- composition evidence: `22cc098ec0f61e8e4f5c2569b871f79feb15473bfbca2113b90c5fdca6cf2e8b`
+- composition evidence: `d974ae1e1d5189d3688ef8147e4f41def6157f9fbb7df44f740a216e729cc8ff`
+
+Mechanical normalization is complete, but human review authority is not. The
+receipt and composition evidence explicitly keep `identityConsistencyPassed`,
+`semanticViewAuditPassed`, and `registrationReady` false.
 
 The staging report classifies `turnaround-sheet` as returned and its coverage as
 complete. The overall request remains incomplete because these six independent
@@ -64,8 +76,10 @@ rig kits are absent:
 - `face-profile-left`
 - `face-profile-right`
 
-The proof attempts the real receipt route and confirms it rejects the
-incomplete request. No receipt file or preparation artifact is created.
+The proof attempts the real import-receipt route and confirms it rejects the
+incomplete request. No verified import receipt or preparation artifact is
+created; the separate normalization receipt above records only the deterministic
+image transform.
 
 ## Fail-closed verification
 
@@ -77,6 +91,9 @@ the sheet, self-hashed coverage JSON, and five independently derived cells.
 The normal Asset Pipeline test path also pins the exact committed sheet, every
 derived PNG, and every coverage/bundle/staging/composition JSON file and
 internal content hash, so ordinary `pnpm verify` fails if the evidence drifts.
+Story Engine contract tests also reject changed crop/scale/translation/baseline,
+resampler, processor, transform, ordering, uniqueness, review flags, or a stale
+normalization receipt hash.
 
 Commands:
 

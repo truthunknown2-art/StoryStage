@@ -146,7 +146,7 @@
         "horizontalSafetyInset": 32,
         "horizontalAlignment": "content-bounds-center",
         "verticalAlignment": "content-bounds-foot-baseline",
-        "transform": "none"
+        "transform": "scale-and-translate"
       },
       "imageLibrary": {
         "id": "sharp",
@@ -198,7 +198,7 @@
         },
         "derivedContentHash": "9179be1665aa88e86ddede71cce064c37714f00962317681f221291349f5fccd",
         "derivedByteLength": 537546,
-        "transform": "none"
+        "transform": "scale-and-translate"
       },
       {
         "view": "three-quarter",
@@ -228,7 +228,7 @@
         },
         "derivedContentHash": "ccfaea3bc3d64f8d600ee0b0758a6149a604c9a520b34949d81ce07b8bea97b6",
         "derivedByteLength": 539390,
-        "transform": "none"
+        "transform": "scale-and-translate"
       },
       {
         "view": "profile-left",
@@ -258,7 +258,7 @@
         },
         "derivedContentHash": "02a728955134f6664487343974a90bb225b21903665d44fcc68d61ea7b57b139",
         "derivedByteLength": 434799,
-        "transform": "none"
+        "transform": "scale-and-translate"
       },
       {
         "view": "profile-right",
@@ -288,7 +288,7 @@
         },
         "derivedContentHash": "1e09db7a87799bc419935ee3d76bc5c58600acfb513065c182dc9dcfba4f61ce",
         "derivedByteLength": 419260,
-        "transform": "none"
+        "transform": "scale-and-translate"
       },
       {
         "view": "rear",
@@ -318,11 +318,13 @@
         },
         "derivedContentHash": "21f766af57ca2648f760a6e0a11efa9d10566e53addffb489994329211f2c5a8",
         "derivedByteLength": 539388,
-        "transform": "none"
+        "transform": "scale-and-translate"
       }
     ]
   },
   "lineage": {
+    "turnaroundNormalizationReceiptContentHash": "08ff2f61b6b1c4a65dea29f42935aee9050cfd743445b424affd70ef63c041fa",
+    "turnaroundNormalizationReceiptFileContentHash": "4826f000f4e3b4494e49ec2fe575a0cf6df8cfa83403212ff47582116d104118",
     "turnaroundViewCoverageEvidenceContentHash": "c9e70319de980a0045d04ef8a2897b88d55a974c89d9aa098bb7dc982449946c",
     "turnaroundViewCoverageEvidenceFileContentHash": "598cd00e26aecce5002554134ca66903ebe11e17670a809360f858cb6650b4d6",
     "candidateBundleContentHash": "40e91d0f5dce0cdefc964cd55e3b56110b0d13082e5ffd7f5605ce2e9ed4c55a",
@@ -348,6 +350,9 @@
   "gate": {
     "exactFiveViewInventoryComplete": true,
     "deterministicRegistrationComplete": true,
+    "identityConsistencyPassed": false,
+    "semanticViewAuditPassed": false,
+    "registrationReady": false,
     "turnaroundItemComplete": true,
     "completeRigRequest": false,
     "missingRigKits": [
@@ -368,5 +373,5 @@
     "approvalRequired": true
   },
   "stagedAt": "2026-07-19T11:45:00.000Z",
-  "contentHash": "22cc098ec0f61e8e4f5c2569b871f79feb15473bfbca2113b90c5fdca6cf2e8b"
+  "contentHash": "d974ae1e1d5189d3688ef8147e4f41def6157f9fbb7df44f740a216e729cc8ff"
 }

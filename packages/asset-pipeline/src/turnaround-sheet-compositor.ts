@@ -42,7 +42,7 @@ export type TurnaroundSheetCompositionResult = {
       horizontalSafetyInset: 32;
       horizontalAlignment: "content-bounds-center";
       verticalAlignment: "content-bounds-foot-baseline";
-      transform: "none";
+      transform: "scale-and-translate";
     };
     imageLibrary: { id: "sharp"; version: string };
     resizeKernel: "lanczos3";
@@ -79,18 +79,28 @@ export type TurnaroundSheetCompositionResult = {
       normalizedByteLength: number;
       normalizedWidth: number;
       normalizedHeight: 768;
+      targetCharacterHeight: 768;
+      scale: number;
+      translateX: number;
+      translateY: 32;
+      baselineY: 800;
+      resampler: "lanczos3";
+      processorVersion: "1.0.0";
       sheetSourceRect: Rect;
       sheetContentBounds: Rect;
       derivedBytes: Buffer;
       derivedContentHash: string;
       derivedByteLength: number;
-      transform: "none";
+      transform: "scale-and-translate";
     }>;
   };
   gate: {
     classification: "untrusted-source-candidate";
     exactFiveViewInventoryComplete: true;
     deterministicRegistrationComplete: true;
+    identityConsistencyPassed: false;
+    semanticViewAuditPassed: false;
+    registrationReady: false;
     coverageEvidenceRequired: true;
     importReceiptCreated: false;
     preparedManifestCreated: false;
@@ -343,6 +353,13 @@ export const composeKidsBipedV1TurnaroundSheet = async (
       normalizedByteLength: view.bytes.length,
       normalizedWidth: view.width,
       normalizedHeight: CHARACTER_HEIGHT,
+      targetCharacterHeight: CHARACTER_HEIGHT,
+      scale: CHARACTER_HEIGHT / view.sourceContentBounds.height,
+      translateX: sheetSourceRect.x + Math.floor((CELL_WIDTH - view.width) / 2),
+      translateY: 32,
+      baselineY: FOOT_BASELINE,
+      resampler: "lanczos3",
+      processorVersion: "1.0.0",
       sheetSourceRect,
       sheetContentBounds: {
         x: sheetSourceRect.x + localBounds.x,
@@ -353,7 +370,7 @@ export const composeKidsBipedV1TurnaroundSheet = async (
       derivedBytes,
       derivedContentHash,
       derivedByteLength: derivedBytes.length,
-      transform: "none",
+      transform: "scale-and-translate",
     });
   }
 
@@ -372,7 +389,7 @@ export const composeKidsBipedV1TurnaroundSheet = async (
         horizontalSafetyInset: HORIZONTAL_SAFETY_INSET,
         horizontalAlignment: "content-bounds-center",
         verticalAlignment: "content-bounds-foot-baseline",
-        transform: "none",
+        transform: "scale-and-translate",
       },
       imageLibrary: { id: "sharp", version: sharp.versions.sharp },
       resizeKernel: "lanczos3",
@@ -397,6 +414,9 @@ export const composeKidsBipedV1TurnaroundSheet = async (
       classification: "untrusted-source-candidate",
       exactFiveViewInventoryComplete: true,
       deterministicRegistrationComplete: true,
+      identityConsistencyPassed: false,
+      semanticViewAuditPassed: false,
+      registrationReady: false,
       coverageEvidenceRequired: true,
       importReceiptCreated: false,
       preparedManifestCreated: false,

@@ -715,7 +715,9 @@ recorded in `CANDIDATE-H-MISSING-TURNAROUND-VIEWS.md`.
 These five rasters were composed deterministically into a new Candidate H sheet;
 Candidate B was not edited or extended. Candidate H has sealed source hashes,
 registration cells, derived view bytes, complete five-view coverage evidence,
-and a real staging report. The turnaround item is complete, but the overall rig
+an exact self-hashed normalization receipt, and a real staging report. The
+turnaround item is complete, but the overall rig
 request remains incomplete because all six face/parts kits are still absent.
-No import receipt, prepared manifest, approval, rig authority, or production
-binding exists.
+Identity consistency, semantic-view review, and registration readiness remain
+false. No import receipt, prepared manifest, approval, rig authority, or
+production binding exists.

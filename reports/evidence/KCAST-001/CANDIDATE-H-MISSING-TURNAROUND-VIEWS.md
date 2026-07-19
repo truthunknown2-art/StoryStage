@@ -69,14 +69,18 @@ the rig itself is not.
 
 - Candidate H sheet: `candidates/ollo-turnaround-candidate-h-five-view-alpha.png`
 - Candidate H sheet SHA-256: `732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec`
+- Normalization receipt content hash: `08ff2f61b6b1c4a65dea29f42935aee9050cfd743445b424affd70ef63c041fa`
 - Coverage evidence content hash: `c9e70319de980a0045d04ef8a2897b88d55a974c89d9aa098bb7dc982449946c`
 - Candidate bundle content hash: `40e91d0f5dce0cdefc964cd55e3b56110b0d13082e5ffd7f5605ce2e9ed4c55a`
 - Staging report content hash: `099f0e606a8bb2b173865449f2617e3bece819d6d05cb8cdf2de7088c76c32aa`
-- Composition evidence content hash: `22cc098ec0f61e8e4f5c2569b871f79feb15473bfbca2113b90c5fdca6cf2e8b`
+- Composition evidence content hash: `d974ae1e1d5189d3688ef8147e4f41def6157f9fbb7df44f740a216e729cc8ff`
 - Registration: five `576x832` cells, common `768px` content height,
-  common foot baseline at row `799`, centered content bounds, no transforms.
-- Gate: turnaround item complete; six rig kits missing; receipt creation rejected;
-  all provider, preparation, approval, and production authority remains false.
+  common foot baseline at row `799`, centered content bounds, and exact
+  crop/scale/translation facts in a self-hashed receipt.
+- Gate: turnaround item complete; six rig kits missing; verified import-receipt
+  creation rejected; identity consistency, semantic-view review, registration
+  readiness, and all provider, preparation, approval, and production authority
+  remain false. The normalization receipt is mechanical evidence only.
 
 ## Exact three-quarter prompt
 

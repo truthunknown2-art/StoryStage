@@ -4,10 +4,12 @@ import {
   createCharacterRigAssetRequest,
   createCharacterRigCandidateBundle,
   createKidsBipedRigRequestItems,
+  createTurnaroundNormalizationReceipt,
   createTurnaroundViewCoverageEvidence,
   inspectCharacterRigCandidateBundle,
   kidsBipedV1RequiredTurnaroundViews,
   kidsBipedV1TopologyTemplate,
+  turnaroundNormalizationReceiptSchema,
   validateCharacterRigCandidateBundle,
   type CharacterRigAssetRequestDraft,
   type CharacterRigCandidateBundleDraft,
@@ -80,7 +82,7 @@ const coverageEvidenceDraft = () => ({
   schemaVersion: "1.0" as const,
   requestId: "kcast-001-ollo-rig-request",
   requestContentHash: hash("a"),
-  requestItemId: "turnaround-sheet",
+  requestItemId: "turnaround-sheet" as const,
   candidateId: "candidate-turnaround-sheet",
   candidateContentHash: hash("b"),
   requiredViews: [...kidsBipedV1RequiredTurnaroundViews] as [
@@ -125,6 +127,39 @@ const coverageEvidenceDraft = () => ({
       transform: "none" as const,
     },
   ],
+});
+
+const normalizationReceiptDraft = () => ({
+  schemaVersion: "1.0" as const,
+  requestId: "kcast-001-ollo-rig-request",
+  requestContentHash: hash("a"),
+  requestItemId: "turnaround-sheet" as const,
+  candidateId: "ollo-turnaround-candidate-h",
+  candidateContentHash: hash("b"),
+  views: kidsBipedV1RequiredTurnaroundViews.map((view, index) => ({
+    view,
+    sourceContentHash: hash(["1", "2", "3", "4", "5"][index]!),
+    sourceContentBounds: {
+      x: 100 + index,
+      y: 50 + index,
+      width: 400 + index,
+      height: 500 + index,
+    },
+    normalizedContentHash: hash(["6", "7", "8", "9", "c"][index]!),
+    targetCharacterHeight: 768,
+    scale: 768 / (500 + index),
+    translateX: index * 576 + 50,
+    translateY: 32,
+    baselineY: 800,
+    resampler: "lanczos3" as const,
+    processorVersion: "1.0.0" as const,
+    transform: "scale-and-translate" as const,
+  })),
+  review: {
+    identityConsistencyPassed: false as const,
+    semanticViewAuditPassed: false as const,
+    registrationReady: false as const,
+  },
 });
 
 describe("provider-neutral character rig acquisition", () => {
@@ -282,6 +317,177 @@ describe("provider-neutral character rig acquisition", () => {
         ],
       }),
     ).toThrow(/unique|identical/i);
+  });
+
+  it("seals a deterministic exact-five-view normalization receipt", () => {
+    const first = createTurnaroundNormalizationReceipt(
+      normalizationReceiptDraft(),
+    );
+    const second = createTurnaroundNormalizationReceipt(
+      normalizationReceiptDraft(),
+    );
+    expect(second).toEqual(first);
+    expect(first.contentHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(first.views.map((view) => view.view)).toEqual(
+      kidsBipedV1RequiredTurnaroundViews,
+    );
+    expect(first.review).toEqual({
+      identityConsistencyPassed: false,
+      semanticViewAuditPassed: false,
+      registrationReady: false,
+    });
+  });
+
+  it("rejects stale normalization receipt hashes and altered registration facts", () => {
+    const receipt = createTurnaroundNormalizationReceipt(
+      normalizationReceiptDraft(),
+    );
+    type MutableReceipt = {
+      contentHash: string;
+      views: Array<Record<string, unknown>>;
+      review: Record<string, unknown>;
+    };
+    const expectStaleHashRejection = (
+      mutate: (value: MutableReceipt) => void,
+    ) => {
+      const changed = structuredClone(receipt) as unknown as MutableReceipt;
+      mutate(changed);
+      expect(() => turnaroundNormalizationReceiptSchema.parse(changed)).toThrow(
+        /hash is invalid/i,
+      );
+    };
+
+    expectStaleHashRejection((changed) => {
+      changed.contentHash = hash("f");
+    });
+    expectStaleHashRejection((changed) => {
+      const bounds = changed.views[0]!.sourceContentBounds as Record<
+        string,
+        unknown
+      >;
+      bounds.x = 101;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.targetCharacterHeight = 769;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.scale = 1.25;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.translateX = 51;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.translateY = 33;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.baselineY = 801;
+    });
+  });
+
+  it("rejects noncanonical or nonunique normalization views", () => {
+    const draft = normalizationReceiptDraft();
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.slice(0, 4),
+      }),
+    ).toThrow();
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: [draft.views[1]!, draft.views[0]!, ...draft.views.slice(2)],
+      }),
+    ).toThrow(/canonical five-view order/i);
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.map((view, index) =>
+          index === 1
+            ? {
+                ...view,
+                sourceContentHash: draft.views[0]!.sourceContentHash,
+              }
+            : view,
+        ),
+      }),
+    ).toThrow(/source hashes must be unique/i);
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.map((view, index) =>
+          index === 1
+            ? {
+                ...view,
+                normalizedContentHash: draft.views[0]!.normalizedContentHash,
+              }
+            : view,
+        ),
+      }),
+    ).toThrow(/normalized hashes must be unique/i);
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.map((view, index) =>
+          index === 1 ? { ...view, scale: 1.25 } : view,
+        ),
+      }),
+    ).toThrow(/scale must equal/i);
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.map((view, index) =>
+          index === 1 ? { ...view, baselineY: 801 } : view,
+        ),
+      }),
+    ).toThrow(/share one baseline|declared baseline/i);
+  });
+
+  it("rejects altered normalization method and review authority literals", () => {
+    const receipt = createTurnaroundNormalizationReceipt(
+      normalizationReceiptDraft(),
+    );
+    for (const [field, value] of [
+      ["resampler", "nearest"],
+      ["processorVersion", "1.0.1"],
+      ["transform", "mirror"],
+    ] as const)
+      expect(() =>
+        turnaroundNormalizationReceiptSchema.parse({
+          ...receipt,
+          views: receipt.views.map((view, index) =>
+            index === 0 ? { ...view, [field]: value } : view,
+          ),
+        }),
+      ).toThrow();
+
+    expect(() =>
+      turnaroundNormalizationReceiptSchema.parse({
+        ...receipt,
+        views: receipt.views.map((view, index) =>
+          index === 0 ? { ...view, scale: Number.POSITIVE_INFINITY } : view,
+        ),
+      }),
+    ).toThrow();
+    expect(() =>
+      turnaroundNormalizationReceiptSchema.parse({
+        ...receipt,
+        views: receipt.views.map((view, index) =>
+          index === 0 ? { ...view, translateX: Number.NaN } : view,
+        ),
+      }),
+    ).toThrow();
+
+    for (const field of [
+      "identityConsistencyPassed",
+      "semanticViewAuditPassed",
+      "registrationReady",
+    ] as const)
+      expect(() =>
+        turnaroundNormalizationReceiptSchema.parse({
+          ...receipt,
+          review: { ...receipt.review, [field]: true },
+        }),
+      ).toThrow();
   });
 
   it("rejects turnaround evidence references on non-turnaround assets", () => {

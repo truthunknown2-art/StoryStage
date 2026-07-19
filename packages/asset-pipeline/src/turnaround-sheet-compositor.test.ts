@@ -29,7 +29,22 @@ const expectedDerivedHashes = {
   rear: "21f766af57ca2648f760a6e0a11efa9d10566e53addffb489994329211f2c5a8",
 } as const;
 
+const expectedNormalization = {
+  front: { sourceHeight: 749, translateX: 60 },
+  "three-quarter": { sourceHeight: 789, translateX: 652 },
+  "profile-left": { sourceHeight: 776, translateX: 1258 },
+  "profile-right": { sourceHeight: 794, translateX: 1842 },
+  rear: { sourceHeight: 775, translateX: 2344 },
+} as const;
+
 const sealedJsonArtifacts = [
+  {
+    relativeFile: "ollo-turnaround-normalization-receipt-h-v1.json",
+    fileHash:
+      "4826f000f4e3b4494e49ec2fe575a0cf6df8cfa83403212ff47582116d104118",
+    contentHash:
+      "08ff2f61b6b1c4a65dea29f42935aee9050cfd743445b424affd70ef63c041fa",
+  },
   {
     relativeFile: "ollo-turnaround-coverage-evidence-h-v1.json",
     fileHash:
@@ -54,9 +69,9 @@ const sealedJsonArtifacts = [
   {
     relativeFile: "ollo-turnaround-composition-evidence-h.json",
     fileHash:
-      "827e103dfb2aeedce4e88610faf4d2e41602a762c96ef02dce959beceeb6abf7",
+      "50b421bbf21daf8bd88897fb62eb6bf332355089bf90513d9e3644f1829ff310",
     contentHash:
-      "22cc098ec0f61e8e4f5c2569b871f79feb15473bfbca2113b90c5fdca6cf2e8b",
+      "d974ae1e1d5189d3688ef8147e4f41def6157f9fbb7df44f740a216e729cc8ff",
   },
 ] as const;
 
@@ -150,11 +165,7 @@ describe("five-view turnaround sheet compositor", () => {
       const bytes = await readFile(
         resolve(evidenceRoot, artifact.relativeFile),
       );
-      const canonicalFileBytes = Buffer.from(
-        bytes.toString("utf8").replace(/\r\n/g, "\n"),
-        "utf8",
-      );
-      expect(sha256(canonicalFileBytes)).toBe(artifact.fileHash);
+      expect(sha256(bytes)).toBe(artifact.fileHash);
       expect(
         (JSON.parse(bytes.toString("utf8")) as { contentHash: string })
           .contentHash,
@@ -187,8 +198,16 @@ describe("five-view turnaround sheet compositor", () => {
       new Set(first.sheet.views.map((view) => view.derivedContentHash)).size,
     ).toBe(5);
     for (const [index, view] of first.sheet.views.entries()) {
-      expect(view.transform).toBe("none");
+      const normalization = expectedNormalization[view.view];
+      expect(view.transform).toBe("scale-and-translate");
       expect(view.normalizedHeight).toBe(768);
+      expect(view.targetCharacterHeight).toBe(768);
+      expect(view.scale).toBe(768 / normalization.sourceHeight);
+      expect(view.translateX).toBe(normalization.translateX);
+      expect(view.translateY).toBe(32);
+      expect(view.baselineY).toBe(800);
+      expect(view.resampler).toBe("lanczos3");
+      expect(view.processorVersion).toBe("1.0.0");
       expect(view.sheetSourceRect).toEqual({
         x: index * 576,
         y: 0,
@@ -210,6 +229,9 @@ describe("five-view turnaround sheet compositor", () => {
       expect.objectContaining({
         exactFiveViewInventoryComplete: true,
         deterministicRegistrationComplete: true,
+        identityConsistencyPassed: false,
+        semanticViewAuditPassed: false,
+        registrationReady: false,
         importReceiptCreated: false,
         preparedManifestCreated: false,
         providerAuthority: false,

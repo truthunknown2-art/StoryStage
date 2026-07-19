@@ -6,6 +6,7 @@ import sharp from "sharp";
 import {
   characterRigAssetRequestSchema,
   createCharacterRigCandidateBundle,
+  createTurnaroundNormalizationReceipt,
   createTurnaroundViewCoverageEvidence,
   hashCanonical,
   kidsBipedV1RequiredTurnaroundViews,
@@ -147,6 +148,49 @@ if (
   throw new Error(
     "Candidate H proof is not bound to the accepted Ollo request.",
   );
+
+const normalizationReceiptFor = (result: typeof composition) =>
+  createTurnaroundNormalizationReceipt({
+    schemaVersion: "1.0",
+    requestId: request.requestId,
+    requestContentHash: request.contentHash,
+    requestItemId: "turnaround-sheet",
+    candidateId,
+    candidateContentHash: result.sheet.contentHash,
+    views: result.sheet.views.map((view) => ({
+      view: view.view,
+      sourceContentHash: view.sourceContentHash,
+      sourceContentBounds: view.sourceContentBounds,
+      normalizedContentHash: view.normalizedContentHash,
+      targetCharacterHeight: view.targetCharacterHeight,
+      scale: view.scale,
+      translateX: view.translateX,
+      translateY: view.translateY,
+      baselineY: view.baselineY,
+      resampler: view.resampler,
+      processorVersion: view.processorVersion,
+      transform: view.transform,
+    })),
+    review: {
+      identityConsistencyPassed: false,
+      semanticViewAuditPassed: false,
+      registrationReady: false,
+    },
+  });
+const normalizationReceipt = normalizationReceiptFor(composition);
+const normalizationReceiptRetry = normalizationReceiptFor(retry);
+if (
+  normalizationReceiptRetry.contentHash !== normalizationReceipt.contentHash ||
+  JSON.stringify(normalizationReceiptRetry) !==
+    JSON.stringify(normalizationReceipt)
+)
+  throw new Error("Candidate H normalization receipt is not deterministic.");
+const normalizationReceiptRelativeFile =
+  "ollo-turnaround-normalization-receipt-h-v1.json";
+const normalizationReceiptBytes = Buffer.from(
+  `${JSON.stringify(normalizationReceipt, null, 2)}\n`,
+  "utf8",
+);
 
 const semanticDirection = {
   front: "neutral-front",
@@ -307,6 +351,10 @@ const evidenceDraft = {
     views: serializableViews,
   },
   lineage: {
+    turnaroundNormalizationReceiptContentHash: normalizationReceipt.contentHash,
+    turnaroundNormalizationReceiptFileContentHash: sha256(
+      normalizationReceiptBytes,
+    ),
     turnaroundViewCoverageEvidenceContentHash: coverageEvidence.contentHash,
     turnaroundViewCoverageEvidenceFileContentHash: sha256(coverageBytes),
     candidateBundleContentHash: bundle.contentHash,
@@ -323,6 +371,9 @@ const evidenceDraft = {
   gate: {
     exactFiveViewInventoryComplete: true as const,
     deterministicRegistrationComplete: true as const,
+    identityConsistencyPassed: false as const,
+    semanticViewAuditPassed: false as const,
+    registrationReady: false as const,
     turnaroundItemComplete: true as const,
     completeRigRequest: false as const,
     missingRigKits: report.missingItems,
@@ -344,6 +395,10 @@ const evidence = {
 
 await Promise.all([
   writeExact(
+    resolve(evidenceRoot, normalizationReceiptRelativeFile),
+    normalizationReceiptBytes,
+  ),
+  writeExact(
     resolve(evidenceRoot, "ollo-turnaround-candidate-bundle-h.json"),
     Buffer.from(`${JSON.stringify(bundle, null, 2)}\n`, "utf8"),
   ),
@@ -364,6 +419,8 @@ process.stdout.write(
       verdict:
         "PASS: Candidate H deterministically composes and stages as a complete five-view turnaround, while the six absent rig kits keep the request incomplete and non-importable.",
       candidateContentHash: composition.sheet.contentHash,
+      normalizationReceiptContentHash: normalizationReceipt.contentHash,
+      normalizationReceiptFileContentHash: sha256(normalizationReceiptBytes),
       coverageEvidenceContentHash: coverageEvidence.contentHash,
       coverageEvidenceFileContentHash: sha256(coverageBytes),
       candidateBundleContentHash: bundle.contentHash,

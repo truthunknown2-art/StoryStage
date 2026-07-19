@@ -777,6 +777,149 @@ export const createTurnaroundViewCoverageEvidence = (
   });
 };
 
+const turnaroundNormalizationSourceBoundsSchema = z
+  .object({
+    x: z.number().int().nonnegative(),
+    y: z.number().int().nonnegative(),
+    width: z.number().int().positive(),
+    height: z.number().int().positive(),
+  })
+  .strict();
+
+export const turnaroundNormalizationReceiptViewSchema = z
+  .object({
+    view: characterRigViewSchema,
+    sourceContentHash: hashSchema,
+    sourceContentBounds: turnaroundNormalizationSourceBoundsSchema,
+    normalizedContentHash: hashSchema,
+    targetCharacterHeight: z.number().int().positive().max(8192),
+    scale: z.number().finite().positive(),
+    translateX: z.number().finite(),
+    translateY: z.number().finite(),
+    baselineY: z.number().finite(),
+    resampler: z.literal("lanczos3"),
+    processorVersion: z.literal("1.0.0"),
+    transform: z.literal("scale-and-translate"),
+  })
+  .strict();
+
+const turnaroundNormalizationReceiptFields = {
+  schemaVersion: z.literal("1.0"),
+  requestId: identifierSchema,
+  requestContentHash: hashSchema,
+  requestItemId: z.literal("turnaround-sheet"),
+  candidateId: identifierSchema,
+  candidateContentHash: hashSchema,
+  views: z.array(turnaroundNormalizationReceiptViewSchema).length(5),
+  review: z
+    .object({
+      identityConsistencyPassed: z.literal(false),
+      semanticViewAuditPassed: z.literal(false),
+      registrationReady: z.literal(false),
+    })
+    .strict(),
+};
+
+const refineTurnaroundNormalizationReceipt = (
+  receipt: {
+    views: Array<z.infer<typeof turnaroundNormalizationReceiptViewSchema>>;
+  },
+  context: z.RefinementCtx,
+) => {
+  const sourceContentHashes = new Set<string>();
+  const normalizedContentHashes = new Set<string>();
+  const targetCharacterHeight = receipt.views[0]?.targetCharacterHeight;
+  const baselineY = receipt.views[0]?.baselineY;
+  for (const [index, view] of receipt.views.entries()) {
+    const expectedView = kidsBipedV1RequiredTurnaroundViews[index];
+    if (view.view !== expectedView)
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "view"],
+        message:
+          "Turnaround normalization receipt views must match the exact canonical five-view order.",
+      });
+    if (sourceContentHashes.has(view.sourceContentHash))
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "sourceContentHash"],
+        message:
+          "Turnaround normalization receipt source hashes must be unique.",
+      });
+    sourceContentHashes.add(view.sourceContentHash);
+    if (normalizedContentHashes.has(view.normalizedContentHash))
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "normalizedContentHash"],
+        message:
+          "Turnaround normalization receipt normalized hashes must be unique.",
+      });
+    normalizedContentHashes.add(view.normalizedContentHash);
+    if (view.targetCharacterHeight !== targetCharacterHeight)
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "targetCharacterHeight"],
+        message:
+          "Every turnaround normalization view must share one target character height.",
+      });
+    if (view.baselineY !== baselineY)
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "baselineY"],
+        message: "Every turnaround normalization view must share one baseline.",
+      });
+    if (
+      view.scale !==
+      view.targetCharacterHeight / view.sourceContentBounds.height
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "scale"],
+        message:
+          "Turnaround normalization scale must equal target height divided by source content height.",
+      });
+    if (view.translateY + view.targetCharacterHeight !== view.baselineY)
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "translateY"],
+        message:
+          "Turnaround normalization vertical translation must land on the declared baseline.",
+      });
+  }
+};
+
+export const turnaroundNormalizationReceiptDraftSchema = z
+  .object(turnaroundNormalizationReceiptFields)
+  .strict()
+  .superRefine(refineTurnaroundNormalizationReceipt);
+
+export const turnaroundNormalizationReceiptSchema = z
+  .object({ ...turnaroundNormalizationReceiptFields, contentHash: hashSchema })
+  .strict()
+  .superRefine((receipt, context) => {
+    refineTurnaroundNormalizationReceipt(receipt, context);
+    if (hashCanonical(withoutContentHash(receipt)) !== receipt.contentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["contentHash"],
+        message: "Turnaround normalization receipt hash is invalid.",
+      });
+  });
+
+export type TurnaroundNormalizationReceipt = z.infer<
+  typeof turnaroundNormalizationReceiptSchema
+>;
+
+export const createTurnaroundNormalizationReceipt = (
+  rawDraft: z.infer<typeof turnaroundNormalizationReceiptDraftSchema>,
+): TurnaroundNormalizationReceipt => {
+  const draft = turnaroundNormalizationReceiptDraftSchema.parse(rawDraft);
+  return turnaroundNormalizationReceiptSchema.parse({
+    ...draft,
+    contentHash: hashCanonical(draft),
+  });
+};
+
 const turnaroundViewCoverageEvidenceReferenceSchema = z
   .object({
     schemaVersion: z.literal("1.0"),
