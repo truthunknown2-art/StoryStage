@@ -1,7 +1,10 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { hashCanonical } from "../packages/story-engine/src/canonical-hash";
-import { buildCandidateRigReviewImplementationReceipt } from "../packages/story-engine/src/candidate-rig-review-implementation-receipt";
+import {
+  buildCandidateRigReviewImplementationReceipt,
+  normalizeCandidateRigReviewImplementationSource,
+} from "../packages/story-engine/src/candidate-rig-review-implementation-receipt";
 import { candidateRigReviewImplementationReceipt as trackedCandidateRigReviewImplementationReceipt } from "../packages/story-engine/src/candidate-rig-review-implementation-receipt.generated";
 
 const assertKnownAnswerInvariants = (
@@ -96,7 +99,11 @@ export const candidateRigReviewImplementationReceipt = ${JSON.stringify(receipt,
     );
     assertKnownAnswerInvariants(receipt, "freshly evaluated receipt");
     const existing = await readFile(generatedFile, "utf8").catch(() => null);
-    if (existing !== generated) {
+    if (
+      existing === null ||
+      normalizeCandidateRigReviewImplementationSource(existing) !==
+        normalizeCandidateRigReviewImplementationSource(generated)
+    ) {
       console.error(
         "Candidate rig review implementation receipt is stale. Run pnpm generate:candidate-rig-review-implementation-receipt and review the evaluator/behavior delta.",
       );

@@ -13,8 +13,8 @@ export const candidateRigReviewImplementationReceipt = {
   "publicBoundarySourceContentHash": "200d1f403bfe077657e7cd3a2b68064debf9ce8449f4a111930820505f33c1ad",
   "actorLocalKernelSourceContentHash": "9d59f3ae627ae6c11e8f4a0e0fe90032501ecd7df1fc98c900efbcc382704fa9",
   "receiptBuilderSourceContentHash": "cce9596314e37ed05fd0110fde88cfa018ec8810d9444d1c5fbc201738a2fee3",
-  "generatorSourceContentHash": "f1b66742315dc28cdee40af1e9f8d61b009cbba2f0ee99935b354c79b9fa383a",
-  "implementationSourceClosureContentHash": "cfbc71eff94e6d9183833ab95a32f1513fbc7bf14199c8b7ad4b078c474a7fe1",
+  "generatorSourceContentHash": "fbc7018d8b31742729dda9bc47ae12960baf453cc53d6c0e03ad8988956ff8b7",
+  "implementationSourceClosureContentHash": "5b2dc06d891fbd611e80c287bb6807ccb8e5bf60674dfe6a835b5da84c92138a",
   "canonicalFixtureContentHash": "059b9d5dad55a74b0fb7f2b8b65755561ac57edf360e76290c34ff026f04e529",
   "canonicalBehaviorContentHash": "68c46811800b945b95fa7198ecf7b12309ffd352234a87d449a5fa0f8601a88a",
   "exerciseDefinitionContentHash": "20956b3867b2fdcc068b32c073dc8efe440a5d53e05771ff4568ca1948fc9317",
@@ -34,5 +34,5 @@ export const candidateRigReviewImplementationReceipt = {
   "approvalAuthority": false,
   "capabilityAuthority": false,
   "productionBindable": false,
-  "contentHash": "ff14b4868f2614d21de88379ec5dcd19161e3ac0ad61c25fcfde217e197288a3"
+  "contentHash": "326e575ed7f866e7f688579561c126b94c2dc3aed181ef8522a307ee50d31500"
 } as const;
