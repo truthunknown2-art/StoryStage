@@ -57,11 +57,32 @@ vi.mock("@remotion/player", async () => {
   };
 });
 
+const candidateCountOverride = vi.hoisted(() => ({
+  count: null as number | null,
+}));
+
+vi.mock("@storystage/story-engine/director-alpha", async () => {
+  const actual = await vi.importActual<
+    typeof import("@storystage/story-engine/director-alpha")
+  >("@storystage/story-engine/director-alpha");
+  return {
+    ...actual,
+    listDirectorReactionDelayCandidates: (
+      project: Parameters<typeof actual.listDirectorReactionDelayCandidates>[0],
+      beatId: string,
+    ) =>
+      candidateCountOverride.count === null
+        ? actual.listDirectorReactionDelayCandidates(project, beatId)
+        : Array.from({ length: candidateCountOverride.count }, () => ({})),
+  };
+});
+
 afterEach(() => {
   cleanup();
   playerHarness.lastProps = null;
   playerHarness.lastSeek = null;
   playerHarness.frameListener = null;
+  candidateCountOverride.count = null;
   window.localStorage.clear();
   delete window.storyStage;
 });
@@ -483,6 +504,83 @@ describe("CV-002 editable script breakdown", () => {
     expect(
       screen.queryByText(/Structured direction unavailable on this beat/),
     ).not.toBeInTheDocument();
+  });
+
+  it("renders truthful, distinct copy for zero, one, and ambiguous reaction-target counts", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const rail = screen.getByLabelText("Studio scenes and beats");
+    const setupBeat = () =>
+      within(rail).getByRole("button", { name: /1\.1 setup/i });
+    const reactionBeat = () =>
+      within(rail).getByRole("button", { name: /2\.2 reaction/i });
+    const motionPanel = () => screen.getByLabelText("Motion controls");
+
+    // 0 candidates on the natural setup beat: honest unavailability, no input.
+    expect(
+      screen.queryByLabelText("Direction for selected beat"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Structured direction unavailable on this beat/),
+    ).toBeInTheDocument();
+
+    // Exactly 1 candidate: the real command control is present.
+    candidateCountOverride.count = 1;
+    await user.click(reactionBeat());
+    expect(
+      screen.getByLabelText("Direction for selected beat"),
+    ).toBeInTheDocument();
+
+    // 2+ candidates: distinct ambiguous state, no input, no fake target picker.
+    candidateCountOverride.count = 2;
+    await user.click(setupBeat());
+    expect(
+      screen.queryByLabelText("Direction for selected beat"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Multiple reaction targets on this beat/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/More than one eligible reaction target/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/More than one reaction event could be retimed/),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/explicit target selection is not supported yet/),
+    ).toBeInTheDocument();
+
+    // Motion panel parity at 2+: explains, never points at the absent control.
+    await user.click(screen.getByRole("tab", { name: "Motion" }));
+    expect(
+      within(motionPanel()).getByText(
+        /explicit target selection is not supported yet/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(motionPanel()).queryByText(/Use “Direct this beat” above/),
+    ).not.toBeInTheDocument();
+
+    // Motion panel parity at 0: states delay editing is unavailable.
+    candidateCountOverride.count = 0;
+    await user.click(reactionBeat());
+    expect(
+      within(motionPanel()).getByText(
+        /No editable reaction target exists on this beat/,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(motionPanel()).queryByText(/Use “Direct this beat” above/),
+    ).not.toBeInTheDocument();
+
+    // Motion panel parity at 1: points at the real control.
+    candidateCountOverride.count = 1;
+    await user.click(setupBeat());
+    expect(
+      within(motionPanel()).getByText(/Use “Direct this beat” above/),
+    ).toBeInTheDocument();
   });
 
   it("clears a typed direction when the selected beat changes", async () => {
