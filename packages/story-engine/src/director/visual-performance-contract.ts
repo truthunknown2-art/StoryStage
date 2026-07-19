@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { hashCanonical } from "../canonical-hash";
 import { hashSchema, identifierSchema } from "../model";
+import { articulatedCharacterRigManifestSchema } from "../rig-manifests";
 import { propWorldStateSchema } from "./world-state";
 import {
   continuityActionPhaseSchema,
@@ -270,6 +271,32 @@ export interface VisualPerformanceRenderer {
   readonly rendererVersion: string;
   evaluate(input: LocalPerformanceInput): unknown;
 }
+
+/**
+ * Compiles the renderer-facing id allowlists from a sealed articulated rig.
+ * There are deliberately no override arguments: local visual authority can
+ * only come from identifiers already bound by the manifest content hash.
+ */
+export const compileRigVisualProgram = (
+  rawManifest: unknown,
+): RigVisualProgram => {
+  const manifest = articulatedCharacterRigManifestSchema.parse(rawManifest);
+  const draft = {
+    schemaVersion: "1.0" as const,
+    id: `${manifest.manifestId}-visual`,
+    rigManifestContentHash: manifest.contentHash,
+    partIds: manifest.parts.map((part) => part.id),
+    socketIds: manifest.parts.flatMap((part) =>
+      part.sockets.map((socket) => socket.id),
+    ),
+    exposureIds: manifest.exposures.map((exposure) => exposure.id),
+    visemeIds: [...manifest.visemeIds],
+  };
+  return rigVisualProgramSchema.parse({
+    ...draft,
+    contentHash: hashCanonical(draft),
+  });
+};
 
 const assertLocalPerformanceInputBindings = (
   input: LocalPerformanceInput,
