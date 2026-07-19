@@ -63,7 +63,8 @@ Preston remains final creative authority
 
 ## Critical path and parallel lanes
 
-Two lanes proceed in parallel and meet in one visible Ollo milestone.
+Three implementation lanes may proceed in parallel, but their acceptance gates
+remain ordered.
 
 ```text
 Lane A: Ollo performance
@@ -79,10 +80,15 @@ Lane B: Editorial intelligence
 cross-artifact lineage containment
 → EditorialTargets + external intent + sealed proposal
 → heuristic-planner equivalence
-→ private blind A/B proxy pilot
-→ AI-planner verdict
 
-Both lanes
+Lane C: Shared timing instrument
+one neutral guide read
+→ immutable audio bytes + clause timing
+→ guide-only TimingBasis
+
+Binding acceptance chain
+Ollo registration → articulated proof → shared guide clock
+→ private proxy A/B → approved-Ollo A/B
 → one real 20–30 second Ollo Storylight sequence
 → ordinary Studio Player + ordinary render worker
 ```
@@ -114,7 +120,8 @@ It compares every canonical `beatId` and `beatContentHash` in source order. No e
 
 ### M1 — KCAST-001J: authority-false Ollo registration proposal and compact diagnostic
 
-**Owner:** Codex  
+**Owner:** Codex
+
 **Human gate:** Preston
 
 Use exact Candidate I atlas bytes to produce typed attachment evidence:
@@ -167,7 +174,20 @@ EditorialProposalRevision
 EditorialPlanningOutcome
 ```
 
-The proposal owns coverage topology, primary/secondary shot purpose, subjects/props, framing, angle, composition intent, camera/transition intent, read bias, structured reason codes, rationale, and scene energy intent.
+The proposal is hierarchy-shaped from its first version:
+
+```text
+episode → sequences → scenes → beats/editorial shots
+```
+
+The current short-script adapter creates one episode and one synthetic sequence
+around the existing canonical scenes and beats. Full hierarchical ingest and
+long-form execution remain later work.
+
+The proposal owns coverage topology, primary/secondary shot purpose,
+subjects/props, structured blocking, framing, angle, composition intent,
+camera/transition intent, read bias, structured reason codes, rationale, and
+scene energy intent.
 
 Move the existing lookup-table behavior into `HeuristicEditorialPlanner`; remove hidden editorial choices from the compiler. Freeze one Kids and one Weird History equivalence fixture.
 
@@ -196,47 +216,9 @@ Accepted principles include purposeful coverage, listener reactions, motivated c
 
 Do not hard-code universal quotas for shot mix, duration CV, same-size streaks, reveal shot count, static duration, blink timing, gesture inventory, or the illustrative 15-shot example.
 
-### M4 — EDI-001B: blind proxy editorial pilot
+### M4 — KCAST-001K: full Ollo motion review and promotion
 
-**Owners:** Codex builds the private runner; Kimi/manual GPT authors Cut B intent; Preston and Pro judge
-
-Freeze one 20–30 second `Storylight in the Little Wood` excerpt containing:
-
-```text
-space establishment
-Ollo physical action
-Storylight/prop reveal
-Tix or Dot listener reaction
-focus change
-payoff
-```
-
-Render with identical lineage:
-
-```text
-Cut A: expanded heuristic proposal
-Cut B: manually authored AI editorial intent
-```
-
-Both use the same story graph, scene worlds, timing budget, continuity compiler, capability registry, renderer versions, and output settings. No fallback is allowed. Both are private, watermarked, and `productionBindable:false`.
-
-Blind rubric:
-
-| Category                                     | Weight |
-| -------------------------------------------- | -----: |
-| Story clarity and causality                  |     25 |
-| Purposeful composition and coverage          |     20 |
-| Motivated cuts and action continuity         |     20 |
-| Pacing and readable holds                    |     15 |
-| Character reactions and performance coverage |     10 |
-| Visual variety without randomness            |     10 |
-
-Success requires Preston to choose Cut B, a margin of at least 15 points, zero additional hard defects, no worse quality findings, and no hidden fallback.
-
-### M5 — KCAST-001K: full Ollo motion review and promotion
-
-**Owner:** Codex  
-**Human gate:** Preston
+**Owner:** Codex · **Human gate:** Preston
 
 After Gate 1, render the private semantic-role motion reel for all three views:
 
@@ -263,7 +245,104 @@ registrationReady
 
 Only all four true authorize preparation, three prepared view manifests, the rig-family manifest, approved assets, and native Ollo capability registration.
 
-### M6 — OLLO-VIS-001: first real 20–30 second Ollo sequence
+### M5 — AUDIO-000G: shared guide-voice timing clock
+
+**Owner:** Codex
+
+**Authority:** guide timing only; never production-bindable
+
+Create or import one neutral guide read for the frozen Storylight script before
+either scored editorial proposal is generated. Seal the exact WAV bytes and
+clause timing as:
+
+```ts
+type GuideVoiceClockV1 = {
+  schemaVersion: "1.0";
+  scriptContentHash: Hash;
+  audioContentHash: Hash;
+  codec: "wav";
+  sampleRate: number;
+  channels: number;
+  durationSamples: number;
+  clauses: Array<{
+    clauseId: string;
+    sourceRange: { start: number; end: number };
+    speakerRef: string | null;
+    startSample: number;
+    endSampleExclusive: number;
+  }>;
+  authority: "guide-timing-only";
+  productionBindable: false;
+  contentHash: Hash;
+};
+```
+
+The artifact is immutable evidence. It may use one neutral reader and contains
+no final casting, music, SFX, ducking, emotional comparison, or audio approval.
+The Editorial Director may consume clause identities, durations, and semantic
+pauses, but it may not author final frame numbers. The timing solver converts
+the guide clock into exact frame allocations.
+
+An invalid or missing guide clock blocks the scored pilot, not editorial
+contract tests. Preserve audio-on scoring renders plus muted continuity renders.
+
+### M6 — EDI-001B: blind proxy editorial pilot
+
+**Owners:** Codex builds the private runner; Kimi/manual GPT authors Cut B intent; Preston and Pro judge
+
+Freeze one 20–30 second `Storylight in the Little Wood` excerpt containing:
+
+```text
+space establishment
+Ollo physical action
+Storylight/prop reveal
+Tix or Dot listener reaction
+focus change
+payoff
+```
+
+Render with identical lineage:
+
+```text
+Cut A: expanded heuristic proposal
+Cut B: manually authored AI editorial intent
+```
+
+Both cuts require the same `GuideVoiceClockV1.contentHash`, exact guide audio
+bytes, clause timing grid, TimingBasis authority, story graph, scene worlds,
+timing budget, continuity compiler, capability registry, renderer versions, and
+output settings. Estimated word-count timing is forbidden. No fallback is
+allowed. Both cuts are private, watermarked, and `productionBindable:false`.
+
+Blind rubric:
+
+| Category                                     | Weight |
+| -------------------------------------------- | -----: |
+| Story clarity and causality                  |     25 |
+| Purposeful composition and coverage          |     20 |
+| Motivated cuts and action continuity         |     20 |
+| Pacing and readable holds                    |     15 |
+| Character reactions and performance coverage |     10 |
+| Visual variety without randomness            |     10 |
+
+Success requires Preston to choose Cut B, a margin of at least 15 points, zero
+additional hard defects, no worse quality findings, and no hidden fallback.
+
+### M7 — EDI-001C: rerun the blind pilot with approved Ollo
+
+Rerender Cuts A and B with the same approved Ollo rig, the exact same editorial
+proposals, and the same guide clock through the ordinary Player and worker. This
+separates editorial quality from proxy-art quality. Only repeated success
+authorizes AI planning as a creator-facing default.
+
+Before defaulting AI planning, repeat on:
+
+```text
+one fast Weird History excerpt
+one quiet Kids dialogue/reaction excerpt
+```
+
+### M8 — OLLO-VIS-001: first real 20–30 second Ollo sequence
 
 **Owners:** Codex implementation; Kimi visual/UX review; Preston final acceptance
 
@@ -298,18 +377,7 @@ no sliding, ghosting, pose swaps, or continuity drops
 
 No special Ollo composition or bespoke preview is permitted.
 
-### M7 — EDI-001C: rerun the blind pilot with approved Ollo
-
-Rerender Cuts A and B with the same approved Ollo rig and repeat the blind judgment. This separates editorial quality from proxy-art quality. Only repeated success authorizes AI planning as a creator-facing default.
-
-Before defaulting AI planning, repeat on:
-
-```text
-one fast Weird History excerpt
-one quiet Kids dialogue/reaction excerpt
-```
-
-### M8 — SCRIPT-001: hierarchical screenplay ingest
+### M9 — SCRIPT-001: hierarchical screenplay ingest and long-form execution
 
 Add:
 
@@ -322,11 +390,16 @@ episode
 → cast, props, locations, continuity state
 ```
 
-This replaces the short-paragraph ceiling and enables 5–20 minute episodes with scene-scoped planning and episode-level arcs.
+The Editorial Director contract already carries this hierarchy through the
+one-sequence short-script adapter. This milestone implements full screenplay
+parsing, cast/location tracking, sequence planning, episode-level arcs, and
+long-form execution. It replaces the short-paragraph ceiling and enables 5–20
+minute episodes.
 
-### M9 — AUDIO-001: guide voice as timing master
+### M10 — AUDIO-001: polished voices, music, SFX, and mix
 
-Implement provider-neutral guide voice/import with exact clause and phoneme/viseme timing.
+After the first ordinary-path Ollo sequence, implement provider-neutral final
+character voices, real phoneme/viseme timing, music, SFX, mix, and ducking.
 
 Timing priority:
 
@@ -336,9 +409,11 @@ approved final audio
 → estimated timing
 ```
 
-Unlock real captions, J/L cuts, dialogue coverage, lip sync, music functions, SFX cues, ducking, and audio-aware editorial planning.
+The guide clock remains the fallback timing basis until final approved audio is
+bound. This milestone unlocks final captions, J/L cuts, dialogue coverage, lip
+sync, music functions, synchronized SFX, ducking, and audio-aware replanning.
 
-### M10 — STUDIO-001: full-episode editable timeline
+### M11 — STUDIO-001: full-episode editable timeline
 
 **UI/UX owner:** Kimi  
 **Data/patch authority:** Codex
@@ -368,13 +443,13 @@ plain-language revise selected range
 
 Keep the approved mockups as the binding visual target.
 
-### M11 — KIPLY-BENCH-001: external animation-quality benchmark
+### M12 — KIPLY-BENCH-001: external animation-quality benchmark
 
 Reproduce the directing and limited-animation grammar of one selected 30-second Mr. Kipply passage using original StoryStage story content and assets, initially without audio.
 
 The benchmark must be generated through the ordinary product path. It tests scene interpretation, coverage, composition, camera, performance, cuts, continuity, and timing. It is not a hand-authored showcase beside the product.
 
-### M12 — Show Pack breadth and finished-episode automation
+### M13 — Show Pack breadth and finished-episode automation
 
 After Ollo and the editorial pilot succeed:
 
@@ -396,16 +471,17 @@ full audio/mix/delivery automation
 
 1. Finish the Candidate I exact detector, proposal bases, immutable Preston patch model, and private compact diagnostic. Stop before full 180-frame authority.
 2. Land EDI-000b cross-artifact planner containment.
-3. Produce and implement M2 contracts/heuristic extraction without model API integration.
+3. Produce and implement hierarchy-shaped M2 contracts/heuristic extraction without model API integration.
 4. Integrate Kimi UI Slice C only after exact composition-only Player proof passes.
-5. Do not add broad Show Pack inventory, audio UI, or another fixture-specific animation patch before M1/M2 gates.
+5. Build the AUDIO-000G guide-clock artifact and TimingBasis adapter before the A/B runner. Do not add polished voice, music, SFX, mix, or audio UI.
+6. Do not add broad Show Pack inventory or another fixture-specific animation patch before M1/M2 gates.
 
 ### Kimi
 
-1. Close UI Slice C with genuine `PlayerRef` exact-frame plus composition-only persisted pixel proof, then stop that polish lane.
+1. Close UI Slice C under Inbox Version 16 with genuine `PlayerRef` exact-frame plus composition-only persisted pixel proof, then stop that polish lane.
 2. Produce `Scene Craft v1.1` with the approved taxonomy and evidence mapping.
-3. Prepare provider-neutral example `ExternalEditorialIntentDraft` documents for the frozen Storylight pilot, without canonical IDs/hashes or compiler authority.
-4. Design the read-only Ollo registration review surface and later blind A/B review surface against real artifacts. Do not add fake controls or candidate media to ordinary playback.
+3. Prepare provider-neutral example `ExternalEditorialIntentDraft` documents using host-issued episode, sequence, scene, beat, and clause references, without canonical IDs/hashes or compiler authority.
+4. Design the read-only Ollo registration review surface and later guide-clock/blind A/B review surfaces against real artifacts. Kimi owns no TTS provider, timing authority, or audio approval. Do not add fake controls or candidate media to ordinary playback.
 5. After those gates, own full-episode timeline/direct-manipulation UX against Codex-owned patch contracts.
 
 ### Project lead
@@ -421,7 +497,7 @@ full audio/mix/delivery automation
 2. Approve or reject the full Ollo motion evidence at Gate 2.
 3. Score the blind editorial cuts and choose the publishable one.
 4. Accept the real 20–30 second Ollo sequence.
-5. Select the Mr. Kipply benchmark excerpt when M11 begins.
+5. Select the Mr. Kipply benchmark excerpt when M12 begins.
 
 ## Stop rules
 

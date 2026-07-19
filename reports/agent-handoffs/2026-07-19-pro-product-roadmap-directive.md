@@ -12,17 +12,18 @@
 
 1. Finish KCAST-001J exact attachment detection, typed mechanical/proposed/shared/rigid/mask bases, immutable Preston patches, and the private compact registration diagnostic. Stop before full motion authority.
 2. Complete EDI-000b after the PR #18 compiler-entry containment: add one reusable planning-artifact ↔ DirectorPlan beat ID/hash assertion and enforce it at DirectorProject, workspace restore/revisions, patching, and production-bundle parse/seal.
-3. Implement EDI-001A contracts and heuristic extraction without network/model integration inside deterministic compilation.
+3. Implement hierarchy-shaped EDI-001A contracts and heuristic extraction without network/model integration inside deterministic compilation.
 4. Integrate Kimi UI Slice C only after exact `PlayerRef` paused-frame and composition-only persisted-pixel proof.
-5. Build the private watermarked, lineage-identical Storylight Cut A/Cut B runner with no fallback and no production authority.
+5. Build AUDIO-000G: one immutable neutral guide clock and TimingBasis adapter, without polished audio or production authority.
+6. Build the private watermarked, lineage-identical Storylight Cut A/Cut B runner against the exact same guide-clock hash, bytes, clause grid, and TimingBasis, with no estimated timing, fallback, or production authority.
 
 ## Immediate Kimi order
 
 1. Finish the current UI Slice C correction from Inbox Version 16: genuine observed `PlayerRef` frame/paused state plus persisted composition-only pixel evidence that excludes Player chrome. Then stop the polish lane.
 2. Treat `Scene Craft v1.1` as non-normative until each rule has enforcement class, minimum sample, semantic exceptions, evidence hashes/kind, and confidence.
-3. Prepare bounded provider-neutral editorial-intent examples for the frozen Storylight pilot. Do not author canonical hashes, exact frames, capability/asset claims, or production authority.
+3. Prepare bounded provider-neutral editorial-intent examples for the frozen Storylight pilot using host-issued episode, sequence, scene, beat, and clause references. Do not author canonical hashes, exact frames, capability/asset claims, or production authority.
 4. Design a real read-only Ollo registration review surface against the private diagnostic packet. Add correction controls only after deterministic patch contracts exist.
-5. Design the blind Cut A/B review surface, followed later by the full-episode timeline and direct-manipulation UX. Do not add decorative Audio/Assets/Export furniture before the underlying contracts exist.
+5. Design the guide-clock and blind Cut A/B review surfaces, followed later by the full-episode timeline and direct-manipulation UX. Kimi owns no TTS provider, timing authority, or audio approval. Do not add decorative Audio/Assets/Export furniture before the underlying contracts exist.
 
 ## Stop rules
 

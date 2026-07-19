@@ -13,9 +13,10 @@ The binding sequencing, ownership, acceptance gates, and stop rules live in
   enforced at DirectorProject sealing, workspace restore and revisions,
   patching, and production-bundle parse/seal before any external planner is
   authorized.
-- Ollo registration/performance, Editorial Director contracts, and Kimi's
-  composition-only UI proof proceed as parallel lanes. They converge on the
-  first ordinary-path 20–30 second Ollo Storylight sequence.
+- Ollo registration/performance, hierarchy-shaped Editorial Director contracts,
+  the shared guide timing basis, and Kimi's composition-only UI proof proceed
+  as parallel lanes. The guide clock is locked before the blind pilot; all lanes
+  converge on the first ordinary-path 20–30 second Ollo Storylight sequence.
 - Candidate Ollo evidence remains private and authority-false until Preston's
   explicit registration and motion gates pass.
 - Scene Craft preferences remain planning knowledge or graded findings; only
