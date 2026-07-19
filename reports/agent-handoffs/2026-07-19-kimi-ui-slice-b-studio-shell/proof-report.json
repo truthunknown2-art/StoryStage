@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "1.0",
+  "status": "kimi-ui-slice-b-studio-shell-proof",
+  "task": "KIMI-UI-SLICE-B-STUDIO-SHELL",
+  "branch": "agent/kimi-ui-slice-b-studio-shell",
+  "base": "21e8d4c601e5e96a540f93ede2b52660bfa6ac0a",
+  "implementationCommit": "60cd50f",
+  "capturedAt": "2026-07-19T13:49:05Z",
+  "environment": {
+    "url": "http://127.0.0.1:5174/",
+    "urlNote": "Port 5173 is occupied by another agent's dev server (kvp001 worktree); gates were run against this branch on 5174.",
+    "browser": "Chromium via Playwright 1.62.0-alpha",
+    "vite": "8.1.5",
+    "axe": "axe-core 4.10.3, resultTypes: violations, critical+serious only"
+  },
+  "results": {
+    "kids": {
+      "episodeHash": "19380598d9a2ddccb1b7c78f429cd0916d3ef1b5e8757405fa2e649d19c566bf",
+      "railThumbnailCount": 9,
+      "stripThumbnailCount": 9,
+      "audit": {
+        "criticalSerious": [
+          {
+            "id": "image-alt",
+            "impact": "critical",
+            "targets": ["img"],
+            "elementCount": 1,
+            "source": "Single 2098x750 blob <img> with empty alt rendered inside .__remotion-player by DirectorProductionComposition (packages/remotion-runtime). That package is outside the allowed scope and is byte-identical to the base on this branch; the finding is pre-existing on 21e8d4c. Fixing requires a remotion-runtime change, not a shell change."
+          }
+        ],
+        "scrollWidth": 1440,
+        "innerWidth": 1440
+      }
+    },
+    "history": {
+      "episodeHash": "cd7332009643cdc8d428c0d29901cfdbc73edaf792c46cdd73b72ed5c44990ee",
+      "railThumbnailCount": 9,
+      "stripThumbnailCount": 9,
+      "audit": {
+        "criticalSerious": [],
+        "scrollWidth": 1440,
+        "innerWidth": 1440
+      }
+    }
+  },
+  "responsive": {
+    "kids-1024x768": {
+      "criticalSerious": ["image-alt (same single pre-existing remotion-player img)"],
+      "scrollWidth": 1024,
+      "innerWidth": 1024
+    },
+    "kids-820x900": {
+      "criticalSerious": ["image-alt (same single pre-existing remotion-player img)"],
+      "scrollWidth": 820,
+      "innerWidth": 820
+    }
+  },
+  "console": {
+    "errors": [],
+    "warnings": [
+      {
+        "text": "EncodingError: The source image cannot be decoded.",
+        "routes": ["kids"],
+        "source": "Same single pre-existing img inside .__remotion-player (packages/remotion-runtime, unmodified, out of scope)."
+      }
+    ],
+    "historyRouteWarnings": []
+  },
+  "interactionProof": {
+    "railSeekParity": "covered by unit test: strip-card seek equals rail seek to exact beat start frame",
+    "eventMarkerSeek": "covered by unit test: event marker seeks to resolved event frame; playhead tracks playback frames",
+    "patchRebuild": "covered by unit test: applied patch changes data-episode-hash and all rail thumbnails carry the edited hash",
+    "undoRedoHashes": "covered by unit test: undo restores original hash, redo reapplies edited hash, selection retained"
+  },
+  "verification": {
+    "test": "corepack pnpm --filter @storystage/studio test -> 79/79 passed (7 files)",
+    "typecheck": "corepack pnpm --filter @storystage/studio typecheck -> clean",
+    "lint": "corepack pnpm exec eslint apps/studio -> clean",
+    "format": "prettier --check clean on all touched files",
+    "build": "verify:director-capability-assets OK; tsc --noEmit OK; vite build OK (pre-existing >500kB chunk note unchanged)",
+    "diffCheck": "git diff --check clean"
+  },
+  "screenshots": [
+    "kids-1440x900.png",
+    "history-1440x900.png",
+    "kids-1024x768.png",
+    "kids-820x900.png"
+  ]
+}
