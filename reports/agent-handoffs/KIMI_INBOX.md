@@ -1,15 +1,32 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `21`
+Inbox-Version: `22`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-SCENECRAFT-V11-EVIDENCE-LEDGER`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`
 Required-Work-Branch: `agent/kimi-scenecraft-v11-evidence-ledger`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger-v21-corrections.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger-v22-corrections.md`
 
 ## Current instruction
+
+Independent exact-head audit of draft PR #22 at
+`a3a6491ed1cf85145c011c2db3048fe345fb7693` rejects only five residual
+mechanical truth defects. Apply only the Version 22 brief on the same branch:
+reclassify SC-027 and fix counts; remove ten remaining `hard-invariant` tokens;
+add `worked example` to the narrative union; replace seven CRLF-derived hashes
+and the repeated SC-007 hash with exact Git-object-byte SHA-256 values; and make
+the handback/PR body full-SHA, net-added, non-circular, and Version-22 truthful.
+Use the two-commit protocol, push the immutable successor, update PR #22, then
+wait. Do not change product code or broaden scope.
+
+Version 22 supersedes Version 21 as the active correction. Version 21 remains
+below as historical traceability.
+
+---
+
+Previous Version 21 instruction:
 
 Exact-head review of draft PR #22 at
 `c067f2f8fcb195a58c940d20748a67f732a2f70c` accepts the Markdown conversion,
