@@ -8,6 +8,7 @@ import {
   sealSpokenLine,
 } from "./audio-director";
 import { createCv002Project } from "./cv002-story-draft";
+import { createCv002ArtDirectionSelection } from "./cv002-art-direction";
 import { compileDirectorProject } from "./director/director-compiler";
 import {
   directorProductionBundleSchema,
@@ -15,6 +16,10 @@ import {
 } from "./director/director-production-bundle";
 
 const hash = (value: string) => value.repeat(64).slice(0, 64);
+const kidsArtDirection = createCv002ArtDirectionSelection(
+  "kids-adventure",
+  "cut-paper-collage-mixed-media",
+);
 
 describe("audio director contracts", () => {
   it("compiles picture frames to exact 48 kHz sample boundaries", () => {
@@ -119,6 +124,7 @@ const createCompilationFixture = () => {
       "Audio contract proof",
       audioScript,
       "kids-adventure",
+      kidsArtDirection,
     ),
   });
   const { directorPlan, timingSolution } = directorProject;

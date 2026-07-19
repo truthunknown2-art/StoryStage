@@ -1,5 +1,10 @@
 import {z} from "zod";
 import {hashCanonical} from "./canonical-hash";
+import {
+  cv002ArtDirectionSelectionSchema,
+  validateCv002ArtDirectionSelection,
+  type Cv002ArtDirectionSelection,
+} from "./cv002-art-direction";
 import {hashSchema, identifierSchema} from "./model";
 
 export const cv002GrammarSchema = z.enum(["kids-adventure", "weird-history"]);
@@ -381,6 +386,7 @@ const projectFields = {
   title: z.string().trim().min(1),
   sourceText: z.string().min(1),
   grammar: cv002GrammarSchema,
+  artDirectionSelection: cv002ArtDirectionSelectionSchema,
   graph: cv002StoryGraphSchema,
   directionDraft: cv002DirectionDraftSchema,
   history: z.array(cv002TransactionSchema),
@@ -392,6 +398,8 @@ export const cv002ProjectSchema = z.object({...projectFields, contentHash: hashS
   if (hashCanonical(draft) !== contentHash) context.addIssue({code: "custom", message: "Story draft project hash is invalid.", path: ["contentHash"]});
   if (project.sourceText !== project.graph.sourceText || project.grammar !== project.graph.grammar)
     context.addIssue({code: "custom", message: "Project source and grammar must match its story graph.", path: ["graph"]});
+  if (project.artDirectionSelection.grammar !== project.grammar)
+    context.addIssue({code: "custom", message: "Project art direction must match its grammar.", path: ["artDirectionSelection", "grammar"]});
   const compiled = compileCv002DirectionDraft(project.graph);
   if (compiled.contentHash !== project.directionDraft.contentHash)
     context.addIssue({code: "custom", message: "Project direction draft does not match its story graph.", path: ["directionDraft"]});
@@ -431,10 +439,16 @@ export type Cv002Project = z.infer<typeof cv002ProjectSchema>;
 
 const sealProject = (draft: z.infer<typeof cv002ProjectDraftSchema>) => cv002ProjectSchema.parse({...draft, contentHash: hashCanonical(draft)});
 
-export function createCv002Project(title: string, sourceText: string, grammar: Cv002Grammar): Cv002Project {
+export function createCv002Project(
+  title: string,
+  sourceText: string,
+  grammar: Cv002Grammar,
+  artDirectionSelection: Cv002ArtDirectionSelection,
+): Cv002Project {
   const graph = createCv002StoryGraph(sourceText, grammar);
   const directionDraft = compileCv002DirectionDraft(graph);
-  return sealProject(cv002ProjectDraftSchema.parse({schemaVersion: "1.0", title, sourceText, grammar, graph, directionDraft, history: [], historyCursor: 0}));
+  const selection = validateCv002ArtDirectionSelection(artDirectionSelection);
+  return sealProject(cv002ProjectDraftSchema.parse({schemaVersion: "1.0", title, sourceText, grammar, artDirectionSelection: selection, graph, directionDraft, history: [], historyCursor: 0}));
 }
 
 export function commitCv002Operation(project: Cv002Project, rawOperation: Cv002GraphOperation): Cv002Project {

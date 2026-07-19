@@ -116,6 +116,37 @@ const requestedFrames = (command: string) => {
 
 /** Deterministic Alpha command interpreter. A future GPT Director may propose
  * the same schema, but never mutates the project directly. */
+/**
+ * The single eligibility source for reaction-delay direction: every concrete
+ * (reaction event, eligible shot) pair for the target beat. Both the Alpha
+ * interpreter and the Studio shell consume this exact list, so their
+ * cardinality cannot drift — one reaction event linked by two eligible shots
+ * yields two candidates and is ambiguous everywhere.
+ */
+export function listDirectorReactionDelayCandidates(
+  baseDirectorProject: DirectorProject,
+  targetBeatId: string,
+) {
+  const reactionEvents = baseDirectorProject.directorPlan.events.filter(
+    (event) => event.beatId === targetBeatId && event.kind === "reaction",
+  );
+  return reactionEvents.flatMap((event) =>
+    baseDirectorProject.directorPlan.shots
+      .filter(
+        (shot) =>
+          shot.beatIds.includes(targetBeatId) &&
+          [
+            shot.entryEventId,
+            shot.exitEventId,
+            shot.timingEnvelope.earliestCutEventId,
+            shot.timingEnvelope.preferredCutEventId,
+            shot.timingEnvelope.latestCutEventId,
+          ].includes(event.id),
+      )
+      .map((shot) => ({ event, shot })),
+  );
+}
+
 export function proposeDirectorPatch(input: {
   baseDirectorProject: DirectorProject;
   targetBeatId: string;
@@ -137,23 +168,9 @@ export function proposeDirectorPatch(input: {
   const frames = requestedFrames(command);
   if (!Number.isInteger(frames) || frames < 1 || frames > 30)
     throw new Error("Reaction delay must be between 1 and 30 frames.");
-  const reactionEvents = base.directorPlan.events.filter(
-    (event) => event.beatId === input.targetBeatId && event.kind === "reaction",
-  );
-  const candidates = reactionEvents.flatMap((event) =>
-    base.directorPlan.shots
-      .filter(
-        (shot) =>
-          shot.beatIds.includes(input.targetBeatId) &&
-          [
-            shot.entryEventId,
-            shot.exitEventId,
-            shot.timingEnvelope.earliestCutEventId,
-            shot.timingEnvelope.preferredCutEventId,
-            shot.timingEnvelope.latestCutEventId,
-          ].includes(event.id),
-      )
-      .map((shot) => ({ event, shot })),
+  const candidates = listDirectorReactionDelayCandidates(
+    base,
+    input.targetBeatId,
   );
   if (candidates.length === 0)
     throw new Error(

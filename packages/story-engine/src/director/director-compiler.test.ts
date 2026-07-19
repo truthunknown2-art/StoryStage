@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
+import { createCv002ArtDirectionSelection } from "../cv002-art-direction";
 import {
   compileDirectorProject,
   tryCompileDirectorProject,
@@ -163,6 +164,10 @@ const compileCameraSemantics = (
     "Camera semantics",
     script,
     "kids-adventure",
+    createCv002ArtDirectionSelection(
+      "kids-adventure",
+      "cut-paper-collage-mixed-media",
+    ),
   );
   const base = compileDirectorProject({ storyProject });
   const targetShot = base.directorPlan.shots[0]!;
@@ -196,6 +201,10 @@ describe("Director Studio Alpha compiler", () => {
       "A bright trail",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const first = compileDirectorProject({ storyProject: story });
     const second = compileDirectorProject({ storyProject: story });
@@ -307,6 +316,10 @@ describe("Director Studio Alpha compiler", () => {
         "Root authority",
         script,
         "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
       ),
     });
     const { contentHash: episodeHash, ...draft } = structuredClone(
@@ -335,6 +348,10 @@ describe("Director Studio Alpha compiler", () => {
         "Picture authority",
         script,
         "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
       ),
     });
     const mutateAndReseal = (kind: "camera" | "transition") => {
@@ -374,10 +391,26 @@ describe("Director Studio Alpha compiler", () => {
 
   it("directs Kids Adventure and Weird History with different grammars", () => {
     const kids = compileDirectorProject({
-      storyProject: createCv002Project("Kids", script, "kids-adventure"),
+      storyProject: createCv002Project(
+        "Kids",
+        script,
+        "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
+      ),
     });
     const history = compileDirectorProject({
-      storyProject: createCv002Project("History", script, "weird-history"),
+      storyProject: createCv002Project(
+        "History",
+        script,
+        "weird-history",
+        createCv002ArtDirectionSelection(
+          "weird-history",
+          "weird-history-editorial-collage",
+        ),
+      ),
     });
 
     expect(kids.directorPlan.grammarProfileContentHash).not.toBe(
@@ -431,6 +464,10 @@ describe("Director Studio Alpha compiler", () => {
       "Capability boundary",
       capabilityScript,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const proxy = compileDirectorProject({ storyProject: story });
     const supportedKinds = [
@@ -608,6 +645,10 @@ describe("Director Studio Alpha compiler", () => {
           "Short",
           exactWords(99),
           "kids-adventure",
+          createCv002ArtDirectionSelection(
+            "kids-adventure",
+            "cut-paper-collage-mixed-media",
+          ),
         ),
       }),
     ).toThrow(/100 to 300/);
@@ -617,6 +658,10 @@ describe("Director Studio Alpha compiler", () => {
           "Minimum",
           exactWords(100),
           "kids-adventure",
+          createCv002ArtDirectionSelection(
+            "kids-adventure",
+            "cut-paper-collage-mixed-media",
+          ),
         ),
       }),
     ).not.toThrow();
@@ -626,6 +671,10 @@ describe("Director Studio Alpha compiler", () => {
           "Maximum",
           exactWords(300),
           "weird-history",
+          createCv002ArtDirectionSelection(
+            "weird-history",
+            "weird-history-editorial-collage",
+          ),
         ),
       }),
     ).not.toThrow();
@@ -635,6 +684,10 @@ describe("Director Studio Alpha compiler", () => {
           "Long",
           exactWords(301),
           "weird-history",
+          createCv002ArtDirectionSelection(
+            "weird-history",
+            "weird-history-editorial-collage",
+          ),
         ),
       }),
     ).toThrow(/100 to 300/);
@@ -646,6 +699,10 @@ describe("Director Studio Alpha compiler", () => {
         "Short",
         exactWords(99),
         "kids-adventure" as const,
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
       ),
     };
 
