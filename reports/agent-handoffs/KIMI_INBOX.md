@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `5`
+Inbox-Version: `6`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-B-STUDIO-SHELL`
 Status: `START-NOW`
@@ -10,6 +10,40 @@ Required-Work-Branch: `agent/kimi-ui-slice-b-studio-shell`
 Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-start-ui-slice-b-studio-shell.md`
 
 ## Current instruction
+
+Resume `KIMI-UI-SLICE-B-STUDIO-SHELL` on the existing required work branch and
+correct the remaining eligibility mismatch on draft PR #12 at exact head
+`a7c034c5564acd7ab80fc137273c8ce5b59870e6`.
+
+The boundary repair, command clearing, honest unavailable state, proxy wording,
+and hosted verification at this head are good. Do not regress them.
+
+**Remaining P1 — the UI and interpreter still count different things.**
+`DirectorPreview.tsx` builds `candidates` by filtering reaction events with
+`shots.some(...)`, so one reaction event linked to two matching shots counts as
+one eligible candidate. `proposeDirectorPatch` in
+`packages/story-engine/src/director/director-patch.ts` uses
+`reactionEvents.flatMap(...matching shots...)`; the same case counts as two and
+is rejected as ambiguous. The UI can therefore still expose a prominent
+command that the interpreter cannot apply, while the inline comment incorrectly
+says it mirrors the acceptance predicate.
+
+Use one shared Director Alpha eligibility helper consumed by both the
+interpreter and Studio, or otherwise prove the two paths use the exact same
+event/shot-pair cardinality. Prefer the shared helper so they cannot drift.
+Add a regression fixture with one reaction event linked by two eligible shots:
+the control must remain unavailable and the interpreter must report ambiguity.
+Keep the existing no-reaction and command-clearing regressions. Run root
+`pnpm verify`, update the handoff/proof wording and exact SHA, push the same
+required branch, and leave PR #12 draft for Codex/Pro review.
+
+The earlier Version 5 requirements and historical hosted boundary context stay
+recorded below for traceability; Version 6 supersedes only the eligibility
+implementation described above.
+
+---
+
+Previous Version 5 instruction:
 
 Resume `KIMI-UI-SLICE-B-STUDIO-SHELL` on the existing required work branch and
 fix the hosted blocker on draft PR #12 at exact head
