@@ -171,6 +171,17 @@ export function DirectorAnimaticPreview({
   const selectedBeatIndex = project.graph.scenes
     .flatMap((scene) => scene.beats)
     .findIndex((beat) => beat.id === selectedBeatId);
+  const selectedSceneIndex = project.graph.scenes.findIndex((scene) =>
+    scene.beats.some((beat) => beat.id === selectedBeatId),
+  );
+  const selectedScene = project.graph.scenes[selectedSceneIndex]!;
+  const selectedSceneBeatIndex = selectedScene.beats.findIndex(
+    (beat) => beat.id === selectedBeatId,
+  );
+  const selectedBeatTitle =
+    selectedBeat.text.length > 54
+      ? `${selectedBeat.text.slice(0, 54).trimEnd()}…`
+      : selectedBeat.text;
 
   const previewCommand = () => {
     try {
@@ -252,8 +263,10 @@ export function DirectorAnimaticPreview({
             <Clapperboard size={20} />
           </span>
           <div>
-            <small>Director workspace</small>
-            <h2>Draft animatic</h2>
+            <small>
+              Scene {selectedSceneIndex + 1} · Beat {selectedSceneBeatIndex + 1}
+            </small>
+            <h2>{selectedBeatTitle}</h2>
           </div>
         </div>
         <div className="cv2-director-ready">
@@ -300,7 +313,7 @@ export function DirectorAnimaticPreview({
         >
           <div className="director-revision-bar">
             <div>
-              <small>Selected beat</small>
+              <small>Director</small>
               <strong>Beat {selectedBeatIndex + 1}</strong>
             </div>
             <code title={director.contentHash}>
