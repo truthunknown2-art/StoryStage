@@ -1,12 +1,26 @@
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdtemp,
+  mkdir,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import capabilityAssetCatalog from "../../../packages/remotion-runtime/src/director/generated-capability-asset-catalog.json";
-import { createBundledKidsCapabilityRegistry } from "@storystage/remotion-runtime/director";
 import {
+  createBundledKidsCapabilityRegistry,
+  createBundledMaraLocalPartsRigManifest,
+} from "@storystage/remotion-runtime/director";
+import {
+  articulatedCharacterRigManifestSchema,
   compileDirectorProject,
+  createCapabilityRegistry,
   createCv002Project,
+  listArticulatedRigAssetReferences,
+  type PerformanceCapabilityDraft,
   type ExecutableEpisodePlan,
 } from "@storystage/story-engine/director-alpha";
 import { hashCanonical } from "@storystage/story-engine";
@@ -19,6 +33,35 @@ import {
 const workspaceRoot = resolve(
   fileURLToPath(new URL("../../..", import.meta.url)),
 );
+const publicRoot = resolve(workspaceRoot, "packages/remotion-runtime/public");
+
+const localPartsFixture = () => {
+  const firstSentence = [
+    ...Array.from({ length: 43 }, (_, index) => `wonder${index}`),
+    "shocked!",
+  ].join(" ");
+  const remainder = Array.from(
+    { length: 5 },
+    (_, sentenceIndex) =>
+      `${Array.from(
+        { length: 12 },
+        (_, wordIndex) => `detail${sentenceIndex}x${wordIndex}`,
+      ).join(" ")}.`,
+  ).join(" ");
+  const storyProject = createCv002Project(
+    "Local-parts asset verification",
+    `${firstSentence} ${remainder}`,
+    "kids-adventure",
+  );
+  const proxy = compileDirectorProject({ storyProject });
+  const requirement = proxy.directorPlan.beats[0]!.performanceRequirements[0]!;
+  const target = {
+    kind: "articulated-rig" as const,
+    requirementId: requirement.id,
+    entityId: requirement.entityId,
+  };
+  return { storyProject, target };
+};
 
 describe("Director capability asset authority", () => {
   it("rejects a different same-size PNG before rendering", async () => {
@@ -104,9 +147,10 @@ Behind the gate, Mara discovers a painted marker and reveals that the missing be
     const original = compiled.executableEpisodePlan.performancePrograms.find(
       (program) => program.execution?.kind === "atlas-cycle",
     )!;
-    const secondIndex = compiled.executableEpisodePlan.performancePrograms.findIndex(
-      (program) => program.id !== original.id,
-    );
+    const secondIndex =
+      compiled.executableEpisodePlan.performancePrograms.findIndex(
+        (program) => program.id !== original.id,
+      );
     expect(secondIndex).toBeGreaterThanOrEqual(0);
     const programs = structuredClone(
       compiled.executableEpisodePlan.performancePrograms,
@@ -114,9 +158,10 @@ Behind the gate, Mara discovers a painted marker and reveals that the missing be
     const second = programs[secondIndex]!;
     const execution = {
       ...structuredClone(original.execution!),
-      atlasWidth: original.execution!.kind === "atlas-cycle"
-        ? original.execution!.atlasWidth - 1
-        : 1,
+      atlasWidth:
+        original.execution!.kind === "atlas-cycle"
+          ? original.execution!.atlasWidth - 1
+          : 1,
     };
     const secondDraft = {
       ...second,
@@ -150,5 +195,120 @@ Behind the gate, Mara discovers a painted marker and reveals that the missing be
         resolve(workspaceRoot, "packages/remotion-runtime/public"),
       ),
     ).rejects.toThrow(/dimensions no longer match its executable program/i);
+  });
+
+  it("verifies every local-parts manifest reference against the immutable sheet", async () => {
+    const fixture = localPartsFixture();
+    const registry = createBundledKidsCapabilityRegistry([fixture.target]);
+    const compiled = compileDirectorProject({
+      storyProject: fixture.storyProject,
+      capabilities: registry,
+    });
+
+    const references = listArticulatedRigAssetReferences(
+      createBundledMaraLocalPartsRigManifest(fixture.target),
+    );
+    const verified = await verifyDirectorEpisodeCapabilityAssets(
+      compiled.executableEpisodePlan,
+      publicRoot,
+    );
+    expect(verified).toHaveLength(references.length);
+    for (const reference of references)
+      expect(verified).toContainEqual(
+        expect.objectContaining({
+          assetId: reference.candidateId,
+          contentHash: reference.contentHash,
+          width: reference.width,
+          height: reference.height,
+        }),
+      );
+  });
+
+  it("rejects local-parts manifest dimension drift before rendering", async () => {
+    const fixture = localPartsFixture();
+    const sealed = createBundledMaraLocalPartsRigManifest(fixture.target);
+    const { contentHash: _oldHash, ...manifestDraft } = structuredClone(sealed);
+    void _oldHash;
+    manifestDraft.identityReference.width += 1;
+    const rigManifest = articulatedCharacterRigManifestSchema.parse({
+      ...manifestDraft,
+      contentHash: hashCanonical(manifestDraft),
+    });
+    const baseCapability = createBundledKidsCapabilityRegistry([fixture.target])
+      .capabilities[0]!;
+    const { contentHash: _capabilityHash, ...baseDraft } = baseCapability;
+    void _capabilityHash;
+    const capability: PerformanceCapabilityDraft = {
+      ...baseDraft,
+      id: `dimension-drift-${fixture.target.requirementId}`,
+      rendererId: rigManifest.renderer.id,
+      rendererVersion: rigManifest.renderer.version,
+      execution: {
+        kind: "articulated-rig",
+        mode: "local-parts-v1",
+        assetId: rigManifest.identityReference.candidateId,
+        displayScale: 0.36,
+        rigManifest,
+      },
+    };
+    const compiled = compileDirectorProject({
+      storyProject: fixture.storyProject,
+      capabilities: createCapabilityRegistry({
+        version: "dimension-drift-v1",
+        capabilities: [capability],
+      }),
+    });
+
+    await expect(
+      verifyDirectorEpisodeCapabilityAssets(
+        compiled.executableEpisodePlan,
+        publicRoot,
+      ),
+    ).rejects.toThrow(/dimensions no longer match its sealed manifest/i);
+  });
+
+  it("rejects a content-addressed file reached through a junction", async () => {
+    const entry = capabilityAssetCatalog.assets.find(
+      (asset) => asset.assetId === "mara-run-right-v1",
+    )!;
+    const bytes = await readFile(
+      resolve(publicRoot, ...entry.relativeFile.split("/")),
+    );
+    const trustedRoot = await mkdtemp(
+      resolve(tmpdir(), "storystage-director-symlink-root-"),
+    );
+    const outsideRoot = await mkdtemp(
+      resolve(tmpdir(), "storystage-director-symlink-target-"),
+    );
+    const segments = entry.relativeFile.split("/");
+    const hashDirectory = segments.slice(0, -1).join("/");
+    const outsideDirectory = resolve(outsideRoot, "asset");
+    await mkdir(outsideDirectory, { recursive: true });
+    await writeFile(resolve(outsideDirectory, segments.at(-1)!), bytes);
+    await mkdir(dirname(resolve(trustedRoot, hashDirectory)), {
+      recursive: true,
+    });
+
+    try {
+      await symlink(
+        outsideDirectory,
+        resolve(trustedRoot, hashDirectory),
+        "junction",
+      );
+      await expect(
+        verifyApprovedDirectorCapabilityAsset(trustedRoot, {
+          assetId: entry.assetId,
+          version: "1.0.0",
+          contentHash: entry.contentHash,
+          status: "approved",
+          relativeFile: entry.relativeFile,
+          byteLength: entry.byteLength,
+          immutableLocationId: entry.immutableLocationId,
+        }),
+      ).rejects.toThrow(/symbolic link/i);
+    } finally {
+      await rm(trustedRoot, { recursive: true, force: true });
+      await rm(outsideRoot, { recursive: true, force: true });
+    }
   });
 });

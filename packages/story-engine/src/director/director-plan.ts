@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { hashCanonical } from "../canonical-hash";
 import { hashSchema, identifierSchema } from "../model";
-import { directorEventTimingAdjustmentSchema } from "./director-proposal";
+import {
+  directorEventTimingAdjustmentSchema,
+  directorLocomotionDirectiveSchema,
+} from "./director-proposal";
 import { directorWorldStateSchema } from "./world-state";
 
 const causalEventSchema = z
@@ -127,6 +130,9 @@ const shotIntentSchema = z
           exitLandmarkId: identifierSchema,
           facing: z.enum(["left", "right", "front", "three-quarter", "away"]),
           gazeTargetId: identifierSchema.nullable(),
+          locomotion: directorLocomotionDirectiveSchema
+            .omit({ entityId: true, destinationLandmarkId: true })
+            .optional(),
         })
         .strict(),
     ),

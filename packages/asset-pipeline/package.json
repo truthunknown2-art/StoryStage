@@ -15,6 +15,7 @@
   },
   "scripts": {
     "chroma-key:atlas": "tsx src/chroma-key-cli.ts",
+    "prepare:kvp-local-parts": "node scripts/prepare-kvp-local-parts.mjs",
     "test": "vitest run src/index.test.ts src/import-evidence-store.test.ts src/approved-asset-workflow.test.ts src/public-show-pack-promotion.test.ts src/public-show-pack-review-store.test.ts src/sprite-atlas.test.ts",
     "typecheck": "tsc --noEmit"
   },

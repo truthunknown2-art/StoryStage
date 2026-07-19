@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
 import { compileContinuitySequencePlan } from "./continuity-compiler";
-import { sealContinuitySequencePlan } from "./continuity-sequence-plan";
 import { compileDirectorProject } from "./director-compiler";
 import {
   continuityGaitPhaseAt,
@@ -13,7 +12,7 @@ import {
   localPerformanceFrameSchema,
   rigVisualProgramSchema,
 } from "./visual-performance-contract";
-import { executableEpisodePlanSchema } from "./executable-episode-plan";
+import { createKvp001ProofFixture } from "./kvp001-proof-fixture";
 
 const sentence =
   "A curious traveler follows the bright trail, watches her friend, and carefully carries the lantern toward the old forest gate.";
@@ -126,126 +125,32 @@ describe("canonical continuity frame evaluation", () => {
   });
 
   it("reports locomotion, deceleration, named plant, settle, and a stopped root on exact frames", () => {
-    const project = compileDirectorProject({
-      storyProject: createCv002Project(
-        "Performance state authority",
-        script,
-        "kids-adventure",
-      ),
-    });
-    const baseEpisode = project.executableEpisodePlan;
-    const continuityDraft = structuredClone(baseEpisode.continuitySequencePlan);
-    Reflect.deleteProperty(continuityDraft, "contentHash");
-    const shot = continuityDraft.shots.at(-1)!;
-    const boundSegment = shot.performanceSegments.find(
-      (segment) => segment.performanceProgramId !== null,
-    )!;
-    const entityId = boundSegment.entityId;
-    const entryWorld = shot.entryWorldState.entities[entityId]!;
-    const exitWorld = shot.exitWorldState.entities[entityId]!;
-    exitWorld.transform.x = entryWorld.transform.x + 0.12;
-    exitWorld.velocity = { x: 0, y: 0, z: 0 };
-    const decelerationFrame = shot.endFrameExclusive - 8;
-    const plantFrame = shot.endFrameExclusive - 3;
-    shot.performanceSegments = [
-      ...shot.performanceSegments.filter(
-        (segment) => segment.entityId !== entityId,
-      ),
-      {
-        entityId,
-        startFrame: shot.startFrame,
-        endFrameExclusive: decelerationFrame,
-        motionMode: "running",
-        actionPhase: "action",
-        gaitStart: 0,
-        gaitAdvanceCycles: 0.5,
-        performanceProgramId: boundSegment.performanceProgramId,
-        performanceProgramContentHash:
-          boundSegment.performanceProgramContentHash,
-      },
-      {
-        entityId,
-        startFrame: decelerationFrame,
-        endFrameExclusive: plantFrame,
-        motionMode: "decelerating",
-        actionPhase: "action",
-        gaitStart: 0.5,
-        gaitAdvanceCycles: 0.25,
-        performanceProgramId: boundSegment.performanceProgramId,
-        performanceProgramContentHash:
-          boundSegment.performanceProgramContentHash,
-      },
-      {
-        entityId,
-        startFrame: plantFrame,
-        endFrameExclusive: shot.endFrameExclusive,
-        motionMode: "idle",
-        actionPhase: "settle",
-        gaitStart: null,
-        gaitAdvanceCycles: null,
-        performanceProgramId: boundSegment.performanceProgramId,
-        performanceProgramContentHash:
-          boundSegment.performanceProgramContentHash,
-      },
-    ];
-    const exitPerformance = shot.exitPerformanceState.find(
-      (state) => state.entityId === entityId,
-    )!;
-    Object.assign(exitPerformance, {
-      motionMode: "idle",
-      actionPhase: "settle",
-      gaitPhase: null,
-      performanceProgramId: boundSegment.performanceProgramId,
-      performanceProgramContentHash: boundSegment.performanceProgramContentHash,
-    });
-    shot.pictureEvents.push(
-      {
-        source: "performance-event",
-        id: `${shot.shotId}-${entityId}-test-deceleration`,
-        parentDirectorEventId: shot.cutEventId,
-        sourceProgramContentHash: boundSegment.performanceProgramContentHash!,
-        frame: decelerationFrame,
-        subjectIds: [entityId],
-        kind: "deceleration",
-      },
-      {
-        source: "performance-event",
-        id: `${shot.shotId}-${entityId}-test-plant`,
-        parentDirectorEventId: shot.cutEventId,
-        sourceProgramContentHash: boundSegment.performanceProgramContentHash!,
-        frame: plantFrame,
-        subjectIds: [entityId],
-        kind: "plant",
-      },
-    );
-    shot.pictureEvents.sort((left, right) => left.frame - right.frame);
-    const continuitySequencePlan = sealContinuitySequencePlan(continuityDraft);
-    const episodeDraft = structuredClone(baseEpisode);
-    Reflect.deleteProperty(episodeDraft, "contentHash");
-    episodeDraft.continuitySequencePlan = continuitySequencePlan;
-    const episode = executableEpisodePlanSchema.parse({
-      ...episodeDraft,
-      contentHash: hashCanonical(episodeDraft),
-    });
-
-    const walking = evaluateContinuityFrame(episode, decelerationFrame - 1)
-      .entities[entityId]!;
-    const decelerating = evaluateContinuityFrame(episode, decelerationFrame)
-      .entities[entityId]!;
-    const planted = evaluateContinuityFrame(episode, plantFrame).entities[
+    const fixture = createKvp001ProofFixture();
+    const project = compileDirectorProject(fixture);
+    const episode = project.executableEpisodePlan;
+    const entityId =
+      project.directorPlan.beats[0]!.performanceRequirements[0]!.entityId;
+    const walking = evaluateContinuityFrame(episode, 71).entities[entityId]!;
+    const decelerating = evaluateContinuityFrame(episode, 72).entities[
       entityId
     ]!;
-    const held = evaluateContinuityFrame(episode, plantFrame + 1).entities[
-      entityId
-    ]!;
+    const planted = evaluateContinuityFrame(episode, 102).entities[entityId]!;
+    const reaching = evaluateContinuityFrame(episode, 109).entities[entityId]!;
+    const settling = evaluateContinuityFrame(episode, 110).entities[entityId]!;
+    const held = evaluateContinuityFrame(episode, 139).entities[entityId]!;
 
     expect(walking.motionMode).toBe("running");
     expect(walking.gaitPhase).not.toBeNull();
     expect(decelerating.motionMode).toBe("decelerating");
     expect(decelerating.gaitPhase).not.toBeNull();
     expect(planted.motionMode).toBe("idle");
-    expect(planted.actionPhase).toBe("settle");
+    expect(planted.actionPhase).toBe("impact");
     expect(planted.gaitPhase).toBeNull();
+    expect(reaching.actionPhase).toBe("impact");
+    expect(settling.actionPhase).toBe("settle");
+    expect(held.actionPhase).toBe("settle");
+    expect(reaching.rootTransform).toEqual(planted.rootTransform);
+    expect(settling.rootTransform).toEqual(planted.rootTransform);
     expect(held.rootTransform).toEqual(planted.rootTransform);
     expect(held.velocity).toEqual({ x: 0, y: 0, z: 0 });
   });

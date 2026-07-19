@@ -27,6 +27,27 @@ const sources = [
     sourceRelativeFile:
       "show-packs/kids/moonlit-ruins/v1/rigs/mara/payoff-puppet-v1/puppet-parts.png",
   },
+  ...[
+    "leg-left",
+    "leg-right",
+    "thigh-left",
+    "thigh-right",
+    "upper-arm-left",
+    "lower-arm-left",
+    "torso",
+    "upper-arm-right",
+    "lower-arm-right",
+    "head",
+    "mouth-rest",
+    "mouth-open",
+    "eyes-open",
+    "eyes-half",
+    "eyes-closed",
+    "pupils",
+  ].map((partId) => ({
+    assetId: `mara-local-${partId}-v1`,
+    sourceRelativeFile: `show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/${partId}.png`,
+  })),
 ];
 
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");

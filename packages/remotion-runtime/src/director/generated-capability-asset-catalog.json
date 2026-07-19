@@ -30,7 +30,167 @@
       "relativeFile": "capability-assets/sha256/d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9.png",
       "width": 1672,
       "height": 941
+    },
+    {
+      "assetId": "mara-local-leg-left-v1",
+      "contentHash": "13d12e9a0eff9b58f6bf7d62403cf9c27a6da9f8626f8086f8a170806d7091d6",
+      "byteLength": 65515,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:13d12e9a0eff9b58f6bf7d62403cf9c27a6da9f8626f8086f8a170806d7091d6",
+      "relativeFile": "capability-assets/sha256/13d12e9a0eff9b58f6bf7d62403cf9c27a6da9f8626f8086f8a170806d7091d6.png",
+      "width": 298,
+      "height": 318
+    },
+    {
+      "assetId": "mara-local-leg-right-v1",
+      "contentHash": "7d8086fcfd7b203ec8bafa439a5633b38847c01feb6541e4f01d9f7320feb20f",
+      "byteLength": 64401,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:7d8086fcfd7b203ec8bafa439a5633b38847c01feb6541e4f01d9f7320feb20f",
+      "relativeFile": "capability-assets/sha256/7d8086fcfd7b203ec8bafa439a5633b38847c01feb6541e4f01d9f7320feb20f.png",
+      "width": 318,
+      "height": 318
+    },
+    {
+      "assetId": "mara-local-thigh-left-v1",
+      "contentHash": "809608100f018c0150a71a2dc759ba0b674d108d7d7f43529fdb0587adb8150c",
+      "byteLength": 34302,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:809608100f018c0150a71a2dc759ba0b674d108d7d7f43529fdb0587adb8150c",
+      "relativeFile": "capability-assets/sha256/809608100f018c0150a71a2dc759ba0b674d108d7d7f43529fdb0587adb8150c.png",
+      "width": 238,
+      "height": 228
+    },
+    {
+      "assetId": "mara-local-thigh-right-v1",
+      "contentHash": "705489814db0acadf9b42b988a4531ca8daaf46059deb42e975a23b3aa798823",
+      "byteLength": 34152,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:705489814db0acadf9b42b988a4531ca8daaf46059deb42e975a23b3aa798823",
+      "relativeFile": "capability-assets/sha256/705489814db0acadf9b42b988a4531ca8daaf46059deb42e975a23b3aa798823.png",
+      "width": 248,
+      "height": 228
+    },
+    {
+      "assetId": "mara-local-upper-arm-left-v1",
+      "contentHash": "4fc16fac6c126b2f82172d725423746dfde7d0ddb89f0d7aa8a476235299cd9a",
+      "byteLength": 37077,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:4fc16fac6c126b2f82172d725423746dfde7d0ddb89f0d7aa8a476235299cd9a",
+      "relativeFile": "capability-assets/sha256/4fc16fac6c126b2f82172d725423746dfde7d0ddb89f0d7aa8a476235299cd9a.png",
+      "width": 228,
+      "height": 323
+    },
+    {
+      "assetId": "mara-local-lower-arm-left-v1",
+      "contentHash": "43a4443ed1e62722b029eea47983fd0ed6fb89d5d6c37a240c0ba6ab21bd1cf3",
+      "byteLength": 26619,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:43a4443ed1e62722b029eea47983fd0ed6fb89d5d6c37a240c0ba6ab21bd1cf3",
+      "relativeFile": "capability-assets/sha256/43a4443ed1e62722b029eea47983fd0ed6fb89d5d6c37a240c0ba6ab21bd1cf3.png",
+      "width": 248,
+      "height": 293
+    },
+    {
+      "assetId": "mara-local-torso-v1",
+      "contentHash": "b58ce5234e85d87e078c1f677304a2d47d846ad8db8d4d0dbebe65b8bf004ade",
+      "byteLength": 213673,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:b58ce5234e85d87e078c1f677304a2d47d846ad8db8d4d0dbebe65b8bf004ade",
+      "relativeFile": "capability-assets/sha256/b58ce5234e85d87e078c1f677304a2d47d846ad8db8d4d0dbebe65b8bf004ade.png",
+      "width": 398,
+      "height": 458
+    },
+    {
+      "assetId": "mara-local-upper-arm-right-v1",
+      "contentHash": "b13742f7e5a0b8db9569d8c43feadbf3b3aede93c18ea79981eb58b7af08c140",
+      "byteLength": 35017,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:b13742f7e5a0b8db9569d8c43feadbf3b3aede93c18ea79981eb58b7af08c140",
+      "relativeFile": "capability-assets/sha256/b13742f7e5a0b8db9569d8c43feadbf3b3aede93c18ea79981eb58b7af08c140.png",
+      "width": 228,
+      "height": 328
+    },
+    {
+      "assetId": "mara-local-lower-arm-right-v1",
+      "contentHash": "c1c43437188de96408ab807b1fb4fac9ff302405f41f0c34f902ba631597299b",
+      "byteLength": 29247,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:c1c43437188de96408ab807b1fb4fac9ff302405f41f0c34f902ba631597299b",
+      "relativeFile": "capability-assets/sha256/c1c43437188de96408ab807b1fb4fac9ff302405f41f0c34f902ba631597299b.png",
+      "width": 258,
+      "height": 298
+    },
+    {
+      "assetId": "mara-local-head-v1",
+      "contentHash": "417e00775f4feba7698b619d44605d33f0da442b499fd10ae3142b9c6e40487b",
+      "byteLength": 294566,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:417e00775f4feba7698b619d44605d33f0da442b499fd10ae3142b9c6e40487b",
+      "relativeFile": "capability-assets/sha256/417e00775f4feba7698b619d44605d33f0da442b499fd10ae3142b9c6e40487b.png",
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-mouth-rest-v1",
+      "contentHash": "5e456ab12ea97aa948dd4d1a723073cf5ef0eaf0caec44d8269078f0563fd61d",
+      "byteLength": 5805,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:5e456ab12ea97aa948dd4d1a723073cf5ef0eaf0caec44d8269078f0563fd61d",
+      "relativeFile": "capability-assets/sha256/5e456ab12ea97aa948dd4d1a723073cf5ef0eaf0caec44d8269078f0563fd61d.png",
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-mouth-open-v1",
+      "contentHash": "d763c700c00597bcd67a94ad1080acbaf31da1510aba3cf282fac0b8219bc17c",
+      "byteLength": 11955,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:d763c700c00597bcd67a94ad1080acbaf31da1510aba3cf282fac0b8219bc17c",
+      "relativeFile": "capability-assets/sha256/d763c700c00597bcd67a94ad1080acbaf31da1510aba3cf282fac0b8219bc17c.png",
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-eyes-open-v1",
+      "contentHash": "f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253",
+      "byteLength": 4160,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253",
+      "relativeFile": "capability-assets/sha256/f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253.png",
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-eyes-half-v1",
+      "contentHash": "a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f",
+      "byteLength": 2905,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f",
+      "relativeFile": "capability-assets/sha256/a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f.png",
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-eyes-closed-v1",
+      "contentHash": "e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41",
+      "byteLength": 1810,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41",
+      "relativeFile": "capability-assets/sha256/e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41.png",
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-pupils-v1",
+      "contentHash": "fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c",
+      "byteLength": 2316,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c",
+      "relativeFile": "capability-assets/sha256/fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c.png",
+      "width": 538,
+      "height": 478
     }
   ],
-  "contentHash": "5a1a315012bcb404d236e7fd3e6cd2af2a6af2e2962e6337bb835533211d8e20"
+  "contentHash": "1127f1fdcd52c3131f18dc98e4afaa14a09546b5b4b43b337b335ce8b1c3df87"
 }

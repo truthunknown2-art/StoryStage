@@ -99,6 +99,9 @@ export function applyDirectorPatch(input: {
           operation.kind === "set-camera-movement"
             ? operation.movement
             : (shotOverrides[existingIndex]?.cameraMovement ?? null),
+        ...(shotOverrides[existingIndex]?.locomotion
+          ? { locomotion: shotOverrides[existingIndex]!.locomotion }
+          : {}),
       };
       if (existingIndex >= 0) shotOverrides[existingIndex] = nextOverride;
       else shotOverrides.push(nextOverride);

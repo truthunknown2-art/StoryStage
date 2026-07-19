@@ -15,6 +15,8 @@ import {
 import { compileContinuitySequencePlan } from "./continuity-compiler";
 import { sealDirectorPlan, type DirectorPlanDraft } from "./director-plan";
 import {
+  isLocalPartsV1Execution,
+  listArticulatedRigAssetReferences,
   sealExecutableEpisodePlan,
   type ExecutableEpisodePlanDraft,
 } from "./executable-episode-plan";
@@ -663,6 +665,30 @@ function buildDirectorPlan(
         const duration =
           shotDurationFor(project, beat, shotCount, shotIndex) +
           eventDelayFrames;
+        const locomotion = shotOverride?.locomotion;
+        if (locomotion) {
+          if (locomotion.entityId !== shotSubjectId)
+            throw new Error(
+              `${shotId} locomotion must target its blocked subject ${shotSubjectId}.`,
+            );
+          if (
+            !stage.landmarks.some(
+              (landmark) => landmark.id === locomotion.destinationLandmarkId,
+            )
+          )
+            throw new Error(
+              `${shotId} locomotion references unknown destination ${locomotion.destinationLandmarkId}.`,
+            );
+          if (
+            locomotion.decelerationFrames +
+              locomotion.impactFrames +
+              locomotion.settleFrames >=
+            duration
+          )
+            throw new Error(
+              `${shotId} locomotion phases leave no readable travel frames.`,
+            );
+        }
         shotIds.push(shotId);
         shots.push({
           id: shotId,
@@ -718,9 +744,10 @@ function buildDirectorPlan(
               entityId: shotSubjectId,
               entryLandmarkId: `entry-${sceneIndex + 1}`,
               exitLandmarkId:
-                beat.role === "action"
+                locomotion?.destinationLandmarkId ??
+                (beat.role === "action"
                   ? `exit-${sceneIndex + 1}`
-                  : `focus-${sceneIndex + 1}`,
+                  : `focus-${sceneIndex + 1}`),
               facing: isKids
                 ? globalIndex % 2
                   ? "left"
@@ -733,6 +760,16 @@ function buildDirectorPlan(
                 : shotSubjectId === "presenter"
                   ? "evidence"
                   : null,
+              ...(locomotion
+                ? {
+                    locomotion: {
+                      mode: locomotion.mode,
+                      decelerationFrames: locomotion.decelerationFrames,
+                      impactFrames: locomotion.impactFrames,
+                      settleFrames: locomotion.settleFrames,
+                    },
+                  }
+                : {}),
             },
           ],
           transition: {
@@ -953,6 +990,10 @@ function buildExecutable(
         capabilityRegistry,
         requirement,
       );
+      const localPartsExecution =
+        capability && isLocalPartsV1Execution(capability.execution)
+          ? capability.execution
+          : null;
       return sealExecutableProgram({
         id: requirement.id,
         kind: requirement.source,
@@ -960,9 +1001,18 @@ function buildExecutable(
         rendererVersion: capability?.rendererVersion ?? "1.0.0",
         entityId: requirement.entityId,
         eventIds: requirement.requiredEventIds,
-        assetIds: capability?.assets.map((asset) => asset.assetId) ?? [],
+        assetIds: localPartsExecution
+          ? listArticulatedRigAssetReferences(
+              localPartsExecution.rigManifest,
+            ).map((asset) => asset.candidateId)
+          : (capability?.assets.map((asset) => asset.assetId) ?? []),
         manifestContentHash:
-          capability?.contentHash ?? hashCanonical(requirement),
+          localPartsExecution?.rigManifest.contentHash ??
+          capability?.contentHash ??
+          hashCanonical(requirement),
+        ...(capability
+          ? { capabilityContentHash: capability.contentHash }
+          : {}),
         sourceSceneIds,
         sourceBeatIds: [beat.beatId],
         sourceShotIds,

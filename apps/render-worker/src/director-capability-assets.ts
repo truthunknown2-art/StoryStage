@@ -4,6 +4,7 @@ import { isAbsolute, relative, resolve } from "node:path";
 import {
   approvedAssetBindingSchema,
   executableEpisodePlanSchema,
+  isLocalPartsV1Execution,
   type ApprovedAssetBinding,
   type ExecutableEpisodePlan,
 } from "@storystage/story-engine/director-alpha";
@@ -33,9 +34,11 @@ const expectedExecutionDimensions = (
     ExecutableEpisodePlan["performancePrograms"][number]["execution"]
   >,
 ) =>
-  execution.kind === "articulated-rig"
-    ? { width: execution.sheetWidth, height: execution.sheetHeight }
-    : { width: execution.atlasWidth, height: execution.atlasHeight };
+  isLocalPartsV1Execution(execution)
+    ? null
+    : execution.kind === "articulated-rig"
+      ? { width: execution.sheetWidth, height: execution.sheetHeight }
+      : { width: execution.atlasWidth, height: execution.atlasHeight };
 
 const assertExecutionDimensions = (
   asset: VerifiedDirectorCapabilityAsset,
@@ -44,9 +47,38 @@ const assertExecutionDimensions = (
   >,
 ) => {
   const expected = expectedExecutionDimensions(execution);
-  if (asset.width !== expected.width || asset.height !== expected.height)
+  if (
+    expected &&
+    (asset.width !== expected.width || asset.height !== expected.height)
+  )
     throw new Error(
       `Approved Director asset ${asset.assetId} dimensions no longer match its executable program.`,
+    );
+};
+
+const assertRigReferenceBinding = (
+  asset: VerifiedDirectorCapabilityAsset,
+  binding: ApprovedAssetBinding,
+  reference: {
+    candidateId: string;
+    contentHash: string;
+    relativeFile: string;
+    width: number;
+    height: number;
+  },
+) => {
+  if (
+    binding.assetId !== reference.candidateId ||
+    binding.contentHash !== reference.contentHash ||
+    binding.relativeFile !== reference.relativeFile ||
+    binding.immutableLocationId !== `sha256:${reference.contentHash}`
+  )
+    throw new Error(
+      `Approved Director rig asset ${reference.candidateId} no longer matches its sealed manifest reference.`,
+    );
+  if (asset.width !== reference.width || asset.height !== reference.height)
+    throw new Error(
+      `Approved Director rig asset ${reference.candidateId} dimensions no longer match its sealed manifest reference.`,
     );
 };
 
@@ -135,12 +167,37 @@ export async function verifyDirectorEpisodeCapabilityAssets(
   const executablePrograms = episode.performancePrograms.filter(
     (program) => program.execution,
   );
-  const verified = new Map<
-    string,
-    VerifiedDirectorCapabilityAsset
-  >();
+  const verified = new Map<string, VerifiedDirectorCapabilityAsset>();
   for (const program of executablePrograms) {
     const execution = program.execution!;
+    if (isLocalPartsV1Execution(execution)) {
+      const references = [
+        execution.rigManifest.identityReference,
+        ...execution.rigManifest.parts.map((part) => part.asset),
+        ...execution.rigManifest.exposures.map((exposure) => exposure.asset),
+      ];
+      for (const reference of references) {
+        const binding = episode.approvedAssets.find(
+          (asset) => asset.assetId === reference.candidateId,
+        );
+        if (!binding)
+          throw new Error(
+            `Executable Director rig asset binding is missing: ${reference.candidateId}`,
+          );
+        let actual = verified.get(reference.candidateId);
+        if (!actual) {
+          actual = await verifyApprovedDirectorCapabilityAsset(
+            publicRoot,
+            binding,
+          );
+          verified.set(reference.candidateId, actual);
+        }
+        // Parts and exposures may intentionally reuse one immutable sheet.
+        // Every manifest reference still has to agree with the verified bytes.
+        assertRigReferenceBinding(actual, binding, reference);
+      }
+      continue;
+    }
     let actual = verified.get(execution.assetId);
     if (!actual) {
       const binding = episode.approvedAssets.find(
@@ -150,10 +207,7 @@ export async function verifyDirectorEpisodeCapabilityAssets(
         throw new Error(
           `Executable Director asset binding is missing: ${execution.assetId}`,
         );
-      actual = await verifyApprovedDirectorCapabilityAsset(
-        publicRoot,
-        binding,
-      );
+      actual = await verifyApprovedDirectorCapabilityAsset(publicRoot, binding);
       verified.set(execution.assetId, actual);
     }
     // Byte verification is safely cached by immutable asset ID, but execution

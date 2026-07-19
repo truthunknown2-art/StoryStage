@@ -107,7 +107,7 @@ export const directorProjectSchema = z
       const program = performancePrograms.get(item.requirementId);
       const executableFinal = Boolean(
         program?.execution &&
-        item.capabilityContentHash === program.manifestContentHash,
+        item.capabilityContentHash === program.capabilityContentHash,
       );
       if (
         (item.resolution === "supported" && !executableFinal) ||

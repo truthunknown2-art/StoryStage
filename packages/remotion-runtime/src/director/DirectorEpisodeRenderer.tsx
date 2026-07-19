@@ -1,6 +1,7 @@
 import {
   evaluateContinuityFrame,
   executableEpisodePlanSchema,
+  listArticulatedRigAssetReferences,
   type ApprovedAssetBinding,
   type ExecutableEpisodePlan,
   type PerformanceProgram,
@@ -16,6 +17,12 @@ import {
   useDelayRender,
 } from "remotion";
 import { useEffect, useState } from "react";
+import {
+  PartsRigLocalVisual,
+  partsRigRuntime,
+  type LocalPartsV1Execution,
+  type VerifiedPartsRigAsset,
+} from "./partsRigRuntime";
 
 type ProxyEntity = NonNullable<
   ExecutableEpisodePlan["proxyEntityPrograms"]
@@ -32,8 +39,16 @@ type AtlasPerformanceExecution = Extract<
 >;
 type ArticulatedPerformanceExecution = Extract<
   NonNullable<PerformanceProgram["execution"]>,
-  { kind: "articulated-rig" }
+  { kind: "articulated-rig"; mode?: never }
 >;
+
+const isLocalPartsV1Execution = (
+  execution: NonNullable<PerformanceProgram["execution"]>,
+): execution is NonNullable<PerformanceProgram["execution"]> &
+  LocalPartsV1Execution =>
+  execution.kind === "articulated-rig" &&
+  "mode" in execution &&
+  execution.mode === "local-parts-v1";
 
 const resolvedPerformanceProgram = (
   performancePrograms: PerformanceProgram[],
@@ -160,6 +175,84 @@ const useVerifiedAssetUrl = (
     delayRender,
   ]);
   return verifiedUrl;
+};
+
+const useVerifiedPartsRigAssets = (
+  bindings: Array<ReturnType<typeof approvedAsset>>,
+): VerifiedPartsRigAsset[] | null => {
+  const [verifiedAssets, setVerifiedAssets] = useState<
+    VerifiedPartsRigAsset[] | null
+  >(null);
+  const { cancelRender, continueRender, delayRender } = useDelayRender();
+  const verificationKey = bindings
+    .map(
+      (binding) =>
+        `${binding.assetId}:${binding.contentHash}:${binding.byteLength}:${binding.relativeFile}`,
+    )
+    .join("|");
+  useEffect(() => {
+    setVerifiedAssets(null);
+    const handle = delayRender("Verifying approved local-parts asset set");
+    const controller = new AbortController();
+    const objectUrls: string[] = [];
+    let active = true;
+    let settled = false;
+    void (async () => {
+      try {
+        const verified = await Promise.all(
+          bindings.map(async (binding): Promise<VerifiedPartsRigAsset> => {
+            const response = await fetch(staticFile(binding.relativeFile), {
+              cache: "no-store",
+              signal: controller.signal,
+            });
+            if (!response.ok)
+              throw new Error(
+                `Approved Director asset ${binding.assetId} could not be loaded.`,
+              );
+            const bytes = await response.arrayBuffer();
+            if (
+              bytes.byteLength !== binding.byteLength ||
+              (await sha256(bytes)) !== binding.contentHash
+            )
+              throw new Error(
+                `Approved Director asset ${binding.assetId} failed browser byte verification.`,
+              );
+            const verifiedBlob = new Blob([bytes], { type: "image/png" });
+            try {
+              const decoded = await createImageBitmap(verifiedBlob);
+              decoded.close();
+            } catch {
+              throw new Error(
+                `Approved Director asset ${binding.assetId} failed browser decode.`,
+              );
+            }
+            const verifiedUrl = URL.createObjectURL(verifiedBlob);
+            objectUrls.push(verifiedUrl);
+            return { binding, verifiedUrl };
+          }),
+        );
+        await document.fonts.ready;
+        if (active) setVerifiedAssets(verified);
+        else objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+        settled = true;
+        continueRender(handle);
+      } catch (error) {
+        if (!active) return;
+        settled = true;
+        cancelRender(error);
+      }
+    })();
+    return () => {
+      active = false;
+      controller.abort();
+      objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+      if (!settled) continueRender(handle);
+    };
+    // The canonical immutable binding tuple is the dependency. Recreated arrays
+    // with identical sealed values must not restart render-time verification.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verificationKey, cancelRender, continueRender, delayRender]);
+  return verifiedAssets;
 };
 
 const AtlasFrame: React.FC<{
@@ -373,23 +466,103 @@ const ArticulatedPerformanceRenderer: React.FC<{
   ) : null;
 };
 
+const LocalPartsPerformanceRenderer: React.FC<{
+  approvedAssets: ApprovedAssetBinding[];
+  episodePlan: ExecutableEpisodePlan;
+  execution: LocalPartsV1Execution;
+  formatWidth: number;
+  localFrame: number;
+  performance: PerformanceProgram;
+  resolved: ResolvedEntityFrame;
+  shotId: string;
+}> = ({
+  approvedAssets,
+  episodePlan,
+  execution,
+  formatWidth,
+  localFrame,
+  performance,
+  resolved,
+  shotId,
+}) => {
+  const assetReferences = listArticulatedRigAssetReferences(
+    execution.rigManifest,
+  );
+  const verifiedAssets = useVerifiedPartsRigAssets(
+    assetReferences.map((reference) =>
+      approvedAsset(approvedAssets, reference.candidateId),
+    ),
+  );
+  if (!verifiedAssets) return null;
+  const input = partsRigRuntime.createInput({
+    episodePlan,
+    execution,
+    localFrame,
+    performance,
+    resolved,
+    shotId,
+    verifiedAssets,
+  });
+  const scale =
+    resolved.rootTransform.scale *
+    execution.displayScale *
+    (formatWidth / 1920);
+  const horizontalScale = resolved.facing === "left" ? -scale : scale;
+  return (
+    <div
+      data-performance-kind="local-parts-v1"
+      data-performance-program={performance.id}
+      style={{
+        left: `${resolved.rootTransform.x * 100}%`,
+        position: "absolute",
+        rotate: `${resolved.rootTransform.rotation}deg`,
+        scale: `${horizontalScale} ${scale}`,
+        top: `${resolved.rootTransform.y * 100}%`,
+        transformOrigin: "0 0",
+        zIndex: Math.round(resolved.rootTransform.z + 4),
+      }}
+    >
+      <PartsRigLocalVisual input={input} rigManifest={execution.rigManifest} />
+    </div>
+  );
+};
+
 const ExecutablePerformanceRenderer: React.FC<{
   approvedAssets: ApprovedAssetBinding[];
   durationInFrames: number;
+  episodePlan: ExecutableEpisodePlan;
   formatWidth: number;
+  localFrame: number;
   performance: PerformanceProgram;
   proxy: ProxyEntity;
   resolved: ResolvedEntityFrame;
+  shotId: string;
 }> = ({
   approvedAssets,
   durationInFrames,
+  episodePlan,
   formatWidth,
+  localFrame,
   performance,
   proxy,
   resolved,
+  shotId,
 }) => {
   if (!performance.execution)
     return <ProxyEntityRenderer program={proxy} resolved={resolved} />;
+  if (isLocalPartsV1Execution(performance.execution))
+    return (
+      <LocalPartsPerformanceRenderer
+        approvedAssets={approvedAssets}
+        episodePlan={episodePlan}
+        execution={performance.execution}
+        formatWidth={formatWidth}
+        localFrame={localFrame}
+        performance={performance}
+        resolved={resolved}
+        shotId={shotId}
+      />
+    );
   if (performance.execution.kind === "articulated-rig")
     return (
       <ArticulatedPerformanceRenderer
@@ -722,9 +895,12 @@ const ProxyShot: React.FC<{
               }
               formatWidth={formatWidth}
               key={entity.id}
+              episodePlan={episodePlan}
+              localFrame={canonicalFrame.shotFrame}
               performance={performance}
               proxy={entity}
               resolved={resolved}
+              shotId={canonicalFrame.shotId}
             />
           ) : (
             <ProxyEntityRenderer

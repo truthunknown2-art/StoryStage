@@ -1,5 +1,18 @@
 export { DirectorEpisodeRenderer } from "./DirectorEpisodeRenderer";
 export {
+  PartsRigLocalVisual,
+  createPartsRigRenderTree,
+  createPartsRigRuntimeInput,
+  partsRigRuntime,
+  type PartsRigRenderNode,
+} from "./partsRigRuntime";
+export {
+  bundledMaraLocalPartsRigManifest,
+  bundledMaraPuppetAsset,
+  createBundledMaraLocalPartsRigManifest,
+  maraLocalPartsVisualPerformanceRenderer,
+} from "./maraLocalParts";
+export {
   bundledKidsPilotCapabilityRegistry,
   createBundledKidsCapabilityRegistry,
   createBundledKidsPilotCapabilityRegistry,
