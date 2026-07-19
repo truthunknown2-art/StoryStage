@@ -19,7 +19,7 @@ async function openProductionSetup() {
 
 async function createDefaultProduction() {
   const user = await openProductionSetup();
-  await user.click(screen.getByRole("button", {name: "Create production"}));
+  await user.click(screen.getByRole("button", {name: "Create first cut"}));
   return user;
 }
 
@@ -56,8 +56,8 @@ describe("StoryStage studio", () => {
 
     await user.click(screen.getByRole("button", {name: "New production"}));
 
-    expect(screen.getByRole("heading", {name: "Choose how this story should think."})).toBeInTheDocument();
-    expect(screen.getByRole("heading", {name: "Production type"})).toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: "Turn your script into an animated first cut"})).toBeInTheDocument();
+    expect(screen.getByRole("heading", {name: /choose a project grammar/i})).toBeInTheDocument();
     expect((screen.getByLabelText("Screenplay") as HTMLTextAreaElement).value).toContain("INT. WORKSHOP");
     expect(screen.queryByText(/intensity/i)).not.toBeInTheDocument();
   });
@@ -76,7 +76,7 @@ describe("StoryStage studio", () => {
 
   it("shows production presets as downstream policy, not decorative choices", async () => {
     const user = await openProductionSetup();
-    const policySection = screen.getByRole("heading", {name: "Production preset"}).closest("section");
+    const policySection = screen.getByRole("heading", {name: /choose a production preset/i}).closest("section");
     expect(policySection).not.toBeNull();
 
     await user.click(within(policySection!).getByRole("button", {name: /premium/i}));
@@ -94,7 +94,7 @@ describe("StoryStage studio", () => {
     expect(screen.getByText(/weird-history-director-v1/)).toBeInTheDocument();
     expect(screen.getByText("Planned shots")).toBeInTheDocument();
     expect(screen.getByText("Average shot")).toBeInTheDocument();
-    expect(screen.getByText("Editorial routing")).toBeInTheDocument();
+    expect(screen.getByText("Evidence & type shots")).toBeInTheDocument();
     expect(screen.getAllByRole("button", {name: /Select shot/}).length).toBeGreaterThan(10);
   });
 
