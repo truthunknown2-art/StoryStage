@@ -122,9 +122,10 @@ The crops use `sharp-exact-review-crop@1.0.0`, Sharp `0.34.5`, PNG compression 9
 
 Source-acquisition evidence:
 
-- Candidate bundle: `ollo-turnaround-candidate-bundle-b.json`; content hash `5809cee2128a65bf1bb33cecba40c267a01d61426bab871f2799d3adfe72d4ba`.
-- Staging report: `ollo-turnaround-staging-report-b.json`; content hash `6b48a2e902c1a7126711c9b15006004f1ac1c0277a9830388d82c0e6251f304f`.
-- View evidence: `ollo-turnaround-view-evidence-b.json`; content hash `cb68cc47c2a9f6356389703f5fcab4bfdca0d5aa7e1aeb9273af38992d1b82f9`.
+- Candidate bundle: `ollo-turnaround-candidate-bundle-b.json`; content hash `d402889f59b483add770b58f9f1b619822a388a7a5d0b02632777d4ea99afc84`.
+- Staging report: `ollo-turnaround-staging-report-b.json`; content hash `832e0bcad358939c3f46209b3beb8736452013f7cba1d96182a7a6e0fcc0fd76`.
+- View evidence: `ollo-turnaround-view-evidence-b.json`; content hash `1e8dca9a0d3ce48d1115cf5baf6a06142d5ce109242fc8053a8eb50bf137bf1c`.
+- Self-hashed coverage evidence: `ollo-turnaround-coverage-evidence-b-v1.json`; evidence hash `b0b7c8a0d52e0a8e960e067cb9f3b723d26ed0668e176a31566b745d74d586a0`; exact file hash `91860ac41e83e2bdc1e4653f3e6781db541f0bc35e9681ba2ebf5523a831f4a1`.
 - Proof command: `pnpm --filter @storystage/asset-pipeline proof:kcast001c-source`.
 - Result: the one exact canonical turnaround source stages through `stageCharacterRigCandidateBundle()`, is reopened from its content-addressed private staging location, and yields three byte-deterministic review crops.
 
@@ -510,4 +511,195 @@ Candidate F is not accepted until the repository proves identical patch dimensio
 - Candidate bundle: `ollo-turnaround-candidate-bundle-a.json`
 - Staging report: `ollo-turnaround-staging-report-a.json`
 - Proof command: `pnpm --filter @storystage/asset-pipeline proof:kcast001b-intake`
-- Result: exact turnaround bytes stage successfully as `incomplete`, with six rig-ready sheets still missing, `providerAuthority: false`, and `approvalRequired: true`.
+- Result: exact turnaround bytes stage successfully as `incomplete`: the sheet is a `partialItem`, three verified crops are persisted, `three-quarter` and `rear` remain `missingSubitems`, six rig-kit files remain missing, `providerAuthority: false`, and `approvalRequired: true`.
+
+## Candidate G profile rig-source attempt
+
+Candidate G is a preserved **rejected source-generation attempt**, not an
+accepted profile kit. The exact rasters are committed so the deterministic
+profile proof can reopen and reject the same bytes. See
+`PROFILE-ATLAS-COMPOSITION.md` for the measured-key and visual-role findings.
+
+Authoritative repository references used by the generation calls:
+
+- profile-left registration/identity review:
+  `derived/ollo-turnaround-candidate-b-profile-left.png`;
+  SHA-256 `c91d7319470e6786750c78ab9cf23824a272fbd08d5238ed21107a2e83b37214`;
+- profile-right registration/identity review:
+  `derived/ollo-turnaround-candidate-b-profile-right.png`;
+  SHA-256 `0204f3b83e731b4d914020a360f943001102b539f8d265343525a675e9614314`;
+- front core material/role reference:
+  `candidates/ollo-parts-front-core-candidate-d-chroma.png`;
+  SHA-256 `8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d`;
+- front limb role reference:
+  `candidates/ollo-parts-front-limbs-candidate-e-chroma.png`;
+  SHA-256 `1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21`;
+- front eye role reference:
+  `candidates/ollo-face-front-eyes-candidate-c-chroma.png`;
+  SHA-256 `65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875`;
+- front lower-face base:
+  `candidates/ollo-face-front-lower-base-candidate-f-chroma.png`;
+  SHA-256 `b20a8c344b74dcd9ee3e4b6c0ca93f305cb0e6e9f1bb75a170b8d13a53c0437c`;
+- front mouth overlays:
+  `candidates/ollo-face-front-mouth-overlays-candidate-f-chroma.png`;
+  SHA-256 `2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437`.
+
+Three final edits also used built-in-generation intermediate images. They are
+not rig evidence and are deliberately not copied into StoryStage, but their
+immutable generation-store identifiers and hashes are recorded for provenance:
+
+| Role | Generation-store source | SHA-256 | Bytes |
+| --- | --- | --- | ---: |
+| profile-left core edit target | `exec-e2ba045f-07b3-4e40-8e9a-93cdd2951b9f.png` | `ab408427774bef27e0dea0f23eb112ca41db1ba485672fb4e97964f5d99348fa` | 1690371 |
+| profile-left limb edit target | `exec-f3ffe960-b320-40d7-b25e-4e7e6cc91934.png` | `860ceb07a4f9f9ea8e41e55f2ad9c35c2c8f5b0806a239bc4c232b3d148c4f5e` | 1314530 |
+| profile-right lower-face edit target | `exec-752d75b7-68ea-4327-b75b-341ed3aa6857.png` | `650b02ee09f6f0ada5e57c2e8e2c85ea1a56d31fc6eb54cb827562357c16eaf7` | 1353338 |
+
+Exact final outputs:
+
+| File | SHA-256 | Dimensions | Bytes | Gate |
+| --- | --- | --- | ---: | --- |
+| `candidates/ollo-parts-profile-left-core-candidate-g-chroma.png` | `152e5b8fc7036b96f584c785ce6461a245781f81a829fd2a3d2ef0f9701724b1` | `1536x1024` | 1857848 | reject |
+| `candidates/ollo-parts-profile-left-limbs-candidate-g-chroma.png` | `b0e744c349af9c1d18d55d0b6886f24bfdee76c14540ecd3fb2e1295b0e21749` | `1672x941` | 1555960 | reject |
+| `candidates/ollo-face-profile-left-eyes-candidate-g-chroma.png` | `ab827cdb3b9682549f25d165ad9e95b40fa17cc8d7cfd938670e75449638d067` | `1774x887` | 1202538 | source-only conditional; bundle rejected |
+| `candidates/ollo-face-profile-left-lower-base-candidate-g-chroma.png` | `269094a84b3b73fb5542b6203648764bca4491cef0bb8644d5f3c021e71ca880` | `1448x1086` | 1160237 | source-only conditional; bundle rejected |
+| `candidates/ollo-face-profile-left-mouth-overlays-candidate-g-chroma.png` | `e9dcdd519b16e48f38d7712102c34432293b1eacd1e1bb76daa16c5f966929aa` | `1672x941` | 1059258 | source-only conditional; bundle rejected |
+| `candidates/ollo-parts-profile-right-core-candidate-g-chroma.png` | `899cf650e9b847ff05c68f9b24cf125e0663716c62852b15009fd3e475980465` | `1536x1024` | 1650640 | reject |
+| `candidates/ollo-parts-profile-right-limbs-candidate-g-chroma.png` | `fc7fca59c9354216e36352c46501a0378ed06e51a3658a3d20c6edd8968e5a99` | `1672x941` | 1519625 | reject |
+| `candidates/ollo-face-profile-right-eyes-candidate-g-chroma.png` | `3ab91e167a2d05701c646f1ec2740ce7b3412a3b2e470dda022694a4893f0b8c` | `1774x887` | 1192449 | reject |
+| `candidates/ollo-face-profile-right-lower-base-candidate-g-chroma.png` | `0ce49c0b8928936b7d7d940f6787751e217f3c705a2701a0bd887ffb3462c8f1` | `1448x1086` | 1259131 | reject |
+| `candidates/ollo-face-profile-right-mouth-overlays-candidate-g-chroma.png` | `ec150581a072088765094f35157505c6aab677441b1ff8e5d45ae21a8f491a16` | `1672x941` | 1064917 | reject |
+
+### Profile-left core final edit prompt
+
+```text
+Edit target: Image 1. Images 2 and 3 are identity and anatomical references.
+Use case: precise-object-edit
+Asset type: untrusted profile-left core-parts rig source sheet
+Primary request: Change ONLY the first two cells of Image 1 so they become clean isolated core shells instead of assembled body chunks.
+Cell R1C1 torso: replace with Ollo's pale-golden PROFILE-LEFT torso shell ONLY, matching the side silhouette and paper texture; no arm, hand, leg, foot, pocket, scarf, tail, ear, or head. It must be a simple torso body shell with rectangular registration tabs only.
+Cell R1C2 pelvis: replace with Ollo's pale-golden PROFILE-LEFT pelvis/hip shell ONLY, a compact hip piece; no leg, foot, torso, tail, costume, or other attached art. It must have registration tabs only.
+Invariants: preserve the blank profile-left head shell, tail, two distinct ears, red secondary-front layer, red secondary-back layer, exact 2x4 positions, scale, generous gutters, and perfectly flat #ff00ff background from Image 1 unchanged. Preserve exact Ollo watercolor/paper identity. Exactly eight components total. All pieces isolated.
+Avoid: full body, fused limbs, attached feet, attached hands, assembled costume, text, labels, shadows, gradients, watermark.
+```
+
+### Profile-left limbs final edit prompt
+
+```text
+Edit target: Image 1. Image 2 is the correct segment-separation reference.
+Use case: precise-object-edit
+Asset type: untrusted profile-left limb-parts rig source sheet
+Primary request: Correct ONLY the eight limb-segment cells in Image 1. Row 1 cells 1, 2, 4, and 5 must be plain isolated PROFILE-LEFT upper/lower arm segments with smooth rounded/furry cuffs and rectangular joint tabs at both ends—NO fingers, thumb, paw, hand, or digit lobes attached. Row 2 cells 1, 2, 4, and 5 must be plain isolated PROFILE-LEFT upper/lower leg segments with smooth rounded/furry cuffs and rectangular joint tabs at both ends—NO toes, foot, paw, or digit lobes attached.
+Invariants: preserve the two isolated four-digit hands in row 1 cells 3 and 6; preserve the two isolated side-profile feet in row 2 cells 3 and 6; preserve their distinct near/far art; preserve the exact 2x6 layout, positions, scale, pale-golden watercolor paper texture, generous gutters, and perfectly flat #ff00ff background. Exactly 12 pieces total.
+Avoid: full limbs, fused hand or foot, fingers/toes on segment pieces, assembled body, labels, text, grid lines, shadows, gradients, watermark.
+```
+
+### Profile-left eye/lid/brow prompt
+
+```text
+Use case: illustration-story
+Asset type: untrusted source-candidate PROFILE-LEFT eye/lid/brow exposure sheet for a production 2D articulated rig
+Primary request: Generate a NEW clean orthographic profile-left facial component sheet for Ollo, preserving the exact huge dark-brown eye, cream eye white, dark brow line, warm watercolor paper-cutout texture, and child-friendly identity from the references. Ollo faces screen-left.
+Composition/framing: one landscape sheet, exactly 14 isolated components in a strict 2-row by 7-column layout, generous equal gutters. Row 1 left-to-right: eye-white-left, pupil-left with white catchlights, lid-open-left, lid-half-left, lid-closed-left, brow-neutral-left, brow-raised-left. Row 2 left-to-right: eye-white-right, pupil-right with white catchlights, lid-open-right, lid-half-right, lid-closed-right, brow-neutral-right, brow-raised-right.
+Profile rules: all shapes use profile-left side-view geometry. The near eye is the larger visible profile eye; the far eye is smaller/narrower and independently drawn, not a duplicate. Whites contain no pupils. Pupils contain no eye white. Lids contain no pupil/white. Brows are isolated strokes.
+Scene/backdrop: perfectly flat solid #ff00ff chroma-key background, one uniform color.
+Style/medium: exact soft watercolor storybook paper-cutout texture from the references; clean source art; crisp fully visible edges.
+Constraints: exactly 14 components and nothing else; every component completely separated; no touching or overlap; each centered in its own cell with safety padding; no nose, muzzle, mouth, head shell, ears, body, costume, labels, numbers, guides, grid lines, text, watermark, cast shadows, floor, reflections, gradients, or texture in the magenta background. Do not use #ff00ff inside any component.
+Avoid: front-facing eyes, assembled face, duplicated left/right art, generic cartoon eyes, extra expressions, eyelashes, extra props, generic rabbit redesign.
+```
+
+### Profile-left lower-face base prompt
+
+```text
+Use case: illustration-story
+Asset type: untrusted source-candidate static PROFILE-LEFT lower-face base for a production 2D articulated rig
+Primary request: Generate one isolated static lower-face base for Ollo facing screen-left, preserving the exact small orange oval nose, pale cream muzzle/cheek patch, warm watercolor paper texture, and child-friendly identity from the references. This base is the stable nose+muzzle registration layer for mouth swaps.
+Composition/framing: one large centered profile-left lower-face component only, with generous empty padding on all sides. The orange nose sits at the far screen-left tip; the cream muzzle extends behind/below it in true side profile. Keep a clear empty mouth-change area within the muzzle.
+Scene/backdrop: perfectly flat solid #ff00ff chroma-key background, one uniform color.
+Style/medium: exact soft watercolor storybook paper-cutout texture from the references; crisp fully visible edges.
+Constraints: exactly one component; NO mouth line or mouth opening; no smile; no tongue; no teeth; no eye, pupil, lid, brow, head shell, ear, body, costume, labels, guides, text, watermark, cast shadow, floor, reflection, gradient, or texture in the magenta background. Do not use #ff00ff inside the component.
+Avoid: front-facing muzzle, assembled face, extra nose, generic rabbit redesign.
+```
+
+### Profile-left mouth-overlay prompt
+
+```text
+Use case: illustration-story
+Asset type: untrusted source-candidate PROFILE-LEFT mouth-overlay exposure sheet for a production 2D articulated rig
+Primary request: Generate a NEW clean orthographic profile-left guide-viseme sheet for Ollo, preserving the exact warm dark-brown mouth line, soft watercolor paper texture, and child-friendly identity from the references. Ollo faces screen-left. These are mouth-only overlays that will be placed over the separate static nose+muzzle base in Image 3.
+Composition/framing: one landscape sheet, exactly 8 isolated mouth overlays in a strict 2-row by 4-column layout with generous equal gutters. Row 1 left-to-right: mouth-rest (tiny closed smile), viseme-ai (open vertical side-profile mouth), viseme-e (wide horizontal side-profile mouth), viseme-mbp (closed pressed lips). Row 2 left-to-right: viseme-oh (small round opening), viseme-fv (upper teeth touching lower lip), viseme-l (tongue cue), viseme-wq (small pursed opening).
+Profile rules: all exposures face screen-left and share one consistent scale and mouth anchor. The shape changes, but the baseline and profile orientation remain consistent.
+Scene/backdrop: perfectly flat solid #ff00ff chroma-key background, one uniform color.
+Style/medium: exact soft watercolor storybook paper-cutout texture from the references; crisp fully visible edges.
+Constraints: exactly 8 overlays and nothing else; every overlay completely separated and centered in its own cell; no touching or overlap; no nose, muzzle patch, cheek patch, head shell, eye, pupil, lid, brow, ear, body, costume, labels, numbers, guides, grid lines, text, watermark, cast shadow, floor, reflection, gradient, or texture in the magenta background. Do not use #ff00ff inside any overlay.
+Avoid: front-facing mouths, assembled face, duplicate mouth shapes, lip-sync labels, generic cartoon style, extra expressions, generic rabbit redesign.
+```
+
+### Profile-right core prompt
+
+```text
+Use case: illustration-story
+Asset type: untrusted source-candidate core-parts sheet for a production 2D articulated rig
+Primary request: Generate a NEW clean orthographic PROFILE-RIGHT core-parts source sheet for Ollo, preserving the exact pale-golden watercolor-and-paper identity, proportions, leaf ears, cheek shape, tail, red scarf, and red front pocket from the references. Ollo faces screen-right. Match the clean separation and component scale of Image 2, but use true profile-right anatomy and asymmetry from Image 1.
+Composition/framing: one landscape sheet, exactly 8 isolated components in a strict 2-row by 4-column layout, generous equal gutters. Row 1 left-to-right: profile-right torso shell ONLY, profile-right pelvis/hip shell ONLY, blank profile-right head shell with snout and cheek silhouette but NO face features and NO ears, profile-right tail. Row 2 left-to-right: ear-left, ear-right, red secondary-front scarf/collar/pocket layer, red secondary-back trailing scarf layer.
+Scene/backdrop: perfectly flat solid #ff00ff chroma-key background, one uniform color.
+Style/medium: exact soft watercolor storybook paper-cutout texture from the references; clean production source art; crisp fully visible edges.
+Constraints: exactly 8 components and nothing else; every component completely separated; no touching or overlap; torso has no arm, hand, leg, foot, pocket, scarf, tail, ear, or head; pelvis has no leg, foot, torso, tail, or costume; each component centered in its cell; safety padding; left and right ears distinct; head shell contains no eye, pupil, brow, nose, muzzle, mouth, or lower-face art; rectangular registration tabs only; no labels, numbers, guides, grid lines, text, watermark, cast shadows, floor, reflections, gradients, or texture in the magenta background. Do not use #ff00ff inside any component.
+Avoid: assembled character, full body, front-facing anatomy, three-quarter pose, fused parts, duplicate role, missing role, limb pieces, facial features, mirrored pocket/scarf mistake, generic rabbit redesign.
+```
+
+### Profile-right limbs prompt
+
+```text
+Use case: illustration-story
+Asset type: untrusted source-candidate limb-parts sheet for a production 2D articulated rig
+Primary request: Generate a NEW clean orthographic PROFILE-RIGHT limb-parts source sheet for Ollo, preserving the exact pale-golden watercolor-and-paper identity and proportions from the references. Ollo faces screen-right. Match the clean 12-piece separation and scale of Image 2, but use true profile-right geometry and near/far asymmetry from Image 1.
+Composition/framing: one landscape sheet, exactly 12 isolated components in a strict 2-row by 6-column layout with generous equal gutters. Row 1 left-to-right: upper-arm-left, lower-arm-left, hand-left, upper-arm-right, lower-arm-right, hand-right. Row 2 left-to-right: upper-leg-left, lower-leg-left, foot-left, upper-leg-right, lower-leg-right, foot-right. All use profile-right side-view geometry; near/far counterparts are visibly distinct.
+Scene/backdrop: perfectly flat solid #ff00ff chroma-key background, one uniform color.
+Style/medium: exact soft watercolor storybook paper-cutout texture; crisp fully visible edges.
+Constraints: exactly 12 components and nothing else; every segment completely separate; upper/lower segments are plain tapered capsules with smooth furry cuffs and rectangular joint tabs at both ends—NO fingers/toes on segment pieces; hands and feet separate; each paw has exactly FOUR total digits: three rounded fingers plus one thumb; left/right hands and feet must be different art, not copies; every piece centered with safety padding; no labels, numbers, guides, grid lines, text, watermark, cast shadows, floor, reflections, gradients, or texture in the magenta background. Do not use #ff00ff inside any component.
+Avoid: assembled character, body/head/ears/tail/costume, front-facing limbs, three-quarter pose, fused parts, five-finger hands, duplicated counterpart art, generic rabbit redesign.
+```
+
+### Profile-right eye/lid/brow prompt
+
+```text
+Use case: illustration-story
+Asset type: untrusted source-candidate PROFILE-RIGHT eye/lid/brow exposure sheet for a production 2D articulated rig
+Primary request: Generate a NEW clean orthographic profile-right facial component sheet for Ollo, preserving the exact huge dark-brown eye, cream eye white, orange-brown brow, warm watercolor paper-cutout texture, and child-friendly identity from the references. Ollo faces screen-right. Match the 14-piece separation and scale of Image 2, but use true profile-right geometry and near/far asymmetry from Image 1.
+Composition/framing: one landscape sheet, exactly 14 isolated components in a strict 2-row by 7-column layout, generous equal gutters. Row 1 left-to-right: eye-white-left, pupil-left with white catchlights, lid-open-left, lid-half-left, lid-closed-left, brow-neutral-left, brow-raised-left. Row 2 left-to-right: eye-white-right, pupil-right with white catchlights, lid-open-right, lid-half-right, lid-closed-right, brow-neutral-right, brow-raised-right.
+Profile rules: all shapes use profile-right side-view geometry. The near eye is larger; the far eye is smaller/narrower and independently drawn, not a duplicate. Whites contain no pupils. Pupils contain no eye white. Lids contain no pupil/white. Brows are isolated.
+Scene/backdrop: perfectly flat solid #ff00ff chroma-key background, one uniform color.
+Style/medium: exact soft watercolor storybook paper-cutout texture; crisp fully visible edges.
+Constraints: exactly 14 components and nothing else; every component completely separated; no touching or overlap; each centered with safety padding; no nose, muzzle, mouth, head shell, ears, body, costume, labels, numbers, guides, grid lines, text, watermark, cast shadows, floor, reflections, gradients, or texture in the magenta background. Do not use #ff00ff inside any component.
+Avoid: front-facing eyes, assembled face, duplicated left/right art, generic cartoon eyes, extra expressions, eyelashes, generic rabbit redesign.
+```
+
+### Profile-right lower-face final edit prompt
+
+```text
+Edit target: Image 1. Images 2 and 3 are the exact scale/silhouette and profile-right identity references.
+Use case: precise-object-edit
+Asset type: static PROFILE-RIGHT lower-face base
+Primary request: Replace the oversized lower-face shape in Image 1 with the exact PROFILE-RIGHT counterpart of Image 2: same compact elongated muzzle/cheek silhouette, same canvas scale, same amount of empty padding, and same watercolor paper texture, but facing screen-right with the small orange nose at the far right tip. Match Image 3's Ollo nose and cheek identity.
+Invariants: one isolated nose+muzzle component only; perfectly flat #ff00ff background; mouth-change area remains blank; no mouth line/opening, eye, brow, head shell, ear, body, costume, text, labels, shadows, gradients, or watermark.
+Avoid: oversized head/body shape, large round back-of-head mass, screen-left nose, generic rabbit muzzle.
+```
+
+### Profile-right mouth-overlay prompt
+
+```text
+Use case: illustration-story
+Asset type: untrusted source-candidate PROFILE-RIGHT mouth-overlay exposure sheet for a production 2D articulated rig
+Primary request: Generate a NEW clean orthographic profile-right guide-viseme sheet for Ollo, preserving the exact warm dark-brown mouth line, soft watercolor paper texture, and child-friendly identity from the references. Ollo faces screen-right. These are the profile-right counterparts to Image 2 and will be placed over the static nose+muzzle base in Image 3.
+Composition/framing: one landscape sheet, exactly 8 isolated mouth overlays in a strict 2-row by 4-column layout with generous equal gutters. Row 1 left-to-right: mouth-rest (tiny closed smile), viseme-ai (open vertical side-profile mouth), viseme-e (wide horizontal side-profile mouth), viseme-mbp (closed pressed lips). Row 2 left-to-right: viseme-oh (small round opening), viseme-fv (upper teeth touching lower lip), viseme-l (tongue cue), viseme-wq (small pursed opening).
+Profile rules: all exposures face screen-right and share one consistent scale and mouth anchor. The shape changes, but the baseline and orientation remain consistent.
+Scene/backdrop: perfectly flat solid #ff00ff chroma-key background, one uniform color.
+Style/medium: exact soft watercolor storybook paper-cutout texture; crisp fully visible edges.
+Constraints: exactly 8 overlays and nothing else; every overlay completely separated and centered; no touching or overlap; no nose, muzzle patch, cheek patch, head shell, eye, pupil, lid, brow, ear, body, costume, labels, numbers, guides, grid lines, text, watermark, cast shadow, floor, reflection, gradient, or texture in the magenta background. Do not use #ff00ff inside any overlay.
+Avoid: screen-left or front-facing mouths, assembled face, duplicate mouth shapes, generic cartoon style, extra expressions, generic rabbit redesign.
+```
+
+Candidate G has no provider authority, preparation authority, approval, import
+receipt, prepared manifest, or production binding. Its intentionally preserved
+failure prevents a later regeneration from silently inheriting old crop or
+approval claims.

@@ -6,10 +6,14 @@ import {
   characterRigAssetRequestSchema,
   createCharacterRigCandidateBundle,
   hashCanonical,
+  turnaroundViewCoverageEvidenceSchema,
 } from "@storystage/story-engine";
 import { composeKidsBipedV1FrontAtlases } from "../src/fixed-grid-front-atlas";
 import type { FrontAtlasSourceInput } from "../src/fixed-grid-front-atlas";
-import { stageCharacterRigCandidateBundle } from "../src/character-rig-staging";
+import {
+  createVerifiedCharacterRigImportReceipt,
+  stageCharacterRigCandidateBundle,
+} from "../src/character-rig-staging";
 
 const workspaceRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -179,6 +183,14 @@ const turnaroundHash =
   "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec";
 if (sha256(turnaroundBytes) !== turnaroundHash)
   throw new Error("Accepted Ollo turnaround source bytes changed.");
+const turnaroundCoverageRelativeFile =
+  "ollo-turnaround-coverage-evidence-b-v1.json";
+const turnaroundCoverageBytes = await readFile(
+  resolve(evidenceRoot, turnaroundCoverageRelativeFile),
+);
+const turnaroundCoverage = turnaroundViewCoverageEvidenceSchema.parse(
+  JSON.parse(turnaroundCoverageBytes.toString("utf8")) as unknown,
+);
 
 const bundle = createCharacterRigCandidateBundle({
   schemaVersion: "1.0",
@@ -205,6 +217,13 @@ const bundle = createCharacterRigCandidateBundle({
       mediaType: "image/png",
       width: 1774,
       height: 887,
+      turnaroundViewCoverageEvidence: {
+        schemaVersion: "1.0",
+        relativeFile: turnaroundCoverageRelativeFile,
+        contentHash: turnaroundCoverage.contentHash,
+        fileContentHash: sha256(turnaroundCoverageBytes),
+        byteLength: turnaroundCoverageBytes.length,
+      },
     },
     {
       candidateId: "ollo-parts-front-source-set-f-alpha",
@@ -241,14 +260,36 @@ const report = await stageCharacterRigCandidateBundle({
 });
 if (
   report.status !== "incomplete" ||
-  report.returnedItems.join(",") !==
-    "face-front,parts-front,turnaround-sheet" ||
+  report.returnedItems.join(",") !== "face-front,parts-front" ||
+  report.partialItems.join(",") !== "turnaround-sheet" ||
   report.missingItems.join(",") !==
     "face-profile-left,face-profile-right,parts-profile-left,parts-profile-right" ||
+  report.missingSubitems.map((item) => item.view).join(",") !==
+    "three-quarter,rear" ||
   report.assets.some(({ alphaClass }) => alphaClass !== "mixed-alpha")
 )
   throw new Error(
     `Candidate front bundle did not remain exact and incomplete: ${JSON.stringify({ status: report.status, returnedItems: report.returnedItems, missingItems: report.missingItems, alphaClasses: report.assets.map(({ alphaClass }) => alphaClass) })}`,
+  );
+let receiptRejected = false;
+try {
+  await createVerifiedCharacterRigImportReceipt({
+    request,
+    bundle,
+    report,
+    trustedStagingRoot,
+    stagingRoot,
+    importId: "import-kcast-001d-must-fail",
+    importedAt: stagedAt,
+  });
+} catch (error) {
+  receiptRejected = /missing request items/i.test(
+    error instanceof Error ? error.message : String(error),
+  );
+}
+if (!receiptRejected)
+  throw new Error(
+    "The exact three-view Ollo reproduction did not fail closed at import receipt creation.",
   );
 for (const asset of report.assets) {
   const stagedBytes = await readFile(
@@ -298,7 +339,9 @@ const evidenceDraft = {
     ...first.gate,
     bundleStatus: report.status,
     returnedItems: report.returnedItems,
+    partialItems: report.partialItems,
     missingItems: report.missingItems,
+    missingSubitems: report.missingSubitems,
     profileKitsMissing: true as const,
     turnaroundInstructionViewsMissing: ["three-quarter", "rear"] as const,
     visualRoleAuditRequired: true as const,
@@ -346,8 +389,10 @@ process.stdout.write(
         dimensions: `${first.atlases.faceFront.width}x${first.atlases.faceFront.height}`,
         components: first.atlases.faceFront.components.length,
       },
-      status: report.status,
-      missingItems: report.missingItems,
+  status: report.status,
+  partialItems: report.partialItems,
+  missingItems: report.missingItems,
+  missingSubitems: report.missingSubitems,
       importReceiptCreated: false,
       preparedManifestCreated: false,
       providerAuthority: false,

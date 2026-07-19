@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { hashCanonical } from "./canonical-hash";
-import {
-  hashSchema,
-  identifierSchema,
-} from "./model";
+import { hashSchema, identifierSchema } from "./model";
 
 export const characterRigSafeRelativePathSchema = z
   .string()
@@ -29,6 +26,14 @@ export const characterRigViewSchema = z.enum([
   "profile-right",
   "rear",
 ]);
+
+export const kidsBipedV1RequiredTurnaroundViews = [
+  "front",
+  "three-quarter",
+  "profile-left",
+  "profile-right",
+  "rear",
+] as const satisfies readonly z.infer<typeof characterRigViewSchema>[];
 
 export const characterRigComponentRoleSchema = z.enum([
   "torso",
@@ -159,26 +164,50 @@ const kidsBipedV1CanonicalParentByRole = {
   "ear-left": { parentRole: "head", parentSocketId: "ear-left" },
   "ear-right": { parentRole: "head", parentSocketId: "ear-right" },
   "upper-arm-left": { parentRole: "torso", parentSocketId: "shoulder-left" },
-  "lower-arm-left": { parentRole: "upper-arm-left", parentSocketId: "elbow-left" },
+  "lower-arm-left": {
+    parentRole: "upper-arm-left",
+    parentSocketId: "elbow-left",
+  },
   "hand-left": { parentRole: "lower-arm-left", parentSocketId: "wrist-left" },
   "upper-arm-right": { parentRole: "torso", parentSocketId: "shoulder-right" },
-  "lower-arm-right": { parentRole: "upper-arm-right", parentSocketId: "elbow-right" },
-  "hand-right": { parentRole: "lower-arm-right", parentSocketId: "wrist-right" },
+  "lower-arm-right": {
+    parentRole: "upper-arm-right",
+    parentSocketId: "elbow-right",
+  },
+  "hand-right": {
+    parentRole: "lower-arm-right",
+    parentSocketId: "wrist-right",
+  },
   "upper-leg-left": { parentRole: "pelvis", parentSocketId: "hip-left" },
-  "lower-leg-left": { parentRole: "upper-leg-left", parentSocketId: "knee-left" },
+  "lower-leg-left": {
+    parentRole: "upper-leg-left",
+    parentSocketId: "knee-left",
+  },
   "foot-left": { parentRole: "lower-leg-left", parentSocketId: "ankle-left" },
   "upper-leg-right": { parentRole: "pelvis", parentSocketId: "hip-right" },
-  "lower-leg-right": { parentRole: "upper-leg-right", parentSocketId: "knee-right" },
-  "foot-right": { parentRole: "lower-leg-right", parentSocketId: "ankle-right" },
+  "lower-leg-right": {
+    parentRole: "upper-leg-right",
+    parentSocketId: "knee-right",
+  },
+  "foot-right": {
+    parentRole: "lower-leg-right",
+    parentSocketId: "ankle-right",
+  },
   tail: { parentRole: "pelvis", parentSocketId: "tail-base" },
   "secondary-front": { parentRole: "torso", parentSocketId: "secondary-front" },
   "secondary-back": { parentRole: "torso", parentSocketId: "secondary-back" },
   "eye-white-left": { parentRole: "head", parentSocketId: "eye-left" },
   "eye-white-right": { parentRole: "head", parentSocketId: "eye-right" },
   "pupil-left": { parentRole: "eye-white-left", parentSocketId: "pupil-left" },
-  "pupil-right": { parentRole: "eye-white-right", parentSocketId: "pupil-right" },
+  "pupil-right": {
+    parentRole: "eye-white-right",
+    parentSocketId: "pupil-right",
+  },
   "lid-open-left": { parentRole: "eye-white-left", parentSocketId: "lid-left" },
-  "lid-open-right": { parentRole: "eye-white-right", parentSocketId: "lid-right" },
+  "lid-open-right": {
+    parentRole: "eye-white-right",
+    parentSocketId: "lid-right",
+  },
   "brow-neutral-left": { parentRole: "head", parentSocketId: "brow-left" },
   "brow-neutral-right": { parentRole: "head", parentSocketId: "brow-right" },
   "mouth-rest": { parentRole: "head", parentSocketId: "mouth" },
@@ -240,7 +269,8 @@ const refineCharacterRigTopologyTemplate = (
     context.addIssue({
       code: "custom",
       path: ["parts"],
-      message: "kids-biped-v1 topology must declare its exact canonical part roles.",
+      message:
+        "kids-biped-v1 topology must declare its exact canonical part roles.",
     });
   const partByRole = new Map(template.parts.map((part) => [part.role, part]));
   const roots = template.parts.filter((part) => part.parentRole === null);
@@ -255,9 +285,10 @@ const refineCharacterRigTopologyTemplate = (
       message: "kids-biped-v1 topology requires one socketless torso root.",
     });
   for (const [index, part] of template.parts.entries()) {
-    const canonical = kidsBipedV1CanonicalParentByRole[
-      part.role as keyof typeof kidsBipedV1CanonicalParentByRole
-    ];
+    const canonical =
+      kidsBipedV1CanonicalParentByRole[
+        part.role as keyof typeof kidsBipedV1CanonicalParentByRole
+      ];
     if (
       !canonical ||
       part.parentRole !== canonical.parentRole ||
@@ -303,7 +334,8 @@ const refineCharacterRigTopologyTemplate = (
     context.addIssue({
       code: "custom",
       path: ["exposures"],
-      message: "kids-biped-v1 topology must declare its exact canonical exposure roles.",
+      message:
+        "kids-biped-v1 topology must declare its exact canonical exposure roles.",
     });
   for (const [index, exposure] of template.exposures.entries())
     if (
@@ -357,21 +389,20 @@ const createCharacterRigTopologyTemplate = (
   return Object.freeze(template);
 };
 
-export const kidsBipedV1TopologyTemplate =
-  createCharacterRigTopologyTemplate({
-    schemaVersion: "1.0",
-    templateId: "kids-biped-v1",
-    profileVersion: "1.0.0",
-    authority: "local-articulated-parts",
-    parts: kidsBipedV1TopologyPartRoles.map((role) => ({
-      role,
-      ...kidsBipedV1CanonicalParentByRole[role],
-    })),
-    exposures: kidsBipedV1TopologyExposureRoles.map((role) => ({
-      role,
-      targetRole: kidsBipedV1CanonicalExposureTargetByRole[role],
-    })),
-  });
+export const kidsBipedV1TopologyTemplate = createCharacterRigTopologyTemplate({
+  schemaVersion: "1.0",
+  templateId: "kids-biped-v1",
+  profileVersion: "1.0.0",
+  authority: "local-articulated-parts",
+  parts: kidsBipedV1TopologyPartRoles.map((role) => ({
+    role,
+    ...kidsBipedV1CanonicalParentByRole[role],
+  })),
+  exposures: kidsBipedV1TopologyExposureRoles.map((role) => ({
+    role,
+    targetRole: kidsBipedV1CanonicalExposureTargetByRole[role],
+  })),
+});
 
 export const requirementsForRigProfile = (
   profileId: "kids-biped-v1",
@@ -410,7 +441,8 @@ export const characterRigRequestItemSchema = z
         context.addIssue({
           code: "custom",
           path: ["view"],
-          message: "A turnaround sheet covers the declared view set as a whole.",
+          message:
+            "A turnaround sheet covers the declared view set as a whole.",
         });
       if (item.requiredComponents.length !== 0)
         context.addIssue({
@@ -468,7 +500,10 @@ const characterRigAssetRequestFields = {
     })
     .strict(),
   acquisition: manualFileAcquisitionSchema,
-  controlledMatte: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable(),
+  controlledMatte: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .nullable(),
   items: z.array(characterRigRequestItemSchema).min(1),
   prohibitions: z.array(z.string().trim().min(1).max(500)).min(1),
   approvalRequired: z.literal(true),
@@ -561,16 +596,213 @@ export const characterRigAssetRequestSchema = z
       });
   });
 
+const turnaroundViewEvidenceFields = {
+  view: characterRigViewSchema,
+  sourceContentHash: hashSchema,
+  sourceRect: z
+    .object({
+      x: z.number().int().nonnegative(),
+      y: z.number().int().nonnegative(),
+      width: z.number().int().positive(),
+      height: z.number().int().positive(),
+    })
+    .strict(),
+  derivedContentHash: hashSchema,
+  byteLength: z
+    .number()
+    .int()
+    .positive()
+    .max(50 * 1024 * 1024),
+  width: z.number().int().positive().max(8192),
+  height: z.number().int().positive().max(8192),
+  semanticDirection: z.enum([
+    "neutral-front",
+    "three-quarter",
+    "faces-screen-left",
+    "faces-screen-right",
+    "neutral-rear",
+  ]),
+  transform: z.literal("none"),
+};
+
+export const turnaroundViewEvidenceSchema = z
+  .object(turnaroundViewEvidenceFields)
+  .strict()
+  .superRefine((evidence, context) => {
+    const expectedSemanticDirection = {
+      front: "neutral-front",
+      "three-quarter": "three-quarter",
+      "profile-left": "faces-screen-left",
+      "profile-right": "faces-screen-right",
+      rear: "neutral-rear",
+    } as const;
+    if (evidence.semanticDirection !== expectedSemanticDirection[evidence.view])
+      context.addIssue({
+        code: "custom",
+        path: ["semanticDirection"],
+        message: "Turnaround semantic direction must equal its declared view.",
+      });
+    if (
+      evidence.width !== evidence.sourceRect.width ||
+      evidence.height !== evidence.sourceRect.height
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["sourceRect"],
+        message:
+          "Turnaround derived dimensions must equal the source rectangle.",
+      });
+  });
+
+const requiredTurnaroundViewsTupleSchema = z.tuple([
+  z.literal("front"),
+  z.literal("three-quarter"),
+  z.literal("profile-left"),
+  z.literal("profile-right"),
+  z.literal("rear"),
+]);
+
+const turnaroundViewCoverageEvidenceFields = {
+  schemaVersion: z.literal("1.0"),
+  requestId: identifierSchema,
+  requestContentHash: hashSchema,
+  requestItemId: identifierSchema,
+  candidateId: identifierSchema,
+  candidateContentHash: hashSchema,
+  requiredViews: requiredTurnaroundViewsTupleSchema,
+  views: z.array(turnaroundViewEvidenceSchema).max(5),
+};
+
+const rectanglesOverlap = (
+  left: z.infer<typeof turnaroundViewEvidenceSchema>["sourceRect"],
+  right: z.infer<typeof turnaroundViewEvidenceSchema>["sourceRect"],
+) =>
+  left.x < right.x + right.width &&
+  left.x + left.width > right.x &&
+  left.y < right.y + right.height &&
+  left.y + left.height > right.y;
+
+const refineTurnaroundViewCoverageEvidence = (
+  evidence: {
+    candidateContentHash: string;
+    views: Array<z.infer<typeof turnaroundViewEvidenceSchema>>;
+  },
+  context: z.RefinementCtx,
+) => {
+  const views = new Set<string>();
+  const derivedContentHashes = new Set<string>();
+  let lastRequiredViewIndex = -1;
+  for (const [index, view] of evidence.views.entries()) {
+    if (views.has(view.view))
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "view"],
+        message: `Duplicate turnaround view ${view.view}.`,
+      });
+    views.add(view.view);
+    if (derivedContentHashes.has(view.derivedContentHash))
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "derivedContentHash"],
+        message:
+          "Every turnaround view must have unique independently derived bytes.",
+      });
+    derivedContentHashes.add(view.derivedContentHash);
+    const requiredViewIndex = kidsBipedV1RequiredTurnaroundViews.indexOf(
+      view.view,
+    );
+    if (requiredViewIndex <= lastRequiredViewIndex)
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "view"],
+        message:
+          "Turnaround views must be an order-preserving subsequence of the canonical required tuple.",
+      });
+    lastRequiredViewIndex = requiredViewIndex;
+    if (view.sourceContentHash !== evidence.candidateContentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["views", index, "sourceContentHash"],
+        message:
+          "Turnaround view is not bound to the declared candidate bytes.",
+      });
+    for (let other = 0; other < index; other += 1)
+      if (rectanglesOverlap(evidence.views[other]!.sourceRect, view.sourceRect))
+        context.addIssue({
+          code: "custom",
+          path: ["views", index, "sourceRect"],
+          message: `Turnaround view ${view.view} overlaps another declared source rectangle.`,
+        });
+  }
+  const left = evidence.views.find((view) => view.view === "profile-left");
+  const right = evidence.views.find((view) => view.view === "profile-right");
+  if (left && right && left.derivedContentHash === right.derivedContentHash)
+    context.addIssue({
+      code: "custom",
+      path: ["views"],
+      message:
+        "Profile-left and profile-right must not use identical derived bytes.",
+    });
+};
+
+export const turnaroundViewCoverageEvidenceDraftSchema = z
+  .object(turnaroundViewCoverageEvidenceFields)
+  .strict()
+  .superRefine(refineTurnaroundViewCoverageEvidence);
+
+export const turnaroundViewCoverageEvidenceSchema = z
+  .object({ ...turnaroundViewCoverageEvidenceFields, contentHash: hashSchema })
+  .strict()
+  .superRefine((evidence, context) => {
+    refineTurnaroundViewCoverageEvidence(evidence, context);
+    if (hashCanonical(withoutContentHash(evidence)) !== evidence.contentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["contentHash"],
+        message: "Turnaround view coverage evidence hash is invalid.",
+      });
+  });
+
+export type TurnaroundViewCoverageEvidence = z.infer<
+  typeof turnaroundViewCoverageEvidenceSchema
+>;
+
+export const createTurnaroundViewCoverageEvidence = (
+  rawDraft: z.infer<typeof turnaroundViewCoverageEvidenceDraftSchema>,
+): TurnaroundViewCoverageEvidence => {
+  const draft = turnaroundViewCoverageEvidenceDraftSchema.parse(rawDraft);
+  return turnaroundViewCoverageEvidenceSchema.parse({
+    ...draft,
+    contentHash: hashCanonical(draft),
+  });
+};
+
+const turnaroundViewCoverageEvidenceReferenceSchema = z
+  .object({
+    schemaVersion: z.literal("1.0"),
+    relativeFile: characterRigSafeRelativePathSchema,
+    contentHash: hashSchema,
+    fileContentHash: hashSchema,
+    byteLength: z.number().int().positive().max(8_000_000),
+  })
+  .strict();
+
 export const characterRigCandidateAssetSchema = z
   .object({
     candidateId: identifierSchema,
     requestItemId: identifierSchema,
     relativeFile: characterRigSafeRelativePathSchema,
     contentHash: hashSchema,
-    byteLength: z.number().int().positive().max(50 * 1024 * 1024),
+    byteLength: z
+      .number()
+      .int()
+      .positive()
+      .max(50 * 1024 * 1024),
     mediaType: z.literal("image/png"),
     width: z.number().int().positive().max(8192),
     height: z.number().int().positive().max(8192),
+    turnaroundViewCoverageEvidence:
+      turnaroundViewCoverageEvidenceReferenceSchema.optional(),
   })
   .strict()
   .refine((asset) => asset.width * asset.height <= 64_000_000, {
@@ -699,7 +931,12 @@ export const validateCharacterRigCandidateBundle = (
   )
     throw new Error("Candidate rig bundle is not bound to this exact request.");
   const inspection = inspectCharacterRigCandidateBundle(request, bundle);
-  const { returnedItems, unknownItems: unknown, missingItems: missing } = inspection;
+  const {
+    returnedItems,
+    partialItems,
+    unknownItems: unknown,
+    missingItems: missing,
+  } = inspection;
   if (unknown.length)
     throw new Error(
       `Candidate rig bundle contains unknown request items: ${unknown.join(", ")}.`,
@@ -712,6 +949,7 @@ export const validateCharacterRigCandidateBundle = (
     requestContentHash: request.contentHash,
     bundleContentHash: bundle.contentHash,
     returnedItems: returnedItems.length,
+    partialItems: partialItems.length,
     providerAuthority: false as const,
     approvalRequired: true as const,
   };
@@ -728,20 +966,52 @@ export const inspectCharacterRigCandidateBundle = (
     bundle.requestContentHash !== request.contentHash
   )
     throw new Error("Candidate rig bundle is not bound to this exact request.");
-  const requested = new Set(request.items.map((item) => item.id));
-  const returned = new Set(bundle.assets.map((asset) => asset.requestItemId));
-  const returnedItems = [...returned].filter((id) => requested.has(id)).sort();
+  const requestedItems = new Map(request.items.map((item) => [item.id, item]));
+  const returnedAssets = new Map(
+    bundle.assets.map((asset) => [asset.requestItemId, asset]),
+  );
+  const requested = new Set(requestedItems.keys());
+  const returned = new Set(returnedAssets.keys());
   const unknownItems = [...returned].filter((id) => !requested.has(id)).sort();
+  for (const asset of bundle.assets) {
+    const item = requestedItems.get(asset.requestItemId);
+    if (
+      item &&
+      item.kind !== "turnaround-sheet" &&
+      asset.turnaroundViewCoverageEvidence !== undefined
+    )
+      throw new Error(
+        `Candidate ${asset.candidateId} declares turnaround view coverage for ${item.kind}.`,
+      );
+  }
+  const returnedItems = request.items
+    .filter((item) => returned.has(item.id) && item.kind !== "turnaround-sheet")
+    .map((item) => item.id)
+    .sort();
+  const partialItems = request.items
+    .filter((item) => returned.has(item.id) && item.kind === "turnaround-sheet")
+    .map((item) => item.id)
+    .sort();
   const missingItems = [...requested].filter((id) => !returned.has(id)).sort();
+  const missingSubitems = partialItems.flatMap((requestItemId) =>
+    kidsBipedV1RequiredTurnaroundViews.map((view) => ({
+      requestItemId,
+      view,
+    })),
+  );
   return {
     requestContentHash: request.contentHash,
     bundleContentHash: bundle.contentHash,
     status:
-      missingItems.length === 0 && unknownItems.length === 0
+      missingItems.length === 0 &&
+      partialItems.length === 0 &&
+      unknownItems.length === 0
         ? ("complete" as const)
         : ("incomplete" as const),
     returnedItems,
+    partialItems,
     missingItems,
+    missingSubitems,
     unknownItems,
     providerAuthority: false as const,
     approvalRequired: true as const,
@@ -760,34 +1030,32 @@ export const createKidsBipedRigRequestItems = () => [
       "Preserve the approved identity, scale, palette, and asymmetric details.",
     ],
   },
-  ...(["front", "profile-left", "profile-right"] as const).flatMap(
-    (view) => [
-      {
-        id: `parts-${view}`,
-        kind: "parts-kit" as const,
-        view,
-        registrationGroup: `rig-${view}`,
-        requiredComponents: [
-          ...requirementsForRigProfile("kids-biped-v1", view, "parts-kit"),
-        ],
-        instructions: [
-          "Provide independently separated transparent parts with safety gutters.",
-          "Upper and lower arms and legs must be distinct; whole-limb substitutes are invalid.",
-        ],
-      },
-      {
-        id: `face-${view}`,
-        kind: "face-kit" as const,
-        view,
-        registrationGroup: `rig-${view}`,
-        requiredComponents: [
-          ...requirementsForRigProfile("kids-biped-v1", view, "face-kit"),
-        ],
-        instructions: [
-          "Provide registration-consistent eyes, lids, brows, and mouth exposures.",
-          "Mouth exposures are guide visemes and require later dialogue-specific timing.",
-        ],
-      },
-    ],
-  ),
+  ...(["front", "profile-left", "profile-right"] as const).flatMap((view) => [
+    {
+      id: `parts-${view}`,
+      kind: "parts-kit" as const,
+      view,
+      registrationGroup: `rig-${view}`,
+      requiredComponents: [
+        ...requirementsForRigProfile("kids-biped-v1", view, "parts-kit"),
+      ],
+      instructions: [
+        "Provide independently separated transparent parts with safety gutters.",
+        "Upper and lower arms and legs must be distinct; whole-limb substitutes are invalid.",
+      ],
+    },
+    {
+      id: `face-${view}`,
+      kind: "face-kit" as const,
+      view,
+      registrationGroup: `rig-${view}`,
+      requiredComponents: [
+        ...requirementsForRigProfile("kids-biped-v1", view, "face-kit"),
+      ],
+      instructions: [
+        "Provide registration-consistent eyes, lids, brows, and mouth exposures.",
+        "Mouth exposures are guide visemes and require later dialogue-specific timing.",
+      ],
+    },
+  ]),
 ];

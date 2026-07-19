@@ -16,12 +16,21 @@ const ATLAS_GUTTER = 24;
 const sha256 = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 
-export type FrontAtlasSourceInput = {
+type DirectionalAtlasSourceInput<MaximumKeyDistance extends 24 | 32> = {
   bytes: Buffer;
   expectedContentHash: string;
   expectedDimensions: { width: number; height: number };
   sourceRects?: readonly FrontAtlasSourceRect[];
-  maximumMeasuredKeyDistance?: 24 | 32;
+  maximumMeasuredKeyDistance?: MaximumKeyDistance;
+};
+
+export type FrontAtlasSourceInput = DirectionalAtlasSourceInput<24 | 32>;
+
+export type ProfileAtlasSourceInput = Omit<
+  DirectionalAtlasSourceInput<24 | 32>,
+  "sourceRects"
+> & {
+  sourceRects: readonly FrontAtlasSourceRect[];
 };
 
 export type FrontAtlasSourceRect = {
@@ -45,6 +54,29 @@ export type KidsBipedV1FrontAtlasInput = {
   };
 };
 
+export type KidsBipedV1AtlasView = "front" | "profile-left" | "profile-right";
+
+export type KidsBipedV1ProfileAtlasView = Exclude<
+  KidsBipedV1AtlasView,
+  "front"
+>;
+
+export type KidsBipedV1ProfileAtlasInput = {
+  core: ProfileAtlasSourceInput;
+  limbs: ProfileAtlasSourceInput;
+  eyes: ProfileAtlasSourceInput;
+  mouths: ProfileAtlasSourceInput;
+  lowerFace: {
+    base: FrontAtlasSourceInput;
+    baseSourceRect: FrontAtlasSourceRect;
+    pivot: { x: number; y: number };
+    noseAnchor: { x: number; y: number };
+    mouthChangeBounds: FrontAtlasSourceRect;
+  };
+};
+
+type KidsBipedV1DirectionalAtlasInput = KidsBipedV1FrontAtlasInput;
+
 type PartComponent = (typeof kidsBipedV1PartComponents)[number];
 type FaceComponent = (typeof kidsBipedV1FaceComponents)[number];
 type FrontComponent = PartComponent | FaceComponent;
@@ -56,6 +88,27 @@ type SheetPlan = {
   atlas: AtlasKind;
   columns: number;
   rows: number;
+  components: readonly FrontComponent[];
+};
+
+type FixedGridSourceEvidence<
+  MaximumKeyDistance extends 24 | 32,
+  Kind extends string,
+> = {
+  id: SheetId;
+  atlas: Kind;
+  sourceContentHash: string;
+  keyedSourceContentHash: string;
+  dimensions: { width: number; height: number };
+  extraction: {
+    mode: "equal-grid" | "sealed-source-rects";
+    declaredGrid: { columns: number; rows: number };
+    sourceRects: readonly FrontAtlasSourceRect[];
+    manifestContentHash: string;
+    maximumMeasuredKeyDistance: MaximumKeyDistance;
+  };
+  measuredKey: { red: number; green: number; blue: number; hex: string };
+  alphaPixels: { transparent: number; partial: number; opaque: number };
   components: readonly FrontComponent[];
 };
 
@@ -171,28 +224,12 @@ export type FixedGridFrontAtlasResult = {
       effort: 10;
     };
   };
-  sources: Array<{
-    id: SheetId;
-    atlas: AtlasKind;
-    sourceContentHash: string;
-    keyedSourceContentHash: string;
-    dimensions: { width: number; height: number };
-    extraction: {
-      mode: "equal-grid" | "sealed-source-rects";
-      declaredGrid: { columns: number; rows: number };
-      sourceRects: readonly FrontAtlasSourceRect[];
-      manifestContentHash: string;
-      maximumMeasuredKeyDistance: 24 | 32;
-    };
-    measuredKey: { red: number; green: number; blue: number; hex: string };
-    alphaPixels: { transparent: number; partial: number; opaque: number };
-    components: readonly FrontComponent[];
-  }>;
+  sources: Array<FixedGridSourceEvidence<24 | 32, AtlasKind>>;
   atlases: {
     partsFront: ComposedFrontAtlas<PartComponent>;
     faceFront: ComposedFrontAtlas<FaceComponent>;
   };
-  lowerFacePatches: ExclusiveLowerFacePatchResult;
+  lowerFacePatches: ExclusiveLowerFacePatchResult<"front">;
   gate: {
     classification: "untrusted-source-candidate";
     declaredCanonicalFrontInventoryComplete: true;
@@ -207,11 +244,43 @@ export type FixedGridFrontAtlasResult = {
   };
 };
 
-export type ExclusiveLowerFacePatchResult = {
+export type FixedGridProfileAtlasResult<
+  View extends KidsBipedV1ProfileAtlasView = KidsBipedV1ProfileAtlasView,
+> = {
+  view: View;
+  processor: Omit<FixedGridFrontAtlasResult["processor"], "id"> & {
+    id: "kids-biped-v1-fixed-grid-profile-atlas";
+  };
+  sources: Array<
+    FixedGridSourceEvidence<24 | 32, `parts-${View}` | `face-${View}`>
+  >;
+  atlases: {
+    partsProfile: ComposedFrontAtlas<PartComponent>;
+    faceProfile: ComposedFrontAtlas<FaceComponent>;
+  };
+  lowerFacePatches: ExclusiveLowerFacePatchResult<View>;
+  gate: {
+    classification: "untrusted-source-candidate";
+    previewClassification: "source-candidate-diagnostic-only";
+    declaredCanonicalProfileInventoryComplete: true;
+    visualRoleAuditPassed: false;
+    registrationReady: false;
+    importReceiptCreated: false;
+    preparedManifestCreated: false;
+    providerAuthority: false;
+    preparationAuthority: false;
+    productionBindable: false;
+    approvalRequired: true;
+  };
+};
+
+export type ExclusiveLowerFacePatchResult<
+  View extends KidsBipedV1AtlasView = "front",
+> = {
   contract: {
     replacementMode: "exclusive";
     ownedFeatures: readonly ["nose", "muzzle", "mouth"];
-    registrationGroup: "ollo-front-lower-face-v1";
+    registrationGroup: `ollo-${View}-lower-face-v1`;
     atomicReplacement: true;
     fixedZOrder: true;
     width: number;
@@ -409,6 +478,7 @@ const sourceRectsFor = (
   source: FrontAtlasSourceInput,
   width: number,
   height: number,
+  maximumAllowedKeyDistance: 32,
 ) => {
   const mode = source.sourceRects ? "sealed-source-rects" : "equal-grid";
   const sourceRects = source.sourceRects
@@ -454,6 +524,10 @@ const sourceRectsFor = (
     throw new Error(
       `Fixed-grid ${plan.id} source declared an unsupported measured-key distance ceiling.`,
     );
+  if (maximumMeasuredKeyDistance > maximumAllowedKeyDistance)
+    throw new Error(
+      `Fixed-grid ${plan.id} source exceeded the ${maximumAllowedKeyDistance}px directional key-distance ceiling.`,
+    );
   return { mode, sourceRects, maximumMeasuredKeyDistance } as const;
 };
 
@@ -483,7 +557,11 @@ const assertAllForegroundAssigned = (
     }
 };
 
-const extractSheet = async (plan: SheetPlan, source: FrontAtlasSourceInput) => {
+const extractSheet = async (
+  plan: SheetPlan,
+  source: FrontAtlasSourceInput,
+  maximumAllowedKeyDistance: 32,
+) => {
   const sourceContentHash = sha256(source.bytes);
   if (sourceContentHash !== source.expectedContentHash)
     throw new Error(`Fixed-grid ${plan.id} source bytes changed.`);
@@ -513,6 +591,7 @@ const extractSheet = async (plan: SheetPlan, source: FrontAtlasSourceInput) => {
     source,
     metadata.width,
     metadata.height,
+    maximumAllowedKeyDistance,
   );
 
   const keyed = await removeBorderChromaKey(source.bytes);
@@ -648,10 +727,15 @@ const pointWithin = (
   point.x < rect.x + rect.width &&
   point.y < rect.y + rect.height;
 
-const composeExclusiveLowerFacePatches = async (
-  input: KidsBipedV1FrontAtlasInput["lowerFace"],
+const composeExclusiveLowerFacePatches = async <
+  View extends KidsBipedV1AtlasView,
+>(
+  input: KidsBipedV1DirectionalAtlasInput["lowerFace"],
   overlays: ExtractedComponent[],
+  view: View,
+  maximumAllowedKeyDistance: 32,
 ) => {
+  const registrationGroup = `ollo-${view}-lower-face-v1` as const;
   const source = input.base;
   const sourceContentHash = sha256(source.bytes);
   if (sourceContentHash !== source.expectedContentHash)
@@ -686,6 +770,10 @@ const composeExclusiveLowerFacePatches = async (
   )
     throw new Error(
       "Exclusive lower-face base declared an unsupported measured-key distance ceiling.",
+    );
+  if (maximumMeasuredKeyDistance > maximumAllowedKeyDistance)
+    throw new Error(
+      `Exclusive lower-face base exceeded the ${maximumAllowedKeyDistance}px directional key-distance ceiling.`,
     );
   const keyed = await removeBorderChromaKey(source.bytes);
   const keyDistance = Math.sqrt(
@@ -783,7 +871,7 @@ const composeExclusiveLowerFacePatches = async (
         sourceRect,
         replacementMode: "exclusive",
         ownedFeatures: ["nose", "muzzle", "mouth"],
-        registrationGroup: "ollo-front-lower-face-v1",
+        registrationGroup,
         pivot: input.pivot,
         noseAnchor: input.noseAnchor,
         mouthChangeBounds: change,
@@ -810,7 +898,7 @@ const composeExclusiveLowerFacePatches = async (
     );
 
   const components: ExtractedComponent[] = [];
-  const patches: ExclusiveLowerFacePatchResult["patches"] = [];
+  const patches: ExclusiveLowerFacePatchResult<View>["patches"] = [];
   for (const overlay of overlays) {
     if (
       overlay.width + SOURCE_SAFETY_INSET * 2 > change.width ||
@@ -894,7 +982,7 @@ const composeExclusiveLowerFacePatches = async (
       height: sourceRect.height,
     });
     patches.push({
-      id: overlay.id as ExclusiveLowerFacePatchResult["patches"][number]["id"],
+      id: overlay.id as ExclusiveLowerFacePatchResult<View>["patches"][number]["id"],
       contentHash,
       byteLength: contentBytes.length,
       width: sourceRect.width,
@@ -926,7 +1014,7 @@ const composeExclusiveLowerFacePatches = async (
   const byId = new Map(
     components.map((component) => [component.id, component]),
   );
-  const diagnosticFrames: ExclusiveLowerFacePatchResult["diagnostic"]["frames"] =
+  const diagnosticFrames: ExclusiveLowerFacePatchResult<View>["diagnostic"]["frames"] =
     [];
   for (let index = 0; index < diagnosticSequence.length; index += 1) {
     const id = diagnosticSequence[index]!;
@@ -963,11 +1051,11 @@ const composeExclusiveLowerFacePatches = async (
     }),
   );
 
-  const result: ExclusiveLowerFacePatchResult = {
+  const result: ExclusiveLowerFacePatchResult<View> = {
     contract: {
       replacementMode: "exclusive",
       ownedFeatures: ["nose", "muzzle", "mouth"],
-      registrationGroup: "ollo-front-lower-face-v1",
+      registrationGroup,
       atomicReplacement: true,
       fixedZOrder: true,
       width: sourceRect.width,
@@ -1010,7 +1098,7 @@ export const inspectKidsBipedV1FrontSourceSheet = async (
   const plan = SHEET_PLANS.find(({ id }) => id === sheetId);
   if (!plan)
     throw new Error(`Unknown fixed-grid front source sheet: ${sheetId}.`);
-  return extractSheet(plan, source);
+  return extractSheet(plan, source, MAX_ALLOWED_KEY_DISTANCE);
 };
 
 const composeAtlas = async <Component extends FrontComponent>(
@@ -1098,13 +1186,19 @@ const composeAtlas = async <Component extends FrontComponent>(
   };
 };
 
-export const composeKidsBipedV1FrontAtlases = async (
-  input: KidsBipedV1FrontAtlasInput,
-): Promise<FixedGridFrontAtlasResult> => {
+const composeKidsBipedV1DirectionalAtlases = async <
+  View extends KidsBipedV1AtlasView,
+>(
+  input: KidsBipedV1DirectionalAtlasInput,
+  view: View,
+) => {
+  const maximumAllowedKeyDistance = MAX_ALLOWED_KEY_DISTANCE;
   validateDeclaredInventory();
   const extracted = [];
   for (const plan of SHEET_PLANS)
-    extracted.push(await extractSheet(plan, input[plan.id]));
+    extracted.push(
+      await extractSheet(plan, input[plan.id], maximumAllowedKeyDistance),
+    );
   const parts = extracted.flatMap(({ components }) =>
     components.filter(({ atlas }) => atlas === "parts-front"),
   );
@@ -1117,6 +1211,8 @@ export const composeKidsBipedV1FrontAtlases = async (
   const lowerFacePatches = await composeExclusiveLowerFacePatches(
     input.lowerFace,
     mouthOverlays,
+    view,
+    maximumAllowedKeyDistance,
   );
   const face = extracted
     .flatMap(({ components }) =>
@@ -1127,31 +1223,93 @@ export const composeKidsBipedV1FrontAtlases = async (
     )
     .concat(lowerFacePatches.components);
   return {
+    extracted,
+    parts: await composeAtlas(parts, kidsBipedV1PartComponents, 5),
+    face: await composeAtlas(face, kidsBipedV1FaceComponents, 6),
+    lowerFacePatches: lowerFacePatches.result,
+  };
+};
+
+const processorContract = () => ({
+  version: "1.0.0" as const,
+  sourceSafetyInset: SOURCE_SAFETY_INSET as 4,
+  atlasGutter: ATLAS_GUTTER as 24,
+  extraction: "equal-grid-or-sealed-source-rects" as const,
+  expectedKey: "#ff00ff" as const,
+  maximumAllowedMeasuredKeyDistance: MAX_ALLOWED_KEY_DISTANCE as 32,
+  imageLibrary: { id: "sharp" as const, version: sharp.versions.sharp },
+  png: {
+    compressionLevel: 9 as const,
+    adaptiveFiltering: false as const,
+    palette: false as const,
+    effort: 10 as const,
+  },
+});
+
+export const composeKidsBipedV1FrontAtlases = async (
+  input: KidsBipedV1FrontAtlasInput,
+): Promise<FixedGridFrontAtlasResult> => {
+  const composed = await composeKidsBipedV1DirectionalAtlases(input, "front");
+  return {
     processor: {
       id: "kids-biped-v1-fixed-grid-front-atlas",
-      version: "1.0.0",
-      sourceSafetyInset: SOURCE_SAFETY_INSET,
-      atlasGutter: ATLAS_GUTTER,
-      extraction: "equal-grid-or-sealed-source-rects",
-      expectedKey: "#ff00ff",
-      maximumAllowedMeasuredKeyDistance: MAX_ALLOWED_KEY_DISTANCE,
-      imageLibrary: { id: "sharp", version: sharp.versions.sharp },
-      png: {
-        compressionLevel: 9,
-        adaptiveFiltering: false,
-        palette: false,
-        effort: 10,
-      },
+      ...processorContract(),
     },
-    sources: extracted.map(({ source }) => source),
+    sources: composed.extracted.map(({ source }) => source),
     atlases: {
-      partsFront: await composeAtlas(parts, kidsBipedV1PartComponents, 5),
-      faceFront: await composeAtlas(face, kidsBipedV1FaceComponents, 6),
+      partsFront: composed.parts,
+      faceFront: composed.face,
     },
-    lowerFacePatches: lowerFacePatches.result,
+    lowerFacePatches: composed.lowerFacePatches,
     gate: {
       classification: "untrusted-source-candidate",
       declaredCanonicalFrontInventoryComplete: true,
+      visualRoleAuditPassed: false,
+      registrationReady: false,
+      importReceiptCreated: false,
+      preparedManifestCreated: false,
+      providerAuthority: false,
+      preparationAuthority: false,
+      productionBindable: false,
+      approvalRequired: true,
+    },
+  };
+};
+
+export const composeKidsBipedV1ProfileAtlases = async <
+  View extends KidsBipedV1ProfileAtlasView,
+>(
+  view: View,
+  input: KidsBipedV1ProfileAtlasInput,
+): Promise<FixedGridProfileAtlasResult<View>> => {
+  for (const sheetId of ["core", "limbs", "eyes", "mouths"] as const)
+    if (!input[sheetId].sourceRects)
+      throw new Error(
+        `Profile ${view} ${sheetId} requires sealed source rectangles.`,
+      );
+  const composed = await composeKidsBipedV1DirectionalAtlases(input, view);
+  return {
+    view,
+    processor: {
+      id: "kids-biped-v1-fixed-grid-profile-atlas",
+      ...processorContract(),
+    },
+    sources: composed.extracted.map(({ source }) => ({
+      ...source,
+      atlas:
+        `${source.atlas.startsWith("parts-") ? "parts" : "face"}-${view}` as
+          | `parts-${View}`
+          | `face-${View}`,
+    })),
+    atlases: {
+      partsProfile: composed.parts,
+      faceProfile: composed.face,
+    },
+    lowerFacePatches: composed.lowerFacePatches,
+    gate: {
+      classification: "untrusted-source-candidate",
+      previewClassification: "source-candidate-diagnostic-only",
+      declaredCanonicalProfileInventoryComplete: true,
       visualRoleAuditPassed: false,
       registrationReady: false,
       importReceiptCreated: false,

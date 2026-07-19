@@ -3,8 +3,8 @@
   "evidenceId": "kcast-001c-ollo-turnaround-source-b",
   "requestId": "kcast-001-ollo-rig-request-v1",
   "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
-  "candidateBundleContentHash": "5809cee2128a65bf1bb33cecba40c267a01d61426bab871f2799d3adfe72d4ba",
-  "stagingReportContentHash": "6b48a2e902c1a7126711c9b15006004f1ac1c0277a9830388d82c0e6251f304f",
+  "candidateBundleContentHash": "d402889f59b483add770b58f9f1b619822a388a7a5d0b02632777d4ea99afc84",
+  "stagingReportContentHash": "832e0bcad358939c3f46209b3beb8736452013f7cba1d96182a7a6e0fcc0fd76",
   "references": {
     "identityAuthority": {
       "sourceReference": "1-Photo-1.jpg from the user-supplied Ollo & Friends identity board",
@@ -202,7 +202,8 @@
       "rear"
     ],
     "intakeStatus": "incomplete",
-    "returnedItems": [
+    "returnedItems": [],
+    "partialItems": [
       "turnaround-sheet"
     ],
     "missingItems": [
@@ -213,6 +214,18 @@
       "parts-profile-left",
       "parts-profile-right"
     ],
+    "missingSubitems": [
+      {
+        "requestItemId": "turnaround-sheet",
+        "view": "three-quarter"
+      },
+      {
+        "requestItemId": "turnaround-sheet",
+        "view": "rear"
+      }
+    ],
+    "turnaroundCoverageEvidenceContentHash": "b0b7c8a0d52e0a8e960e067cb9f3b723d26ed0668e176a31566b745d74d586a0",
+    "turnaroundCoverageEvidenceFileContentHash": "91860ac41e83e2bdc1e4653f3e6781db541f0bc35e9681ba2ebf5523a831f4a1",
     "importReceiptCreated": false,
     "preparedRigViewsCreated": false,
     "providerAuthority": false,
@@ -222,5 +235,5 @@
     "prestonApprovalRequired": true
   },
   "acquiredAt": "2026-07-19T08:45:00.000Z",
-  "contentHash": "cb68cc47c2a9f6356389703f5fcab4bfdca0d5aa7e1aeb9273af38992d1b82f9"
+  "contentHash": "1e8dca9a0d3ce48d1115cf5baf6a06142d5ce109242fc8053a8eb50bf137bf1c"
 }

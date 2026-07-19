@@ -4,7 +4,9 @@ import {
   createCharacterRigAssetRequest,
   createCharacterRigCandidateBundle,
   createKidsBipedRigRequestItems,
+  createTurnaroundViewCoverageEvidence,
   inspectCharacterRigCandidateBundle,
+  kidsBipedV1RequiredTurnaroundViews,
   kidsBipedV1TopologyTemplate,
   validateCharacterRigCandidateBundle,
   type CharacterRigAssetRequestDraft,
@@ -74,6 +76,57 @@ const bundleDraft = (
   })),
 });
 
+const coverageEvidenceDraft = () => ({
+  schemaVersion: "1.0" as const,
+  requestId: "kcast-001-ollo-rig-request",
+  requestContentHash: hash("a"),
+  requestItemId: "turnaround-sheet",
+  candidateId: "candidate-turnaround-sheet",
+  candidateContentHash: hash("b"),
+  requiredViews: [...kidsBipedV1RequiredTurnaroundViews] as [
+    "front",
+    "three-quarter",
+    "profile-left",
+    "profile-right",
+    "rear",
+  ],
+  views: [
+    {
+      view: "front" as const,
+      sourceContentHash: hash("b"),
+      sourceRect: { x: 0, y: 0, width: 10, height: 10 },
+      derivedContentHash: hash("1"),
+      byteLength: 100,
+      width: 10,
+      height: 10,
+      semanticDirection: "neutral-front" as const,
+      transform: "none" as const,
+    },
+    {
+      view: "profile-left" as const,
+      sourceContentHash: hash("b"),
+      sourceRect: { x: 20, y: 0, width: 10, height: 10 },
+      derivedContentHash: hash("2"),
+      byteLength: 101,
+      width: 10,
+      height: 10,
+      semanticDirection: "faces-screen-left" as const,
+      transform: "none" as const,
+    },
+    {
+      view: "profile-right" as const,
+      sourceContentHash: hash("b"),
+      sourceRect: { x: 40, y: 0, width: 10, height: 10 },
+      derivedContentHash: hash("3"),
+      byteLength: 102,
+      width: 10,
+      height: 10,
+      semanticDirection: "faces-screen-right" as const,
+      transform: "none" as const,
+    },
+  ],
+});
+
 describe("provider-neutral character rig acquisition", () => {
   it("seals the Ollo identity lock and a true upper/lower-limb request", () => {
     const request = createCharacterRigAssetRequest(requestDraft());
@@ -87,6 +140,10 @@ describe("provider-neutral character rig acquisition", () => {
       credentialsRequired: false,
       accountSessionRequired: false,
     });
+    expect(
+      request.items.find((item) => item.kind === "turnaround-sheet")
+        ?.instructions[0],
+    ).toMatch(/front, three-quarter, profile-left, profile-right, and rear/i);
     for (const view of ["front", "profile-left", "profile-right"] as const) {
       const parts = request.items.find(
         (item) => item.kind === "parts-kit" && item.view === view,
@@ -122,7 +179,7 @@ describe("provider-neutral character rig acquisition", () => {
     }
   });
 
-  it("inspects a partial manual intake without granting completeness", () => {
+  it("keeps an unverified turnaround response partial", () => {
     const request = createCharacterRigAssetRequest(requestDraft());
     const draft = bundleDraft(request);
     const partial = createCharacterRigCandidateBundle({
@@ -131,11 +188,127 @@ describe("provider-neutral character rig acquisition", () => {
     });
     const inspection = inspectCharacterRigCandidateBundle(request, partial);
     expect(inspection.status).toBe("incomplete");
-    expect(inspection.returnedItems).toEqual(["turnaround-sheet"]);
+    expect(inspection.returnedItems).toEqual([]);
+    expect(inspection.partialItems).toEqual(["turnaround-sheet"]);
     expect(inspection.missingItems).toHaveLength(request.items.length - 1);
+    expect(inspection.missingSubitems).toEqual(
+      kidsBipedV1RequiredTurnaroundViews.map((view) => ({
+        requestItemId: "turnaround-sheet",
+        view,
+      })),
+    );
     expect(inspection.providerAuthority).toBe(false);
     expect(() => validateCharacterRigCandidateBundle(request, partial)).toThrow(
       /missing request items/i,
+    );
+  });
+
+  it("does not let all profile kits substitute for verified turnaround evidence", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const draft = bundleDraft(request);
+    const bundle = createCharacterRigCandidateBundle(draft);
+    const inspection = inspectCharacterRigCandidateBundle(request, bundle);
+    expect(inspection.status).toBe("incomplete");
+    expect(inspection.missingItems).toEqual([]);
+    expect(inspection.partialItems).toEqual(["turnaround-sheet"]);
+    expect(inspection.returnedItems).toHaveLength(request.items.length - 1);
+    expect(
+      validateCharacterRigCandidateBundle(request, bundle).partialItems,
+    ).toBe(1);
+  });
+
+  it("seals per-view evidence and rejects reordered or mirrored assertions", () => {
+    const draft = coverageEvidenceDraft();
+    const evidence = createTurnaroundViewCoverageEvidence(draft);
+    expect(evidence.contentHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [draft.views[1]!, draft.views[0]!, draft.views[2]!],
+      }),
+    ).toThrow(/order-preserving/i);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [
+          draft.views[0]!,
+          draft.views[1]!,
+          { ...draft.views[2]!, transform: "mirror" },
+        ],
+      } as unknown as Parameters<
+        typeof createTurnaroundViewCoverageEvidence
+      >[0]),
+    ).toThrow();
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [draft.views[0]!, draft.views[0]!],
+      }),
+    ).toThrow(/duplicate|order-preserving/i);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [
+          draft.views[0]!,
+          {
+            ...draft.views[1]!,
+            sourceRect: { x: 5, y: 0, width: 10, height: 10 },
+          },
+        ],
+      }),
+    ).toThrow(/overlaps/i);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [
+          draft.views[0]!,
+          {
+            ...draft.views[1]!,
+            derivedContentHash: draft.views[0]!.derivedContentHash,
+          },
+        ],
+      }),
+    ).toThrow(/unique/i);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [
+          draft.views[0]!,
+          draft.views[1]!,
+          {
+            ...draft.views[2]!,
+            derivedContentHash: draft.views[1]!.derivedContentHash,
+          },
+        ],
+      }),
+    ).toThrow(/unique|identical/i);
+  });
+
+  it("rejects turnaround evidence references on non-turnaround assets", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const draft = bundleDraft(request);
+    const target = draft.assets.find(
+      (asset) => asset.requestItemId === "parts-front",
+    )!;
+    const bundle = createCharacterRigCandidateBundle({
+      ...draft,
+      assets: draft.assets.map((asset) =>
+        asset === target
+          ? {
+              ...asset,
+              turnaroundViewCoverageEvidence: {
+                schemaVersion: "1.0",
+                relativeFile: "evidence/forged.json",
+                contentHash: hash("e"),
+                fileContentHash: hash("f"),
+                byteLength: 100,
+              },
+            }
+          : asset,
+      ),
+    });
+    expect(() => inspectCharacterRigCandidateBundle(request, bundle)).toThrow(
+      /declares turnaround view coverage for parts-kit/i,
     );
   });
 
@@ -145,7 +318,8 @@ describe("provider-neutral character rig acquisition", () => {
     expect(validateCharacterRigCandidateBundle(request, bundle)).toEqual({
       requestContentHash: request.contentHash,
       bundleContentHash: bundle.contentHash,
-      returnedItems: request.items.length,
+      returnedItems: request.items.length - 1,
+      partialItems: 1,
       providerAuthority: false,
       approvalRequired: true,
     });

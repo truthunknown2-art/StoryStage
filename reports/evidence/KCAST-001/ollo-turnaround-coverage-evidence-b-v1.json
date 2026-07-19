@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "requestItemId": "turnaround-sheet",
+  "candidateId": "ollo-turnaround-candidate-b-alpha-repo",
+  "candidateContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+  "requiredViews": [
+    "front",
+    "three-quarter",
+    "profile-left",
+    "profile-right",
+    "rear"
+  ],
+  "views": [
+    {
+      "view": "front",
+      "sourceContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "sourceRect": {
+        "x": 96,
+        "y": 16,
+        "width": 528,
+        "height": 832
+      },
+      "derivedContentHash": "4e4dc1a16caf4ff5f0bad85979921db1c14cc01969a8406648efefd778417ce7",
+      "byteLength": 564350,
+      "width": 528,
+      "height": 832,
+      "semanticDirection": "neutral-front",
+      "transform": "none"
+    },
+    {
+      "view": "profile-left",
+      "sourceContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "sourceRect": {
+        "x": 680,
+        "y": 16,
+        "width": 448,
+        "height": 832
+      },
+      "derivedContentHash": "c91d7319470e6786750c78ab9cf23824a272fbd08d5238ed21107a2e83b37214",
+      "byteLength": 408912,
+      "width": 448,
+      "height": 832,
+      "semanticDirection": "faces-screen-left",
+      "transform": "none"
+    },
+    {
+      "view": "profile-right",
+      "sourceContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "sourceRect": {
+        "x": 1150,
+        "y": 16,
+        "width": 448,
+        "height": 832
+      },
+      "derivedContentHash": "0204f3b83e731b4d914020a360f943001102b539f8d265343525a675e9614314",
+      "byteLength": 407145,
+      "width": 448,
+      "height": 832,
+      "semanticDirection": "faces-screen-right",
+      "transform": "none"
+    }
+  ],
+  "contentHash": "b0b7c8a0d52e0a8e960e067cb9f3b723d26ed0668e176a31566b745d74d586a0"
+}

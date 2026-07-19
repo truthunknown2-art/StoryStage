@@ -7,6 +7,7 @@ import {
   createCharacterRigAssetRequest,
   createCharacterRigCandidateBundle,
   createKidsBipedRigRequestItems,
+  createTurnaroundViewCoverageEvidence,
   characterRigAssetRequestSchema,
   hashCanonical,
   kidsBipedV1TopologyTemplate,
@@ -131,6 +132,81 @@ if (persistedRequest.contentHash !== request.contentHash)
     "Persisted Ollo request does not match the acquisition proof.",
   );
 
+const cropPlans = [
+  {
+    view: "front" as const,
+    semanticDirection: "neutral-front" as const,
+    rect: { x: 96, y: 16, width: 528, height: 832 },
+  },
+  {
+    view: "profile-left" as const,
+    semanticDirection: "faces-screen-left" as const,
+    rect: { x: 680, y: 16, width: 448, height: 832 },
+  },
+  {
+    view: "profile-right" as const,
+    semanticDirection: "faces-screen-right" as const,
+    rect: { x: 1150, y: 16, width: 448, height: 832 },
+  },
+];
+const coverageViews: Parameters<
+  typeof createTurnaroundViewCoverageEvidence
+>[0]["views"] = [];
+for (const plan of cropPlans) {
+  const derived = await sharp(canonicalAlphaBytes, {
+    limitInputPixels: 64_000_000,
+    animated: false,
+  })
+    .extract({
+      left: plan.rect.x,
+      top: plan.rect.y,
+      width: plan.rect.width,
+      height: plan.rect.height,
+    })
+    .ensureAlpha()
+    .png({
+      compressionLevel: 9,
+      adaptiveFiltering: false,
+      palette: false,
+      effort: 10,
+    })
+    .toBuffer();
+  coverageViews.push({
+    view: plan.view,
+    sourceContentHash: sha256(canonicalAlphaBytes),
+    sourceRect: plan.rect,
+    derivedContentHash: sha256(derived),
+    byteLength: derived.length,
+    width: plan.rect.width,
+    height: plan.rect.height,
+    semanticDirection: plan.semanticDirection,
+    transform: "none" as const,
+  });
+}
+const coverageEvidence = createTurnaroundViewCoverageEvidence({
+  schemaVersion: "1.0",
+  requestId: request.requestId,
+  requestContentHash: request.contentHash,
+  requestItemId: "turnaround-sheet",
+  candidateId: "ollo-turnaround-candidate-b-alpha-repo",
+  candidateContentHash: sha256(canonicalAlphaBytes),
+  requiredViews: [
+    "front",
+    "three-quarter",
+    "profile-left",
+    "profile-right",
+    "rear",
+  ],
+  views: coverageViews,
+});
+const coverageRelativeFile =
+  "ollo-turnaround-coverage-evidence-b-v1.json";
+const coverageBytes = Buffer.from(
+  `${JSON.stringify(coverageEvidence, null, 2)}\n`,
+  "utf8",
+);
+await writeExact(resolve(evidenceRoot, coverageRelativeFile), coverageBytes);
+
 const bundle = createCharacterRigCandidateBundle({
   schemaVersion: "1.0",
   acquisitionMode: "manual-file-import",
@@ -154,6 +230,13 @@ const bundle = createCharacterRigCandidateBundle({
       mediaType: "image/png",
       width: canonicalMetadata.width,
       height: canonicalMetadata.height,
+      turnaroundViewCoverageEvidence: {
+        schemaVersion: "1.0",
+        relativeFile: coverageRelativeFile,
+        contentHash: coverageEvidence.contentHash,
+        fileContentHash: sha256(coverageBytes),
+        byteLength: coverageBytes.length,
+      },
     },
   ],
 });
@@ -170,8 +253,11 @@ const report = await stageCharacterRigCandidateBundle({
 });
 if (
   report.status !== "incomplete" ||
-  report.returnedItems.join(",") !== "turnaround-sheet" ||
+  report.returnedItems.length !== 0 ||
+  report.partialItems.join(",") !== "turnaround-sheet" ||
   report.missingItems.length !== 6 ||
+  report.missingSubitems.map((item) => item.view).join(",") !==
+    "three-quarter,rear" ||
   report.assets[0]?.alphaClass !== "mixed-alpha"
 )
   throw new Error(
@@ -190,21 +276,6 @@ if (
   throw new Error(
     "Reopened staged turnaround bytes do not match their lineage.",
   );
-
-const cropPlans = [
-  {
-    view: "front" as const,
-    rect: { x: 96, y: 16, width: 528, height: 832 },
-  },
-  {
-    view: "profile-left" as const,
-    rect: { x: 680, y: 16, width: 448, height: 832 },
-  },
-  {
-    view: "profile-right" as const,
-    rect: { x: 1150, y: 16, width: 448, height: 832 },
-  },
-];
 
 const derivedRoot = resolve(evidenceRoot, "derived");
 await mkdir(derivedRoot, { recursive: true });
@@ -379,7 +450,11 @@ const evidenceDraft = {
     missingTurnaroundInstructionViews: ["three-quarter", "rear"] as const,
     intakeStatus: report.status,
     returnedItems: report.returnedItems,
+    partialItems: report.partialItems,
     missingItems: report.missingItems,
+    missingSubitems: report.missingSubitems,
+    turnaroundCoverageEvidenceContentHash: coverageEvidence.contentHash,
+    turnaroundCoverageEvidenceFileContentHash: sha256(coverageBytes),
     importReceiptCreated: false as const,
     preparedRigViewsCreated: false as const,
     providerAuthority: false as const,
@@ -429,7 +504,9 @@ process.stdout.write(
         contentHash: view.output.contentHash,
       })),
       status: report.status,
+      partialItems: report.partialItems,
       missingItems: report.missingItems,
+      missingSubitems: report.missingSubitems,
       providerAuthority: false,
       productionBindable: false,
       movingDiagnosticRequired: true,

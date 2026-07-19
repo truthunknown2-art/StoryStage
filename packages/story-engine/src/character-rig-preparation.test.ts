@@ -6,6 +6,7 @@ import {
   createCharacterRigCandidateBundle,
   createKidsBipedRigRequestItems,
   inspectCharacterRigCandidateBundle,
+  kidsBipedV1RequiredTurnaroundViews,
   kidsBipedV1TopologyTemplate,
   type CharacterRigAssetRequestDraft,
 } from "./character-rig-acquisition";
@@ -16,6 +17,7 @@ import {
   createCharacterRigPreparationRecipe,
   createCharacterRigPreparationRecipeDraft,
   createCharacterRigStagingReport,
+  stagedTurnaroundViewCoverageEvidenceSchema,
   validateCharacterRigPreparationRecipe,
   validateCharacterRigPreparationRecipeDraft,
 } from "./character-rig-preparation";
@@ -84,9 +86,50 @@ const fixture = (complete = false) => {
       mediaType: "image/png",
       width: 2048,
       height: 2048,
+      ...(complete && requestItemId === "turnaround-sheet"
+        ? {
+            turnaroundViewCoverageEvidence: {
+              schemaVersion: "1.0" as const,
+              relativeFile: "evidence/turnaround-coverage.json",
+              contentHash: repeatedHash("e"),
+              fileContentHash: repeatedHash("f"),
+              byteLength: 1024,
+            },
+          }
+        : {}),
     })),
   });
   const inspection = inspectCharacterRigCandidateBundle(request, bundle);
+  const coverage = complete
+    ? [
+        {
+          schemaVersion: "1.0" as const,
+          requestItemId: "turnaround-sheet",
+          candidateId: "candidate-turnaround-sheet",
+          candidateContentHash: bundle.assets[0]!.contentHash,
+          evidenceContentHash: repeatedHash("e"),
+          evidenceFileContentHash: repeatedHash("f"),
+          sourceRelativeFile: "evidence/turnaround-coverage.json",
+          stagedRelativeFile: `character-rig/coverage-evidence/${repeatedHash("f")}.json`,
+          requiredViews: [...kidsBipedV1RequiredTurnaroundViews] as [
+            "front",
+            "three-quarter",
+            "profile-left",
+            "profile-right",
+            "rear",
+          ],
+          views: kidsBipedV1RequiredTurnaroundViews.map((view, index) => ({
+            view,
+            derivedContentHash: (index + 8).toString(16).repeat(64),
+            byteLength: 100 + index,
+            width: 10,
+            height: 10,
+            stagedRelativeFile: `character-rig/coverage-views/${(index + 8).toString(16).repeat(64)}.png`,
+          })),
+          status: "complete" as const,
+        },
+      ]
+    : [];
   const report = createCharacterRigStagingReport({
     schemaVersion: "1.0",
     reportId: "rig-staging-kcast-001b",
@@ -95,10 +138,15 @@ const fixture = (complete = false) => {
     bundleContentHash: bundle.contentHash,
     identityLockContentHash: request.identityLock.contentHash,
     templateContentHash: request.rigProfile.templateContentHash,
-    status: inspection.status,
-    returnedItems: inspection.returnedItems,
+    status: complete ? "complete" : inspection.status,
+    returnedItems: complete
+      ? [...inspection.returnedItems, "turnaround-sheet"].sort()
+      : inspection.returnedItems,
+    partialItems: complete ? [] : inspection.partialItems,
     missingItems: inspection.missingItems,
+    missingSubitems: complete ? [] : inspection.missingSubitems,
     unknownItems: inspection.unknownItems,
+    turnaroundViewCoverageEvidence: coverage,
     assets: bundle.assets.map((asset, index) => ({
       candidateId: asset.candidateId,
       requestItemId: asset.requestItemId,
@@ -126,13 +174,16 @@ const fixture = (complete = false) => {
   const viewItems = request.items.filter(
     (item) => item.view === "front" && item.kind !== "turnaround-sheet",
   );
-  const roleSource = new Map<string, {
-    candidateId: string;
-    requestItemId: string;
-    stagedContentHash: string;
-    rect: { x: number; y: number; width: number; height: number };
-    matte: { mode: "existing-alpha" };
-  }>(
+  const roleSource = new Map<
+    string,
+    {
+      candidateId: string;
+      requestItemId: string;
+      stagedContentHash: string;
+      rect: { x: number; y: number; width: number; height: number };
+      matte: { mode: "existing-alpha" };
+    }
+  >(
     viewItems.flatMap((item) =>
       item.requiredComponents.map((role, index) => [
         role,
@@ -190,18 +241,18 @@ const fixture = (complete = false) => {
     zIndex: index,
   }));
   const exposures = kidsBipedV1TopologyTemplate.exposures.map((rule) => ({
-      id: `exposure-${rule.role}`,
-      role: characterRigExposureRoleSchema.parse(rule.role),
-      targetPartId: `part-${rule.targetRole}`,
-      source: roleSource.get(rule.role)!,
-      output: {
-        relativeFile: `prepared/front/exposure-${rule.role}.png`,
-        width: 64,
-        height: 64,
-        padding: 4,
-      },
-      childPivot: { x: 32, y: 32 },
-    }));
+    id: `exposure-${rule.role}`,
+    role: characterRigExposureRoleSchema.parse(rule.role),
+    targetPartId: `part-${rule.targetRole}`,
+    source: roleSource.get(rule.role)!,
+    output: {
+      relativeFile: `prepared/front/exposure-${rule.role}.png`,
+      width: 64,
+      height: 64,
+      padding: 4,
+    },
+    childPivot: { x: 32, y: 32 },
+  }));
   const receiptDraft = complete
     ? {
         schemaVersion: "1.0" as const,
@@ -220,6 +271,7 @@ const fixture = (complete = false) => {
           immutableLocationId: asset.immutableLocationId,
           stagedRelativeFile: asset.relativeFile,
         })),
+        turnaroundViewCoverageEvidence: coverage,
         providerAuthority: false as const,
         approvalRequired: true as const,
         importedAt: "2026-07-18T20:06:00.000Z",
@@ -261,6 +313,27 @@ const fixture = (complete = false) => {
 };
 
 describe("character rig preparation ledger", () => {
+  it("rejects staged turnaround records that reuse derived bytes or paths", () => {
+    const { report } = fixture(true);
+    const coverage = report.turnaroundViewCoverageEvidence[0]!;
+    const first = coverage.views[0]!;
+    const forged = {
+      ...coverage,
+      views: coverage.views.map((view, index) =>
+        index === 1
+          ? {
+              ...view,
+              derivedContentHash: first.derivedContentHash,
+              stagedRelativeFile: first.stagedRelativeFile,
+            }
+          : view,
+      ),
+    };
+    expect(() =>
+      stagedTurnaroundViewCoverageEvidenceSchema.parse(forged),
+    ).toThrow(/unique/i);
+  });
+
   it("does not export a report-only import receipt constructor", () => {
     expect(characterRigPreparation).not.toHaveProperty(
       "createCharacterRigImportReceipt",
@@ -274,7 +347,14 @@ describe("character rig preparation ledger", () => {
     const { request, bundle, report, recipe } = fixture();
     expect(report.status).toBe("incomplete");
     expect(recipe).not.toHaveProperty("contentHash");
-    expect(validateCharacterRigPreparationRecipeDraft(request, bundle, report, recipe)).toEqual({
+    expect(
+      validateCharacterRigPreparationRecipeDraft(
+        request,
+        bundle,
+        report,
+        recipe,
+      ),
+    ).toEqual({
       componentCount: recipe.parts.length + recipe.exposures.length,
       providerAuthority: false,
       approvalRequired: true,
@@ -300,7 +380,12 @@ describe("character rig preparation ledger", () => {
       stagingReportContentHash: opaqueReport.contentHash,
     });
     expect(() =>
-      validateCharacterRigPreparationRecipeDraft(request, bundle, opaqueReport, rebound),
+      validateCharacterRigPreparationRecipeDraft(
+        request,
+        bundle,
+        opaqueReport,
+        rebound,
+      ),
     ).toThrow(/cannot claim existing-alpha/i);
   });
 
@@ -332,12 +417,23 @@ describe("character rig preparation ledger", () => {
       ...recipe,
       parts: recipe.parts.map((part, index) =>
         index === 0
-          ? { ...part, source: { ...part.source, rect: { x: 2040, y: 0, width: 64, height: 64 } } }
+          ? {
+              ...part,
+              source: {
+                ...part.source,
+                rect: { x: 2040, y: 0, width: 64, height: 64 },
+              },
+            }
           : part,
       ),
     });
     expect(() =>
-      validateCharacterRigPreparationRecipeDraft(request, bundle, report, outside),
+      validateCharacterRigPreparationRecipeDraft(
+        request,
+        bundle,
+        report,
+        outside,
+      ),
     ).toThrow(/crop leaves its staged source/i);
     expect(() =>
       validateCharacterRigPreparationRecipeDraft(request, bundle, report, {

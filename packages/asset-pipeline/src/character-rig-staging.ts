@@ -9,6 +9,8 @@ import {
   createCharacterRigStagingReport,
   hashCanonical,
   inspectCharacterRigCandidateBundle,
+  kidsBipedV1RequiredTurnaroundViews,
+  turnaroundViewCoverageEvidenceSchema,
   validateCharacterRigCandidateBundle,
   validateCharacterRigStagingReport,
   type CharacterRigAssetRequest,
@@ -16,6 +18,8 @@ import {
   type CharacterRigImportReceipt,
   type CharacterRigStagingReport,
   type StagedCharacterRigCandidate,
+  type StagedTurnaroundViewCoverageEvidence,
+  type TurnaroundViewCoverageEvidence,
 } from "@storystage/story-engine";
 
 const MAX_FILES = 32;
@@ -43,6 +47,7 @@ export class CharacterRigStagingError extends Error {
       | "dimension-limit"
       | "dimension-mismatch"
       | "decode-failed"
+      | "coverage-evidence-invalid"
       | "untrusted-staging-root"
       | "output-collision",
     message: string,
@@ -347,6 +352,116 @@ const decodeSinglePagePng = async (bytes: Buffer, candidateId: string) => {
   }
 };
 
+const verifyTurnaroundViewCoverageEvidence = async (input: {
+  request: ReturnType<typeof characterRigAssetRequestSchema.parse>;
+  candidate: ReturnType<typeof characterRigCandidateBundleSchema.parse>["assets"][number];
+  sourceBytes: Buffer;
+  evidenceBytes: Buffer;
+  expectedEvidenceContentHash: string;
+  expectedEvidenceFileContentHash: string;
+  expectedEvidenceByteLength: number;
+}) => {
+  if (
+    input.evidenceBytes.length !== input.expectedEvidenceByteLength ||
+    sha256(input.evidenceBytes) !== input.expectedEvidenceFileContentHash
+  )
+    throw new CharacterRigStagingError(
+      "coverage-evidence-invalid",
+      "Turnaround coverage evidence file bytes changed.",
+    );
+  let evidence: TurnaroundViewCoverageEvidence;
+  try {
+    evidence = turnaroundViewCoverageEvidenceSchema.parse(
+      JSON.parse(input.evidenceBytes.toString("utf8")) as unknown,
+    );
+  } catch (error) {
+    throw new CharacterRigStagingError(
+      "coverage-evidence-invalid",
+      `Turnaround coverage evidence is invalid: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  if (
+    evidence.contentHash !== input.expectedEvidenceContentHash ||
+    evidence.requestId !== input.request.requestId ||
+    evidence.requestContentHash !== input.request.contentHash ||
+    evidence.requestItemId !== input.candidate.requestItemId ||
+    evidence.candidateId !== input.candidate.candidateId ||
+    evidence.candidateContentHash !== input.candidate.contentHash
+  )
+    throw new CharacterRigStagingError(
+      "coverage-evidence-invalid",
+      "Turnaround coverage evidence is not bound to the exact request and candidate.",
+    );
+  const derivedViews: Array<{
+    view: (typeof evidence.views)[number];
+    bytes: Buffer;
+  }> = [];
+  for (const view of evidence.views) {
+    const { sourceRect } = view;
+    if (
+      sourceRect.x + sourceRect.width > input.candidate.width ||
+      sourceRect.y + sourceRect.height > input.candidate.height
+    )
+      throw new CharacterRigStagingError(
+        "coverage-evidence-invalid",
+        `Turnaround ${view.view} source rectangle escapes the candidate raster.`,
+      );
+    let derived: Buffer;
+    try {
+      derived = await sharp(input.sourceBytes, {
+        limitInputPixels: MAX_PIXELS,
+        animated: false,
+      })
+        .extract({
+          left: sourceRect.x,
+          top: sourceRect.y,
+          width: sourceRect.width,
+          height: sourceRect.height,
+        })
+        .ensureAlpha()
+        .png({
+          compressionLevel: 9,
+          adaptiveFiltering: false,
+          palette: false,
+          effort: 10,
+        })
+        .toBuffer();
+    } catch (error) {
+      throw new CharacterRigStagingError(
+        "coverage-evidence-invalid",
+        `Turnaround ${view.view} could not be deterministically rederived: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    const pixels = await sharp(derived)
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    let nonempty = false;
+    for (let offset = 3; offset < pixels.data.length; offset += pixels.info.channels)
+      if (pixels.data[offset] !== 0) {
+        nonempty = true;
+        break;
+      }
+    if (!nonempty)
+      throw new CharacterRigStagingError(
+        "coverage-evidence-invalid",
+        `Turnaround ${view.view} crop is empty.`,
+      );
+    if (
+      sha256(derived) !== view.derivedContentHash ||
+      derived.length !== view.byteLength ||
+      pixels.info.width !== view.width ||
+      pixels.info.height !== view.height
+    )
+      throw new CharacterRigStagingError(
+        "coverage-evidence-invalid",
+        `Turnaround ${view.view} derived bytes, dimensions, or length changed.`,
+      );
+    derivedViews.push({ view, bytes: derived });
+  }
+  return { evidence, derivedViews };
+};
+
 const writeImmutable = async (
   output: string,
   bytes: Buffer,
@@ -402,6 +517,16 @@ export const stageCharacterRigCandidateBundle = async (
     bytes: Buffer;
     header: PngHeader;
     alphaClass: "opaque" | "mixed-alpha";
+    coverage: {
+      evidence: TurnaroundViewCoverageEvidence;
+      bytes: Buffer;
+      sourceRelativeFile: string;
+      fileContentHash: string;
+      derivedViews: Array<{
+        view: TurnaroundViewCoverageEvidence["views"][number];
+        bytes: Buffer;
+      }>;
+    } | null;
   }> = [];
   const contentHashes = new Set<string>();
   let totalBytes = 0;
@@ -456,7 +581,43 @@ export const stageCharacterRigCandidateBundle = async (
         "dimension-mismatch",
         `Decoded character rig dimensions disagree with IHDR: ${asset.candidateId}.`,
       );
-    validated.push({ asset, bytes, header, alphaClass: decoded.alphaClass });
+    let coverage: (typeof validated)[number]["coverage"] = null;
+    if (asset.turnaroundViewCoverageEvidence) {
+      const reference = asset.turnaroundViewCoverageEvidence;
+      const coverageSource = await resolveSafeSource(
+        input.sourceRoot,
+        reference.relativeFile,
+      );
+      if (coverageSource.size !== reference.byteLength)
+        throw new CharacterRigStagingError(
+          "coverage-evidence-invalid",
+          `Turnaround coverage evidence byte length changed: ${asset.candidateId}.`,
+        );
+      const evidenceBytes = await readFile(coverageSource.canonical);
+      const verified = await verifyTurnaroundViewCoverageEvidence({
+        request,
+        candidate: asset,
+        sourceBytes: bytes,
+        evidenceBytes,
+        expectedEvidenceContentHash: reference.contentHash,
+        expectedEvidenceFileContentHash: reference.fileContentHash,
+        expectedEvidenceByteLength: reference.byteLength,
+      });
+      coverage = {
+        evidence: verified.evidence,
+        bytes: evidenceBytes,
+        sourceRelativeFile: reference.relativeFile,
+        fileContentHash: reference.fileContentHash,
+        derivedViews: verified.derivedViews,
+      };
+    }
+    validated.push({
+      asset,
+      bytes,
+      header,
+      alphaClass: decoded.alphaClass,
+      coverage,
+    });
   }
 
   const stagingRoot = await ensureTrustedStagingRoot(
@@ -469,6 +630,19 @@ export const stageCharacterRigCandidateBundle = async (
     ["character-rig", "candidates"],
     true,
   );
+  if (validated.some((entry) => entry.coverage))
+  {
+    await ensureRealDerivedDirectory(
+      stagingRoot,
+      ["character-rig", "coverage-evidence"],
+      true,
+    );
+    await ensureRealDerivedDirectory(
+      stagingRoot,
+      ["character-rig", "coverage-views"],
+      true,
+    );
+  }
   const requestFile = await resolveSafePublicationTarget(
     stagingRoot,
     ["character-rig"],
@@ -490,6 +664,7 @@ export const stageCharacterRigCandidateBundle = async (
     "Character rig candidate bundle evidence path contains conflicting bytes.",
   );
   const stagedAssets: StagedCharacterRigCandidate[] = [];
+  const stagedCoverageEvidence: StagedTurnaroundViewCoverageEvidence[] = [];
   for (const entry of validated) {
     const relativeFile = `character-rig/candidates/${entry.asset.contentHash}.png`;
     const output = await resolveSafePublicationTarget(
@@ -522,7 +697,90 @@ export const stageCharacterRigCandidateBundle = async (
         decodedSinglePage: true,
       },
     });
+    if (entry.coverage) {
+      const coverageRelativeFile = `character-rig/coverage-evidence/${entry.coverage.fileContentHash}.json`;
+      const coverageOutput = await resolveSafePublicationTarget(
+        stagingRoot,
+        ["character-rig", "coverage-evidence"],
+        `${entry.coverage.fileContentHash}.json`,
+      );
+      await writeImmutable(
+        coverageOutput,
+        entry.coverage.bytes,
+        `Turnaround coverage evidence path contains conflicting bytes: ${entry.asset.candidateId}.`,
+      );
+      const stagedViews: StagedTurnaroundViewCoverageEvidence["views"] = [];
+      for (const derived of entry.coverage.derivedViews) {
+        const stagedViewRelativeFile = `character-rig/coverage-views/${derived.view.derivedContentHash}.png`;
+        const stagedViewOutput = await resolveSafePublicationTarget(
+          stagingRoot,
+          ["character-rig", "coverage-views"],
+          `${derived.view.derivedContentHash}.png`,
+        );
+        await writeImmutable(
+          stagedViewOutput,
+          derived.bytes,
+          `Turnaround derived view path contains conflicting bytes: ${entry.asset.candidateId}/${derived.view.view}.`,
+        );
+        stagedViews.push({
+          view: derived.view.view,
+          derivedContentHash: derived.view.derivedContentHash,
+          byteLength: derived.view.byteLength,
+          width: derived.view.width,
+          height: derived.view.height,
+          stagedRelativeFile: stagedViewRelativeFile,
+        });
+      }
+      const verifiedViews = stagedViews.map((view) => view.view);
+      const complete = kidsBipedV1RequiredTurnaroundViews.every((view) =>
+        verifiedViews.includes(view),
+      );
+      stagedCoverageEvidence.push({
+        schemaVersion: "1.0" as const,
+        requestItemId: entry.asset.requestItemId,
+        candidateId: entry.asset.candidateId,
+        candidateContentHash: entry.asset.contentHash,
+        evidenceContentHash: entry.coverage.evidence.contentHash,
+        evidenceFileContentHash: entry.coverage.fileContentHash,
+        sourceRelativeFile: entry.coverage.sourceRelativeFile,
+        stagedRelativeFile: coverageRelativeFile,
+        requiredViews: [...kidsBipedV1RequiredTurnaroundViews],
+        views: stagedViews,
+        status: complete ? ("complete" as const) : ("incomplete" as const),
+      });
+    }
   }
+
+  const completeTurnaroundItems = new Set(
+    stagedCoverageEvidence
+      .filter((evidence) => evidence.status === "complete")
+      .map((evidence) => evidence.requestItemId),
+  );
+  const returnedItems = [
+    ...inspection.returnedItems,
+    ...inspection.partialItems.filter((item) => completeTurnaroundItems.has(item)),
+  ].sort();
+  const partialItems = inspection.partialItems.filter(
+    (item) => !completeTurnaroundItems.has(item),
+  );
+  const coverageByItem = new Map(
+    stagedCoverageEvidence.map((evidence) => [evidence.requestItemId, evidence]),
+  );
+  const missingSubitems = partialItems.flatMap((requestItemId) => {
+    const verified = new Set(
+      coverageByItem.get(requestItemId)?.views.map((view) => view.view) ?? [],
+    );
+    return kidsBipedV1RequiredTurnaroundViews
+      .filter((view) => !verified.has(view))
+      .map((view) => ({ requestItemId, view }));
+  });
+  const status =
+    partialItems.length === 0 &&
+    missingSubitems.length === 0 &&
+    inspection.missingItems.length === 0 &&
+    inspection.unknownItems.length === 0
+      ? ("complete" as const)
+      : ("incomplete" as const);
 
   const report = createCharacterRigStagingReport({
     schemaVersion: "1.0",
@@ -532,10 +790,13 @@ export const stageCharacterRigCandidateBundle = async (
     bundleContentHash: bundle.contentHash,
     identityLockContentHash: request.identityLock.contentHash,
     templateContentHash: request.rigProfile.templateContentHash,
-    status: inspection.status,
-    returnedItems: inspection.returnedItems,
+    status,
+    returnedItems,
+    partialItems,
     missingItems: inspection.missingItems,
+    missingSubitems,
     unknownItems: inspection.unknownItems,
+    turnaroundViewCoverageEvidence: stagedCoverageEvidence,
     assets: stagedAssets,
     providerAuthority: false,
     approvalRequired: true,
@@ -576,6 +837,12 @@ const sealCharacterRigImportReceipt = (
       immutableLocationId: asset.immutableLocationId,
       stagedRelativeFile: asset.relativeFile,
     })),
+    turnaroundViewCoverageEvidence:
+      report.turnaroundViewCoverageEvidence.map((evidence) => ({
+        ...evidence,
+        requiredViews: [...evidence.requiredViews],
+        views: evidence.views.map((view) => ({ ...view })),
+      })),
     providerAuthority: false as const,
     approvalRequired: true as const,
     importedAt,
@@ -661,6 +928,12 @@ export const createVerifiedCharacterRigImportReceipt = async (
   const sources = new Map(
     bundle.assets.map((asset) => [asset.candidateId, asset]),
   );
+  const coverageByCandidate = new Map(
+    report.turnaroundViewCoverageEvidence.map((evidence) => [
+      evidence.candidateId,
+      evidence,
+    ]),
+  );
   for (const asset of report.assets) {
     const source = sources.get(asset.candidateId);
     if (!source)
@@ -714,6 +987,80 @@ export const createVerifiedCharacterRigImportReceipt = async (
         "dimension-mismatch",
         `Character rig staged decode evidence changed: ${asset.candidateId}.`,
       );
+    const coverage = coverageByCandidate.get(asset.candidateId);
+    if (coverage) {
+      const reference = source.turnaroundViewCoverageEvidence;
+      if (
+        !reference ||
+        coverage.requestItemId !== source.requestItemId ||
+        coverage.candidateContentHash !== source.contentHash ||
+        coverage.evidenceContentHash !== reference.contentHash ||
+        coverage.evidenceFileContentHash !== reference.fileContentHash ||
+        coverage.sourceRelativeFile !== reference.relativeFile ||
+        coverage.stagedRelativeFile !==
+          `character-rig/coverage-evidence/${reference.fileContentHash}.json`
+      )
+        throw new CharacterRigStagingError(
+          "coverage-evidence-invalid",
+          `Turnaround coverage staging lineage changed: ${asset.candidateId}.`,
+        );
+      const evidenceBytes = await readVerifiedPublishedFile(
+        stagingRoot,
+        ["character-rig", "coverage-evidence"],
+        `${reference.fileContentHash}.json`,
+        8_000_000,
+      );
+      const verified = await verifyTurnaroundViewCoverageEvidence({
+        request,
+        candidate: source,
+        sourceBytes: bytes,
+        evidenceBytes,
+        expectedEvidenceContentHash: reference.contentHash,
+        expectedEvidenceFileContentHash: reference.fileContentHash,
+        expectedEvidenceByteLength: reference.byteLength,
+      });
+      if (
+        hashCanonical(verified.evidence.views.map((view) => view.view)) !==
+        hashCanonical(coverage.views.map((view) => view.view))
+      )
+        throw new CharacterRigStagingError(
+          "coverage-evidence-invalid",
+          `Turnaround verified-view binding changed: ${asset.candidateId}.`,
+        );
+      const rederivedByView = new Map(
+        verified.derivedViews.map((view) => [view.view.view, view]),
+      );
+      for (const stagedView of coverage.views) {
+        if (
+          stagedView.stagedRelativeFile !==
+          `character-rig/coverage-views/${stagedView.derivedContentHash}.png`
+        )
+          throw new CharacterRigStagingError(
+            "coverage-evidence-invalid",
+            `Turnaround derived-view path changed: ${asset.candidateId}/${stagedView.view}.`,
+          );
+        const persistedDerived = await readVerifiedPublishedFile(
+          stagingRoot,
+          ["character-rig", "coverage-views"],
+          `${stagedView.derivedContentHash}.png`,
+          MAX_FILE_BYTES,
+        );
+        const rederived = rederivedByView.get(stagedView.view);
+        const header = parsePngHeader(persistedDerived);
+        if (
+          !rederived ||
+          !persistedDerived.equals(rederived.bytes) ||
+          sha256(persistedDerived) !== stagedView.derivedContentHash ||
+          persistedDerived.length !== stagedView.byteLength ||
+          header.width !== stagedView.width ||
+          header.height !== stagedView.height
+        )
+          throw new CharacterRigStagingError(
+            "coverage-evidence-invalid",
+            `Turnaround persisted derived view changed: ${asset.candidateId}/${stagedView.view}.`,
+          );
+      }
+    }
   }
 
   const receipt = sealCharacterRigImportReceipt(

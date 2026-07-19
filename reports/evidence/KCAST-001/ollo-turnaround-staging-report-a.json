@@ -7,7 +7,8 @@
   "identityLockContentHash": "0950d7043347528a302de5d70f36736dcfbec1f9e0177296756e91b96fbc846f",
   "templateContentHash": "6ab97203293ff1736587a224b515d9ce5562825442d02e8cd31b98c4db588c83",
   "status": "incomplete",
-  "returnedItems": [
+  "returnedItems": [],
+  "partialItems": [
     "turnaround-sheet"
   ],
   "missingItems": [
@@ -18,7 +19,30 @@
     "parts-profile-left",
     "parts-profile-right"
   ],
+  "missingSubitems": [
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "front"
+    },
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "three-quarter"
+    },
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "profile-left"
+    },
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "profile-right"
+    },
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "rear"
+    }
+  ],
   "unknownItems": [],
+  "turnaroundViewCoverageEvidence": [],
   "assets": [
     {
       "candidateId": "ollo-turnaround-candidate-a",
@@ -44,5 +68,5 @@
   "providerAuthority": false,
   "approvalRequired": true,
   "stagedAt": "2026-07-19T06:00:00.000Z",
-  "contentHash": "405408d488ffa8b8c73002fa1dbb9216ff48527819e96d726b73057b8237616b"
+  "contentHash": "a6ed5083424ff0d2b212a8c1b6209907a852f5f73e8ba9f45a71bba3a90a3989"
 }

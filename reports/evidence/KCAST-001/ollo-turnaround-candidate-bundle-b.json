@@ -19,8 +19,15 @@
       "byteLength": 1131309,
       "mediaType": "image/png",
       "width": 1774,
-      "height": 887
+      "height": 887,
+      "turnaroundViewCoverageEvidence": {
+        "schemaVersion": "1.0",
+        "relativeFile": "ollo-turnaround-coverage-evidence-b-v1.json",
+        "contentHash": "b0b7c8a0d52e0a8e960e067cb9f3b723d26ed0668e176a31566b745d74d586a0",
+        "fileContentHash": "91860ac41e83e2bdc1e4653f3e6781db541f0bc35e9681ba2ebf5523a831f4a1",
+        "byteLength": 2027
+      }
     }
   ],
-  "contentHash": "5809cee2128a65bf1bb33cecba40c267a01d61426bab871f2799d3adfe72d4ba"
+  "contentHash": "d402889f59b483add770b58f9f1b619822a388a7a5d0b02632777d4ea99afc84"
 }

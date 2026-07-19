@@ -46,9 +46,9 @@ The source-candidate diagnostic is `derived/ollo-lower-face-source-candidate-dia
 
 Atlas placement follows the canonical `kids-biped-v1` component arrays, not source-sheet order. Each atlas cell uses the maximum component canvas for its group with a 24-pixel transparent gutter. The evidence JSON preserves source hash, keyed hash, source rectangle, component content bounds, component hash, atlas cell, and atlas placement for every role.
 
-- Candidate bundle: `ollo-front-candidate-bundle-f.json`; content hash `47bd4d5f6564d26db5c90163af6a04c61a79482a10f3fa3c3ce44b483f4ff379`.
-- Incomplete staging report: `ollo-front-staging-report-f.json`; content hash `78436f1f1243d1f6ff2372e7ceb20257718220fd35b81627d72462305cd65725`.
-- Composition evidence: `ollo-front-atlas-evidence-f.json`; content hash `4b9e4278bd9d1204b5137440426b37ff142de70af8b99a5fc5095ff22e327ff8`.
+- Candidate bundle: `ollo-front-candidate-bundle-f.json`; content hash `ad678eebdfc97a73aaaecacacd59f1f55009db0a27bed7ac39ffa3e7331758ad`.
+- Incomplete staging report: `ollo-front-staging-report-f.json`; content hash `5922389b1e50ddf64bdea9cf58710ba66502c2df0034922993ac65c328f9f042`.
+- Composition evidence: `ollo-front-atlas-evidence-f.json`; content hash `35113c30ad22d1ea007015eb9119753f50cd6ffc2db662c1fb4f37d196b29162`.
 - Proof command: `pnpm --filter @storystage/asset-pipeline proof:kcast001d-front-atlas`.
 
 The provider-neutral bundle stages the exact accepted turnaround source plus `parts-front` and `face-front`. Its status is `incomplete`. `parts-profile-left`, `face-profile-left`, `parts-profile-right`, and `face-profile-right` remain missing. Three-quarter and rear turnaround instruction views also remain absent.
