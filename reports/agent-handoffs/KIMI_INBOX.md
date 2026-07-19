@@ -1,15 +1,33 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `20`
+Inbox-Version: `21`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-SCENECRAFT-V11-EVIDENCE-LEDGER`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`
 Required-Work-Branch: `agent/kimi-scenecraft-v11-evidence-ledger`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger-v20-corrections.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger-v21-corrections.md`
 
 ## Current instruction
+
+Exact-head review of draft PR #22 at
+`c067f2f8fcb195a58c940d20748a67f732a2f70c` accepts the Markdown conversion,
+documentation-only scope, 43-row coverage, and presence of all named fields,
+but the Version 20 mechanical acceptance checks still fail. Apply only the
+exact residual corrections in the Version 21 brief: make IDs contiguous,
+replace every per-row abbreviated digest with exact evidence, remove blocking
+tokens from seven soft rows, align narrative vocabulary, and make the handback
+and PR body exact and truthful. Use the two-commit handback protocol to avoid a
+self-referential SHA. Push the immutable successor to PR #22, update its body,
+then wait. Do not change product code or broaden scope.
+
+Version 21 supersedes Version 20 as the active correction. Version 20 remains
+below as historical traceability.
+
+---
+
+Previous Version 20 instruction:
 
 Exact-head review of draft PR #22 at
 `864b82deb9a53d92b7c66f3a503a99068da395dd` found that the useful Scene Craft
