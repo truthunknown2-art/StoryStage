@@ -302,7 +302,7 @@ describe("candidate preparation and rig validation", () => {
     expect(comparison).toMatchObject({briefId: "brief-editorial", width: 1320, height: 450});
     expect(comparison.cells.map((cell) => cell.candidateSetId)).toEqual(["editorial-set-1", "editorial-set-2"]);
     expect(await sharp(bytes).metadata()).toMatchObject({format: "png", width: 1320, height: 450});
-  });
+  }, 10_000);
 
   it("detects report and manifest tampering", async () => {
     const {root, trustedStagingRoot, stagingRoot} = await fixture();

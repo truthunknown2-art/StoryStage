@@ -319,6 +319,14 @@ export const assetWorkerCommandSchema = z.discriminatedUnion("type", [
     serializedRigBundle: z.string().min(2).max(4_000_000),
   }).strict(),
   z.object({
+    type: z.literal("prepare-character-rig-view"),
+    requestId: z.string().min(1),
+    trustedStagingRoot: z.string().min(1),
+    stagingRoot: z.string().min(1),
+    preparedAt: z.string().datetime(),
+    serializedPreparationRecipe: z.string().min(2).max(8_000_000),
+  }).strict(),
+  z.object({
     type: z.literal("stage-candidate-bundle"),
     requestId: z.string().min(1),
     sourceRoot: z.string().min(1),
@@ -351,6 +359,7 @@ export const assetWorkerCommandSchema = z.discriminatedUnion("type", [
 
 export const assetWorkerMessageSchema = z.discriminatedUnion("type", [
   z.object({type: z.literal("character-rig-staged"), requestId: z.string().min(1), serializedStagingReport: z.string().min(2).max(8_000_000), serializedImportReceipt: z.string().min(2).max(8_000_000).nullable()}).strict(),
+  z.object({type: z.literal("character-rig-prepared"), requestId: z.string().min(1), serializedPreparedViewManifest: z.string().min(2).max(16_000_000)}).strict(),
   z.object({type: z.literal("staged"), requestId: z.string().min(1), serializedStagedCandidates: z.string().min(2).max(2_000_000)}).strict(),
   z.object({type: z.literal("loose-staged"), requestId: z.string().min(1), serializedLooseCandidates: z.string().min(2).max(2_000_000)}).strict(),
   z.object({type: z.literal("verified"), requestId: z.string().min(1), serializedStagedCandidates: z.string().min(2).max(2_000_000)}).strict(),

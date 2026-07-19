@@ -17,7 +17,7 @@
   "rigProfile": {
     "id": "kids-biped-v1",
     "version": "1.0.0",
-    "templateContentHash": "2f6b4320121dc626f5af95ed7a796d0633dbeb9baced1d3e603ec1af418ad2da"
+    "templateContentHash": "6ab97203293ff1736587a224b515d9ce5562825442d02e8cd31b98c4db588c83"
   },
   "acquisition": {
     "mode": "manual-file-import",
@@ -246,5 +246,5 @@
     "Do not translate a front-facing rig sideways as profile locomotion."
   ],
   "approvalRequired": true,
-  "contentHash": "24a7a627be2a8acab69407524b30722aecb579a7a1d78f142d68c38082698365"
+  "contentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310"
 }

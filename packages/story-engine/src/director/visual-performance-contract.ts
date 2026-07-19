@@ -132,7 +132,7 @@ const reservedLocalAuthorityPartIds = new Set([
 const reservedLocalAuthorityPartIdPattern =
   /(^|-)(root|global|whole-actor|whole-body|top-level)(-|$)/;
 
-const isReservedLocalAuthorityPartId = (partId: string): boolean =>
+export const isReservedActorLocalPartId = (partId: string): boolean =>
   reservedLocalAuthorityPartIds.has(partId) ||
   reservedLocalAuthorityPartIdPattern.test(partId);
 
@@ -160,7 +160,7 @@ export const rigVisualProgramSchema = z
           message: `Rig visual program ${key} must be unique.`,
         });
     for (const [index, partId] of program.partIds.entries())
-      if (isReservedLocalAuthorityPartId(partId))
+      if (isReservedActorLocalPartId(partId))
         context.addIssue({
           code: "custom",
           path: ["partIds", index],
@@ -357,22 +357,28 @@ const assertExactManifestKeys = (
     );
 };
 
+export type ActorLocalVisualProgramAllowlists = {
+  partIds: string[];
+  socketIds: string[];
+  exposureIds: string[];
+};
+
 const assertLocalPerformanceOutputBindings = (
-  input: LocalPerformanceInput,
+  program: ActorLocalVisualProgramAllowlists,
   output: LocalPerformanceFrame,
 ): void => {
   assertExactManifestKeys(
     "part ids",
     Object.keys(output.parts),
-    input.program.partIds,
+    program.partIds,
   );
   assertExactManifestKeys(
     "socket ids",
     Object.keys(output.sockets),
-    input.program.socketIds,
+    program.socketIds,
   );
 
-  const declaredExposures = new Set(input.program.exposureIds);
+  const declaredExposures = new Set(program.exposureIds);
   for (const [partId, part] of Object.entries(output.parts))
     if (part.exposureId !== null && !declaredExposures.has(part.exposureId))
       throw new Error(
@@ -394,6 +400,33 @@ const assertLocalPerformanceOutputBindings = (
 };
 
 /**
+ * Shared fail-closed kernel for actor-local visual evaluation. Callers must
+ * validate their own authority/lineage envelope before entering this kernel.
+ * The kernel admits only exact allowlisted part/socket/exposure output and
+ * never admits actor-root, camera, visibility, or episode authority.
+ */
+export const evaluateActorLocalPerformanceKernel = <TInput>(
+  renderer: { evaluate(input: TInput): unknown },
+  input: TInput,
+  program: ActorLocalVisualProgramAllowlists,
+): LocalPerformanceFrame => {
+  const authoritySnapshot = structuredClone(program);
+  const reservedPartIds = authoritySnapshot.partIds.filter(
+    isReservedActorLocalPartId,
+  );
+  if (reservedPartIds.length > 0)
+    throw new Error(
+      `Actor-local performance cannot admit continuity/root authority parts: ${reservedPartIds.join(", ")}.`,
+    );
+  const rendererInput = structuredClone(input);
+  const output = localPerformanceFrameSchema.parse(
+    renderer.evaluate(rendererInput),
+  );
+  assertLocalPerformanceOutputBindings(authoritySnapshot, output);
+  return output;
+};
+
+/**
  * The only supported runtime boundary for an untrusted/local visual renderer.
  * Continuity owns actor roots, visibility, timing, camera, and transitions; this
  * function admits only manifest-bound, actor-local visual performance data.
@@ -404,10 +437,5 @@ export const evaluateLocalPerformance = (
 ): LocalPerformanceFrame => {
   const input = localPerformanceInputSchema.parse(rawInput);
   assertLocalPerformanceInputBindings(input);
-  const rendererInput = structuredClone(input);
-  const output = localPerformanceFrameSchema.parse(
-    renderer.evaluate(rendererInput),
-  );
-  assertLocalPerformanceOutputBindings(input, output);
-  return output;
+  return evaluateActorLocalPerformanceKernel(renderer, input, input.program);
 };

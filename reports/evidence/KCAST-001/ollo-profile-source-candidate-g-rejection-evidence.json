@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "1.0",
+  "evidenceId": "kcast-001d-ollo-profile-source-candidate-g-rejection",
+  "observedAt": "2026-07-19T12:00:00.000Z",
+  "classification": "source-candidate-diagnostic-only",
+  "verdict": "rejected",
+  "declaredInventories": {
+    "partsPerProfile": 20,
+    "faceRolesPerProfile": 22,
+    "sourceRectangleMode": "sealed-source-rects",
+    "deterministicCompositorImplemented": true,
+    "inventorySemanticsAccepted": false
+  },
+  "chromaGate": {
+    "expectedKey": "#ff00ff",
+    "maximumCanonicalKeyDistance": 32,
+    "observations": [
+      {
+        "view": "profile-left",
+        "sheetId": "core",
+        "relativeFile": "candidates/ollo-parts-profile-left-core-candidate-g-chroma.png",
+        "contentHash": "152e5b8fc7036b96f584c785ce6461a245781f81a829fd2a3d2ef0f9701724b1",
+        "dimensions": { "width": 1536, "height": 1024 },
+        "measuredKey": {
+          "red": 236,
+          "green": 9,
+          "blue": 226,
+          "hex": "#ec09e2"
+        },
+        "canonicalKeyDistance": 35.81898937714463,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": false
+      },
+      {
+        "view": "profile-left",
+        "sheetId": "limbs",
+        "relativeFile": "candidates/ollo-parts-profile-left-limbs-candidate-g-chroma.png",
+        "contentHash": "b0e744c349af9c1d18d55d0b6886f24bfdee76c14540ecd3fb2e1295b0e21749",
+        "dimensions": { "width": 1672, "height": 941 },
+        "measuredKey": {
+          "red": 232,
+          "green": 6,
+          "blue": 220,
+          "hex": "#e806dc"
+        },
+        "canonicalKeyDistance": 42.30839160261236,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": false
+      },
+      {
+        "view": "profile-left",
+        "sheetId": "eyes",
+        "relativeFile": "candidates/ollo-face-profile-left-eyes-candidate-g-chroma.png",
+        "contentHash": "ab827cdb3b9682549f25d165ad9e95b40fa17cc8d7cfd938670e75449638d067",
+        "dimensions": { "width": 1774, "height": 887 },
+        "measuredKey": {
+          "red": 244,
+          "green": 6,
+          "blue": 242,
+          "hex": "#f406f2"
+        },
+        "canonicalKeyDistance": 18.05547008526779,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": true
+      },
+      {
+        "view": "profile-left",
+        "sheetId": "mouths",
+        "relativeFile": "candidates/ollo-face-profile-left-mouth-overlays-candidate-g-chroma.png",
+        "contentHash": "e9dcdd519b16e48f38d7712102c34432293b1eacd1e1bb76daa16c5f966929aa",
+        "dimensions": { "width": 1672, "height": 941 },
+        "measuredKey": {
+          "red": 245,
+          "green": 6,
+          "blue": 235,
+          "hex": "#f506eb"
+        },
+        "canonicalKeyDistance": 23.15167380558045,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": true
+      },
+      {
+        "view": "profile-left",
+        "sheetId": "lowerFace",
+        "relativeFile": "candidates/ollo-face-profile-left-lower-base-candidate-g-chroma.png",
+        "contentHash": "269094a84b3b73fb5542b6203648764bca4491cef0bb8644d5f3c021e71ca880",
+        "dimensions": { "width": 1448, "height": 1086 },
+        "measuredKey": {
+          "red": 248,
+          "green": 5,
+          "blue": 244,
+          "hex": "#f805f4"
+        },
+        "canonicalKeyDistance": 13.96424004376894,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": true
+      },
+      {
+        "view": "profile-right",
+        "sheetId": "core",
+        "relativeFile": "candidates/ollo-parts-profile-right-core-candidate-g-chroma.png",
+        "contentHash": "899cf650e9b847ff05c68f9b24cf125e0663716c62852b15009fd3e475980465",
+        "dimensions": { "width": 1536, "height": 1024 },
+        "measuredKey": {
+          "red": 244,
+          "green": 6,
+          "blue": 239,
+          "hex": "#f406ef"
+        },
+        "canonicalKeyDistance": 20.322401432901575,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": true
+      },
+      {
+        "view": "profile-right",
+        "sheetId": "limbs",
+        "relativeFile": "candidates/ollo-parts-profile-right-limbs-candidate-g-chroma.png",
+        "contentHash": "fc7fca59c9354216e36352c46501a0378ed06e51a3658a3d20c6edd8968e5a99",
+        "dimensions": { "width": 1672, "height": 941 },
+        "measuredKey": {
+          "red": 236,
+          "green": 6,
+          "blue": 223,
+          "hex": "#ec06df"
+        },
+        "canonicalKeyDistance": 37.69615364994153,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": false
+      },
+      {
+        "view": "profile-right",
+        "sheetId": "eyes",
+        "relativeFile": "candidates/ollo-face-profile-right-eyes-candidate-g-chroma.png",
+        "contentHash": "3ab91e167a2d05701c646f1ec2740ce7b3412a3b2e470dda022694a4893f0b8c",
+        "dimensions": { "width": 1774, "height": 887 },
+        "measuredKey": {
+          "red": 243,
+          "green": 6,
+          "blue": 239,
+          "hex": "#f306ef"
+        },
+        "canonicalKeyDistance": 20.8806130178211,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": true
+      },
+      {
+        "view": "profile-right",
+        "sheetId": "mouths",
+        "relativeFile": "candidates/ollo-face-profile-right-mouth-overlays-candidate-g-chroma.png",
+        "contentHash": "ec150581a072088765094f35157505c6aab677441b1ff8e5d45ae21a8f491a16",
+        "dimensions": { "width": 1672, "height": 941 },
+        "measuredKey": {
+          "red": 243,
+          "green": 7,
+          "blue": 232,
+          "hex": "#f307e8"
+        },
+        "canonicalKeyDistance": 26.870057685088806,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": true
+      },
+      {
+        "view": "profile-right",
+        "sheetId": "lowerFace",
+        "relativeFile": "candidates/ollo-face-profile-right-lower-base-candidate-g-chroma.png",
+        "contentHash": "0ce49c0b8928936b7d7d940f6787751e217f3c705a2701a0bd887ffb3462c8f1",
+        "dimensions": { "width": 1448, "height": 1086 },
+        "measuredKey": {
+          "red": 237,
+          "green": 12,
+          "blue": 225,
+          "hex": "#ed0ce1"
+        },
+        "canonicalKeyDistance": 36.98648401781386,
+        "maximumCanonicalKeyDistance": 32,
+        "chromaGatePassed": false
+      }
+    ],
+    "rejectedSources": [
+      "candidates/ollo-parts-profile-left-core-candidate-g-chroma.png",
+      "candidates/ollo-parts-profile-left-limbs-candidate-g-chroma.png",
+      "candidates/ollo-parts-profile-right-limbs-candidate-g-chroma.png",
+      "candidates/ollo-face-profile-right-lower-base-candidate-g-chroma.png"
+    ],
+    "failClosedChecks": [
+      {
+        "view": "profile-left",
+        "rejected": true,
+        "message": "Fixed-grid core measured #ec09e2, not the declared #ff00ff background."
+      },
+      {
+        "view": "profile-right",
+        "rejected": true,
+        "message": "Fixed-grid limbs measured #ec06df, not the declared #ff00ff background."
+      }
+    ]
+  },
+  "visualRoleAudit": {
+    "passed": false,
+    "rejections": [
+      {
+        "views": ["profile-left", "profile-right"],
+        "role": "secondary-front",
+        "reason": "Both core sheets use a full frontal apron; a profile rig requires a foreshortened view-specific apron layer."
+      },
+      {
+        "views": ["profile-right"],
+        "role": "eye, lid, and brow overlays",
+        "reason": "The profile-right eye, lid, and brow sheet retains profile-left near/far anatomy and asymmetric feature handedness; it must be reauthored for a genuine right-facing construction."
+      },
+      {
+        "views": ["profile-right"],
+        "role": "mouth overlays",
+        "reason": "The profile-right mouth set retains the same handedness as profile-left and must be reauthored for the right-facing muzzle."
+      }
+    ]
+  },
+  "publicationGate": {
+    "derivedProfileAtlasesCreated": false,
+    "lowerFaceDiagnosticsCreated": false,
+    "importReceiptCreated": false,
+    "preparedManifestCreated": false,
+    "providerAuthority": false,
+    "preparationAuthority": false,
+    "approvalGranted": false,
+    "productionBindable": false,
+    "regenerationRequired": true
+  },
+  "contentHash": "6c296121f7eaa00567ca3f6b743006e0300597f0f2abfb819d7d061c611a4d4e"
+}

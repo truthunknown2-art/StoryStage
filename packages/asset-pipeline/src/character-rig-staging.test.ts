@@ -9,6 +9,9 @@ import {
   createCharacterRigCandidateBundle,
   createCharacterRigStagingReport,
   createKidsBipedRigRequestItems,
+  createTurnaroundViewCoverageEvidence,
+  kidsBipedV1RequiredTurnaroundViews,
+  kidsBipedV1TopologyTemplate,
   type CharacterRigAssetRequestDraft,
 } from "@storystage/story-engine";
 import {
@@ -29,6 +32,87 @@ const withoutHash = <T extends { contentHash: string }>(value: T) =>
     Object.entries(value).filter(([key]) => key !== "contentHash"),
   ) as Omit<T, "contentHash">;
 
+const turnaroundRects = {
+  front: { x: 0, y: 0, width: 3, height: 12 },
+  "three-quarter": { x: 3, y: 0, width: 3, height: 12 },
+  "profile-left": { x: 6, y: 0, width: 3, height: 12 },
+  "profile-right": { x: 9, y: 0, width: 3, height: 12 },
+  rear: { x: 12, y: 0, width: 4, height: 12 },
+} as const;
+const semanticDirection = {
+  front: "neutral-front",
+  "three-quarter": "three-quarter",
+  "profile-left": "faces-screen-left",
+  "profile-right": "faces-screen-right",
+  rear: "neutral-rear",
+} as const;
+
+const createTurnaroundSheet = async () => {
+  const pixels = Buffer.alloc(16 * 12 * 4, 255);
+  for (let x = 0; x < 16; x += 1)
+    for (let y = 0; y < 12; y += 1) {
+      const band = x < 3 ? 0 : x < 6 ? 1 : x < 9 ? 2 : x < 12 ? 3 : 4;
+      const offset = (y * 16 + x) * 4;
+      pixels[offset] = 30 + band * 40;
+      pixels[offset + 1] = 180 - band * 20;
+      pixels[offset + 2] = 60 + band * 25;
+    }
+  return sharp(pixels, { raw: { width: 16, height: 12, channels: 4 } })
+    .png()
+    .toBuffer();
+};
+
+const writeCoverageEvidence = async (
+  sourceRoot: string,
+  request: ReturnType<typeof createCharacterRigAssetRequest>,
+  candidateId: string,
+  sourceBytes: Buffer,
+  selectedViews: Array<(typeof kidsBipedV1RequiredTurnaroundViews)[number]>,
+) => {
+  const sourceContentHash = sha256(sourceBytes);
+  const views = [];
+  for (const view of selectedViews) {
+    const rect = turnaroundRects[view];
+    const derived = await sharp(sourceBytes)
+      .extract({ left: rect.x, top: rect.y, width: rect.width, height: rect.height })
+      .ensureAlpha()
+      .png({ compressionLevel: 9, adaptiveFiltering: false, palette: false, effort: 10 })
+      .toBuffer();
+    views.push({
+      view,
+      sourceContentHash,
+      sourceRect: rect,
+      derivedContentHash: sha256(derived),
+      byteLength: derived.length,
+      width: rect.width,
+      height: rect.height,
+      semanticDirection: semanticDirection[view],
+      transform: "none" as const,
+    });
+  }
+  const evidence = createTurnaroundViewCoverageEvidence({
+    schemaVersion: "1.0",
+    requestId: request.requestId,
+    requestContentHash: request.contentHash,
+    requestItemId: "turnaround-sheet",
+    candidateId,
+    candidateContentHash: sourceContentHash,
+    requiredViews: [...kidsBipedV1RequiredTurnaroundViews],
+    views,
+  });
+  const bytes = Buffer.from(`${JSON.stringify(evidence, null, 2)}\n`, "utf8");
+  const relativeFile = `evidence/${evidence.contentHash}.json`;
+  await mkdir(join(sourceRoot, "evidence"), { recursive: true });
+  await writeFile(join(sourceRoot, ...relativeFile.split("/")), bytes);
+  return {
+    schemaVersion: "1.0" as const,
+    relativeFile,
+    contentHash: evidence.contentHash,
+    fileContentHash: sha256(bytes),
+    byteLength: bytes.length,
+  };
+};
+
 const requestDraft = (): CharacterRigAssetRequestDraft => ({
   schemaVersion: "1.0",
   requestId: "kcast-001b-staging-request",
@@ -46,7 +130,7 @@ const requestDraft = (): CharacterRigAssetRequestDraft => ({
   rigProfile: {
     id: "kids-biped-v1",
     version: "1.0.0",
-    templateContentHash: "b".repeat(64),
+    templateContentHash: kidsBipedV1TopologyTemplate.contentHash,
   },
   acquisition: {
     mode: "manual-file-import",
@@ -68,16 +152,18 @@ const setup = async (bytes?: Buffer) => {
   const trustedStagingRoot = join(root, "trusted");
   const stagingRoot = join(trustedStagingRoot, "import-one");
   await mkdir(join(sourceRoot, "candidates"), { recursive: true });
-  const png = bytes ?? (await sharp({
-    create: {
-      width: 16,
-      height: 12,
-      channels: 3,
-      background: { r: 248, g: 240, b: 224 },
-    },
-  }).png().toBuffer());
+  const png = bytes ?? (await createTurnaroundSheet());
   await writeFile(join(sourceRoot, "candidates", "turnaround.png"), png);
   const request = createCharacterRigAssetRequest(requestDraft());
+  const coverage = bytes
+    ? null
+    : await writeCoverageEvidence(
+        sourceRoot,
+        request,
+        "candidate-turnaround",
+        png,
+        ["front", "profile-left", "profile-right"],
+      );
   const bundle = createCharacterRigCandidateBundle({
     schemaVersion: "1.0",
     acquisitionMode: "manual-file-import",
@@ -99,12 +185,17 @@ const setup = async (bytes?: Buffer) => {
       mediaType: "image/png",
       width: 16,
       height: 12,
+      ...(coverage ? { turnaroundViewCoverageEvidence: coverage } : {}),
     }],
   });
   return { root, sourceRoot, trustedStagingRoot, stagingRoot, png, request, bundle };
 };
 
-const setupComplete = async () => {
+const setupComplete = async (
+  turnaroundViewCoverage: Array<
+    (typeof kidsBipedV1RequiredTurnaroundViews)[number]
+  > = [...kidsBipedV1RequiredTurnaroundViews],
+) => {
   const root = await mkdtemp(join(tmpdir(), "storystage-kcast-complete-"));
   roots.push(root);
   const sourceRoot = join(root, "source");
@@ -114,7 +205,7 @@ const setupComplete = async () => {
   const request = createCharacterRigAssetRequest(requestDraft());
   const assets = [];
   for (const [index, item] of request.items.entries()) {
-    const png = await sharp({
+    const png = item.kind === "turnaround-sheet" ? await createTurnaroundSheet() : await sharp({
       create: {
         width: 16,
         height: 12,
@@ -129,6 +220,16 @@ const setupComplete = async () => {
     }).png().toBuffer();
     const relativeFile = `candidates/${item.id}.png`;
     await writeFile(join(sourceRoot, ...relativeFile.split("/")), png);
+    const coverage =
+      item.kind === "turnaround-sheet"
+        ? await writeCoverageEvidence(
+            sourceRoot,
+            request,
+            `candidate-${item.id}`,
+            png,
+            turnaroundViewCoverage,
+          )
+        : null;
     assets.push({
       candidateId: `candidate-${item.id}`,
       requestItemId: item.id,
@@ -138,6 +239,7 @@ const setupComplete = async () => {
       mediaType: "image/png" as const,
       width: 16,
       height: 12,
+      ...(coverage ? { turnaroundViewCoverageEvidence: coverage } : {}),
     });
   }
   const bundle = createCharacterRigCandidateBundle({
@@ -165,7 +267,13 @@ describe("character rig safe staging", () => {
       stagedAt: "2026-07-18T20:05:00.000Z",
     });
     expect(report.status).toBe("incomplete");
-    expect(report.returnedItems).toEqual(["turnaround-sheet"]);
+    expect(report.returnedItems).toEqual([]);
+    expect(report.partialItems).toEqual(["turnaround-sheet"]);
+    expect(report.missingItems).toHaveLength(6);
+    expect(report.missingSubitems).toEqual([
+      { requestItemId: "turnaround-sheet", view: "three-quarter" },
+      { requestItemId: "turnaround-sheet", view: "rear" },
+    ]);
     expect(report.assets).toEqual([
       expect.objectContaining({
         candidateId: "candidate-turnaround",
@@ -186,6 +294,107 @@ describe("character rig safe staging", () => {
       join(fixture.stagingRoot, ...report.assets[0]!.relativeFile.split("/")),
     );
     expect(sha256(staged)).toBe(sha256(fixture.png));
+    expect(report.turnaroundViewCoverageEvidence[0]?.views).toHaveLength(3);
+    for (const view of report.turnaroundViewCoverageEvidence[0]!.views) {
+      const persistedView = await readFile(
+        join(fixture.stagingRoot, ...view.stagedRelativeFile.split("/")),
+      );
+      expect(sha256(persistedView)).toBe(view.derivedContentHash);
+      expect(persistedView.length).toBe(view.byteLength);
+    }
+  });
+
+  it("rejects a self-rehashed forged crop assertion and out-of-bounds evidence", async () => {
+    const fixture = await setup();
+    const reference = fixture.bundle.assets[0]!.turnaroundViewCoverageEvidence!;
+    const original = JSON.parse(
+      await readFile(join(fixture.sourceRoot, ...reference.relativeFile.split("/")), "utf8"),
+    ) as ReturnType<typeof createTurnaroundViewCoverageEvidence>;
+    const cases = [
+      original.views.map((view, index) =>
+        index === 0 ? { ...view, derivedContentHash: "f".repeat(64) } : view,
+      ),
+      original.views.map((view, index) =>
+        index === 0
+          ? {
+              ...view,
+              sourceRect: { ...view.sourceRect, x: 15 },
+            }
+          : view,
+      ),
+    ];
+    for (const [index, views] of cases.entries()) {
+      const forgedEvidence = createTurnaroundViewCoverageEvidence({
+        ...withoutHash(original),
+        views,
+      });
+      const forgedBytes = Buffer.from(
+        `${JSON.stringify(forgedEvidence, null, 2)}\n`,
+        "utf8",
+      );
+      const relativeFile = `evidence/forged-${index}.json`;
+      await writeFile(
+        join(fixture.sourceRoot, ...relativeFile.split("/")),
+        forgedBytes,
+      );
+      const forgedBundle = createCharacterRigCandidateBundle({
+        ...withoutHash(fixture.bundle),
+        assets: [
+          {
+            ...fixture.bundle.assets[0]!,
+            turnaroundViewCoverageEvidence: {
+              schemaVersion: "1.0",
+              relativeFile,
+              contentHash: forgedEvidence.contentHash,
+              fileContentHash: sha256(forgedBytes),
+              byteLength: forgedBytes.length,
+            },
+          },
+        ],
+      });
+      await expect(
+        stageCharacterRigCandidateBundle({
+          ...fixture,
+          bundle: forgedBundle,
+          stagingRoot: join(fixture.trustedStagingRoot, `forged-${index}`),
+        }),
+      ).rejects.toMatchObject({ code: "coverage-evidence-invalid" });
+    }
+    const reboundEvidence = createTurnaroundViewCoverageEvidence({
+      ...withoutHash(original),
+      candidateId: "another-candidate",
+    });
+    const reboundBytes = Buffer.from(
+      `${JSON.stringify(reboundEvidence, null, 2)}\n`,
+      "utf8",
+    );
+    const reboundRelativeFile = "evidence/rebound.json";
+    await writeFile(
+      join(fixture.sourceRoot, ...reboundRelativeFile.split("/")),
+      reboundBytes,
+    );
+    const reboundBundle = createCharacterRigCandidateBundle({
+      ...withoutHash(fixture.bundle),
+      assets: [
+        {
+          ...fixture.bundle.assets[0]!,
+          turnaroundViewCoverageEvidence: {
+            schemaVersion: "1.0",
+            relativeFile: reboundRelativeFile,
+            contentHash: reboundEvidence.contentHash,
+            fileContentHash: sha256(reboundBytes),
+            byteLength: reboundBytes.length,
+          },
+        },
+      ],
+    });
+    await expect(
+      stageCharacterRigCandidateBundle({
+        ...fixture,
+        bundle: reboundBundle,
+        stagingRoot: join(fixture.trustedStagingRoot, "rebound"),
+      }),
+    ).rejects.toMatchObject({ code: "coverage-evidence-invalid" });
   });
 
   it("classifies actual decoded alpha pixels instead of trusting the PNG color type", async () => {
@@ -332,9 +541,43 @@ describe("character rig safe staging", () => {
       importedAt: stagedAt,
     });
     expect(receipt.files).toHaveLength(7);
+    expect(
+      receipt.turnaroundViewCoverageEvidence[0]?.views.map(
+        (view) => view.view,
+      ),
+    ).toEqual(kidsBipedV1RequiredTurnaroundViews);
     expect(receipt.stagingReportContentHash).toBe(report.contentHash);
     expect(receipt.providerAuthority).toBe(false);
     expect(receipt.approvalRequired).toBe(true);
+  });
+
+  it("rejects an import receipt for all kits plus the exact current three-view turnaround", async () => {
+    const fixture = await setupComplete([
+      "front",
+      "profile-left",
+      "profile-right",
+    ]);
+    const stagedAt = "2026-07-18T20:05:00.000Z";
+    const report = await stageCharacterRigCandidateBundle({
+      ...fixture,
+      stagedAt,
+    });
+    expect(report.status).toBe("incomplete");
+    expect(report.missingItems).toEqual([]);
+    expect(report.partialItems).toEqual(["turnaround-sheet"]);
+    expect(report.missingSubitems).toEqual([
+      { requestItemId: "turnaround-sheet", view: "three-quarter" },
+      { requestItemId: "turnaround-sheet", view: "rear" },
+    ]);
+    expect(report.returnedItems).toHaveLength(fixture.request.items.length - 1);
+    await expect(
+      createVerifiedCharacterRigImportReceipt({
+        ...fixture,
+        report,
+        importId: "import-three-view-must-fail",
+        importedAt: stagedAt,
+      }),
+    ).rejects.toThrow(/exact request-item coverage/i);
   });
 
   it("refuses a receipt after staged candidate bytes are changed", async () => {
@@ -366,12 +609,14 @@ describe("character rig safe staging", () => {
       stagedAt,
     });
     const forged = createCharacterRigStagingReport({
-      ...withoutHash(partial),
-      status: "complete",
-      returnedItems: fixture.request.items.map((item) => item.id),
-      missingItems: [],
-      unknownItems: [],
-      assets: fixture.request.items.map((item, index) => {
+        ...withoutHash(partial),
+        status: "complete",
+        returnedItems: fixture.request.items.map((item) => item.id),
+        partialItems: [],
+        missingItems: [],
+        missingSubitems: [],
+        unknownItems: [],
+        assets: fixture.request.items.map((item, index) => {
         const contentHash = `${index + 1}`.repeat(64);
         return {
           candidateId: `forged-candidate-${index + 1}`,
@@ -393,8 +638,8 @@ describe("character rig safe staging", () => {
             decodedSinglePage: true,
           },
         };
-      }),
-    });
+        }),
+      });
     await expect(
       createVerifiedCharacterRigImportReceipt({
         ...fixture,
@@ -402,6 +647,70 @@ describe("character rig safe staging", () => {
         importId: "import-forged",
         importedAt: stagedAt,
       }),
-    ).rejects.toThrow(/missing request items/i);
+    ).rejects.toThrow(/missing request items|does not match|coverage/i);
+  });
+
+  it("refuses receipt creation after persisted coverage JSON bytes change", async () => {
+    const fixture = await setupComplete();
+    const stagedAt = "2026-07-18T20:05:00.000Z";
+    const report = await stageCharacterRigCandidateBundle({ ...fixture, stagedAt });
+    const coverage = report.turnaroundViewCoverageEvidence[0]!;
+    await writeFile(
+      join(fixture.stagingRoot, ...coverage.stagedRelativeFile.split("/")),
+      Buffer.from("tampered coverage evidence"),
+    );
+    await expect(
+      createVerifiedCharacterRigImportReceipt({
+        ...fixture,
+        report,
+        importId: "import-tampered-coverage",
+        importedAt: stagedAt,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("refuses receipt creation when any persisted derived view changes", async () => {
+    for (const view of kidsBipedV1RequiredTurnaroundViews) {
+      const fixture = await setupComplete();
+      const stagedAt = "2026-07-18T20:05:00.000Z";
+      const report = await stageCharacterRigCandidateBundle({ ...fixture, stagedAt });
+      const stagedView = report.turnaroundViewCoverageEvidence[0]!.views.find(
+        (candidate) => candidate.view === view,
+      )!;
+      await writeFile(
+        join(fixture.stagingRoot, ...stagedView.stagedRelativeFile.split("/")),
+        Buffer.from(`tampered ${view}`),
+      );
+      await expect(
+        createVerifiedCharacterRigImportReceipt({
+          ...fixture,
+          report,
+          importId: `import-tampered-${view}`,
+          importedAt: stagedAt,
+        }),
+      ).rejects.toThrow();
+    }
+  });
+
+  it("refuses a self-hashed staging report that relinks coverage evidence", async () => {
+    const fixture = await setupComplete();
+    const stagedAt = "2026-07-18T20:05:00.000Z";
+    const report = await stageCharacterRigCandidateBundle({ ...fixture, stagedAt });
+    const forged = createCharacterRigStagingReport({
+      ...withoutHash(report),
+      turnaroundViewCoverageEvidence:
+        report.turnaroundViewCoverageEvidence.map((coverage) => ({
+          ...coverage,
+          stagedRelativeFile: "character-rig/coverage-evidence/relinked.json",
+        })),
+    });
+    await expect(
+      createVerifiedCharacterRigImportReceipt({
+        ...fixture,
+        report: forged,
+        importId: "import-relinked-coverage",
+        importedAt: stagedAt,
+      }),
+    ).rejects.toThrow(/not bound|coverage/i);
   });
 });
