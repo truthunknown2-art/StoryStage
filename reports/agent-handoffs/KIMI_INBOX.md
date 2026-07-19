@@ -1,29 +1,41 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `9`
+Inbox-Version: `10`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-UI-SLICE-B-COPY-PARITY`
+Current-Task: `KIMI-UI-SLICE-C-VISUAL-POLISH`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `04f794a5db3226d51e23235e2c488ae89d9fca0f`
-Required-Work-Branch: `agent/kimi-ui-slice-b-copy-parity`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-b-copy-parity.md`
+Accepted-Root-Base: `2de764c27640657a97f90eef2c630ff171e9176f`
+Required-Work-Branch: `agent/kimi-ui-slice-c-visual-polish`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-visual-polish.md`
 
 ## Current instruction
 
-Exact-head code review at PR #15 head
-`d423d2df623cf8499beeb6cddb584bbbe7546e99` accepts the pair-accurate UI and
-regression. Before Pro review, correct the handback metadata only: its heading
-still says Inbox v7, its implementation line names only `b90ba71`, and its
-integration paragraph says the branch is one implementation commit plus the
-handback. Record Inbox v8, implementation SHAs `b90ba71` and `ce60efb`, evidence
-head `d423d2d`, and the exact four-commit branch history. Remove the stale known
-limitation claiming the Kids image-alt/EncodingError fix is still on a separate
-branch; that Remotion fix was already accepted and integrated in PR #13.
-Do not change Studio code, copy, tests, or scope. Commit and push the corrected
-handback on the same branch.
+PR #15 was accepted by Pro at exact head
+`f8726b2b2d08f8cdf9f7b1238639720f49a9d0b7` and merged into the provider-neutral
+Ollo integration lineage as exact merge commit
+`2de764c27640657a97f90eef2c630ff171e9176f`.
 
-Version 9 supersedes Version 8 only for this handback metadata correction.
+Create the new required work branch from that exact merge and execute the full
+UI Slice C brief. This is visible Director Studio polish against the user's
+approved mockup, with no new or fake capability. Preserve the accepted real
+controls, truth labels, exact 0/1/2+ reaction-target behavior, Director Alpha
+boundary, and all engine/runtime/asset authority. Run the full Studio suite and
+root verification, capture the requested actual-app screenshots, commit and
+push the required branch, and leave a handback plus draft PR for Codex/Pro.
+
+Version 10 supersedes Version 9 as the active task. Version 9 remains below as
+historical traceability.
+
+---
+
+Previous Version 9 instruction:
+
+Exact-head code review at PR #15 head
+`d423d2df623cf8499beeb6cddb584bbbe7546e99` accepted the pair-accurate UI and
+requested handback metadata correction only. That correction was delivered at
+`f8726b2b2d08f8cdf9f7b1238639720f49a9d0b7`, accepted by Pro, and merged as
+`2de764c27640657a97f90eef2c630ff171e9176f`.
 
 ---
 
