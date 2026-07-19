@@ -1,0 +1,226 @@
+{
+  "schemaVersion": "1.0",
+  "evidenceId": "kcast-001c-ollo-turnaround-source-b",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "candidateBundleContentHash": "5809cee2128a65bf1bb33cecba40c267a01d61426bab871f2799d3adfe72d4ba",
+  "stagingReportContentHash": "6b48a2e902c1a7126711c9b15006004f1ac1c0277a9830388d82c0e6251f304f",
+  "references": {
+    "identityAuthority": {
+      "sourceReference": "1-Photo-1.jpg from the user-supplied Ollo & Friends identity board",
+      "contentHash": "0950d7043347528a302de5d70f36736dcfbec1f9e0177296756e91b96fbc846f",
+      "byteLength": 126956,
+      "mediaType": "image/jpeg",
+      "width": 1280,
+      "height": 960,
+      "role": "character-identity-authority"
+    },
+    "materialDirectionOnly": {
+      "sourceReference": "e44ea5c3-4cb0-4f13-803a-d2a38b2e5162.png Ollo art-direction board",
+      "contentHash": "d8fb05e2eeb63b2d8a1397f4aa43a5c4ad28d3cac333ce5b48f0a9bb7b41c30d",
+      "byteLength": 2940395,
+      "mediaType": "image/png",
+      "width": 1536,
+      "height": 1024,
+      "role": "material-and-texture-direction-only",
+      "identityAuthority": false
+    }
+  },
+  "source": {
+    "chroma": {
+      "relativeFile": "candidates/ollo-turnaround-candidate-b-chroma.png",
+      "contentHash": "ae779f1a2068753a1e40c65ab8509f3e65f7dff41fe84560addd81a73c3a1a7d",
+      "byteLength": 1703180,
+      "mediaType": "image/png",
+      "width": 1774,
+      "height": 887,
+      "role": "generated-source-plate"
+    },
+    "imageHelperAlpha": {
+      "relativeFile": "candidates/ollo-turnaround-candidate-b-alpha.png",
+      "contentHash": "709317090e7a482e753e22e4e399389142727bc22c965d1d4bcf597ad2784277",
+      "byteLength": 1201209,
+      "mediaType": "image/png",
+      "width": 1774,
+      "height": 887,
+      "role": "untrusted-visual-companion-only",
+      "productionAuthority": false
+    },
+    "canonicalRepoAlpha": {
+      "relativeFile": "candidates/ollo-turnaround-candidate-b-alpha-repo.png",
+      "contentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "byteLength": 1131309,
+      "mediaType": "image/png",
+      "width": 1774,
+      "height": 887,
+      "stagedRelativeFile": "character-rig/candidates/38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec.png",
+      "immutableLocationId": "sha256:38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "derivedFromContentHash": "ae779f1a2068753a1e40c65ab8509f3e65f7dff41fe84560addd81a73c3a1a7d",
+      "processor": {
+        "id": "border-median-soft-distance-matte",
+        "version": "1.0.0",
+        "transparentRadius": 40,
+        "opaqueRadius": 225,
+        "borderSampleStride": 24,
+        "imageLibrary": {
+          "id": "sharp",
+          "version": "0.34.5"
+        },
+        "png": {
+          "compressionLevel": 9,
+          "adaptiveFiltering": true,
+          "palette": false
+        }
+      },
+      "measuredKey": {
+        "red": 5,
+        "green": 247,
+        "blue": 8,
+        "hex": "#05f708"
+      },
+      "alphaPixels": {
+        "transparent": 1047216,
+        "partial": 12001,
+        "opaque": 514321
+      },
+      "reproducedExactly": true
+    }
+  },
+  "cropProcessor": {
+    "id": "sharp-exact-review-crop",
+    "version": "1.0.0",
+    "imageLibrary": {
+      "id": "sharp",
+      "version": "0.34.5"
+    },
+    "png": {
+      "compressionLevel": 9,
+      "adaptiveFiltering": false,
+      "palette": false,
+      "effort": 10
+    }
+  },
+  "views": [
+    {
+      "view": "front",
+      "semanticDirection": "neutral-front",
+      "sourceContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "crop": {
+        "x": 96,
+        "y": 16,
+        "width": 528,
+        "height": 832
+      },
+      "output": {
+        "relativeFile": "derived/ollo-turnaround-candidate-b-front.png",
+        "contentHash": "4e4dc1a16caf4ff5f0bad85979921db1c14cc01969a8406648efefd778417ce7",
+        "byteLength": 564350,
+        "mediaType": "image/png",
+        "width": 528,
+        "height": 832,
+        "alphaClass": "mixed-alpha",
+        "contentBounds": {
+          "x": 36,
+          "y": 23,
+          "width": 477,
+          "height": 781
+        },
+        "foregroundPixels": 216131,
+        "boundaryTouch": false
+      },
+      "role": "identity-and-registration-review-only"
+    },
+    {
+      "view": "profile-left",
+      "semanticDirection": "nose-and-gaze-face-screen-left",
+      "sourceContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "crop": {
+        "x": 680,
+        "y": 16,
+        "width": 448,
+        "height": 832
+      },
+      "output": {
+        "relativeFile": "derived/ollo-turnaround-candidate-b-profile-left.png",
+        "contentHash": "c91d7319470e6786750c78ab9cf23824a272fbd08d5238ed21107a2e83b37214",
+        "byteLength": 408912,
+        "mediaType": "image/png",
+        "width": 448,
+        "height": 832,
+        "alphaClass": "mixed-alpha",
+        "contentBounds": {
+          "x": 44,
+          "y": 17,
+          "width": 351,
+          "height": 787
+        },
+        "foregroundPixels": 155446,
+        "boundaryTouch": false
+      },
+      "role": "identity-and-registration-review-only"
+    },
+    {
+      "view": "profile-right",
+      "semanticDirection": "nose-and-gaze-face-screen-right",
+      "sourceContentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "crop": {
+        "x": 1150,
+        "y": 16,
+        "width": 448,
+        "height": 832
+      },
+      "output": {
+        "relativeFile": "derived/ollo-turnaround-candidate-b-profile-right.png",
+        "contentHash": "0204f3b83e731b4d914020a360f943001102b539f8d265343525a675e9614314",
+        "byteLength": 407145,
+        "mediaType": "image/png",
+        "width": 448,
+        "height": 832,
+        "alphaClass": "mixed-alpha",
+        "contentBounds": {
+          "x": 26,
+          "y": 17,
+          "width": 358,
+          "height": 787
+        },
+        "foregroundPixels": 154745,
+        "boundaryTouch": false
+      },
+      "role": "identity-and-registration-review-only"
+    }
+  ],
+  "gate": {
+    "acquiredViewSet": [
+      "front",
+      "profile-left",
+      "profile-right"
+    ],
+    "viewAcquisitionEvidenceComplete": true,
+    "turnaroundInstructionComplete": false,
+    "missingTurnaroundInstructionViews": [
+      "three-quarter",
+      "rear"
+    ],
+    "intakeStatus": "incomplete",
+    "returnedItems": [
+      "turnaround-sheet"
+    ],
+    "missingItems": [
+      "face-front",
+      "face-profile-left",
+      "face-profile-right",
+      "parts-front",
+      "parts-profile-left",
+      "parts-profile-right"
+    ],
+    "importReceiptCreated": false,
+    "preparedRigViewsCreated": false,
+    "providerAuthority": false,
+    "preparationAuthority": false,
+    "productionBindable": false,
+    "movingDiagnosticRequired": true,
+    "prestonApprovalRequired": true
+  },
+  "acquiredAt": "2026-07-19T08:45:00.000Z",
+  "contentHash": "cb68cc47c2a9f6356389703f5fcab4bfdca0d5aa7e1aeb9273af38992d1b82f9"
+}
