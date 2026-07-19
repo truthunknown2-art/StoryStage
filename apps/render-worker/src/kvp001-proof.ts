@@ -190,6 +190,7 @@ const compileProofBuild = () => {
   return {
     fixture,
     capabilities,
+    proxyProject: proxy,
     project: compileDirectorProject({
       storyProject: fixture.storyProject,
       planner: fixture.planner,
@@ -231,6 +232,53 @@ const authorityProjection = (frame: ResolvedContinuityFrame) => ({
     ]),
   ),
   props: frame.props,
+});
+
+const crossCapabilityAuthorityProjection = (
+  frame: ResolvedContinuityFrame,
+) => ({
+  absoluteFrame: frame.absoluteFrame,
+  shotFrame: frame.shotFrame,
+  fps: frame.fps,
+  shotId: frame.shotId,
+  sceneId: frame.sceneId,
+  camera: frame.camera,
+  transition: frame.transition,
+  entities: Object.fromEntries(
+    Object.entries(frame.entities).map(([entityId, entity]) => [
+      entityId,
+      {
+        entityId: entity.entityId,
+        visible: entity.visible,
+        lifecycle: entity.lifecycle,
+        rootTransform: entity.rootTransform,
+        velocity: entity.velocity,
+        facing: entity.facing,
+        gazeVectorLocal: entity.gazeVectorLocal,
+        motionMode: entity.motionMode,
+        actionPhase: entity.actionPhase,
+        phaseProgress: entity.phaseProgress,
+        gaitPhase: entity.gaitPhase,
+        visemeId: entity.visemeId,
+      },
+    ]),
+  ),
+  props: frame.props,
+});
+
+const crossCapabilityArtifactProjection = (
+  project: ReturnType<typeof compileDirectorProject>,
+) => ({
+  storyProjectContentHash: project.storyProjectContentHash,
+  planningArtifactContentHash: project.planningArtifact.contentHash,
+  sceneWorldContentHashes: project.sceneWorlds.map((world) => world.contentHash),
+  directorPlanContentHash: project.directorPlan.contentHash,
+  timingSolutionContentHash: project.timingSolution.contentHash,
+  executableShotsHash: hashCanonical(project.executableEpisodePlan.shots),
+  resolvedEventFramesHash: hashCanonical(
+    project.executableEpisodePlan.resolvedEventFrames ?? [],
+  ),
+  formatHash: hashCanonical(project.executableEpisodePlan.format),
 });
 
 const exactProofProgram = (episode: ExecutableEpisodePlan) => {
@@ -546,6 +594,43 @@ async function main() {
     throw new Error("KVP canonical source rebuilds are not identical.");
 
   const episodePlan = firstBuild.project.executableEpisodePlan;
+  const proxyEpisodePlan = firstBuild.proxyProject.executableEpisodePlan;
+  const proxyAuthorityArtifacts = crossCapabilityArtifactProjection(
+    firstBuild.proxyProject,
+  );
+  const rigAuthorityArtifacts = crossCapabilityArtifactProjection(
+    firstBuild.project,
+  );
+  if (
+    hashCanonical(proxyAuthorityArtifacts) !==
+    hashCanonical(rigAuthorityArtifacts)
+  )
+    throw new Error(
+      "Enabling the KVP capability changed canonical planning, timing, shots, events, scene worlds, or format.",
+    );
+  const proxyVsRigAuthorityFrames = Array.from(
+    { length: 140 },
+    (_, absoluteFrame) => {
+      const proxy = crossCapabilityAuthorityProjection(
+        evaluateContinuityFrame(proxyEpisodePlan, absoluteFrame),
+      );
+      const rig = crossCapabilityAuthorityProjection(
+        evaluateContinuityFrame(episodePlan, absoluteFrame),
+      );
+      const proxyHash = hashCanonical(proxy);
+      const rigHash = hashCanonical(rig);
+      return {
+        absoluteFrame,
+        proxyHash,
+        rigHash,
+        matches: proxyHash === rigHash,
+      };
+    },
+  );
+  if (proxyVsRigAuthorityFrames.some((frame) => !frame.matches))
+    throw new Error(
+      "Enabling the KVP capability changed canonical frame authority.",
+    );
   const { performance, execution, shot } = exactProofProgram(episodePlan);
   if (shot.startFrame !== 0 || shot.endFrameExclusive !== 140)
     throw new Error("KVP proof is not the exact canonical 0..140 shot.");
@@ -653,6 +738,10 @@ async function main() {
     mode: "director-episode",
     episodePlan,
   };
+  const proxyInputProps: ProductionCompositionProps = {
+    mode: "director-episode",
+    episodePlan: proxyEpisodePlan,
+  };
   const metadataBrowser = await openPinnedBrowser(browserExecutable);
   const composition = await (async () => {
     try {
@@ -666,6 +755,34 @@ async function main() {
       await metadataBrowser.close({ silent: true });
     }
   })();
+  const proxyMetadataBrowser = await openPinnedBrowser(browserExecutable);
+  const proxyComposition = await (async () => {
+    try {
+      return await selectComposition({
+        serveUrl,
+        id: STORY_STAGE_PRODUCTION_COMPOSITION_ID,
+        inputProps: proxyInputProps,
+        puppeteerInstance: proxyMetadataBrowser,
+      });
+    } finally {
+      await proxyMetadataBrowser.close({ silent: true });
+    }
+  })();
+  if (
+    hashCanonical({
+      width: proxyComposition.width,
+      height: proxyComposition.height,
+      fps: proxyComposition.fps,
+      durationInFrames: proxyComposition.durationInFrames,
+    }) !==
+    hashCanonical({
+      width: composition.width,
+      height: composition.height,
+      fps: composition.fps,
+      durationInFrames: composition.durationInFrames,
+    })
+  )
+    throw new Error("Proxy and rig compositions do not share exact metadata.");
   const environment = await createEnvironmentReceipt({
     browserExecutable,
     bundleReceipt,
@@ -726,6 +843,31 @@ async function main() {
     isolation: "fresh-browser-per-frame",
     serveUrl,
   });
+  const proxyStills = await renderSelectedStills({
+    browserExecutable,
+    composition: proxyComposition,
+    directory: resolve(outputRoot, "stills-proxy"),
+    frameOrder: selectedFrameOrders.ascending,
+    inputProps: proxyInputProps,
+    isolation: "fresh-browser-per-frame",
+    serveUrl,
+  });
+  const proxyVsRigVisualComparisons = stills.map((rig, index) => {
+    const proxy = proxyStills[index]!;
+    return {
+      frame: rig.frame,
+      proxy: proxy.sha256,
+      rig: rig.sha256,
+      differs: proxy.sha256 !== rig.sha256,
+    };
+  });
+  const proxyVsRigDifferingFrames = proxyVsRigVisualComparisons
+    .filter((comparison) => comparison.differs)
+    .map((comparison) => comparison.frame);
+  if (proxyVsRigDifferingFrames.length === 0)
+    throw new Error(
+      "The KVP rig capability produced no visible difference from the proxy renderer.",
+    );
   const ascendingStills = await renderSelectedStills({
     browserExecutable,
     composition,
@@ -867,6 +1009,23 @@ async function main() {
       performanceProgramContentHash: performance.contentHash,
     },
     localEvaluations,
+    proxyVsRigAuthority: {
+      proxyArtifacts: proxyAuthorityArtifacts,
+      rigArtifacts: rigAuthorityArtifacts,
+      artifactsMatch: true,
+      frameComparisons: proxyVsRigAuthorityFrames,
+      matchedFrames: proxyVsRigAuthorityFrames.filter((frame) => frame.matches)
+        .length,
+      totalFrames: proxyVsRigAuthorityFrames.length,
+      exact: true,
+    },
+    proxyVsRigVisualDifference: {
+      proxyEpisodePlanContentHash: proxyEpisodePlan.contentHash,
+      rigEpisodePlanContentHash: episodePlan.contentHash,
+      comparisons: proxyVsRigVisualComparisons,
+      differingFrames: proxyVsRigDifferingFrames,
+      verdict: "PASS",
+    },
     verifiedAssets,
     encoded: {
       passOne: {

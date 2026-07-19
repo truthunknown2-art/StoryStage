@@ -2,7 +2,7 @@
 
 - Branch: `agent/kvp001-production-proof-wip`
 - Base: `cc5f8a55e32d727a2a1636d9146d394f64050e52`
-- Status: **strict determinism evidence PASS; Pro/Player acceptance pending**
+- Status: **strict determinism accepted by Pro at `a8d7aef`; proxy-vs-rig authority closure PASS; final Pro/Player closure pending**
 
 ## What changed
 
@@ -25,6 +25,9 @@
 - Encoded-pass decoded comparison: 11/11 exact matches, 0 mismatches.
 - Encoded MP4 pass hashes: `81f1c66ee22eb861f46001771c97a6acb293883d073768e1fa2024b567815f9d` for both passes.
 - Output contract: 1920x1080, 30 fps, 140 frames, H.264/yuv420p.
+- Proxy-vs-rig planning/timing/scene-world/shot/event/format artifact projection: exact match.
+- Proxy-vs-rig canonical authority comparison: 140/140 exact frame matches.
+- Proxy-vs-rig visual comparison: 10/11 selected frames differ as required; frame 0 matches because both renders are fully hidden by the canonical opening transition.
 
 Pinned environment receipt:
 
@@ -55,4 +58,4 @@ Evidence files:
 
 ## Acceptance still required
 
-This checkpoint does not self-award Pro acceptance. The pinned environment and selected-frame order matrix are now present and green. The real Player visual review remains a separate gate, and the fixture still does not prove general arbitrary-script synthesis of compound locomotion-to-acting performances.
+Pro accepted the strict determinism P1 at `a8d7aef`. This follow-up closes the remaining authority-isolation failure class by retaining the capability-free proxy compilation and comparing it with the rig-enabled compilation. The real Player visual review remains a separate Preston gate, and the fixture still does not prove general arbitrary-script synthesis of compound locomotion-to-acting performances.
