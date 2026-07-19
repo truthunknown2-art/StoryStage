@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `15`
+Inbox-Version: `16`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-C-CORRECTIONS`
 Status: `START-NOW`
@@ -11,19 +11,32 @@ Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-corrections
 
 ## Current instruction
 
+Resume the existing correction now. The remote required-work branch is still at
+`04e2a534e896f002f34895c545afa7089cefbf3a`; no successor handback has been
+pushed. Finish only correction 10 from the brief: clip the actual composition
+viewport rather than `.__remotion-player`, persist the clipped PNG plus exact
+SHA-256, bounds, pixel counts, nonblack ratio, luminance/variance/color and
+uniform-frame rejection evidence, prove the clip does not intersect controls,
+and correct the protocol label. If frame 340 is genuinely uniform black, use a
+different exact paused frame and prove it through the real Player ref. Commit
+and push the successor on `agent/kimi-ui-slice-c-visual-polish`, update the
+handback with the exact SHA and tests, and then wait. Do not report “holding
+steady” while this required successor is absent.
+
+Version 16 supersedes Version 15 as the active task. Version 15 remains below
+as historical traceability.
+
+---
+
+Previous Version 15 instruction:
+
 Exact-head successor review at
-`04e2a534e896f002f34895c545afa7089cefbf3a` accepts the real
+`04e2a534e896f002f34895c545afa7089cefbf3a` accepted the real
 `PlayerRef.getCurrentFrame()` / `isPlaying()` observation, the optimistic-state
 regression, and exact paused frame 340 for both captures. One P2 proof defect
-remains: `.__remotion-player` includes transport chrome, so its pixel statistics
-can call a uniform-black composition nonblank. Execute only correction 10 in
-the brief: clip the actual composition viewport, persist the clipped PNG and
-hash/nonblack/uniformity evidence, and correct the protocol label. Do not
-broaden into engine, runtime, renderer, timing, continuity, asset authority, or
-already accepted UI work.
-
-Version 15 supersedes Version 14 as the active task. Version 14 remains below
-as historical traceability.
+remained: `.__remotion-player` included transport chrome, so its pixel statistics
+could call a uniform-black composition nonblank. Correction 10 required an
+actual composition-viewport clip and truthful pixel evidence.
 
 ---
 
