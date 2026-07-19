@@ -17,6 +17,7 @@ import {
   type DirectorProposal,
   type DirectorProposalDraft,
 } from "./director-proposal";
+import { assertPlanningArtifactMatchesDirectorPlan } from "./planning-artifact-lineage";
 
 class FixedDirectorProposalPlanner implements DirectorPlanner {
   constructor(private readonly artifact: DirectorProposal) {}
@@ -46,6 +47,10 @@ export function applyDirectorPatch(input: {
   capabilities?: CapabilityRegistry;
 }): DirectorProject {
   const storyProject = cv002ProjectSchema.parse(input.storyProject);
+  assertPlanningArtifactMatchesDirectorPlan(
+    input.baseDirectorProject.planningArtifact,
+    input.baseDirectorProject.directorPlan,
+  );
   const base = directorProjectSchema.parse(input.baseDirectorProject);
   const patch = directorPatchSchema.parse(input.patch);
   const capabilityRegistry = capabilityRegistrySchema.parse(
@@ -179,5 +184,9 @@ export function applyDirectorPatch(input: {
     throw new Error(
       "Director patch compile did not preserve its exact planning artifact.",
     );
+  assertPlanningArtifactMatchesDirectorPlan(
+    next.planningArtifact,
+    next.directorPlan,
+  );
   return next;
 }

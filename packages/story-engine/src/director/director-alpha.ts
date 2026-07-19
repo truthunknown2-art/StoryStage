@@ -31,6 +31,10 @@ export type {
   DirectorRevisionLineage,
 } from "./director-project";
 export {
+  assertPlanningArtifactMatchesDirectorPlan,
+  PLANNING_ARTIFACT_DIRECTOR_PLAN_LINEAGE_ERROR,
+} from "./planning-artifact-lineage";
+export {
   describeDirectorPatch,
   directorPatchSchema,
   listDirectorReactionDelayCandidates,

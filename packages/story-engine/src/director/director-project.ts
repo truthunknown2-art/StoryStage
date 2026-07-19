@@ -9,6 +9,10 @@ import { directorProposalSchema } from "./director-proposal";
 import { directorQualityReportSchema } from "./quality-report";
 import { sceneWorldPlanSchema } from "./scene-world";
 import { timingSolutionSchema } from "./timing-solution";
+import {
+  assertPlanningArtifactMatchesDirectorPlan,
+  PLANNING_ARTIFACT_DIRECTOR_PLAN_LINEAGE_ERROR,
+} from "./planning-artifact-lineage";
 
 const directorProjectFields = {
   schemaVersion: z.literal("1.0"),
@@ -53,8 +57,7 @@ export const directorProjectSchema = z
         message: "Director plan is not bound to a story graph.",
       });
     if (
-      project.artDirectionSelection.grammar !==
-      project.planningArtifact.grammar
+      project.artDirectionSelection.grammar !== project.planningArtifact.grammar
     )
       context.addIssue({
         code: "custom",
@@ -78,6 +81,18 @@ export const directorProjectSchema = z
         message:
           "Director project planning artifact does not match the exact compiled plan authority and content.",
       });
+    try {
+      assertPlanningArtifactMatchesDirectorPlan(
+        project.planningArtifact,
+        project.directorPlan,
+      );
+    } catch {
+      context.addIssue({
+        code: "custom",
+        path: ["planningArtifact", "beatDirections"],
+        message: PLANNING_ARTIFACT_DIRECTOR_PLAN_LINEAGE_ERROR,
+      });
+    }
     if (
       project.timingSolution.directorPlanContentHash !==
       project.directorPlan.contentHash
@@ -162,6 +177,10 @@ export type DirectorRevisionLineage = NonNullable<DirectorProject["revision"]>;
 export function sealDirectorProject(
   raw: Omit<DirectorProject, "contentHash">,
 ): DirectorProject {
+  assertPlanningArtifactMatchesDirectorPlan(
+    raw.planningArtifact,
+    raw.directorPlan,
+  );
   return directorProjectSchema.parse({
     ...raw,
     contentHash: hashCanonical(raw),

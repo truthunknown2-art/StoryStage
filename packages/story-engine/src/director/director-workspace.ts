@@ -23,6 +23,10 @@ import {
   directorProjectSchema,
   type DirectorProject,
 } from "./director-project";
+import {
+  assertPlanningArtifactMatchesDirectorPlan,
+  PLANNING_ARTIFACT_DIRECTOR_PLAN_LINEAGE_ERROR,
+} from "./planning-artifact-lineage";
 
 export const DIRECTOR_WORKSPACE_STORAGE_KEY_PREFIX =
   "storystage.director-workspace.v1";
@@ -61,6 +65,25 @@ export const directorWorkspaceStateSchema = z
         message: "Director workspace history cursor is out of range.",
       });
     entries.forEach((entry, index) => {
+      try {
+        assertPlanningArtifactMatchesDirectorPlan(
+          entry.directorProject.planningArtifact,
+          entry.directorProject.directorPlan,
+        );
+      } catch {
+        context.addIssue({
+          code: "custom",
+          path: [
+            "history",
+            "entries",
+            index,
+            "directorProject",
+            "planningArtifact",
+            "beatDirections",
+          ],
+          message: PLANNING_ARTIFACT_DIRECTOR_PLAN_LINEAGE_ERROR,
+        });
+      }
       if (
         entry.directorProject.storyProjectContentHash !==
         workspace.storyProjectContentHash
@@ -118,6 +141,10 @@ export function createDirectorWorkspaceState(
   directorProject: DirectorProject,
   selectedBeatId: string,
 ): DirectorWorkspaceState {
+  assertPlanningArtifactMatchesDirectorPlan(
+    directorProject.planningArtifact,
+    directorProject.directorPlan,
+  );
   return directorWorkspaceStateSchema.parse({
     schemaVersion: "1.0",
     storyProjectContentHash: directorProject.storyProjectContentHash,
@@ -140,6 +167,12 @@ export function restoreDirectorWorkspaceState(
     throw new Error(
       "Saved Director workspace belongs to another story project.",
     );
+  workspace.history.entries.forEach((entry) =>
+    assertPlanningArtifactMatchesDirectorPlan(
+      entry.directorProject.planningArtifact,
+      entry.directorProject.directorPlan,
+    ),
+  );
   let replayed = workspace.history.entries[0]!.directorProject;
   if (
     replayed.capabilityReport.registryContentHash !==
@@ -190,6 +223,10 @@ export function restoreDirectorWorkspaceState(
       throw new Error(
         `Saved Director workspace revision ${index} failed semantic replay.`,
       );
+    assertPlanningArtifactMatchesDirectorPlan(
+      computed.planningArtifact,
+      computed.directorPlan,
+    );
     replayed = computed;
   }
   return workspace;
@@ -215,6 +252,16 @@ export function recordDirectorWorkspaceRevision(
   patch: DirectorPatch,
   directorProject: DirectorProject,
 ): DirectorWorkspaceState {
+  workspace.history.entries.forEach((entry) =>
+    assertPlanningArtifactMatchesDirectorPlan(
+      entry.directorProject.planningArtifact,
+      entry.directorProject.directorPlan,
+    ),
+  );
+  assertPlanningArtifactMatchesDirectorPlan(
+    directorProject.planningArtifact,
+    directorProject.directorPlan,
+  );
   return directorWorkspaceStateSchema.parse({
     ...workspace,
     history: recordDirectorRevision(
