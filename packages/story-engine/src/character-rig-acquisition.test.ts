@@ -4,6 +4,7 @@ import {
   createCharacterRigAssetRequest,
   createCharacterRigCandidateBundle,
   createKidsBipedRigRequestItems,
+  inspectCharacterRigCandidateBundle,
   validateCharacterRigCandidateBundle,
   type CharacterRigAssetRequestDraft,
   type CharacterRigCandidateBundleDraft,
@@ -91,13 +92,50 @@ describe("provider-neutral character rig acquisition", () => {
       );
       expect(parts?.requiredComponents).toEqual(
         expect.arrayContaining([
-          "upper-arm-near",
-          "lower-arm-near",
-          "upper-leg-near",
-          "lower-leg-near",
+          "upper-arm-left",
+          "lower-arm-left",
+          "upper-leg-left",
+          "lower-leg-left",
+          "ear-left",
+          "ear-right",
+          "tail",
+          "secondary-front",
+          "secondary-back",
+        ]),
+      );
+      const face = request.items.find(
+        (item) => item.kind === "face-kit" && item.view === view,
+      );
+      expect(face?.requiredComponents).toEqual(
+        expect.arrayContaining([
+          "eye-white-left",
+          "eye-white-right",
+          "pupil-left",
+          "pupil-right",
+          "lid-closed-left",
+          "lid-closed-right",
+          "brow-raised-left",
+          "brow-raised-right",
         ]),
       );
     }
+  });
+
+  it("inspects a partial manual intake without granting completeness", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const draft = bundleDraft(request);
+    const partial = createCharacterRigCandidateBundle({
+      ...draft,
+      assets: [draft.assets[0]!],
+    });
+    const inspection = inspectCharacterRigCandidateBundle(request, partial);
+    expect(inspection.status).toBe("incomplete");
+    expect(inspection.returnedItems).toEqual(["turnaround-sheet"]);
+    expect(inspection.missingItems).toHaveLength(request.items.length - 1);
+    expect(inspection.providerAuthority).toBe(false);
+    expect(() => validateCharacterRigCandidateBundle(request, partial)).toThrow(
+      /missing request items/i,
+    );
   });
 
   it("binds every returned file to the exact request without provider authority", () => {
@@ -130,10 +168,21 @@ describe("provider-neutral character rig acquisition", () => {
       (item) => item.kind === "parts-kit" && item.view === "profile-right",
     )!;
     target.requiredComponents = target.requiredComponents.filter(
-      (role) => role !== "lower-arm-near",
+      (role) => role !== "lower-arm-left",
     );
     expect(() => createCharacterRigAssetRequest(draft)).toThrow(
-      /missing lower-arm-near/i,
+      /missing lower-arm-left/i,
+    );
+  });
+
+  it("uses one exact role authority and rejects cross-kit roles", () => {
+    const draft = requestDraft();
+    const parts = draft.items.find(
+      (item) => item.kind === "parts-kit" && item.view === "front",
+    )!;
+    parts.requiredComponents.push("viseme-ai");
+    expect(() => createCharacterRigAssetRequest(draft)).toThrow(
+      /parts-kit front contains forbidden role viseme-ai/i,
     );
   });
 

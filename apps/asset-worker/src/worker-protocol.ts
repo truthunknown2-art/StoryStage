@@ -1,4 +1,4 @@
-import {CandidateStagingError, prepareCandidateSets, stageCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "@storystage/asset-pipeline";
+import {CandidateStagingError, CharacterRigStagingError, prepareCandidateSets, stageCandidateBundle, stageCharacterRigCandidateBundle, stageLooseCandidateFiles, verifyStagedCandidates} from "@storystage/asset-pipeline";
 import {
   assetWorkerCommandSchema,
   assetWorkerMessageSchema,
@@ -17,6 +17,18 @@ export async function runAssetWorkerCommand(rawCommand: unknown, emit: (message:
   }
 
   try {
+    if (parsed.data.type === "stage-character-rig-candidates") {
+      const report = await stageCharacterRigCandidateBundle({
+        request: JSON.parse(parsed.data.serializedRigRequest),
+        bundle: JSON.parse(parsed.data.serializedRigBundle),
+        sourceRoot: parsed.data.sourceRoot,
+        trustedStagingRoot: parsed.data.trustedStagingRoot,
+        stagingRoot: parsed.data.stagingRoot,
+        stagedAt: parsed.data.stagedAt,
+      });
+      emit(assetWorkerMessageSchema.parse({type: "character-rig-staged", requestId: parsed.data.requestId, serializedStagingReport: JSON.stringify(report)}));
+      return;
+    }
     if (parsed.data.type === "prepare-candidate-sets") {
       const report = await prepareCandidateSets({request: JSON.parse(parsed.data.serializedRequest), trustedStagingRoot: parsed.data.trustedStagingRoot, stagingRoot: parsed.data.stagingRoot});
       emit(assetWorkerMessageSchema.parse({type: "prepared", requestId: parsed.data.requestId, serializedPreparationReport: JSON.stringify(report)}));
@@ -48,7 +60,7 @@ export async function runAssetWorkerCommand(rawCommand: unknown, emit: (message:
       type: "failed",
       requestId: parsed.data.requestId,
       error: {
-        code: error instanceof CandidateStagingError ? error.code.toUpperCase().replaceAll("-", "_") : "ASSET_STAGING_FAILED",
+        code: error instanceof CandidateStagingError || error instanceof CharacterRigStagingError ? error.code.toUpperCase().replaceAll("-", "_") : "ASSET_STAGING_FAILED",
         message: error instanceof Error ? error.message : "Candidate staging failed.",
       },
     }));

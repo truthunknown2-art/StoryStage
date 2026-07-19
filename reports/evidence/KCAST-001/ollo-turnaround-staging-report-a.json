@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "1.0",
+  "reportId": "rig-staging-25d4f105f892fb1484d6",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "24a7a627be2a8acab69407524b30722aecb579a7a1d78f142d68c38082698365",
+  "bundleContentHash": "25d4f105f892fb1484d67563dff277b09e420838827d26c5f940735a437d2ce0",
+  "identityLockContentHash": "0950d7043347528a302de5d70f36736dcfbec1f9e0177296756e91b96fbc846f",
+  "templateContentHash": "2f6b4320121dc626f5af95ed7a796d0633dbeb9baced1d3e603ec1af418ad2da",
+  "status": "incomplete",
+  "returnedItems": [
+    "turnaround-sheet"
+  ],
+  "missingItems": [
+    "face-front",
+    "face-profile-left",
+    "face-profile-right",
+    "parts-front",
+    "parts-profile-left",
+    "parts-profile-right"
+  ],
+  "unknownItems": [],
+  "assets": [
+    {
+      "candidateId": "ollo-turnaround-candidate-a",
+      "requestItemId": "turnaround-sheet",
+      "sourceContentHash": "e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e",
+      "stagedContentHash": "e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e",
+      "immutableLocationId": "sha256:e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e",
+      "relativeFile": "character-rig/candidates/e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e.png",
+      "byteLength": 1713138,
+      "mediaType": "image/png",
+      "width": 1774,
+      "height": 887,
+      "alphaClass": "opaque",
+      "checks": {
+        "byteLength": true,
+        "contentHash": true,
+        "codec": true,
+        "dimensions": true,
+        "decodedSinglePage": true
+      }
+    }
+  ],
+  "providerAuthority": false,
+  "approvalRequired": true,
+  "stagedAt": "2026-07-19T06:00:00.000Z",
+  "contentHash": "c8f1bfbbdc9a8333caca650ee48d399e40e683166cde5cca765503bed5bf3925"
+}

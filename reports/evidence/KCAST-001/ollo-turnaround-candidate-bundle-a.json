@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0",
+  "acquisitionMode": "manual-file-import",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "24a7a627be2a8acab69407524b30722aecb579a7a1d78f142d68c38082698365",
+  "provenance": {
+    "sourceType": "generated",
+    "providerLabel": "OpenAI built-in image generation",
+    "sourceReference": "Codex task 019f6dc3-6859-79d1-960a-fc69c9e275d9",
+    "createdAt": "2026-07-19T05:50:00.000Z",
+    "rightsStatement": "Original generated candidate created from the user-supplied Ollo identity board for this project; unapproved source art."
+  },
+  "assets": [
+    {
+      "candidateId": "ollo-turnaround-candidate-a",
+      "requestItemId": "turnaround-sheet",
+      "relativeFile": "candidates/ollo-turnaround-candidate-a.png",
+      "contentHash": "e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e",
+      "byteLength": 1713138,
+      "mediaType": "image/png",
+      "width": 1774,
+      "height": 887
+    }
+  ],
+  "contentHash": "25d4f105f892fb1484d67563dff277b09e420838827d26c5f940735a437d2ce0"
+}

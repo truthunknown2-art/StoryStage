@@ -5,7 +5,7 @@ import {
   identifierSchema,
 } from "./model";
 
-const safeRelativePathSchema = z
+export const characterRigSafeRelativePathSchema = z
   .string()
   .min(1)
   .refine(
@@ -34,30 +34,37 @@ export const characterRigComponentRoleSchema = z.enum([
   "torso",
   "pelvis",
   "head",
-  "ear-near",
-  "ear-far",
-  "upper-arm-near",
-  "lower-arm-near",
-  "hand-near",
-  "upper-arm-far",
-  "lower-arm-far",
-  "hand-far",
-  "upper-leg-near",
-  "lower-leg-near",
-  "foot-near",
-  "upper-leg-far",
-  "lower-leg-far",
-  "foot-far",
+  "ear-left",
+  "ear-right",
+  "upper-arm-left",
+  "lower-arm-left",
+  "hand-left",
+  "upper-arm-right",
+  "lower-arm-right",
+  "hand-right",
+  "upper-leg-left",
+  "lower-leg-left",
+  "foot-left",
+  "upper-leg-right",
+  "lower-leg-right",
+  "foot-right",
   "tail",
   "secondary-front",
   "secondary-back",
-  "eye-white",
-  "pupil",
-  "lid-open",
-  "lid-half",
-  "lid-closed",
-  "brow-neutral",
-  "brow-raised",
+  "eye-white-left",
+  "eye-white-right",
+  "pupil-left",
+  "pupil-right",
+  "lid-open-left",
+  "lid-open-right",
+  "lid-half-left",
+  "lid-half-right",
+  "lid-closed-left",
+  "lid-closed-right",
+  "brow-neutral-left",
+  "brow-neutral-right",
+  "brow-raised-left",
+  "brow-raised-right",
   "mouth-rest",
   "viseme-ai",
   "viseme-e",
@@ -67,6 +74,68 @@ export const characterRigComponentRoleSchema = z.enum([
   "viseme-l",
   "viseme-wq",
 ]);
+
+export const kidsBipedV1PartComponents = [
+  "torso",
+  "pelvis",
+  "head",
+  "ear-left",
+  "ear-right",
+  "upper-arm-left",
+  "lower-arm-left",
+  "hand-left",
+  "upper-arm-right",
+  "lower-arm-right",
+  "hand-right",
+  "upper-leg-left",
+  "lower-leg-left",
+  "foot-left",
+  "upper-leg-right",
+  "lower-leg-right",
+  "foot-right",
+  "tail",
+  "secondary-front",
+  "secondary-back",
+] as const satisfies readonly z.infer<typeof characterRigComponentRoleSchema>[];
+
+export const kidsBipedV1FaceComponents = [
+  "eye-white-left",
+  "eye-white-right",
+  "pupil-left",
+  "pupil-right",
+  "lid-open-left",
+  "lid-open-right",
+  "lid-half-left",
+  "lid-half-right",
+  "lid-closed-left",
+  "lid-closed-right",
+  "brow-neutral-left",
+  "brow-neutral-right",
+  "brow-raised-left",
+  "brow-raised-right",
+  "mouth-rest",
+  "viseme-ai",
+  "viseme-e",
+  "viseme-mbp",
+  "viseme-oh",
+  "viseme-fv",
+  "viseme-l",
+  "viseme-wq",
+] as const satisfies readonly z.infer<typeof characterRigComponentRoleSchema>[];
+
+export const requirementsForRigProfile = (
+  profileId: "kids-biped-v1",
+  view: z.infer<typeof characterRigViewSchema> | null,
+  itemKind: "turnaround-sheet" | "parts-kit" | "face-kit",
+): readonly z.infer<typeof characterRigComponentRoleSchema>[] => {
+  if (profileId !== "kids-biped-v1") return [];
+  if (itemKind === "turnaround-sheet") return [];
+  if (view !== "front" && view !== "profile-left" && view !== "profile-right")
+    return [];
+  return itemKind === "parts-kit"
+    ? kidsBipedV1PartComponents
+    : kidsBipedV1FaceComponents;
+};
 
 export const characterRigRequestItemSchema = z
   .object({
@@ -198,48 +267,27 @@ const refineCharacterRigAssetRequest = (
         message: `kids-biped-v1 requires ${key}.`,
       });
 
-  const partRoles = new Set([
-    "torso",
-    "pelvis",
-    "head",
-    "upper-arm-near",
-    "lower-arm-near",
-    "hand-near",
-    "upper-arm-far",
-    "lower-arm-far",
-    "hand-far",
-    "upper-leg-near",
-    "lower-leg-near",
-    "foot-near",
-    "upper-leg-far",
-    "lower-leg-far",
-    "foot-far",
-  ]);
-  const faceRoles = new Set([
-    "eye-white",
-    "pupil",
-    "lid-open",
-    "lid-half",
-    "lid-closed",
-    "mouth-rest",
-    "viseme-ai",
-    "viseme-e",
-    "viseme-mbp",
-    "viseme-oh",
-    "viseme-fv",
-    "viseme-l",
-    "viseme-wq",
-  ]);
   for (const [index, item] of request.items.entries()) {
-    const expected = item.kind === "parts-kit" ? partRoles : item.kind === "face-kit" ? faceRoles : null;
-    if (!expected) continue;
+    const expected = requirementsForRigProfile(
+      "kids-biped-v1",
+      item.view,
+      item.kind,
+    );
     const declared = new Set(item.requiredComponents);
     for (const role of expected)
-      if (!declared.has(role as z.infer<typeof characterRigComponentRoleSchema>))
+      if (!declared.has(role))
         context.addIssue({
           code: "custom",
           path: ["items", index, "requiredComponents"],
           message: `${item.kind} ${item.view} is missing ${role}.`,
+        });
+    const expectedSet = new Set(expected);
+    for (const role of declared)
+      if (!expectedSet.has(role))
+        context.addIssue({
+          code: "custom",
+          path: ["items", index, "requiredComponents"],
+          message: `${item.kind} ${item.view} contains forbidden role ${role}.`,
         });
   }
 };
@@ -263,11 +311,11 @@ export const characterRigAssetRequestSchema = z
       });
   });
 
-const characterRigCandidateAssetSchema = z
+export const characterRigCandidateAssetSchema = z
   .object({
     candidateId: identifierSchema,
     requestItemId: identifierSchema,
-    relativeFile: safeRelativePathSchema,
+    relativeFile: characterRigSafeRelativePathSchema,
     contentHash: hashSchema,
     byteLength: z.number().int().positive().max(50 * 1024 * 1024),
     mediaType: z.literal("image/png"),
@@ -365,6 +413,9 @@ export type CharacterRigCandidateBundleDraft = z.infer<
 export type CharacterRigCandidateBundle = z.infer<
   typeof characterRigCandidateBundleSchema
 >;
+export type CharacterRigCandidateAsset = z.infer<
+  typeof characterRigCandidateAssetSchema
+>;
 
 export const createCharacterRigAssetRequest = (
   rawDraft: CharacterRigAssetRequestDraft,
@@ -397,10 +448,8 @@ export const validateCharacterRigCandidateBundle = (
     bundle.requestContentHash !== request.contentHash
   )
     throw new Error("Candidate rig bundle is not bound to this exact request.");
-  const requested = new Set(request.items.map((item) => item.id));
-  const returned = new Set(bundle.assets.map((asset) => asset.requestItemId));
-  const unknown = [...returned].filter((id) => !requested.has(id));
-  const missing = [...requested].filter((id) => !returned.has(id));
+  const inspection = inspectCharacterRigCandidateBundle(request, bundle);
+  const { returnedItems, unknownItems: unknown, missingItems: missing } = inspection;
   if (unknown.length)
     throw new Error(
       `Candidate rig bundle contains unknown request items: ${unknown.join(", ")}.`,
@@ -412,52 +461,42 @@ export const validateCharacterRigCandidateBundle = (
   return {
     requestContentHash: request.contentHash,
     bundleContentHash: bundle.contentHash,
-    returnedItems: returned.size,
+    returnedItems: returnedItems.length,
     providerAuthority: false as const,
     approvalRequired: true as const,
   };
 };
 
-const requiredPartComponents = [
-  "torso",
-  "pelvis",
-  "head",
-  "ear-near",
-  "ear-far",
-  "upper-arm-near",
-  "lower-arm-near",
-  "hand-near",
-  "upper-arm-far",
-  "lower-arm-far",
-  "hand-far",
-  "upper-leg-near",
-  "lower-leg-near",
-  "foot-near",
-  "upper-leg-far",
-  "lower-leg-far",
-  "foot-far",
-  "tail",
-  "secondary-front",
-  "secondary-back",
-] as const;
-
-const requiredFaceComponents = [
-  "eye-white",
-  "pupil",
-  "lid-open",
-  "lid-half",
-  "lid-closed",
-  "brow-neutral",
-  "brow-raised",
-  "mouth-rest",
-  "viseme-ai",
-  "viseme-e",
-  "viseme-mbp",
-  "viseme-oh",
-  "viseme-fv",
-  "viseme-l",
-  "viseme-wq",
-] as const;
+export const inspectCharacterRigCandidateBundle = (
+  rawRequest: CharacterRigAssetRequest,
+  rawBundle: CharacterRigCandidateBundle,
+) => {
+  const request = characterRigAssetRequestSchema.parse(rawRequest);
+  const bundle = characterRigCandidateBundleSchema.parse(rawBundle);
+  if (
+    bundle.requestId !== request.requestId ||
+    bundle.requestContentHash !== request.contentHash
+  )
+    throw new Error("Candidate rig bundle is not bound to this exact request.");
+  const requested = new Set(request.items.map((item) => item.id));
+  const returned = new Set(bundle.assets.map((asset) => asset.requestItemId));
+  const returnedItems = [...returned].filter((id) => requested.has(id)).sort();
+  const unknownItems = [...returned].filter((id) => !requested.has(id)).sort();
+  const missingItems = [...requested].filter((id) => !returned.has(id)).sort();
+  return {
+    requestContentHash: request.contentHash,
+    bundleContentHash: bundle.contentHash,
+    status:
+      missingItems.length === 0 && unknownItems.length === 0
+        ? ("complete" as const)
+        : ("incomplete" as const),
+    returnedItems,
+    missingItems,
+    unknownItems,
+    providerAuthority: false as const,
+    approvalRequired: true as const,
+  };
+};
 
 export const createKidsBipedRigRequestItems = () => [
   {
@@ -478,7 +517,9 @@ export const createKidsBipedRigRequestItems = () => [
         kind: "parts-kit" as const,
         view,
         registrationGroup: `rig-${view}`,
-        requiredComponents: [...requiredPartComponents],
+        requiredComponents: [
+          ...requirementsForRigProfile("kids-biped-v1", view, "parts-kit"),
+        ],
         instructions: [
           "Provide independently separated transparent parts with safety gutters.",
           "Upper and lower arms and legs must be distinct; whole-limb substitutes are invalid.",
@@ -489,7 +530,9 @@ export const createKidsBipedRigRequestItems = () => [
         kind: "face-kit" as const,
         view,
         registrationGroup: `rig-${view}`,
-        requiredComponents: [...requiredFaceComponents],
+        requiredComponents: [
+          ...requirementsForRigProfile("kids-biped-v1", view, "face-kit"),
+        ],
         instructions: [
           "Provide registration-consistent eyes, lids, brows, and mouth exposures.",
           "Mouth exposures are guide visemes and require later dialogue-specific timing.",

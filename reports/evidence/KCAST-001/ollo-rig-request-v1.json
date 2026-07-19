@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "showPack": {
+    "id": "ollo-and-friends-kids-v1",
+    "version": "1.0.0",
+    "contentHash": "083d036b9a65f2d79e382bfbdf8037a4c7a1baeb65d9fa5558b3cd765a872fa8"
+  },
+  "character": {
+    "id": "ollo",
+    "displayName": "Ollo"
+  },
+  "identityLock": {
+    "assetId": "ollo-friends-identity-board-v1",
+    "contentHash": "0950d7043347528a302de5d70f36736dcfbec1f9e0177296756e91b96fbc846f"
+  },
+  "rigProfile": {
+    "id": "kids-biped-v1",
+    "version": "1.0.0",
+    "templateContentHash": "2f6b4320121dc626f5af95ed7a796d0633dbeb9baced1d3e603ec1af418ad2da"
+  },
+  "acquisition": {
+    "mode": "manual-file-import",
+    "providerNeutral": true,
+    "acceptedMediaTypes": [
+      "image/png"
+    ],
+    "credentialsRequired": false,
+    "accountSessionRequired": false
+  },
+  "controlledMatte": "#ff00ff",
+  "items": [
+    {
+      "id": "turnaround-sheet",
+      "kind": "turnaround-sheet",
+      "view": null,
+      "registrationGroup": "identity-turnaround",
+      "requiredComponents": [],
+      "instructions": [
+        "Provide front, three-quarter, profile-left, profile-right, and rear views.",
+        "Preserve the approved identity, scale, palette, and asymmetric details."
+      ]
+    },
+    {
+      "id": "parts-front",
+      "kind": "parts-kit",
+      "view": "front",
+      "registrationGroup": "rig-front",
+      "requiredComponents": [
+        "torso",
+        "pelvis",
+        "head",
+        "ear-left",
+        "ear-right",
+        "upper-arm-left",
+        "lower-arm-left",
+        "hand-left",
+        "upper-arm-right",
+        "lower-arm-right",
+        "hand-right",
+        "upper-leg-left",
+        "lower-leg-left",
+        "foot-left",
+        "upper-leg-right",
+        "lower-leg-right",
+        "foot-right",
+        "tail",
+        "secondary-front",
+        "secondary-back"
+      ],
+      "instructions": [
+        "Provide independently separated transparent parts with safety gutters.",
+        "Upper and lower arms and legs must be distinct; whole-limb substitutes are invalid."
+      ]
+    },
+    {
+      "id": "face-front",
+      "kind": "face-kit",
+      "view": "front",
+      "registrationGroup": "rig-front",
+      "requiredComponents": [
+        "eye-white-left",
+        "eye-white-right",
+        "pupil-left",
+        "pupil-right",
+        "lid-open-left",
+        "lid-open-right",
+        "lid-half-left",
+        "lid-half-right",
+        "lid-closed-left",
+        "lid-closed-right",
+        "brow-neutral-left",
+        "brow-neutral-right",
+        "brow-raised-left",
+        "brow-raised-right",
+        "mouth-rest",
+        "viseme-ai",
+        "viseme-e",
+        "viseme-mbp",
+        "viseme-oh",
+        "viseme-fv",
+        "viseme-l",
+        "viseme-wq"
+      ],
+      "instructions": [
+        "Provide registration-consistent eyes, lids, brows, and mouth exposures.",
+        "Mouth exposures are guide visemes and require later dialogue-specific timing."
+      ]
+    },
+    {
+      "id": "parts-profile-left",
+      "kind": "parts-kit",
+      "view": "profile-left",
+      "registrationGroup": "rig-profile-left",
+      "requiredComponents": [
+        "torso",
+        "pelvis",
+        "head",
+        "ear-left",
+        "ear-right",
+        "upper-arm-left",
+        "lower-arm-left",
+        "hand-left",
+        "upper-arm-right",
+        "lower-arm-right",
+        "hand-right",
+        "upper-leg-left",
+        "lower-leg-left",
+        "foot-left",
+        "upper-leg-right",
+        "lower-leg-right",
+        "foot-right",
+        "tail",
+        "secondary-front",
+        "secondary-back"
+      ],
+      "instructions": [
+        "Provide independently separated transparent parts with safety gutters.",
+        "Upper and lower arms and legs must be distinct; whole-limb substitutes are invalid."
+      ]
+    },
+    {
+      "id": "face-profile-left",
+      "kind": "face-kit",
+      "view": "profile-left",
+      "registrationGroup": "rig-profile-left",
+      "requiredComponents": [
+        "eye-white-left",
+        "eye-white-right",
+        "pupil-left",
+        "pupil-right",
+        "lid-open-left",
+        "lid-open-right",
+        "lid-half-left",
+        "lid-half-right",
+        "lid-closed-left",
+        "lid-closed-right",
+        "brow-neutral-left",
+        "brow-neutral-right",
+        "brow-raised-left",
+        "brow-raised-right",
+        "mouth-rest",
+        "viseme-ai",
+        "viseme-e",
+        "viseme-mbp",
+        "viseme-oh",
+        "viseme-fv",
+        "viseme-l",
+        "viseme-wq"
+      ],
+      "instructions": [
+        "Provide registration-consistent eyes, lids, brows, and mouth exposures.",
+        "Mouth exposures are guide visemes and require later dialogue-specific timing."
+      ]
+    },
+    {
+      "id": "parts-profile-right",
+      "kind": "parts-kit",
+      "view": "profile-right",
+      "registrationGroup": "rig-profile-right",
+      "requiredComponents": [
+        "torso",
+        "pelvis",
+        "head",
+        "ear-left",
+        "ear-right",
+        "upper-arm-left",
+        "lower-arm-left",
+        "hand-left",
+        "upper-arm-right",
+        "lower-arm-right",
+        "hand-right",
+        "upper-leg-left",
+        "lower-leg-left",
+        "foot-left",
+        "upper-leg-right",
+        "lower-leg-right",
+        "foot-right",
+        "tail",
+        "secondary-front",
+        "secondary-back"
+      ],
+      "instructions": [
+        "Provide independently separated transparent parts with safety gutters.",
+        "Upper and lower arms and legs must be distinct; whole-limb substitutes are invalid."
+      ]
+    },
+    {
+      "id": "face-profile-right",
+      "kind": "face-kit",
+      "view": "profile-right",
+      "registrationGroup": "rig-profile-right",
+      "requiredComponents": [
+        "eye-white-left",
+        "eye-white-right",
+        "pupil-left",
+        "pupil-right",
+        "lid-open-left",
+        "lid-open-right",
+        "lid-half-left",
+        "lid-half-right",
+        "lid-closed-left",
+        "lid-closed-right",
+        "brow-neutral-left",
+        "brow-neutral-right",
+        "brow-raised-left",
+        "brow-raised-right",
+        "mouth-rest",
+        "viseme-ai",
+        "viseme-e",
+        "viseme-mbp",
+        "viseme-oh",
+        "viseme-fv",
+        "viseme-l",
+        "viseme-wq"
+      ],
+      "instructions": [
+        "Provide registration-consistent eyes, lids, brows, and mouth exposures.",
+        "Mouth exposures are guide visemes and require later dialogue-specific timing."
+      ]
+    }
+  ],
+  "prohibitions": [
+    "Do not redesign Ollo or substitute a generic woodland character.",
+    "Do not combine upper and lower limbs into a whole-limb piece.",
+    "Do not translate a front-facing rig sideways as profile locomotion."
+  ],
+  "approvalRequired": true,
+  "contentHash": "24a7a627be2a8acab69407524b30722aecb579a7a1d78f142d68c38082698365"
+}
