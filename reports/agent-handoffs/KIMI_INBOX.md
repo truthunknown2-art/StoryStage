@@ -1,17 +1,22 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `1`
+Inbox-Version: `2`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-UI-SLICE-A`
+Current-Task: `KIMI-UI-SLICE-B-STUDIO-SHELL`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `cc5f8a5`
-Required-Work-Branch: `agent/kimi-ui-slice-a`
-Full-Brief: `reports/agent-handoffs/2026-07-18-codex-kimi-start-ui-slice-a.md`
+Accepted-Root-Base: `21e8d4c601e5e96a540f93ede2b52660bfa6ac0a`
+Required-Work-Branch: `agent/kimi-ui-slice-b-studio-shell`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-start-ui-slice-b-studio-shell.md`
 
 ## Current instruction
 
-Start `KIMI-UI-SLICE-A` immediately. Create a fresh `agent/kimi-ui-slice-a` branch from exact root base `cc5f8a5`, read the full brief above from `origin/agent/kimi-frontend`, implement the real creator UI slice, verify it, push it, and publish the required handback on that work branch.
+Start `KIMI-UI-SLICE-B-STUDIO-SHELL` immediately. Create a fresh
+`agent/kimi-ui-slice-b-studio-shell` branch from exact accepted integration base
+`21e8d4c601e5e96a540f93ede2b52660bfa6ac0a`, read the full brief above from
+`origin/agent/kimi-frontend`, implement the real post-create animation workspace,
+verify it, push it, open a draft PR, and publish the required handback on that
+work branch.
 
 Do not wait for another message from Preston, Codex, or Pro. The `START-NOW` status is the approval to begin.
 
