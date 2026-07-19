@@ -38,16 +38,40 @@ smallest visual-performance layer that could own:
 - parts-based character rigs and authored exposures;
 - internal body/face performance, walk/idle/reaction cycles, easing, blinking,
   and lip-sync visuals;
-- camera and transition execution that consumes canonical camera intent;
+- local visual performance that consumes compiler-resolved camera,
+  transition, phase, gait, gaze, and viseme samples without deciding their
+  timing;
 - reusable motion programs that consume, but never independently invent,
-  canonical root motion, facing, gaze, gait phase, action phase, visibility,
-  prop attachment, or shot-boundary state.
+canonical root motion, facing, gaze, gait phase, action phase, visibility,
+prop attachment, camera/transition samples, viseme timing, or shot-boundary
+state.
 
 Codex owns those canonical continuity states in a new hash-bound
 `ContinuitySequencePlan` inside the existing `ExecutableEpisodePlan`. Your
 audit must name the exact TypeScript boundary you recommend between that plan
 and the visual-performance implementation so the two lanes cannot create
 competing root-motion, camera, or timing authority.
+
+Pro has accepted this tightened ownership line:
+
+- Codex compiles camera intent to exact samples, transition intent to exact
+  progress/mask samples, dialogue timing to exact viseme cues, and continuity
+  to exact root/boundary states.
+- Kimi owns deterministic local rig output only: articulated parts, authored
+  exposures, facial shapes, blink appearance, secondary motion, sockets, and
+  local effects.
+- Kimi's output may not contain root transforms, camera or transition values,
+  absolute frames, shot-duration mutation, visibility mutation, prop ownership,
+  prop lifecycle, or cut timing.
+- A rig renders at local origin inside Codex-owned entity, camera, and
+  transition hosts. Kimi owns how a viseme looks, never when it occurs.
+
+Your audit should propose strict `LocalPerformanceInput` and
+`LocalPerformanceFrame` schemas, fail-closed rig validation, and a first
+120–150 frame generic Kids proof covering walk/decelerate, named plant,
+gaze/head lead, torso follow, arm reach, supplied viseme cues, blink, settle,
+and living hold. Do not begin that proof until the accepted continuity-contract
+commit is available as a new base.
 
 Write only the audit, proposed rig/performance interface, and proposed file plan to
 `reports/agent-handoffs/kimi-ui-audit.md`, commit it, push
