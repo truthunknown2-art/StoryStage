@@ -1,9 +1,10 @@
 # Scene Craft v1.1 — non-normative directing knowledge
 
-- **Status:** Editorial knowledge base; non-normative. Every candidate rule is
-  classified with evidence in
-  [`scene-craft-v1.1-rule-ledger.json`](./scene-craft-v1.1-rule-ledger.json)
-  under a numbered rule ID (`SC-###`).
+- **Status:** Draft editorial knowledge base; non-normative until rule
+  classification, evidence mapping, and pilot calibration are accepted. Every
+  candidate rule is classified with evidence in
+  [`scene-craft-rule-ledger-v1.md`](./scene-craft-rule-ledger-v1.md) under a
+  stable rule ID (`SC-###`).
 - **Supersedes for future adoption:** `scene-craft-v1.md` at
   `0a4f25d8c5eb4956ed508cf3ab05df1c3c92dd3e`.
 - **Editorial source:** Kimi Scene Craft v1, amended by Codex and ChatGPT Pro.
