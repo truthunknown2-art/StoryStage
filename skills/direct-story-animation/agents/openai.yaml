@@ -1,0 +1,4 @@
+interface:
+  display_name: "StoryStage Director"
+  short_description: "Direct scenes, animation, picture, and sound"
+  default_prompt: "Use $direct-story-animation to turn this script into a coherent, production-ready directed animation plan."

@@ -6,10 +6,13 @@
   "exports": {
     ".": "./src/index.tsx",
     "./entry": "./src/remotion-entry.ts",
-    "./manifest": "./src/manifest.ts"
+    "./manifest": "./src/manifest.ts",
+    "./director": "./src/director/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run src/cv001-rig-contract.test.ts src/director/bundledKidsCapabilities.test.ts",
+    "verify:director-capability-assets": "node ../../scripts/generate-director-capability-asset-catalog.mjs --check"
   },
   "dependencies": {
     "@remotion/captions": "4.0.490",
@@ -22,6 +25,7 @@
   },
   "devDependencies": {
     "@types/react": "19.2.7",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
   }
 }

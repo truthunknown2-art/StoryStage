@@ -3,9 +3,13 @@ import {
   canTransitionRenderJob,
   assetWorkerCommandSchema,
   exportGenerationJobRequestSchema,
+  importVoiceTrackRequestSchema,
+  importMusicTrackRequestSchema,
+  importSoundEffectRequestSchema,
   prepareGenerationImportRequestSchema,
   renderJobEventSchema,
   renderWorkerMessageSchema,
+  startProductionRenderRequestSchema,
   startRenderRequestSchema,
   stageCandidateBundleRequestSchema,
 } from "./schemas";
@@ -13,6 +17,14 @@ import {
 describe("StoryStage contracts", () => {
   it("rejects renderer-provided filesystem paths", () => {
     expect(startRenderRequestSchema.safeParse({outputPath: "C:/arbitrary/output.mp4"}).success).toBe(false);
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1, scope: "engineering-slice", outputPath: "C:/arbitrary/output.mp4"}).success).toBe(false);
+  });
+
+  it("requires an explicit bounded production render scope", () => {
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1, scope: "engineering-slice"}).success).toBe(true);
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1, scope: "full-production"}).success).toBe(true);
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1}).success).toBe(false);
+    expect(startProductionRenderRequestSchema.safeParse({productionId: "production-one", revision: 1, scope: "arbitrary-range"}).success).toBe(false);
   });
 
   it("keeps image exchange requests path-free and bounded", () => {
@@ -20,6 +32,24 @@ describe("StoryStage contracts", () => {
     expect(stageCandidateBundleRequestSchema.safeParse({exchangeJobId: "job-one", sourcePath: "C:/elsewhere"}).success).toBe(false);
     expect(exportGenerationJobRequestSchema.safeParse({serializedJob: "x".repeat(2_000_001), productionBundleContentHash: "a".repeat(64)}).success).toBe(false);
     expect(prepareGenerationImportRequestSchema.safeParse({exchangeJobId: "job-one", stagingRoot: "C:/elsewhere"}).success).toBe(false);
+  });
+
+  it("keeps voice import requests path-free and snapshot-bound", () => {
+    const valid = {productionId: "production-one", revision: 1, productionBundleContentHash: "a".repeat(64)};
+    expect(importVoiceTrackRequestSchema.safeParse(valid).success).toBe(true);
+    expect(importVoiceTrackRequestSchema.safeParse({...valid, sourcePath: "C:/untrusted/voice.wav"}).success).toBe(false);
+  });
+
+  it("keeps music import requests path-free and snapshot-bound", () => {
+    const valid = {productionId: "production-one", revision: 1, productionBundleContentHash: "a".repeat(64)};
+    expect(importMusicTrackRequestSchema.safeParse(valid).success).toBe(true);
+    expect(importMusicTrackRequestSchema.safeParse({...valid, sourcePath: "C:/untrusted/music.wav"}).success).toBe(false);
+  });
+
+  it("keeps sound-effect import requests path-free and snapshot-bound", () => {
+    const valid = {productionId: "production-one", revision: 1, productionBundleContentHash: "a".repeat(64)};
+    expect(importSoundEffectRequestSchema.safeParse(valid).success).toBe(true);
+    expect(importSoundEffectRequestSchema.safeParse({...valid, sourcePath: "C:/untrusted/hit.wav"}).success).toBe(false);
   });
 
   it("validates render-worker messages at the process boundary", () => {

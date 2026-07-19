@@ -1,5 +1,15 @@
 # Product vision
 
+## Creator-first reset
+
+StoryStage is an AI animation director with a creator-first editor. The visible promise is: paste a script, choose a project grammar and art style, watch a directed animated first cut, improve individual beats in plain language, approve media, and export. The local-first production, approval, rights, lineage, render, and delivery systems quietly protect this flow; they are not the default interface.
+
+The creator edits semantic beats before internal shots. A beat may be an idea, action, reaction, joke, or revelation and may compile to one continuous shot or several editorial shots. The preview dominates the Studio; scenes and beats sit to its left, contextual direction sits to its right, and the exact Character, Camera, Voice, and SFX tracks expand below only when needed.
+
+Full-body pose swaps, root-position tweens, and camera moves are useful ingredients, but none is character animation on its own. Recurring character performance must use continuous articulated motion with readable gaze, face, head, torso, limb, hand, and secondary-motion intent. Root translation must be paired with appropriate locomotion and grounded contacts. Preview and export must resolve the same deterministic scene graph and tracks.
+
+The first honest proof is one 10-15 second Kids Adventure scene that turns three to five script beats into a rigged performance with a prop, layered background, phoneme timing, camera reframe, parallax, captions, and sound. See `docs/research/mister-kipley-limited-animation-study.md`.
+
 StoryStage is a local-first directing and production studio for repeat characters, repeat styles, and inspectable episode plans. Its end product is not merely a script parser, storyboard generator, or Remotion player. The target workflow is: paste a script, choose a production grammar, review the proposed direction, acquire or create the required assets, prepare and rig them, build sound and picture, revise decisions, and render a reproducible episode.
 
 AI may propose structured production decisions, but approved data—not an opaque one-shot prompt—drives deterministic rendering. The product should feel like a calm studio desk: the operator can see why every scene, cut, asset, action, sound cue, and camera move exists; lock or replace it; and reproduce the result later.

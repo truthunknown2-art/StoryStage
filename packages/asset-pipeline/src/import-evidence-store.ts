@@ -7,11 +7,7 @@ export type ImportEvidenceCheckpoint = "candidate-bundle-written" | "import-reco
 type CommitImportEvidenceOptions = {
   stagingRoot: string;
   expectedContentHash: string;
-  files: {
-    candidateBundle: string;
-    importRecord: string;
-    validationReport: string;
-  };
+  files: {candidateBundle: string; importRecord: string; validationReport: string};
   readCommittedContentHash: (evidenceRoot: string) => Promise<string>;
   onCheckpoint?: (checkpoint: ImportEvidenceCheckpoint) => void | Promise<void>;
   transactionId?: string;
@@ -37,7 +33,6 @@ export async function commitImportEvidenceDirectory(options: CommitImportEvidenc
   await options.onCheckpoint?.("import-record-written");
   await writeFile(join(temporaryRoot, "validation-report.json"), options.files.validationReport, {encoding: "utf8", mode: 0o600, flag: "wx"});
   await options.onCheckpoint?.("validation-report-written");
-
   try {
     await rename(temporaryRoot, evidenceRoot);
   } catch (error) {

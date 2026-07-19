@@ -63,7 +63,7 @@ function buildFromStages(input: BuildAnimaticInput, draft: ProductionDraft, scri
   const baseResolvedPlan = resolveAssets(creativePlan, showPack, input.overrides ?? []);
   const resolvedPlan = (input.approvedAssetVersions ?? []).reduce((plan, approved) => applyApprovedAssetVersion(plan, approved), baseResolvedPlan);
   const renderPlan = compileAnimation(resolvedPlan);
-  const metrics = measureDirectedPlan(creativePlan);
+  const metrics = measureDirectedPlan(resolvedPlan.creativePlan);
   const estimate = productionEstimateSchema.parse({shotCount: renderPlan.shots.length, durationSeconds: renderPlan.durationInFrames / renderPlan.fps, newRequirementCount: resolvedPlan.generationBriefs.length, deferredRequirementCount: resolvedPlan.requirements.filter((requirement) => requirement.status === "deferred").length, estimatedCandidateImages: resolvedPlan.generationBriefs.reduce((sum, brief) => sum + brief.candidateCount, 0), outputWidth: renderPlan.width, outputHeight: renderPlan.height});
   return {draft, scriptDocument, storyAnalysis, creativePlan, resolvedPlan, renderPlan, metrics, estimate};
 }

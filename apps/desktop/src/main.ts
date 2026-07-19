@@ -1,11 +1,27 @@
 import {createHash, randomUUID} from "node:crypto";
-import {access, lstat, mkdir, readFile, readdir, realpath, rename, unlink, writeFile} from "node:fs/promises";
+import {access, link, lstat, mkdir, readFile, readdir, realpath, rename, unlink, writeFile} from "node:fs/promises";
 import {basename, dirname, isAbsolute, join, relative, resolve, sep} from "node:path";
 import {pathToFileURL} from "node:url";
-import {app, BrowserWindow, dialog, ipcMain, shell, utilityProcess, type OpenDialogOptions} from "electron";
-import {commitImportEvidenceDirectory} from "./import-evidence-store";
+import {productionDraftPayload} from "./production-draft-payload";
+import {assertApprovedPublicReviewLineage} from "./public-review-lineage";
+import {assertVerifiedFullRenderReceipt} from "./render-receipt";
+import {publishDeliveryBundle, readVerifiedDeliveryBundle, type VerifiedDeliveryBundle} from "./delivery-store";
+import {ProductionMutationCoordinator, StaleProductionError} from "./production-mutation-lock";
+import {app, BrowserWindow, dialog, ipcMain, net, protocol, shell, utilityProcess, type OpenDialogOptions} from "electron";
+import {commitApprovalWorkflow} from "@storystage/asset-pipeline/approval-recovery";
+import {buildApprovedProductionRevisionDraft, buildSelectedCandidateRigArtifacts, persistAssetReviewRecordSnapshot, promotePreparedCandidateSet} from "@storystage/asset-pipeline/approved-asset-workflow";
+import {promotePublicShowPackCandidate, verifyPublicShowPackCandidate} from "@storystage/asset-pipeline/public-show-pack-promotion";
+import {persistPublicShowPackReviewRecord, PublicShowPackReviewCoordinator, readPublicShowPackReviewRecord} from "@storystage/asset-pipeline/public-show-pack-review-store";
+import {commitImportEvidenceDirectory} from "@storystage/asset-pipeline/import-evidence-store";
+import {createImportRecordFromStagedCandidates} from "@storystage/asset-pipeline/import-record-builder";
 import {
   IPC_CHANNELS,
+  approveMusicTrackRequestSchema,
+  approveMusicTrackResultSchema,
+  approveSoundEffectRequestSchema,
+  approveSoundEffectResultSchema,
+  approveVoiceTrackRequestSchema,
+  approveVoiceTrackResultSchema,
   assetWorkerCommandSchema,
   assetWorkerMessageSchema,
   canTransitionRenderJob,
@@ -16,11 +32,21 @@ import {
   finalizeLooseCandidateMappingResultSchema,
   getGenerationExchangeRequestSchema,
   getGenerationExchangeResultSchema,
+  getVerifiedDeliveryRequestSchema,
+  getVerifiedDeliveryResultSchema,
   importLooseCandidateFilesRequestSchema,
   importLooseCandidateFilesResultSchema,
+  importMusicTrackRequestSchema,
+  importMusicTrackResultSchema,
+  importSoundEffectRequestSchema,
+  importSoundEffectResultSchema,
+  importVoiceTrackRequestSchema,
+  importVoiceTrackResultSchema,
   listGenerationExchangesRequestSchema,
   listGenerationExchangesResultSchema,
   listProductionBundlesResultSchema,
+  listPublicShowPackCandidatesRequestSchema,
+  listPublicShowPackCandidatesResultSchema,
   loadProductionBundleRequestSchema,
   loadProductionBundleResultSchema,
   openRenderedFileResultSchema,
@@ -29,7 +55,10 @@ import {
   preparationReviewSchema,
   reviewCandidateSetRequestSchema,
   reviewCandidateSetResultSchema,
+  reviewPublicShowPackCandidateRequestSchema,
+  reviewPublicShowPackCandidateResultSchema,
   productionBundleSummarySchema,
+  verifiedDeliverySummarySchema,
   stagedCandidateSummarySchema,
   renderJobEventSchema,
   renderWorkerCommandSchema,
@@ -52,21 +81,28 @@ import {
   assetReviewRecordSchema,
   canTransitionGenerationExchange,
   candidateBundleSchema,
-  finalizeImportRecord,
+  assertPublicShowPackReviewAttemptIsCompatible,
   createImportValidationReport,
   finalizeAssetReviewRecord,
+  finalizePublicShowPackReviewRecord,
   finalizeProductionBundle,
   finalizeGenerationJob,
   generationExchangeStateSchema,
+  generationBriefsMatchAuthoritativePlan,
   generationJobSchema,
   generationJobDraftSchema,
   getShowPack,
   hashCanonical,
+  inspectPcmWav,
+  musicTrackSchema,
+  soundEffectAssetSchema,
   importRecordSchema,
   importValidationReportSchema,
   preparationReportSchema,
+  publicShowPackCandidateMatchesRelease,
   prepareCandidateSetsRequestSchema,
   rigValidationReportSchema,
+  renderReceiptSchema,
   rigDiagnosticReportSchema,
   stagedCandidateSchema,
   productionBundleSchema,
@@ -82,30 +118,32 @@ import {
   verifyRigValidationReportHash,
   verifyRigDiagnosticReportHash,
   validateCandidateSets,
-  createAssetRigManifest,
-  validateAssetRigManifest,
-  finalizeRigDiagnosticReport,
+  voiceTrackSchema,
   type CandidateBundle,
   type ApprovedAssetVersion,
   type AssetReviewRecord,
   type AssetRigManifest,
-  type AssetRigManifestDraft,
   type RigDiagnosticReport,
   type RigValidationReport,
   type GenerationExchangeState,
   type GenerationJob,
   type GenerationJobDraft,
   type ImportRecord,
+  type MusicTrack,
+  type SoundEffectAsset,
   type PreparationReport,
   type ProductionBundle,
+  type PublicShowPackReviewRecord,
   type ShowPack,
   type StagedCandidate,
+  type VoiceTrack,
 } from "@storystage/story-engine";
 
 type JobRecord = {
   event: RenderJobEvent;
   phaseProgress: Partial<Record<"bundling" | "rendering", number>>;
   allowedOutputRoot: string;
+  productionBinding?: {productionId: string; revision: number; bundleContentHash: string; scope: "engineering-slice" | "full-production"};
 };
 
 let mainWindow: BrowserWindow | null = null;
@@ -114,7 +152,12 @@ const jobRegistry = new Map<string, JobRecord>();
 type GenerationExchangeRecord = {job: GenerationJob; jobFile: string; stateFile: string; state: GenerationExchangeState};
 const generationExchangeRegistry = new Map<string, GenerationExchangeRecord>();
 const productionBundleRegistry = new Map<string, {bundle: ProductionBundle; bundleFile: string}>();
-const productionSaveQueues = new Map<string, Promise<ProductionBundle>>();
+const deliveryRegistry = new Map<string, VerifiedDeliveryBundle>();
+const voiceTrackRegistry = new Map<string, VoiceTrack>();
+const musicTrackRegistry = new Map<string, MusicTrack>();
+const soundEffectRegistry = new Map<string, SoundEffectAsset>();
+const productionMutations = new ProductionMutationCoordinator();
+const publicShowPackReviewCoordinator = new PublicShowPackReviewCoordinator();
 const looseImportRegistry = new Map<string, {
   exchange: GenerationExchangeRecord;
   trustedStagingRoot: string;
@@ -122,11 +165,130 @@ const looseImportRegistry = new Map<string, {
   candidates: WorkerLooseStagedCandidate[];
 }>();
 const workspaceRoot = app.isPackaged ? app.getAppPath() : resolve(__dirname, "../../..");
+const rookCandidateRelease = {
+  candidateId: "weird-history-rook-v1",
+  showPackId: "weird-history-editorial-v1",
+  contentHash: "6c60b1fa633a4c3c7e9a32cbe475a52277f38b7d5cf2e239b0acee2ada85c691",
+  relativeRoot: "packages/remotion-runtime/public/show-packs/weird-history/rook/v1",
+  publicRoot: "/show-packs/weird-history/rook/v1",
+} as const;
 const terminalStatuses = new Set<RenderJobEvent["status"]>(["completed", "failed"]);
+const renderedMediaScheme = "storystage-media";
+
+protocol.registerSchemesAsPrivileged([{
+  scheme: renderedMediaScheme,
+  privileges: {standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true},
+}]);
 
 function isWithinPath(root: string, candidate: string): boolean {
   const pathFromRoot = relative(root, candidate);
   return pathFromRoot === "" || (!pathFromRoot.startsWith("..") && !isAbsolute(pathFromRoot));
+}
+
+const localAssetsRoot = () => join(app.getPath("userData"), ".storystage-local", "assets");
+const rookCandidateRoot = () => resolve(workspaceRoot, ...rookCandidateRelease.relativeRoot.split("/"));
+
+async function readPublicShowPackReview(productionId: string, revision: number, candidateId: string): Promise<PublicShowPackReviewRecord | null> {
+  const file = join(app.getPath("userData"), ".storystage-local", "show-pack-reviews", productionId, `r${revision}`, candidateId, "review.json");
+  return readPublicShowPackReviewRecord(file);
+}
+
+async function persistPublicShowPackReview(record: ReturnType<typeof finalizePublicShowPackReviewRecord>): Promise<void> {
+  const file = join(app.getPath("userData"), ".storystage-local", "show-pack-reviews", record.productionId, `r${record.sourceProductionRevision}`, record.candidateId, "review.json");
+  await persistPublicShowPackReviewRecord({file, record});
+}
+
+const completedPublicReviewAcknowledgements = {identitySheet: true, neutralPose: true, talkPose: true, reactionPose: true, movingDiagnostic: true, identityConsistency: true, matteEdges: true, provenance: true} as const;
+const publicCandidateAssetPrefix = (candidateId: string) => `approved-${candidateId}-`;
+const publicCandidateAssetInBundle = (bundle: ProductionBundle, candidateId: string) => (bundle.approvedAssetVersions ?? []).find((asset) => asset.assetId.startsWith(publicCandidateAssetPrefix(candidateId))) ?? null;
+
+async function resolvePublicShowPackReviewForBundle(bundle: ProductionBundle, candidate: {candidateId: string; contentHash: string}): Promise<PublicShowPackReviewRecord | null> {
+  const exact = await readPublicShowPackReview(bundle.production.productionId, bundle.production.revision, candidate.candidateId);
+  const currentAsset = publicCandidateAssetInBundle(bundle, candidate.candidateId);
+  const next = productionBundleRegistry.get(productionBundleKey(bundle.production.productionId, bundle.production.revision + 1))?.bundle ?? null;
+  const nextAsset = next ? publicCandidateAssetInBundle(next, candidate.candidateId) : null;
+  if (exact) {
+    if (exact.decision === "rejected" && (currentAsset || nextAsset)) throw new Error("The durable Rook decision contradicts an approved production lineage.");
+    if (exact.decision === "approved") await verifyApprovedPublicReviewLineageOnDisk(exact);
+    return exact;
+  }
+
+  if (currentAsset && bundle.production.revision > 1) {
+    const sourceRevision = bundle.production.revision - 1;
+    const source = productionBundleRegistry.get(productionBundleKey(bundle.production.productionId, sourceRevision))?.bundle ?? null;
+    if (!source || !verifyProductionBundleHash(source)) throw new Error("The approved Rook target lost its authoritative source revision.");
+    const sourceReview = await readPublicShowPackReview(bundle.production.productionId, sourceRevision, candidate.candidateId);
+    if (sourceReview) {
+      if (sourceReview.decision !== "approved" || sourceReview.targetProductionRevision !== bundle.production.revision) throw new Error("The Rook source review contradicts its approved target revision.");
+      await verifyApprovedPublicReviewLineageOnDisk(sourceReview);
+      return sourceReview;
+    }
+    const recovered = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: bundle.production.productionId, sourceProductionRevision: sourceRevision, sourceProductionBundleContentHash: source.contentHash, decision: "approved", acknowledgements: completedPublicReviewAcknowledgements, decidedAt: currentAsset.approvedAt, approvedAssetVersion: currentAsset, targetProductionRevision: bundle.production.revision, targetProductionBundleContentHash: bundle.contentHash});
+    await persistPublicShowPackReview(recovered);
+    return recovered;
+  }
+
+  if (next && nextAsset) {
+    if (!verifyProductionBundleHash(next)) throw new Error("The recovered Rook target revision failed its content hash.");
+    const recovered = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: bundle.production.productionId, sourceProductionRevision: bundle.production.revision, sourceProductionBundleContentHash: bundle.contentHash, decision: "approved", acknowledgements: completedPublicReviewAcknowledgements, decidedAt: nextAsset.approvedAt, approvedAssetVersion: nextAsset, targetProductionRevision: next.production.revision, targetProductionBundleContentHash: next.contentHash});
+    await persistPublicShowPackReview(recovered);
+    return recovered;
+  }
+  return null;
+}
+
+async function publishImmutableVoiceFile(targetFile: string, bytes: Buffer): Promise<void> {
+  await mkdir(dirname(targetFile), {recursive: true});
+  const temporaryFile = `${targetFile}.${randomUUID()}.tmp`;
+  await writeFile(temporaryFile, bytes, {mode: 0o600, flag: "wx"});
+  try {
+    try {
+      await link(temporaryFile, targetFile);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      const existing = await readFile(targetFile);
+      if (createHash("sha256").update(existing).digest("hex") !== createHash("sha256").update(bytes).digest("hex")) throw new Error("Voice asset filename collides with different bytes.");
+    }
+  } finally {
+    await unlink(temporaryFile).catch(() => undefined);
+  }
+}
+
+async function readVerifiedVoiceTrack(trackInput: VoiceTrack): Promise<{bytes: Buffer; file: string}> {
+  const track = voiceTrackSchema.parse(trackInput);
+  const root = localAssetsRoot();
+  await mkdir(root, {recursive: true});
+  const requestedFile = resolve(root, ...track.relativeFile.split("/"));
+  if (!isWithinPath(root, requestedFile)) throw new Error("Voice asset escaped the private asset root.");
+  const rootInfo = await lstat(root);
+  if (rootInfo.isSymbolicLink() || !rootInfo.isDirectory()) throw new Error("Voice asset root is not a trusted directory.");
+  let current = root;
+  for (const segment of relative(root, requestedFile).split(/[\\/]/).filter(Boolean)) {
+    current = resolve(current, segment);
+    const segmentInfo = await lstat(current);
+    if (segmentInfo.isSymbolicLink()) throw new Error("Voice asset path contains a symbolic link.");
+  }
+  const [canonicalRoot, canonicalFile] = await Promise.all([realpath(root), realpath(requestedFile)]);
+  if (!isWithinPath(canonicalRoot, canonicalFile)) throw new Error("Voice asset escaped its canonical private root.");
+  const info = await lstat(canonicalFile);
+  if (!info.isFile() || info.isSymbolicLink() || info.size <= 0 || info.size > 256 * 1024 * 1024) throw new Error("Voice asset is missing or exceeds 256 MB.");
+  const bytes = await readFile(canonicalFile);
+  if (createHash("sha256").update(bytes).digest("hex") !== track.contentHash) throw new Error("Voice asset bytes no longer match the approved content hash.");
+  const metadata = inspectPcmWav(bytes);
+  if (metadata.codec !== track.codec || metadata.sampleRate !== track.sampleRate || metadata.channels !== track.channels || metadata.bitsPerSample !== track.bitsPerSample || metadata.durationInSeconds !== track.durationInSeconds) throw new Error("Voice asset metadata no longer matches the production binding.");
+  return {bytes, file: canonicalFile};
+}
+
+async function readVerifiedMusicTrack(trackInput: MusicTrack): Promise<{bytes: Buffer; file: string}> {
+  const track = musicTrackSchema.parse(trackInput);
+  if (!track.relativeFile.startsWith("music/")) throw new Error("Music asset is outside its private media scope.");
+  return readVerifiedVoiceTrack(track);
+}
+
+async function readVerifiedSoundEffect(trackInput: SoundEffectAsset): Promise<{bytes: Buffer; file: string}> {
+  const track = soundEffectAssetSchema.parse(trackInput);
+  if (!track.relativeFile.startsWith("sfx/")) throw new Error("Sound-effect asset is outside its private media scope.");
+  return readVerifiedVoiceTrack(track);
 }
 
 function makeExchangeState(job: GenerationJob, status: GenerationExchangeState["status"], importId: string | null): GenerationExchangeState {
@@ -211,6 +373,8 @@ async function rehydrateGenerationExchangeRegistry(): Promise<void> {
           }
           const record: GenerationExchangeRecord = {job, jobFile, stateFile, state};
           if (!await validateRehydratedExchangeArtifacts(record)) continue;
+          await reconcileApprovedExchange(record);
+          if (!await validateRehydratedExchangeArtifacts(record)) continue;
           generationExchangeRegistry.set(job.exchangeJobId, record);
           if (!stateWasRecovered) await persistExchangeState(record, state);
         } catch {
@@ -230,8 +394,34 @@ function summarizeProductionBundle(bundle: ProductionBundle): ProductionBundleSu
   return productionBundleSummarySchema.parse({productionId: bundle.production.productionId, revision: bundle.production.revision, title: bundle.production.title, projectType: bundle.production.projectType, showPackId: bundle.production.showPackId, savedAt: bundle.savedAt, contentHash: bundle.contentHash});
 }
 
+function summarizeDelivery(delivery: VerifiedDeliveryBundle) {
+  return verifiedDeliverySummarySchema.parse({deliveryManifestContentHash: delivery.manifest.contentHash, productionId: delivery.bundle.production.productionId, revision: delivery.bundle.production.revision, productionBundleContentHash: delivery.bundle.contentHash, rightsStatus: "cleared", captionCueCount: delivery.captionCueCount, master: {width: delivery.receipt.master.width, height: delivery.receipt.master.height, fps: delivery.receipt.master.fps, frameCount: delivery.receipt.master.frameCount, durationInSeconds: delivery.receipt.master.durationInSeconds}});
+}
+
+async function rehydrateDeliveryRegistry(): Promise<void> {
+  deliveryRegistry.clear();
+  const deliveriesRoot = join(app.getPath("userData"), ".storystage-local", "deliveries");
+  await mkdir(deliveriesRoot, {recursive: true});
+  const info = await lstat(deliveriesRoot);
+  if (info.isSymbolicLink() || !info.isDirectory()) throw new Error("The private delivery root is not a trusted local directory.");
+  const canonicalRoot = await realpath(deliveriesRoot);
+  for (const productionDirectory of await realChildDirectories(deliveriesRoot, canonicalRoot)) for (const revisionDirectory of await realChildDirectories(productionDirectory.path, canonicalRoot)) for (const bundleDirectory of await realChildDirectories(revisionDirectory.path, canonicalRoot)) for (const deliveryDirectory of await realChildDirectories(bundleDirectory.path, canonicalRoot)) {
+    if (deliveryDirectory.name.startsWith(".tmp-")) continue;
+    try {
+      const delivery = await readVerifiedDeliveryBundle(deliveryDirectory.path);
+      if (productionDirectory.name !== delivery.bundle.production.productionId || revisionDirectory.name !== `r${delivery.bundle.production.revision}` || bundleDirectory.name !== delivery.bundle.contentHash || deliveryDirectory.name !== delivery.manifest.contentHash) continue;
+      deliveryRegistry.set(delivery.manifest.contentHash, delivery);
+    } catch {
+      // Partial or tampered deliveries are quarantined by omission and can never be opened by manifest identity.
+    }
+  }
+}
+
 async function rehydrateProductionBundleRegistry(): Promise<void> {
   productionBundleRegistry.clear();
+  voiceTrackRegistry.clear();
+  musicTrackRegistry.clear();
+  soundEffectRegistry.clear();
   const productionsRoot = join(app.getPath("userData"), ".storystage-local", "productions");
   await mkdir(productionsRoot, {recursive: true});
   const rootInfo = await lstat(productionsRoot);
@@ -254,6 +444,30 @@ async function rehydrateProductionBundleRegistry(): Promise<void> {
         const showPack = getShowPack(bundle.production.showPackId);
         if (!verifyShowPackHash(showPack) || bundle.resolvedPlan.showPack.contentHash !== showPack.contentHash) continue;
         productionBundleRegistry.set(productionBundleKey(bundle.production.productionId, bundle.production.revision), {bundle, bundleFile});
+        if (bundle.voiceTrack) {
+          try {
+            await readVerifiedVoiceTrack(bundle.voiceTrack);
+            voiceTrackRegistry.set(bundle.voiceTrack.contentHash, bundle.voiceTrack);
+          } catch {
+            // Keep the production visible, but never expose or render a missing/tampered voice asset.
+          }
+        }
+        if (bundle.musicTrack) {
+          try {
+            await readVerifiedMusicTrack(bundle.musicTrack);
+            musicTrackRegistry.set(bundle.musicTrack.contentHash, bundle.musicTrack);
+          } catch {
+            // Keep the production visible, but never expose or render a missing/tampered music asset.
+          }
+        }
+        for (const soundEffect of bundle.soundEffectAssets ?? []) {
+          try {
+            await readVerifiedSoundEffect(soundEffect);
+            soundEffectRegistry.set(soundEffect.contentHash, soundEffect);
+          } catch {
+            // Keep the production visible, but never expose or render a missing/tampered sound-effect asset.
+          }
+        }
       } catch {
         // Ignore malformed private production snapshots; never expose them to the renderer.
       }
@@ -280,6 +494,30 @@ async function persistProductionBundle(bundle: ProductionBundle): Promise<string
   return bundleFile;
 }
 
+async function readProductionBundleSnapshot(productionId: string, revision: number, contentHash: string): Promise<ProductionBundle | null> {
+  if (!/^[a-f0-9]{64}$/.test(contentHash)) throw new Error("Production snapshot hash is invalid.");
+  const file = join(app.getPath("userData"), ".storystage-local", "productions", productionId, `r${revision}`, "snapshots", `${contentHash}.json`);
+  try {
+    const info = await lstat(file);
+    if (info.isSymbolicLink() || !info.isFile() || info.size > 10_000_000) throw new Error("The production snapshot is unsafe.");
+    const bundle = productionBundleSchema.parse(JSON.parse(await readFile(file, "utf8")));
+    if (!verifyProductionBundleHash(bundle) || bundle.contentHash !== contentHash || bundle.production.productionId !== productionId || bundle.production.revision !== revision) throw new Error("The production snapshot failed its immutable identity.");
+    return bundle;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
+async function verifyApprovedPublicReviewLineageOnDisk(review: PublicShowPackReviewRecord): Promise<void> {
+  if (review.decision !== "approved" || !review.targetProductionRevision || !review.targetProductionBundleContentHash) throw new Error("The Rook review is not an approved lineage binding.");
+  const originalSource = await readProductionBundleSnapshot(review.productionId, review.sourceProductionRevision, review.sourceProductionBundleContentHash);
+  const originalTarget = await readProductionBundleSnapshot(review.productionId, review.targetProductionRevision, review.targetProductionBundleContentHash);
+  const currentTarget = productionBundleRegistry.get(productionBundleKey(review.productionId, review.targetProductionRevision))?.bundle ?? null;
+  if (!originalSource || !originalTarget || !currentTarget) throw new Error("The approved Rook lineage lost an immutable source or target snapshot.");
+  assertApprovedPublicReviewLineage({review, originalTarget, currentTarget});
+}
+
 function verifyAuthoritativeBriefData(draft: GenerationJobDraft, showPack: ShowPack): void {
   for (const brief of draft.briefs) {
     if (hashCanonical(brief.styleBible) !== hashCanonical(showPack.styleBible)) throw new Error(`Generation brief ${brief.id} alters the authoritative style bible.`);
@@ -303,23 +541,11 @@ function verifyGenerationDraftAgainstProduction(draft: GenerationJobDraft, bundl
     && draft.showPack.id === bundle.resolvedPlan.showPack.id
     && draft.showPack.version === bundle.resolvedPlan.showPack.version
     && draft.showPack.contentHash === bundle.resolvedPlan.showPack.contentHash
-    && hashCanonical(draft.briefs) === hashCanonical(bundle.resolvedPlan.generationBriefs);
+    && generationBriefsMatchAuthoritativePlan(draft.briefs, bundle.resolvedPlan.generationBriefs);
 }
 
 function createImportRecord(options: {exchange: GenerationExchangeRecord; importId: string; sourceMode: "structured-bundle" | "loose-files"; bundle: CandidateBundle; staged: StagedCandidate[]; originalNameById: Map<string, string>}): {record: ImportRecord; missingRoleCount: number} {
-  const {candidateSets, findings, missingRoleCount} = validateCandidateSets(options.exchange.job, options.bundle);
-  const briefById = new Map(options.exchange.job.briefs.map((brief) => [brief.id, brief]));
-  const bundleAssetById = new Map(options.bundle.assets.map((asset) => [asset.candidateId, asset]));
-  const assets = options.staged.map((stagedCandidate) => {
-    const asset = bundleAssetById.get(stagedCandidate.candidateId);
-    if (!asset) throw new Error(`Staged candidate ${stagedCandidate.candidateId} is absent from its immutable manifest.`);
-    const brief = briefById.get(asset.briefId);
-    if (!brief) throw new Error(`Staged candidate ${stagedCandidate.candidateId} names an unknown brief.`);
-    if (!stagedCandidate.checks.alphaOrMatte) findings.push({severity: "warning", code: "MANUAL_MASK_REQUIRED", candidateId: stagedCandidate.candidateId, message: `${options.originalNameById.get(stagedCandidate.candidateId) ?? stagedCandidate.candidateId} needs matte or alpha cleanup.`});
-    return {candidateId: stagedCandidate.candidateId, candidateSetId: asset.candidateSetId, briefId: asset.briefId, requirementId: brief.requirementId, fileRole: asset.fileRole, originalName: options.originalNameById.get(stagedCandidate.candidateId) ?? basename(asset.relativeFile), mediaType: asset.mediaType, width: asset.width, height: asset.height, rights: asset.rights, stagedCandidate};
-  });
-  findings.unshift({severity: "info", code: "BYTE_STAGING_COMPLETE", candidateId: null, message: `${assets.length} candidates were byte-verified; ${missingRoleCount} expected roles remain missing.`});
-  return {record: finalizeImportRecord({schemaVersion: "1.0", importId: options.importId, sourceMode: options.sourceMode, exchangeJobId: options.exchange.job.exchangeJobId, generationJobContentHash: options.exchange.job.contentHash, production: {id: options.exchange.job.production.id, revision: options.exchange.job.production.revision}, manifestContentHash: hashCanonical(options.bundle), candidateBundle: options.bundle, assets, candidateSets, findings, missingRoleCount}, new Date().toISOString()), missingRoleCount};
+  return createImportRecordFromStagedCandidates({job: options.exchange.job, importId: options.importId, sourceMode: options.sourceMode, bundle: options.bundle, staged: options.staged, originalNames: Object.fromEntries(options.originalNameById)});
 }
 
 async function persistImportRecord(stagingRoot: string, record: ImportRecord): Promise<void> {
@@ -533,48 +759,7 @@ async function readAssetReviewRecord(exchange: GenerationExchangeRecord, prepara
 
 async function persistAssetReviewRecord(exchange: GenerationExchangeRecord, record: AssetReviewRecord): Promise<void> {
   const reviewsRoot = join(importStagingRoot(exchange), "reviews");
-  await mkdir(reviewsRoot, {recursive: true});
-  const snapshotFile = join(reviewsRoot, `${record.contentHash}.json`);
-  try {
-    await writeFile(snapshotFile, `${JSON.stringify(record, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-  }
-  const currentFile = join(reviewsRoot, "current.json");
-  const temporaryFile = `${currentFile}.${randomUUID()}.tmp`;
-  await writeFile(temporaryFile, `${JSON.stringify({schemaVersion: "1.0", contentHash: record.contentHash, updatedAt: record.updatedAt}, null, 2)}\n`, {encoding: "utf8", mode: 0o600, flag: "wx"});
-  await rename(temporaryFile, currentFile);
-}
-
-function rebaseRigManifest(manifest: AssetRigManifest): AssetRigManifest {
-  const rebaseBinding = <T extends {candidateId: string; relativeFile: string}>(binding: T): T => ({...binding, relativeFile: `files/${binding.candidateId}.png`});
-  let draft: AssetRigManifestDraft;
-  if (manifest.type === "character-rig") {
-    const {contentHash: _contentHash, ...identity} = manifest;
-    void _contentHash;
-    draft = {...identity, identityReference: rebaseBinding(manifest.identityReference), poses: {neutral: rebaseBinding(manifest.poses.neutral), talk: rebaseBinding(manifest.poses.talk), reaction: rebaseBinding(manifest.poses.reaction)}};
-  } else if (manifest.type === "background-layers") {
-    const {contentHash: _contentHash, ...identity} = manifest;
-    void _contentHash;
-    draft = {...identity, layers: manifest.layers.map((layer) => ({...layer, asset: rebaseBinding(layer.asset)})) as typeof manifest.layers};
-  } else {
-    const {contentHash: _contentHash, ...identity} = manifest;
-    void _contentHash;
-    draft = {...identity, cutout: rebaseBinding(manifest.cutout)};
-  }
-  return assetRigManifestSchema.parse({...draft, contentHash: hashCanonical(draft)});
-}
-
-async function writeImmutablePrivateFile(file: string, bytes: Uint8Array, expectedByteHash?: string): Promise<void> {
-  await mkdir(dirname(file), {recursive: true});
-  try {
-    await writeFile(file, bytes, {flag: "wx", mode: 0o600});
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
-    const existing = await readFile(file);
-    const expected = expectedByteHash ?? createHash("sha256").update(bytes).digest("hex");
-    if (createHash("sha256").update(existing).digest("hex") !== expected) throw new Error("An immutable local asset version already exists with different bytes.");
-  }
+  await persistAssetReviewRecordSnapshot({reviewsRoot, record});
 }
 
 async function buildSelectedCandidateRig(exchange: GenerationExchangeRecord, report: PreparationReport, candidateSetId: string, createdAt: string): Promise<void> {
@@ -582,87 +767,21 @@ async function buildSelectedCandidateRig(exchange: GenerationExchangeRecord, rep
   const brief = exchange.job.briefs.find((candidate) => candidate.id === candidateSet?.briefId);
   if (!candidateSet || candidateSet.status !== "ready-for-review" || !brief) throw new Error("Only a prepared coherent candidate set can be selected for rigging.");
   const stagingRoot = importStagingRoot(exchange);
-  const preparedRoot = join(importStagingRoot(exchange), "prepared");
-  const manifestFile = join(preparedRoot, `rig-manifest-${candidateSetId}.json`);
-  const validationFile = join(preparedRoot, `rig-validation-${candidateSetId}.json`);
-  let manifest: AssetRigManifest;
-  try {
-    manifest = assetRigManifestSchema.parse(await readBoundJsonFile(manifestFile, 2_000_000));
-    if (!verifyAssetRigManifestHash(manifest) || manifest.candidateSetId !== candidateSetId || manifest.briefId !== brief.id || manifest.requirementId !== brief.requirementId) throw new Error("Existing selected-rig evidence is stale or mismatched.");
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    manifest = createAssetRigManifest(brief, candidateSetId, candidateSet.preparedCandidates, createdAt);
-    await writeImmutablePrivateFile(manifestFile, Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, "utf8"));
-  }
-  let validation: RigValidationReport;
-  try {
-    validation = rigValidationReportSchema.parse(await readBoundJsonFile(validationFile, 2_000_000));
-    if (!verifyRigValidationReportHash(validation) || validation.manifestContentHash !== manifest.contentHash || validation.candidateSetId !== candidateSetId) throw new Error("Existing selected-rig validation is stale or mismatched.");
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    validation = validateAssetRigManifest(manifest, createdAt);
-    await writeImmutablePrivateFile(validationFile, Buffer.from(`${JSON.stringify(validation, null, 2)}\n`, "utf8"));
-  }
-  if (validation.status !== "passed") throw new Error("The selected candidate set failed technical rig validation.");
-  try {
-    await readRigDiagnosticEvidence(stagingRoot, candidateSetId, manifest, validation);
-    return;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-  }
-
-  const videoRelativeFile = `prepared/rig-diagnostic-${candidateSetId}.mp4`;
-  const finalVideoFile = join(stagingRoot, ...videoRelativeFile.split("/"));
-  let videoBytes: Buffer;
-  try {
-    const existingInfo = await lstat(finalVideoFile);
-    if (existingInfo.isSymbolicLink() || !existingInfo.isFile() || existingInfo.size > 18 * 1024 * 1024) throw new Error("Existing rig diagnostic video is unavailable or unsafe.");
-    videoBytes = await readFile(finalVideoFile);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    const temporaryVideoFile = join(preparedRoot, `.rig-diagnostic-${candidateSetId}-${randomUUID()}.tmp.mp4`);
-    try {
-      await renderRigDiagnosticInWorker(stagingRoot, manifestFile, temporaryVideoFile, brief.entity.name);
-      videoBytes = await readFile(temporaryVideoFile);
-      await writeImmutablePrivateFile(finalVideoFile, videoBytes);
-    } finally {
-      await unlink(temporaryVideoFile).catch(() => undefined);
-    }
-  }
-  const videoContentHash = createHash("sha256").update(videoBytes).digest("hex");
-  const diagnostic = finalizeRigDiagnosticReport({schemaVersion: "1.0", candidateSetId, manifestContentHash: manifest.contentHash, validationReportContentHash: validation.contentHash, videoContentHash, videoRelativeFile, fps: 30, frameCount: 120, width: 1280, height: 720, sourceDiagnosticContentHash: null}, createdAt);
-  await writeImmutablePrivateFile(join(preparedRoot, `rig-diagnostic-${candidateSetId}.json`), Buffer.from(`${JSON.stringify(diagnostic, null, 2)}\n`, "utf8"));
+  await buildSelectedCandidateRigArtifacts({stagingRoot, report, brief, candidateSetId, createdAt, renderDiagnostic: async ({stagingRoot: root, manifestFile, outputFile, entityName}) => renderRigDiagnosticInWorker(root, manifestFile, outputFile, entityName)});
 }
 
 async function promoteCandidateSet(exchange: GenerationExchangeRecord, report: PreparationReport, importRecord: ImportRecord, candidateSetId: string, approvedAt: string): Promise<ApprovedAssetVersion> {
-  const candidateSet = report.candidateSets.find((candidate) => candidate.candidateSetId === candidateSetId);
-  if (!candidateSet || candidateSet.status !== "ready-for-review") throw new Error("Only a complete, review-ready candidate set can be approved.");
-  const stagingRoot = importStagingRoot(exchange);
-  const originalManifest = assetRigManifestSchema.parse(await readBoundJsonFile(join(stagingRoot, "prepared", `rig-manifest-${candidateSetId}.json`), 2_000_000));
-  const originalValidation = rigValidationReportSchema.parse(await readBoundJsonFile(join(stagingRoot, "prepared", `rig-validation-${candidateSetId}.json`), 2_000_000));
-  if (!verifyAssetRigManifestHash(originalManifest) || !verifyRigValidationReportHash(originalValidation) || originalValidation.status !== "passed" || originalValidation.manifestContentHash !== originalManifest.contentHash) throw new Error("Candidate rig validation is missing, failed, or stale.");
-  const selectedDiagnostic = await readRigDiagnosticEvidence(stagingRoot, candidateSetId, originalManifest, originalValidation);
-  const manifest = rebaseRigManifest(originalManifest);
-  const validation = validateAssetRigManifest(manifest, approvedAt);
-  if (validation.status !== "passed") throw new Error("Promoted rig failed validation after local-library rebasing.");
-  const diagnostic = finalizeRigDiagnosticReport({schemaVersion: "1.0", candidateSetId, manifestContentHash: manifest.contentHash, validationReportContentHash: validation.contentHash, videoContentHash: selectedDiagnostic.report.videoContentHash, videoRelativeFile: "rig-diagnostic.mp4", fps: 30, frameCount: 120, width: 1280, height: 720, sourceDiagnosticContentHash: selectedDiagnostic.report.contentHash}, approvedAt);
-  const assetId = `approved-${candidateSet.requirementId}`;
-  const version = `sha256-${manifest.contentHash.slice(0, 16)}`;
   const assetsRoot = join(app.getPath("userData"), ".storystage-local", "assets");
-  const versionRoot = join(assetsRoot, assetId, version);
-  for (const candidate of candidateSet.preparedCandidates) {
-    const bytes = await readVerifiedPrivateBytes(stagingRoot, candidate.relativeFile, candidate.preparedContentHash, 50 * 1024 * 1024);
-    await writeImmutablePrivateFile(join(versionRoot, "files", `${candidate.candidateId}.png`), bytes, candidate.preparedContentHash);
-  }
-  await writeImmutablePrivateFile(join(versionRoot, "manifest.json"), Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`, "utf8"));
-  await writeImmutablePrivateFile(join(versionRoot, "rig-validation.json"), Buffer.from(`${JSON.stringify(validation, null, 2)}\n`, "utf8"));
-  await writeImmutablePrivateFile(join(versionRoot, "rig-diagnostic.mp4"), selectedDiagnostic.videoBytes, selectedDiagnostic.report.videoContentHash);
-  await writeImmutablePrivateFile(join(versionRoot, "rig-diagnostic.json"), Buffer.from(`${JSON.stringify(diagnostic, null, 2)}\n`, "utf8"));
-  const importedAssets = importRecord.assets.filter((asset) => asset.candidateSetId === candidateSetId);
-  const provenance = importedAssets[0]?.rights;
-  if (!provenance || importedAssets.some((asset) => hashCanonical(asset.rights) !== hashCanonical(provenance))) throw new Error("Candidate set provenance is missing or inconsistent.");
-  return {assetId, version, requirementId: candidateSet.requirementId, contentHash: manifest.contentHash, relativeFile: `${assetId}/${version}/manifest.json`, provenance, approvedAt};
+  return promotePreparedCandidateSet({stagingRoot: importStagingRoot(exchange), assetsRoot, report, importRecord, candidateSetId, approvedAt});
 }
+
+const rigManifestBindings = (manifest: AssetRigManifest) => manifest.type === "character-rig"
+  ? manifest.animationMode === "pose-swap-2d"
+    ? [manifest.identityReference, ...Object.values(manifest.poses)]
+    : [manifest.identityReference, ...manifest.parts.map((part) => part.asset), ...manifest.exposures.map((exposure) => exposure.asset)]
+  : manifest.type === "background-layers"
+    ? manifest.layers.map((layer) => layer.asset)
+    : [manifest.cutout];
 
 async function verifyApprovedAssetVersionOnDisk(approved: ApprovedAssetVersion): Promise<boolean> {
   try {
@@ -672,7 +791,7 @@ async function verifyApprovedAssetVersionOnDisk(approved: ApprovedAssetVersion):
     const versionRoot = dirname(manifestFile);
     const manifest = assetRigManifestSchema.parse(await readBoundJsonFile(manifestFile, 2_000_000));
     if (!verifyAssetRigManifestHash(manifest) || manifest.contentHash !== approved.contentHash) return false;
-    const bindings = manifest.type === "character-rig" ? [manifest.identityReference, ...Object.values(manifest.poses)] : manifest.type === "background-layers" ? manifest.layers.map((layer) => layer.asset) : [manifest.cutout];
+    const bindings = rigManifestBindings(manifest);
     for (const binding of bindings) await readVerifiedPrivateBytes(versionRoot, binding.relativeFile, binding.contentHash, 50 * 1024 * 1024);
     const validation = rigValidationReportSchema.parse(await readBoundJsonFile(join(versionRoot, "rig-validation.json"), 2_000_000));
     if (!verifyRigValidationReportHash(validation) || validation.status !== "passed" || validation.manifestContentHash !== manifest.contentHash) return false;
@@ -683,6 +802,55 @@ async function verifyApprovedAssetVersionOnDisk(approved: ApprovedAssetVersion):
   } catch {
     return false;
   }
+}
+
+function approvedVersionsForExchange(exchange: GenerationExchangeRecord, reviewRecord: AssetReviewRecord): ApprovedAssetVersion[] | null {
+  const versions: ApprovedAssetVersion[] = [];
+  for (const brief of exchange.job.briefs) {
+    const decision = reviewRecord.decisions.find((candidate) => candidate.requirementId === brief.requirementId && candidate.status === "approved" && candidate.approvedAssetVersion);
+    if (!decision?.approvedAssetVersion) return null;
+    versions.push(decision.approvedAssetVersion);
+  }
+  return versions;
+}
+
+async function ensureApprovedProductionRevision(exchange: GenerationExchangeRecord, reviewRecord: AssetReviewRecord): Promise<ProductionBundle> {
+  const source = productionBundleRegistry.get(productionBundleKey(exchange.job.production.id, exchange.job.production.revision));
+  if (!source || source.bundle.contentHash !== exchange.job.productionBundleContentHash || !verifyProductionBundleHash(source.bundle)) throw new Error("The approved exchange lost its authoritative source production.");
+  const approved = approvedVersionsForExchange(exchange, reviewRecord);
+  if (!approved) throw new Error("The review record does not approve every generation requirement.");
+  if (!(await Promise.all(approved.map(verifyApprovedAssetVersionOnDisk))).every(Boolean)) throw new Error("An approved local asset failed recovery verification.");
+
+  const nextDraft = buildApprovedProductionRevisionDraft({sourceBundle: source.bundle, approvedAssetVersions: approved});
+  const targetKey = productionBundleKey(nextDraft.production.productionId, nextDraft.production.revision);
+  const existing = productionBundleRegistry.get(targetKey);
+  if (existing) {
+    if (!verifyProductionBundleHash(existing.bundle) || hashCanonical(productionDraftPayload(existing.bundle)) !== hashCanonical(nextDraft)) throw new Error("The recovery target production revision already contains different decisions.");
+    return existing.bundle;
+  }
+  const bundle = finalizeProductionBundle(nextDraft, reviewRecord.updatedAt);
+  await persistProductionBundle(bundle);
+  return bundle;
+}
+
+async function commitFullyApprovedExchange(exchange: GenerationExchangeRecord, reviewRecord: AssetReviewRecord): Promise<void> {
+  await commitApprovalWorkflow({
+    persistReview: () => persistAssetReviewRecord(exchange, reviewRecord),
+    ensureProduction: async () => { await ensureApprovedProductionRevision(exchange, reviewRecord); },
+    ensureApprovedState: async () => {
+      if (exchange.state.status === "needs-review") await transitionExchangeState(exchange, "approved", exchange.state.importId);
+      else if (exchange.state.status !== "approved") throw new Error(`A fully approved exchange cannot recover from ${exchange.state.status}.`);
+    },
+  });
+}
+
+async function reconcileApprovedExchange(exchange: GenerationExchangeRecord): Promise<void> {
+  if (!["needs-review", "approved"].includes(exchange.state.status)) return;
+  const preparationReport = await readPreparationReport(exchange);
+  if (!preparationReport) return;
+  const reviewRecord = await readAssetReviewRecord(exchange, preparationReport.contentHash);
+  if (!reviewRecord || !approvedVersionsForExchange(exchange, reviewRecord)) return;
+  await commitFullyApprovedExchange(exchange, reviewRecord);
 }
 
 async function validateRehydratedExchangeArtifacts(exchange: GenerationExchangeRecord): Promise<boolean> {
@@ -723,9 +891,9 @@ const failedEvent = (jobId: string, code: string, message: string): RenderJobEve
   error: {code, message},
 });
 
-function registerJob(jobId: string, allowedOutputRoot: string) {
+function registerJob(jobId: string, allowedOutputRoot: string, productionBinding?: JobRecord["productionBinding"]) {
   const event = renderJobEventSchema.parse({jobId, status: "queued", progress: null, message: "Render queued"});
-  jobRegistry.set(jobId, {event, phaseProgress: {}, allowedOutputRoot});
+  jobRegistry.set(jobId, {event, phaseProgress: {}, allowedOutputRoot, ...(productionBinding ? {productionBinding} : {})});
   activeJobId = jobId;
   emitJob(event);
 }
@@ -760,7 +928,7 @@ function failJob(jobId: string, code: string, message: string) {
   }
 }
 
-type ProductionRenderCommandInput = {trustedProductionRoot: string; bundleFile: string; assetsRoot: string; outputRoot: string; bundleContentHash: string};
+type ProductionRenderCommandInput = {trustedProductionRoot: string; bundleFile: string; assetsRoot: string; outputRoot: string; bundleContentHash: string; scope: "engineering-slice" | "full-production"};
 function startRenderWorker(jobId: string, simulateFailure: boolean, production?: ProductionRenderCommandInput) {
   const workerEntry = app.isPackaged
     ? resolve(process.resourcesPath, "render-worker/render-worker.cjs")
@@ -773,14 +941,15 @@ function startRenderWorker(jobId: string, simulateFailure: boolean, production?:
     clearTimeout(timeout);
     worker.kill();
   };
+  const timeoutMs = production?.scope === "full-production" ? 15 * 60_000 : 120_000;
   const timeout = setTimeout(() => {
-    failJob(jobId, "TIMEOUT", "The render worker did not respond within two minutes.");
+    failJob(jobId, "TIMEOUT", `The render worker did not respond within ${production?.scope === "full-production" ? "fifteen minutes" : "two minutes"}.`);
     stop();
-  }, 120_000);
+  }, timeoutMs);
 
   worker.on("spawn", () => {
     transitionJob({jobId, status: "bundling", progress: 0, message: "Starting render worker"});
-    worker.postMessage(renderWorkerCommandSchema.parse(production ? {type: "start-production", workspaceRoot, trustedProductionRoot: production.trustedProductionRoot, bundleFile: production.bundleFile, assetsRoot: production.assetsRoot, outputRoot: production.outputRoot, request: {jobId, bundleContentHash: production.bundleContentHash}} : {type: "start", workspaceRoot, request: {jobId, simulateFailure}}));
+    worker.postMessage(renderWorkerCommandSchema.parse(production ? {type: "start-production", workspaceRoot, trustedProductionRoot: production.trustedProductionRoot, bundleFile: production.bundleFile, assetsRoot: production.assetsRoot, outputRoot: production.outputRoot, request: {jobId, bundleContentHash: production.bundleContentHash, scope: production.scope}} : {type: "start", workspaceRoot, request: {jobId, simulateFailure}}));
   });
 
   worker.on("message", (rawMessage: unknown) => {
@@ -808,9 +977,32 @@ function startRenderWorker(jobId: string, simulateFailure: boolean, production?:
             realpath(record.allowedOutputRoot),
           ]);
           if (!canonicalOutput.startsWith(`${canonicalRoot}${sep}`)) throw new Error("Output escaped the allowed artifact directory.");
-          if (!transitionJob({...event, outputPath: canonicalOutput})) failJob(jobId, "INVALID_TRANSITION", "The worker completed from an invalid job state.");
-        } catch {
-          failJob(jobId, "UNSAFE_OUTPUT_PATH", "The worker returned an unavailable or unsafe output path.");
+          let completionEvent = {...event, outputPath: canonicalOutput};
+          if (record.productionBinding?.scope === "full-production") {
+            if (!event.renderReceipt) throw new Error("The full-production worker did not return a durable render receipt.");
+            const [canonicalReceipt, receiptInfo, masterBytes] = await Promise.all([realpath(event.renderReceipt.path), lstat(event.renderReceipt.path), readFile(canonicalOutput)]);
+            if (!canonicalReceipt.startsWith(`${canonicalRoot}${sep}`) || receiptInfo.isSymbolicLink() || !receiptInfo.isFile() || receiptInfo.size > 2_000_000) throw new Error("The render receipt escaped its trusted output root.");
+            const receipt = renderReceiptSchema.parse(JSON.parse(await readFile(canonicalReceipt, "utf8")));
+            if (receipt.contentHash !== event.renderReceipt.contentHash) throw new Error("The worker receipt identity changed before host verification.");
+            const binding = record.productionBinding;
+            const delivery = await productionMutations.run(productionBundleKey(binding.productionId, binding.revision), async () => {
+              const current = productionBundleRegistry.get(productionBundleKey(binding.productionId, binding.revision))?.bundle;
+              if (!current || current.contentHash !== binding.bundleContentHash) throw new StaleProductionError("The production changed while rendering; the old cut was not published as a delivery.");
+              const snapshot = await readProductionBundleSnapshot(binding.productionId, binding.revision, binding.bundleContentHash);
+              if (!snapshot) throw new Error("The exact immutable render snapshot is unavailable.");
+              assertVerifiedFullRenderReceipt({receipt, bundle: snapshot, masterBytes, masterFile: canonicalOutput});
+              const localRoot = join(app.getPath("userData"), ".storystage-local");
+              return publishDeliveryBundle({deliveryRoot: join(localRoot, "deliveries"), bundleFile: join(localRoot, "productions", binding.productionId, `r${binding.revision}`, "snapshots", `${binding.bundleContentHash}.json`), receiptFile: canonicalReceipt, masterFile: canonicalOutput, ...(snapshot.audioMix?.transitionSfx === "paper-flip" ? {transitionSfxFile: resolve(workspaceRoot, "packages/remotion-runtime/public/audio/paper-flip.wav")} : {})});
+            });
+            deliveryRegistry.set(delivery.manifest.contentHash, delivery);
+            completionEvent = {...completionEvent, message: "Full production and verified delivery complete", delivery: summarizeDelivery(delivery)};
+          } else if (event.renderReceipt) throw new Error("Only a full-production render may return a delivery receipt.");
+          const {renderReceipt: privateReceipt, ...publicCompletionEvent} = completionEvent;
+          void privateReceipt;
+          if (!transitionJob(publicCompletionEvent)) failJob(jobId, "INVALID_TRANSITION", "The worker completed from an invalid job state.");
+        } catch (error) {
+          const code = error instanceof StaleProductionError ? error.code : record.productionBinding?.scope === "full-production" ? "DELIVERY_PUBLISH_FAILED" : "UNSAFE_OUTPUT_PATH";
+          failJob(jobId, code, error instanceof Error ? error.message : "The verified render or delivery could not be published safely.");
         } finally {
           stop();
         }
@@ -1121,28 +1313,74 @@ async function createWindow() {
   else await mainWindow.loadURL(process.env.STORYSTAGE_DEV_URL ?? "http://127.0.0.1:5173");
 }
 
-ipcMain.handle(IPC_CHANNELS.capabilities, () => desktopCapabilitiesSchema.parse({localRendering: true, openRenderedFile: true, manualImageExchange: true}));
+function installRenderedMediaProtocol() {
+  protocol.handle(renderedMediaScheme, async (request) => {
+    try {
+      const requestedUrl = new URL(request.url);
+      if (requestedUrl.search || requestedUrl.hash) throw new Error("Unsupported media request.");
+      if (requestedUrl.hostname === "asset") {
+        const pathParts = requestedUrl.pathname.slice(1).split("/").map((part) => decodeURIComponent(part));
+        if (pathParts.length !== 3) throw new Error("Approved asset request is malformed.");
+        const [assetId, manifestContentHash, role] = pathParts;
+        if (!assetId || !/^[a-z0-9][a-z0-9-]*$/.test(assetId) || !manifestContentHash || !/^[a-f0-9]{64}$/.test(manifestContentHash) || !role) throw new Error("Approved asset identity is invalid.");
+        const approved = [...productionBundleRegistry.values()].flatMap(({bundle}) => bundle.approvedAssetVersions ?? []).find((candidate) => candidate.assetId === assetId && candidate.contentHash === manifestContentHash);
+        if (!approved || !(await verifyApprovedAssetVersionOnDisk(approved))) throw new Error("Approved asset is unavailable or failed integrity verification.");
+        const assetsRoot = join(app.getPath("userData"), ".storystage-local", "assets");
+        const manifestFile = resolve(assetsRoot, ...approved.relativeFile.split("/"));
+        const versionRoot = dirname(manifestFile);
+        const manifest = assetRigManifestSchema.parse(await readBoundJsonFile(manifestFile, 2_000_000));
+        const binding = manifest.type === "character-rig"
+          ? manifest.animationMode === "pose-swap-2d"
+            ? role === "neutral" || role === "talk" || role === "reaction" ? manifest.poses[role] : null
+            : role === "identity" ? manifest.identityReference : manifest.parts.find((part) => part.id === role)?.asset ?? manifest.exposures.find((exposure) => exposure.id === role)?.asset ?? null
+          : manifest.type === "background-layers"
+            ? manifest.layers.find((layer) => layer.role === role)?.asset ?? null
+            : role === "cutout" ? manifest.cutout : null;
+        if (!binding) throw new Error("Approved asset role is unavailable.");
+        const bytes = await readVerifiedPrivateBytes(versionRoot, binding.relativeFile, binding.contentHash, 50 * 1024 * 1024);
+        return new Response(new Uint8Array(bytes), {status: 200, headers: {"cache-control": "no-store", "content-type": "image/png", "x-content-type-options": "nosniff"}});
+      }
+      if (["voice", "music", "sfx"].includes(requestedUrl.hostname)) {
+        const contentHash = decodeURIComponent(requestedUrl.pathname.slice(1));
+        if (!/^[a-f0-9]{64}$/.test(contentHash)) throw new Error("Audio asset hash is invalid.");
+        const isMusic = requestedUrl.hostname === "music";
+        const isSoundEffect = requestedUrl.hostname === "sfx";
+        const track = isMusic ? musicTrackRegistry.get(contentHash) : isSoundEffect ? soundEffectRegistry.get(contentHash) : voiceTrackRegistry.get(contentHash);
+        if (!track) throw new Error("Audio asset is unavailable.");
+        const verified = isMusic ? await readVerifiedMusicTrack(track) : isSoundEffect ? await readVerifiedSoundEffect(track) : await readVerifiedVoiceTrack(track);
+        return net.fetch(pathToFileURL(verified.file).toString(), {headers: request.headers});
+      }
+      if (requestedUrl.hostname !== "render") throw new Error("Unsupported media request.");
+      const jobId = startRenderResponseSchema.shape.jobId.parse(decodeURIComponent(requestedUrl.pathname.slice(1)));
+      const record = jobRegistry.get(jobId);
+      if (!record || record.event.status !== "completed") throw new Error("Render output is unavailable.");
+      const [canonicalRoot, canonicalOutput] = await Promise.all([realpath(record.allowedOutputRoot), realpath(record.event.outputPath)]);
+      const outputInfo = await lstat(canonicalOutput);
+      if (!isWithinPath(canonicalRoot, canonicalOutput) || outputInfo.isSymbolicLink() || !outputInfo.isFile() || outputInfo.size === 0 || !canonicalOutput.toLowerCase().endsWith(".mp4")) throw new Error("Render output failed media validation.");
+      return net.fetch(pathToFileURL(canonicalOutput).toString(), {headers: request.headers});
+    } catch {
+      return new Response("Rendered media not found.", {status: 404, headers: {"content-type": "text/plain; charset=utf-8"}});
+    }
+  });
+}
+
+ipcMain.handle(IPC_CHANNELS.capabilities, () => desktopCapabilitiesSchema.parse({localRendering: true, openRenderedFile: true, manualImageExchange: true, localAudioImport: true}));
 
 ipcMain.handle(IPC_CHANNELS.saveProductionBundle, async (_event, rawRequest: unknown) => {
   try {
     const request = saveProductionBundleRequestSchema.parse(rawRequest);
     const draft = productionBundleDraftSchema.parse(JSON.parse(request.serializedDraft));
     const key = productionBundleKey(draft.production.productionId, draft.production.revision);
-    const priorSave = productionSaveQueues.get(key);
-    const currentSave = (priorSave ? priorSave.then(() => undefined, () => undefined) : Promise.resolve()).then(async () => {
+    const bundle = await productionMutations.run(key, async () => {
       const showPack = getShowPack(draft.production.showPackId);
       if (!verifyShowPackHash(showPack) || draft.resolvedPlan.showPack.contentHash !== showPack.contentHash) throw new Error("Production bundle references a stale or non-authoritative Show Pack.");
+      const existing = productionBundleRegistry.get(key);
+      if (existing && verifyProductionBundleHash(existing.bundle) && hashCanonical(productionDraftPayload(existing.bundle)) === hashCanonical(draft)) return existing.bundle;
       const bundle = finalizeProductionBundle(draft, new Date().toISOString());
       await persistProductionBundle(bundle);
       return bundle;
     });
-    productionSaveQueues.set(key, currentSave);
-    try {
-      const bundle = await currentSave;
-      return saveProductionBundleResultSchema.parse({ok: true, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash});
-    } finally {
-      if (productionSaveQueues.get(key) === currentSave) productionSaveQueues.delete(key);
-    }
+    return saveProductionBundleResultSchema.parse({ok: true, productionId: bundle.production.productionId, revision: bundle.production.revision, contentHash: bundle.contentHash});
   } catch (error) {
     return saveProductionBundleResultSchema.parse({ok: false, error: {code: "INVALID_PRODUCTION_BUNDLE", message: error instanceof Error ? error.message : "Production bundle could not be persisted."}});
   }
@@ -1158,6 +1396,225 @@ ipcMain.handle(IPC_CHANNELS.loadProductionBundle, (_event, rawRequest: unknown) 
     return loadProductionBundleResultSchema.parse({ok: true, serializedBundle: JSON.stringify(stored.bundle)});
   } catch (error) {
     return loadProductionBundleResultSchema.parse({ok: false, error: {code: "PRODUCTION_UNAVAILABLE", message: error instanceof Error ? error.message : "Production bundle could not be loaded."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.listPublicShowPackCandidates, async (_event, rawRequest: unknown) => {
+  try {
+    const request = listPublicShowPackCandidatesRequestSchema.parse(rawRequest);
+    if (!request.productionBundleContentHash) throw new Error("A saved production snapshot is required before trusted candidate review.");
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Candidate review status requires the current acknowledged production snapshot.");
+    const showPack = getShowPack(stored.bundle.production.showPackId);
+    const {candidate} = await verifyPublicShowPackCandidate({candidateRoot: rookCandidateRoot(), expectedCandidateId: rookCandidateRelease.candidateId, expectedCandidateContentHash: rookCandidateRelease.contentHash});
+    if (!publicShowPackCandidateMatchesRelease(candidate, showPack)) throw new Error("Rook was not prepared for this exact authoritative Show Pack release.");
+    const review = await resolvePublicShowPackReviewForBundle(stored.bundle, candidate);
+    if (review?.decision === "approved") {
+      if (!review.approvedAssetVersion || !(await verifyApprovedAssetVersionOnDisk(review.approvedAssetVersion))) throw new Error("The approved Rook review lost its private immutable asset.");
+      await verifyApprovedPublicReviewLineageOnDisk(review);
+    }
+    const sourceByRole = new Map(candidate.files.map((file) => [file.role, file]));
+    const preparedByRole = new Map(candidate.preparedFiles.map((file) => [file.role, file]));
+    const previewFile = (role: "identity-sheet" | "neutral-pose" | "talk-pose" | "reaction-pose") => role === "identity-sheet" ? sourceByRole.get(role)! : preparedByRole.get(role)!;
+    return listPublicShowPackCandidatesResultSchema.parse({candidates: [{
+      candidateId: candidate.candidateId,
+      version: candidate.version,
+      showPackId: candidate.showPackId,
+      displayName: candidate.displayName,
+      status: candidate.status,
+      contentHash: candidate.contentHash,
+      identityLock: candidate.style.identityLock,
+      provenance: {provider: candidate.rights.provider, usageNotes: candidate.rights.usageNotes},
+      files: (["identity-sheet", "neutral-pose", "talk-pose", "reaction-pose"] as const).map((role) => {const file = previewFile(role); return {role, url: `${rookCandidateRelease.publicRoot}/${file.file}`, width: file.width, height: file.height};}),
+      diagnosticUrl: `${rookCandidateRelease.publicRoot}/${candidate.evidence.diagnosticVideo.file}`,
+      verifiedByHost: true,
+      canReview: review === null,
+      review: review === null ? {decision: "none"} : review.decision === "rejected" ? {decision: "rejected", decidedAt: review.decidedAt} : {decision: "approved", decidedAt: review.decidedAt, targetProductionRevision: review.targetProductionRevision!, targetProductionBundleContentHash: review.targetProductionBundleContentHash!},
+    }]});
+  } catch {
+    return listPublicShowPackCandidatesResultSchema.parse({candidates: []});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.reviewPublicShowPackCandidate, async (_event, rawRequest: unknown) => {
+  try {
+    const request = reviewPublicShowPackCandidateRequestSchema.parse(rawRequest);
+    const queueKey = `${request.productionId}:r${request.revision}:${request.candidateId}`;
+    return await publicShowPackReviewCoordinator.run(queueKey, async () => {
+      if (request.candidateId !== rookCandidateRelease.candidateId) throw new Error("This packaged candidate is not allowlisted by the desktop host.");
+      const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+      if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Rook review requires the current acknowledged production snapshot.");
+      if (stored.bundle.production.showPackId !== rookCandidateRelease.showPackId) throw new Error("Rook can only be reviewed for the Frankly Weird History Show Pack.");
+      const {candidate} = await verifyPublicShowPackCandidate({candidateRoot: rookCandidateRoot(), expectedCandidateId: rookCandidateRelease.candidateId, expectedCandidateContentHash: rookCandidateRelease.contentHash});
+      const authoritativeShowPack = getShowPack(stored.bundle.production.showPackId);
+      if (!publicShowPackCandidateMatchesRelease(candidate, authoritativeShowPack)) throw new Error("Rook was not prepared for this exact authoritative Show Pack release.");
+      const existingReview = await resolvePublicShowPackReviewForBundle(stored.bundle, candidate);
+      if (existingReview) {
+        if (existingReview.candidateContentHash !== candidate.contentHash) throw new Error("The final Rook review belongs to a different packaged candidate release.");
+        assertPublicShowPackReviewAttemptIsCompatible(existingReview, request.revision, request.decision);
+        if (existingReview.sourceProductionRevision === request.revision && existingReview.sourceProductionBundleContentHash !== stored.bundle.contentHash) throw new Error("The final Rook review no longer matches its source production snapshot.");
+        if (existingReview.approvedAssetVersion && !(await verifyApprovedAssetVersionOnDisk(existingReview.approvedAssetVersion))) throw new Error("The previously approved Rook asset failed private integrity verification.");
+        return reviewPublicShowPackCandidateResultSchema.parse({status: "reviewed", decision: existingReview.decision, approvedAssetVersion: existingReview.approvedAssetVersion, targetProductionRevision: existingReview.targetProductionRevision, targetProductionBundleContentHash: existingReview.targetProductionBundleContentHash});
+      }
+      if (publicCandidateAssetInBundle(stored.bundle, candidate.candidateId)) throw new Error("Rook is already bound in this production revision and cannot receive another review decision.");
+
+      const decidedAt = new Date().toISOString();
+      if (request.decision === "reject") {
+        const record = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: request.productionId, sourceProductionRevision: request.revision, sourceProductionBundleContentHash: stored.bundle.contentHash, decision: "rejected", acknowledgements: request.acknowledgements, decidedAt, approvedAssetVersion: null, targetProductionRevision: null, targetProductionBundleContentHash: null});
+        await persistPublicShowPackReview(record);
+        return reviewPublicShowPackCandidateResultSchema.parse({status: "reviewed", decision: "rejected", approvedAssetVersion: null, targetProductionRevision: null, targetProductionBundleContentHash: null});
+      }
+      if (Object.values(request.acknowledgements).some((value) => !value)) throw new Error("Approve Rook only after reviewing every pose, the moving diagnostic, matte edges, identity consistency, and provenance.");
+
+      const presenterAssetId = authoritativeShowPack.roleBindings.narrationPresenterAssetId;
+      const presenter = stored.bundle.resolvedPlan.characters.find((character) => character.matchStrategy === "show-pack-role" && character.assetId === presenterAssetId);
+      if (!presenter) throw new Error("The production has no unique Show Pack presenter binding for Rook.");
+      const matchingRequirements = stored.bundle.resolvedPlan.requirements.filter((requirement) => requirement.role === "character" && requirement.entityId === presenter.entityId);
+      if (matchingRequirements.length !== 1) throw new Error("Rook approval requires one unique presenter-character requirement.");
+      const requirement = matchingRequirements[0]!;
+      const approved = await promotePublicShowPackCandidate({candidateRoot: rookCandidateRoot(), assetsRoot: localAssetsRoot(), expectedCandidateId: candidate.candidateId, expectedCandidateContentHash: candidate.contentHash, requirementId: requirement.id, entityId: presenter.entityId, entityName: presenter.entityName, approvedAt: decidedAt});
+      const nextDraft = buildApprovedProductionRevisionDraft({sourceBundle: stored.bundle, approvedAssetVersions: [approved]});
+      const nextBundle = finalizeProductionBundle(nextDraft, approved.approvedAt);
+      const targetKey = productionBundleKey(nextBundle.production.productionId, nextBundle.production.revision);
+      const existingTarget = productionBundleRegistry.get(targetKey);
+      if (existingTarget && existingTarget.bundle.contentHash !== nextBundle.contentHash) throw new Error("The target production revision already contains different creative decisions.");
+      if (!existingTarget) await persistProductionBundle(nextBundle);
+      const record = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: candidate.candidateId, candidateContentHash: candidate.contentHash, productionId: request.productionId, sourceProductionRevision: request.revision, sourceProductionBundleContentHash: stored.bundle.contentHash, decision: "approved", acknowledgements: request.acknowledgements, decidedAt: approved.approvedAt, approvedAssetVersion: approved, targetProductionRevision: nextBundle.production.revision, targetProductionBundleContentHash: nextBundle.contentHash});
+      await persistPublicShowPackReview(record);
+      return reviewPublicShowPackCandidateResultSchema.parse({status: "reviewed", decision: "approved", approvedAssetVersion: approved, targetProductionRevision: nextBundle.production.revision, targetProductionBundleContentHash: nextBundle.contentHash});
+    });
+  } catch (error) {
+    return reviewPublicShowPackCandidateResultSchema.parse({status: "failed", error: {code: "SHOW_PACK_REVIEW_FAILED", message: error instanceof Error ? error.message : "Rook review could not be recorded."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.importVoiceTrack, async (_event, rawRequest: unknown) => {
+  try {
+    const request = importVoiceTrackRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Voice import requires the current acknowledged production snapshot.");
+    const selectionOptions: OpenDialogOptions = {title: "Import narration or dialogue master", properties: ["openFile"], filters: [{name: "Uncompressed WAV voice recording", extensions: ["wav"]}]};
+    const selection = mainWindow ? await dialog.showOpenDialog(mainWindow, selectionOptions) : await dialog.showOpenDialog(selectionOptions);
+    if (selection.canceled || selection.filePaths.length !== 1) return importVoiceTrackResultSchema.parse({status: "cancelled"});
+    const sourceFile = selection.filePaths[0]!;
+    const sourceInfo = await lstat(sourceFile);
+    if (sourceInfo.isSymbolicLink() || !sourceInfo.isFile() || sourceInfo.size <= 0 || sourceInfo.size > 256 * 1024 * 1024) throw new Error("Voice recording must be a regular WAV file no larger than 256 MB.");
+    const bytes = await readFile(sourceFile);
+    const metadata = inspectPcmWav(bytes);
+    const {dataBytes: _dataBytes, ...voiceMetadata} = metadata;
+    void _dataBytes;
+    const contentHash = createHash("sha256").update(bytes).digest("hex");
+    const relativeFile = `voice/${request.productionId}/r${request.revision}/${contentHash}.wav`;
+    const targetFile = resolve(localAssetsRoot(), ...relativeFile.split("/"));
+    await publishImmutableVoiceFile(targetFile, bytes);
+    const track = voiceTrackSchema.parse({id: `voice-${contentHash.slice(0, 20)}`, contentHash, relativeFile, sourceFileName: basename(sourceFile), ...voiceMetadata, importedAt: new Date().toISOString(), approvalStatus: "imported", approvedAt: null});
+    await readVerifiedVoiceTrack(track);
+    voiceTrackRegistry.set(track.contentHash, track);
+    return importVoiceTrackResultSchema.parse({status: "imported", track});
+  } catch (error) {
+    return importVoiceTrackResultSchema.parse({status: "failed", error: {code: "VOICE_IMPORT_FAILED", message: error instanceof Error ? error.message : "Voice recording could not be imported."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.approveVoiceTrack, async (_event, rawRequest: unknown) => {
+  try {
+    const request = approveVoiceTrackRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    const track = stored?.bundle.voiceTrack;
+    if (!stored || !track || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash || track.contentHash !== request.voiceTrackContentHash) throw new Error("Voice approval requires the exact saved imported track.");
+    await readVerifiedVoiceTrack(track);
+    const approved = voiceTrackSchema.parse({...track, approvalStatus: "approved", approvedAt: new Date().toISOString(), rights: request.rights});
+    voiceTrackRegistry.set(approved.contentHash, approved);
+    return approveVoiceTrackResultSchema.parse({ok: true, track: approved});
+  } catch (error) {
+    return approveVoiceTrackResultSchema.parse({ok: false, error: {code: "VOICE_APPROVAL_FAILED", message: error instanceof Error ? error.message : "Voice recording could not be approved."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.importMusicTrack, async (_event, rawRequest: unknown) => {
+  try {
+    const request = importMusicTrackRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Music import requires the current acknowledged production snapshot.");
+    const selectionOptions: OpenDialogOptions = {title: "Import music master", properties: ["openFile"], filters: [{name: "Uncompressed WAV music master", extensions: ["wav"]}]};
+    const selection = mainWindow ? await dialog.showOpenDialog(mainWindow, selectionOptions) : await dialog.showOpenDialog(selectionOptions);
+    if (selection.canceled || selection.filePaths.length !== 1) return importMusicTrackResultSchema.parse({status: "cancelled"});
+    const sourceFile = selection.filePaths[0]!;
+    const sourceInfo = await lstat(sourceFile);
+    if (sourceInfo.isSymbolicLink() || !sourceInfo.isFile() || sourceInfo.size <= 0 || sourceInfo.size > 256 * 1024 * 1024) throw new Error("Music master must be a regular WAV file no larger than 256 MB.");
+    const bytes = await readFile(sourceFile);
+    const metadata = inspectPcmWav(bytes);
+    const {dataBytes: _dataBytes, ...musicMetadata} = metadata;
+    void _dataBytes;
+    const contentHash = createHash("sha256").update(bytes).digest("hex");
+    const relativeFile = `music/${request.productionId}/r${request.revision}/${contentHash}.wav`;
+    const targetFile = resolve(localAssetsRoot(), ...relativeFile.split("/"));
+    await publishImmutableVoiceFile(targetFile, bytes);
+    const track = musicTrackSchema.parse({id: `music-${contentHash.slice(0, 20)}`, contentHash, relativeFile, sourceFileName: basename(sourceFile), ...musicMetadata, importedAt: new Date().toISOString(), approvalStatus: "imported", approvedAt: null});
+    await readVerifiedMusicTrack(track);
+    musicTrackRegistry.set(track.contentHash, track);
+    return importMusicTrackResultSchema.parse({status: "imported", track});
+  } catch (error) {
+    return importMusicTrackResultSchema.parse({status: "failed", error: {code: "MUSIC_IMPORT_FAILED", message: error instanceof Error ? error.message : "Music master could not be imported."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.approveMusicTrack, async (_event, rawRequest: unknown) => {
+  try {
+    const request = approveMusicTrackRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    const track = stored?.bundle.musicTrack;
+    if (!stored || !track || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash || track.contentHash !== request.musicTrackContentHash) throw new Error("Music approval requires the exact saved imported track.");
+    await readVerifiedMusicTrack(track);
+    const approved = musicTrackSchema.parse({...track, approvalStatus: "approved", approvedAt: new Date().toISOString(), rights: request.rights});
+    musicTrackRegistry.set(approved.contentHash, approved);
+    return approveMusicTrackResultSchema.parse({ok: true, track: approved});
+  } catch (error) {
+    return approveMusicTrackResultSchema.parse({ok: false, error: {code: "MUSIC_APPROVAL_FAILED", message: error instanceof Error ? error.message : "Music master could not be approved."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.importSoundEffect, async (_event, rawRequest: unknown) => {
+  try {
+    const request = importSoundEffectRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    if (!stored || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Sound-effect import requires the current acknowledged production snapshot.");
+    const selectionOptions: OpenDialogOptions = {title: "Import sound effect", properties: ["openFile"], filters: [{name: "Uncompressed WAV sound effect", extensions: ["wav"]}]};
+    const selection = mainWindow ? await dialog.showOpenDialog(mainWindow, selectionOptions) : await dialog.showOpenDialog(selectionOptions);
+    if (selection.canceled || selection.filePaths.length !== 1) return importSoundEffectResultSchema.parse({status: "cancelled"});
+    const sourceFile = selection.filePaths[0]!;
+    const sourceInfo = await lstat(sourceFile);
+    if (sourceInfo.isSymbolicLink() || !sourceInfo.isFile() || sourceInfo.size <= 0 || sourceInfo.size > 64 * 1024 * 1024) throw new Error("Sound effect must be a regular WAV file no larger than 64 MB.");
+    const bytes = await readFile(sourceFile);
+    const metadata = inspectPcmWav(bytes);
+    if (metadata.durationInSeconds > 300) throw new Error("A sound effect must be five minutes or shorter.");
+    const {dataBytes: _dataBytes, ...soundEffectMetadata} = metadata;
+    void _dataBytes;
+    const contentHash = createHash("sha256").update(bytes).digest("hex");
+    const relativeFile = `sfx/${request.productionId}/r${request.revision}/${contentHash}.wav`;
+    const targetFile = resolve(localAssetsRoot(), ...relativeFile.split("/"));
+    await publishImmutableVoiceFile(targetFile, bytes);
+    const asset = soundEffectAssetSchema.parse({id: `sfx-${contentHash.slice(0, 20)}`, contentHash, relativeFile, sourceFileName: basename(sourceFile), ...soundEffectMetadata, importedAt: new Date().toISOString(), approvalStatus: "imported", approvedAt: null});
+    await readVerifiedSoundEffect(asset);
+    soundEffectRegistry.set(asset.contentHash, asset);
+    return importSoundEffectResultSchema.parse({status: "imported", track: asset});
+  } catch (error) {
+    return importSoundEffectResultSchema.parse({status: "failed", error: {code: "SFX_IMPORT_FAILED", message: error instanceof Error ? error.message : "Sound effect could not be imported."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.approveSoundEffect, async (_event, rawRequest: unknown) => {
+  try {
+    const request = approveSoundEffectRequestSchema.parse(rawRequest);
+    const stored = productionBundleRegistry.get(productionBundleKey(request.productionId, request.revision));
+    const asset = stored?.bundle.soundEffectAssets?.find((candidate) => candidate.contentHash === request.soundEffectContentHash);
+    if (!stored || !asset || !verifyProductionBundleHash(stored.bundle) || stored.bundle.contentHash !== request.productionBundleContentHash) throw new Error("Sound-effect approval requires the exact saved imported asset.");
+    await readVerifiedSoundEffect(asset);
+    const approved = soundEffectAssetSchema.parse({...asset, approvalStatus: "approved", approvedAt: new Date().toISOString(), rights: request.rights});
+    soundEffectRegistry.set(approved.contentHash, approved);
+    return approveSoundEffectResultSchema.parse({ok: true, track: approved});
+  } catch (error) {
+    return approveSoundEffectResultSchema.parse({ok: false, error: {code: "SFX_APPROVAL_FAILED", message: error instanceof Error ? error.message : "Sound effect could not be approved."}});
   }
 });
 
@@ -1469,7 +1926,8 @@ ipcMain.handle(IPC_CHANNELS.reviewCandidateSet, async (_event, rawRequest: unkno
     const request = reviewCandidateSetRequestSchema.parse(rawRequest);
     const exchange = generationExchangeRegistry.get(request.exchangeJobId);
     if (!exchange) throw new Error("This generation exchange is unknown or failed durable integrity checks.");
-    if (exchange.state.status !== "needs-review") throw new Error(`Candidate review cannot change an exchange in ${exchange.state.status}.`);
+    const isApprovedRetry = request.decision === "approve" && exchange.state.status === "approved";
+    if (exchange.state.status !== "needs-review" && !isApprovedRetry) throw new Error(`Candidate review cannot change an exchange in ${exchange.state.status}.`);
     const report = await readPreparationReport(exchange);
     const importRecord = await readImportRecord(exchange);
     if (!report || !importRecord || !exchange.state.importId) throw new Error("The preparation or import evidence is unavailable.");
@@ -1478,6 +1936,12 @@ ipcMain.handle(IPC_CHANNELS.reviewCandidateSet, async (_event, rawRequest: unkno
     const existing = await readAssetReviewRecord(exchange, report.contentHash);
     const decidedAt = new Date().toISOString();
     const existingDecision = existing?.decisions.find((decision) => decision.candidateSetId === candidateSet.candidateSetId);
+    if (request.decision === "approve" && existingDecision?.status === "approved" && existingDecision.approvedAssetVersion && existing) {
+      const allRequirementsApproved = Boolean(approvedVersionsForExchange(exchange, existing));
+      if (allRequirementsApproved) await commitFullyApprovedExchange(exchange, existing);
+      return reviewCandidateSetResultSchema.parse({status: "reviewed", exchangeStatus: allRequirementsApproved ? "approved" : "needs-review", decisions: existing.decisions, approvedAssetVersion: existingDecision.approvedAssetVersion});
+    }
+    if (isApprovedRetry) throw new Error("The approved exchange is missing its durable approval decision and cannot be changed.");
     if (request.decision === "approve" && existingDecision?.status !== "selected") throw new Error("Select and technically validate this coherent set before final approval.");
     if (request.decision === "select") await buildSelectedCandidateRig(exchange, report, candidateSet.candidateSetId, decidedAt);
     const approvedAssetVersion = request.decision === "approve" ? await promoteCandidateSet(exchange, report, importRecord, candidateSet.candidateSetId, decidedAt) : null;
@@ -1489,18 +1953,20 @@ ipcMain.handle(IPC_CHANNELS.reviewCandidateSet, async (_event, rawRequest: unkno
     }
     decisions.push({candidateSetId: candidateSet.candidateSetId, briefId: candidateSet.briefId, requirementId: candidateSet.requirementId, status: request.decision === "select" ? "selected" : request.decision === "approve" ? "approved" : "rejected", notes: request.notes, decidedAt, approvedAssetVersion});
     const reviewRecord = finalizeAssetReviewRecord({schemaVersion: "1.0", exchangeJobId: exchange.job.exchangeJobId, importId: exchange.state.importId, preparationReportContentHash: report.contentHash, decisions}, decidedAt);
-    await persistAssetReviewRecord(exchange, reviewRecord);
 
-    const allRequirementsApproved = exchange.job.briefs.every((brief) => reviewRecord.decisions.some((decision) => decision.requirementId === brief.requirementId && decision.status === "approved"));
+    const allRequirementsApproved = Boolean(approvedVersionsForExchange(exchange, reviewRecord));
     const selectedBriefSets = report.candidateSets.filter((set) => set.briefId === candidateSet.briefId);
     const selectedBriefRejected = selectedBriefSets.every((set) => reviewRecord.decisions.some((decision) => decision.candidateSetId === set.candidateSetId && decision.status === "rejected"));
     let exchangeStatus: "needs-review" | "approved" | "rejected" = "needs-review";
     if (allRequirementsApproved) {
-      await transitionExchangeState(exchange, "approved", exchange.state.importId);
+      await commitFullyApprovedExchange(exchange, reviewRecord);
       exchangeStatus = "approved";
-    } else if (selectedBriefRejected) {
-      await transitionExchangeState(exchange, "rejected", exchange.state.importId);
-      exchangeStatus = "rejected";
+    } else {
+      await persistAssetReviewRecord(exchange, reviewRecord);
+      if (selectedBriefRejected) {
+        await transitionExchangeState(exchange, "rejected", exchange.state.importId);
+        exchangeStatus = "rejected";
+      }
     }
     return reviewCandidateSetResultSchema.parse({status: "reviewed", exchangeStatus, decisions: reviewRecord.decisions, approvedAssetVersion});
   } catch (error) {
@@ -1529,17 +1995,65 @@ ipcMain.handle(IPC_CHANNELS.productionRenderStart, async (_event, payload: unkno
   if (!stored || !verifyProductionBundleHash(stored.bundle) || (stored.bundle.approvedAssetVersions ?? []).length === 0) throw new Error("The selected production has no verified approved assets to render.");
   const approvedVersions = stored.bundle.approvedAssetVersions ?? [];
   if (!(await Promise.all(approvedVersions.map(verifyApprovedAssetVersionOnDisk))).every(Boolean)) throw new Error("An approved asset or its watched diagnostic changed after final approval. Rendering is blocked.");
+  if (stored.bundle.voiceTrack?.approvalStatus === "approved") await readVerifiedVoiceTrack(stored.bundle.voiceTrack);
+  if (stored.bundle.musicTrack?.approvalStatus === "approved") await readVerifiedMusicTrack(stored.bundle.musicTrack);
+  await Promise.all((stored.bundle.soundEffectAssets ?? []).filter((asset) => asset.approvalStatus === "approved").map(readVerifiedSoundEffect));
   const jobId = randomUUID();
   const localRoot = join(app.getPath("userData"), ".storystage-local");
   const outputRoot = join(localRoot, "renders", request.productionId, `r${request.revision}`);
   await mkdir(outputRoot, {recursive: true});
-  registerJob(jobId, outputRoot);
+  registerJob(jobId, outputRoot, {productionId: request.productionId, revision: request.revision, bundleContentHash: stored.bundle.contentHash, scope: request.scope});
   try {
-    startRenderWorker(jobId, false, {trustedProductionRoot: join(localRoot, "productions"), bundleFile: stored.bundleFile, assetsRoot: join(localRoot, "assets"), outputRoot, bundleContentHash: stored.bundle.contentHash});
+    startRenderWorker(jobId, false, {trustedProductionRoot: join(localRoot, "productions"), bundleFile: stored.bundleFile, assetsRoot: join(localRoot, "assets"), outputRoot, bundleContentHash: stored.bundle.contentHash, scope: request.scope});
   } catch {
     failJob(jobId, "WORKER_START_FAILED", "The production render worker could not be started.");
   }
   return startRenderResponseSchema.parse({jobId});
+});
+
+ipcMain.handle(IPC_CHANNELS.getVerifiedDelivery, async (_event, rawRequest: unknown) => {
+  const request = getVerifiedDeliveryRequestSchema.parse(rawRequest);
+  const candidate = [...deliveryRegistry.values()].find((delivery) => delivery.bundle.production.productionId === request.productionId && delivery.bundle.production.revision === request.revision && delivery.bundle.contentHash === request.productionBundleContentHash);
+  if (!candidate) return getVerifiedDeliveryResultSchema.parse({delivery: null});
+  try {
+    const verified = await readVerifiedDeliveryBundle(candidate.directory);
+    deliveryRegistry.set(verified.manifest.contentHash, verified);
+    return getVerifiedDeliveryResultSchema.parse({delivery: summarizeDelivery(verified)});
+  } catch {
+    deliveryRegistry.delete(candidate.manifest.contentHash);
+    return getVerifiedDeliveryResultSchema.parse({delivery: null});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.openDeliveryMaster, async (_event, rawManifestHash: unknown) => {
+  const manifestHash = verifiedDeliverySummarySchema.shape.deliveryManifestContentHash.parse(rawManifestHash);
+  const candidate = deliveryRegistry.get(manifestHash);
+  if (!candidate) return openRenderedFileResultSchema.parse({ok: false, error: {code: "DELIVERY_UNAVAILABLE", message: "This verified delivery is unavailable."}});
+  try {
+    const verified = await readVerifiedDeliveryBundle(candidate.directory);
+    deliveryRegistry.set(manifestHash, verified);
+    const errorMessage = await shell.openPath(join(verified.directory, "master.mp4"));
+    if (errorMessage) throw new Error(errorMessage);
+    return openRenderedFileResultSchema.parse({ok: true});
+  } catch (error) {
+    deliveryRegistry.delete(manifestHash);
+    return openRenderedFileResultSchema.parse({ok: false, error: {code: "DELIVERY_UNVERIFIED", message: error instanceof Error ? error.message : "The delivery failed verification."}});
+  }
+});
+
+ipcMain.handle(IPC_CHANNELS.revealDeliveryBundle, async (_event, rawManifestHash: unknown) => {
+  const manifestHash = verifiedDeliverySummarySchema.shape.deliveryManifestContentHash.parse(rawManifestHash);
+  const candidate = deliveryRegistry.get(manifestHash);
+  if (!candidate) return openRenderedFileResultSchema.parse({ok: false, error: {code: "DELIVERY_UNAVAILABLE", message: "This verified delivery is unavailable."}});
+  try {
+    const verified = await readVerifiedDeliveryBundle(candidate.directory);
+    deliveryRegistry.set(manifestHash, verified);
+    shell.showItemInFolder(join(verified.directory, "delivery-manifest.json"));
+    return openRenderedFileResultSchema.parse({ok: true});
+  } catch (error) {
+    deliveryRegistry.delete(manifestHash);
+    return openRenderedFileResultSchema.parse({ok: false, error: {code: "DELIVERY_UNVERIFIED", message: error instanceof Error ? error.message : "The delivery failed verification."}});
+  }
 });
 
 ipcMain.handle(IPC_CHANNELS.openRenderedFile, async (_event, rawJobId: unknown) => {
@@ -1558,7 +2072,9 @@ ipcMain.handle(IPC_CHANNELS.openRenderedFile, async (_event, rawJobId: unknown) 
 });
 
 app.whenReady().then(async () => {
+  installRenderedMediaProtocol();
   await rehydrateProductionBundleRegistry();
+  await rehydrateDeliveryRegistry();
   await rehydrateGenerationExchangeRegistry();
   await rehydrateLooseImportRegistry();
   await createWindow();

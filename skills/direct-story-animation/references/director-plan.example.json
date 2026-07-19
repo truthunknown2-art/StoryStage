@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "1.0",
+  "id": "director-plan-threshold-v1",
+  "productionId": "moonlit-ruins",
+  "grammarId": "kids-adventure-v1",
+  "sourceContentHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "startFrame": 84,
+  "durationInFrames": 48,
+  "scenes": [
+    {
+      "id": "scene-ruins",
+      "objective": "Make entering the ruins feel like a choice.",
+      "geography": "The arch divides the safe forest from the corridor.",
+      "sceneKitId": "scene-kit-ruins-v1",
+      "beatIds": ["beat-threshold"]
+    }
+  ],
+  "beats": [
+    {
+      "id": "beat-threshold",
+      "sceneId": "scene-ruins",
+      "audienceQuestion": "Will Mara follow the moth inside?",
+      "knowledgeBefore": "The moth entered an unknown place.",
+      "knowledgeAfter": "Mara chooses to cross the threshold.",
+      "emotionBefore": "curiosity",
+      "emotionAfter": "caution",
+      "muteReadableAction": "Mara pauses, then plants one foot beyond the arch.",
+      "audioReadableIntent": "Ambience narrows and one leaf contact marks the decision.",
+      "shotIds": ["shot-threshold"]
+    }
+  ],
+  "shots": [
+    {
+      "id": "shot-threshold",
+      "sceneId": "scene-ruins",
+      "beatId": "beat-threshold",
+      "storyFunction": "Turn pursuit into a deliberate choice.",
+      "startFrame": 84,
+      "durationInFrames": 48,
+      "composition": {
+        "scale": "close-up",
+        "focalSubjectId": "mara-foot",
+        "screenDirection": "left-to-right",
+        "depthPlaneIds": ["ground", "mara-feet", "foreground-leaves"],
+        "eyelineTargetIds": [],
+        "staging": "Keep the foot contact clear while leaves cross only the frame edge."
+      },
+      "transition": {
+        "type": "foreground-wipe",
+        "motivation": "Leaf contact covers the geography change."
+      },
+      "continuity": {
+        "entryState": "Mara approaches frame-left.",
+        "exitState": "Her planted foot is inside the arch."
+      },
+      "performanceProgramIds": ["mara-threshold-step-v1"],
+      "assetRequirementIds": ["scene-kit-ruins-v1", "foreground-leaves-v1"],
+      "events": [
+        {
+          "id": "threshold-contact",
+          "kind": "contact",
+          "frameOffset": 10,
+          "description": "Mara's foot plants inside the ruins."
+        }
+      ],
+      "audioIntentIds": ["threshold-rustle"]
+    }
+  ],
+  "audioIntents": [
+    {
+      "id": "threshold-rustle",
+      "role": "foley",
+      "shotId": "shot-threshold",
+      "anchorEventId": "threshold-contact",
+      "offsetFrames": 0,
+      "direction": "A brief, close paper-leaf rustle."
+    }
+  ],
+  "contentHash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+}

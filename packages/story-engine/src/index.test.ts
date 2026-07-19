@@ -2,6 +2,7 @@ import {readFileSync} from "node:fs";
 import {describe, expect, it} from "vitest";
 import {
   analyzeStory,
+  assertPublicShowPackReviewAttemptIsCompatible,
   applyApprovedAssetVersion,
   buildAnimaticSync,
   canTransitionGenerationExchange,
@@ -9,21 +10,28 @@ import {
   compileAnimation,
   createEstimatedTiming,
   createProductionDraft,
+  createRookPilot001Fixture,
   directEpisode,
   finalizeGenerationJob,
   finalizeAssetReviewRecord,
   createImportValidationReport,
   finalizeImportRecord,
   finalizeRigDiagnosticReport,
+  finalizePublicShowPackReviewRecord,
   finalizeProductionBundle,
+  finalizeScriptApprovalRecord,
+  generationBriefsMatchAuthoritativePlan,
   generationBriefSchema,
   generationJobDraftSchema,
   generationExchangeStateSchema,
   getProductionPolicy,
+  getFullProductionRenderBlockers,
   getShowPack,
   measureDirectedPlan,
   parseScript,
+  publicShowPackCandidateMatchesRelease,
   hashCanonical,
+  inspectPcmWav,
   rehashShowPack,
   sampleWorkshopScript,
   shotOverrideSchema,
@@ -36,7 +44,9 @@ import {
   verifyAssetReviewRecordHash,
   verifyImportEvidence,
   verifyRigDiagnosticReportHash,
+  verifyScriptApprovalRecordHash,
   verifyShowPackHash,
+  scriptApprovalMatchesProduction,
   type DirectingProfile,
   type ProjectType,
   type ShowPack,
@@ -53,6 +63,15 @@ const makeDraft = (projectType: ProjectType, options: {productionId?: string; ti
 
 const buildFor = (projectType: ProjectType, preset: "draft" | "studio" | "premium" = "studio", productionId = `production-${projectType}-${preset}`) => buildAnimaticSync({draft: makeDraft(projectType, {preset, productionId})});
 
+function makePcmWav(sampleRate = 48_000, frames = 4_800): Uint8Array {
+  const dataBytes = frames * 2;
+  const bytes = new Uint8Array(44 + dataBytes);
+  const view = new DataView(bytes.buffer);
+  const writeAscii = (offset: number, value: string) => [...value].forEach((character, index) => {bytes[offset + index] = character.charCodeAt(0);});
+  writeAscii(0, "RIFF"); view.setUint32(4, 36 + dataBytes, true); writeAscii(8, "WAVE"); writeAscii(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true); writeAscii(36, "data"); view.setUint32(40, dataBytes, true);
+  return bytes;
+}
+
 function directWithProfile(profile: DirectingProfile) {
   const base = getShowPack("kids-adventure-v1");
   const showPack = rehashShowPack({...base, profile} as ShowPack);
@@ -63,6 +82,13 @@ function directWithProfile(profile: DirectingProfile) {
 }
 
 describe("StoryStage story engine", () => {
+  it("inspects bounded uncompressed WAV voice recordings", () => {
+    const bytes = makePcmWav();
+    expect(inspectPcmWav(bytes)).toEqual({codec: "pcm-wav", sampleRate: 48_000, channels: 1, bitsPerSample: 16, dataBytes: 9_600, durationInSeconds: .1});
+    new DataView(bytes.buffer).setUint32(28, 1, true);
+    expect(() => inspectPcmWav(bytes)).toThrow(/alignment/i);
+  });
+
   it("creates an entity ledger with scene presence and unknown action props", () => {
     const script = `INT. CAVE - NIGHT\n\nMARA: This should be fine.\n\n[Mara lifts the dragon compass from a stone shelf.]`;
     const document = parseScript(script, "Compass", "production-compass");
@@ -149,6 +175,46 @@ describe("StoryStage story engine", () => {
     const presenter = build.resolvedPlan.characters.find((character) => character.entityName === "NARRATOR");
     expect(presenter).toMatchObject({assetId: "history-rig-guide", matchStrategy: "show-pack-role", resolved: true});
     expect(build.creativePlan.shots.every((shot) => shot.focusCharacterName === "NARRATOR")).toBe(true);
+    const narratedShots = build.renderPlan.shots.filter((shot) => Boolean(shot.caption));
+    expect(narratedShots.length).toBeGreaterThan(0);
+    expect(narratedShots.every((shot) => shot.actions.some((action) => action.detail.type === "talk" && action.detail.mouthCue?.mode === "timing-driven-pose-swap"))).toBe(true);
+  });
+
+  it("keeps Rook Pilot 001 inside its fixed short-form editorial envelope", () => {
+    const fixture = createRookPilot001Fixture();
+    const build = buildAnimaticSync(fixture);
+    const durationSeconds = build.renderPlan.durationInFrames / build.renderPlan.fps;
+    expect(durationSeconds).toBeGreaterThanOrEqual(25);
+    expect(durationSeconds).toBeLessThanOrEqual(40);
+    expect(build.renderPlan.shots.length).toBeGreaterThanOrEqual(10);
+    expect(build.renderPlan.shots.length).toBeLessThanOrEqual(16);
+    expect(build.renderPlan.shots.map((shot) => shot.treatment)).toEqual(["environment", "character-performance", "generated-illustration", "character-performance", "generated-illustration", "kinetic-type", "diagram", "generated-illustration", "diagram", "kinetic-type", "reaction"]);
+    expect(build.renderPlan.shots.slice(1).every((shot) => shot.transition === "hard-cut")).toBe(true);
+    expect(build.renderPlan.shots.every((shot) => Boolean(shot.editorialText))).toBe(true);
+    expect(build.resolvedPlan.generationBriefs).toHaveLength(3);
+    expect(build.resolvedPlan.generationBriefs.every((brief) => brief.outputRole === "reconstruction" && brief.consumingShotIds.length === 1)).toBe(true);
+    const reconstructionDirectionByShotNumber = new Map(build.resolvedPlan.generationBriefs.map((brief) => {
+      const shot = build.renderPlan.shots.find((candidate) => brief.consumingShotIds.includes(candidate.id))!;
+      return [shot.number, brief.creativeRequirements.find((requirement) => requirement.startsWith("Shot direction:"))];
+    }));
+    expect(reconstructionDirectionByShotNumber.get("1.03")).toMatch(/one adult woman dances alone.*cut-paper/i);
+    expect(reconstructionDirectionByShotNumber.get("1.05")).toMatch(/genuine public emergency.*gentle pan/i);
+    expect(reconstructionDirectionByShotNumber.get("1.08")).toMatch(/raised wooden stage.*civic officials/i);
+    expect((build.metrics.treatmentDistribution["generated-illustration"] ?? 0) + (build.metrics.treatmentDistribution.diagram ?? 0) + (build.metrics.treatmentDistribution["kinetic-type"] ?? 0)).toBeGreaterThan(0.6);
+    expect(build.renderPlan.shots.filter((shot) => shot.caption).every((shot) => shot.actions.some((action) => action.detail.type === "talk"))).toBe(true);
+  });
+
+  it("binds a public Show Pack candidate to the exact authoritative release", () => {
+    const showPack = getShowPack("weird-history-editorial-v1");
+    expect(publicShowPackCandidateMatchesRelease({showPack: {id: showPack.id, version: showPack.version, contentHash: showPack.contentHash}}, showPack)).toBe(true);
+    expect(publicShowPackCandidateMatchesRelease({showPack: {id: showPack.id, version: "0.9.0", contentHash: showPack.contentHash}}, showPack)).toBe(false);
+    expect(publicShowPackCandidateMatchesRelease({showPack: {id: showPack.id, version: showPack.version, contentHash: "f".repeat(64)}}, showPack)).toBe(false);
+  });
+
+  it("makes an approved public candidate terminal across its target revision", () => {
+    const review = finalizePublicShowPackReviewRecord({schemaVersion: "1.0", candidateId: "weird-history-rook-v1", candidateContentHash: "1".repeat(64), productionId: "rook-pilot-001", sourceProductionRevision: 1, sourceProductionBundleContentHash: "2".repeat(64), decision: "approved", acknowledgements: {identitySheet: true, neutralPose: true, talkPose: true, reactionPose: true, movingDiagnostic: true, identityConsistency: true, matteEdges: true, provenance: true}, decidedAt: "2026-07-17T22:00:00.000Z", approvedAssetVersion: {assetId: "approved-weird-history-rook-v1-requirement", version: "sha256-rook", requirementId: "requirement-rook", contentHash: "3".repeat(64), relativeFile: "approved-rook/manifest.json", provenance: {sourceType: "generated", provider: "ChatGPT Images", usageNotes: "Reviewed."}, approvedAt: "2026-07-17T22:00:00.000Z"}, targetProductionRevision: 2, targetProductionBundleContentHash: "4".repeat(64)});
+    expect(() => assertPublicShowPackReviewAttemptIsCompatible(review, 2, "approve")).not.toThrow();
+    expect(() => assertPublicShowPackReviewAttemptIsCompatible(review, 2, "reject")).toThrow(/opposite final decision|cannot be rejected/);
   });
 
   it("prioritizes real missing assets and leaves exhausted requirements visible", () => {
@@ -168,6 +234,14 @@ describe("StoryStage story engine", () => {
     const changed = updated.renderPlan.shots.find((shot) => shot.id === talkingShot.id)!;
     expect(changed.actions.some((action) => action.detail.type === "talk")).toBe(true);
     expect(changed.actions.some((action) => action.detail.type === "gesture" && action.detail.gestureId === "point" && action.detail.intensity === 0.9)).toBe(true);
+  });
+
+  it("freezes profile-specific timing-driven mouth cues into the render plan", () => {
+    const kidsTalk = buildFor("kids").renderPlan.shots.flatMap((shot) => shot.actions).find((action) => action.detail.type === "talk");
+    const historyTalk = buildFor("explainer").renderPlan.shots.flatMap((shot) => shot.actions).find((action) => action.detail.type === "talk");
+    expect(kidsTalk?.detail.type === "talk" ? kidsTalk.detail.mouthCue : null).toMatchObject({mode: "timing-driven-pose-swap", openFrames: 4, closedFrames: 3});
+    expect(historyTalk?.detail.type === "talk" ? historyTalk.detail.mouthCue : null).toMatchObject({mode: "timing-driven-pose-swap", openFrames: 3, closedFrames: 2});
+    expect(verifyRenderPlanHash({...buildFor("kids").renderPlan, shots: buildFor("kids").renderPlan.shots.map((shot, index) => index === 0 ? {...shot, title: "tampered"} : shot)})).toBe(false);
   });
 
   it("uses one validated manual exchange schema and keeps prompts out of render plans", () => {
@@ -196,16 +270,73 @@ describe("StoryStage story engine", () => {
     expect(job.briefs[0]?.styleBible.principles.length).toBeGreaterThan(0);
     expect(generationJobDraftSchema.safeParse({...draft, production: {...draft.production, id: "different-production"}}).success).toBe(false);
     expect(generationJobDraftSchema.safeParse({...draft, briefs: draft.briefs.length > 0 ? [draft.briefs[0]!, draft.briefs[0]!] : []}).success).toBe(false);
+    expect(generationBriefsMatchAuthoritativePlan(job.briefs, build.resolvedPlan.generationBriefs)).toBe(true);
+    expect(generationBriefsMatchAuthoritativePlan(job.briefs, build.resolvedPlan.generationBriefs.map((brief, index) => index === 0 ? {...brief, candidateCount: brief.candidateCount + 1} : brief))).toBe(false);
   });
 
   it("persists a hash-bound production bundle that still derives from its resolved plan", () => {
     const build = buildFor("kids", "studio", "production-bundle");
-    const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z");
+    const bundle = finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], audioMix: {profile: "kids", voiceGain: 1, musicDecision: "none", transitionSfx: "off", transitionSfxGain: .1, reviewed: true}, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z");
 
     expect(verifyProductionBundleHash(bundle)).toBe(true);
     expect(verifyProductionBundleHash({...bundle, savedAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
+    expect(verifyProductionBundleHash({...bundle, audioMix: {...bundle.audioMix!, voiceGain: .4}})).toBe(false);
     expect(() => finalizeProductionBundle({schemaVersion: "1.0", production: {...build.draft, productionId: "other-production"}, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z")).toThrow(/identity/i);
     expect(() => finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: {...build.renderPlan, shots: build.renderPlan.shots.map((shot, index) => index === 0 ? {...shot, title: "Divergent shot with retained hash"} : shot)}, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z")).toThrow(/exactly derive|content hash/i);
+  });
+
+  it("binds human editorial approval to the exact production script", () => {
+    const build = buildFor("explainer", "studio", "production-script-lock");
+    const approvedAt = "2026-07-17T00:00:00.000Z";
+    const scriptApproval = finalizeScriptApprovalRecord(build.draft, approvedAt);
+    const unrelatedRevision = {...build.draft, revision: build.draft.revision + 1};
+    expect(verifyScriptApprovalRecordHash(scriptApproval)).toBe(true);
+    expect(scriptApprovalMatchesProduction(scriptApproval, build.draft)).toBe(true);
+    expect(scriptApprovalMatchesProduction(scriptApproval, unrelatedRevision)).toBe(true);
+    expect(scriptApprovalMatchesProduction(scriptApproval, {...build.draft, script: `${build.draft.script}\nOne changed word.`})).toBe(false);
+    expect(verifyScriptApprovalRecordHash({...scriptApproval, approvedAt: "2026-07-18T00:00:00.000Z"})).toBe(false);
+
+    const bundleDraft = {schemaVersion: "1.0" as const, production: build.draft, overrides: [], scriptApproval, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate};
+    expect(finalizeProductionBundle(bundleDraft, approvedAt).scriptApproval?.contentHash).toBe(scriptApproval.contentHash);
+    expect(() => finalizeProductionBundle({...bundleDraft, production: {...build.draft, script: `${build.draft.script}\nOne changed word.`}}, approvedAt)).toThrow(/exact production script/i);
+  });
+
+  it("rehydrates the exact pre-mouth-cue plan shape for one-way workspace migration", () => {
+    const build = buildFor("explainer", "studio", "production-legacy-mouth-cues");
+    const {contentHash: _contentHash, ...currentPayload} = build.renderPlan;
+    void _contentHash;
+    const legacyPayload = {...currentPayload, shots: currentPayload.shots.map((shot) => ({...shot, actions: shot.actions.map((action) => {
+      if (action.detail.type !== "talk") return action;
+      const {mouthCue: _mouthCue, ...legacyTalk} = action.detail;
+      void _mouthCue;
+      return {...action, detail: legacyTalk};
+    })}))};
+    const legacyRenderPlan = {...legacyPayload, contentHash: hashCanonical(legacyPayload)};
+    const migrated = finalizeProductionBundle({schemaVersion: "1.0", production: build.draft, overrides: [], resolvedPlan: build.resolvedPlan, renderPlan: legacyRenderPlan, metrics: build.metrics, estimate: build.estimate}, "2026-07-17T00:00:00.000Z");
+    expect(verifyProductionBundleHash(migrated)).toBe(true);
+    expect(migrated.renderPlan.shots.flatMap((shot) => shot.actions).filter((action) => action.detail.type === "talk").every((action) => action.detail.type === "talk" && action.detail.mouthCue === undefined)).toBe(true);
+  });
+
+  it("requires an approved private music master when the reviewed mix selects one", () => {
+    const build = buildFor("kids", "studio", "production-music-binding");
+    const audioMix = {profile: "kids" as const, voiceGain: 1, musicDecision: "approved-master" as const, musicGain: .12, musicLoop: true, transitionSfx: "off" as const, transitionSfxGain: .1, reviewed: true};
+    const base = {schemaVersion: "1.0" as const, production: build.draft, overrides: [], audioMix, resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate};
+    expect(() => finalizeProductionBundle(base, "2026-07-17T00:00:00.000Z")).toThrow(/approved music track/i);
+    const contentHash = "b".repeat(64);
+    const musicTrack = {id: "music-bbbbbbbbbbbbbbbbbbbb", contentHash, relativeFile: `music/${build.draft.productionId}/r1/${contentHash}.wav`, sourceFileName: "approved-bed.wav", codec: "pcm-wav" as const, durationInSeconds: 60, sampleRate: 48_000, channels: 2 as const, bitsPerSample: 24 as const, importedAt: "2026-07-17T00:00:00.000Z", approvalStatus: "approved" as const, approvedAt: "2026-07-17T00:05:00.000Z"};
+    expect(verifyProductionBundleHash(finalizeProductionBundle({...base, musicTrack}, "2026-07-17T00:06:00.000Z"))).toBe(true);
+  });
+
+  it("binds custom sound effects to approved assets and shot-relative frame offsets", () => {
+    const build = buildFor("explainer", "studio", "production-sfx-binding");
+    const shot = build.renderPlan.shots[1]!;
+    const contentHash = "c".repeat(64);
+    const soundEffectAsset = {id: "sfx-cccccccccccccccccccc", contentHash, relativeFile: `sfx/${build.draft.productionId}/r1/${contentHash}.wav`, sourceFileName: "impact.wav", codec: "pcm-wav" as const, durationInSeconds: .5, sampleRate: 48_000, channels: 1 as const, bitsPerSample: 16 as const, importedAt: "2026-07-17T00:00:00.000Z", approvalStatus: "approved" as const, approvedAt: "2026-07-17T00:05:00.000Z"};
+    const cue = {id: "sfx-cue-impact-one", assetContentHash: contentHash, shotId: shot.id, offsetInFrames: 4, gain: .5, label: "Impact"};
+    const base = {schemaVersion: "1.0" as const, production: build.draft, overrides: [], soundEffectAssets: [soundEffectAsset], soundEffectCues: [cue], resolvedPlan: build.resolvedPlan, renderPlan: build.renderPlan, metrics: build.metrics, estimate: build.estimate};
+    expect(verifyProductionBundleHash(finalizeProductionBundle(base, "2026-07-17T00:06:00.000Z"))).toBe(true);
+    expect(() => finalizeProductionBundle({...base, soundEffectCues: [{...cue, offsetInFrames: shot.durationInFrames}]}, "2026-07-17T00:06:00.000Z")).toThrow(/within a render-plan shot/i);
+    expect(() => finalizeProductionBundle({...base, soundEffectAssets: [{...soundEffectAsset, approvalStatus: "imported" as const, approvedAt: null}]}, "2026-07-17T00:06:00.000Z")).toThrow(/approved bound asset/i);
   });
 
   it("validates complete candidate kits by set and preserves the import evidence", () => {
@@ -232,6 +363,11 @@ describe("StoryStage story engine", () => {
     expect(verifyImportEvidence(record, report)).toBe(true);
     expect(verifyImportEvidence(record, {...report, assets: report.assets.map((asset, index) => index === 0 ? {...asset, width: asset.width + 1} : asset)})).toBe(false);
     expect(verifyImportEvidence(record, {...report, assets: report.assets.map((asset, index) => index === 0 ? {...asset, stagedContentHash: "f".repeat(64)} : asset)})).toBe(false);
+    const {createdAt: _createdAt, contentHash: _contentHash, ...recordDraft} = record;
+    void _createdAt;
+    void _contentHash;
+    expect(() => finalizeImportRecord({...recordDraft, assets: record.assets.map((asset, index) => index === 0 ? {...asset, width: asset.width + 1} : asset)}, "2026-07-17T00:08:00.000Z")).toThrow(/candidate-bundle entry/i);
+    expect(() => finalizeImportRecord({...recordDraft, assets: record.assets.map((asset, index) => index === 0 ? {...asset, rights: {...asset.rights, usageNotes: "Changed after bundle creation"}} : asset)}, "2026-07-17T00:08:00.000Z")).toThrow(/candidate-bundle entry/i);
   });
 
   it("enforces generation exchange lifecycle transitions", () => {
@@ -265,9 +401,83 @@ describe("StoryStage story engine", () => {
     expect(build.renderPlan.shots.some((shot) => shot.visualBindings.some((binding) => binding.resolutionStatus !== "approved"))).toBe(true);
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.every((binding) => binding.contentHash.length === 64))).toBe(true);
     expect(build.renderPlan.shots.every((shot) => shot.visualBindings.find((binding) => binding.role === "background")?.assetId === shot.locationAssetId)).toBe(true);
-    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, treatment: "diagram"}).success).toBe(false);
+    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, treatment: "diagram"}).success).toBe(true);
+    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, imageDirection: "Wide editorial reconstruction with a readable focal point."}).success).toBe(true);
+    expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, transition: "brief-dissolve"}).success).toBe(true);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, locationAssetId: "other-background"}).success).toBe(false);
     expect(shotOverrideSchema.safeParse({shotId: build.renderPlan.shots[0]!.id, cameraAction: "hardCut"}).success).toBe(false);
+  });
+
+  it("reroutes treatment overrides through requirements, briefs, metrics, and render bindings", () => {
+    const base = buildFor("explainer");
+    const target = base.renderPlan.shots.find((shot) => shot.treatment === "licensed-media")!;
+    const rebuilt = buildAnimaticSync({draft: base.draft, overrides: [{shotId: target.id, treatment: "generated-illustration"}]});
+    const rerouted = rebuilt.renderPlan.shots.find((shot) => shot.id === target.id)!;
+    const activeCreativeShot = rebuilt.resolvedPlan.creativePlan.shots.find((shot) => shot.id === target.id)!;
+
+    expect(rerouted.treatment).toBe("generated-illustration");
+    expect(activeCreativeShot.treatment).toBe("generated-illustration");
+    expect(rerouted.visualBindings.some((binding) => binding.role === "reconstruction")).toBe(true);
+    expect(rerouted.visualBindings.some((binding) => binding.role === "evidence")).toBe(false);
+    expect(rebuilt.resolvedPlan.generationBriefs.some((brief) => brief.consumingShotIds.includes(target.id) && brief.outputRole === "reconstruction")).toBe(true);
+    expect(rebuilt.metrics.treatmentDistribution["generated-illustration"]).toBeGreaterThan(base.metrics.treatmentDistribution["generated-illustration"] ?? 0);
+    expect(rebuilt.metrics.treatmentDistribution["licensed-media"]).toBeLessThan(base.metrics.treatmentDistribution["licensed-media"] ?? 1);
+    expect(rebuilt.renderPlan.contentHash).not.toBe(base.renderPlan.contentHash);
+
+    const kinetic = buildAnimaticSync({draft: base.draft, overrides: [{shotId: target.id, treatment: "kinetic-type"}]}).renderPlan.shots.find((shot) => shot.id === target.id)!;
+    expect(kinetic.visualBindings.some((binding) => binding.role === "diagram")).toBe(true);
+    expect(kinetic.actions.some((action) => action.detail.type === "kineticType")).toBe(true);
+  });
+
+  it("keeps the full-production renderer behind the actual approval gates", () => {
+    const build = buildFor("explainer");
+    const initialBlockers = getFullProductionRenderBlockers({approvedAssetVersions: [], audioMix: {profile: "explainer", voiceGain: 1, musicDecision: "pending", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: false}, overrides: [], production: build.draft, renderPlan: build.renderPlan, resolvedPlan: build.resolvedPlan, soundEffectAssets: []});
+    expect(initialBlockers.map((blocker) => blocker.id)).toEqual(expect.arrayContaining(["approved-art", "audio-mix", "script-approval", "source-acquisition", "spoken-timing", "visual-bindings", "voice-master"]));
+
+    const spokenShotIds = build.renderPlan.shots.filter((shot) => shot.actions.some((action) => action.detail.type === "talk") || Boolean(shot.caption)).map((shot) => shot.id);
+    const approvedAssetVersion = {assetId: "approved-full-render-art", version: "1.0.0", requirementId: build.resolvedPlan.requirements[0]!.id, contentHash: "f".repeat(64), relativeFile: "approved-full-render-art/1.0.0/manifest.json", provenance: {sourceType: "generated" as const, provider: "chatgpt-images", usageNotes: "Human-approved production art"}, approvedAt: "2026-07-17T00:00:00.000Z"};
+    const readyBlockers = getFullProductionRenderBlockers({
+      approvedAssetVersions: [approvedAssetVersion],
+      audioMix: {profile: "explainer", voiceGain: 1, musicDecision: "none", musicGain: .1, musicLoop: true, transitionSfx: "paper-flip", transitionSfxGain: .14, reviewed: true},
+      overrides: spokenShotIds.map((shotId) => ({shotId, timingLocked: true as const})),
+      production: build.draft,
+      renderPlan: {...build.renderPlan, shots: build.renderPlan.shots.map((shot) => ({...shot, visualBindings: shot.visualBindings.map((binding) => ({...binding, ...(binding.role === "character" ? {assetId: approvedAssetVersion.assetId} : {}), resolutionStatus: "approved" as const}))}))},
+      resolvedPlan: {...build.resolvedPlan, generationBriefs: [], requirements: build.resolvedPlan.requirements.map((requirement) => ({...requirement, status: "resolved" as const}))},
+      scriptApproval: finalizeScriptApprovalRecord(build.draft, "2026-07-17T00:00:00.000Z"),
+      soundEffectAssets: [],
+      voiceTrack: {id: "voice-full-render-ready", contentHash: "a".repeat(64), relativeFile: "voice/production-one/r1/ready.wav", sourceFileName: "ready.wav", codec: "pcm-wav", durationInSeconds: build.renderPlan.durationInFrames / build.renderPlan.fps, sampleRate: 48_000, channels: 1, bitsPerSample: 16, importedAt: "2026-07-17T00:00:00.000Z", approvalStatus: "approved", approvedAt: "2026-07-17T00:01:00.000Z", rights: {sourceType: "user-owned", provider: "Operator", usageNotes: "Original narration recording.", clearanceStatus: "cleared", evidenceReference: "Operator recording ledger 2026-07-17"}},
+    });
+    expect(readyBlockers).toEqual([]);
+  });
+
+  it("compiles transition overrides into rendered transition metadata and actions", () => {
+    const base = buildFor("explainer");
+    const shot = base.renderPlan.shots[1]!;
+    const dissolved = buildAnimaticSync({draft: base.draft, overrides: [{shotId: shot.id, transition: "brief-dissolve"}]}).renderPlan.shots[1]!;
+    const wiped = buildAnimaticSync({draft: base.draft, overrides: [{shotId: shot.id, transition: "foreground-wipe"}]}).renderPlan.shots[1]!;
+
+    expect(dissolved.transition).toBe("brief-dissolve");
+    expect(dissolved.actions.some((action) => action.detail.type === "hardCut")).toBe(false);
+    expect(wiped.transition).toBe("foreground-wipe");
+    expect(wiped.actions.some((action) => action.detail.type === "foregroundWipe")).toBe(true);
+  });
+
+  it("retimes narration and captions without breaking exact shot boundaries", () => {
+    const base = buildFor("explainer");
+    const shotIndex = base.renderPlan.shots.findIndex((shot) => Boolean(shot.caption));
+    const shot = base.renderPlan.shots[shotIndex]!;
+    const nextShot = base.renderPlan.shots[shotIndex + 1]!;
+    const addedFrames = 24;
+    const rebuilt = buildAnimaticSync({draft: base.draft, overrides: [{shotId: shot.id, caption: "A sharper editorial read.", durationInFrames: shot.durationInFrames + addedFrames, timingLocked: true}]});
+    const retimed = rebuilt.renderPlan.shots[shotIndex]!;
+
+    expect(retimed.caption).toBe("A sharper editorial read.");
+    expect(retimed.durationInFrames).toBe(shot.durationInFrames + addedFrames);
+    expect(rebuilt.renderPlan.shots[shotIndex + 1]!.startFrame).toBe(nextShot.startFrame + addedFrames);
+    expect(rebuilt.renderPlan.durationInFrames).toBe(base.renderPlan.durationInFrames + addedFrames);
+    expect(retimed.actions.every((action) => action.startFrame >= retimed.startFrame && action.endFrame <= retimed.startFrame + retimed.durationInFrames)).toBe(true);
+    expect(retimed.actions.some((action) => ["talk", "holdPose"].includes(action.detail.type) && action.endFrame === retimed.startFrame + retimed.durationInFrames)).toBe(true);
+    expect(shotOverrideSchema.safeParse({shotId: shot.id, caption: null, durationInFrames: 12, timingLocked: true}).success).toBe(true);
   });
 
   it("resolves only dependent shots when an immutable candidate is approved", () => {

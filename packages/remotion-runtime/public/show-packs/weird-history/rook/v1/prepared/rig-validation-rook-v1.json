@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0",
+  "manifestId": "manifest-rook-v1",
+  "manifestContentHash": "48fa071180f3f47fb30f4cca7a164f67c5c6abc943def9e2bf22e771009c9299",
+  "candidateSetId": "rook-v1",
+  "status": "passed",
+  "checks": [
+    {
+      "code": "MANIFEST_HASH",
+      "status": "passed",
+      "message": "Manifest canonical hash matches its bindings."
+    },
+    {
+      "code": "CHARACTER_CANVAS",
+      "status": "passed",
+      "message": "Character pose canvases share exact dimensions."
+    },
+    {
+      "code": "CHARACTER_GROUND",
+      "status": "passed",
+      "message": "Character pose ground registration stays within two pixels."
+    },
+    {
+      "code": "CHARACTER_POSES",
+      "status": "passed",
+      "message": "Neutral, talk, and reaction poses are bound."
+    }
+  ],
+  "validatedAt": "2026-07-17T17:00:00.000Z",
+  "contentHash": "5fe76aeea8eec3b786654c172cb4cc83ed03735088618320fcef06ec645709e1"
+}

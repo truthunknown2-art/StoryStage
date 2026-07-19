@@ -1,0 +1,2 @@
+packages/remotion-runtime/public/show-packs/**/*.json text eol=lf
+packages/remotion-runtime/public/show-packs/**/*.md text eol=lf

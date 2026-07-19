@@ -10,10 +10,12 @@ export const desktopCapabilitiesSchema = z.object({
   localRendering: z.boolean(),
   openRenderedFile: z.boolean(),
   manualImageExchange: z.boolean(),
+  localAudioImport: z.boolean(),
 }).strict();
 
 const productionIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
-export const startProductionRenderRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive()}).strict();
+export const productionRenderScopeSchema = z.enum(["engineering-slice", "full-production"]);
+export const startProductionRenderRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), scope: productionRenderScopeSchema}).strict();
 
 export const exportGenerationJobRequestSchema = z.object({
   serializedJob: z.string().min(2).max(2_000_000),
@@ -116,15 +118,85 @@ export const approvedAssetVersionBridgeSchema = z.object({
   requirementId: productionIdSchema,
   contentHash: z.string().regex(/^[a-f0-9]{64}$/),
   relativeFile: z.string().min(1),
-  provenance: z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict(),
+  provenance: z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned", "project-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict(),
   approvedAt: z.string().datetime(),
 }).strict();
+export const publicShowPackCandidateSummarySchema = z.object({
+  candidateId: productionIdSchema,
+  version: z.string().min(1),
+  showPackId: productionIdSchema,
+  displayName: z.string().min(1),
+  status: z.literal("candidate-needs-human-review"),
+  contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  identityLock: z.string().min(1),
+  provenance: z.object({provider: z.string().min(1), usageNotes: z.string().min(1)}).strict(),
+  files: z.array(z.object({role: z.enum(["identity-sheet", "neutral-pose", "talk-pose", "reaction-pose"]), url: z.string().startsWith("/"), width: z.number().int().positive(), height: z.number().int().positive()}).strict()).length(4),
+  diagnosticUrl: z.string().startsWith("/"),
+  verifiedByHost: z.boolean(),
+  canReview: z.boolean(),
+  review: z.discriminatedUnion("decision", [
+    z.object({decision: z.literal("none")}).strict(),
+    z.object({decision: z.literal("rejected"), decidedAt: z.string().datetime()}).strict(),
+    z.object({decision: z.literal("approved"), decidedAt: z.string().datetime(), targetProductionRevision: z.number().int().positive(), targetProductionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict(),
+  ]),
+}).strict();
+export const listPublicShowPackCandidatesRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/).nullable()}).strict();
+export const listPublicShowPackCandidatesResultSchema = z.object({candidates: z.array(publicShowPackCandidateSummarySchema)}).strict();
+export const publicShowPackReviewAcknowledgementsBridgeSchema = z.object({identitySheet: z.boolean(), neutralPose: z.boolean(), talkPose: z.boolean(), reactionPose: z.boolean(), movingDiagnostic: z.boolean(), identityConsistency: z.boolean(), matteEdges: z.boolean(), provenance: z.boolean()}).strict();
+export const reviewPublicShowPackCandidateRequestSchema = z.object({
+  productionId: productionIdSchema,
+  revision: z.number().int().positive(),
+  productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  candidateId: productionIdSchema,
+  decision: z.enum(["approve", "reject"]),
+  acknowledgements: publicShowPackReviewAcknowledgementsBridgeSchema,
+}).strict();
+export const reviewPublicShowPackCandidateResultSchema = z.discriminatedUnion("status", [
+  z.object({status: z.literal("reviewed"), decision: z.enum(["approved", "rejected"]), approvedAssetVersion: approvedAssetVersionBridgeSchema.nullable(), targetProductionRevision: z.number().int().positive().nullable(), targetProductionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/).nullable()}).strict(),
+  z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
 export const candidateSetReviewSummarySchema = z.object({candidateSetId: productionIdSchema, briefId: productionIdSchema, requirementId: productionIdSchema, status: z.enum(["selected", "approved", "rejected"]), notes: z.string(), decidedAt: z.string().datetime(), approvedAssetVersion: approvedAssetVersionBridgeSchema.nullable()}).strict();
 export const reviewCandidateSetRequestSchema = z.object({exchangeJobId: productionIdSchema, candidateSetId: productionIdSchema, decision: z.enum(["select", "approve", "reject"]), notes: z.string().max(2_000)}).strict();
 export const reviewCandidateSetResultSchema = z.discriminatedUnion("status", [
   z.object({status: z.literal("reviewed"), exchangeStatus: z.enum(["needs-review", "approved", "rejected"]), decisions: z.array(candidateSetReviewSummarySchema), approvedAssetVersion: approvedAssetVersionBridgeSchema.nullable()}).strict(),
   z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
 ]);
+
+export const voiceTrackBridgeSchema = z.object({
+  id: productionIdSchema,
+  contentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  relativeFile: z.string().min(1),
+  sourceFileName: z.string().min(1).max(260),
+  codec: z.enum(["pcm-wav", "ieee-float-wav"]),
+  durationInSeconds: z.number().positive().max(14_400),
+  sampleRate: z.number().int().min(8_000).max(192_000),
+  channels: z.union([z.literal(1), z.literal(2)]),
+  bitsPerSample: z.union([z.literal(16), z.literal(24), z.literal(32)]),
+  importedAt: z.string().datetime(),
+  approvalStatus: z.enum(["imported", "approved"]),
+  approvedAt: z.string().datetime().nullable(),
+  rights: z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned", "project-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1), clearanceStatus: z.literal("cleared"), evidenceReference: z.string().trim().min(1).max(500)}).strict().optional(),
+}).strict();
+export const importVoiceTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict();
+export const importVoiceTrackResultSchema = z.discriminatedUnion("status", [
+  z.object({status: z.literal("imported"), track: voiceTrackBridgeSchema}).strict(),
+  z.object({status: z.literal("cancelled")}).strict(),
+  z.object({status: z.literal("failed"), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
+const clearedMediaRightsBridgeSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned", "project-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1), clearanceStatus: z.literal("cleared"), evidenceReference: z.string().trim().min(1).max(500)}).strict();
+export const approveVoiceTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), voiceTrackContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true), rights: clearedMediaRightsBridgeSchema}).strict();
+export const approveVoiceTrackResultSchema = z.discriminatedUnion("ok", [
+  z.object({ok: z.literal(true), track: voiceTrackBridgeSchema}).strict(),
+  z.object({ok: z.literal(false), error: z.object({code: z.string().min(1), message: z.string().min(1)}).strict()}).strict(),
+]);
+export const importMusicTrackRequestSchema = importVoiceTrackRequestSchema;
+export const importMusicTrackResultSchema = importVoiceTrackResultSchema;
+export const approveMusicTrackRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), musicTrackContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true), rights: clearedMediaRightsBridgeSchema}).strict();
+export const approveMusicTrackResultSchema = approveVoiceTrackResultSchema;
+export const importSoundEffectRequestSchema = importVoiceTrackRequestSchema;
+export const importSoundEffectResultSchema = importVoiceTrackResultSchema;
+export const approveSoundEffectRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), soundEffectContentHash: z.string().regex(/^[a-f0-9]{64}$/), listenedThrough: z.literal(true), rights: clearedMediaRightsBridgeSchema}).strict();
+export const approveSoundEffectResultSchema = approveVoiceTrackResultSchema;
 
 export const saveProductionBundleRequestSchema = z.object({serializedDraft: z.string().min(2).max(10_000_000)}).strict();
 export const saveProductionBundleResultSchema = z.discriminatedUnion("ok", [
@@ -153,6 +225,18 @@ const activeJobFields = {
   message: z.string().min(1),
 };
 
+export const verifiedDeliverySummarySchema = z.object({
+  deliveryManifestContentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  productionId: productionIdSchema,
+  revision: z.number().int().positive(),
+  productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/),
+  rightsStatus: z.literal("cleared"),
+  captionCueCount: z.number().int().nonnegative(),
+  master: z.object({width: z.literal(1920), height: z.literal(1080), fps: z.literal(30), frameCount: z.number().int().positive(), durationInSeconds: z.number().positive()}).strict(),
+}).strict();
+export const getVerifiedDeliveryRequestSchema = z.object({productionId: productionIdSchema, revision: z.number().int().positive(), productionBundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict();
+export const getVerifiedDeliveryResultSchema = z.object({delivery: verifiedDeliverySummarySchema.nullable()}).strict();
+
 export const idleRenderJobSchema = z.object({
   status: z.literal("idle"),
   progress: z.null(),
@@ -168,6 +252,8 @@ export const completedRenderJobSchema = z.object({
   status: z.literal("completed"),
   progress: z.null(),
   outputPath: z.string().min(1),
+  renderReceipt: z.object({contentHash: z.string().regex(/^[a-f0-9]{64}$/), path: z.string().min(1)}).strict().optional(),
+  delivery: verifiedDeliverySummarySchema.optional(),
 }).strict();
 export const failedRenderJobSchema = z.object({
   ...activeJobFields,
@@ -204,7 +290,7 @@ export const renderWorkerCommandSchema = z.discriminatedUnion("type", [
     bundleFile: z.string().min(1),
     assetsRoot: z.string().min(1),
     outputRoot: z.string().min(1),
-    request: z.object({jobId: z.string().min(1), bundleContentHash: z.string().regex(/^[a-f0-9]{64}$/)}).strict(),
+    request: z.object({jobId: z.string().min(1), bundleContentHash: z.string().regex(/^[a-f0-9]{64}$/), scope: productionRenderScopeSchema}).strict(),
   }).strict(),
   z.object({
     type: z.literal("start-rig-diagnostic"),
@@ -302,15 +388,27 @@ export const IPC_CHANNELS = {
   getGenerationExchange: "storystage:get-generation-exchange",
   prepareGenerationImport: "storystage:prepare-generation-import",
   reviewCandidateSet: "storystage:review-candidate-set",
+  listPublicShowPackCandidates: "storystage:list-public-show-pack-candidates",
+  reviewPublicShowPackCandidate: "storystage:review-public-show-pack-candidate",
+  importVoiceTrack: "storystage:import-voice-track",
+  approveVoiceTrack: "storystage:approve-voice-track",
+  importMusicTrack: "storystage:import-music-track",
+  approveMusicTrack: "storystage:approve-music-track",
+  importSoundEffect: "storystage:import-sound-effect",
+  approveSoundEffect: "storystage:approve-sound-effect",
   renderEvent: "storystage:render-event",
   renderStart: "storystage:render-start",
   productionRenderStart: "storystage:production-render-start",
   openRenderedFile: "storystage:open-rendered-file",
+  getVerifiedDelivery: "storystage:get-verified-delivery",
+  openDeliveryMaster: "storystage:open-delivery-master",
+  revealDeliveryBundle: "storystage:reveal-delivery-bundle",
 } as const;
 
 export type StartRenderRequest = z.input<typeof startRenderRequestSchema>;
 export type StartRenderResponse = z.infer<typeof startRenderResponseSchema>;
 export type StartProductionRenderRequest = z.infer<typeof startProductionRenderRequestSchema>;
+export type ProductionRenderScope = z.infer<typeof productionRenderScopeSchema>;
 export type DesktopCapabilities = z.infer<typeof desktopCapabilitiesSchema>;
 export type ExportGenerationJobRequest = z.infer<typeof exportGenerationJobRequestSchema>;
 export type ExportGenerationJobResult = z.infer<typeof exportGenerationJobResultSchema>;
@@ -341,10 +439,31 @@ export type ApprovedAssetVersionBridge = z.infer<typeof approvedAssetVersionBrid
 export type CandidateSetReviewSummary = z.infer<typeof candidateSetReviewSummarySchema>;
 export type ReviewCandidateSetRequest = z.infer<typeof reviewCandidateSetRequestSchema>;
 export type ReviewCandidateSetResult = z.infer<typeof reviewCandidateSetResultSchema>;
+export type PublicShowPackCandidateSummary = z.infer<typeof publicShowPackCandidateSummarySchema>;
+export type ListPublicShowPackCandidatesResult = z.infer<typeof listPublicShowPackCandidatesResultSchema>;
+export type ListPublicShowPackCandidatesRequest = z.infer<typeof listPublicShowPackCandidatesRequestSchema>;
+export type ReviewPublicShowPackCandidateRequest = z.infer<typeof reviewPublicShowPackCandidateRequestSchema>;
+export type ReviewPublicShowPackCandidateResult = z.infer<typeof reviewPublicShowPackCandidateResultSchema>;
+export type VoiceTrackBridge = z.infer<typeof voiceTrackBridgeSchema>;
+export type ImportVoiceTrackRequest = z.infer<typeof importVoiceTrackRequestSchema>;
+export type ImportVoiceTrackResult = z.infer<typeof importVoiceTrackResultSchema>;
+export type ApproveVoiceTrackRequest = z.infer<typeof approveVoiceTrackRequestSchema>;
+export type ApproveVoiceTrackResult = z.infer<typeof approveVoiceTrackResultSchema>;
+export type ImportMusicTrackRequest = z.infer<typeof importMusicTrackRequestSchema>;
+export type ImportMusicTrackResult = z.infer<typeof importMusicTrackResultSchema>;
+export type ApproveMusicTrackRequest = z.infer<typeof approveMusicTrackRequestSchema>;
+export type ApproveMusicTrackResult = z.infer<typeof approveMusicTrackResultSchema>;
+export type ImportSoundEffectRequest = z.infer<typeof importSoundEffectRequestSchema>;
+export type ImportSoundEffectResult = z.infer<typeof importSoundEffectResultSchema>;
+export type ApproveSoundEffectRequest = z.infer<typeof approveSoundEffectRequestSchema>;
+export type ApproveSoundEffectResult = z.infer<typeof approveSoundEffectResultSchema>;
 export type RenderJobEvent = z.infer<typeof renderJobEventSchema>;
 export type RenderJobState = z.infer<typeof renderJobStateSchema>;
 export type RenderJobStatus = RenderJobState["status"];
 export type OpenRenderedFileResult = z.infer<typeof openRenderedFileResultSchema>;
+export type VerifiedDeliverySummary = z.infer<typeof verifiedDeliverySummarySchema>;
+export type GetVerifiedDeliveryRequest = z.infer<typeof getVerifiedDeliveryRequestSchema>;
+export type GetVerifiedDeliveryResult = z.infer<typeof getVerifiedDeliveryResultSchema>;
 export type RenderWorkerCommand = z.infer<typeof renderWorkerCommandSchema>;
 export type RenderWorkerMessage = z.infer<typeof renderWorkerMessageSchema>;
 export type AssetWorkerCommand = z.infer<typeof assetWorkerCommandSchema>;
@@ -364,8 +483,19 @@ export type StoryStageDesktopBridge = {
   getGenerationExchange: (request: GetGenerationExchangeRequest) => Promise<GetGenerationExchangeResult>;
   prepareGenerationImport: (request: PrepareGenerationImportRequest) => Promise<PrepareGenerationImportResult>;
   reviewCandidateSet: (request: ReviewCandidateSetRequest) => Promise<ReviewCandidateSetResult>;
+  listPublicShowPackCandidates: (request: ListPublicShowPackCandidatesRequest) => Promise<ListPublicShowPackCandidatesResult>;
+  reviewPublicShowPackCandidate: (request: ReviewPublicShowPackCandidateRequest) => Promise<ReviewPublicShowPackCandidateResult>;
+  importVoiceTrack: (request: ImportVoiceTrackRequest) => Promise<ImportVoiceTrackResult>;
+  approveVoiceTrack: (request: ApproveVoiceTrackRequest) => Promise<ApproveVoiceTrackResult>;
+  importMusicTrack: (request: ImportMusicTrackRequest) => Promise<ImportMusicTrackResult>;
+  approveMusicTrack: (request: ApproveMusicTrackRequest) => Promise<ApproveMusicTrackResult>;
+  importSoundEffect: (request: ImportSoundEffectRequest) => Promise<ImportSoundEffectResult>;
+  approveSoundEffect: (request: ApproveSoundEffectRequest) => Promise<ApproveSoundEffectResult>;
   startSampleRender: (request: StartRenderRequest) => Promise<StartRenderResponse>;
   startProductionRender: (request: StartProductionRenderRequest) => Promise<StartRenderResponse>;
   subscribeToRenderJobs: (listener: (event: RenderJobEvent) => void) => () => void;
   openRenderedFile: (jobId: string) => Promise<OpenRenderedFileResult>;
+  getVerifiedDelivery: (request: GetVerifiedDeliveryRequest) => Promise<GetVerifiedDeliveryResult>;
+  openDeliveryMaster: (deliveryManifestContentHash: string) => Promise<OpenRenderedFileResult>;
+  revealDeliveryBundle: (deliveryManifestContentHash: string) => Promise<OpenRenderedFileResult>;
 };

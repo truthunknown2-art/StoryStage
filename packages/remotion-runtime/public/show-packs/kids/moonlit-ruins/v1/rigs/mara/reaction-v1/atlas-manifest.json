@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "1.0",
+  "assetId": "mara-reaction-v1",
+  "sourceContentHash": "54dfaa1f3261f88875a713980a5e7f68cbcdd869edab921cffa9fcae4319a26d",
+  "width": 1774,
+  "height": 887,
+  "alphaThreshold": 16,
+  "minGapColumns": 8,
+  "groundY": 369,
+  "frames": [
+    {
+      "index": 0,
+      "source": {
+        "x": 154,
+        "y": 66,
+        "width": 172,
+        "height": 367
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 172,
+        "height": 367
+      },
+      "anchor": {
+        "x": 98.019,
+        "y": 367
+      }
+    },
+    {
+      "index": 1,
+      "source": {
+        "x": 578,
+        "y": 68,
+        "width": 165,
+        "height": 366
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 165,
+        "height": 366
+      },
+      "anchor": {
+        "x": 78.268,
+        "y": 366
+      }
+    },
+    {
+      "index": 2,
+      "source": {
+        "x": 961,
+        "y": 110,
+        "width": 174,
+        "height": 324
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 174,
+        "height": 324
+      },
+      "anchor": {
+        "x": 85.795,
+        "y": 324
+      }
+    },
+    {
+      "index": 3,
+      "source": {
+        "x": 1292,
+        "y": 84,
+        "width": 333,
+        "height": 343
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 333,
+        "height": 343
+      },
+      "anchor": {
+        "x": 128.281,
+        "y": 343
+      }
+    },
+    {
+      "index": 4,
+      "source": {
+        "x": 103,
+        "y": 485,
+        "width": 343,
+        "height": 338
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 343,
+        "height": 338
+      },
+      "anchor": {
+        "x": 146.755,
+        "y": 338
+      }
+    },
+    {
+      "index": 5,
+      "source": {
+        "x": 523,
+        "y": 490,
+        "width": 268,
+        "height": 334
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 268,
+        "height": 334
+      },
+      "anchor": {
+        "x": 116.289,
+        "y": 334
+      }
+    },
+    {
+      "index": 6,
+      "source": {
+        "x": 974,
+        "y": 492,
+        "width": 186,
+        "height": 337
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 186,
+        "height": 337
+      },
+      "anchor": {
+        "x": 85.174,
+        "y": 337
+      }
+    },
+    {
+      "index": 7,
+      "source": {
+        "x": 1394,
+        "y": 464,
+        "width": 149,
+        "height": 369
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 149,
+        "height": 369
+      },
+      "anchor": {
+        "x": 75.792,
+        "y": 369
+      }
+    }
+  ],
+  "checks": {
+    "expectedFrameCount": true,
+    "transparentSeparation": true,
+    "noClippedPixels": true,
+    "stableAnchors": true
+  }
+}

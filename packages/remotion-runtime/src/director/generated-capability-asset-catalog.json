@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "assets": [
+    {
+      "assetId": "mara-performance-v1",
+      "contentHash": "49421dd6a269ff3fb87e435cbeafedd11eb31bf8e24609f6f10d0f0a8b27c171",
+      "byteLength": 636474,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:49421dd6a269ff3fb87e435cbeafedd11eb31bf8e24609f6f10d0f0a8b27c171",
+      "relativeFile": "capability-assets/sha256/49421dd6a269ff3fb87e435cbeafedd11eb31bf8e24609f6f10d0f0a8b27c171.png",
+      "width": 2098,
+      "height": 750
+    },
+    {
+      "assetId": "mara-run-right-v1",
+      "contentHash": "8da63e531829d70ea7587e5752c016d9dcfadab780c2b875e3fe9c034a43dbb9",
+      "byteLength": 938808,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:8da63e531829d70ea7587e5752c016d9dcfadab780c2b875e3fe9c034a43dbb9",
+      "relativeFile": "capability-assets/sha256/8da63e531829d70ea7587e5752c016d9dcfadab780c2b875e3fe9c034a43dbb9.png",
+      "width": 2172,
+      "height": 724
+    },
+    {
+      "assetId": "mara-payoff-puppet-v1",
+      "contentHash": "d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9",
+      "byteLength": 742576,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9",
+      "relativeFile": "capability-assets/sha256/d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9.png",
+      "width": 1672,
+      "height": 941
+    }
+  ],
+  "contentHash": "5a1a315012bcb404d236e7fd3e6cd2af2a6af2e2962e6337bb835533211d8e20"
+}

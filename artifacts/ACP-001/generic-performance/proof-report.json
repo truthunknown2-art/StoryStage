@@ -1,0 +1,129 @@
+{
+  "proof": "ACP-001.1 Capability Asset and Registry Authority Closure",
+  "storyProjectContentHash": "71130d4115095af4f6ea24726867eb4412eee82d526432d24c36018b0b84447f",
+  "registryContentHash": "30c2063a8388593b595fe888b78a0857a6c3634225d24489bf48b81970f96a17",
+  "episodePlanContentHash": "3d710c78c9b6339d2a6ee18e911d0f3c98cc310b641290f41ea10b19e6d88381",
+  "capabilitySummary": {
+    "supported": 3,
+    "proxyOnly": 6,
+    "blocked": 0
+  },
+  "assetAuthority": {
+    "mode": "sha256-and-byte-length-verified-before-render",
+    "verifiedAssets": [
+      {
+        "assetId": "mara-performance-v1",
+        "contentHash": "49421dd6a269ff3fb87e435cbeafedd11eb31bf8e24609f6f10d0f0a8b27c171",
+        "byteLength": 636474,
+        "width": 2098,
+        "height": 750
+      },
+      {
+        "assetId": "mara-payoff-puppet-v1",
+        "contentHash": "d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9",
+        "byteLength": 742576,
+        "width": 1672,
+        "height": 941
+      },
+      {
+        "assetId": "mara-run-right-v1",
+        "contentHash": "8da63e531829d70ea7587e5752c016d9dcfadab780c2b875e3fe9c034a43dbb9",
+        "byteLength": 938808,
+        "width": 2172,
+        "height": 724
+      }
+    ]
+  },
+  "supportedKinds": [
+    "living-hold",
+    "atlas-cycle",
+    "articulated-rig"
+  ],
+  "rendererPath": "StoryStageProduction -> DirectorEpisodeRenderer -> generic executable performance",
+  "proofs": [
+    {
+      "kind": "living-hold",
+      "requirementId": "performance-1-primary",
+      "entityId": "lead",
+      "rendererId": "director-living-hold",
+      "rendererVersion": "1.0.0",
+      "executionContentHash": "c73dce595c497d285e90c780e813ec1d2c6f3666af7f4abf1edf5d26958486d3",
+      "capabilityRegistryContentHash": "6957c50200e41572d9836f585a826b9b012cfa66c669ac771157f307faff84cb",
+      "assetIds": [
+        "mara-performance-v1"
+      ],
+      "rendered": [
+        {
+          "frame": 66,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\living-hold-1.png",
+          "finalHash": "991aa49c96f67bb0a8619bebebb3d932d2508e6c6e2fe8ba40c0e61aaaac06d9",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\living-hold-1-proxy.png",
+          "proxyHash": "ed50c2ce5182af7e94b6ae066f01cae4bd8e52ea57cf2ad50ccebbc08b77b220"
+        },
+        {
+          "frame": 88,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\living-hold-2.png",
+          "finalHash": "81dfcc88161728c64ce1e15f2e1baa7479be0c340720386b6643cc41a2eab18c",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\living-hold-2-proxy.png",
+          "proxyHash": "4789ba9a07fd58ac99da7881badc8daa3577d25230128ef70442830c4e85a655"
+        }
+      ]
+    },
+    {
+      "kind": "atlas-cycle",
+      "requirementId": "performance-3-primary",
+      "entityId": "lead",
+      "rendererId": "director-atlas-cycle",
+      "rendererVersion": "1.0.0",
+      "executionContentHash": "472f3bc0a73395da624d8638274655f36cf209397131b9c073e1827ac0c46331",
+      "capabilityRegistryContentHash": "e47391566d13bd6f8e130586fb4e1d4ef6c2ed094d362a9f388c04f009c34216",
+      "assetIds": [
+        "mara-run-right-v1"
+      ],
+      "rendered": [
+        {
+          "frame": 215,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\atlas-cycle-1.png",
+          "finalHash": "87cd798e71a653e9e0b2defa5f26da671442177538b0b75124b3419c3657c401",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\atlas-cycle-1-proxy.png",
+          "proxyHash": "30e724ba25516900e049d7f474056109bdd10abfd2f0c999c6b753986442268b"
+        },
+        {
+          "frame": 265,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\atlas-cycle-2.png",
+          "finalHash": "f6000786f0371644565f6f02c68f0bb99e770846c0893318cb1864eb47947df2",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\atlas-cycle-2-proxy.png",
+          "proxyHash": "c25e081e7139a1562409ccccc4a787d6076d016b53221a1f83c663b9b26f2b52"
+        }
+      ]
+    },
+    {
+      "kind": "articulated-rig",
+      "requirementId": "performance-1-response",
+      "entityId": "support",
+      "rendererId": "director-articulated-rig",
+      "rendererVersion": "1.0.0",
+      "executionContentHash": "b5f52543f6d80d9e3b0661a1bdaa84126f7e6fe331b4d7fd570bc30095325861",
+      "capabilityRegistryContentHash": "8bf5fb60db9ba61f1b3cdb9577f73f8bec9cda4655abf834c1b910cbdcb51ed1",
+      "assetIds": [
+        "mara-payoff-puppet-v1"
+      ],
+      "rendered": [
+        {
+          "frame": 66,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\articulated-rig-1.png",
+          "finalHash": "85aa77e751f6827330e98d95203f6a8caffcef554804520ed051687f8718a648",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\articulated-rig-1-proxy.png",
+          "proxyHash": "ed50c2ce5182af7e94b6ae066f01cae4bd8e52ea57cf2ad50ccebbc08b77b220"
+        },
+        {
+          "frame": 88,
+          "finalFile": "artifacts\\ACP-001\\generic-performance\\articulated-rig-2.png",
+          "finalHash": "132e72bed08921bf0d3638a753769a74a89fa436837abd6f64375509ea58ef5b",
+          "proxyFile": "artifacts\\ACP-001\\generic-performance\\articulated-rig-2-proxy.png",
+          "proxyHash": "4789ba9a07fd58ac99da7881badc8daa3577d25230128ef70442830c4e85a655"
+        }
+      ]
+    }
+  ]
+}

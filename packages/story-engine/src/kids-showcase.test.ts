@@ -1,0 +1,67 @@
+import { describe, expect, it } from "vitest";
+import {
+  createKidsShowcaseProject,
+  getKidsShowcaseShotLineage,
+  makeKidsShowcaseSneezeBigger,
+  redoKidsShowcaseEdit,
+  undoKidsShowcaseEdit,
+} from "./kids-showcase";
+
+describe("30-second Kids showcase product path", () => {
+  it("binds one source script through three scenes, six beats, and ten event-directed shots", () => {
+    const project = createKidsShowcaseProject();
+    expect(project.program.scenes).toHaveLength(3);
+    expect(project.program.beats).toHaveLength(6);
+    expect(project.program.shotBindings).toHaveLength(10);
+    expect(project.program.directorTimeline.shots).toHaveLength(10);
+    expect(project.program.renderPlan.durationInFrames).toBe(900);
+    expect(project.program.payoffPuppetAssetHashes).toHaveLength(3);
+    expect(
+      project.program.renderPlan.shots.at(-1)!.startFrame +
+        project.program.renderPlan.shots.at(-1)!.durationInFrames,
+    ).toBe(900);
+    const lineage = getKidsShowcaseShotLineage(
+      project.program,
+      "shot-spark-sneeze",
+    );
+    expect(lineage.beat.id).toBe("beat-spark-sneeze");
+    expect(lineage.binding.motionChannels).toContain("delayed-kids-reaction");
+    const sneezePlan = project.directedBeatPlans[0]!;
+    expect(sneezePlan.beats[0]!.audienceQuestion).toMatch(/guardian attack/i);
+    expect(sneezePlan.shots[0]!.events.map((event) => event.id)).toEqual([
+      "inhale-apex",
+      "sneeze-impact",
+      "spark-onset",
+      "child-reaction",
+      "settle",
+    ]);
+    expect(
+      project.program.audioCues.find((cue) => cue.id === "cue-sneeze")
+        ?.offsetInFrames,
+    ).toBe(48);
+    const payoffPlan = project.directedBeatPlans[1]!;
+    expect(payoffPlan.shots.map((shot) => shot.id)).toEqual([
+      "shot-friendly-offer",
+      "shot-understand-and-play",
+    ]);
+    expect(
+      project.program.audioCues.find(
+        (cue) => cue.id === "cue-payoff-moth-release",
+      ),
+    ).toMatchObject({
+      shotId: "shot-understand-and-play",
+      offsetInFrames: 6,
+    });
+  });
+
+  it("edits only the bounded sneeze direction and supports exact undo and redo", () => {
+    const initial = createKidsShowcaseProject();
+    const changed = makeKidsShowcaseSneezeBigger(initial);
+    expect(changed.program.contentHash).toBe(initial.program.contentHash);
+    expect(changed.direction.sneezeIntensity).toBe(1.4);
+    const undone = undoKidsShowcaseEdit(changed);
+    expect(undone.direction).toEqual(initial.direction);
+    const redone = redoKidsShowcaseEdit(undone);
+    expect(redone.direction).toEqual(changed.direction);
+  });
+});

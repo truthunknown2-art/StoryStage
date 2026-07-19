@@ -19,7 +19,7 @@ export async function runWorkerCommand(raw: unknown, post: PostMessage, render: 
   try {
     if (parsed.data.type === "start-production") {
       const {request} = parsed.data;
-      await productionRender({jobId: request.jobId, workspaceRoot, bundleContentHash: request.bundleContentHash, trustedProductionRoot: parsed.data.trustedProductionRoot, bundleFile: parsed.data.bundleFile, assetsRoot: parsed.data.assetsRoot, outputRoot: parsed.data.outputRoot, onEvent: (event) => post(renderWorkerMessageSchema.parse({type: "event", payload: event}))});
+      await productionRender({jobId: request.jobId, workspaceRoot, bundleContentHash: request.bundleContentHash, scope: request.scope, trustedProductionRoot: parsed.data.trustedProductionRoot, bundleFile: parsed.data.bundleFile, assetsRoot: parsed.data.assetsRoot, outputRoot: parsed.data.outputRoot, onEvent: (event) => post(renderWorkerMessageSchema.parse({type: "event", payload: event}))});
       return;
     }
     if (parsed.data.type === "start-rig-diagnostic") {

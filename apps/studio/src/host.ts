@@ -1,4 +1,10 @@
 import type {
+  ApproveMusicTrackRequest,
+  ApproveMusicTrackResult,
+  ApproveSoundEffectRequest,
+  ApproveSoundEffectResult,
+  ApproveVoiceTrackRequest,
+  ApproveVoiceTrackResult,
   DesktopCapabilities,
   ExportGenerationJobRequest,
   ExportGenerationJobResult,
@@ -6,11 +12,21 @@ import type {
   FinalizeLooseCandidateMappingResult,
   ImportLooseCandidateFilesRequest,
   ImportLooseCandidateFilesResult,
+  ImportMusicTrackRequest,
+  ImportMusicTrackResult,
+  ImportSoundEffectRequest,
+  ImportSoundEffectResult,
+  ImportVoiceTrackRequest,
+  ImportVoiceTrackResult,
   GetGenerationExchangeRequest,
   GetGenerationExchangeResult,
+  GetVerifiedDeliveryRequest,
+  GetVerifiedDeliveryResult,
   ListGenerationExchangesRequest,
   ListGenerationExchangesResult,
   ListProductionBundlesResult,
+  ListPublicShowPackCandidatesRequest,
+  ListPublicShowPackCandidatesResult,
   LoadProductionBundleRequest,
   LoadProductionBundleResult,
   OpenRenderedFileResult,
@@ -18,6 +34,8 @@ import type {
   PrepareGenerationImportResult,
   ReviewCandidateSetRequest,
   ReviewCandidateSetResult,
+  ReviewPublicShowPackCandidateRequest,
+  ReviewPublicShowPackCandidateResult,
   RenderJobEvent,
   SaveProductionBundleRequest,
   SaveProductionBundleResult,
@@ -42,14 +60,25 @@ export interface HostAdapter {
   getGenerationExchange(request: GetGenerationExchangeRequest): Promise<GetGenerationExchangeResult>;
   prepareGenerationImport(request: PrepareGenerationImportRequest): Promise<PrepareGenerationImportResult>;
   reviewCandidateSet(request: ReviewCandidateSetRequest): Promise<ReviewCandidateSetResult>;
+  listPublicShowPackCandidates(request: ListPublicShowPackCandidatesRequest): Promise<ListPublicShowPackCandidatesResult>;
+  reviewPublicShowPackCandidate(request: ReviewPublicShowPackCandidateRequest): Promise<ReviewPublicShowPackCandidateResult>;
+  importVoiceTrack(request: ImportVoiceTrackRequest): Promise<ImportVoiceTrackResult>;
+  approveVoiceTrack(request: ApproveVoiceTrackRequest): Promise<ApproveVoiceTrackResult>;
+  importMusicTrack(request: ImportMusicTrackRequest): Promise<ImportMusicTrackResult>;
+  approveMusicTrack(request: ApproveMusicTrackRequest): Promise<ApproveMusicTrackResult>;
+  importSoundEffect(request: ImportSoundEffectRequest): Promise<ImportSoundEffectResult>;
+  approveSoundEffect(request: ApproveSoundEffectRequest): Promise<ApproveSoundEffectResult>;
   startSampleRender(request: StartRenderRequest): Promise<StartRenderResponse>;
   startProductionRender(request: StartProductionRenderRequest): Promise<StartRenderResponse>;
   subscribeToRenderJobs(listener: (event: RenderJobEvent) => void): () => void;
   openRenderedFile(jobId: string): Promise<OpenRenderedFileResult>;
+  getVerifiedDelivery(request: GetVerifiedDeliveryRequest): Promise<GetVerifiedDeliveryResult>;
+  openDeliveryMaster(deliveryManifestContentHash: string): Promise<OpenRenderedFileResult>;
+  revealDeliveryBundle(deliveryManifestContentHash: string): Promise<OpenRenderedFileResult>;
 }
 
 export class BrowserHostAdapter implements HostAdapter {
-  getCapabilities = async () => ({localRendering: false, openRenderedFile: false, manualImageExchange: false});
+  getCapabilities = async () => ({localRendering: false, openRenderedFile: false, manualImageExchange: false, localAudioImport: false});
   exportGenerationJob = async (_request: ExportGenerationJobRequest): Promise<ExportGenerationJobResult> => {
     void _request;
     return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Private job export requires the desktop app."}};
@@ -91,6 +120,37 @@ export class BrowserHostAdapter implements HostAdapter {
     void _request;
     return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Asset review requires the desktop app."}};
   };
+  // The browser preview intentionally ignores production scope because it cannot read durable review state.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  listPublicShowPackCandidates = async (_request: ListPublicShowPackCandidatesRequest): Promise<ListPublicShowPackCandidatesResult> => ({candidates: [{candidateId: "weird-history-rook-v1", version: "1.0.0", showPackId: "weird-history-editorial-v1", displayName: "Rook editorial presenter", status: "candidate-needs-human-review", contentHash: "6c60b1fa633a4c3c7e9a32cbe475a52277f38b7d5cf2e239b0acee2ada85c691", identityLock: "Angular swept-back dark hair, cream rolled-sleeve shirt, vermilion neck scarf, charcoal high-waist trousers, practical dark shoes.", provenance: {provider: "ChatGPT Images", usageNotes: "Original StoryStage Show Pack candidate; do not promote to an approved production asset before explicit human visual review."}, files: [{role: "identity-sheet", url: "/show-packs/weird-history/rook/v1/identity-sheet.png", width: 1536, height: 1024}, {role: "neutral-pose", url: "/show-packs/weird-history/rook/v1/prepared/rook-v1-neutral.png", width: 1600, height: 1800}, {role: "talk-pose", url: "/show-packs/weird-history/rook/v1/prepared/rook-v1-talk.png", width: 1600, height: 1800}, {role: "reaction-pose", url: "/show-packs/weird-history/rook/v1/prepared/rook-v1-reaction.png", width: 1600, height: 1800}], diagnosticUrl: "/show-packs/weird-history/rook/v1/prepared/rig-diagnostic-rook-v1.mp4", verifiedByHost: false, canReview: false, review: {decision: "none"}}]});
+  reviewPublicShowPackCandidate = async (_request: ReviewPublicShowPackCandidateRequest): Promise<ReviewPublicShowPackCandidateResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Trusted Show Pack review and binding requires the desktop app."}};
+  };
+  importVoiceTrack = async (_request: ImportVoiceTrackRequest): Promise<ImportVoiceTrackResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Voice recording import requires the desktop app."}};
+  };
+  approveVoiceTrack = async (_request: ApproveVoiceTrackRequest): Promise<ApproveVoiceTrackResult> => {
+    void _request;
+    return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Voice recording approval requires the desktop app."}};
+  };
+  importMusicTrack = async (_request: ImportMusicTrackRequest): Promise<ImportMusicTrackResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Music import requires the desktop app."}};
+  };
+  approveMusicTrack = async (_request: ApproveMusicTrackRequest): Promise<ApproveMusicTrackResult> => {
+    void _request;
+    return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Music approval requires the desktop app."}};
+  };
+  importSoundEffect = async (_request: ImportSoundEffectRequest): Promise<ImportSoundEffectResult> => {
+    void _request;
+    return {status: "failed", error: {code: "DESKTOP_REQUIRED", message: "Sound-effect import requires the desktop app."}};
+  };
+  approveSoundEffect = async (_request: ApproveSoundEffectRequest): Promise<ApproveSoundEffectResult> => {
+    void _request;
+    return {ok: false, error: {code: "DESKTOP_REQUIRED", message: "Sound-effect approval requires the desktop app."}};
+  };
   startSampleRender = async (_request: StartRenderRequest): Promise<StartRenderResponse> => {
     void _request;
     throw new Error("Local rendering is available in the desktop app");
@@ -101,6 +161,9 @@ export class BrowserHostAdapter implements HostAdapter {
   };
   subscribeToRenderJobs = () => () => undefined;
   openRenderedFile = async (): Promise<OpenRenderedFileResult> => ({ok: false, error: {code: "DESKTOP_REQUIRED", message: "Opening rendered files requires the desktop app."}});
+  getVerifiedDelivery = async (_request: GetVerifiedDeliveryRequest): Promise<GetVerifiedDeliveryResult> => {void _request; return {delivery: null};};
+  openDeliveryMaster = async (): Promise<OpenRenderedFileResult> => ({ok: false, error: {code: "DESKTOP_REQUIRED", message: "Opening delivery masters requires the desktop app."}});
+  revealDeliveryBundle = async (): Promise<OpenRenderedFileResult> => ({ok: false, error: {code: "DESKTOP_REQUIRED", message: "Revealing delivery bundles requires the desktop app."}});
 }
 
 export class DesktopHostAdapter implements HostAdapter {
@@ -117,10 +180,21 @@ export class DesktopHostAdapter implements HostAdapter {
   getGenerationExchange = (request: GetGenerationExchangeRequest) => this.bridge.getGenerationExchange(request);
   prepareGenerationImport = (request: PrepareGenerationImportRequest) => this.bridge.prepareGenerationImport(request);
   reviewCandidateSet = (request: ReviewCandidateSetRequest) => this.bridge.reviewCandidateSet(request);
+  listPublicShowPackCandidates = (request: ListPublicShowPackCandidatesRequest) => this.bridge.listPublicShowPackCandidates(request);
+  reviewPublicShowPackCandidate = (request: ReviewPublicShowPackCandidateRequest) => this.bridge.reviewPublicShowPackCandidate(request);
+  importVoiceTrack = (request: ImportVoiceTrackRequest) => this.bridge.importVoiceTrack(request);
+  approveVoiceTrack = (request: ApproveVoiceTrackRequest) => this.bridge.approveVoiceTrack(request);
+  importMusicTrack = (request: ImportMusicTrackRequest) => this.bridge.importMusicTrack(request);
+  approveMusicTrack = (request: ApproveMusicTrackRequest) => this.bridge.approveMusicTrack(request);
+  importSoundEffect = (request: ImportSoundEffectRequest) => this.bridge.importSoundEffect(request);
+  approveSoundEffect = (request: ApproveSoundEffectRequest) => this.bridge.approveSoundEffect(request);
   startSampleRender = (request: StartRenderRequest) => this.bridge.startSampleRender(request);
   startProductionRender = (request: StartProductionRenderRequest) => this.bridge.startProductionRender(request);
   subscribeToRenderJobs = (listener: (event: RenderJobEvent) => void) => this.bridge.subscribeToRenderJobs(listener);
   openRenderedFile = (jobId: string) => this.bridge.openRenderedFile(jobId);
+  getVerifiedDelivery = (request: GetVerifiedDeliveryRequest) => this.bridge.getVerifiedDelivery(request);
+  openDeliveryMaster = (deliveryManifestContentHash: string) => this.bridge.openDeliveryMaster(deliveryManifestContentHash);
+  revealDeliveryBundle = (deliveryManifestContentHash: string) => this.bridge.revealDeliveryBundle(deliveryManifestContentHash);
 }
 
 export const createHostAdapter = (bridge?: StoryStageDesktopBridge): HostAdapter =>

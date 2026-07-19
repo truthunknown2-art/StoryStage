@@ -1,6 +1,12 @@
 import {contextBridge, ipcRenderer} from "electron";
 import {
   IPC_CHANNELS,
+  approveMusicTrackRequestSchema,
+  approveMusicTrackResultSchema,
+  approveSoundEffectRequestSchema,
+  approveSoundEffectResultSchema,
+  approveVoiceTrackRequestSchema,
+  approveVoiceTrackResultSchema,
   desktopCapabilitiesSchema,
   exportGenerationJobRequestSchema,
   exportGenerationJobResultSchema,
@@ -8,11 +14,21 @@ import {
   finalizeLooseCandidateMappingResultSchema,
   importLooseCandidateFilesRequestSchema,
   importLooseCandidateFilesResultSchema,
+  importMusicTrackRequestSchema,
+  importMusicTrackResultSchema,
+  importSoundEffectRequestSchema,
+  importSoundEffectResultSchema,
+  importVoiceTrackRequestSchema,
+  importVoiceTrackResultSchema,
   getGenerationExchangeRequestSchema,
   getGenerationExchangeResultSchema,
+  getVerifiedDeliveryRequestSchema,
+  getVerifiedDeliveryResultSchema,
   listGenerationExchangesRequestSchema,
   listGenerationExchangesResultSchema,
   listProductionBundlesResultSchema,
+  listPublicShowPackCandidatesRequestSchema,
+  listPublicShowPackCandidatesResultSchema,
   loadProductionBundleRequestSchema,
   loadProductionBundleResultSchema,
   openRenderedFileResultSchema,
@@ -20,6 +36,8 @@ import {
   prepareGenerationImportResultSchema,
   reviewCandidateSetRequestSchema,
   reviewCandidateSetResultSchema,
+  reviewPublicShowPackCandidateRequestSchema,
+  reviewPublicShowPackCandidateResultSchema,
   saveProductionBundleRequestSchema,
   saveProductionBundleResultSchema,
   renderJobEventSchema,
@@ -29,13 +47,22 @@ import {
   stageCandidateBundleRequestSchema,
   stageCandidateBundleResultSchema,
   type ExportGenerationJobRequest,
+  type ApproveMusicTrackRequest,
+  type ApproveSoundEffectRequest,
+  type ApproveVoiceTrackRequest,
   type FinalizeLooseCandidateMappingRequest,
   type ImportLooseCandidateFilesRequest,
+  type ImportMusicTrackRequest,
+  type ImportSoundEffectRequest,
+  type ImportVoiceTrackRequest,
+  type GetVerifiedDeliveryRequest,
   type GetGenerationExchangeRequest,
   type ListGenerationExchangesRequest,
+  type ListPublicShowPackCandidatesRequest,
   type LoadProductionBundleRequest,
   type PrepareGenerationImportRequest,
   type ReviewCandidateSetRequest,
+  type ReviewPublicShowPackCandidateRequest,
   type RenderJobEvent,
   type SaveProductionBundleRequest,
   type StartRenderRequest,
@@ -87,6 +114,38 @@ const bridge: StoryStageDesktopBridge = {
     const payload = reviewCandidateSetRequestSchema.parse(request);
     return reviewCandidateSetResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.reviewCandidateSet, payload));
   },
+  listPublicShowPackCandidates: async (request: ListPublicShowPackCandidatesRequest) => {
+    const payload = listPublicShowPackCandidatesRequestSchema.parse(request);
+    return listPublicShowPackCandidatesResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.listPublicShowPackCandidates, payload));
+  },
+  reviewPublicShowPackCandidate: async (request: ReviewPublicShowPackCandidateRequest) => {
+    const payload = reviewPublicShowPackCandidateRequestSchema.parse(request);
+    return reviewPublicShowPackCandidateResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.reviewPublicShowPackCandidate, payload));
+  },
+  importVoiceTrack: async (request: ImportVoiceTrackRequest) => {
+    const payload = importVoiceTrackRequestSchema.parse(request);
+    return importVoiceTrackResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.importVoiceTrack, payload));
+  },
+  approveVoiceTrack: async (request: ApproveVoiceTrackRequest) => {
+    const payload = approveVoiceTrackRequestSchema.parse(request);
+    return approveVoiceTrackResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.approveVoiceTrack, payload));
+  },
+  importMusicTrack: async (request: ImportMusicTrackRequest) => {
+    const payload = importMusicTrackRequestSchema.parse(request);
+    return importMusicTrackResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.importMusicTrack, payload));
+  },
+  approveMusicTrack: async (request: ApproveMusicTrackRequest) => {
+    const payload = approveMusicTrackRequestSchema.parse(request);
+    return approveMusicTrackResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.approveMusicTrack, payload));
+  },
+  importSoundEffect: async (request: ImportSoundEffectRequest) => {
+    const payload = importSoundEffectRequestSchema.parse(request);
+    return importSoundEffectResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.importSoundEffect, payload));
+  },
+  approveSoundEffect: async (request: ApproveSoundEffectRequest) => {
+    const payload = approveSoundEffectRequestSchema.parse(request);
+    return approveSoundEffectResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.approveSoundEffect, payload));
+  },
   startSampleRender: async (request: StartRenderRequest) => {
     const payload = startRenderRequestSchema.parse(request);
     return startRenderResponseSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.renderStart, payload));
@@ -104,6 +163,12 @@ const bridge: StoryStageDesktopBridge = {
     return () => ipcRenderer.removeListener(IPC_CHANNELS.renderEvent, handler);
   },
   openRenderedFile: async (jobId: string) => openRenderedFileResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.openRenderedFile, jobId)),
+  getVerifiedDelivery: async (request: GetVerifiedDeliveryRequest) => {
+    const payload = getVerifiedDeliveryRequestSchema.parse(request);
+    return getVerifiedDeliveryResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.getVerifiedDelivery, payload));
+  },
+  openDeliveryMaster: async (deliveryManifestContentHash: string) => openRenderedFileResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.openDeliveryMaster, deliveryManifestContentHash)),
+  revealDeliveryBundle: async (deliveryManifestContentHash: string) => openRenderedFileResultSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.revealDeliveryBundle, deliveryManifestContentHash)),
 };
 
 contextBridge.exposeInMainWorld("storyStage", bridge);

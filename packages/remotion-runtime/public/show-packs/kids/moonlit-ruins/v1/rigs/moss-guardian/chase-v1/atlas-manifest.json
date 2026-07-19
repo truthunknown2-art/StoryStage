@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "1.0",
+  "assetId": "moss-guardian-chase-v1",
+  "sourceContentHash": "2e465a0da510b6cbb15b49962bf378482f260f7ce44d224ca48a7ce143c41e0b",
+  "width": 1774,
+  "height": 887,
+  "alphaThreshold": 16,
+  "minGapColumns": 8,
+  "groundY": 294,
+  "frames": [
+    {
+      "index": 0,
+      "source": {
+        "x": 170,
+        "y": 108,
+        "width": 270,
+        "height": 294
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 270,
+        "height": 294
+      },
+      "anchor": {
+        "x": 132.515,
+        "y": 294
+      }
+    },
+    {
+      "index": 1,
+      "source": {
+        "x": 575,
+        "y": 147,
+        "width": 217,
+        "height": 259
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 217,
+        "height": 259
+      },
+      "anchor": {
+        "x": 111.173,
+        "y": 259
+      }
+    },
+    {
+      "index": 2,
+      "source": {
+        "x": 929,
+        "y": 129,
+        "width": 294,
+        "height": 277
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 294,
+        "height": 277
+      },
+      "anchor": {
+        "x": 146.125,
+        "y": 277
+      }
+    },
+    {
+      "index": 3,
+      "source": {
+        "x": 1345,
+        "y": 114,
+        "width": 280,
+        "height": 284
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 280,
+        "height": 284
+      },
+      "anchor": {
+        "x": 144.062,
+        "y": 284
+      }
+    },
+    {
+      "index": 4,
+      "source": {
+        "x": 166,
+        "y": 471,
+        "width": 248,
+        "height": 293
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 248,
+        "height": 293
+      },
+      "anchor": {
+        "x": 133.601,
+        "y": 293
+      }
+    },
+    {
+      "index": 5,
+      "source": {
+        "x": 570,
+        "y": 507,
+        "width": 214,
+        "height": 257
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 214,
+        "height": 257
+      },
+      "anchor": {
+        "x": 115.597,
+        "y": 257
+      }
+    },
+    {
+      "index": 6,
+      "source": {
+        "x": 916,
+        "y": 490,
+        "width": 295,
+        "height": 274
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 295,
+        "height": 274
+      },
+      "anchor": {
+        "x": 165.201,
+        "y": 274
+      }
+    },
+    {
+      "index": 7,
+      "source": {
+        "x": 1346,
+        "y": 480,
+        "width": 284,
+        "height": 279
+      },
+      "contentBounds": {
+        "left": 0,
+        "top": 0,
+        "width": 284,
+        "height": 279
+      },
+      "anchor": {
+        "x": 147.437,
+        "y": 279
+      }
+    }
+  ],
+  "checks": {
+    "expectedFrameCount": true,
+    "transparentSeparation": true,
+    "noClippedPixels": true,
+    "stableAnchors": true
+  }
+}

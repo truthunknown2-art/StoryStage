@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.0",
+  "status": "cv002-arbitrary-creator-shell-proof",
+  "results": {
+    "kids": {
+      "episodeHash": "c7d1ded26a5b64dad526dbcf2593bb74f75b4b24041043686811a0e6375b71d3",
+      "railThumbnailCount": 9,
+      "stripThumbnailCount": 9,
+      "audit": {
+        "serious": [],
+        "targets": [],
+        "microtype": [],
+        "scrollWidth": 1440
+      }
+    },
+    "history": {
+      "episodeHash": "78d6d562b905b99586ab4747d7dd50dac8bb02a7dd9ea5ffbb16238759fe533d",
+      "railThumbnailCount": 9,
+      "stripThumbnailCount": 9,
+      "audit": {
+        "serious": [],
+        "targets": [],
+        "microtype": [],
+        "scrollWidth": 1440
+      }
+    }
+  },
+  "visualPatch": {
+    "originalHash": "78d6d562b905b99586ab4747d7dd50dac8bb02a7dd9ea5ffbb16238759fe533d",
+    "editedHash": "bcae6a733850c9a23c7a18ff96dfe7fd2cad11ca92c03e9f9ca6504e38688946"
+  },
+  "responsive": {
+    "serious": [],
+    "targets": [],
+    "microtype": [],
+    "scrollWidth": 1024
+  },
+  "consoleErrors": []
+}

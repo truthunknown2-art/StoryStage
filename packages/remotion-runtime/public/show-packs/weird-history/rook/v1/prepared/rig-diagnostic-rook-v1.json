@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0",
+  "candidateSetId": "rook-v1",
+  "manifestContentHash": "48fa071180f3f47fb30f4cca7a164f67c5c6abc943def9e2bf22e771009c9299",
+  "validationReportContentHash": "5fe76aeea8eec3b786654c172cb4cc83ed03735088618320fcef06ec645709e1",
+  "videoContentHash": "a3e868d31b222e723dfbefc48349cd3549318dd3e4b3806c5b9a207487e40f29",
+  "videoRelativeFile": "prepared/rig-diagnostic-rook-v1.mp4",
+  "fps": 30,
+  "frameCount": 120,
+  "width": 1280,
+  "height": 720,
+  "sourceDiagnosticContentHash": null,
+  "renderedAt": "2026-07-17T17:00:00.000Z",
+  "contentHash": "23979749b696754e945cde0e20f9499ee77e7f62b41d1aa48c0d236326e2671f"
+}

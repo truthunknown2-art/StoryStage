@@ -4,6 +4,7 @@ dist/
 coverage/
 out/
 artifacts/
+output/playwright/
 .storystage-local/
 private-assets/
 candidate-bundles/
@@ -18,6 +19,7 @@ credentials.json
 auth.json
 cookies.json
 .vite/
+.playwright-cli/
 *.log
 .DS_Store
 Thumbs.db

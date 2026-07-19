@@ -32,11 +32,14 @@ pnpm render:sample
 pnpm render:determinism
 pnpm render:audio
 pnpm render:production-proof
+pnpm prepare:rook
 ```
 
 `pnpm render:production-proof` creates an ignored private engineering fixture under `artifacts/SS-002/`, renders its four-second selected-rig diagnostic, finalizes an immutable approved asset and new production bundle, renders a real 24-second 1080p H.264 MP4, extracts exact frame indices, probes video/audio streams, and writes `proof-report.json`.
 
 The generated proof art is deliberately primitive. It proves that approved pixels traverse the real path; it is not a visual target.
+
+`pnpm prepare:rook` stages the public original Rook history-presenter sources, reproducibly normalizes them onto the canonical character canvas, validates their shared ground registration, and creates the four-second review diagnostic. Later runs hash-verify and reuse that bound diagnostic instead of replacing reviewed evidence with a newly encoded container. The command does not approve the character or bind it to a production.
 
 ## Workspace
 

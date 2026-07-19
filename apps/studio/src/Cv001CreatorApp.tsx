@@ -1,0 +1,622 @@
+import {
+  createCv002Project,
+  createCv001CreatorProject,
+  createCv001ThreeBeatProofFixture,
+  parseCv001ThreeBeatScript,
+  restoreCv002Project,
+  restoreCv001CreatorProject,
+  CV001_CREATOR_STORAGE_KEY,
+  CV001_DEFAULT_SCRIPT,
+  type Cv001CreatorProjectState,
+  type Cv002Grammar,
+  type Cv002Project,
+} from "@storystage/story-engine";
+import {
+  ArrowRight,
+  Check,
+  Clapperboard,
+  Feather,
+  FileText,
+  Play,
+  Sparkles,
+  Trees,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Cv001CreatorStudio } from "./Cv001CreatorStudio";
+import { Cv002DraftReview } from "./Cv002DraftReview";
+import { KidsShowcaseStudio } from "./KidsShowcaseStudio";
+import "./cv001-creator-studio.css";
+
+type CreatorScreen =
+  | "creator-create"
+  | "creator-studio"
+  | "draft-review"
+  | "kids-showcase";
+type StudioEntryMode = "new-first-cut" | "continue-saved";
+
+const CV002_DRAFT_STORAGE_KEY = "storystage.cv002.draft.v1";
+const HISTORY_SAMPLE = `In 1867, Alaska was sold to the United States for 7.2 million dollars. Newspapers mocked the deal as a frozen mistake, because many editors imagined nothing but ice, fog, and very expensive polar bears. The purchase looked like a punchline waiting for history to finish it.
+
+Then prospectors found gold, fishing fleets found enormous waters, and geologists found oil. The supposedly useless territory became strategically important as well. During the Second World War, Alaska sat on the shortest route between North America and Asia, which made the old bargain look far less ridiculous.
+
+The strangest part is that Russia did not simply forget Alaska's value. Its treasury was strained, the colony was difficult to defend, and leaders feared Britain might seize it in another war. Selling to the United States turned a vulnerable outpost into cash - and accidentally created one of history's most famous real-estate jokes.`;
+const KIDS_TEMPLATE_SAMPLE = `Mara follows a trail of blue feathers until she reaches a quiet clearing. A small lantern hums beneath an old stump, and she freezes when its light follows her gaze. She kneels beside it and whispers that she has never seen anything glow like that before.
+
+The handle is cold, so Mara tests it with one finger before reaching with both hands. She leans forward, lifts the lantern slowly, and steadies it against her chest. Tiny paper stars spill from the glass while the forest seems to hold its breath.
+
+Mara gasps, then turns the lantern toward her friends at the edge of the clearing. She raises it proudly as the stars circle her head and the group cheers. The lantern settles into a warm golden glow, and Mara grins because their next path has appeared.`;
+
+const KIDS_STYLE_REFERENCES = [
+  "/show-packs/kids/moonlit-ruins/v1/sets/moonlit-forest/background-v1.png",
+  "/show-packs/kids/moonlit-ruins/v1/concepts/mara-milo-model-sheet-v1.png",
+  "/show-packs/kids/moonlit-ruins/v1/sets/moon-hall/background-v1.png",
+  "/show-packs/kids/moonlit-ruins/v1/sets/dawn-clearing/background-v1.png",
+];
+const HISTORY_STYLE_REFERENCES = [
+  "/show-packs/weird-history/rook/v1/neutral-pose.png",
+  "/show-packs/weird-history/rook/v1/talk-pose.png",
+  "/show-packs/weird-history/rook/v1/reaction-pose.png",
+  "/show-packs/weird-history/rook/v1/identity-sheet.png",
+];
+
+const countWords = (value: string) =>
+  value.trim().split(/\s+/).filter(Boolean).length;
+const countParagraphs = (value: string) =>
+  value.trim()
+    ? value
+        .trim()
+        .split(/\r?\n[\t ]*\r?\n/)
+        .filter((paragraph) => paragraph.trim()).length
+    : 0;
+
+export function Cv001CreatorApp({
+  onOpenLegacy,
+}: {
+  onOpenLegacy: () => void;
+}) {
+  const [screen, setScreen] = useState<CreatorScreen>("creator-create");
+  const [title, setTitle] = useState("The Lantern Discovery");
+  const [script, setScript] = useState(CV001_DEFAULT_SCRIPT);
+  const [grammar, setGrammar] = useState<Cv002Grammar>("kids-adventure");
+  const restored = useMemo(() => {
+    const serialized = window.localStorage.getItem(CV001_CREATOR_STORAGE_KEY);
+    if (!serialized) return { project: null, notice: null };
+    try {
+      return {
+        project: restoreCv001CreatorProject(
+          serialized,
+          createCv001ThreeBeatProofFixture().renderPlan,
+        ),
+        notice: null,
+      };
+    } catch {
+      window.localStorage.removeItem(CV001_CREATOR_STORAGE_KEY);
+      return {
+        project: null,
+        notice:
+          "The saved prototype could not be verified, so StoryStage restored the original lantern scene.",
+      };
+    }
+  }, []);
+  const [project, setProjectState] = useState<Cv001CreatorProjectState | null>(
+    restored.project,
+  );
+  const restoredDraft = useMemo(() => {
+    const serialized = window.localStorage.getItem(CV002_DRAFT_STORAGE_KEY);
+    if (!serialized) return { project: null, notice: null };
+    try {
+      return { project: restoreCv002Project(serialized), notice: null };
+    } catch {
+      window.localStorage.removeItem(CV002_DRAFT_STORAGE_KEY);
+      return {
+        project: null,
+        notice:
+          "The saved script breakdown could not be verified, so StoryStage removed it.",
+      };
+    }
+  }, []);
+  const [draftProject, setDraftProjectState] = useState<Cv002Project | null>(
+    restoredDraft.project,
+  );
+  const [studioEntryMode, setStudioEntryMode] =
+    useState<StudioEntryMode>("new-first-cut");
+  const [notice, setNotice] = useState<string | null>(
+    restored.notice ?? restoredDraft.notice,
+  );
+  const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen]);
+
+  const isLanternRoute =
+    grammar === "kids-adventure" &&
+    script.trim() === CV001_DEFAULT_SCRIPT.trim();
+  const lanternScriptError = useMemo(() => {
+    try {
+      parseCv001ThreeBeatScript(script);
+      return null;
+    } catch (caught) {
+      return caught instanceof Error
+        ? caught.message
+        : "Use exactly three paragraphs.";
+    }
+  }, [script]);
+  const scriptWords = countWords(script);
+  const scriptParagraphs = countParagraphs(script);
+  const draftScriptError = useMemo(() => {
+    if (scriptWords < 100 || scriptWords > 300)
+      return `Paste 100 to 300 words for a directed animatic. This script has ${scriptWords}.`;
+    if (scriptParagraphs < 1 || scriptParagraphs > 6)
+      return `Use one to six non-empty paragraphs. This script has ${scriptParagraphs}.`;
+    return null;
+  }, [scriptParagraphs, scriptWords]);
+  const scriptError = isLanternRoute ? lanternScriptError : draftScriptError;
+  const draftPreviewProject = useMemo(() => {
+    if (isLanternRoute || draftScriptError) return null;
+    try {
+      return createCv002Project(title, script, grammar);
+    } catch {
+      return null;
+    }
+  }, [draftScriptError, grammar, isLanternRoute, script, title]);
+  const beatPreview = isLanternRoute
+    ? parseCv001ThreeBeatScript(script)
+    : (draftPreviewProject?.graph.scenes
+        .flatMap((scene) => scene.beats)
+        .slice(0, 4)
+        .map((beat) => beat.text) ?? []);
+  const styleReferences =
+    grammar === "kids-adventure"
+      ? KIDS_STYLE_REFERENCES
+      : HISTORY_STYLE_REFERENCES;
+
+  const saveProject = (next: Cv001CreatorProjectState) => {
+    window.localStorage.setItem(
+      CV001_CREATOR_STORAGE_KEY,
+      JSON.stringify(next),
+    );
+    setProjectState(next);
+  };
+
+  const saveDraftProject = (next: Cv002Project) => {
+    window.localStorage.setItem(CV002_DRAFT_STORAGE_KEY, JSON.stringify(next));
+    setDraftProjectState(next);
+  };
+
+  const createFirstCut = (confirmed = false) => {
+    if (!confirmed && project && project.history.length > 0) {
+      setReplaceConfirmOpen(true);
+      return;
+    }
+    const next = createCv001CreatorProject({ title, script });
+    saveProject(next);
+    setReplaceConfirmOpen(false);
+    setNotice(null);
+    setStudioEntryMode("new-first-cut");
+    setScreen("creator-studio");
+  };
+
+  const createDraft = () => {
+    try {
+      const next = createCv002Project(title, script, grammar);
+      saveDraftProject(next);
+      setNotice(null);
+      setScreen("draft-review");
+    } catch (caught) {
+      setNotice(
+        caught instanceof Error
+          ? caught.message
+          : "StoryStage could not create this draft breakdown.",
+      );
+    }
+  };
+
+  const submitProject = () =>
+    isLanternRoute ? createFirstCut() : createDraft();
+
+  if (screen === "kids-showcase")
+    return <KidsShowcaseStudio onBack={() => setScreen("creator-create")} />;
+
+  if (screen === "creator-studio" && project)
+    return (
+      <Cv001CreatorStudio
+        entryMode={studioEntryMode}
+        onExit={() => setScreen("creator-create")}
+        onOpenLegacy={onOpenLegacy}
+        onProjectChange={saveProject}
+        project={project}
+      />
+    );
+
+  if (screen === "draft-review" && draftProject)
+    return (
+      <Cv002DraftReview
+        onBack={() => setScreen("creator-create")}
+        onProjectChange={saveDraftProject}
+        project={draftProject}
+      />
+    );
+
+  return (
+    <main className="cv-create">
+      <header className="cv-create-topbar">
+        <div className="cv-create-brand">
+          <span>
+            <Clapperboard size={18} />
+          </span>
+          <div>
+            <strong>StoryStage</strong>
+            <small>New project</small>
+          </div>
+        </div>
+        <div className="cv-create-top-actions">
+          <span className="cv-create-save-state">
+            <Check size={13} />
+            Drafts save locally
+          </span>
+          <button
+            className="cv-open-showcase"
+            onClick={() => setScreen("kids-showcase")}
+            type="button"
+          >
+            <Play fill="currentColor" size={13} />
+            Open 30-second showcase
+          </button>
+        </div>
+      </header>
+
+      <div className="cv-create-layout is-mock-layout">
+        <section className="cv-create-copy">
+          <p className="cv-kicker">New production</p>
+          <h1>Turn your script into an animated first cut</h1>
+          <p>
+            StoryStage finds the natural beats, directs each scene, and builds
+            an editable first cut you can shape before final production.
+          </p>
+          <div className="cv-create-proof">
+            <span>
+              <Check size={14} />
+            </span>
+            <div>
+              <strong>You stay in control of every beat</strong>
+              <small>
+                Review the structure before final art, voice, motion, or export.
+              </small>
+            </div>
+          </div>
+        </section>
+
+        <form
+          className="cv-create-form is-mock-layout"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitProject();
+          }}
+        >
+          <section className="cv-create-script-column">
+            <header className="cv-create-step-heading">
+              <span>1</span>
+              <div>
+                <h2>Paste your script</h2>
+                <p>The words stay editable throughout production.</p>
+              </div>
+            </header>
+
+            <label className="cv-create-label" htmlFor="cv-title">
+              Title
+            </label>
+            <input
+              id="cv-title"
+              onChange={(event) => setTitle(event.target.value)}
+              value={title}
+            />
+
+            <label className="cv-create-label" htmlFor="cv-script">
+              Script
+            </label>
+            <textarea
+              aria-describedby="cv-script-help"
+              id="cv-script"
+              onChange={(event) => setScript(event.target.value)}
+              rows={11}
+              value={script}
+            />
+            <div
+              className={
+                scriptError ? "cv-script-help is-error" : "cv-script-help"
+              }
+              id="cv-script-help"
+            >
+              <span>
+                {scriptError ??
+                  (isLanternRoute
+                    ? "Animated lantern demo · 3 beats ready"
+                    : `${scriptWords} words · ${scriptParagraphs} paragraphs · ready for breakdown`)}
+              </span>
+              <small>
+                {isLanternRoute
+                  ? "This exact scene has an assigned rig and motion template."
+                  : "New scripts compile into an honest directed proxy animatic before final animation capabilities are assigned."}
+              </small>
+            </div>
+            {grammar === "weird-history" && script === CV001_DEFAULT_SCRIPT ? (
+              <button
+                className="cv-load-sample"
+                onClick={() => {
+                  setTitle("The Alaska Bargain");
+                  setScript(HISTORY_SAMPLE);
+                }}
+                type="button"
+              >
+                <FileText size={15} />
+                Load a Weird History sample
+              </button>
+            ) : null}
+            {grammar === "kids-adventure" && isLanternRoute ? (
+              <button
+                className="cv-load-sample"
+                onClick={() => {
+                  setTitle("The Blue Lantern Trail");
+                  setScript(KIDS_TEMPLATE_SAMPLE);
+                }}
+                type="button"
+              >
+                <FileText size={15} />
+                Load a longer Kids script sample
+              </button>
+            ) : null}
+
+            <section
+              aria-label="Preview of natural beats"
+              className="cv-beat-preview"
+            >
+              <header>
+                <div>
+                  <small>Story structure</small>
+                  <strong>Preview of natural beats</strong>
+                </div>
+                <span>Style references only</span>
+              </header>
+              <div>
+                {beatPreview.map((beat, index) => (
+                  <article
+                    data-beat-id={
+                      draftPreviewProject?.graph.scenes
+                        .flatMap((scene) => scene.beats)[index]?.id
+                    }
+                    key={`${index}-${beat}`}
+                  >
+                    {/* Creator-workspace thumbnail, not Remotion composition media. */}
+                    {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
+                    <img alt="" src={styleReferences[index]} />
+                    <span>Beat {index + 1}</span>
+                    <strong>
+                      {beat.split(/\s+/).slice(0, 7).join(" ")}
+                      {beat.split(/\s+/).length > 7 ? "…" : ""}
+                    </strong>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </section>
+
+          <aside className="cv-create-options-column">
+            <fieldset className="cv-create-choice-panel cv-grammar-panel">
+              <legend>
+                <span>2</span> Choose a project grammar
+              </legend>
+              <div className="cv-choice-grid is-two">
+                <button
+                  aria-pressed={grammar === "kids-adventure"}
+                  className={grammar === "kids-adventure" ? "is-selected" : ""}
+                  onClick={() => setGrammar("kids-adventure")}
+                  type="button"
+                >
+                  {/* Creator-workspace thumbnail, not Remotion composition media. */}
+                  {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
+                  <img alt="" src={KIDS_STYLE_REFERENCES[1]} />
+                  <span>
+                    <Trees size={18} />
+                  </span>
+                  <strong>Kids Adventure</strong>
+                  <small>Character-led · warm holds</small>
+                  {grammar === "kids-adventure" ? <Check size={14} /> : null}
+                </button>
+                <button
+                  aria-pressed={grammar === "weird-history"}
+                  className={grammar === "weird-history" ? "is-selected" : ""}
+                  onClick={() => setGrammar("weird-history")}
+                  type="button"
+                >
+                  {/* Creator-workspace thumbnail, not Remotion composition media. */}
+                  {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
+                  <img alt="" src={HISTORY_STYLE_REFERENCES[3]} />
+                  <span>
+                    <Feather size={18} />
+                  </span>
+                  <strong>Weird History Explainer</strong>
+                  <small>Evidence-led · fast cuts</small>
+                  {grammar === "weird-history" ? <Check size={14} /> : null}
+                </button>
+              </div>
+            </fieldset>
+
+            <fieldset className="cv-create-choice-panel cv-style-panel">
+              <legend>
+                <span>3</span> Style reference
+              </legend>
+              <div className="cv-choice-grid is-three">
+                <button
+                  aria-pressed={grammar === "kids-adventure"}
+                  className={grammar === "kids-adventure" ? "is-selected" : ""}
+                  disabled={grammar !== "kids-adventure"}
+                  type="button"
+                >
+                  <span className="cv-style-swatch is-cut-paper" />
+                  <strong>Storybook Cutout</strong>
+                  <small>
+                    {isLanternRoute ? "Animated demo" : "Direction reference"}
+                  </small>
+                  {grammar === "kids-adventure" ? <Check size={14} /> : null}
+                </button>
+                <button disabled type="button">
+                  <span className="cv-style-swatch is-ink" />
+                  <strong>Ink & Wash</strong>
+                  <small>Coming later</small>
+                </button>
+                <button
+                  aria-pressed={grammar === "weird-history"}
+                  className={grammar === "weird-history" ? "is-selected" : ""}
+                  disabled={grammar !== "weird-history"}
+                  type="button"
+                >
+                  <span className="cv-style-swatch is-collage" />
+                  <strong>Editorial collage</strong>
+                  <small>Direction reference</small>
+                  {grammar === "weird-history" ? <Check size={14} /> : null}
+                </button>
+              </div>
+            </fieldset>
+
+            <section className="cv-create-format-panel">
+              <header>
+                <span>4</span>
+                <strong>Voice & format</strong>
+              </header>
+              <div>
+                <label>
+                  <span>Voice</span>
+                  <select aria-label="Voice plan" disabled value="later">
+                    <option value="later">Add after first cut</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Frame</span>
+                  <select aria-label="Output frame" disabled value="16:9">
+                    <option value="16:9">16:9 · 1080p</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Language</span>
+                  <select aria-label="Project language" disabled value="en">
+                    <option value="en">English</option>
+                  </select>
+                </label>
+              </div>
+              <small>
+                Voice stays off until a real recording or approved track is
+                attached.
+              </small>
+            </section>
+
+            <button
+              className="cv-create-action"
+              disabled={Boolean(scriptError) || !title.trim()}
+              type="submit"
+            >
+              {isLanternRoute ? (
+                <>
+                  <Play fill="currentColor" size={16} />
+                  Create animated first cut
+                </>
+              ) : (
+                <>
+                  <ArrowRight size={17} />
+                  Create first cut
+                </>
+              )}
+            </button>
+            <p className="cv-create-review-note">
+              <Sparkles size={15} /> You’ll review every beat before final media
+              or export.
+            </p>
+            <p className="cv-create-boundary">
+              {isLanternRoute
+                ? "Prototype art · real articulated motion · no voice or export yet"
+                : "Draft breakdown only · no generated art, voice, animation, or export"}
+            </p>
+          </aside>
+          {replaceConfirmOpen ? (
+            <div
+              className="cv-replace-confirm"
+              role="alertdialog"
+              aria-label="Replace edited prototype"
+            >
+              <p>
+                <strong>Replace your edited prototype?</strong>
+                <span>
+                  Creating a new first cut clears its direction history.
+                </span>
+              </p>
+              <button
+                onClick={() => setReplaceConfirmOpen(false)}
+                type="button"
+              >
+                Keep editing
+              </button>
+              <button onClick={() => createFirstCut(true)} type="button">
+                Replace and create
+              </button>
+            </div>
+          ) : null}
+        </form>
+      </div>
+      {project || draftProject ? (
+        <section className="cv-saved-projects" aria-label="Saved projects">
+          <header>
+            <span>Saved work</span>
+            <small>Stored privately in this browser</small>
+          </header>
+          <div>
+            {project ? (
+              <button
+                className="cv-continue-card"
+                onClick={() => {
+                  setStudioEntryMode("continue-saved");
+                  setScreen("creator-studio");
+                }}
+                type="button"
+              >
+                <span>Continue animated prototype</span>
+                <strong>{project.title}</strong>
+                <small>
+                  3 beats · last selected:{" "}
+                  {project.baseInput.beats.find(
+                    (beat) => beat.id === project.selectedBeatId,
+                  )?.text ?? "Lantern scene"}
+                </small>
+              </button>
+            ) : null}
+            {draftProject ? (
+              <button
+                className="cv-continue-card cv-continue-draft"
+                onClick={() => setScreen("draft-review")}
+                type="button"
+              >
+                <span>Continue direction draft</span>
+                <strong>{draftProject.title}</strong>
+                <small>
+                  {draftProject.graph.scenes.length} scenes ·{" "}
+                  {
+                    draftProject.graph.scenes.flatMap((scene) => scene.beats)
+                      .length
+                  }{" "}
+                  beats ·{" "}
+                  {draftProject.grammar === "kids-adventure"
+                    ? "Kids Adventure"
+                    : "Weird History"}
+                </small>
+              </button>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+      {notice ? (
+        <p className="cv-restore-notice" role="status">
+          {notice}
+        </p>
+      ) : null}
+    </main>
+  );
+}

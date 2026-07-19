@@ -1,0 +1,251 @@
+{
+  "proof": "DSA-002c.1 Camera and Framing Semantic Closure",
+  "storyGraphContentHash": "ae1e1129b27f6da8c8ddaad332f041a7b95f966149d97822e34b0ab5f01d7cc8",
+  "targetShotId": "shot-1-response",
+  "rendererConsumes": [
+    "camera.keyframes[].x",
+    "y",
+    "scale"
+  ],
+  "sizes": [
+    {
+      "value": "extreme-wide",
+      "file": "size-extreme-wide.png",
+      "frame": 90,
+      "contentHash": "59918f0c5b8d26a79a0bd5e480660aefd025f7ec1ba7e3eaa495365788a24e80",
+      "cameraProgramContentHash": "ca2e59570a3e452ad852c028d87af170d21df337851718304eae8d08d0a4cb00",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 6,
+          "y": 0,
+          "scale": 1
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1
+        }
+      ]
+    },
+    {
+      "value": "wide",
+      "file": "size-wide.png",
+      "frame": 90,
+      "contentHash": "b1351af3b494cc314364032901709456bcace23795150da1988730c82e98e219",
+      "cameraProgramContentHash": "52ecb84f5e09b7f668a3f6e6598695b2558f76a802622319cc4731ca4392c009",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 6,
+          "y": 0,
+          "scale": 1.08
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1.08
+        }
+      ]
+    },
+    {
+      "value": "medium",
+      "file": "size-medium.png",
+      "frame": 90,
+      "contentHash": "089564bbcb778114fa5e0ed86e1c1e5e26056bc403db85670393a173316dfeb7",
+      "cameraProgramContentHash": "6ed9f128b83feca5561b9e0748193884beb522851eaa8ccaba797721ab90bae4",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 6,
+          "y": 0,
+          "scale": 1.2
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1.2
+        }
+      ]
+    },
+    {
+      "value": "close-up",
+      "file": "size-close-up.png",
+      "frame": 90,
+      "contentHash": "1b8d0020a43f1f53d3659669e9079c36d067a6e0a61322716604b9cdad00e0ba",
+      "cameraProgramContentHash": "3cab235cf34f53f1d15c9890ebd66dd81a0a386fd8563d0d84184814f05bfbed",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 6,
+          "y": 0,
+          "scale": 1.38
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1.38
+        }
+      ]
+    },
+    {
+      "value": "insert",
+      "file": "size-insert.png",
+      "frame": 90,
+      "contentHash": "6ac36ba0077923142fc9e59d884b953382dbd7221e6aa826e9c42fc587a79b1f",
+      "cameraProgramContentHash": "a6d7b80c9236088fa79fe8e5cba4ef88d0e20dddd9337ceabfccb12013dd07c0",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 6,
+          "y": 0,
+          "scale": 1.62
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1.62
+        }
+      ]
+    }
+  ],
+  "movements": [
+    {
+      "value": "locked",
+      "file": "movement-locked.png",
+      "frame": 90,
+      "contentHash": "089564bbcb778114fa5e0ed86e1c1e5e26056bc403db85670393a173316dfeb7",
+      "cameraProgramContentHash": "6ed9f128b83feca5561b9e0748193884beb522851eaa8ccaba797721ab90bae4",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 6,
+          "y": 0,
+          "scale": 1.2
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1.2
+        }
+      ]
+    },
+    {
+      "value": "pan",
+      "file": "movement-pan.png",
+      "frame": 90,
+      "contentHash": "d698166fe3778825fbc7c4a5f81313732df9ca290fe05db797409e4e41645507",
+      "cameraProgramContentHash": "21423b9410146fe1783521c90874d1bddb39b6f7421b50181ce6c7c0e0e49c57",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 1,
+          "y": 0,
+          "scale": 1.2
+        },
+        {
+          "frame": 47,
+          "x": 11,
+          "y": 0,
+          "scale": 1.2
+        }
+      ]
+    },
+    {
+      "value": "track",
+      "file": "movement-track.png",
+      "frame": 90,
+      "contentHash": "1fee65c92542957383599e6585ac0f23da76d676ccf2426d21bd592a9674faf8",
+      "cameraProgramContentHash": "302ba64debffb42fb954f750fadf098a9630e9670ef1244c17650f3440abc67f",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 6,
+          "y": 0,
+          "scale": 1.2
+        },
+        {
+          "frame": 22,
+          "x": 6,
+          "y": 2.0000000000000018,
+          "scale": 1.2
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1.2
+        }
+      ]
+    },
+    {
+      "value": "push",
+      "file": "movement-push.png",
+      "frame": 90,
+      "contentHash": "c7f075746b1717c313f19d9bb56131ce822896074a82309cc592f24f7131ab1f",
+      "cameraProgramContentHash": "fc96da6a3869a82ebbd58a5416b2e1724ab162bbf2bfb05263821757c944dc19",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 6,
+          "y": 0,
+          "scale": 1.152
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1.248
+        }
+      ]
+    },
+    {
+      "value": "pull",
+      "file": "movement-pull.png",
+      "frame": 90,
+      "contentHash": "09d9657636e59ea63c92d997e50046cec62a01440dbfa1d759583605248fffd3",
+      "cameraProgramContentHash": "2f5020e94841725b4affc6d942f01f3be763c8a98d5bda156fe539c01a9aa04f",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 6,
+          "y": 0,
+          "scale": 1.248
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1.152
+        }
+      ]
+    },
+    {
+      "value": "reframe",
+      "file": "movement-reframe.png",
+      "frame": 90,
+      "contentHash": "4c5343dc5e8b2f52415c569dd159c8038a37a602c43b0fb6911c013f501a332e",
+      "cameraProgramContentHash": "357e720065cdb1dec9d9c41daefa53b829a616370639cbdbdff5d1729a0c2c55",
+      "keyframes": [
+        {
+          "frame": 0,
+          "x": 1,
+          "y": 3,
+          "scale": 1.2
+        },
+        {
+          "frame": 47,
+          "x": 6,
+          "y": 0,
+          "scale": 1.2
+        }
+      ]
+    }
+  ]
+}

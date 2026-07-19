@@ -126,7 +126,12 @@ export const storyAnalysisSchema = z.object({
 }).strict();
 
 export const actionDetailSchema = z.discriminatedUnion("type", [
-  z.object({type: z.literal("talk"), dialogueLineId: identifierSchema, timingId: identifierSchema}).strict(),
+  z.object({
+    type: z.literal("talk"),
+    dialogueLineId: identifierSchema,
+    timingId: identifierSchema,
+    mouthCue: z.object({mode: z.literal("timing-driven-pose-swap"), openFrames: z.number().int().min(1).max(12), closedFrames: z.number().int().min(1).max(12), phaseOffsetFrames: z.number().int().min(0).max(23)}).strict().optional(),
+  }).strict(),
   z.object({type: z.literal("gesture"), gestureId: gestureSchema, intensity: z.number().min(0).max(1)}).strict(),
   z.object({type: z.literal("react"), poseId: identifierSchema}).strict(),
   z.object({type: z.literal("enter"), direction: z.enum(["left", "right", "foreground", "background"])}).strict(),
@@ -395,7 +400,8 @@ export const generationExchangeStateSchema = z.object({
   if (state.status !== "superseded" && state.supersededBy !== null) context.addIssue({code: "custom", path: ["supersededBy"], message: "Only a superseded exchange may identify a replacement."});
 });
 
-export const rightsRecordSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict();
+export const rightsRecordSchema = z.object({sourceType: z.enum(["generated", "licensed", "public-domain", "user-owned", "project-owned"]), provider: z.string().min(1), usageNotes: z.string().min(1)}).strict();
+export const clearedRightsRecordSchema = rightsRecordSchema.extend({clearanceStatus: z.literal("cleared"), evidenceReference: z.string().trim().min(1).max(500)}).strict();
 export const candidateBundleAssetSchema = z.object({candidateId: identifierSchema, candidateSetId: identifierSchema, briefId: identifierSchema, fileRole: z.string().min(1), relativeFile: safeRelativePathSchema, contentHash: hashSchema, mediaType: z.enum(["image/png", "image/jpeg", "image/webp"]), width: z.number().int().positive(), height: z.number().int().positive(), rights: rightsRecordSchema}).strict();
 export const candidateBundleSchema = z.object({
   schemaVersion: z.literal("1.0"),
@@ -433,6 +439,45 @@ export const preparedCandidateSchema = z.object({
 });
 export const assetApprovalSchema = z.object({candidateId: identifierSchema, status: z.enum(["pending", "approved", "rejected"]), approvedBy: z.literal("user").nullable(), approvedAt: z.string().datetime().nullable(), notes: z.string()}).strict();
 export const approvedAssetVersionSchema = z.object({assetId: identifierSchema, version: z.string().min(1), requirementId: identifierSchema, contentHash: hashSchema, relativeFile: safeRelativePathSchema, provenance: rightsRecordSchema, approvedAt: z.string().datetime()}).strict();
+export const audioMixSchema = z.object({
+  profile: projectTypeSchema,
+  voiceGain: z.number().min(0).max(2),
+  musicDecision: z.enum(["pending", "none", "approved-master"]),
+  musicGain: z.number().min(0).max(1).optional(),
+  musicLoop: z.boolean().optional(),
+  transitionSfx: z.enum(["off", "paper-flip"]),
+  transitionSfxGain: z.number().min(0).max(1),
+  reviewed: z.boolean(),
+}).strict().superRefine((mix, context) => {
+  if (mix.reviewed && mix.musicDecision === "pending") context.addIssue({code: "custom", path: ["musicDecision"], message: "A reviewed mix must explicitly choose no music or bind an approved music master."});
+});
+export const voiceTrackSchema = z.object({
+  id: identifierSchema,
+  contentHash: hashSchema,
+  relativeFile: safeRelativePathSchema,
+  sourceFileName: z.string().min(1).max(260),
+  codec: z.enum(["pcm-wav", "ieee-float-wav"]),
+  durationInSeconds: z.number().positive().max(14_400),
+  sampleRate: z.number().int().min(8_000).max(192_000),
+  channels: z.union([z.literal(1), z.literal(2)]),
+  bitsPerSample: z.union([z.literal(16), z.literal(24), z.literal(32)]),
+  importedAt: z.string().datetime(),
+  approvalStatus: z.enum(["imported", "approved"]),
+  approvedAt: z.string().datetime().nullable(),
+  rights: clearedRightsRecordSchema.optional(),
+}).strict().superRefine((track, context) => {
+  if ((track.approvalStatus === "approved") !== Boolean(track.approvedAt)) context.addIssue({code: "custom", path: ["approvedAt"], message: "Approved voice tracks require an approval timestamp; imported tracks must not have one."});
+});
+export const musicTrackSchema = voiceTrackSchema;
+export const soundEffectAssetSchema = voiceTrackSchema;
+export const soundEffectCueSchema = z.object({
+  id: identifierSchema,
+  assetContentHash: hashSchema,
+  shotId: identifierSchema,
+  offsetInFrames: z.number().int().nonnegative(),
+  gain: z.number().min(0).max(1),
+  label: z.string().trim().min(1).max(120),
+}).strict();
 
 export const resolvedEntitySchema = z.object({
   entityId: identifierSchema,
@@ -447,7 +492,13 @@ export const resolvedVisualSchema = z.object({requirementId: identifierSchema, r
 
 export const shotOverrideSchema = z.object({
   shotId: identifierSchema,
+  treatment: shotTreatmentSchema.optional(),
+  imageDirection: z.string().trim().min(1).max(2000).optional(),
   framing: shotFramingSchema.optional(),
+  transition: transitionStyleSchema.optional(),
+  caption: z.string().trim().min(1).max(500).nullable().optional(),
+  durationInFrames: z.number().int().min(12).max(1800).optional(),
+  timingLocked: z.literal(true).optional(),
   gesture: gestureSchema.optional(),
   gestureIntensity: z.number().min(0).max(1).optional(),
   cameraAction: z.enum(["cameraPush", "pan", "reframe"]).optional(),
@@ -483,6 +534,7 @@ export const renderShotSchema = z.object({
   sceneId: identifierSchema,
   number: z.string().min(1),
   title: z.string().min(1),
+  editorialText: z.string().min(1).optional(),
   framing: shotFramingSchema,
   treatment: shotTreatmentSchema,
   transition: transitionStyleSchema,
@@ -593,6 +645,12 @@ export type StagedCandidate = z.infer<typeof stagedCandidateSchema>;
 export type PreparedCandidate = z.infer<typeof preparedCandidateSchema>;
 export type AssetApproval = z.infer<typeof assetApprovalSchema>;
 export type ApprovedAssetVersion = z.infer<typeof approvedAssetVersionSchema>;
+export type ClearedRightsRecord = z.infer<typeof clearedRightsRecordSchema>;
+export type AudioMix = z.infer<typeof audioMixSchema>;
+export type VoiceTrack = z.infer<typeof voiceTrackSchema>;
+export type MusicTrack = z.infer<typeof musicTrackSchema>;
+export type SoundEffectAsset = z.infer<typeof soundEffectAssetSchema>;
+export type SoundEffectCue = z.infer<typeof soundEffectCueSchema>;
 export type ResolvedProductionPlan = z.infer<typeof resolvedProductionPlanSchema>;
 export type ShotOverride = z.infer<typeof shotOverrideSchema>;
 export type FrameAccurateRenderPlan = z.infer<typeof frameAccurateRenderPlanSchema>;
