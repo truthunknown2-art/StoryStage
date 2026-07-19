@@ -83,7 +83,7 @@
     "format": "prettier --check clean on all touched files",
     "build": "verify:director-capability-assets OK; tsc --noEmit OK; vite build OK (pre-existing >500kB chunk note unchanged)",
     "diffCheck": "git diff --check clean",
-    "rootVerify": "pnpm verify (repository root, at e13292a) -> exit 0: 19 capability assets verified; privacy 580 files passed; eslint . 0 errors (2 pre-existing render-worker flicker warnings, outside scope); typecheck clean across 10 projects; all tests green incl. director-alpha-boundary and studio 81/81 (first run flaked on unrelated apps/desktop delivery-store timeout; green on rerun)"
+    "rootVerify": "pnpm verify (repository root, at dad474d) -> exit 0: 19 capability assets verified; privacy 580 files passed; eslint . 0 errors (2 pre-existing render-worker flicker warnings, outside scope); typecheck clean across 10 projects; all tests green incl. director-alpha-boundary, story-engine 254/254, studio 81/81"
   },
   "blockerResolution": {
     "blocker": "PR #12 hosted blocker at 767669f: director-alpha-boundary audit failed — DirectorPreview imported CreatorSceneRail/CreatorBeatStrip from ../creator-studio-components, pulling ten legacy CV-001/showcase files into the audited Director surface via the story-engine index",
@@ -92,11 +92,18 @@
   },
   "inboxV5Resolution": {
     "successorSha": "e13292a",
-    "p1": "DirectorCommandPanel gated to beats with exactly one concrete reaction event (same acceptance predicate as proposeDirectorPatch); honest unavailability note elsewhere — regression test covers the default/non-reaction beat",
+    "p1": "DirectorCommandPanel gated to beats with a concrete reaction event; honest unavailability note elsewhere — regression test covers the default/non-reaction beat",
     "p2": "command state clears on every selection change — regression test covers click-driven beat switch",
-    "wording": "DirectorFrameThumbnail described as deterministic proxy approximation, not canonical frame",
-    "studioTests": "81/81 (includes both regression tests)",
-    "rootVerify": "pnpm verify at e13292a -> exit 0 on rerun (first run flaked on unrelated apps/desktop delivery-store 5000ms timeout under parallel load; test left untouched per Codex guidance and flagged for the flake lane)"
+    "wording": "DirectorFrameThumbnail described as deterministic proxy approximation, not canonical frame"
+  },
+  "inboxV6Resolution": {
+    "successorSha": "dad474d",
+    "rootCause": "v5 UI predicate counted reaction events (shots.some) while the interpreter counts (event, shot) pairs (flatMap) — one event linked by two eligible shots read as eligible in the UI but ambiguous to the interpreter",
+    "fix": "listDirectorReactionDelayCandidates in packages/story-engine/src/director/director-patch.ts is the single eligibility source consumed by both proposeDirectorPatch (identical behavior) and the Studio shell gating via director-alpha; drift impossible by construction; Director Alpha boundary audit green",
+    "regressionFixture": "schema-valid forged project with one reaction event linked by two eligible shots: shared list reports 2 candidates, interpreter throws /more than one possible reaction event/i; control stays unavailable for exactly the rejected cases",
+    "storyEngineTests": "254/254 (includes ambiguity-cardinality regression)",
+    "studioTests": "81/81",
+    "rootVerify": "pnpm verify at dad474d -> exit 0 (first attempt green; prior e13292a run's only failure was the unrelated apps/desktop delivery-store parallel-load timeout, green on rerun, flagged for the flake lane)"
   },
   "screenshots": [
     "kids-1440x900.png",
