@@ -511,6 +511,7 @@ export function DirectorAnimaticPreview({
         {timeline ? (
           <DirectorTimelineDrawer
             activeFrame={frame}
+            fps={episode.format.fps}
             onSeek={seekTo}
             timeline={timeline}
           />

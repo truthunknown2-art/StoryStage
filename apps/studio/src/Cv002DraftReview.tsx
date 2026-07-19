@@ -43,6 +43,19 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Cv002TemplateAssignmentPanel } from "./Cv002TemplateAssignmentPanel";
 import { CreatorStudioShell } from "./creator-studio-components";
+
+const GRAMMAR_LABEL: Record<Cv002Project["grammar"], string> = {
+  "kids-adventure": "Kids Adventure",
+  "weird-history": "Weird History",
+};
+
+/** Short creator-facing labels for the sealed art-direction option ids. */
+const ART_DIRECTION_LABEL: Record<string, string> = {
+  "storybook-watercolor-paper-cutout": "Storybook Cutout",
+  "cut-paper-collage-mixed-media": "Cut Paper Collage",
+  "soft-2d-digital-illustration": "Soft 2D",
+  "weird-history-editorial-collage": "Editorial Collage",
+};
 import { DirectorAnimaticPreview } from "./director/DirectorPreview";
 import "./cv002-draft-review.css";
 
@@ -412,6 +425,21 @@ export function Cv002DraftReview({
             <strong>StoryStage</strong>
             <small>{project.title}</small>
           </div>
+        </div>
+        <div aria-label="Project setup" className="cv2-project-tags">
+          <span className="cv2-tag">
+            {project.grammar === "kids-adventure" ? (
+              <Trees size={13} />
+            ) : (
+              <Feather size={13} />
+            )}
+            {GRAMMAR_LABEL[project.grammar]}
+          </span>
+          <span className="cv2-tag">
+            <Sparkles size={13} />
+            {ART_DIRECTION_LABEL[project.artDirectionSelection.optionId] ??
+              humanize(project.artDirectionSelection.optionId)}
+          </span>
         </div>
         <div className="cv2-history-actions">
           <button

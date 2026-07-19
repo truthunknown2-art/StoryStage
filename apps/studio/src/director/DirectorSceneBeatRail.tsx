@@ -19,6 +19,33 @@ const firstFrameForBeat = (director: DirectorProject, beatId: string) => {
   );
 };
 
+/** Real per-beat duration from the resolved timing solution, in seconds. */
+const beatDurationSeconds = (director: DirectorProject, beatId: string) => {
+  const shotIds = new Set(
+    director.directorPlan.shots
+      .filter((shot) => shot.beatIds.includes(beatId))
+      .map((shot) => shot.id),
+  );
+  const frames = director.timingSolution.resolvedShots
+    .filter((shot) => shotIds.has(shot.shotId))
+    .reduce(
+      (total, shot) => total + (shot.endFrameExclusive - shot.startFrame),
+      0,
+    );
+  return frames / director.executableEpisodePlan.format.fps;
+};
+
+/** Honest capability state for the beat: render-ready only when every
+ * performance requirement resolved to a supported executable program. */
+const beatIsRenderReady = (director: DirectorProject, beatId: string) => {
+  const items = director.capabilityReport.items.filter(
+    (item) => item.beatId === beatId,
+  );
+  return (
+    items.length > 0 && items.every((item) => item.resolution === "supported")
+  );
+};
+
 /**
  * Boundary-safe scene rail for the Director Alpha surface. Mirrors the
  * creator-studio rail markup but imports only Director Alpha contracts, so the
@@ -55,6 +82,7 @@ export function DirectorSceneRail({
             </header>
             {scene.beats.map((beat, beatIndex) => {
               const frame = firstFrameForBeat(director, beat.id);
+              const renderReady = beatIsRenderReady(director, beat.id);
               return (
                 <button
                   aria-label={`${sceneIndex + 1}.${beatIndex + 1} ${humanize(beat.role)} — Scene ${sceneIndex + 1}, beat ${beatIndex + 1}: ${beat.text}`}
@@ -72,6 +100,16 @@ export function DirectorSceneRail({
                   <span className="cv2-direction-rail-copy">
                     <strong>{humanize(beat.role)}</strong>
                     <small>{beat.text}</small>
+                    <span className="cv2-direction-rail-meta">
+                      <em>
+                        {beatDurationSeconds(director, beat.id).toFixed(1)}s
+                      </em>
+                      <i
+                        className={renderReady ? "is-render-ready" : "is-proxy"}
+                      >
+                        {renderReady ? "Render-ready" : "Proxy"}
+                      </i>
+                    </span>
                   </span>
                 </button>
               );
@@ -119,6 +157,9 @@ export function DirectorBeatStrip({
                   {sceneIndex + 1}.{beatIndex + 1}
                 </span>
                 <small>{humanize(beat.role)}</small>
+                <em className="cv2-beat-strip-duration">
+                  {beatDurationSeconds(director, beat.id).toFixed(1)}s
+                </em>
               </button>
             );
           }),

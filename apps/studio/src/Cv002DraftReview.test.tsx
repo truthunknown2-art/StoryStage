@@ -387,7 +387,10 @@ describe("CV-002 editable script breakdown", () => {
     expect(within(timeline).getByText("Events")).toBeVisible();
     expect(within(timeline).getByText("Camera")).toBeVisible();
     playerHarness.lastSeek = null;
-    await user.click(within(timeline).getAllByRole("button")[0]!);
+    const shotsLane = timeline.querySelector(
+      ".director-timeline-lane.is-shots",
+    ) as HTMLElement;
+    await user.click(within(shotsLane).getAllByRole("button")[0]!);
     expect(playerHarness.lastSeek).not.toBeNull();
   });
 
