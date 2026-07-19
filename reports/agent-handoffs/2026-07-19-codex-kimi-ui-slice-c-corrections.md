@@ -6,6 +6,53 @@ Continue on `agent/kimi-ui-slice-c-visual-polish` from exact reviewed head
 `55873d2b489c8c69e2110817bb6c4accb91e50d0`. Keep PR #17 draft. Do not rewrite
 history and do not broaden this Studio-only correction.
 
+## Final Player-proof correction after exact review of `852e776`
+
+The Mara Engineering-demo gate, ordinary Ollo empty capability registry,
+capability wording, accessibility names, fit-width zoom, 44px controls, narrow
+topbar, and visibly nonblank committed screenshots are accepted. Do not rewrite
+those repairs.
+
+Fix only this remaining P2 proof defect:
+
+9. **The committed harness still proves timeline React state, not the Remotion
+   Player's exact state.** `browser-proof.mjs` derives `exactFrame` from
+   `.director-timeline-playhead` CSS. That playhead is driven by the local
+   `frame` state, and `seekTo()` sets that state synchronously to the requested
+   value alongside `playerRef.current?.seekTo(nextFrame)`. The assertion can
+   therefore pass even if the Player did not reach frame 340. It also permits a
+   one-frame error, waits 1400 wall-clock milliseconds, captures approximately
+   frame 374 rather than frame 340, and calls the composition nonblank by
+   counting colored DOM nodes that include Player chrome.
+
+   Add a Studio-local, read-only proof surface derived from the actual
+   `PlayerRef` methods available in the pinned Remotion version:
+   `getCurrentFrame()` and `isPlaying()`. Update it from real Player events,
+   keep it separate from the optimistic timeline `frame` state, and expose the
+   observed values as stable data attributes or equivalent browser-readable
+   state on the Player container. The browser harness must:
+
+   - perform the real timeline seek to the named frame 340;
+   - wait until the Player-ref observation reports `getCurrentFrame() === 340`;
+   - pause and assert `isPlaying() === false` from the same Player-ref state;
+   - require exact integer equality, with no `<= 1` tolerance;
+   - capture the 1440 and 1920 screenshots while that same exact frame 340 is
+     still observed and paused, rather than playing for a wall-clock delay;
+   - record the episode, shot, beat, exact frame, and paused state from that
+     same captured app state;
+   - prove the rendered composition area itself is nonblank, excluding controls
+     and chrome. Prefer a clipped composition-pixel check with explicit
+     non-black/non-uniform statistics; if using DOM, target the composition
+     subtree specifically and prove controls are excluded;
+   - add a focused regression that the Player-ref proof observation cannot be
+     satisfied by changing only the optimistic timeline state.
+
+   Regenerate `browser-proofs.json` and the two exact-frame screenshots with the
+   committed harness, rerun the focused Studio tests/typecheck/lint and root
+   verification, commit, push, update the handback with the exact successor
+   SHA, and wait for Codex review. Do not broaden into runtime, engine, timing,
+   asset, renderer, or unrelated UI changes.
+
 ## Successor correction after exact review of `e54547f`
 
 The ordinary Director compilation, capability labels, zoom geometry, 44px

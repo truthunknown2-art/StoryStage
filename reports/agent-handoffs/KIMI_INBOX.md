@@ -1,26 +1,36 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `13`
+Inbox-Version: `14`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-C-CORRECTIONS`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `e54547ffaef722b18f9d31b2fe6a3932b6076fb5`
+Accepted-Root-Base: `852e776720aafbea92bd63373d807d45d233ce16`
 Required-Work-Branch: `agent/kimi-ui-slice-c-visual-polish`
 Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-corrections.md`
 
 ## Current instruction
 
 Exact-head successor review at
-`e54547ffaef722b18f9d31b2fe6a3932b6076fb5` accepts the ordinary Director
-registry, capability wording, zoom geometry, accessibility metadata, and narrow
-topbar repairs, but found one remaining P1 Mara workflow leak and one P2 proof
-defect. Continue on the same work branch and execute the new successor section
-in the correction brief. Do not broaden into engine, runtime, renderer, timing,
-continuity, or asset-authority changes.
+`852e776720aafbea92bd63373d807d45d233ce16` accepts the Mara Engineering-demo
+gate, ordinary Ollo registry/capability truth, accessibility, zoom, responsive
+layout, and visibly nonblank screenshots. One P2 proof defect remains: the
+committed harness derives the claimed frame from optimistic timeline CSS state
+instead of `PlayerRef.getCurrentFrame()`, permits a one-frame mismatch, captures
+another wall-clock frame, and counts Player chrome as nonblank composition.
+Execute only correction 9 in the brief. Do not broaden into engine, runtime,
+renderer, timing, continuity, or asset-authority changes.
 
-Version 13 supersedes Version 12 as the active task. Version 12 remains below
+Version 14 supersedes Version 13 as the active task. Version 13 remains below
 as historical traceability.
+
+---
+
+Previous Version 13 instruction:
+
+Exact-head review at `e54547f` retained the Mara workflow leak and Player-proof
+defect. Kimi delivered `852e776`; Version 14 accepts the Mara gate and narrows
+the remaining work to exact Player-ref evidence only.
 
 ---
 
