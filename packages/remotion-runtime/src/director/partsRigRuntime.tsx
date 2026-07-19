@@ -3,8 +3,10 @@ import {
   compileRigVisualProgram,
   evaluateLocalPerformance,
   hashCanonical,
+  listArticulatedRigAssetReferences,
   localPerformanceInputSchema,
   type ApprovedAssetBinding,
+  type ArticulatedCharacterRigManifest,
   type ExecutableEpisodePlan,
   type LocalPerformanceFrame,
   type LocalPerformanceInput,
@@ -19,7 +21,7 @@ export type LocalPartsV1Execution = {
   mode: "local-parts-v1";
   assetId: string;
   displayScale: number;
-  rigManifest: unknown;
+  rigManifest: ArticulatedCharacterRigManifest;
 };
 
 type PartsRigRuntimeSource = {
@@ -29,7 +31,11 @@ type PartsRigRuntimeSource = {
   performance: PerformanceProgram;
   resolved: ResolvedEntityFrame;
   shotId: string;
-  verifiedAsset: ApprovedAssetBinding & {
+  verifiedAssets: VerifiedPartsRigAsset[];
+};
+
+export type VerifiedPartsRigAsset = {
+  binding: ApprovedAssetBinding & {
     byteLength: number;
     immutableLocationId: string;
     relativeFile: string;
@@ -44,8 +50,7 @@ export const createPartsRigRuntimeInput = ({
   performance,
   resolved,
   shotId,
-  verifiedAsset,
-  verifiedUrl,
+  verifiedAssets,
 }: PartsRigRuntimeSource): LocalPerformanceInput => {
   if (!performance.contentHash)
     throw new Error(
@@ -126,33 +131,48 @@ export const createPartsRigRuntimeInput = ({
     throw new Error(
       `Local-parts rig ${manifest.manifestId} requires unsupported renderer version ${manifest.renderer.version}.`,
     );
-  const assetBindings = [
-    manifest.identityReference,
-    ...manifest.parts.map((part) => part.asset),
-    ...manifest.exposures.map((exposure) => exposure.asset),
-  ];
+  const assetReferences = listArticulatedRigAssetReferences(manifest);
+  if (execution.assetId !== manifest.identityReference.candidateId)
+    throw new Error(
+      `Local-parts rig ${manifest.manifestId} identity does not match its executable asset.`,
+    );
+  const verifiedById = new Map(
+    verifiedAssets.map((asset) => [asset.binding.assetId, asset]),
+  );
   if (
-    execution.assetId !== verifiedAsset.assetId ||
-    assetBindings.some(
-      (binding) =>
-        binding.candidateId !== execution.assetId ||
-        binding.contentHash !== verifiedAsset.contentHash ||
-        binding.relativeFile !== verifiedAsset.relativeFile ||
-        binding.width !== manifest.identityReference.width ||
-        binding.height !== manifest.identityReference.height,
+    verifiedById.size !== verifiedAssets.length ||
+    verifiedById.size !== assetReferences.length
+  )
+    throw new Error(
+      `Local-parts rig ${manifest.manifestId} requires one exact verified handle per immutable asset reference.`,
+    );
+  const assetHandles = assetReferences.map((reference) => {
+    const verified = verifiedById.get(reference.candidateId);
+    if (!verified)
+      throw new Error(
+        `Local-parts rig ${manifest.manifestId} is missing verified asset ${reference.candidateId}.`,
+      );
+    const { binding } = verified;
+    if (
+      binding.status !== "approved" ||
+      binding.assetId !== reference.candidateId ||
+      binding.contentHash !== reference.contentHash ||
+      binding.relativeFile !== reference.relativeFile ||
+      binding.immutableLocationId !== `sha256:${reference.contentHash}` ||
+      !binding.relativeFile.includes(reference.contentHash)
     )
-  )
-    throw new Error(
-      `Local-parts rig ${manifest.manifestId} is not bound to the exact approved puppet asset.`,
-    );
-  if (
-    verifiedAsset.immutableLocationId !==
-      `sha256:${verifiedAsset.contentHash}` ||
-    !verifiedAsset.relativeFile.includes(verifiedAsset.contentHash)
-  )
-    throw new Error(
-      `Local-parts asset ${verifiedAsset.assetId} is not content-addressed.`,
-    );
+      throw new Error(
+        `Local-parts asset ${reference.candidateId} does not match its exact approved manifest binding.`,
+      );
+    return {
+      assetId: binding.assetId,
+      contentHash: binding.contentHash,
+      byteLength: binding.byteLength,
+      width: reference.width,
+      height: reference.height,
+      verifiedUrl: verified.verifiedUrl,
+    };
+  });
   const program = compileRigVisualProgram(manifest, performance.contentHash);
   return localPerformanceInputSchema.parse({
     schemaVersion: "1.0",
@@ -182,16 +202,7 @@ export const createPartsRigRuntimeInput = ({
       shotId,
     }),
     program,
-    assets: [
-      {
-        assetId: verifiedAsset.assetId,
-        contentHash: verifiedAsset.contentHash,
-        byteLength: verifiedAsset.byteLength,
-        width: manifest.identityReference.width,
-        height: manifest.identityReference.height,
-        verifiedUrl,
-      },
-    ],
+    assets: assetHandles,
   });
 };
 
@@ -246,71 +257,95 @@ export const createHeadFaceOverlayGeometry = (
 });
 
 const HeadFaceOverlay: React.FC<{
-  asset: LocalPerformanceInput["assets"][number];
   frame: LocalPerformanceFrame;
-}> = ({ asset, frame }) => {
+  input: LocalPerformanceInput;
+  manifest: ParsedRigManifest;
+}> = ({ frame, input, manifest }) => {
   const geometry = createHeadFaceOverlayGeometry(frame);
   const eyeOpen = Math.max(0.08, Math.min(1, frame.face.eyeOpen));
+  const mouthExposure = frame.face.mouthExposureId
+    ? manifest.exposures.find(
+        (candidate) => candidate.id === frame.face.mouthExposureId,
+      )
+    : null;
+  const mouthAsset = mouthExposure
+    ? input.assets.find(
+        (asset) => asset.assetId === mouthExposure.asset.candidateId,
+      )
+    : null;
+  const head = manifest.parts.find((part) => part.id === "head")!;
+  if (mouthExposure && !mouthAsset)
+    throw new Error(
+      `Local-parts exposure ${mouthExposure.id} has no verified visual asset.`,
+    );
+  const eyeExposureId =
+    eyeOpen <= 0.12
+      ? "eyes-closed"
+      : eyeOpen < 0.75
+        ? "eyes-half"
+        : "eyes-open";
+  const verifiedExposure = (exposureId: string) => {
+    const exposure = manifest.exposures.find(
+      (candidate) => candidate.id === exposureId,
+    );
+    const asset = exposure
+      ? input.assets.find(
+          (candidate) => candidate.assetId === exposure.asset.candidateId,
+        )
+      : null;
+    if (!exposure || !asset)
+      throw new Error(
+        `Local-parts exposure ${exposureId} has no verified visual asset.`,
+      );
+    return asset;
+  };
+  const eyeAsset = verifiedExposure(eyeExposureId);
+  const pupilAsset = verifiedExposure("pupils");
+  const pupilOffset = {
+    x: Math.round(frame.face.pupilX * 10),
+    y: Math.round(frame.face.pupilY * 8),
+  };
   return (
     <div data-rig-face="head-local" style={{ position: "absolute" }}>
-      {geometry.eyes.map((eye) => (
-        <div
-          data-rig-eye={eye.id}
-          key={eye.id}
+      <Img
+        data-rig-eye-layer={eyeExposureId}
+        src={eyeAsset.verifiedUrl}
+        style={{
+          height: eyeAsset.height,
+          left: -head.pivot.x,
+          maxWidth: "none",
+          position: "absolute",
+          top: -head.pivot.y,
+          width: eyeAsset.width,
+        }}
+      />
+      {eyeExposureId !== "eyes-closed" ? (
+        <Img
+          data-rig-pupil-layer="quantized-local"
+          src={pupilAsset.verifiedUrl}
           style={{
-            background: "#fff8df",
-            border: "7px solid #3a2119",
-            borderRadius: "48%",
-            boxSizing: "border-box",
-            height: 94,
-            left: eye.left,
-            overflow: "hidden",
+            height: pupilAsset.height,
+            left: -head.pivot.x + pupilOffset.x,
+            maxWidth: "none",
             position: "absolute",
-            top: eye.top,
-            transform: `scaleY(${eyeOpen})`,
-            transformOrigin: "center 55%",
-            width: 80,
+            top: -head.pivot.y + pupilOffset.y,
+            width: pupilAsset.width,
           }}
-        >
-          <div
-            data-rig-pupil={eye.id}
-            style={{
-              background: "#241713",
-              border: "6px solid #6b3c20",
-              borderRadius: "50%",
-              height: 44,
-              left: 13 + frame.face.pupilX * 10,
-              position: "absolute",
-              top: 24 + frame.face.pupilY * 8,
-              width: 44,
-            }}
-          />
-        </div>
-      ))}
-      {geometry.mouth ? (
-        <div
+        />
+      ) : null}
+      {geometry.mouth && mouthAsset ? (
+        <Img
           data-rig-exposure={frame.face.mouthExposureId ?? undefined}
+          src={mouthAsset.verifiedUrl}
           style={{
-            height: geometry.mouth.source.height,
-            left: geometry.mouth.target.left,
-            overflow: "hidden",
+            height: mouthAsset.height,
+            left: -head.pivot.x,
+            maxWidth: "none",
             position: "absolute",
-            top: geometry.mouth.target.top,
-            width: geometry.mouth.source.width,
+            top: -head.pivot.y,
+            width: mouthAsset.width,
           }}
-        >
-          <Img
-            src={asset.verifiedUrl}
-            style={{
-              height: asset.height,
-              left: -geometry.mouth.source.x,
-              maxWidth: "none",
-              position: "absolute",
-              top: -geometry.mouth.source.y,
-              width: asset.width,
-            }}
-          />
-        </div>
+        />
       ) : null}
     </div>
   );
@@ -331,17 +366,22 @@ export const createPartsRigRenderTree = (
 };
 
 const RigPartTree: React.FC<{
-  asset: LocalPerformanceInput["assets"][number];
   frame: LocalPerformanceFrame;
+  input: LocalPerformanceInput;
   manifest: ParsedRigManifest;
   node: PartsRigRenderNode;
-}> = ({ asset, frame, manifest, node }) => {
+}> = ({ frame, input, manifest, node }) => {
   const part = manifest.parts.find(
     (candidate) => candidate.id === node.partId,
   )!;
   const partFrame = frame.parts[part.id]!;
-  const pivotX = part.pivot.x - part.bounds.x;
-  const pivotY = part.pivot.y - part.bounds.y;
+  const asset = input.assets.find(
+    (candidate) => candidate.assetId === part.asset.candidateId,
+  );
+  if (!asset)
+    throw new Error(
+      `Local-parts part ${part.id} has no verified visual asset.`,
+    );
   const torsoIndex = manifest.parts.findIndex(
     (candidate) => candidate.id === "torso",
   );
@@ -361,36 +401,25 @@ const RigPartTree: React.FC<{
         zIndex: partIndex - torsoIndex,
       }}
     >
-      <div
+      <Img
+        src={asset.verifiedUrl}
         style={{
-          height: part.bounds.height,
-          left: -pivotX,
+          height: asset.height,
+          left: -part.pivot.x,
+          maxWidth: "none",
           opacity: partFrame.opacity,
-          overflow: "hidden",
           position: "absolute",
-          top: -pivotY,
-          width: part.bounds.width,
+          top: -part.pivot.y,
+          width: asset.width,
         }}
-      >
-        <Img
-          src={asset.verifiedUrl}
-          style={{
-            height: asset.height,
-            left: -part.bounds.x,
-            maxWidth: "none",
-            position: "absolute",
-            top: -part.bounds.y,
-            width: asset.width,
-          }}
-        />
-      </div>
+      />
       {part.id === "head" ? (
-        <HeadFaceOverlay asset={asset} frame={frame} />
+        <HeadFaceOverlay frame={frame} input={input} manifest={manifest} />
       ) : null}
       {node.children.map((child) => (
         <RigPartTree
-          asset={asset}
           frame={frame}
+          input={input}
           key={child.partId}
           manifest={manifest}
           node={child}
@@ -407,7 +436,6 @@ export const PartsRigLocalVisual: React.FC<{
   const manifest = articulatedCharacterRigManifestSchema.parse(rigManifest);
   const renderTree = createPartsRigRenderTree(manifest);
   const frame = partsRigRuntime.evaluate(input);
-  const asset = input.assets[0]!;
   return (
     <div
       data-local-parts-renderer={partsRigRuntime.rendererId}
@@ -416,8 +444,8 @@ export const PartsRigLocalVisual: React.FC<{
     >
       {renderTree.map((node) => (
         <RigPartTree
-          asset={asset}
           frame={frame}
+          input={input}
           key={node.partId}
           manifest={manifest}
           node={node}

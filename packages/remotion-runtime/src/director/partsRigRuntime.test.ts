@@ -3,6 +3,7 @@ import {
   createCv002Project,
   evaluateContinuityFrame,
   hashCanonical,
+  listArticulatedRigAssetReferences,
 } from "@storystage/story-engine/director-alpha";
 import { describe, expect, it } from "vitest";
 import { createBundledKidsCapabilityRegistry } from "./bundledKidsCapabilities";
@@ -59,11 +60,27 @@ const localPartsFixture = () => {
   const canonical = evaluateContinuityFrame(episodePlan, shot.startFrame);
   const resolved = canonical.entities[performance.entityId];
   if (!resolved) throw new Error("Fixture has no resolved local-parts actor.");
-  const asset = episodePlan.approvedAssets.find(
-    (candidate) => candidate.assetId === performance.execution!.assetId,
+  const references = listArticulatedRigAssetReferences(
+    performance.execution.rigManifest,
   );
-  if (!asset?.relativeFile || !asset.byteLength || !asset.immutableLocationId)
-    throw new Error("Fixture has no approved local-parts asset.");
+  const verifiedAssets = references.map((reference) => {
+    const asset = episodePlan.approvedAssets.find(
+      (candidate) => candidate.assetId === reference.candidateId,
+    );
+    if (!asset?.relativeFile || !asset.byteLength || !asset.immutableLocationId)
+      throw new Error(
+        `Fixture has no approved local-parts asset ${reference.candidateId}.`,
+      );
+    return {
+      binding: {
+        ...asset,
+        relativeFile: asset.relativeFile,
+        byteLength: asset.byteLength,
+        immutableLocationId: asset.immutableLocationId,
+      },
+      verifiedUrl: `blob:verified-${asset.assetId}`,
+    };
+  });
   const input = partsRigRuntime.createInput({
     episodePlan,
     execution: performance.execution,
@@ -71,13 +88,7 @@ const localPartsFixture = () => {
     performance,
     resolved,
     shotId: canonical.shotId,
-    verifiedAsset: {
-      ...asset,
-      relativeFile: asset.relativeFile,
-      byteLength: asset.byteLength,
-      immutableLocationId: asset.immutableLocationId,
-    },
-    verifiedUrl: "blob:verified-mara-puppet",
+    verifiedAssets,
   });
   return {
     episodePlan,
@@ -86,12 +97,7 @@ const localPartsFixture = () => {
     performance,
     resolved,
     shot,
-    verifiedAsset: {
-      ...asset,
-      relativeFile: asset.relativeFile,
-      byteLength: asset.byteLength,
-      immutableLocationId: asset.immutableLocationId,
-    },
+    verifiedAssets,
   };
 };
 
@@ -107,12 +113,22 @@ describe("partsRigRuntime", () => {
     expect(input.rigManifestContentHash).toBe(
       input.program.rigManifestContentHash,
     );
-    expect(input.assets).toEqual([
-      expect.objectContaining({
-        assetId: "mara-payoff-puppet-v1",
-        verifiedUrl: "blob:verified-mara-puppet",
-      }),
-    ]);
+    expect(input.assets).toHaveLength(17);
+    expect(input.assets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          assetId: "mara-payoff-puppet-v1",
+          verifiedUrl: "blob:verified-mara-payoff-puppet-v1",
+        }),
+        expect.objectContaining({
+          assetId: "mara-local-head-v1",
+          verifiedUrl: "blob:verified-mara-local-head-v1",
+        }),
+        expect.objectContaining({ assetId: "mara-local-mouth-open-v1" }),
+        expect.objectContaining({ assetId: "mara-local-eyes-open-v1" }),
+        expect.objectContaining({ assetId: "mara-local-pupils-v1" }),
+      ]),
+    );
     expect(input.microMotionSeed).toBe(
       hashCanonical({
         episodePlanContentHash: input.episodePlanContentHash,
@@ -223,8 +239,7 @@ describe("partsRigRuntime", () => {
         performance: fixture.performance,
         resolved: fixture.resolved,
         shotId: fixture.input.shotId,
-        verifiedAsset: fixture.verifiedAsset,
-        verifiedUrl: fixture.input.assets[0]!.verifiedUrl,
+        verifiedAssets: fixture.verifiedAssets,
       }),
     ).toThrow(/exact sealed rig execution/i);
 
@@ -232,15 +247,46 @@ describe("partsRigRuntime", () => {
       partsRigRuntime.createInput({
         episodePlan: fixture.episodePlan,
         execution: fixture.execution,
-        localFrame:
-          fixture.shot.endFrameExclusive - fixture.shot.startFrame,
+        localFrame: fixture.shot.endFrameExclusive - fixture.shot.startFrame,
         performance: fixture.performance,
         resolved: fixture.resolved,
         shotId: fixture.input.shotId,
-        verifiedAsset: fixture.verifiedAsset,
-        verifiedUrl: fixture.input.assets[0]!.verifiedUrl,
+        verifiedAssets: fixture.verifiedAssets,
       }),
     ).toThrow(/not authorized for canonical shot/i);
+  });
+
+  it("rejects missing, stale, and duplicate individual part handles", () => {
+    const fixture = localPartsFixture();
+    const create = (verifiedAssets: typeof fixture.verifiedAssets) =>
+      partsRigRuntime.createInput({
+        episodePlan: fixture.episodePlan,
+        execution: fixture.execution,
+        localFrame: fixture.input.localFrame,
+        performance: fixture.performance,
+        resolved: fixture.resolved,
+        shotId: fixture.input.shotId,
+        verifiedAssets,
+      });
+
+    expect(() => create(fixture.verifiedAssets.slice(1))).toThrow(
+      /one exact verified handle/i,
+    );
+    expect(() =>
+      create(
+        fixture.verifiedAssets.map((asset, index) =>
+          index === 1
+            ? {
+                ...asset,
+                binding: { ...asset.binding, contentHash: "f".repeat(64) },
+              }
+            : asset,
+        ),
+      ),
+    ).toThrow(/exact approved manifest binding/i);
+    expect(() =>
+      create([...fixture.verifiedAssets, fixture.verifiedAssets[0]!]),
+    ).toThrow(/one exact verified handle/i);
   });
 
   it("evaluates a 140-frame local motion sample when canonical values are supplied", () => {

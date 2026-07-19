@@ -40,6 +40,10 @@ const sources = [
     "head",
     "mouth-rest",
     "mouth-open",
+    "eyes-open",
+    "eyes-half",
+    "eyes-closed",
+    "pupils",
   ].map((partId) => ({
     assetId: `mara-local-${partId}-v1`,
     sourceRelativeFile: `show-packs/kids/moonlit-ruins/v1/rigs/mara/local-parts-v1/${partId}.png`,

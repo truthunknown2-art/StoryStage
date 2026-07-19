@@ -11,7 +11,6 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import capabilityAssetCatalog from "../../../packages/remotion-runtime/src/director/generated-capability-asset-catalog.json";
 import {
-  bundledMaraPuppetAsset,
   createBundledKidsCapabilityRegistry,
   createBundledMaraLocalPartsRigManifest,
 } from "@storystage/remotion-runtime/director";
@@ -20,6 +19,7 @@ import {
   compileDirectorProject,
   createCapabilityRegistry,
   createCv002Project,
+  listArticulatedRigAssetReferences,
   type PerformanceCapabilityDraft,
   type ExecutableEpisodePlan,
 } from "@storystage/story-engine/director-alpha";
@@ -205,19 +205,23 @@ Behind the gate, Mara discovers a painted marker and reveals that the missing be
       capabilities: registry,
     });
 
-    await expect(
-      verifyDirectorEpisodeCapabilityAssets(
-        compiled.executableEpisodePlan,
-        publicRoot,
-      ),
-    ).resolves.toEqual([
-      expect.objectContaining({
-        assetId: bundledMaraPuppetAsset.assetId,
-        contentHash: bundledMaraPuppetAsset.contentHash,
-        width: bundledMaraPuppetAsset.width,
-        height: bundledMaraPuppetAsset.height,
-      }),
-    ]);
+    const references = listArticulatedRigAssetReferences(
+      createBundledMaraLocalPartsRigManifest(fixture.target),
+    );
+    const verified = await verifyDirectorEpisodeCapabilityAssets(
+      compiled.executableEpisodePlan,
+      publicRoot,
+    );
+    expect(verified).toHaveLength(references.length);
+    for (const reference of references)
+      expect(verified).toContainEqual(
+        expect.objectContaining({
+          assetId: reference.candidateId,
+          contentHash: reference.contentHash,
+          width: reference.width,
+          height: reference.height,
+        }),
+      );
   });
 
   it("rejects local-parts manifest dimension drift before rendering", async () => {
@@ -230,26 +234,19 @@ Behind the gate, Mara discovers a painted marker and reveals that the missing be
       ...manifestDraft,
       contentHash: hashCanonical(manifestDraft),
     });
+    const baseCapability = createBundledKidsCapabilityRegistry([fixture.target])
+      .capabilities[0]!;
+    const { contentHash: _capabilityHash, ...baseDraft } = baseCapability;
+    void _capabilityHash;
     const capability: PerformanceCapabilityDraft = {
+      ...baseDraft,
       id: `dimension-drift-${fixture.target.requirementId}`,
-      ...fixture.target,
       rendererId: rigManifest.renderer.id,
       rendererVersion: rigManifest.renderer.version,
-      assets: [
-        {
-          assetId: bundledMaraPuppetAsset.assetId,
-          contentHash: bundledMaraPuppetAsset.contentHash,
-          byteLength: bundledMaraPuppetAsset.byteLength,
-          immutableLocationId: bundledMaraPuppetAsset.immutableLocationId,
-          relativeFile: bundledMaraPuppetAsset.relativeFile,
-          version: "1.0.0",
-          status: "approved",
-        },
-      ],
       execution: {
         kind: "articulated-rig",
         mode: "local-parts-v1",
-        assetId: bundledMaraPuppetAsset.assetId,
+        assetId: rigManifest.identityReference.candidateId,
         displayScale: 0.36,
         rigManifest,
       },

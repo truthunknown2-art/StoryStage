@@ -1,6 +1,8 @@
+import { Buffer } from "node:buffer";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import process from "node:process";
+import { fileURLToPath, URL } from "node:url";
 import sharp from "sharp";
 
 const workspaceRoot = resolve(
@@ -111,6 +113,47 @@ for (const exposure of exposures) {
     .toFile(resolve(outputRoot, `${exposure.id}.png`));
 }
 
+const svgOverlay = async (id, contents) => {
+  const svg = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${headWidth}" height="${headHeight}" viewBox="0 0 ${headWidth} ${headHeight}">${contents}</svg>`,
+  );
+  await sharp(svg)
+    .png({ adaptiveFiltering: false, compressionLevel: 9, palette: false })
+    .toFile(resolve(outputRoot, `${id}.png`));
+};
+
+const eyeCenters = [
+  { x: headPivot.x - 38 + 40, y: headPivot.y - 238 + 47 },
+  { x: headPivot.x + 72 + 40, y: headPivot.y - 238 + 47 },
+];
+const eyes = (radiusY) =>
+  eyeCenters
+    .map(
+      ({ x, y }) =>
+        `<ellipse cx="${x}" cy="${y}" rx="36.5" ry="${radiusY}" fill="#fff8df" stroke="#3a2119" stroke-width="7"/>`,
+    )
+    .join("");
+await svgOverlay("eyes-open", eyes(43.5));
+await svgOverlay("eyes-half", eyes(17));
+await svgOverlay(
+  "eyes-closed",
+  eyeCenters
+    .map(
+      ({ x, y }) =>
+        `<path d="M ${x - 34} ${y} Q ${x} ${y + 12} ${x + 34} ${y}" fill="none" stroke="#3a2119" stroke-width="9" stroke-linecap="round"/>`,
+    )
+    .join(""),
+);
+await svgOverlay(
+  "pupils",
+  eyeCenters
+    .map(
+      ({ x, y }) =>
+        `<circle cx="${x}" cy="${y}" r="19" fill="#241713" stroke="#6b3c20" stroke-width="6"/>`,
+    )
+    .join(""),
+);
+
 process.stdout.write(
-  `Prepared ${parts.length} KVP parts and ${exposures.length} head exposures.\n`,
+  `Prepared ${parts.length} KVP parts and ${exposures.length + 4} head exposures.\n`,
 );

@@ -1,6 +1,7 @@
 import {
   evaluateContinuityFrame,
   executableEpisodePlanSchema,
+  listArticulatedRigAssetReferences,
   type ApprovedAssetBinding,
   type ExecutableEpisodePlan,
   type PerformanceProgram,
@@ -20,6 +21,7 @@ import {
   PartsRigLocalVisual,
   partsRigRuntime,
   type LocalPartsV1Execution,
+  type VerifiedPartsRigAsset,
 } from "./partsRigRuntime";
 
 type ProxyEntity = NonNullable<
@@ -173,6 +175,76 @@ const useVerifiedAssetUrl = (
     delayRender,
   ]);
   return verifiedUrl;
+};
+
+const useVerifiedPartsRigAssets = (
+  bindings: Array<ReturnType<typeof approvedAsset>>,
+): VerifiedPartsRigAsset[] | null => {
+  const [verifiedAssets, setVerifiedAssets] = useState<
+    VerifiedPartsRigAsset[] | null
+  >(null);
+  const { cancelRender, continueRender, delayRender } = useDelayRender();
+  const verificationKey = bindings
+    .map(
+      (binding) =>
+        `${binding.assetId}:${binding.contentHash}:${binding.byteLength}:${binding.relativeFile}`,
+    )
+    .join("|");
+  useEffect(() => {
+    setVerifiedAssets(null);
+    const handle = delayRender("Verifying approved local-parts asset set");
+    const controller = new AbortController();
+    const objectUrls: string[] = [];
+    let active = true;
+    let settled = false;
+    void (async () => {
+      try {
+        const verified = await Promise.all(
+          bindings.map(async (binding): Promise<VerifiedPartsRigAsset> => {
+            const response = await fetch(staticFile(binding.relativeFile), {
+              cache: "no-store",
+              signal: controller.signal,
+            });
+            if (!response.ok)
+              throw new Error(
+                `Approved Director asset ${binding.assetId} could not be loaded.`,
+              );
+            const bytes = await response.arrayBuffer();
+            if (
+              bytes.byteLength !== binding.byteLength ||
+              (await sha256(bytes)) !== binding.contentHash
+            )
+              throw new Error(
+                `Approved Director asset ${binding.assetId} failed browser byte verification.`,
+              );
+            const verifiedUrl = URL.createObjectURL(
+              new Blob([bytes], { type: "image/png" }),
+            );
+            objectUrls.push(verifiedUrl);
+            return { binding, verifiedUrl };
+          }),
+        );
+        if (active) setVerifiedAssets(verified);
+        else objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+        settled = true;
+        continueRender(handle);
+      } catch (error) {
+        if (!active) return;
+        settled = true;
+        cancelRender(error);
+      }
+    })();
+    return () => {
+      active = false;
+      controller.abort();
+      objectUrls.splice(0).forEach((url) => URL.revokeObjectURL(url));
+      if (!settled) continueRender(handle);
+    };
+    // The canonical immutable binding tuple is the dependency. Recreated arrays
+    // with identical sealed values must not restart render-time verification.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verificationKey, cancelRender, continueRender, delayRender]);
+  return verifiedAssets;
 };
 
 const AtlasFrame: React.FC<{
@@ -405,9 +477,15 @@ const LocalPartsPerformanceRenderer: React.FC<{
   resolved,
   shotId,
 }) => {
-  const verifiedAsset = approvedAsset(approvedAssets, execution.assetId);
-  const verifiedUrl = useVerifiedAssetUrl(verifiedAsset);
-  if (!verifiedUrl) return null;
+  const assetReferences = listArticulatedRigAssetReferences(
+    execution.rigManifest,
+  );
+  const verifiedAssets = useVerifiedPartsRigAssets(
+    assetReferences.map((reference) =>
+      approvedAsset(approvedAssets, reference.candidateId),
+    ),
+  );
+  if (!verifiedAssets) return null;
   const input = partsRigRuntime.createInput({
     episodePlan,
     execution,
@@ -415,8 +493,7 @@ const LocalPartsPerformanceRenderer: React.FC<{
     performance,
     resolved,
     shotId,
-    verifiedAsset,
-    verifiedUrl,
+    verifiedAssets,
   });
   const scale =
     resolved.rootTransform.scale *

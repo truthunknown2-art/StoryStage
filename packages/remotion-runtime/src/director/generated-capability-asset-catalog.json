@@ -150,7 +150,47 @@
       "relativeFile": "capability-assets/sha256/d763c700c00597bcd67a94ad1080acbaf31da1510aba3cf282fac0b8219bc17c.png",
       "width": 538,
       "height": 478
+    },
+    {
+      "assetId": "mara-local-eyes-open-v1",
+      "contentHash": "f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253",
+      "byteLength": 4160,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253",
+      "relativeFile": "capability-assets/sha256/f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253.png",
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-eyes-half-v1",
+      "contentHash": "a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f",
+      "byteLength": 2905,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f",
+      "relativeFile": "capability-assets/sha256/a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f.png",
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-eyes-closed-v1",
+      "contentHash": "e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41",
+      "byteLength": 1810,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41",
+      "relativeFile": "capability-assets/sha256/e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41.png",
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-pupils-v1",
+      "contentHash": "fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c",
+      "byteLength": 2316,
+      "mediaType": "image/png",
+      "immutableLocationId": "sha256:fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c",
+      "relativeFile": "capability-assets/sha256/fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c.png",
+      "width": 538,
+      "height": 478
     }
   ],
-  "contentHash": "93ce457f7871c481c858af31d82d4e1821be541fe4f1033a2e32f4ca23dddadc"
+  "contentHash": "1127f1fdcd52c3131f18dc98e4afaa14a09546b5b4b43b337b335ce8b1c3df87"
 }

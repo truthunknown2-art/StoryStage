@@ -129,7 +129,13 @@ const separatedPart = (partId: PartId) => {
 };
 
 const exposureAsset = (
-  exposureId: "mouth-open" | "mouth-rest",
+  exposureId:
+    | "eyes-closed"
+    | "eyes-half"
+    | "eyes-open"
+    | "mouth-open"
+    | "mouth-rest"
+    | "pupils",
   headRegistration: ReturnType<typeof separatedPart>["asset"]["registration"],
 ) => {
   const entry = catalogEntry(`mara-local-${exposureId}-v1`);
@@ -144,94 +150,111 @@ const exposureAsset = (
   };
 };
 
-const manifestDraft = (target: {
-  entityId: string;
-  requirementId: string;
-}) => {
+const manifestDraft = (target: { entityId: string; requirementId: string }) => {
   const headPart = separatedPart("head");
   return {
-  schemaVersion: "1.0" as const,
-  manifestId: "mara-local-parts-rig-v1",
-  candidateSetId: "mara-payoff-puppet-v1",
-  briefId: "mara-local-parts-brief-v1",
-  requirementId: target.requirementId,
-  entityId: target.entityId,
-  entityName: "Mara",
-  createdAt: "2026-07-18T00:00:00.000Z",
-  type: "character-rig" as const,
-  animationMode: "articulated-2d" as const,
-  identityReference: puppetAsset("identity-reference"),
-  renderer: { id: "director-local-parts", version: "1.0.0" },
-  template: { id: "kids-local-parts", version: "1.0.0" },
-  parts: [
-    {
-      id: "leg-left",
-      parentId: "thigh-left",
-      ...separatedPart("leg-left"),
-    },
-    {
-      id: "leg-right",
-      parentId: "thigh-right",
-      ...separatedPart("leg-right"),
-    },
-    {
-      id: "thigh-left",
-      parentId: "torso",
-      ...separatedPart("thigh-left"),
-    },
-    {
-      id: "thigh-right",
-      parentId: "torso",
-      ...separatedPart("thigh-right"),
-    },
-    {
-      id: "upper-arm-left",
-      parentId: "torso",
-      ...separatedPart("upper-arm-left"),
-    },
-    {
-      id: "lower-arm-left",
-      parentId: "upper-arm-left",
-      ...separatedPart("lower-arm-left"),
-    },
-    {
-      id: "torso",
-      parentId: null,
-      ...separatedPart("torso"),
-    },
-    {
-      id: "upper-arm-right",
-      parentId: "torso",
-      ...separatedPart("upper-arm-right"),
-    },
-    {
-      id: "lower-arm-right",
-      parentId: "upper-arm-right",
-      ...separatedPart("lower-arm-right"),
-    },
-    {
-      id: "head",
-      parentId: "torso",
-      ...headPart,
-    },
-  ],
-  exposures: [
-    {
-      id: "mouth-rest",
-      partId: "head",
-      asset: exposureAsset("mouth-rest", headPart.asset.registration),
-    },
-    {
-      id: "mouth-open",
-      partId: "head",
-      asset: exposureAsset("mouth-open", headPart.asset.registration),
-    },
-  ],
-  visemeIds: ["rest", "open"],
-  visemeMappings: [
-    { visemeId: "rest", exposureId: "mouth-rest" },
-    { visemeId: "open", exposureId: "mouth-open" },
-  ],
+    schemaVersion: "1.0" as const,
+    manifestId: "mara-local-parts-rig-v1",
+    candidateSetId: "mara-payoff-puppet-v1",
+    briefId: "mara-local-parts-brief-v1",
+    requirementId: target.requirementId,
+    entityId: target.entityId,
+    entityName: "Mara",
+    createdAt: "2026-07-18T00:00:00.000Z",
+    type: "character-rig" as const,
+    animationMode: "articulated-2d" as const,
+    identityReference: puppetAsset("identity-reference"),
+    renderer: { id: "director-local-parts", version: "1.0.0" },
+    template: { id: "kids-local-parts", version: "1.0.0" },
+    parts: [
+      {
+        id: "leg-left",
+        parentId: "thigh-left",
+        ...separatedPart("leg-left"),
+      },
+      {
+        id: "leg-right",
+        parentId: "thigh-right",
+        ...separatedPart("leg-right"),
+      },
+      {
+        id: "thigh-left",
+        parentId: "torso",
+        ...separatedPart("thigh-left"),
+      },
+      {
+        id: "thigh-right",
+        parentId: "torso",
+        ...separatedPart("thigh-right"),
+      },
+      {
+        id: "upper-arm-left",
+        parentId: "torso",
+        ...separatedPart("upper-arm-left"),
+      },
+      {
+        id: "lower-arm-left",
+        parentId: "upper-arm-left",
+        ...separatedPart("lower-arm-left"),
+      },
+      {
+        id: "torso",
+        parentId: null,
+        ...separatedPart("torso"),
+      },
+      {
+        id: "upper-arm-right",
+        parentId: "torso",
+        ...separatedPart("upper-arm-right"),
+      },
+      {
+        id: "lower-arm-right",
+        parentId: "upper-arm-right",
+        ...separatedPart("lower-arm-right"),
+      },
+      {
+        id: "head",
+        parentId: "torso",
+        ...headPart,
+      },
+    ],
+    exposures: [
+      {
+        id: "mouth-rest",
+        partId: "head",
+        asset: exposureAsset("mouth-rest", headPart.asset.registration),
+      },
+      {
+        id: "mouth-open",
+        partId: "head",
+        asset: exposureAsset("mouth-open", headPart.asset.registration),
+      },
+      {
+        id: "eyes-open",
+        partId: "head",
+        asset: exposureAsset("eyes-open", headPart.asset.registration),
+      },
+      {
+        id: "eyes-half",
+        partId: "head",
+        asset: exposureAsset("eyes-half", headPart.asset.registration),
+      },
+      {
+        id: "eyes-closed",
+        partId: "head",
+        asset: exposureAsset("eyes-closed", headPart.asset.registration),
+      },
+      {
+        id: "pupils",
+        partId: "head",
+        asset: exposureAsset("pupils", headPart.asset.registration),
+      },
+    ],
+    visemeIds: ["rest", "open"],
+    visemeMappings: [
+      { visemeId: "rest", exposureId: "mouth-rest" },
+      { visemeId: "open", exposureId: "mouth-open" },
+    ],
   };
 };
 

@@ -25,6 +25,7 @@ import {
   hashCanonical,
   isLocalPartsV1Execution,
   KVP001_PROOF_LIMITATION,
+  listArticulatedRigAssetReferences,
   type ExecutableEpisodePlan,
   type ResolvedContinuityFrame,
 } from "@storystage/story-engine/director-alpha";
@@ -98,8 +99,7 @@ const authorityProjection = (frame: ResolvedContinuityFrame) => ({
         gaitPhase: entity.gaitPhase,
         visemeId: entity.visemeId,
         performanceProgramId: entity.performanceProgramId,
-        performanceProgramContentHash:
-          entity.performanceProgramContentHash,
+        performanceProgramContentHash: entity.performanceProgramContentHash,
       },
     ]),
   ),
@@ -149,7 +149,10 @@ const compileOrdinaryReactionSmoke = () => {
   return compileDirectorProject({ storyProject, capabilities });
 };
 
-const probeVideo = async (file: string) => {
+const probeVideo = async (
+  file: string,
+  expected: { fps: number; frameCount: number; height: number; width: number },
+) => {
   const { stdout } = await execFileAsync(
     ffprobeStatic.path,
     ["-v", "error", "-show_streams", "-of", "json", file],
@@ -175,10 +178,10 @@ const probeVideo = async (file: string) => {
   if (
     !video ||
     video.codec_name !== "h264" ||
-    video.width !== 960 ||
-    video.height !== 540 ||
-    fps !== 30 ||
-    Number(video.nb_frames) !== 140
+    video.width !== expected.width ||
+    video.height !== expected.height ||
+    fps !== expected.fps ||
+    Number(video.nb_frames) !== expected.frameCount
   )
     throw new Error(
       `Unexpected KVP proof video metadata: ${JSON.stringify({ video, fps })}`,
@@ -213,7 +216,12 @@ const decodeSelectedFrames = async (video: string, directory: string) => {
         `frame-${String(index + 1).padStart(2, "0")}.png`,
       );
       const bytes = await readFile(file);
-      return { frame, file, byteLength: bytes.byteLength, sha256: sha256(bytes) };
+      return {
+        frame,
+        file,
+        byteLength: bytes.byteLength,
+        sha256: sha256(bytes),
+      };
     }),
   );
 };
@@ -375,25 +383,34 @@ async function main() {
     episodePlan,
     publicRoot,
   );
-  const verifiedAsset = verifiedAssets.find(
-    (asset) => asset.assetId === execution.assetId,
-  );
-  const approved = episodePlan.approvedAssets.find(
-    (asset) => asset.assetId === execution.assetId,
-  );
-  if (
-    !verifiedAsset ||
-    !approved?.relativeFile ||
-    !approved.byteLength ||
-    !approved.immutableLocationId
-  )
-    throw new Error("KVP proof asset is not verified and renderable.");
-  const verifiedBinding = {
-    ...approved,
-    relativeFile: approved.relativeFile,
-    byteLength: approved.byteLength,
-    immutableLocationId: approved.immutableLocationId,
-  };
+  const verifiedPartsRigAssets = listArticulatedRigAssetReferences(
+    execution.rigManifest,
+  ).map((reference) => {
+    const verified = verifiedAssets.find(
+      (asset) => asset.assetId === reference.candidateId,
+    );
+    const approved = episodePlan.approvedAssets.find(
+      (asset) => asset.assetId === reference.candidateId,
+    );
+    if (
+      !verified ||
+      !approved?.relativeFile ||
+      !approved.byteLength ||
+      !approved.immutableLocationId
+    )
+      throw new Error(
+        `KVP proof asset ${reference.candidateId} is not verified and renderable.`,
+      );
+    return {
+      binding: {
+        ...approved,
+        relativeFile: approved.relativeFile,
+        byteLength: approved.byteLength,
+        immutableLocationId: approved.immutableLocationId,
+      },
+      verifiedUrl: `verified://${verified.contentHash}`,
+    };
+  });
 
   const localEvaluations = selectedFrames.map((absoluteFrame) => {
     const before = evaluateContinuityFrame(episodePlan, absoluteFrame);
@@ -408,8 +425,7 @@ async function main() {
       performance,
       resolved,
       shotId: before.shotId,
-      verifiedAsset: verifiedBinding,
-      verifiedUrl: `verified://${verifiedAsset.contentHash}`,
+      verifiedAssets: verifiedPartsRigAssets,
     });
     const local = partsRigRuntime.evaluate(input);
     const after = evaluateContinuityFrame(episodePlan, absoluteFrame);
@@ -546,16 +562,15 @@ async function main() {
   if (decodedComparisons.some((comparison) => !comparison.matches))
     throw new Error("KVP decoded frames differ across encoded passes.");
   if (new Set(decodedPassOne.map((frame) => frame.sha256)).size < 8)
-    throw new Error("KVP proof lacks visible variation across selected frames.");
+    throw new Error(
+      "KVP proof lacks visible variation across selected frames.",
+    );
 
   const arbitraryProject = compileOrdinaryReactionSmoke();
-  const arbitrary = exactProofProgram(
-    arbitraryProject.executableEpisodePlan,
-  );
+  const arbitrary = exactProofProgram(arbitraryProject.executableEpisodePlan);
   const arbitraryFrame = Array.from(
     {
-      length:
-        arbitrary.shot.endFrameExclusive - arbitrary.shot.startFrame,
+      length: arbitrary.shot.endFrameExclusive - arbitrary.shot.startFrame,
     },
     (_, offset) => arbitrary.shot.startFrame + offset,
   ).find((frame) => {
@@ -592,8 +607,7 @@ async function main() {
   const report = {
     proof: "KVP-001 canonical local-parts execution and authority isolation",
     verdict: "PASS",
-    verified:
-      "canonical local-parts execution and authority isolation",
+    verified: "canonical local-parts execution and authority isolation",
     notYetVerified:
       "general arbitrary-script synthesis of compound locomotion → plant → acting performances",
     fixtureLimitation: KVP001_PROOF_LIMITATION,
@@ -610,8 +624,24 @@ async function main() {
     localEvaluations,
     verifiedAssets,
     encoded: {
-      passOne: { file: passOne, ...(await probeVideo(passOne)) },
-      passTwo: { file: passTwo, ...(await probeVideo(passTwo)) },
+      passOne: {
+        file: passOne,
+        ...(await probeVideo(passOne, {
+          width: composition.width,
+          height: composition.height,
+          fps: composition.fps,
+          frameCount: sequenceOne.frames.length,
+        })),
+      },
+      passTwo: {
+        file: passTwo,
+        ...(await probeVideo(passTwo, {
+          width: composition.width,
+          height: composition.height,
+          fps: composition.fps,
+          frameCount: sequenceTwo.frames.length,
+        })),
+      },
       decodedComparisons,
     },
     losslessFrameSequences: {

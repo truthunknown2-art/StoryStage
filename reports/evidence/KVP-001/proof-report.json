@@ -1,0 +1,3156 @@
+{
+  "proof": "KVP-001 canonical local-parts execution and authority isolation",
+  "verdict": "PASS",
+  "verified": "canonical local-parts execution and authority isolation",
+  "notYetVerified": "general arbitrary-script synthesis of compound locomotion → plant → acting performances",
+  "fixtureLimitation": "KVP-001 proves that an explicit upstream Director locomotion decision compiles through the canonical production path. It does not claim that the ordinary planner infers this performance from arbitrary scripts.",
+  "canonicalRebuildsMatch": true,
+  "canonicalHashes": {
+    "storyProject": "8f2e9613e3119362c931001d5a7b15f7c0171d2ffedd1379cd15548300049e24",
+    "capabilityRegistry": "35a2b353278bdae79f5e01645e76995e6d2290c8fa88e154a1cc205a26ce5830",
+    "directorProject": "3dcc0a237cf700b6a5a1e0626f42ecccc346556ebc8bbf7294f55990e64a186a",
+    "directorProposal": "f75a3c5d590ed4d296bdd72a8f619682a5090e9ffd2b523fe0d670f3c13ae274",
+    "directorPlan": "64f48c307101210e2c2c4eac94dbed6c9d4171ae0bae0ab78855200c83dc102d",
+    "timingSolution": "f5630d98547d7900e05a1c43595e51bb010e353d5344d9b830ed6ad4da7327c8",
+    "continuitySequencePlan": "71f0cfbdeded21a6826fc889c4009e15cdb3ab8f0862b24753b889f6a7b55e05",
+    "executableEpisodePlan": "75c071b3cb3592d37b2c0074ae5a923464c28bc6f55714e1939c2940cbcfd970"
+  },
+  "repeatedCanonicalHashes": {
+    "storyProject": "8f2e9613e3119362c931001d5a7b15f7c0171d2ffedd1379cd15548300049e24",
+    "capabilityRegistry": "35a2b353278bdae79f5e01645e76995e6d2290c8fa88e154a1cc205a26ce5830",
+    "directorProject": "3dcc0a237cf700b6a5a1e0626f42ecccc346556ebc8bbf7294f55990e64a186a",
+    "directorProposal": "f75a3c5d590ed4d296bdd72a8f619682a5090e9ffd2b523fe0d670f3c13ae274",
+    "directorPlan": "64f48c307101210e2c2c4eac94dbed6c9d4171ae0bae0ab78855200c83dc102d",
+    "timingSolution": "f5630d98547d7900e05a1c43595e51bb010e353d5344d9b830ed6ad4da7327c8",
+    "continuitySequencePlan": "71f0cfbdeded21a6826fc889c4009e15cdb3ab8f0862b24753b889f6a7b55e05",
+    "executableEpisodePlan": "75c071b3cb3592d37b2c0074ae5a923464c28bc6f55714e1939c2940cbcfd970"
+  },
+  "firstShot": {
+    "id": "shot-1-main",
+    "startFrame": 0,
+    "endFrameExclusive": 140,
+    "performanceProgramId": "performance-1-primary",
+    "performanceProgramContentHash": "c85be6951985020edfc384b7490fea61b0a99265f3d8ec17572588753363c306"
+  },
+  "localEvaluations": [
+    {
+      "absoluteFrame": 0,
+      "authorityHash": "0c72977a4dfb9062b9ce5aca217af69574518730d1c99837752646b167634593",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.28,
+          "y": 0.72,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "running",
+        "actionPhase": "action",
+        "phaseProgress": 0,
+        "gaitPhase": 0,
+        "visemeId": null,
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 0,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 198,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -400,
+            "rotation": 0.9246158913309469,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -1.1557698641636838,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": 1,
+          "pupilY": 0,
+          "brow": 0,
+          "mouthExposureId": null
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -118,
+            "y": -290,
+            "rotation": 0,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 148,
+            "y": -290,
+            "rotation": 0,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 36,
+      "authorityHash": "9eff84d36aef236711bb1e4af0cba6b4b4c9d190b21896e8582452be6fd3119d",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.491764705882353,
+          "y": 0.7294117647058823,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0.005882352941176483,
+          "y": 0.0002614379084967332,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "running",
+        "actionPhase": "action",
+        "phaseProgress": 0.5070422535211268,
+        "gaitPhase": 0.04225352112676051,
+        "visemeId": null,
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 198.90096839486418,
+            "rotation": 6.29709481540749,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 198.78713685192594,
+            "rotation": -6.29709481540749,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": -4.722821111555618,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 4.722821111555618,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": -2.6735806839077974,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": -6.662411886825971,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -401.83665265449383,
+            "rotation": -1.7306829704898792,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": -36.875715090740094,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": -10.069982479371212,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -2.8769053799640854,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": 0.9987523388778446,
+          "pupilY": -0.04993761694389217,
+          "brow": 0.30422535211267604,
+          "mouthExposureId": null
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -127.12676056338029,
+            "y": -301.97749772491636,
+            "rotation": -6.662411886825971,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 169.29577464788733,
+            "y": -340.512708992522,
+            "rotation": -10.069982479371212,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 61,
+      "authorityHash": "3fe5788fbbd6859c38a4dc8e6576e321761376ed58f762c9418c151e47137ca8",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.6388235294117648,
+          "y": 0.7359477124183007,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0.00588235294117645,
+          "y": 0.00026143790849673167,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "running",
+        "actionPhase": "action",
+        "phaseProgress": 0.8591549295774648,
+        "gaitPhase": 0.15492957746478808,
+        "visemeId": "open",
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 194.38534572896876,
+            "rotation": 19.843962813093754,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 200.48049535163673,
+            "rotation": -19.843962813093754,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": -14.882972109820315,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 14.882972109820315,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": 0.4389540354962076,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": -14.347048637228434,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -405.78782248715237,
+            "rotation": -2.525723570840641,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": -67.45303854253845,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": -14.0050640388279,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -6.8167041626148155,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": 0.9325037867331147,
+          "pupilY": -0.36116019676647826,
+          "brow": 0.5154929577464789,
+          "mouthExposureId": "mouth-open"
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -133.46478873239437,
+            "y": -312.9709210787017,
+            "rotation": -14.347048637228434,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 184.0845070422535,
+            "y": -378.266695726589,
+            "rotation": -14.0050640388279,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 71,
+      "authorityHash": "ea6752ad8da46ae20052aa68abb7775a770dda630471c65f8ac1f3dfb638191a",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.6976470588235294,
+          "y": 0.738562091503268,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0.00588235294117645,
+          "y": 0.00026143790849673167,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "running",
+        "actionPhase": "action",
+        "phaseProgress": 1,
+        "gaitPhase": 0,
+        "visemeId": "rest",
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 198,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": -12,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": -9,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -400,
+            "rotation": 0.8951293745090184,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": -66,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": -24,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -9.118911718136273,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": -0.6890176846550295,
+          "pupilY": -0.7247445275630734,
+          "brow": 0.6,
+          "mouthExposureId": "mouth-rest"
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -136,
+            "y": -310,
+            "rotation": -9,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 190,
+            "y": -386,
+            "rotation": -24,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 72,
+      "authorityHash": "7c5c49176925c43c766a59e8871e2fc37ca81caad3ff84ffe313f8f651e5b451",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.703529411764706,
+          "y": 0.7388235294117648,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0.0058823529411765165,
+          "y": 0.00026143790849673465,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "decelerating",
+        "actionPhase": "action",
+        "phaseProgress": 0,
+        "gaitPhase": 0,
+        "visemeId": "rest",
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 198,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -400,
+            "rotation": 0.9618803818450515,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -1.2023504773063145,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": -0.7808688094430293,
+          "pupilY": -0.6246950475544256,
+          "brow": 0,
+          "mouthExposureId": "mouth-rest"
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -118,
+            "y": -290,
+            "rotation": 0,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 148,
+            "y": -290,
+            "rotation": 0,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 96,
+      "authorityHash": "f9ae31f3a0f4a78ddd8603a10a35e68553af21eab81f09b2b65ba1b6af9920c1",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.8672941176470589,
+          "y": 0.7461019607843138,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0.004267973856209184,
+          "y": 0.00018968772694263084,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "decelerating",
+        "actionPhase": "action",
+        "phaseProgress": 0.8275862068965517,
+        "gaitPhase": 0.06896551724137945,
+        "visemeId": null,
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 197.64088718751788,
+            "rotation": 10.077338437446368,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 199.2596673046808,
+            "rotation": -10.077338437446368,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": -7.558003828084776,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 7.558003828084776,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": -4.472476162475171,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": -10.807388674551088,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -402.93922371092185,
+            "rotation": -1.1392332468593367,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": -60.079247975455864,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": -16.502956153035118,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -6.771232227449238,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": -0.9904281162883161,
+          "pupilY": -0.1380295130237658,
+          "brow": 0.496551724137931,
+          "mouthExposureId": null
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -132.89655172413794,
+            "y": -309.4909478488529,
+            "rotation": -10.807388674551088,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 182.75862068965517,
+            "y": -372.3874995729908,
+            "rotation": -16.502956153035118,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 101,
+      "authorityHash": "1b503fb83fec82c7384c2bdee1e37ad163980ac84e7b94a2969010250addd62b",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.8796143790849673,
+          "y": 0.7466495279593319,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0.0011307189542484107,
+          "y": 0.00005025417574437393,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "decelerating",
+        "actionPhase": "action",
+        "phaseProgress": 1,
+        "gaitPhase": 0.5,
+        "visemeId": null,
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 201,
+            "rotation": 2.9391523179536475e-15,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 198,
+            "rotation": -2.9391523179536475e-15,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": -2.204364238465236e-15,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 2.204364238465236e-15,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": -11.999999999999998,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": -9.000000000000002,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -400,
+            "rotation": -0.3993834534275842,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": -66,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": -24,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -7.50077068321552,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": -0.9912055885833629,
+          "pupilY": -0.13233095314819288,
+          "brow": 0.6,
+          "mouthExposureId": null
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -136,
+            "y": -310,
+            "rotation": -9.000000000000002,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 190,
+            "y": -386,
+            "rotation": -24,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 102,
+      "authorityHash": "205ca670313a36cec28cd496bc8f331980ce18eda783e21b3d4863d8748434ea",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.88,
+          "y": 0.7466666666666667,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "idle",
+        "actionPhase": "impact",
+        "phaseProgress": 0,
+        "gaitPhase": null,
+        "visemeId": null,
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -400,
+            "rotation": -0.4972506971919406,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": 0.6215633714899258,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": -0.9912279006826346,
+          "pupilY": -0.13216372009101826,
+          "brow": 0,
+          "mouthExposureId": null
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -118,
+            "y": -290,
+            "rotation": 0,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 148,
+            "y": -290,
+            "rotation": 0,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 109,
+      "authorityHash": "25d51f6a14bb9c9c32ac03cd0e856477aa9f95e42cec15fcb4facdbe71e7f1fe",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.88,
+          "y": 0.7466666666666667,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "idle",
+        "actionPhase": "impact",
+        "phaseProgress": 1,
+        "gaitPhase": null,
+        "visemeId": null,
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": -12,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": -9,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -400,
+            "rotation": -1.0367081006314025,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": -66,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": -24,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -6.704114874210747,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": -0.9912279006826346,
+          "pupilY": -0.13216372009101826,
+          "brow": 0.6,
+          "mouthExposureId": null
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -136,
+            "y": -310,
+            "rotation": -9,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 190,
+            "y": -386,
+            "rotation": -24,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 110,
+      "authorityHash": "b93a287302690ad43b05949825eacdc1c54e90ba791e2433cfa3880bdc68892c",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.88,
+          "y": 0.7466666666666667,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "idle",
+        "actionPhase": "settle",
+        "phaseProgress": 0,
+        "gaitPhase": null,
+        "visemeId": null,
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": -7.800000000000001,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": -5.8500000000000005,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -400,
+            "rotation": -1.0857924629592226,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": -42.9,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": -15.600000000000001,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -3.842759421300972,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": -0.9912279006826346,
+          "pupilY": -0.13216372009101826,
+          "brow": 0.39,
+          "mouthExposureId": null
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -129.7,
+            "y": -303,
+            "rotation": -5.8500000000000005,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 175.3,
+            "y": -352.4,
+            "rotation": -15.600000000000001,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    },
+    {
+      "absoluteFrame": 139,
+      "authorityHash": "1317b1368a5fbf571fbf2c91f41cc3ab74caa0474f9ee89c9c06064aebdb8652",
+      "canonical": {
+        "rootTransform": {
+          "x": 0.88,
+          "y": 0.7466666666666667,
+          "z": 0,
+          "scale": 1,
+          "rotation": 0
+        },
+        "velocity": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "visible": true,
+        "facing": "right",
+        "motionMode": "idle",
+        "actionPhase": "settle",
+        "phaseProgress": 1,
+        "gaitPhase": null,
+        "visemeId": null,
+        "camera": {
+          "programId": "proxy-camera-shot-1-main",
+          "programContentHash": "cef07b7d64bce0c4d86f9c1e10bf1a9d34be0952a932429a2917e79ea8aae59a",
+          "x": -6,
+          "y": 0,
+          "scale": 1.38,
+          "rotation": 0,
+          "shotSize": "close-up"
+        },
+        "transition": {
+          "programId": "proxy-transition-shot-1-main",
+          "programContentHash": "b64a261456dd83247a9a3b6dc50e9392725cbfc68529d400550f6876e9036157",
+          "kind": "dissolve",
+          "progress": 1,
+          "fromShotId": null,
+          "toShotId": "shot-1-main",
+          "occluderId": null
+        },
+        "props": {}
+      },
+      "localPerformance": {
+        "parts": {
+          "leg-left": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "leg-right": {
+            "x": 0,
+            "y": 201,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-left": {
+            "x": -62,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "thigh-right": {
+            "x": 68,
+            "y": 155,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-left": {
+            "x": -142,
+            "y": -290,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-left": {
+            "x": 20,
+            "y": 205,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "torso": {
+            "x": 0,
+            "y": -400,
+            "rotation": 0.6173274405378073,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "upper-arm-right": {
+            "x": 145,
+            "y": -290,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "lower-arm-right": {
+            "x": 0,
+            "y": 205,
+            "rotation": 0,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          },
+          "head": {
+            "x": 0,
+            "y": -355,
+            "rotation": -0.7716593006722592,
+            "scaleX": 1,
+            "scaleY": 1,
+            "opacity": 1,
+            "exposureId": null
+          }
+        },
+        "face": {
+          "eyeOpen": 1,
+          "pupilX": -0.9912279006826346,
+          "pupilY": -0.13216372009101826,
+          "brow": 0,
+          "mouthExposureId": null
+        },
+        "sockets": {
+          "left-hand": {
+            "x": -118,
+            "y": -290,
+            "rotation": 0,
+            "scale": 1
+          },
+          "right-hand": {
+            "x": 148,
+            "y": -290,
+            "rotation": 0,
+            "scale": 1
+          }
+        },
+        "localEffects": []
+      }
+    }
+  ],
+  "verifiedAssets": [
+    {
+      "assetId": "mara-payoff-puppet-v1",
+      "contentHash": "d569b47f5f33b86ccdc887e7d4d1cdc973f257213fad8efa8c3254d53d3eeab9",
+      "byteLength": 742576,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "assetId": "mara-local-leg-left-v1",
+      "contentHash": "13d12e9a0eff9b58f6bf7d62403cf9c27a6da9f8626f8086f8a170806d7091d6",
+      "byteLength": 65515,
+      "width": 298,
+      "height": 318
+    },
+    {
+      "assetId": "mara-local-leg-right-v1",
+      "contentHash": "7d8086fcfd7b203ec8bafa439a5633b38847c01feb6541e4f01d9f7320feb20f",
+      "byteLength": 64401,
+      "width": 318,
+      "height": 318
+    },
+    {
+      "assetId": "mara-local-thigh-left-v1",
+      "contentHash": "809608100f018c0150a71a2dc759ba0b674d108d7d7f43529fdb0587adb8150c",
+      "byteLength": 34302,
+      "width": 238,
+      "height": 228
+    },
+    {
+      "assetId": "mara-local-thigh-right-v1",
+      "contentHash": "705489814db0acadf9b42b988a4531ca8daaf46059deb42e975a23b3aa798823",
+      "byteLength": 34152,
+      "width": 248,
+      "height": 228
+    },
+    {
+      "assetId": "mara-local-upper-arm-left-v1",
+      "contentHash": "4fc16fac6c126b2f82172d725423746dfde7d0ddb89f0d7aa8a476235299cd9a",
+      "byteLength": 37077,
+      "width": 228,
+      "height": 323
+    },
+    {
+      "assetId": "mara-local-lower-arm-left-v1",
+      "contentHash": "43a4443ed1e62722b029eea47983fd0ed6fb89d5d6c37a240c0ba6ab21bd1cf3",
+      "byteLength": 26619,
+      "width": 248,
+      "height": 293
+    },
+    {
+      "assetId": "mara-local-torso-v1",
+      "contentHash": "b58ce5234e85d87e078c1f677304a2d47d846ad8db8d4d0dbebe65b8bf004ade",
+      "byteLength": 213673,
+      "width": 398,
+      "height": 458
+    },
+    {
+      "assetId": "mara-local-upper-arm-right-v1",
+      "contentHash": "b13742f7e5a0b8db9569d8c43feadbf3b3aede93c18ea79981eb58b7af08c140",
+      "byteLength": 35017,
+      "width": 228,
+      "height": 328
+    },
+    {
+      "assetId": "mara-local-lower-arm-right-v1",
+      "contentHash": "c1c43437188de96408ab807b1fb4fac9ff302405f41f0c34f902ba631597299b",
+      "byteLength": 29247,
+      "width": 258,
+      "height": 298
+    },
+    {
+      "assetId": "mara-local-head-v1",
+      "contentHash": "417e00775f4feba7698b619d44605d33f0da442b499fd10ae3142b9c6e40487b",
+      "byteLength": 294566,
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-mouth-rest-v1",
+      "contentHash": "5e456ab12ea97aa948dd4d1a723073cf5ef0eaf0caec44d8269078f0563fd61d",
+      "byteLength": 5805,
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-mouth-open-v1",
+      "contentHash": "d763c700c00597bcd67a94ad1080acbaf31da1510aba3cf282fac0b8219bc17c",
+      "byteLength": 11955,
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-eyes-open-v1",
+      "contentHash": "f4b8fff169c4c5160a45a05e07011db5df32c5b340a7120f7788a274798eb253",
+      "byteLength": 4160,
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-eyes-half-v1",
+      "contentHash": "a2a9ad44c6d3b493cf71d0d45fc8872b059095188e5bad4e6b5b7745a15a361f",
+      "byteLength": 2905,
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-eyes-closed-v1",
+      "contentHash": "e7faa87c7b671baf6b1fa82fe23ea5e01a010354c93bb2a23297912530731d41",
+      "byteLength": 1810,
+      "width": 538,
+      "height": 478
+    },
+    {
+      "assetId": "mara-local-pupils-v1",
+      "contentHash": "fad97db9c3683bfb25dbe9316a5f3b0645c4ea729c49ccd97c5ab709caf6535c",
+      "byteLength": 2316,
+      "width": 538,
+      "height": 478
+    }
+  ],
+  "encoded": {
+    "passOne": {
+      "file": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\kvp001-pass-1.mp4",
+      "index": 0,
+      "codec_name": "h264",
+      "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+      "profile": "High",
+      "codec_type": "video",
+      "codec_time_base": "1/60",
+      "codec_tag_string": "avc1",
+      "codec_tag": "0x31637661",
+      "width": 1920,
+      "height": 1080,
+      "coded_width": 1920,
+      "coded_height": 1088,
+      "has_b_frames": 2,
+      "pix_fmt": "yuv420p",
+      "level": 51,
+      "chroma_location": "left",
+      "refs": 1,
+      "is_avc": "true",
+      "nal_length_size": "4",
+      "r_frame_rate": "30/1",
+      "avg_frame_rate": "30/1",
+      "time_base": "1/90000",
+      "start_pts": 0,
+      "start_time": "0.000000",
+      "duration_ts": 420030,
+      "duration": "4.667000",
+      "bit_rate": "915452",
+      "bits_per_raw_sample": "8",
+      "nb_frames": "140",
+      "disposition": {
+        "default": 1,
+        "dub": 0,
+        "original": 0,
+        "comment": 0,
+        "lyrics": 0,
+        "karaoke": 0,
+        "forced": 0,
+        "hearing_impaired": 0,
+        "visual_impaired": 0,
+        "clean_effects": 0,
+        "attached_pic": 0,
+        "timed_thumbnails": 0
+      },
+      "tags": {
+        "language": "und",
+        "handler_name": "VideoHandler",
+        "encoder": "Lavc61.19.100 libx264"
+      },
+      "fps": 30,
+      "byteLength": 536334,
+      "sha256": "81f1c66ee22eb861f46001771c97a6acb293883d073768e1fa2024b567815f9d"
+    },
+    "passTwo": {
+      "file": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\kvp001-pass-2.mp4",
+      "index": 0,
+      "codec_name": "h264",
+      "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+      "profile": "High",
+      "codec_type": "video",
+      "codec_time_base": "1/60",
+      "codec_tag_string": "avc1",
+      "codec_tag": "0x31637661",
+      "width": 1920,
+      "height": 1080,
+      "coded_width": 1920,
+      "coded_height": 1088,
+      "has_b_frames": 2,
+      "pix_fmt": "yuv420p",
+      "level": 51,
+      "chroma_location": "left",
+      "refs": 1,
+      "is_avc": "true",
+      "nal_length_size": "4",
+      "r_frame_rate": "30/1",
+      "avg_frame_rate": "30/1",
+      "time_base": "1/90000",
+      "start_pts": 0,
+      "start_time": "0.000000",
+      "duration_ts": 420030,
+      "duration": "4.667000",
+      "bit_rate": "915452",
+      "bits_per_raw_sample": "8",
+      "nb_frames": "140",
+      "disposition": {
+        "default": 1,
+        "dub": 0,
+        "original": 0,
+        "comment": 0,
+        "lyrics": 0,
+        "karaoke": 0,
+        "forced": 0,
+        "hearing_impaired": 0,
+        "visual_impaired": 0,
+        "clean_effects": 0,
+        "attached_pic": 0,
+        "timed_thumbnails": 0
+      },
+      "tags": {
+        "language": "und",
+        "handler_name": "VideoHandler",
+        "encoder": "Lavc61.19.100 libx264"
+      },
+      "fps": 30,
+      "byteLength": 536334,
+      "sha256": "81f1c66ee22eb861f46001771c97a6acb293883d073768e1fa2024b567815f9d"
+    },
+    "decodedComparisons": [
+      {
+        "frame": 0,
+        "first": "dd91505bed5b68247cb66dec4ed90e0601c764f1a14c20ff8db16020bd646de1",
+        "second": "dd91505bed5b68247cb66dec4ed90e0601c764f1a14c20ff8db16020bd646de1",
+        "matches": true
+      },
+      {
+        "frame": 36,
+        "first": "1e5d578b93a06f22e25f1fcf9a511251f66c7dff6363ac6ec3d7cd00718e07a3",
+        "second": "1e5d578b93a06f22e25f1fcf9a511251f66c7dff6363ac6ec3d7cd00718e07a3",
+        "matches": true
+      },
+      {
+        "frame": 61,
+        "first": "91999a3015483fe050ff25eb9243310b1a1df3a4534dc06624629c65ff0a2ea4",
+        "second": "91999a3015483fe050ff25eb9243310b1a1df3a4534dc06624629c65ff0a2ea4",
+        "matches": true
+      },
+      {
+        "frame": 71,
+        "first": "0b6843848dc531cd08259cbe282ee9df54b954c8c7209162d079fdda16b9a34f",
+        "second": "0b6843848dc531cd08259cbe282ee9df54b954c8c7209162d079fdda16b9a34f",
+        "matches": true
+      },
+      {
+        "frame": 72,
+        "first": "36dac50ad5b41210fffa479c75a5b6759005fc6144d0e582cb3cac9725ba884d",
+        "second": "36dac50ad5b41210fffa479c75a5b6759005fc6144d0e582cb3cac9725ba884d",
+        "matches": true
+      },
+      {
+        "frame": 96,
+        "first": "7d5089de900935f5fa443f3488c2b5daf7691e329bb7d5c575af5477d454bee3",
+        "second": "7d5089de900935f5fa443f3488c2b5daf7691e329bb7d5c575af5477d454bee3",
+        "matches": true
+      },
+      {
+        "frame": 101,
+        "first": "84c1b1558882d6b9d5081cd09ca6d18b6305308fe52b931038fca08383f35758",
+        "second": "84c1b1558882d6b9d5081cd09ca6d18b6305308fe52b931038fca08383f35758",
+        "matches": true
+      },
+      {
+        "frame": 102,
+        "first": "877c5b6789860cea4045c974edd04902b050db940bc5bfa590b16857961f3c4d",
+        "second": "877c5b6789860cea4045c974edd04902b050db940bc5bfa590b16857961f3c4d",
+        "matches": true
+      },
+      {
+        "frame": 109,
+        "first": "774ae0e454acb9005ebbdd60652d3575dd5007e82679d998f939e15b96439194",
+        "second": "774ae0e454acb9005ebbdd60652d3575dd5007e82679d998f939e15b96439194",
+        "matches": true
+      },
+      {
+        "frame": 110,
+        "first": "3f4468cd3014a66eeb888ee2dff8542c4abd77da51a770c7f75c65f6142c0800",
+        "second": "3f4468cd3014a66eeb888ee2dff8542c4abd77da51a770c7f75c65f6142c0800",
+        "matches": true
+      },
+      {
+        "frame": 139,
+        "first": "f352b691c894c8d62880ac91049c4cda04f0d7bb11ff8c071ba73dd6f22f9846",
+        "second": "f352b691c894c8d62880ac91049c4cda04f0d7bb11ff8c071ba73dd6f22f9846",
+        "matches": true
+      }
+    ]
+  },
+  "losslessFrameSequences": {
+    "firstAggregateHash": "db188bcc86e5bf97f151f408e94de1722d35872a517b7134f9aae6cb88633596",
+    "secondAggregateHash": "db188bcc86e5bf97f151f408e94de1722d35872a517b7134f9aae6cb88633596",
+    "frameSequenceComparisons": [
+      {
+        "frame": 0,
+        "first": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+        "second": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+        "matches": true
+      },
+      {
+        "frame": 1,
+        "first": "efa53453b8de83a01bcd29fd203cf633a9947978b8d2234115a8b96369e9d28c",
+        "second": "efa53453b8de83a01bcd29fd203cf633a9947978b8d2234115a8b96369e9d28c",
+        "matches": true
+      },
+      {
+        "frame": 2,
+        "first": "7a017680f5e310daa810f2eec5e30ddfdaa6a7168f40a5bdd3b73852c624767e",
+        "second": "7a017680f5e310daa810f2eec5e30ddfdaa6a7168f40a5bdd3b73852c624767e",
+        "matches": true
+      },
+      {
+        "frame": 3,
+        "first": "4f7f1ab791fe203bd7a01d6dac0db7f15351b9f520a9f2fd2707fcf84f5d2c30",
+        "second": "4f7f1ab791fe203bd7a01d6dac0db7f15351b9f520a9f2fd2707fcf84f5d2c30",
+        "matches": true
+      },
+      {
+        "frame": 4,
+        "first": "072502ae45b654aed054ca3cd61836d5b5084c7cf3171eda83939b382d00c3ba",
+        "second": "072502ae45b654aed054ca3cd61836d5b5084c7cf3171eda83939b382d00c3ba",
+        "matches": true
+      },
+      {
+        "frame": 5,
+        "first": "18aa96e5b0126f100705efbcca06bbde265fbf4613ab4567eb8828d82551713c",
+        "second": "18aa96e5b0126f100705efbcca06bbde265fbf4613ab4567eb8828d82551713c",
+        "matches": true
+      },
+      {
+        "frame": 6,
+        "first": "566a310b5c9419a21d82a853b0f69d4ec588f5c4e78bf9561a7243a2517e72fa",
+        "second": "566a310b5c9419a21d82a853b0f69d4ec588f5c4e78bf9561a7243a2517e72fa",
+        "matches": true
+      },
+      {
+        "frame": 7,
+        "first": "b898b612ff7fab759d05a625d323ec97dd9c1c8f698dc68e173a0714dea1d954",
+        "second": "b898b612ff7fab759d05a625d323ec97dd9c1c8f698dc68e173a0714dea1d954",
+        "matches": true
+      },
+      {
+        "frame": 8,
+        "first": "86a4cf641836872311a7a04e0a35546a7a096cc9617dce633103860b3749dcf5",
+        "second": "86a4cf641836872311a7a04e0a35546a7a096cc9617dce633103860b3749dcf5",
+        "matches": true
+      },
+      {
+        "frame": 9,
+        "first": "07bf3a10275095edd889db2622ed37cb559e1584fb5878708573d2e9e266e59e",
+        "second": "07bf3a10275095edd889db2622ed37cb559e1584fb5878708573d2e9e266e59e",
+        "matches": true
+      },
+      {
+        "frame": 10,
+        "first": "4596e961dc1015c5fd4372318e9905340118675b3922c3d1957db75537534cf8",
+        "second": "4596e961dc1015c5fd4372318e9905340118675b3922c3d1957db75537534cf8",
+        "matches": true
+      },
+      {
+        "frame": 11,
+        "first": "aaf2c8418955c65f5046df96634a9cd69ccb492688f4b7aa2f0277cf6c216674",
+        "second": "aaf2c8418955c65f5046df96634a9cd69ccb492688f4b7aa2f0277cf6c216674",
+        "matches": true
+      },
+      {
+        "frame": 12,
+        "first": "4ce754c4e5f0655ae0594ce502931c1830083d6f85fe49dbc60894f25a1e19af",
+        "second": "4ce754c4e5f0655ae0594ce502931c1830083d6f85fe49dbc60894f25a1e19af",
+        "matches": true
+      },
+      {
+        "frame": 13,
+        "first": "c14c400b81584c8e1dc065f05255d726d20f7cc78388c8ac0356304d946f1a7d",
+        "second": "c14c400b81584c8e1dc065f05255d726d20f7cc78388c8ac0356304d946f1a7d",
+        "matches": true
+      },
+      {
+        "frame": 14,
+        "first": "a2ac8fb7bbb3fbafddb8f058f12121a78e884c214c40b9d2cfe908870c82f67c",
+        "second": "a2ac8fb7bbb3fbafddb8f058f12121a78e884c214c40b9d2cfe908870c82f67c",
+        "matches": true
+      },
+      {
+        "frame": 15,
+        "first": "6f99a2d98245c8855725f2e73a19046017280484c2a0297d347a66e635bed505",
+        "second": "6f99a2d98245c8855725f2e73a19046017280484c2a0297d347a66e635bed505",
+        "matches": true
+      },
+      {
+        "frame": 16,
+        "first": "447d4b328d566af28fbd321eb000a61e0494680b298e23e3561b05a8e4f65fe8",
+        "second": "447d4b328d566af28fbd321eb000a61e0494680b298e23e3561b05a8e4f65fe8",
+        "matches": true
+      },
+      {
+        "frame": 17,
+        "first": "84bc88aaf3a09acfc52b999f4729125e3d620944b6e8179abd218e679820c54c",
+        "second": "84bc88aaf3a09acfc52b999f4729125e3d620944b6e8179abd218e679820c54c",
+        "matches": true
+      },
+      {
+        "frame": 18,
+        "first": "c624c3c62f0fbf9cebb16f740b6c6ad7d984b90dcc1628c906201fe0f3ffccbe",
+        "second": "c624c3c62f0fbf9cebb16f740b6c6ad7d984b90dcc1628c906201fe0f3ffccbe",
+        "matches": true
+      },
+      {
+        "frame": 19,
+        "first": "40cb29bbf29ca91e42fa651f3e946684eb1201e8ba09e55f483b609eef607f86",
+        "second": "40cb29bbf29ca91e42fa651f3e946684eb1201e8ba09e55f483b609eef607f86",
+        "matches": true
+      },
+      {
+        "frame": 20,
+        "first": "24056c2ce095d89658300c19592814610086759aebf703b4e13d30c24173ae2f",
+        "second": "24056c2ce095d89658300c19592814610086759aebf703b4e13d30c24173ae2f",
+        "matches": true
+      },
+      {
+        "frame": 21,
+        "first": "0956884df30f636070eb2259418f9cfe8c4026d2a0feaadff138a4f8ad9c08ad",
+        "second": "0956884df30f636070eb2259418f9cfe8c4026d2a0feaadff138a4f8ad9c08ad",
+        "matches": true
+      },
+      {
+        "frame": 22,
+        "first": "1b661acc7ba0ebca1802d14d940af90bef662cd9b1bdc40ca1986b0628327f08",
+        "second": "1b661acc7ba0ebca1802d14d940af90bef662cd9b1bdc40ca1986b0628327f08",
+        "matches": true
+      },
+      {
+        "frame": 23,
+        "first": "97d20aeb9c3f00b85e246949a71dd03d6873f4c75f9565eb03e108adcb6684df",
+        "second": "97d20aeb9c3f00b85e246949a71dd03d6873f4c75f9565eb03e108adcb6684df",
+        "matches": true
+      },
+      {
+        "frame": 24,
+        "first": "e6e86ad16561ec913f36d878e75c264601b7ed786775afaa9512a30272a67415",
+        "second": "e6e86ad16561ec913f36d878e75c264601b7ed786775afaa9512a30272a67415",
+        "matches": true
+      },
+      {
+        "frame": 25,
+        "first": "cd4e912e9eb3db7d99b61dc5c39e20afb7b10b878340ba3b931a62344f3bf7f4",
+        "second": "cd4e912e9eb3db7d99b61dc5c39e20afb7b10b878340ba3b931a62344f3bf7f4",
+        "matches": true
+      },
+      {
+        "frame": 26,
+        "first": "9491d506c49ca91e5476adeac1f1038e3d844a4d7894435059dc065b93f58c2d",
+        "second": "9491d506c49ca91e5476adeac1f1038e3d844a4d7894435059dc065b93f58c2d",
+        "matches": true
+      },
+      {
+        "frame": 27,
+        "first": "391c81ee816de34ee973c5041bc6eee8b15b6e10be848cbe73c4f6898d2d8df8",
+        "second": "391c81ee816de34ee973c5041bc6eee8b15b6e10be848cbe73c4f6898d2d8df8",
+        "matches": true
+      },
+      {
+        "frame": 28,
+        "first": "2647ea138242264558eabdb3cf29d7475f0875ff1a50a69998065a7d7e8973bd",
+        "second": "2647ea138242264558eabdb3cf29d7475f0875ff1a50a69998065a7d7e8973bd",
+        "matches": true
+      },
+      {
+        "frame": 29,
+        "first": "bc014d0e28edc5d28de47cfe1284003845bbc7a4e2643b9570d5e0fd20ccf7c4",
+        "second": "bc014d0e28edc5d28de47cfe1284003845bbc7a4e2643b9570d5e0fd20ccf7c4",
+        "matches": true
+      },
+      {
+        "frame": 30,
+        "first": "32bcbcaac8b6fd0bfce602f9a9ab302ca28dc88de6fad6aa3a4ce55d4d2dc363",
+        "second": "32bcbcaac8b6fd0bfce602f9a9ab302ca28dc88de6fad6aa3a4ce55d4d2dc363",
+        "matches": true
+      },
+      {
+        "frame": 31,
+        "first": "13fac9296962d41f88842d774fd11f77d7c8ebcd67c24fbd72d735a244d9a83a",
+        "second": "13fac9296962d41f88842d774fd11f77d7c8ebcd67c24fbd72d735a244d9a83a",
+        "matches": true
+      },
+      {
+        "frame": 32,
+        "first": "a293302ca69962cb52071b93be6f9764f2bbb0cb09c541ba4a6a4ea853240b19",
+        "second": "a293302ca69962cb52071b93be6f9764f2bbb0cb09c541ba4a6a4ea853240b19",
+        "matches": true
+      },
+      {
+        "frame": 33,
+        "first": "536490b3805170832540d389670c882d50e43ed387e08bda1a146c8b8887f19e",
+        "second": "536490b3805170832540d389670c882d50e43ed387e08bda1a146c8b8887f19e",
+        "matches": true
+      },
+      {
+        "frame": 34,
+        "first": "2411a59de19a3dd0936e3d19b2489731fc3be545e91c34a10be09e9acca0a6c1",
+        "second": "2411a59de19a3dd0936e3d19b2489731fc3be545e91c34a10be09e9acca0a6c1",
+        "matches": true
+      },
+      {
+        "frame": 35,
+        "first": "4f92741da181eb2c6a4b34ec6d920136676a2472fbfcf170343fc0ae44fc68d7",
+        "second": "4f92741da181eb2c6a4b34ec6d920136676a2472fbfcf170343fc0ae44fc68d7",
+        "matches": true
+      },
+      {
+        "frame": 36,
+        "first": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+        "second": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+        "matches": true
+      },
+      {
+        "frame": 37,
+        "first": "43ec40176461131dd94bdd1abb5dcfb93d14d46586969e5bdc42aefec5f6ca6c",
+        "second": "43ec40176461131dd94bdd1abb5dcfb93d14d46586969e5bdc42aefec5f6ca6c",
+        "matches": true
+      },
+      {
+        "frame": 38,
+        "first": "5c55f89bbef119adabb329b1a7263e2272fc2cb724fff499106a2a3f48bf7095",
+        "second": "5c55f89bbef119adabb329b1a7263e2272fc2cb724fff499106a2a3f48bf7095",
+        "matches": true
+      },
+      {
+        "frame": 39,
+        "first": "d976c95cbfe941b0e2e86d29ea44d8038f19852975629185f6f0c060188a2180",
+        "second": "d976c95cbfe941b0e2e86d29ea44d8038f19852975629185f6f0c060188a2180",
+        "matches": true
+      },
+      {
+        "frame": 40,
+        "first": "c355700f1a3a057d950fc7757961e8ffba6e26bb994702672f92f67aadad0a5a",
+        "second": "c355700f1a3a057d950fc7757961e8ffba6e26bb994702672f92f67aadad0a5a",
+        "matches": true
+      },
+      {
+        "frame": 41,
+        "first": "4dda8daa98aee3ba3853502a8a62957e3c58d6029a188632eeb4bd9ac687aaeb",
+        "second": "4dda8daa98aee3ba3853502a8a62957e3c58d6029a188632eeb4bd9ac687aaeb",
+        "matches": true
+      },
+      {
+        "frame": 42,
+        "first": "5d32648da1dfa7b8cb0eb411ab90ddf7fc5150080803d4593438dfe11b622203",
+        "second": "5d32648da1dfa7b8cb0eb411ab90ddf7fc5150080803d4593438dfe11b622203",
+        "matches": true
+      },
+      {
+        "frame": 43,
+        "first": "20bea827512e08fbbe0eee2d0cb75936a237682dce0a0d73121d37cc35a1ccad",
+        "second": "20bea827512e08fbbe0eee2d0cb75936a237682dce0a0d73121d37cc35a1ccad",
+        "matches": true
+      },
+      {
+        "frame": 44,
+        "first": "00371cb301ad4da262d4aeb1da44cbfd5afc847599f76c5b1fcea1a88ed5c6b1",
+        "second": "00371cb301ad4da262d4aeb1da44cbfd5afc847599f76c5b1fcea1a88ed5c6b1",
+        "matches": true
+      },
+      {
+        "frame": 45,
+        "first": "96f7eed3f3bbd5ed2695d7f96e4456785fbc57e4b46bd12c9e7053867ef89242",
+        "second": "96f7eed3f3bbd5ed2695d7f96e4456785fbc57e4b46bd12c9e7053867ef89242",
+        "matches": true
+      },
+      {
+        "frame": 46,
+        "first": "028bb364eafb0f2f1d486765d0c50ad8ff561d1fe98b163939aac70137ae1abb",
+        "second": "028bb364eafb0f2f1d486765d0c50ad8ff561d1fe98b163939aac70137ae1abb",
+        "matches": true
+      },
+      {
+        "frame": 47,
+        "first": "7f73a8bc20799039901a9e5e04b9c0e29ce482f15392ffda691f3950de620788",
+        "second": "7f73a8bc20799039901a9e5e04b9c0e29ce482f15392ffda691f3950de620788",
+        "matches": true
+      },
+      {
+        "frame": 48,
+        "first": "03ece77aac0af726ccc89c549b1d5ef87ea9845912d24445382bfa41ef75f06e",
+        "second": "03ece77aac0af726ccc89c549b1d5ef87ea9845912d24445382bfa41ef75f06e",
+        "matches": true
+      },
+      {
+        "frame": 49,
+        "first": "eb7f9070976c060ed4d5ef9c125169e9ec853ff30ad10e2fb4ec91a11ffb99b5",
+        "second": "eb7f9070976c060ed4d5ef9c125169e9ec853ff30ad10e2fb4ec91a11ffb99b5",
+        "matches": true
+      },
+      {
+        "frame": 50,
+        "first": "8a752b84e9c18e89027a9577089d5fc2fa0680c2fd4316ac73c17badf973410e",
+        "second": "8a752b84e9c18e89027a9577089d5fc2fa0680c2fd4316ac73c17badf973410e",
+        "matches": true
+      },
+      {
+        "frame": 51,
+        "first": "83079565d28000307c6e73290f6848e0bb4e39e175c7d966acd064a5cb338079",
+        "second": "83079565d28000307c6e73290f6848e0bb4e39e175c7d966acd064a5cb338079",
+        "matches": true
+      },
+      {
+        "frame": 52,
+        "first": "63eb497e5c467df29e39cbc8816e6ef8b0388280b72f834a4f9a1142e6ba0716",
+        "second": "63eb497e5c467df29e39cbc8816e6ef8b0388280b72f834a4f9a1142e6ba0716",
+        "matches": true
+      },
+      {
+        "frame": 53,
+        "first": "83fd2757369b1696e73204cbe909637ab6d02878014d57debd96587d272cbc32",
+        "second": "83fd2757369b1696e73204cbe909637ab6d02878014d57debd96587d272cbc32",
+        "matches": true
+      },
+      {
+        "frame": 54,
+        "first": "e5e08aeeb91cb651200cbb03209b425e21ddc288e0571bb3a21768f4948778d2",
+        "second": "e5e08aeeb91cb651200cbb03209b425e21ddc288e0571bb3a21768f4948778d2",
+        "matches": true
+      },
+      {
+        "frame": 55,
+        "first": "d894b76c558c50c32367e3215991930281f6ff691ca642a9dedfe3a21db678c3",
+        "second": "d894b76c558c50c32367e3215991930281f6ff691ca642a9dedfe3a21db678c3",
+        "matches": true
+      },
+      {
+        "frame": 56,
+        "first": "4a9b3fb25750a3abdcf786e98271b64bccf64c2a56467feac55c523b3d0c1c0d",
+        "second": "4a9b3fb25750a3abdcf786e98271b64bccf64c2a56467feac55c523b3d0c1c0d",
+        "matches": true
+      },
+      {
+        "frame": 57,
+        "first": "ae348d2f2ad037346196d8a1399886d93d90bfb78a7f2f975427bdc2f1eb63c5",
+        "second": "ae348d2f2ad037346196d8a1399886d93d90bfb78a7f2f975427bdc2f1eb63c5",
+        "matches": true
+      },
+      {
+        "frame": 58,
+        "first": "cfea935d55729fcc6d0b37cce9bc3643f7509353d57b01ce891a48128bb82f5c",
+        "second": "cfea935d55729fcc6d0b37cce9bc3643f7509353d57b01ce891a48128bb82f5c",
+        "matches": true
+      },
+      {
+        "frame": 59,
+        "first": "65020d76134411ab62fa033b9a077c339552ddcafdbe2fc99998850134432412",
+        "second": "65020d76134411ab62fa033b9a077c339552ddcafdbe2fc99998850134432412",
+        "matches": true
+      },
+      {
+        "frame": 60,
+        "first": "4034c8d9527d16f7acf84aa3aba819fba99be1ef8d076bf8cc50190a633a3e17",
+        "second": "4034c8d9527d16f7acf84aa3aba819fba99be1ef8d076bf8cc50190a633a3e17",
+        "matches": true
+      },
+      {
+        "frame": 61,
+        "first": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+        "second": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+        "matches": true
+      },
+      {
+        "frame": 62,
+        "first": "c2e95c1c1cf5f091e51a7a09b2e71b624aade95d9af17f363d9a09028bde7690",
+        "second": "c2e95c1c1cf5f091e51a7a09b2e71b624aade95d9af17f363d9a09028bde7690",
+        "matches": true
+      },
+      {
+        "frame": 63,
+        "first": "791b5264819ece450c8c3a9ed4ae504cf4d01a9e4d06da439ae2bd08c54a26b3",
+        "second": "791b5264819ece450c8c3a9ed4ae504cf4d01a9e4d06da439ae2bd08c54a26b3",
+        "matches": true
+      },
+      {
+        "frame": 64,
+        "first": "d8ae713c78ec507fee5a8525b79921f41f93ccba8d41d4ef8befac628130d626",
+        "second": "d8ae713c78ec507fee5a8525b79921f41f93ccba8d41d4ef8befac628130d626",
+        "matches": true
+      },
+      {
+        "frame": 65,
+        "first": "bd848caed4ea1ca9d36cec4474c8b78eca576bcabb4bd1e5ad2ae7158f1df667",
+        "second": "bd848caed4ea1ca9d36cec4474c8b78eca576bcabb4bd1e5ad2ae7158f1df667",
+        "matches": true
+      },
+      {
+        "frame": 66,
+        "first": "222dd6283b38ec19bb32e5224677ff3e149b0fe7e6ad1d4cd15e16ea1c179501",
+        "second": "222dd6283b38ec19bb32e5224677ff3e149b0fe7e6ad1d4cd15e16ea1c179501",
+        "matches": true
+      },
+      {
+        "frame": 67,
+        "first": "ba31cc22210143a5bb96f76e03397726ea535980dd7da6f857df736cd95a51be",
+        "second": "ba31cc22210143a5bb96f76e03397726ea535980dd7da6f857df736cd95a51be",
+        "matches": true
+      },
+      {
+        "frame": 68,
+        "first": "7a9a2cadfd99820b51d943b7ba25d2e84be66fde560c9289ae6158357d4e2723",
+        "second": "7a9a2cadfd99820b51d943b7ba25d2e84be66fde560c9289ae6158357d4e2723",
+        "matches": true
+      },
+      {
+        "frame": 69,
+        "first": "0b3e31a3267687ea43fa86d9735e0f8f077cdef78ac578a1aaf786473d8d5adc",
+        "second": "0b3e31a3267687ea43fa86d9735e0f8f077cdef78ac578a1aaf786473d8d5adc",
+        "matches": true
+      },
+      {
+        "frame": 70,
+        "first": "4a98ad3c086fcd854412d2b00a959bcc1ae4ddd2e27cbf9a203d7541c93b0a33",
+        "second": "4a98ad3c086fcd854412d2b00a959bcc1ae4ddd2e27cbf9a203d7541c93b0a33",
+        "matches": true
+      },
+      {
+        "frame": 71,
+        "first": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+        "second": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+        "matches": true
+      },
+      {
+        "frame": 72,
+        "first": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+        "second": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+        "matches": true
+      },
+      {
+        "frame": 73,
+        "first": "f3258f73a18298a20d17d76643789c76dc39607080a085b9c6f815ecd4940f9f",
+        "second": "f3258f73a18298a20d17d76643789c76dc39607080a085b9c6f815ecd4940f9f",
+        "matches": true
+      },
+      {
+        "frame": 74,
+        "first": "0144068f140ae328304b95c0115fad07a72596b50342972a58249fd81ce968c0",
+        "second": "0144068f140ae328304b95c0115fad07a72596b50342972a58249fd81ce968c0",
+        "matches": true
+      },
+      {
+        "frame": 75,
+        "first": "305b96d1f32630ea66a7768ebe62a39cd0edd2834c18177fdb923ec9333dcffe",
+        "second": "305b96d1f32630ea66a7768ebe62a39cd0edd2834c18177fdb923ec9333dcffe",
+        "matches": true
+      },
+      {
+        "frame": 76,
+        "first": "6048511ad9cf9abd0d79d0723b8afbd85baf716229883a99d059d2f5d92b9439",
+        "second": "6048511ad9cf9abd0d79d0723b8afbd85baf716229883a99d059d2f5d92b9439",
+        "matches": true
+      },
+      {
+        "frame": 77,
+        "first": "31084aa09579ebd6a2800af70898154fb4da4f72f87612da8749b38074ef4b37",
+        "second": "31084aa09579ebd6a2800af70898154fb4da4f72f87612da8749b38074ef4b37",
+        "matches": true
+      },
+      {
+        "frame": 78,
+        "first": "b3fe2a7d74e86b77514f81fd48a54fe63114e0a83a1823a3c1063a75ab051423",
+        "second": "b3fe2a7d74e86b77514f81fd48a54fe63114e0a83a1823a3c1063a75ab051423",
+        "matches": true
+      },
+      {
+        "frame": 79,
+        "first": "17c4b79780147e543767ed13868992ad51b65ed2cf9e28e54719e3cac4639920",
+        "second": "17c4b79780147e543767ed13868992ad51b65ed2cf9e28e54719e3cac4639920",
+        "matches": true
+      },
+      {
+        "frame": 80,
+        "first": "be4098935e3408112ca9d62adb524482ba9790d0399f90cdb6d654e6f979914d",
+        "second": "be4098935e3408112ca9d62adb524482ba9790d0399f90cdb6d654e6f979914d",
+        "matches": true
+      },
+      {
+        "frame": 81,
+        "first": "24d85ccaae704d38ae0327120e167f59dfa42b40da82d6ffde15fc707cc2580c",
+        "second": "24d85ccaae704d38ae0327120e167f59dfa42b40da82d6ffde15fc707cc2580c",
+        "matches": true
+      },
+      {
+        "frame": 82,
+        "first": "e1f9ced158afb67f271e9d10172a9c3529b0bbe2c8fc5e50d9823973f90f028a",
+        "second": "e1f9ced158afb67f271e9d10172a9c3529b0bbe2c8fc5e50d9823973f90f028a",
+        "matches": true
+      },
+      {
+        "frame": 83,
+        "first": "bc0faf9d4fa9d6b1a82d6aaa2f9e83bc661cc041254a68dab6456da733a90fd8",
+        "second": "bc0faf9d4fa9d6b1a82d6aaa2f9e83bc661cc041254a68dab6456da733a90fd8",
+        "matches": true
+      },
+      {
+        "frame": 84,
+        "first": "dfb7ef0a625a799bb4f54130fd45f35a7bd1821cb15ba1cee707e9f37fc3b105",
+        "second": "dfb7ef0a625a799bb4f54130fd45f35a7bd1821cb15ba1cee707e9f37fc3b105",
+        "matches": true
+      },
+      {
+        "frame": 85,
+        "first": "06cededb2b856b8223c103d979d328a2a3078f7eb8cb531e9247678a6a65592d",
+        "second": "06cededb2b856b8223c103d979d328a2a3078f7eb8cb531e9247678a6a65592d",
+        "matches": true
+      },
+      {
+        "frame": 86,
+        "first": "667f491a1df37b429ce1d2603bf2fa5d02a03ba9b5bfb72bff9f4c8372fd1c6c",
+        "second": "667f491a1df37b429ce1d2603bf2fa5d02a03ba9b5bfb72bff9f4c8372fd1c6c",
+        "matches": true
+      },
+      {
+        "frame": 87,
+        "first": "8cc07d24a611c0aea6974c592994a7a71f97842e483d4acdcdf5c3afcc31bc99",
+        "second": "8cc07d24a611c0aea6974c592994a7a71f97842e483d4acdcdf5c3afcc31bc99",
+        "matches": true
+      },
+      {
+        "frame": 88,
+        "first": "28442a6d5b010fb29113c28a49aee6c9c15be00944a8945ec358a42e13debf39",
+        "second": "28442a6d5b010fb29113c28a49aee6c9c15be00944a8945ec358a42e13debf39",
+        "matches": true
+      },
+      {
+        "frame": 89,
+        "first": "502fb23bd7a017e111ec8f10693c7856aaadc771302481cf0988567a60106217",
+        "second": "502fb23bd7a017e111ec8f10693c7856aaadc771302481cf0988567a60106217",
+        "matches": true
+      },
+      {
+        "frame": 90,
+        "first": "1dacc0ebece220afddb871d679d01ced4ffd26b30610a7e950b74044b4a21b74",
+        "second": "1dacc0ebece220afddb871d679d01ced4ffd26b30610a7e950b74044b4a21b74",
+        "matches": true
+      },
+      {
+        "frame": 91,
+        "first": "96cc1cd054b84f34da953bc0a04f08f097e3ab640f45e6c37b98bef8cf95689a",
+        "second": "96cc1cd054b84f34da953bc0a04f08f097e3ab640f45e6c37b98bef8cf95689a",
+        "matches": true
+      },
+      {
+        "frame": 92,
+        "first": "f7ac8f18fccba0ddfa63d3394369b7fc7bca168bd098159241a291f853312b0a",
+        "second": "f7ac8f18fccba0ddfa63d3394369b7fc7bca168bd098159241a291f853312b0a",
+        "matches": true
+      },
+      {
+        "frame": 93,
+        "first": "6584efd6eceaeabc13c85c77764d443c85a80097ece7b3afabf2746a1a703274",
+        "second": "6584efd6eceaeabc13c85c77764d443c85a80097ece7b3afabf2746a1a703274",
+        "matches": true
+      },
+      {
+        "frame": 94,
+        "first": "7b20d7f6ee593ae7407b391ed654ba62fa2ac8c7b79785cf4d61912e92c43662",
+        "second": "7b20d7f6ee593ae7407b391ed654ba62fa2ac8c7b79785cf4d61912e92c43662",
+        "matches": true
+      },
+      {
+        "frame": 95,
+        "first": "0428a002ea459fe4903f10bc3c7dabe2495627ee534bd5197d310cb1eb5b03b2",
+        "second": "0428a002ea459fe4903f10bc3c7dabe2495627ee534bd5197d310cb1eb5b03b2",
+        "matches": true
+      },
+      {
+        "frame": 96,
+        "first": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+        "second": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+        "matches": true
+      },
+      {
+        "frame": 97,
+        "first": "a182d7cb0f1e4e7e54d508f392d39277efe650a06c58917b2e085d8d7bcef6ee",
+        "second": "a182d7cb0f1e4e7e54d508f392d39277efe650a06c58917b2e085d8d7bcef6ee",
+        "matches": true
+      },
+      {
+        "frame": 98,
+        "first": "02fb265be1a7edf24b020e866f9f2572f0c8c9601cebbe203abf0208c0c43acd",
+        "second": "02fb265be1a7edf24b020e866f9f2572f0c8c9601cebbe203abf0208c0c43acd",
+        "matches": true
+      },
+      {
+        "frame": 99,
+        "first": "8dc1d50928582f6187e899901114c42ab034ea1539b3f97f2dafa1adb3d0768e",
+        "second": "8dc1d50928582f6187e899901114c42ab034ea1539b3f97f2dafa1adb3d0768e",
+        "matches": true
+      },
+      {
+        "frame": 100,
+        "first": "d170c984335d69766e476b93051122e413b08f22e7c4c0f61040390b7cd4d999",
+        "second": "d170c984335d69766e476b93051122e413b08f22e7c4c0f61040390b7cd4d999",
+        "matches": true
+      },
+      {
+        "frame": 101,
+        "first": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+        "second": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+        "matches": true
+      },
+      {
+        "frame": 102,
+        "first": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+        "second": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+        "matches": true
+      },
+      {
+        "frame": 103,
+        "first": "33b9088815b621886669b7446eb3c7a79a9efcfc73883fc3e305032a8c5a1f76",
+        "second": "33b9088815b621886669b7446eb3c7a79a9efcfc73883fc3e305032a8c5a1f76",
+        "matches": true
+      },
+      {
+        "frame": 104,
+        "first": "debe215f6ec4bed33abfc6c05036988ee822da1dbfd3ee39b89fac1be7681d0d",
+        "second": "debe215f6ec4bed33abfc6c05036988ee822da1dbfd3ee39b89fac1be7681d0d",
+        "matches": true
+      },
+      {
+        "frame": 105,
+        "first": "8f9767fdf7def4434c7e78efd0cab8eca0de09ebde39a7560d98537f91fb1efe",
+        "second": "8f9767fdf7def4434c7e78efd0cab8eca0de09ebde39a7560d98537f91fb1efe",
+        "matches": true
+      },
+      {
+        "frame": 106,
+        "first": "fa8c3ce4a74c702c69c58d11f322a5f369d12ede29dc41012ae07e4148d0cda7",
+        "second": "fa8c3ce4a74c702c69c58d11f322a5f369d12ede29dc41012ae07e4148d0cda7",
+        "matches": true
+      },
+      {
+        "frame": 107,
+        "first": "f67b8e019d02e556f48419710a2e0f5d67ccdb265e0306c8cb3516fafe740bd8",
+        "second": "f67b8e019d02e556f48419710a2e0f5d67ccdb265e0306c8cb3516fafe740bd8",
+        "matches": true
+      },
+      {
+        "frame": 108,
+        "first": "d7211e3f0e317e47287e5201e5bb82e8e79fd8f2e2e761f166cbbf1a801a186b",
+        "second": "d7211e3f0e317e47287e5201e5bb82e8e79fd8f2e2e761f166cbbf1a801a186b",
+        "matches": true
+      },
+      {
+        "frame": 109,
+        "first": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+        "second": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+        "matches": true
+      },
+      {
+        "frame": 110,
+        "first": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+        "second": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+        "matches": true
+      },
+      {
+        "frame": 111,
+        "first": "b70386a46ca848e1552d4de8df08306e4f546016c7a0e0b194cf3b89b33174d2",
+        "second": "b70386a46ca848e1552d4de8df08306e4f546016c7a0e0b194cf3b89b33174d2",
+        "matches": true
+      },
+      {
+        "frame": 112,
+        "first": "370cdd3bf0987ec1bdbda0a0223e3c978f7e2d169975ecb60952e973e2345d4a",
+        "second": "370cdd3bf0987ec1bdbda0a0223e3c978f7e2d169975ecb60952e973e2345d4a",
+        "matches": true
+      },
+      {
+        "frame": 113,
+        "first": "b0559bed1b53f6a97f3508bdfa5ecc90562c26095bd6cf16ef7e9f875a089586",
+        "second": "b0559bed1b53f6a97f3508bdfa5ecc90562c26095bd6cf16ef7e9f875a089586",
+        "matches": true
+      },
+      {
+        "frame": 114,
+        "first": "5b6539922cfb9104aca4bfeb0adb46d9cc1ece711c717519b8f2769603cf15d7",
+        "second": "5b6539922cfb9104aca4bfeb0adb46d9cc1ece711c717519b8f2769603cf15d7",
+        "matches": true
+      },
+      {
+        "frame": 115,
+        "first": "60ee1e4f7d326a82c2dbe4499adfe3f12b678564bd29581e02bddd982838919b",
+        "second": "60ee1e4f7d326a82c2dbe4499adfe3f12b678564bd29581e02bddd982838919b",
+        "matches": true
+      },
+      {
+        "frame": 116,
+        "first": "673e08dad8923ce845d0ff403ed733ae38b7bfa3cb9e80334b28cfdc4bd0815a",
+        "second": "673e08dad8923ce845d0ff403ed733ae38b7bfa3cb9e80334b28cfdc4bd0815a",
+        "matches": true
+      },
+      {
+        "frame": 117,
+        "first": "8fbab50c867bfb77e219c34f8b428bcd89a687a9cd97d81679d7b28b221a3419",
+        "second": "8fbab50c867bfb77e219c34f8b428bcd89a687a9cd97d81679d7b28b221a3419",
+        "matches": true
+      },
+      {
+        "frame": 118,
+        "first": "102643728be8aaef7dfd6abdd5ae63ed73475d3cc9889f05df324ce4d1ef4cf7",
+        "second": "102643728be8aaef7dfd6abdd5ae63ed73475d3cc9889f05df324ce4d1ef4cf7",
+        "matches": true
+      },
+      {
+        "frame": 119,
+        "first": "9c56bae89e3d53db152be5e0d8349425fd122030175b09a826d1c8a49dbb9f87",
+        "second": "9c56bae89e3d53db152be5e0d8349425fd122030175b09a826d1c8a49dbb9f87",
+        "matches": true
+      },
+      {
+        "frame": 120,
+        "first": "dd5c69d7a211a58e04553e978583a4ae6ac1c815e34b9420726f69e4a49cf51d",
+        "second": "dd5c69d7a211a58e04553e978583a4ae6ac1c815e34b9420726f69e4a49cf51d",
+        "matches": true
+      },
+      {
+        "frame": 121,
+        "first": "6d996b0b7ad8d1cfd2f44697499d75a948808c470173a25e94d56d4ba0250412",
+        "second": "6d996b0b7ad8d1cfd2f44697499d75a948808c470173a25e94d56d4ba0250412",
+        "matches": true
+      },
+      {
+        "frame": 122,
+        "first": "fdfdaa2ded6ba6c761574477d0f1e08b756febd4aabbf0207c9c17bae1530471",
+        "second": "fdfdaa2ded6ba6c761574477d0f1e08b756febd4aabbf0207c9c17bae1530471",
+        "matches": true
+      },
+      {
+        "frame": 123,
+        "first": "f079e6ada873f81db53c8f4499ad5d837d43ac83b1279627eb870ca1e2e69008",
+        "second": "f079e6ada873f81db53c8f4499ad5d837d43ac83b1279627eb870ca1e2e69008",
+        "matches": true
+      },
+      {
+        "frame": 124,
+        "first": "4c46afba2654791ceb106e73d13bd2435d7723ee47082f61aee086291fc1a4c0",
+        "second": "4c46afba2654791ceb106e73d13bd2435d7723ee47082f61aee086291fc1a4c0",
+        "matches": true
+      },
+      {
+        "frame": 125,
+        "first": "60d597a1cc913331bd847167eee4d17538df0c192e660d4d0d883cc76f3097b1",
+        "second": "60d597a1cc913331bd847167eee4d17538df0c192e660d4d0d883cc76f3097b1",
+        "matches": true
+      },
+      {
+        "frame": 126,
+        "first": "cea7b5e81a2df3ae1221c52a9756862bde0307bce055c7b17101ebcac4ccc900",
+        "second": "cea7b5e81a2df3ae1221c52a9756862bde0307bce055c7b17101ebcac4ccc900",
+        "matches": true
+      },
+      {
+        "frame": 127,
+        "first": "a7170d8b7c0c4b94a3ec471926cca9e2866922b22d459d6e1d21705ec7846c9d",
+        "second": "a7170d8b7c0c4b94a3ec471926cca9e2866922b22d459d6e1d21705ec7846c9d",
+        "matches": true
+      },
+      {
+        "frame": 128,
+        "first": "761b05728f48e444aaf070b762ba097991eb98fbee6e207ecd679b625d6013ba",
+        "second": "761b05728f48e444aaf070b762ba097991eb98fbee6e207ecd679b625d6013ba",
+        "matches": true
+      },
+      {
+        "frame": 129,
+        "first": "aec5598ecbdfdf42514b6471e5644cd3725d0b2ec95715d38a3f2c85878f634b",
+        "second": "aec5598ecbdfdf42514b6471e5644cd3725d0b2ec95715d38a3f2c85878f634b",
+        "matches": true
+      },
+      {
+        "frame": 130,
+        "first": "a92d45c4dc80a40cef98b21f1c66a80f80b377fe8f969b8cd9536e3e35a9587e",
+        "second": "a92d45c4dc80a40cef98b21f1c66a80f80b377fe8f969b8cd9536e3e35a9587e",
+        "matches": true
+      },
+      {
+        "frame": 131,
+        "first": "23efbac11350ddcf4e7a6f1c7aaad223b5da32f89dec42920ea9f57a9c51354d",
+        "second": "23efbac11350ddcf4e7a6f1c7aaad223b5da32f89dec42920ea9f57a9c51354d",
+        "matches": true
+      },
+      {
+        "frame": 132,
+        "first": "80249dfaabd820ed5f26034c3b627a018c24e7e03047a496309b0e4f4b7b2056",
+        "second": "80249dfaabd820ed5f26034c3b627a018c24e7e03047a496309b0e4f4b7b2056",
+        "matches": true
+      },
+      {
+        "frame": 133,
+        "first": "e1d75a52be843b1c6ced1714177dfa456c2defcc87bd9a79e959853fbcb48679",
+        "second": "e1d75a52be843b1c6ced1714177dfa456c2defcc87bd9a79e959853fbcb48679",
+        "matches": true
+      },
+      {
+        "frame": 134,
+        "first": "06fc8015f967ebe2c390b944877be645f2e2388cf5308fe68ebca424689e2835",
+        "second": "06fc8015f967ebe2c390b944877be645f2e2388cf5308fe68ebca424689e2835",
+        "matches": true
+      },
+      {
+        "frame": 135,
+        "first": "8f60861dbf3bbf45dc6d1553f79eaa54fdb0a7e84f9066eb8e5242c5130b8bb1",
+        "second": "8f60861dbf3bbf45dc6d1553f79eaa54fdb0a7e84f9066eb8e5242c5130b8bb1",
+        "matches": true
+      },
+      {
+        "frame": 136,
+        "first": "69734ecd6a504df70a626c89e48c29f5825970f2b18a4083b5ffb2b0d2937117",
+        "second": "69734ecd6a504df70a626c89e48c29f5825970f2b18a4083b5ffb2b0d2937117",
+        "matches": true
+      },
+      {
+        "frame": 137,
+        "first": "8a62da0f70919590a4a48350bbc462d309586002ce37ec7310540c9558cf1ddd",
+        "second": "8a62da0f70919590a4a48350bbc462d309586002ce37ec7310540c9558cf1ddd",
+        "matches": true
+      },
+      {
+        "frame": 138,
+        "first": "58d0c63bfee9be3bc0b0b192e41475f7ab7116558cd4c22d60e649f4ed902036",
+        "second": "58d0c63bfee9be3bc0b0b192e41475f7ab7116558cd4c22d60e649f4ed902036",
+        "matches": true
+      },
+      {
+        "frame": 139,
+        "first": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+        "second": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+        "matches": true
+      }
+    ]
+  },
+  "stills": [
+    {
+      "frame": 0,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-00.png",
+      "byteLength": 34427,
+      "sha256": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e"
+    },
+    {
+      "frame": 36,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-01.png",
+      "byteLength": 348298,
+      "sha256": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559"
+    },
+    {
+      "frame": 61,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-02.png",
+      "byteLength": 343473,
+      "sha256": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb"
+    },
+    {
+      "frame": 71,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-03.png",
+      "byteLength": 322101,
+      "sha256": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa"
+    },
+    {
+      "frame": 72,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-04.png",
+      "byteLength": 322828,
+      "sha256": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090"
+    },
+    {
+      "frame": 96,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-05.png",
+      "byteLength": 328923,
+      "sha256": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5"
+    },
+    {
+      "frame": 101,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-06.png",
+      "byteLength": 324745,
+      "sha256": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4"
+    },
+    {
+      "frame": 102,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-07.png",
+      "byteLength": 325670,
+      "sha256": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78"
+    },
+    {
+      "frame": 109,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-08.png",
+      "byteLength": 325041,
+      "sha256": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7"
+    },
+    {
+      "frame": 110,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-09.png",
+      "byteLength": 324627,
+      "sha256": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5"
+    },
+    {
+      "frame": 139,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-1\\still-10.png",
+      "byteLength": 325061,
+      "sha256": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9"
+    }
+  ],
+  "repeatedStills": [
+    {
+      "frame": 0,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-00.png",
+      "byteLength": 34427,
+      "sha256": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e"
+    },
+    {
+      "frame": 36,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-01.png",
+      "byteLength": 348298,
+      "sha256": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559"
+    },
+    {
+      "frame": 61,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-02.png",
+      "byteLength": 343473,
+      "sha256": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb"
+    },
+    {
+      "frame": 71,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-03.png",
+      "byteLength": 322101,
+      "sha256": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa"
+    },
+    {
+      "frame": 72,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-04.png",
+      "byteLength": 322828,
+      "sha256": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090"
+    },
+    {
+      "frame": 96,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-05.png",
+      "byteLength": 328923,
+      "sha256": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5"
+    },
+    {
+      "frame": 101,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-06.png",
+      "byteLength": 324745,
+      "sha256": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4"
+    },
+    {
+      "frame": 102,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-07.png",
+      "byteLength": 325670,
+      "sha256": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78"
+    },
+    {
+      "frame": 109,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-08.png",
+      "byteLength": 325041,
+      "sha256": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7"
+    },
+    {
+      "frame": 110,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-09.png",
+      "byteLength": 324627,
+      "sha256": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5"
+    },
+    {
+      "frame": 139,
+      "output": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\stills-pass-2\\still-10.png",
+      "byteLength": 325061,
+      "sha256": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9"
+    }
+  ],
+  "rawStillComparisons": [
+    {
+      "frame": 0,
+      "first": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+      "second": "d8a99889991a117fac0a5318b42cfec15315071fd463a28fc6cc58e864d1de8e",
+      "matches": true
+    },
+    {
+      "frame": 36,
+      "first": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+      "second": "15cc904650f2e9c598cfadc4e1c9c5481dcdf6256830a1062715bf7c7f715559",
+      "matches": true
+    },
+    {
+      "frame": 61,
+      "first": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+      "second": "589f02f80ab1a5e21a324f2fd9007462d432f7ba5af70479d5700f26db88becb",
+      "matches": true
+    },
+    {
+      "frame": 71,
+      "first": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+      "second": "2bbd18b47587333c9387c60eac9b1f156d7cf23cdd442424f85d374ebf3514aa",
+      "matches": true
+    },
+    {
+      "frame": 72,
+      "first": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+      "second": "100dd2ee8b13e034dc93ca9a0e676e9930618a5689c4d92d4a847b304affb090",
+      "matches": true
+    },
+    {
+      "frame": 96,
+      "first": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+      "second": "bc93468c2c8aed5f685a32f7d83cf0b71e72154d3d4316d2f36c140ae9f7f5a5",
+      "matches": true
+    },
+    {
+      "frame": 101,
+      "first": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+      "second": "38a7a2467161d8c55d909d9263b928a9211b9662f1bfa1bcca4baf2a7b96b2b4",
+      "matches": true
+    },
+    {
+      "frame": 102,
+      "first": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+      "second": "67ab7b856aba3faed9be99d4b6fd5df8d49076514744cc87365b12feb73a3d78",
+      "matches": true
+    },
+    {
+      "frame": 109,
+      "first": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+      "second": "0ad5deef48e29b3cd21d3118a0028381a8f70e52cd420edac116162f4958cac7",
+      "matches": true
+    },
+    {
+      "frame": 110,
+      "first": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+      "second": "d804c833c2e24435bab37a50d49d78f0065916fd7e8e55a916150f7e702c01f5",
+      "matches": true
+    },
+    {
+      "frame": 139,
+      "first": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+      "second": "a2d595cd411a0e417bfb08aed84c01ba8e9ea0cc22455996f0d5f67666fcb2b9",
+      "matches": true
+    }
+  ],
+  "contactSheet": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\contact-sheet.png",
+  "arbitraryScriptSmoke": {
+    "episodePlanContentHash": "ae4eb2bfff62780c984849f218dadddbc54742b720b8ff9f8d7e24bedce0e85c",
+    "performanceProgramId": "performance-1-primary",
+    "sourceShotId": "shot-1-primary",
+    "frame": 26,
+    "still": "C:\\Projects\\StoryStage\\artifacts\\KVP-001\\arbitrary-reaction-smoke.png",
+    "limitation": "Ordinary planner emits the local-parts articulated reaction without authored locomotion."
+  },
+  "rendererPath": "canonical Director inputs → DirectorPlan → TimingSolution → ContinuitySequencePlan → ExecutableEpisodePlan → StoryStageProduction → DirectorEpisodeRenderer"
+}
