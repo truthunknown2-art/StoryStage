@@ -455,6 +455,61 @@ describe("CV-002 editable script breakdown", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("gates the Director command to beats with a concrete reaction event", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+
+    // The default setup beat (1.1) has no reaction event: the command control
+    // would reject every input, so an honest explanation replaces it.
+    expect(
+      screen.queryByLabelText("Direction for selected beat"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Structured direction unavailable on this beat/),
+    ).toBeInTheDocument();
+
+    // A beat with exactly one concrete reaction event gets the real control.
+    await user.click(
+      within(screen.getByLabelText("Studio scenes and beats")).getByRole(
+        "button",
+        { name: /3\.1 reaction/i },
+      ),
+    );
+    expect(
+      screen.getByLabelText("Direction for selected beat"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Structured direction unavailable on this beat/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears a typed direction when the selected beat changes", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const rail = screen.getByLabelText("Studio scenes and beats");
+
+    await user.click(
+      within(rail).getByRole("button", { name: /2\.2 reaction/i }),
+    );
+    const input = screen.getByLabelText(
+      "Direction for selected beat",
+    ) as HTMLInputElement;
+    await user.type(input, "Make the reaction 6 frames later");
+    expect(input.value).toBe("Make the reaction 6 frames later");
+
+    await user.click(
+      within(rail).getByRole("button", { name: /3\.1 reaction/i }),
+    );
+    expect(
+      (screen.getByLabelText("Direction for selected beat") as HTMLInputElement)
+        .value,
+    ).toBe("");
+  });
+
   it("restores a verified local direction draft without routing into ProductionComposition", async () => {
     const user = await openHistoryBreakdown();
     await user.selectOptions(

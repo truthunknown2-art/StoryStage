@@ -143,6 +143,7 @@ export function DirectorAnimaticPreview({
   }, [director, onWorkspaceChange, selectedBeatId, workspace]);
 
   useEffect(() => {
+    setCommand("");
     setProposal(null);
     setCommandError(null);
     setFeedback(null);
@@ -192,6 +193,30 @@ export function DirectorAnimaticPreview({
   const selectedCapabilityItems = director.capabilityReport.items.filter(
     (item) => item.beatId === selectedBeatId,
   );
+  // Mirrors the acceptance predicate in proposeDirectorPatch
+  // (packages/story-engine/src/director/director-patch.ts): the Alpha
+  // interpreter can only delay exactly one concrete reaction event linked to
+  // a shot of the target beat. The command control is offered only when that
+  // contract exists for the selected beat.
+  const selectedBeatReactionEdit = (() => {
+    const reactionEvents = director.directorPlan.events.filter(
+      (event) => event.beatId === selectedBeatId && event.kind === "reaction",
+    );
+    const candidates = reactionEvents.filter((event) =>
+      director.directorPlan.shots.some(
+        (shot) =>
+          shot.beatIds.includes(selectedBeatId) &&
+          [
+            shot.entryEventId,
+            shot.exitEventId,
+            shot.timingEnvelope.earliestCutEventId,
+            shot.timingEnvelope.preferredCutEventId,
+            shot.timingEnvelope.latestCutEventId,
+          ].includes(event.id),
+      ),
+    );
+    return candidates.length === 1;
+  })();
   const selectedBeatRenderReady =
     selectedCapabilityItems.length > 0 &&
     selectedCapabilityItems.every((item) => item.resolution === "supported");
@@ -373,14 +398,23 @@ export function DirectorAnimaticPreview({
           </div>
         </div>
         <p className="director-selected-beat-copy">{selectedBeat.text}</p>
-        <DirectorCommandPanel
-          beatLabel={`Beat ${selectedBeatIndex + 1}`}
-          beatText={selectedBeatTitle}
-          command={command}
-          error={commandError}
-          onCommandChange={setCommand}
-          onPreview={previewCommand}
-        />
+        {selectedBeatReactionEdit ? (
+          <DirectorCommandPanel
+            beatLabel={`Beat ${selectedBeatIndex + 1}`}
+            beatText={selectedBeatTitle}
+            command={command}
+            error={commandError}
+            onCommandChange={setCommand}
+            onPreview={previewCommand}
+          />
+        ) : (
+          <p className="director-command-unavailable">
+            <strong>Structured direction unavailable on this beat.</strong>
+            The director currently understands reaction-delay notes only for
+            beats with a concrete reaction event. This beat has none — shape it
+            with the Visual and Motion controls below.
+          </p>
+        )}
         <div
           aria-label="Director departments"
           className="director-department-tabs"

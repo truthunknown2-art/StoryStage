@@ -1630,6 +1630,22 @@
   padding: 15px 14px;
 }
 
+.director-command-unavailable {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #aebbb4;
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+  padding: 15px 14px;
+}
+
+.director-command-unavailable strong {
+  color: #e8f0ec;
+  display: block;
+  font-size: 12.5px;
+  margin-bottom: 3px;
+}
+
 .director-command-panel > header,
 .director-change-preview > header {
   align-items: flex-start;
