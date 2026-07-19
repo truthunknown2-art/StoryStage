@@ -5,6 +5,7 @@ import {
   createCharacterRigCandidateBundle,
   createKidsBipedRigRequestItems,
   inspectCharacterRigCandidateBundle,
+  kidsBipedV1TopologyTemplate,
   validateCharacterRigCandidateBundle,
   type CharacterRigAssetRequestDraft,
   type CharacterRigCandidateBundleDraft,
@@ -29,7 +30,7 @@ const requestDraft = (): CharacterRigAssetRequestDraft => ({
   rigProfile: {
     id: "kids-biped-v1",
     version: "1.0.0",
-    templateContentHash: hash("b"),
+    templateContentHash: kidsBipedV1TopologyTemplate.contentHash,
   },
   acquisition: {
     mode: "manual-file-import",
@@ -224,5 +225,33 @@ describe("provider-neutral character rig acquisition", () => {
         ],
       }),
     ).toThrow(/hash is invalid/i);
+  });
+
+  it("binds kids-biped-v1 requests to the exact canonical topology hash", () => {
+    const draft = requestDraft();
+    expect(() =>
+      createCharacterRigAssetRequest({
+        ...draft,
+        rigProfile: {
+          ...draft.rigProfile,
+          templateContentHash: hash("d"),
+        },
+      } as unknown as CharacterRigAssetRequestDraft),
+    ).toThrow(/invalid literal|templateContentHash/i);
+  });
+
+  it("deep-freezes the canonical topology authority", () => {
+    const contentHash = kidsBipedV1TopologyTemplate.contentHash;
+    expect(Object.isFrozen(kidsBipedV1TopologyTemplate)).toBe(true);
+    expect(Object.isFrozen(kidsBipedV1TopologyTemplate.parts)).toBe(true);
+    expect(Object.isFrozen(kidsBipedV1TopologyTemplate.parts[1])).toBe(true);
+    expect(() => {
+      (
+        kidsBipedV1TopologyTemplate.parts[1] as {
+          parentRole: string | null;
+        }
+      ).parentRole = "upper-arm-right";
+    }).toThrow();
+    expect(kidsBipedV1TopologyTemplate.contentHash).toBe(contentHash);
   });
 });

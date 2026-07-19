@@ -123,6 +123,256 @@ export const kidsBipedV1FaceComponents = [
   "viseme-wq",
 ] as const satisfies readonly z.infer<typeof characterRigComponentRoleSchema>[];
 
+export const kidsBipedV1TopologyPartRoles = [
+  ...kidsBipedV1PartComponents,
+  "eye-white-left",
+  "eye-white-right",
+  "pupil-left",
+  "pupil-right",
+  "lid-open-left",
+  "lid-open-right",
+  "brow-neutral-left",
+  "brow-neutral-right",
+  "mouth-rest",
+] as const;
+
+export const kidsBipedV1TopologyExposureRoles = [
+  "lid-half-left",
+  "lid-half-right",
+  "lid-closed-left",
+  "lid-closed-right",
+  "brow-raised-left",
+  "brow-raised-right",
+  "viseme-ai",
+  "viseme-e",
+  "viseme-mbp",
+  "viseme-oh",
+  "viseme-fv",
+  "viseme-l",
+  "viseme-wq",
+] as const;
+
+const kidsBipedV1CanonicalParentByRole = {
+  torso: { parentRole: null, parentSocketId: null },
+  pelvis: { parentRole: "torso", parentSocketId: "pelvis" },
+  head: { parentRole: "torso", parentSocketId: "neck" },
+  "ear-left": { parentRole: "head", parentSocketId: "ear-left" },
+  "ear-right": { parentRole: "head", parentSocketId: "ear-right" },
+  "upper-arm-left": { parentRole: "torso", parentSocketId: "shoulder-left" },
+  "lower-arm-left": { parentRole: "upper-arm-left", parentSocketId: "elbow-left" },
+  "hand-left": { parentRole: "lower-arm-left", parentSocketId: "wrist-left" },
+  "upper-arm-right": { parentRole: "torso", parentSocketId: "shoulder-right" },
+  "lower-arm-right": { parentRole: "upper-arm-right", parentSocketId: "elbow-right" },
+  "hand-right": { parentRole: "lower-arm-right", parentSocketId: "wrist-right" },
+  "upper-leg-left": { parentRole: "pelvis", parentSocketId: "hip-left" },
+  "lower-leg-left": { parentRole: "upper-leg-left", parentSocketId: "knee-left" },
+  "foot-left": { parentRole: "lower-leg-left", parentSocketId: "ankle-left" },
+  "upper-leg-right": { parentRole: "pelvis", parentSocketId: "hip-right" },
+  "lower-leg-right": { parentRole: "upper-leg-right", parentSocketId: "knee-right" },
+  "foot-right": { parentRole: "lower-leg-right", parentSocketId: "ankle-right" },
+  tail: { parentRole: "pelvis", parentSocketId: "tail-base" },
+  "secondary-front": { parentRole: "torso", parentSocketId: "secondary-front" },
+  "secondary-back": { parentRole: "torso", parentSocketId: "secondary-back" },
+  "eye-white-left": { parentRole: "head", parentSocketId: "eye-left" },
+  "eye-white-right": { parentRole: "head", parentSocketId: "eye-right" },
+  "pupil-left": { parentRole: "eye-white-left", parentSocketId: "pupil-left" },
+  "pupil-right": { parentRole: "eye-white-right", parentSocketId: "pupil-right" },
+  "lid-open-left": { parentRole: "eye-white-left", parentSocketId: "lid-left" },
+  "lid-open-right": { parentRole: "eye-white-right", parentSocketId: "lid-right" },
+  "brow-neutral-left": { parentRole: "head", parentSocketId: "brow-left" },
+  "brow-neutral-right": { parentRole: "head", parentSocketId: "brow-right" },
+  "mouth-rest": { parentRole: "head", parentSocketId: "mouth" },
+} as const;
+
+const kidsBipedV1CanonicalExposureTargetByRole = {
+  "lid-half-left": "lid-open-left",
+  "lid-half-right": "lid-open-right",
+  "lid-closed-left": "lid-open-left",
+  "lid-closed-right": "lid-open-right",
+  "brow-raised-left": "brow-neutral-left",
+  "brow-raised-right": "brow-neutral-right",
+  "viseme-ai": "mouth-rest",
+  "viseme-e": "mouth-rest",
+  "viseme-mbp": "mouth-rest",
+  "viseme-oh": "mouth-rest",
+  "viseme-fv": "mouth-rest",
+  "viseme-l": "mouth-rest",
+  "viseme-wq": "mouth-rest",
+} as const;
+
+const characterRigTopologyPartRuleSchema = z
+  .object({
+    role: characterRigComponentRoleSchema,
+    parentRole: characterRigComponentRoleSchema.nullable(),
+    parentSocketId: identifierSchema.nullable(),
+  })
+  .strict();
+
+const characterRigTopologyExposureRuleSchema = z
+  .object({
+    role: characterRigComponentRoleSchema,
+    targetRole: characterRigComponentRoleSchema,
+  })
+  .strict();
+
+const characterRigTopologyTemplateFields = {
+  schemaVersion: z.literal("1.0"),
+  templateId: z.literal("kids-biped-v1"),
+  profileVersion: z.literal("1.0.0"),
+  authority: z.literal("local-articulated-parts"),
+  parts: z.array(characterRigTopologyPartRuleSchema).length(29),
+  exposures: z.array(characterRigTopologyExposureRuleSchema).length(13),
+};
+
+const refineCharacterRigTopologyTemplate = (
+  template: {
+    parts: Array<z.infer<typeof characterRigTopologyPartRuleSchema>>;
+    exposures: Array<z.infer<typeof characterRigTopologyExposureRuleSchema>>;
+  },
+  context: z.RefinementCtx,
+) => {
+  const partRoles = template.parts.map((part) => part.role);
+  if (
+    new Set(partRoles).size !== partRoles.length ||
+    hashCanonical([...partRoles].sort()) !==
+      hashCanonical([...kidsBipedV1TopologyPartRoles].sort())
+  )
+    context.addIssue({
+      code: "custom",
+      path: ["parts"],
+      message: "kids-biped-v1 topology must declare its exact canonical part roles.",
+    });
+  const partByRole = new Map(template.parts.map((part) => [part.role, part]));
+  const roots = template.parts.filter((part) => part.parentRole === null);
+  if (
+    roots.length !== 1 ||
+    roots[0]?.role !== "torso" ||
+    roots[0]?.parentSocketId !== null
+  )
+    context.addIssue({
+      code: "custom",
+      path: ["parts"],
+      message: "kids-biped-v1 topology requires one socketless torso root.",
+    });
+  for (const [index, part] of template.parts.entries()) {
+    const canonical = kidsBipedV1CanonicalParentByRole[
+      part.role as keyof typeof kidsBipedV1CanonicalParentByRole
+    ];
+    if (
+      !canonical ||
+      part.parentRole !== canonical.parentRole ||
+      part.parentSocketId !== canonical.parentSocketId
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["parts", index],
+        message: `Topology part ${part.role} does not match canonical kids-biped-v1 parent/socket authority.`,
+      });
+    if (
+      part.parentRole !== null &&
+      (!partByRole.has(part.parentRole) || !part.parentSocketId)
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["parts", index],
+        message: `Topology part ${part.role} requires an existing parent role and canonical parent socket.`,
+      });
+    const visited = new Set<string>();
+    let cursor: typeof part | undefined = part;
+    while (cursor) {
+      if (visited.has(cursor.role)) {
+        context.addIssue({
+          code: "custom",
+          path: ["parts"],
+          message: `Topology contains a cycle at ${cursor.role}.`,
+        });
+        break;
+      }
+      visited.add(cursor.role);
+      cursor = cursor.parentRole
+        ? partByRole.get(cursor.parentRole)
+        : undefined;
+    }
+  }
+  const exposureRoles = template.exposures.map((exposure) => exposure.role);
+  if (
+    new Set(exposureRoles).size !== exposureRoles.length ||
+    hashCanonical([...exposureRoles].sort()) !==
+      hashCanonical([...kidsBipedV1TopologyExposureRoles].sort())
+  )
+    context.addIssue({
+      code: "custom",
+      path: ["exposures"],
+      message: "kids-biped-v1 topology must declare its exact canonical exposure roles.",
+    });
+  for (const [index, exposure] of template.exposures.entries())
+    if (
+      !partByRole.has(exposure.targetRole) ||
+      exposure.targetRole !==
+        kidsBipedV1CanonicalExposureTargetByRole[
+          exposure.role as keyof typeof kidsBipedV1CanonicalExposureTargetByRole
+        ]
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["exposures", index, "targetRole"],
+        message: `Exposure ${exposure.role} does not match canonical kids-biped-v1 target authority.`,
+      });
+};
+
+export const characterRigTopologyTemplateDraftSchema = z
+  .object(characterRigTopologyTemplateFields)
+  .strict()
+  .superRefine(refineCharacterRigTopologyTemplate);
+
+export const characterRigTopologyTemplateSchema = z
+  .object({ ...characterRigTopologyTemplateFields, contentHash: hashSchema })
+  .strict()
+  .superRefine((template, context) => {
+    refineCharacterRigTopologyTemplate(template, context);
+    if (hashCanonical(withoutContentHash(template)) !== template.contentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["contentHash"],
+        message: "Character rig topology template hash is invalid.",
+      });
+  });
+
+export type CharacterRigTopologyTemplate = z.infer<
+  typeof characterRigTopologyTemplateSchema
+>;
+
+const createCharacterRigTopologyTemplate = (
+  rawDraft: z.infer<typeof characterRigTopologyTemplateDraftSchema>,
+) => {
+  const draft = characterRigTopologyTemplateDraftSchema.parse(rawDraft);
+  const template = characterRigTopologyTemplateSchema.parse({
+    ...draft,
+    contentHash: hashCanonical(draft),
+  });
+  template.parts.forEach((part) => Object.freeze(part));
+  template.exposures.forEach((exposure) => Object.freeze(exposure));
+  Object.freeze(template.parts);
+  Object.freeze(template.exposures);
+  return Object.freeze(template);
+};
+
+export const kidsBipedV1TopologyTemplate =
+  createCharacterRigTopologyTemplate({
+    schemaVersion: "1.0",
+    templateId: "kids-biped-v1",
+    profileVersion: "1.0.0",
+    authority: "local-articulated-parts",
+    parts: kidsBipedV1TopologyPartRoles.map((role) => ({
+      role,
+      ...kidsBipedV1CanonicalParentByRole[role],
+    })),
+    exposures: kidsBipedV1TopologyExposureRoles.map((role) => ({
+      role,
+      targetRole: kidsBipedV1CanonicalExposureTargetByRole[role],
+    })),
+  });
+
 export const requirementsForRigProfile = (
   profileId: "kids-biped-v1",
   view: z.infer<typeof characterRigViewSchema> | null,
@@ -214,7 +464,7 @@ const characterRigAssetRequestFields = {
     .object({
       id: z.literal("kids-biped-v1"),
       version: z.literal("1.0.0"),
-      templateContentHash: hashSchema,
+      templateContentHash: z.literal(kidsBipedV1TopologyTemplate.contentHash),
     })
     .strict(),
   acquisition: manualFileAcquisitionSchema,

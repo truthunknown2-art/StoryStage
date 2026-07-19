@@ -8,6 +8,7 @@ import {
   createCharacterRigCandidateBundle,
   createKidsBipedRigRequestItems,
   hashCanonical,
+  kidsBipedV1TopologyTemplate,
 } from "@storystage/story-engine";
 import { stageCharacterRigCandidateBundle } from "../src/character-rig-staging";
 
@@ -48,12 +49,7 @@ const request = createCharacterRigAssetRequest({
   rigProfile: {
     id: "kids-biped-v1",
     version: "1.0.0",
-    templateContentHash: hashCanonical({
-      id: "kids-biped-v1",
-      version: "1.0.0",
-      views: ["front", "profile-left", "profile-right"],
-      authority: "local-parts-only",
-    }),
+    templateContentHash: kidsBipedV1TopologyTemplate.contentHash,
   },
   acquisition: {
     mode: "manual-file-import",

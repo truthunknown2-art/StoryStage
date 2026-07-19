@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "acquisitionMode": "manual-file-import",
   "requestId": "kcast-001-ollo-rig-request-v1",
-  "requestContentHash": "24a7a627be2a8acab69407524b30722aecb579a7a1d78f142d68c38082698365",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
   "provenance": {
     "sourceType": "generated",
     "providerLabel": "OpenAI built-in image generation",
@@ -22,5 +22,5 @@
       "height": 887
     }
   ],
-  "contentHash": "25d4f105f892fb1484d67563dff277b09e420838827d26c5f940735a437d2ce0"
+  "contentHash": "52b0395e9780183e8fc4abb09213f3808914a5d774eeeeb92f4fbaf168ae54d4"
 }

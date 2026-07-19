@@ -5,6 +5,7 @@ import {
   characterRigCandidateBundleSchema,
   characterRigSafeRelativePathSchema,
   inspectCharacterRigCandidateBundle,
+  kidsBipedV1TopologyTemplate,
   type CharacterRigAssetRequest,
   type CharacterRigCandidateBundle,
 } from "./character-rig-acquisition";
@@ -382,6 +383,49 @@ const refinePreparationRecipe = (
   if (roots.length !== 1 || roots[0]?.role !== "torso")
     context.addIssue({ code: "custom", path: ["parts"], message: "Recipe must have exactly one torso root." });
 
+  const partByRole = new Map(recipe.parts.map((part) => [part.role, part]));
+  const expectedPartRoles = kidsBipedV1TopologyTemplate.parts
+    .map((part) => part.role)
+    .sort();
+  if (
+    hashCanonical([...partByRole.keys()].sort()) !==
+    hashCanonical(expectedPartRoles)
+  )
+    context.addIssue({
+      code: "custom",
+      path: ["parts"],
+      message: "Recipe must implement every kids-biped-v1 topology part exactly once.",
+    });
+  for (const rule of kidsBipedV1TopologyTemplate.parts) {
+    const role = characterRigPartRoleSchema.parse(rule.role);
+    const parentRole = rule.parentRole
+      ? characterRigPartRoleSchema.parse(rule.parentRole)
+      : null;
+    const part = partByRole.get(role);
+    if (!part) continue;
+    const parent = parentRole ? partByRole.get(parentRole) : undefined;
+    if (
+      part.parentId !== (parent?.id ?? null) ||
+      part.parentSocketId !== rule.parentSocketId
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["parts"],
+        message: `Part role ${role} must follow kids-biped-v1 topology: parent ${parentRole ?? "none"}, socket ${rule.parentSocketId ?? "none"}.`,
+      });
+    const expectedSockets = kidsBipedV1TopologyTemplate.parts
+      .filter((candidate) => candidate.parentRole === role)
+      .map((candidate) => candidate.parentSocketId!)
+      .sort();
+    const actualSockets = part.sockets.map((socket) => socket.id).sort();
+    if (hashCanonical(actualSockets) !== hashCanonical(expectedSockets))
+      context.addIssue({
+        code: "custom",
+        path: ["parts"],
+        message: `Part role ${role} must expose only its canonical kids-biped-v1 child sockets.`,
+      });
+  }
+
   for (const [index, part] of recipe.parts.entries()) {
     if (!pointInsideOutput(part.childPivot, part.output))
       context.addIssue({ code: "custom", path: ["parts", index, "childPivot"], message: `Part ${part.id} child pivot leaves its output canvas.` });
@@ -427,6 +471,22 @@ const refinePreparationRecipe = (
   }
 
   const exposureIds = new Set<string>();
+  const exposureByRole = new Map(
+    recipe.exposures.map((exposure) => [exposure.role, exposure]),
+  );
+  if (
+    hashCanonical([...exposureByRole.keys()].sort()) !==
+    hashCanonical(
+      kidsBipedV1TopologyTemplate.exposures
+        .map((exposure) => exposure.role)
+        .sort(),
+    )
+  )
+    context.addIssue({
+      code: "custom",
+      path: ["exposures"],
+      message: "Recipe must implement every kids-biped-v1 exposure exactly once.",
+    });
   for (const [index, exposure] of recipe.exposures.entries()) {
     if (exposureIds.has(exposure.id))
       context.addIssue({ code: "custom", path: ["exposures", index, "id"], message: `Recipe exposure id is duplicated: ${exposure.id}.` });
@@ -443,6 +503,18 @@ const refinePreparationRecipe = (
       context.addIssue({ code: "custom", path: ["exposures", index], message: `Exposure ${exposure.id} registration must exactly match target ${target.id}.` });
     if (!pointInsideOutput(exposure.childPivot, exposure.output))
       context.addIssue({ code: "custom", path: ["exposures", index, "childPivot"], message: `Exposure ${exposure.id} child pivot leaves its output canvas.` });
+  }
+  for (const rule of kidsBipedV1TopologyTemplate.exposures) {
+    const role = characterRigExposureRoleSchema.parse(rule.role);
+    const targetRole = characterRigPartRoleSchema.parse(rule.targetRole);
+    const exposure = exposureByRole.get(role);
+    const target = exposure ? partById.get(exposure.targetPartId) : undefined;
+    if (exposure && target?.role !== targetRole)
+      context.addIssue({
+        code: "custom",
+        path: ["exposures"],
+        message: `Exposure ${role} must target ${targetRole}; ${target?.role ?? "missing"} is forbidden.`,
+      });
   }
 
   const sources = [

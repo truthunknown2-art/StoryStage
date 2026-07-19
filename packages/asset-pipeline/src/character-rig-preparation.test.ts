@@ -22,6 +22,7 @@ import {
   createCharacterRigPreparationRecipe,
   createKidsBipedRigRequestItems,
   hashCanonical,
+  kidsBipedV1TopologyTemplate,
   type CharacterRigAssetRequestDraft,
   type CharacterRigPreparationRecipe,
 } from "@storystage/story-engine";
@@ -64,7 +65,7 @@ const requestDraft = (): CharacterRigAssetRequestDraft => ({
   rigProfile: {
     id: "kids-biped-v1",
     version: "1.0.0",
-    templateContentHash: "c".repeat(64),
+    templateContentHash: kidsBipedV1TopologyTemplate.contentHash,
   },
   acquisition: {
     mode: "manual-file-import",
@@ -170,37 +171,34 @@ const buildRecipe = (
       });
     });
   }
-  const partRoles = [...roleSources.keys()].filter((role) =>
-    characterRigPartRoleSchema.safeParse(role).success,
+  const socketPositions = new Map(
+    kidsBipedV1TopologyTemplate.parts
+      .filter((rule) => rule.parentSocketId)
+      .map((rule, index) => [
+        rule.parentSocketId!,
+        {
+          x: 5 + (index % 6) * 5,
+          y: 5 + Math.floor(index / 6) * 5,
+        },
+      ]),
   );
-  const orderedPartRoles = [
-    "torso",
-    ...partRoles.filter((role) => role !== "torso"),
-  ];
-  const childRoles = orderedPartRoles.slice(1);
-  const sockets = childRoles.map((role, index) => ({
-    id: `socket-${role}`,
-    position: {
-      x: 5 + (index % 6) * 5,
-      y: 5 + Math.floor(index / 6) * 5,
-    },
-  }));
-  const parts = orderedPartRoles.map((role, index) => {
-    const socket = index === 0 ? null : sockets[index - 1]!;
+  const parts = kidsBipedV1TopologyTemplate.parts.map((rule, index) => {
     return {
-      id: `part-${role}`,
-      role: characterRigPartRoleSchema.parse(role),
-      source: roleSources.get(role)!,
+      id: `part-${rule.role}`,
+      role: characterRigPartRoleSchema.parse(rule.role),
+      source: roleSources.get(rule.role)!,
       output: {
-        relativeFile: `planned/front/part-${role}.png`,
+        relativeFile: `planned/front/part-${rule.role}.png`,
         width: 40,
         height: 40,
         padding: 4,
       },
-      parentId: index === 0 ? null : "part-torso",
-      parentSocketId: socket?.id ?? null,
+      parentId: rule.parentRole ? `part-${rule.parentRole}` : null,
+      parentSocketId: rule.parentSocketId,
       childPivot: { x: 20, y: 20 },
-      parentJoint: socket?.position ?? null,
+      parentJoint: rule.parentSocketId
+        ? socketPositions.get(rule.parentSocketId)!
+        : null,
       restTransform: {
         x: 0,
         y: 0,
@@ -208,24 +206,22 @@ const buildRecipe = (
         scaleX: 1,
         scaleY: 1,
       },
-      sockets: index === 0 ? sockets : [],
+      sockets: kidsBipedV1TopologyTemplate.parts
+        .filter((child) => child.parentRole === rule.role)
+        .map((child) => ({
+          id: child.parentSocketId!,
+          position: socketPositions.get(child.parentSocketId!)!,
+        })),
       zIndex: index,
     };
   });
-  const exposureRoles = [...roleSources.keys()].filter((role) =>
-    characterRigExposureRoleSchema.safeParse(role).success,
-  );
-  const exposures = exposureRoles.map((role) => ({
-    id: `exposure-${role}`,
-    role: characterRigExposureRoleSchema.parse(role),
-    targetPartId: role.startsWith("lid-")
-      ? `part-lid-open-${role.endsWith("left") ? "left" : "right"}`
-      : role.startsWith("brow-")
-        ? `part-brow-neutral-${role.endsWith("left") ? "left" : "right"}`
-        : "part-mouth-rest",
-    source: roleSources.get(role)!,
+  const exposures = kidsBipedV1TopologyTemplate.exposures.map((rule) => ({
+    id: `exposure-${rule.role}`,
+    role: characterRigExposureRoleSchema.parse(rule.role),
+    targetPartId: `part-${rule.targetRole}`,
+    source: roleSources.get(rule.role)!,
     output: {
-      relativeFile: `planned/front/exposure-${role}.png`,
+      relativeFile: `planned/front/exposure-${rule.role}.png`,
       width: 40,
       height: 40,
       padding: 4,
@@ -353,7 +349,7 @@ const setup = async () => {
 };
 
 describe("deterministic character rig component preparation", () => {
-  it("prepares exact alpha and chroma roles, then retries byte-identically", async () => {
+  it("prepares the canonical articulated alpha/chroma chain and retries byte-identically", async () => {
     const fixture = await setup();
     const input = {
       recipe: fixture.recipe,

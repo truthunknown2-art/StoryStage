@@ -9,6 +9,7 @@ import {
   createCharacterRigCandidateBundle,
   createCharacterRigStagingReport,
   createKidsBipedRigRequestItems,
+  kidsBipedV1TopologyTemplate,
   type CharacterRigAssetRequestDraft,
 } from "@storystage/story-engine";
 import {
@@ -46,7 +47,7 @@ const requestDraft = (): CharacterRigAssetRequestDraft => ({
   rigProfile: {
     id: "kids-biped-v1",
     version: "1.0.0",
-    templateContentHash: "b".repeat(64),
+    templateContentHash: kidsBipedV1TopologyTemplate.contentHash,
   },
   acquisition: {
     mode: "manual-file-import",

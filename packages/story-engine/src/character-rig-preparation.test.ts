@@ -6,6 +6,7 @@ import {
   createCharacterRigCandidateBundle,
   createKidsBipedRigRequestItems,
   inspectCharacterRigCandidateBundle,
+  kidsBipedV1TopologyTemplate,
   type CharacterRigAssetRequestDraft,
 } from "./character-rig-acquisition";
 import {
@@ -42,7 +43,7 @@ const requestDraft = (): CharacterRigAssetRequestDraft => ({
   rigProfile: {
     id: "kids-biped-v1",
     version: "1.0.0",
-    templateContentHash: repeatedHash("b"),
+    templateContentHash: kidsBipedV1TopologyTemplate.contentHash,
   },
   acquisition: {
     mode: "manual-file-import",
@@ -152,58 +153,49 @@ const fixture = (complete = false) => {
       ]),
     ),
   );
-  const partRoles = [...roleSource.keys()].filter((role) =>
-    characterRigPartRoleSchema.safeParse(role).success,
+  const socketPositions = new Map(
+    kidsBipedV1TopologyTemplate.parts
+      .filter((rule) => rule.parentSocketId)
+      .map((rule, index) => [
+        rule.parentSocketId!,
+        {
+          x: 5 + (index % 6) * 5,
+          y: 5 + Math.floor(index / 6) * 5,
+        },
+      ]),
   );
-  const nonRootPartRoles = partRoles.filter((role) => role !== "torso");
-  const parts = ["torso", ...nonRootPartRoles].map((role, index) => ({
-    id: `part-${role}`,
-    role: characterRigPartRoleSchema.parse(role),
-    source: roleSource.get(role)!,
+  const parts = kidsBipedV1TopologyTemplate.parts.map((rule, index) => ({
+    id: `part-${rule.role}`,
+    role: characterRigPartRoleSchema.parse(rule.role),
+    source: roleSource.get(rule.role)!,
     output: {
-      relativeFile: `prepared/front/part-${role}.png`,
+      relativeFile: `prepared/front/part-${rule.role}.png`,
       width: 64,
       height: 64,
       padding: 4,
     },
-    parentId: role === "torso" ? null : "part-torso",
-    parentSocketId: role === "torso" ? null : `socket-${role}`,
+    parentId: rule.parentRole ? `part-${rule.parentRole}` : null,
+    parentSocketId: rule.parentSocketId,
     childPivot: { x: 32, y: 32 },
-    parentJoint:
-      role === "torso"
-        ? null
-        : {
-            x: 2 + ((index - 1) % 10) * 6,
-            y: 2 + Math.floor((index - 1) / 10) * 8,
-          },
+    parentJoint: rule.parentSocketId
+      ? socketPositions.get(rule.parentSocketId)!
+      : null,
     restTransform: { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1 },
-    sockets:
-      role === "torso"
-        ? nonRootPartRoles.map((childRole, socketIndex) => ({
-            id: `socket-${childRole}`,
-            position: {
-              x: 2 + (socketIndex % 10) * 6,
-              y: 2 + Math.floor(socketIndex / 10) * 8,
-            },
-          }))
-        : [],
+    sockets: kidsBipedV1TopologyTemplate.parts
+      .filter((child) => child.parentRole === rule.role)
+      .map((child) => ({
+        id: child.parentSocketId!,
+        position: socketPositions.get(child.parentSocketId!)!,
+      })),
     zIndex: index,
   }));
-  const targetForExposure = (role: string) =>
-    role.startsWith("lid-")
-      ? `part-lid-open-${role.endsWith("left") ? "left" : "right"}`
-      : role.startsWith("brow-")
-        ? `part-brow-neutral-${role.endsWith("left") ? "left" : "right"}`
-        : "part-mouth-rest";
-  const exposures = [...roleSource.keys()]
-    .filter((role) => characterRigExposureRoleSchema.safeParse(role).success)
-    .map((role) => ({
-      id: `exposure-${role}`,
-      role: characterRigExposureRoleSchema.parse(role),
-      targetPartId: targetForExposure(role),
-      source: roleSource.get(role)!,
+  const exposures = kidsBipedV1TopologyTemplate.exposures.map((rule) => ({
+      id: `exposure-${rule.role}`,
+      role: characterRigExposureRoleSchema.parse(rule.role),
+      targetPartId: `part-${rule.targetRole}`,
+      source: roleSource.get(rule.role)!,
       output: {
-        relativeFile: `prepared/front/exposure-${role}.png`,
+        relativeFile: `prepared/front/exposure-${rule.role}.png`,
         width: 64,
         height: 64,
         padding: 4,
@@ -385,18 +377,67 @@ describe("character rig preparation ledger", () => {
   });
 
   it("rejects missing exact role coverage", () => {
-    const { request, bundle, report, recipe } = fixture();
-    const incomplete = createCharacterRigPreparationRecipeDraft({
-      ...recipe,
-      exposures: recipe.exposures.slice(1),
-    });
+    const { recipe } = fixture();
     expect(() =>
-      validateCharacterRigPreparationRecipeDraft(
-        request,
-        bundle,
-        report,
-        incomplete,
-      ),
-    ).toThrow(/every requested component/i);
+      createCharacterRigPreparationRecipeDraft({
+        ...recipe,
+        exposures: recipe.exposures.slice(1),
+      }),
+    ).toThrow(/every kids-biped-v1 exposure/i);
+  });
+
+  it("rejects an all-children-under-torso star topology", () => {
+    const { recipe } = fixture();
+    expect(() =>
+      createCharacterRigPreparationRecipeDraft({
+        ...recipe,
+        parts: recipe.parts.map((part) =>
+          part.role === "torso"
+            ? part
+            : {
+                ...part,
+                parentId: "part-torso",
+                parentSocketId: null,
+                parentJoint: null,
+              },
+        ),
+      }),
+    ).toThrow(/kids-biped-v1 topology|canonical/i);
+  });
+
+  it("rejects hand-left cross-wired under the right arm chain", () => {
+    const { recipe } = fixture();
+    const rightElbow = recipe.parts
+      .find((part) => part.role === "upper-arm-right")!
+      .sockets.find((socket) => socket.id === "elbow-right")!;
+    expect(() =>
+      createCharacterRigPreparationRecipeDraft({
+        ...recipe,
+        parts: recipe.parts.map((part) =>
+          part.role === "hand-left"
+            ? {
+                ...part,
+                parentId: "part-upper-arm-right",
+                parentSocketId: rightElbow.id,
+                parentJoint: rightElbow.position,
+              }
+            : part,
+        ),
+      }),
+    ).toThrow(/hand-left.*topology|canonical/i);
+  });
+
+  it("rejects viseme-ai targeting an eye or lid part", () => {
+    const { recipe } = fixture();
+    expect(() =>
+      createCharacterRigPreparationRecipeDraft({
+        ...recipe,
+        exposures: recipe.exposures.map((exposure) =>
+          exposure.role === "viseme-ai"
+            ? { ...exposure, targetPartId: "part-lid-open-left" }
+            : exposure,
+        ),
+      }),
+    ).toThrow(/viseme-ai must target mouth-rest/i);
   });
 });
