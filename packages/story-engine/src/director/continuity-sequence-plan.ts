@@ -31,8 +31,113 @@ export const continuityPerformanceStateSchema = z
     actionPhase: continuityActionPhaseSchema,
     gaitPhase: z.number().min(0).max(1).nullable(),
     performanceProgramId: identifierSchema.nullable(),
+    performanceProgramContentHash: hashSchema.nullable(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (state) =>
+      (state.performanceProgramId === null) ===
+      (state.performanceProgramContentHash === null),
+    {
+      message:
+        "Performance state program IDs and hashes must be bound together.",
+    },
+  );
+
+export const continuityPerformanceSegmentSchema = z
+  .object({
+    entityId: identifierSchema,
+    startFrame: z.number().int().nonnegative(),
+    endFrameExclusive: z.number().int().positive(),
+    motionMode: continuityMotionModeSchema,
+    actionPhase: continuityActionPhaseSchema,
+    gaitStart: z.number().min(0).max(1).nullable(),
+    gaitEnd: z.number().min(0).max(1).nullable(),
+    performanceProgramId: identifierSchema.nullable(),
+    performanceProgramContentHash: hashSchema.nullable(),
+  })
+  .strict()
+  .refine((segment) => segment.endFrameExclusive > segment.startFrame, {
+    message: "Performance segment end must follow its start.",
+  })
+  .superRefine((segment, context) => {
+    const locomoting = [
+      "walking",
+      "sneaking",
+      "running",
+      "decelerating",
+    ].includes(segment.motionMode);
+    if ((segment.gaitStart === null) !== (segment.gaitEnd === null))
+      context.addIssue({
+        code: "custom",
+        path: ["gaitStart"],
+        message:
+          "Performance segment gait boundaries must both be present or both be null.",
+      });
+    if (
+      (segment.performanceProgramId === null) !==
+      (segment.performanceProgramContentHash === null)
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["performanceProgramContentHash"],
+        message:
+          "Performance segment program IDs and hashes must be bound together.",
+      });
+    if (locomoting && segment.gaitStart === null)
+      context.addIssue({
+        code: "custom",
+        path: ["gaitStart"],
+        message:
+          "Locomotion performance segments require an advancing gait phase.",
+      });
+    if (segment.motionMode === "idle" && segment.gaitStart !== null)
+      context.addIssue({
+        code: "custom",
+        path: ["gaitStart"],
+        message: "Idle performance segments cannot advance gait.",
+      });
+  });
+
+const continuityVisemeCueSchema = z
+  .object({
+    startFrame: z.number().int().nonnegative(),
+    endFrameExclusive: z.number().int().positive(),
+    visemeId: identifierSchema,
+  })
+  .strict()
+  .refine((cue) => cue.endFrameExclusive > cue.startFrame, {
+    message: "Viseme cue end must follow its start.",
+  });
+
+export const continuityVisemeProgramSchema = z
+  .object({
+    id: identifierSchema,
+    shotId: identifierSchema,
+    entityId: identifierSchema,
+    sourceLineId: identifierSchema,
+    cues: z.array(continuityVisemeCueSchema).min(1),
+    contentHash: hashSchema,
+  })
+  .strict()
+  .superRefine((program, context) => {
+    const { contentHash, ...draft } = program;
+    if (hashCanonical(draft) !== contentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["contentHash"],
+        message: "Continuity viseme program hash is invalid.",
+      });
+    program.cues.forEach((cue, index) => {
+      const previous = program.cues[index - 1];
+      if (previous && cue.startFrame < previous.endFrameExclusive)
+        context.addIssue({
+          code: "custom",
+          path: ["cues", index],
+          message: "Viseme cues must be ordered and non-overlapping.",
+        });
+    });
+  });
 
 const directorPictureEventSchema = z
   .object({
@@ -164,11 +269,55 @@ export const continuityShotStateSchema = z
     exitWorldState: directorWorldStateSchema,
     entryPerformanceState: z.array(continuityPerformanceStateSchema).min(1),
     exitPerformanceState: z.array(continuityPerformanceStateSchema).min(1),
+    performanceSegments: z.array(continuityPerformanceSegmentSchema).min(1),
     pictureEvents: z.array(continuityPictureEventSchema).min(1),
   })
   .strict()
   .refine((shot) => shot.endFrameExclusive > shot.startFrame, {
     message: "Continuity shot end must follow its start.",
+  })
+  .superRefine((shot, context) => {
+    const entityIds = Object.keys(shot.entryWorldState.entities).sort();
+    const segmentEntityIds = [
+      ...new Set(shot.performanceSegments.map((segment) => segment.entityId)),
+    ].sort();
+    if (hashCanonical(entityIds) !== hashCanonical(segmentEntityIds))
+      context.addIssue({
+        code: "custom",
+        path: ["performanceSegments"],
+        message: "Performance segments must cover every continuity entity.",
+      });
+    entityIds.forEach((entityId) => {
+      const segments = shot.performanceSegments
+        .filter((segment) => segment.entityId === entityId)
+        .sort((left, right) => left.startFrame - right.startFrame);
+      if (
+        segments[0]?.startFrame !== shot.startFrame ||
+        segments.at(-1)?.endFrameExclusive !== shot.endFrameExclusive ||
+        segments.some(
+          (segment, index) =>
+            index > 0 &&
+            segment.startFrame !== segments[index - 1]!.endFrameExclusive,
+        )
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["performanceSegments"],
+          message: `${entityId} performance segments must cover the shot without gaps or overlaps.`,
+        });
+      if (
+        segments.some(
+          (segment) =>
+            segment.startFrame < shot.startFrame ||
+            segment.endFrameExclusive > shot.endFrameExclusive,
+        )
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["performanceSegments"],
+          message: `${entityId} performance segments must remain inside the shot.`,
+        });
+    });
   });
 
 export const continuityTransitionLinkSchema = z
@@ -205,12 +354,48 @@ const continuitySequencePlanFields = {
   durationInFrames: z.number().int().positive(),
   shots: z.array(continuityShotStateSchema).min(1),
   transitions: z.array(continuityTransitionLinkSchema),
+  visemePrograms: z.array(continuityVisemeProgramSchema),
 };
 
 export const continuitySequencePlanDraftSchema = z
   .object(continuitySequencePlanFields)
   .strict()
-  .superRefine(validateContinuityRules);
+  .superRefine((plan, context) => {
+    validateContinuityRules(plan, context);
+    const programIds = new Set<string>();
+    const bindings = new Set<string>();
+    plan.visemePrograms.forEach((program, index) => {
+      const shot = plan.shots.find(
+        (candidate) => candidate.shotId === program.shotId,
+      );
+      const binding = `${program.shotId}:${program.entityId}`;
+      if (programIds.has(program.id) || bindings.has(binding))
+        context.addIssue({
+          code: "custom",
+          path: ["visemePrograms", index],
+          message:
+            "Continuity viseme program IDs and shot/entity bindings must be unique.",
+        });
+      programIds.add(program.id);
+      bindings.add(binding);
+      if (
+        !shot ||
+        !shot.beatIds.includes(program.sourceLineId) ||
+        !shot.entryWorldState.entities[program.entityId] ||
+        program.cues.some(
+          (cue) =>
+            cue.startFrame < shot.startFrame ||
+            cue.endFrameExclusive > shot.endFrameExclusive,
+        )
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["visemePrograms", index],
+          message:
+            "Continuity viseme programs must bind an exact shot entity, source beat, and in-shot cue range.",
+        });
+    });
+  });
 
 export const continuitySequencePlanSchema = z
   .object({ ...continuitySequencePlanFields, contentHash: hashSchema })
@@ -236,6 +421,12 @@ export const continuitySequencePlanSchema = z
 
 export type ContinuityPerformanceState = z.infer<
   typeof continuityPerformanceStateSchema
+>;
+export type ContinuityPerformanceSegment = z.infer<
+  typeof continuityPerformanceSegmentSchema
+>;
+export type ContinuityVisemeProgram = z.infer<
+  typeof continuityVisemeProgramSchema
 >;
 export type ContinuityShotState = z.infer<typeof continuityShotStateSchema>;
 export type ContinuityTransitionLink = z.infer<

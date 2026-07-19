@@ -594,6 +594,19 @@ export function sealExecutableEpisodePlan(
     directorPlan,
     timing,
     draft.continuitySequencePlan,
+    draft.performancePrograms.flatMap((program) =>
+      program.contentHash && program.sourceShotIds
+        ? [
+            {
+              id: program.id,
+              entityId: program.entityId,
+              kind: program.kind,
+              contentHash: program.contentHash,
+              sourceShotIds: program.sourceShotIds,
+            },
+          ]
+        : [],
+    ),
   );
 
   const programIds = new Set(
@@ -644,6 +657,137 @@ export function sealExecutableEpisodePlan(
           `${program.id} executable performance is not bound to an approved renderable asset.`,
         );
     }
+  });
+  draft.continuitySequencePlan.shots.forEach((continuityShot) => {
+    const validatePerformanceBinding = (
+      entityId: string,
+      performanceProgramId: string | null,
+      performanceProgramContentHash: string | null,
+    ) => {
+      if (performanceProgramId === null) {
+        if (performanceProgramContentHash !== null)
+          throw new Error(
+            `${continuityShot.shotId}/${entityId} has a performance hash without a program ID.`,
+          );
+        return;
+      }
+      const program = draft.performancePrograms.find(
+        (candidate) => candidate.id === performanceProgramId,
+      );
+      if (
+        !program ||
+        program.entityId !== entityId ||
+        !program.sourceShotIds?.includes(continuityShot.shotId) ||
+        program.contentHash !== performanceProgramContentHash
+      )
+        throw new Error(
+          `${continuityShot.shotId}/${entityId} is not bound to the exact current-shot performance program.`,
+        );
+    };
+
+    continuityShot.entryPerformanceState.forEach((state) =>
+      validatePerformanceBinding(
+        state.entityId,
+        state.performanceProgramId,
+        state.performanceProgramContentHash,
+      ),
+    );
+    continuityShot.exitPerformanceState.forEach((state) =>
+      validatePerformanceBinding(
+        state.entityId,
+        state.performanceProgramId,
+        state.performanceProgramContentHash,
+      ),
+    );
+    continuityShot.performanceSegments.forEach((segment) =>
+      validatePerformanceBinding(
+        segment.entityId,
+        segment.performanceProgramId,
+        segment.performanceProgramContentHash,
+      ),
+    );
+    continuityShot.pictureEvents
+      .filter((event) => event.source === "performance-event")
+      .forEach((event) => {
+        event.subjectIds.forEach((entityId) => {
+          const program = draft.performancePrograms.find(
+            (candidate) =>
+              candidate.entityId === entityId &&
+              candidate.sourceShotIds?.includes(continuityShot.shotId) &&
+              candidate.contentHash === event.sourceProgramContentHash,
+          );
+          if (!program)
+            throw new Error(
+              `${event.id} is not bound to an exact current-shot performance program.`,
+            );
+        });
+      });
+
+    Object.entries(continuityShot.entryWorldState.entities).forEach(
+      ([entityId, entryWorld]) => {
+        const exitWorld = continuityShot.exitWorldState.entities[entityId]!;
+        const moved =
+          Math.hypot(
+            exitWorld.transform.x - entryWorld.transform.x,
+            exitWorld.transform.y - entryWorld.transform.y,
+            exitWorld.transform.z - entryWorld.transform.z,
+          ) > 0.000001;
+        if (!moved) return;
+        const segments = continuityShot.performanceSegments.filter(
+          (segment) => segment.entityId === entityId,
+        );
+        const decelerationFrame = continuityShot.pictureEvents.find(
+          (event) =>
+            event.source === "performance-event" &&
+            event.kind === "deceleration" &&
+            event.subjectIds.includes(entityId),
+        )?.frame;
+        const plantFrame = continuityShot.pictureEvents.find(
+          (event) =>
+            event.source === "performance-event" &&
+            (event.kind === "plant" || event.kind === "foot-contact") &&
+            event.subjectIds.includes(entityId),
+        )?.frame;
+        if (
+          segments.some(
+            (segment) =>
+              segment.startFrame <
+                (plantFrame ?? continuityShot.endFrameExclusive) &&
+              segment.motionMode === "idle",
+          )
+        )
+          throw new Error(
+            `${continuityShot.shotId}/${entityId} reports idle while its canonical root is moving.`,
+          );
+        if (decelerationFrame !== undefined) {
+          const deceleration = segments.find(
+            (segment) =>
+              decelerationFrame >= segment.startFrame &&
+              decelerationFrame < segment.endFrameExclusive,
+          );
+          if (deceleration?.motionMode !== "decelerating")
+            throw new Error(
+              `${continuityShot.shotId}/${entityId} does not enter deceleration on its named event.`,
+            );
+        }
+        if (plantFrame !== undefined) {
+          const plant = segments.find(
+            (segment) =>
+              plantFrame >= segment.startFrame &&
+              plantFrame < segment.endFrameExclusive,
+          );
+          if (
+            plant?.motionMode !== "idle" ||
+            !["settle", "hold"].includes(plant.actionPhase) ||
+            plant.gaitStart !== null ||
+            plant.gaitEnd !== null
+          )
+            throw new Error(
+              `${continuityShot.shotId}/${entityId} does not stop on its named plant contact.`,
+            );
+        }
+      },
+    );
   });
   draft.stageKits.forEach((stage) => {
     if (stage.assetIds.some((assetId) => !assetIds.has(assetId)))

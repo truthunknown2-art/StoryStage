@@ -159,15 +159,6 @@ export function evaluateContinuityFrame(
     occluderId: transitionProgram.occluderId,
   };
 
-  const entryPerformance = new Map(
-    continuityShot.entryPerformanceState.map((state) => [
-      state.entityId,
-      state,
-    ]),
-  );
-  const exitPerformance = new Map(
-    continuityShot.exitPerformanceState.map((state) => [state.entityId, state]),
-  );
   const phaseStartByEntity = new Map<string, number>();
   const decelerationFrameByEntity = new Map<string, number>();
   const plantFrameByEntity = new Map<string, number>();
@@ -238,23 +229,47 @@ export function evaluateContinuityFrame(
     Object.entries(continuityShot.entryWorldState.entities).map(
       ([entityId, entryWorld]) => {
         const exitWorld = continuityShot.exitWorldState.entities[entityId]!;
-        const entry = entryPerformance.get(entityId)!;
-        const exit = exitPerformance.get(entityId)!;
+        const performanceSegment = continuityShot.performanceSegments.find(
+          (segment) =>
+            segment.entityId === entityId &&
+            absoluteFrame >= segment.startFrame &&
+            absoluteFrame < segment.endFrameExclusive,
+        );
+        if (!performanceSegment)
+          throw new Error(
+            `${entityId} has no canonical performance segment at frame ${absoluteFrame}.`,
+          );
         const phaseStart =
           phaseStartByEntity.get(entityId) ?? continuityShot.startFrame;
         const phaseProgress = clamp01(
-          (absoluteFrame - phaseStart) /
-            Math.max(1, continuityShot.endFrameExclusive - 1 - phaseStart),
+          (absoluteFrame - performanceSegment.startFrame) /
+            Math.max(
+              1,
+              performanceSegment.endFrameExclusive -
+                1 -
+                performanceSegment.startFrame,
+            ),
         );
         const transitioned = absoluteFrame >= phaseStart;
-        const performanceProgramId = transitioned
-          ? exit.performanceProgramId
-          : entry.performanceProgramId;
+        const performanceProgramId = performanceSegment.performanceProgramId;
         const performanceProgram = performanceProgramId
           ? episode.performancePrograms.find(
               (program) => program.id === performanceProgramId,
             )
           : null;
+        if (
+          performanceProgramId !== null &&
+          (!performanceProgram ||
+            performanceProgram.entityId !== entityId ||
+            !performanceProgram.sourceShotIds?.includes(
+              executableShot.directorShotId,
+            ) ||
+            performanceProgram.contentHash !==
+              performanceSegment.performanceProgramContentHash)
+        )
+          throw new Error(
+            `${entityId} performance segment is not bound to the exact current-shot program.`,
+          );
         const gazeTargetId = transitioned
           ? exitWorld.gazeTargetId
           : entryWorld.gazeTargetId;
@@ -293,6 +308,18 @@ export function evaluateContinuityFrame(
         const lifecycle = transitioned
           ? exitWorld.lifecycle
           : entryWorld.lifecycle;
+        const visemeProgram =
+          episode.continuitySequencePlan.visemePrograms.find(
+            (program) =>
+              program.shotId === executableShot.directorShotId &&
+              program.entityId === entityId,
+          );
+        const visemeId =
+          visemeProgram?.cues.find(
+            (cue) =>
+              absoluteFrame >= cue.startFrame &&
+              absoluteFrame < cue.endFrameExclusive,
+          )?.visemeId ?? null;
         return [
           entityId,
           {
@@ -307,14 +334,18 @@ export function evaluateContinuityFrame(
                 : sampledVelocity,
             facing: transitioned ? exitWorld.facing : entryWorld.facing,
             gazeVectorLocal,
-            motionMode: transitioned ? exit.motionMode : entry.motionMode,
-            actionPhase: transitioned ? exit.actionPhase : entry.actionPhase,
+            motionMode: performanceSegment.motionMode,
+            actionPhase: performanceSegment.actionPhase,
             phaseProgress,
-            gaitPhase: gaitAt(entry.gaitPhase, exit.gaitPhase, phaseProgress),
-            visemeId: null,
+            gaitPhase: gaitAt(
+              performanceSegment.gaitStart,
+              performanceSegment.gaitEnd,
+              phaseProgress,
+            ),
+            visemeId,
             performanceProgramId,
             performanceProgramContentHash:
-              performanceProgram?.contentHash ?? null,
+              performanceSegment.performanceProgramContentHash,
           },
         ];
       },

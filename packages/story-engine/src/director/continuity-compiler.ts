@@ -2,6 +2,7 @@ import { hashCanonical } from "../canonical-hash";
 import {
   continuitySequencePlanSchema,
   sealContinuitySequencePlan,
+  type ContinuityPerformanceSegment,
   type ContinuityPerformanceState,
   type ContinuitySequencePlan,
   type ContinuitySequencePlanDraft,
@@ -41,6 +42,7 @@ const defaultPerformanceState = (
   actionPhase: "hold",
   gaitPhase: null,
   performanceProgramId: null,
+  performanceProgramContentHash: null,
 });
 
 const actionPhaseFor = (
@@ -113,6 +115,53 @@ const sealContinuityProgram = <T extends Record<string, unknown>>(
   ...draft,
   contentHash: hashCanonical(draft),
 });
+
+const wrapGait = (value: number) => ((value % 1) + 1) % 1;
+
+const gaitAfterFrames = (start: number, frames: number) =>
+  wrapGait(start + frames / 12);
+
+const guideVisemeProgramFor = (
+  shot: DirectorPlan["shots"][number],
+  startFrame: number,
+  endFrameExclusive: number,
+  program: ContinuityPerformanceProgramBinding,
+) => {
+  const duration = endFrameExclusive - startFrame;
+  if (
+    program.kind !== "articulated-rig" ||
+    !program.sourceShotIds.includes(shot.id) ||
+    duration < 6
+  )
+    return null;
+  const unit = Math.max(1, Math.min(6, Math.floor(duration / 8)));
+  const span = unit * 3;
+  const cueStart = startFrame + Math.floor((duration - span) / 2);
+  const draft = {
+    id: `guide-viseme-${shot.id}-${program.entityId}`,
+    shotId: shot.id,
+    entityId: program.entityId,
+    sourceLineId: shot.beatIds[0]!,
+    cues: [
+      {
+        startFrame: cueStart,
+        endFrameExclusive: cueStart + unit,
+        visemeId: "open",
+      },
+      {
+        startFrame: cueStart + unit,
+        endFrameExclusive: cueStart + unit * 2,
+        visemeId: "rest",
+      },
+      {
+        startFrame: cueStart + unit * 2,
+        endFrameExclusive: cueStart + span,
+        visemeId: "open",
+      },
+    ],
+  };
+  return { ...draft, contentHash: hashCanonical(draft) };
+};
 
 const cameraProgramForShot = (
   shot: DirectorPlan["shots"][number],
@@ -258,6 +307,7 @@ export function assertContinuitySequenceMatchesSources(
   rawDirectorPlan: DirectorPlan,
   rawTimingSolution: TimingSolution,
   rawContinuityPlan: ContinuitySequencePlan,
+  performancePrograms: ContinuityPerformanceProgramBinding[],
 ) {
   const directorPlan = directorPlanSchema.parse(rawDirectorPlan);
   const timing = timingSolutionSchema.parse(rawTimingSolution);
@@ -324,6 +374,26 @@ export function assertContinuitySequenceMatchesSources(
     )
       throw new Error(
         `${shot.shotId} invents continuity authority outside DirectorPlan.`,
+      );
+
+    const expectedVisemes = performancePrograms
+      .filter((program) => program.sourceShotIds.includes(shot.shotId))
+      .map((program) =>
+        guideVisemeProgramFor(
+          planned,
+          shot.startFrame,
+          shot.endFrameExclusive,
+          program,
+        ),
+      )
+      .filter((program) => program !== null)
+      .sort((left, right) => left.id.localeCompare(right.id));
+    const actualVisemes = continuity.visemePrograms
+      .filter((program) => program.shotId === shot.shotId)
+      .sort((left, right) => left.id.localeCompare(right.id));
+    if (hashCanonical(actualVisemes) !== hashCanonical(expectedVisemes))
+      throw new Error(
+        `${shot.shotId} moves guide visemes outside compiler-owned timing.`,
       );
   });
 
@@ -483,6 +553,7 @@ export function compileContinuitySequencePlan(
     .sort()
     .map(defaultPerformanceState);
   const shots: ContinuitySequencePlanDraft["shots"] = [];
+  const visemePrograms: ContinuitySequencePlanDraft["visemePrograms"] = [];
 
   directorPlan.shots.forEach((plannedShot, shotIndex) => {
     const resolved = resolvedByShotId.get(plannedShot.id);
@@ -500,7 +571,8 @@ export function compileContinuitySequencePlan(
       );
       return {
         ...state,
-        performanceProgramId: program?.id ?? state.performanceProgramId,
+        performanceProgramId: program?.id ?? null,
+        performanceProgramContentHash: program?.contentHash ?? null,
       };
     });
     const exitWorldState = cloneWorldAt(
@@ -551,8 +623,13 @@ export function compileContinuitySequencePlan(
       worldEntity.facing = blocking.facing;
       worldEntity.gazeTargetId = blocking.gazeTargetId;
       performanceState.performanceProgramId = program?.id ?? null;
+      performanceState.performanceProgramContentHash =
+        program?.contentHash ?? null;
       if (!program) {
-        performanceState.actionPhase = actionPhaseFor(exitDirectorEvent.kind);
+        performanceState.motionMode = "idle";
+        performanceState.actionPhase = "hold";
+        performanceState.gaitPhase = null;
+        worldEntity.velocity = { x: 0, y: 0, z: 0 };
         return;
       }
 
@@ -653,12 +730,10 @@ export function compileContinuitySequencePlan(
             input.performancePrograms,
           )
         : null;
-      const inheritedProgramId = performanceCursor.find(
-        (state) => state.entityId === outgoing.entityId,
-      )?.performanceProgramId;
-      const sourceProgram = input.performancePrograms.find(
-        (program) =>
-          program.id === (inheritedProgramId ?? outgoing.performanceProgramId),
+      const sourceProgram = programForEntity(
+        plannedShot.id,
+        outgoing.entityId,
+        input.performancePrograms,
       );
       const mustPlant =
         (wasLocomoting && !remainsLocomoting) ||
@@ -718,6 +793,182 @@ export function compileContinuitySequencePlan(
     )
       throw new Error(`${plannedShot.id} has no resolved cut picture event.`);
     const shotDuration = resolved.endFrameExclusive - resolved.startFrame;
+    const performanceSegments = Object.keys(entryWorldState.entities)
+      .sort()
+      .flatMap((entityId): ContinuityPerformanceSegment[] => {
+        const entryWorld = entryWorldState.entities[entityId]!;
+        const exitWorld = exitWorldState.entities[entityId]!;
+        const entry = entryPerformanceState.find(
+          (state) => state.entityId === entityId,
+        )!;
+        const exit = exitPerformanceState.find(
+          (state) => state.entityId === entityId,
+        )!;
+        const program = programForEntity(
+          plannedShot.id,
+          entityId,
+          input.performancePrograms,
+        );
+        const moved =
+          Math.hypot(
+            exitWorld.transform.x - entryWorld.transform.x,
+            exitWorld.transform.y - entryWorld.transform.y,
+            exitWorld.transform.z - entryWorld.transform.z,
+          ) > 0.000001;
+        const performanceEvents = performancePictureEvents.filter(
+          (
+            event,
+          ): event is Extract<
+            (typeof performancePictureEvents)[number],
+            { source: "performance-event" }
+          > =>
+            event.source === "performance-event" &&
+            event.subjectIds.includes(entityId),
+        );
+        const decelerationFrame = performanceEvents.find(
+          (event) => event.kind === "deceleration",
+        )?.frame;
+        const plantFrame = performanceEvents.find(
+          (event) => event.kind === "plant" || event.kind === "foot-contact",
+        )?.frame;
+        const gaitStart = entry.gaitPhase ?? 0;
+        const segment = (
+          startFrame: number,
+          endFrameExclusive: number,
+          motionMode: ContinuityPerformanceSegment["motionMode"],
+          actionPhase: ContinuityPerformanceSegment["actionPhase"],
+          startGait: number | null,
+          endGait: number | null,
+        ): ContinuityPerformanceSegment | null =>
+          endFrameExclusive <= startFrame
+            ? null
+            : {
+                entityId,
+                startFrame,
+                endFrameExclusive,
+                motionMode,
+                actionPhase,
+                gaitStart: startGait,
+                gaitEnd: endGait,
+                performanceProgramId: program?.id ?? null,
+                performanceProgramContentHash: program?.contentHash ?? null,
+              };
+        const segments: ContinuityPerformanceSegment[] = [];
+        const push = (candidate: ContinuityPerformanceSegment | null) => {
+          if (candidate) segments.push(candidate);
+        };
+
+        if (moved && plantFrame !== undefined) {
+          const deceleration = Math.max(
+            resolved.startFrame,
+            Math.min(decelerationFrame ?? plantFrame - 1, plantFrame - 1),
+          );
+          const gaitAtDeceleration = gaitAfterFrames(
+            gaitStart,
+            deceleration - resolved.startFrame,
+          );
+          const gaitAtPlant = gaitAfterFrames(
+            gaitStart,
+            plantFrame - resolved.startFrame,
+          );
+          push(
+            segment(
+              resolved.startFrame,
+              deceleration,
+              program?.kind === "atlas-cycle" ? "running" : "walking",
+              "action",
+              gaitStart,
+              gaitAtDeceleration,
+            ),
+          );
+          push(
+            segment(
+              deceleration,
+              plantFrame,
+              "decelerating",
+              "action",
+              gaitAtDeceleration,
+              gaitAtPlant,
+            ),
+          );
+          const settleEnd = Math.min(
+            resolved.endFrameExclusive,
+            plantFrame + 6,
+          );
+          push(segment(plantFrame, settleEnd, "idle", "settle", null, null));
+          push(
+            segment(
+              settleEnd,
+              resolved.endFrameExclusive,
+              "idle",
+              "hold",
+              null,
+              null,
+            ),
+          );
+        } else if (moved) {
+          push(
+            segment(
+              resolved.startFrame,
+              resolved.endFrameExclusive,
+              program?.kind === "atlas-cycle" ? "running" : "walking",
+              "action",
+              gaitStart,
+              gaitAfterFrames(gaitStart, shotDuration),
+            ),
+          );
+        } else {
+          const entryDiffers =
+            entry.motionMode !== exit.motionMode ||
+            entry.actionPhase !== exit.actionPhase ||
+            entry.gaitPhase !== exit.gaitPhase;
+          if (entryDiffers && shotDuration > 1)
+            push(
+              segment(
+                resolved.startFrame,
+                resolved.startFrame + 1,
+                entry.motionMode,
+                entry.actionPhase,
+                entry.gaitPhase,
+                entry.gaitPhase,
+              ),
+            );
+          push(
+            segment(
+              entryDiffers && shotDuration > 1
+                ? resolved.startFrame + 1
+                : resolved.startFrame,
+              resolved.endFrameExclusive,
+              exit.motionMode,
+              exit.actionPhase,
+              exit.gaitPhase,
+              exit.gaitPhase,
+            ),
+          );
+        }
+
+        const last = segments.at(-1)!;
+        Object.assign(exit, {
+          motionMode: last.motionMode,
+          actionPhase: last.actionPhase,
+          gaitPhase: last.gaitEnd,
+          performanceProgramId: last.performanceProgramId,
+          performanceProgramContentHash: last.performanceProgramContentHash,
+        });
+        return segments;
+      });
+
+    input.performancePrograms.forEach((program) => {
+      if (!entryWorldState.entities[program.entityId]) return;
+      const visemeProgram = guideVisemeProgramFor(
+        plannedShot,
+        resolved.startFrame,
+        resolved.endFrameExclusive,
+        program,
+      );
+      if (visemeProgram) visemePrograms.push(visemeProgram);
+    });
+
     shots.push({
       shotId: plannedShot.id,
       sceneId: plannedShot.sceneId,
@@ -746,6 +997,7 @@ export function compileContinuitySequencePlan(
       exitWorldState,
       entryPerformanceState,
       exitPerformanceState,
+      performanceSegments,
       pictureEvents: [
         ...canonicalPictureEvents,
         ...performancePictureEvents,
@@ -785,7 +1037,13 @@ export function compileContinuitySequencePlan(
     durationInFrames: timing.durationInFrames,
     shots,
     transitions,
+    visemePrograms,
   });
-  assertContinuitySequenceMatchesSources(directorPlan, timing, continuity);
+  assertContinuitySequenceMatchesSources(
+    directorPlan,
+    timing,
+    continuity,
+    input.performancePrograms,
+  );
   return continuity;
 }

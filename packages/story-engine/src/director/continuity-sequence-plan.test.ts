@@ -75,6 +75,7 @@ const performance = (
     actionPhase: leadPhase,
     gaitPhase,
     performanceProgramId: "lead-run",
+    performanceProgramContentHash: hash,
   },
   {
     entityId: "support",
@@ -82,6 +83,37 @@ const performance = (
     actionPhase: "hold" as const,
     gaitPhase: null,
     performanceProgramId: "support-hold",
+    performanceProgramContentHash: hash,
+  },
+];
+
+const performanceSegments = (
+  startFrame: number,
+  endFrameExclusive: number,
+  gaitStart: number,
+  gaitEnd: number,
+) => [
+  {
+    entityId: "lead",
+    startFrame,
+    endFrameExclusive,
+    motionMode: "running" as const,
+    actionPhase: "action" as const,
+    gaitStart,
+    gaitEnd,
+    performanceProgramId: "lead-run",
+    performanceProgramContentHash: hash,
+  },
+  {
+    entityId: "support",
+    startFrame,
+    endFrameExclusive,
+    motionMode: "idle" as const,
+    actionPhase: "hold" as const,
+    gaitStart: null,
+    gaitEnd: null,
+    performanceProgramId: "support-hold",
+    performanceProgramContentHash: hash,
   },
 ];
 
@@ -116,6 +148,7 @@ const draft = (): ContinuitySequencePlanDraft => ({
       exitWorldState: world(29, 0.4),
       entryPerformanceState: performance("idle", "hold", null),
       exitPerformanceState: performance("running", "action", 0.25),
+      performanceSegments: performanceSegments(0, 30, 0, 0.25),
       pictureEvents: [
         {
           source: "director-event",
@@ -148,6 +181,7 @@ const draft = (): ContinuitySequencePlanDraft => ({
       exitWorldState: world(59, 0.55),
       entryPerformanceState: performance("running", "action", 0.25),
       exitPerformanceState: performance("running", "action", 0.75),
+      performanceSegments: performanceSegments(30, 60, 0.25, 0.75),
       pictureEvents: [
         {
           source: "director-event",
@@ -169,6 +203,7 @@ const draft = (): ContinuitySequencePlanDraft => ({
       bridgeEventId: null,
     },
   ],
+  visemePrograms: [],
 });
 
 describe("ContinuitySequencePlan", () => {
@@ -274,14 +309,43 @@ describe("ContinuitySequencePlan", () => {
     continuityDraft.transitions[0]!.bridgeEventId =
       project.directorPlan.shots[1]!.entryEventId;
     const inventedBridge = sealContinuitySequencePlan(continuityDraft);
+    const bindings = project.executableEpisodePlan.performancePrograms.map(
+      (program) => ({
+        id: program.id,
+        entityId: program.entityId,
+        kind: program.kind,
+        contentHash: program.contentHash!,
+        sourceShotIds: program.sourceShotIds!,
+      }),
+    );
 
     expect(() =>
       assertContinuitySequenceMatchesSources(
         project.directorPlan,
         project.timingSolution,
         inventedBridge,
+        bindings,
       ),
     ).toThrow(/does not match the Director shot boundary/);
+
+    const movedVisemeDraft = structuredClone(
+      project.executableEpisodePlan.continuitySequencePlan,
+    );
+    Reflect.deleteProperty(movedVisemeDraft, "contentHash");
+    const viseme = movedVisemeDraft.visemePrograms[0]!;
+    viseme.cues[0]!.startFrame += 1;
+    const visemeDraft = structuredClone(viseme);
+    Reflect.deleteProperty(visemeDraft, "contentHash");
+    viseme.contentHash = hashCanonical(visemeDraft);
+    const movedVisemes = sealContinuitySequencePlan(movedVisemeDraft);
+    expect(() =>
+      assertContinuitySequenceMatchesSources(
+        project.directorPlan,
+        project.timingSolution,
+        movedVisemes,
+        bindings,
+      ),
+    ).toThrow(/compiler-owned timing/);
   });
 
   it("rejects locomotion that stops without deceleration and a plant", () => {

@@ -38,6 +38,7 @@ type ArticulatedPerformanceExecution = Extract<
 const resolvedPerformanceProgram = (
   performancePrograms: PerformanceProgram[],
   resolved: ResolvedEntityFrame,
+  currentShotId: string,
 ): PerformanceProgram | null => {
   if (resolved.performanceProgramId === null) {
     if (resolved.performanceProgramContentHash !== null)
@@ -64,6 +65,10 @@ const resolvedPerformanceProgram = (
   if (performance.entityId !== resolved.entityId)
     throw new Error(
       `${resolved.entityId} canonical performance ${resolved.performanceProgramId} belongs to ${performance.entityId}.`,
+    );
+  if (!performance.sourceShotIds?.includes(currentShotId))
+    throw new Error(
+      `${resolved.entityId} canonical performance ${resolved.performanceProgramId} is not authorized for ${currentShotId}.`,
     );
   return performance;
 };
@@ -628,7 +633,11 @@ const ProxyShot: React.FC<{
       entity,
       resolved,
       performance: resolved.visible
-        ? resolvedPerformanceProgram(performancePrograms, resolved)
+        ? resolvedPerformanceProgram(
+            performancePrograms,
+            resolved,
+            canonicalFrame.shotId,
+          )
         : null,
     };
   });

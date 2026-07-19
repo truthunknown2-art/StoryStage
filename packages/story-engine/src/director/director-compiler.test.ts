@@ -456,6 +456,22 @@ describe("Director Studio Alpha compiler", () => {
       ),
     ).toBe(true);
     expect(compiled.executableEpisodePlan.approvedAssets).toHaveLength(3);
+
+    supported.forEach((program) =>
+      compiled.executableEpisodePlan.continuitySequencePlan.shots
+        .filter((shot) => program.sourceShotIds?.includes(shot.shotId))
+        .forEach((shot) =>
+          expect(
+            shot.performanceSegments
+              .filter((segment) => segment.entityId === program.entityId)
+              .every(
+                (segment) =>
+                  segment.performanceProgramId === program.id &&
+                  segment.performanceProgramContentHash === program.contentHash,
+              ),
+          ).toBe(true),
+        ),
+    );
   });
 
   it("compiles every exposed shot size to a distinct renderer-consumed scale", () => {

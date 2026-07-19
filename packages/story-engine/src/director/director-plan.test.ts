@@ -268,6 +268,34 @@ describe("Director plan", () => {
       ],
       durationInFrames: 61,
     });
+    const performanceProgramDraft = {
+      id: "mara-reaction-program",
+      kind: "articulated-rig" as const,
+      rendererId: "paper-rig",
+      rendererVersion: "1.0.0",
+      entityId: "mara",
+      eventIds: ["notice-moth", "mara-reacts"],
+      assetIds: ["mara-art"],
+      manifestContentHash: hash,
+      sourceSceneIds: ["scene-one"],
+      sourceBeatIds: ["beat-one"],
+      sourceShotIds: ["shot-one"],
+    };
+    const performanceProgram = {
+      ...performanceProgramDraft,
+      contentHash: hashCanonical(performanceProgramDraft),
+    };
+    const visemeProgramDraft = {
+      id: "guide-viseme-shot-one-mara",
+      shotId: "shot-one",
+      entityId: "mara",
+      sourceLineId: "beat-one",
+      cues: [
+        { startFrame: 21, endFrameExclusive: 27, visemeId: "open" },
+        { startFrame: 27, endFrameExclusive: 33, visemeId: "rest" },
+        { startFrame: 33, endFrameExclusive: 39, visemeId: "open" },
+      ],
+    };
     const continuitySequencePlan = sealContinuitySequencePlan({
       schemaVersion: "1.0",
       directorPlanContentHash: directorPlan.contentHash,
@@ -319,6 +347,7 @@ describe("Director plan", () => {
               actionPhase: "hold",
               gaitPhase: null,
               performanceProgramId: "mara-reaction-program",
+              performanceProgramContentHash: performanceProgram.contentHash,
             },
           ],
           exitPerformanceState: [
@@ -328,6 +357,31 @@ describe("Director plan", () => {
               actionPhase: "reaction",
               gaitPhase: null,
               performanceProgramId: "mara-reaction-program",
+              performanceProgramContentHash: performanceProgram.contentHash,
+            },
+          ],
+          performanceSegments: [
+            {
+              entityId: "mara",
+              startFrame: 0,
+              endFrameExclusive: 40,
+              motionMode: "idle",
+              actionPhase: "hold",
+              gaitStart: null,
+              gaitEnd: null,
+              performanceProgramId: "mara-reaction-program",
+              performanceProgramContentHash: performanceProgram.contentHash,
+            },
+            {
+              entityId: "mara",
+              startFrame: 40,
+              endFrameExclusive: 61,
+              motionMode: "reacting",
+              actionPhase: "reaction",
+              gaitStart: null,
+              gaitEnd: null,
+              performanceProgramId: "mara-reaction-program",
+              performanceProgramContentHash: performanceProgram.contentHash,
             },
           ],
           pictureEvents: [
@@ -347,6 +401,12 @@ describe("Director plan", () => {
         },
       ],
       transitions: [],
+      visemePrograms: [
+        {
+          ...visemeProgramDraft,
+          contentHash: hashCanonical(visemeProgramDraft),
+        },
+      ],
     });
     const episode = sealExecutableEpisodePlan(directorPlan, timing, {
       schemaVersion: "1.0",
@@ -386,18 +446,7 @@ describe("Director plan", () => {
           layerIds: ["background", "characters", "foreground"],
         },
       ],
-      performancePrograms: [
-        {
-          id: "mara-reaction-program",
-          kind: "articulated-rig",
-          rendererId: "paper-rig",
-          rendererVersion: "1.0.0",
-          entityId: "mara",
-          eventIds: ["notice-moth", "mara-reacts"],
-          assetIds: ["mara-art"],
-          manifestContentHash: hash,
-        },
-      ],
+      performancePrograms: [performanceProgram],
       approvedAssets: [
         {
           assetId: "mara-art",
