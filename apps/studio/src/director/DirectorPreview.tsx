@@ -34,10 +34,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import {
-  CreatorBeatStrip,
-  CreatorSceneRail,
-} from "../creator-studio-components";
+import { DirectorBeatStrip, DirectorSceneRail } from "./DirectorSceneBeatRail";
 import { DirectorChangePreview } from "./DirectorChangePreview";
 import { DirectorCommandPanel } from "./DirectorCommandPanel";
 import { DirectorMotionPanel } from "./DirectorMotionPanel";
@@ -287,7 +284,7 @@ export function DirectorAnimaticPreview({
       className="cv2-director-preview"
       data-episode-hash={episode.contentHash}
     >
-      <CreatorSceneRail
+      <DirectorSceneRail
         director={director}
         onSelectBeat={selectBeat}
         project={project}
@@ -478,7 +475,7 @@ export function DirectorAnimaticPreview({
       </aside>
 
       <div className="cv2-shell-timeline">
-        <CreatorBeatStrip
+        <DirectorBeatStrip
           director={director}
           onSelectBeat={selectBeat}
           project={project}
