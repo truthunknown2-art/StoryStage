@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "1.0",
+  "acquisitionMode": "manual-file-import",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "provenance": {
+    "sourceType": "generated",
+    "providerLabel": "OpenAI built-in image generation plus deterministic repo composition",
+    "sourceReference": "Codex task 019f6dc3-6859-79d1-960a-fc69c9e275d9 / KCAST-001D",
+    "createdAt": "2026-07-19T10:00:00.000Z",
+    "rightsStatement": "Original generated candidates created for this project and composed by deterministic repository code; unapproved source art."
+  },
+  "assets": [
+    {
+      "candidateId": "ollo-turnaround-candidate-b-alpha-repo",
+      "requestItemId": "turnaround-sheet",
+      "relativeFile": "candidates/ollo-turnaround-candidate-b-alpha-repo.png",
+      "contentHash": "38d0321cfcb1daaf564b676c19fe65d2a3c0172ac1b378fe4a4b13076de9b0ec",
+      "byteLength": 1131309,
+      "mediaType": "image/png",
+      "width": 1774,
+      "height": 887
+    },
+    {
+      "candidateId": "ollo-parts-front-source-set-f-alpha",
+      "requestItemId": "parts-front",
+      "relativeFile": "derived/ollo-parts-front-source-set-f-alpha.png",
+      "contentHash": "a8c74ff89094a4169be9b19f7d9c0e251f0059aa6d13a9075994d74ba11efe30",
+      "byteLength": 1077007,
+      "mediaType": "image/png",
+      "width": 1600,
+      "height": 1248
+    },
+    {
+      "candidateId": "ollo-face-front-source-set-f-alpha",
+      "requestItemId": "face-front",
+      "relativeFile": "derived/ollo-face-front-source-set-f-alpha.png",
+      "contentHash": "b9564f7fd1a30e470ea62e9d85d430dcb2d437f4b9e9a5ef01cc1507cb6925c7",
+      "byteLength": 1657956,
+      "mediaType": "image/png",
+      "width": 4896,
+      "height": 2112
+    }
+  ],
+  "contentHash": "47bd4d5f6564d26db5c90163af6a04c61a79482a10f3fa3c3ce44b483f4ff379"
+}

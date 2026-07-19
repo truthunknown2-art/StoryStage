@@ -138,6 +138,372 @@ Remaining visual and rig caveats:
 - No complete import receipt or prepared-view manifest can be created from this partial bundle. Front/profile parts kits and face kits remain missing.
 - No moving diagnostic exists yet. Even after all three articulated views are prepared and assembled, Preston's explicit moving-diagnostic approval remains mandatory before production binding.
 
+## Ollo front rig-source candidate C
+
+Candidate C replaces the rejected single-sheet attempt with four smaller, fixed-grid source tasks. The raw sheets remain untrusted generation outputs. Repository code must reopen the exact bytes, remove chroma, extract only declared cells, record source rectangles and hashes, and compose the canonical parts and face atlases before either atlas may enter staging.
+
+The fail-closed fixed-grid proof subsequently rejected candidate-C core, limb, and eye sheets: core and eye foreground crossed mathematical equal-cell boundaries, and `hand-right` in the limb sheet left only one transparent pixel before its boundary. Those three sheets remain preserved as rejected evidence. The candidate-C mouth sheet passed geometric isolation but remains semantically conditional pending an explicit ruling on its combined nose, muzzle, and mouth replacement-patch construction.
+
+Reference roles for all four generations:
+
+- Identity authority: the original Ollo & Friends board at `C:\Projects\.codex-remote-attachments\019f6dc3-6859-79d1-960a-fc69c9e275d9\ccd4a098-d7a1-4f52-9381-07fabcb1fd0d\1-Photo-1.jpg`.
+- Registration authority: accepted front review crop `derived/ollo-turnaround-candidate-b-front.png`.
+- No alternate rabbit, human, or inferred hidden anatomy is authoritative.
+
+The first 5-by-4 attempt is preserved as `candidates/ollo-parts-front-candidate-b-rejected-fused.png`; SHA-256 `5e9e27fe832e030bb8490af6684cb1e21e59ccc2171ccca04582cfbabd39b1af`; `1536x1024`; 1,846,922 bytes. It is rejected because the torso visibly includes costume and leg anatomy and multiple arm cells fuse hands into limb segments. It must never enter staging.
+
+### Core and costume sheet
+
+- File: `candidates/ollo-parts-front-core-candidate-c-chroma.png`
+- SHA-256: `939d9f98be6e5812d12c0da04c123bab3697717fd459c6a6c057c0f363d62b01`
+- Dimensions: `1536x1024`
+- Byte length: 1,750,649
+- Declared grid: 4 columns by 2 rows
+- Declared order: torso, pelvis, head, tail, ear-left, ear-right, secondary-front, secondary-back
+
+Exact built-in image-generation prompt:
+
+```text
+Use case: stylized-concept
+Asset type: explicit separated FRONT core-and-costume source sheet for Ollo's production 2D articulated rig
+Identity authority: Image 1 is the original Ollo identity board. Registration authority: Image 2 is the accepted neutral straight-front Ollo source. Preserve exactly the same pale golden species-ambiguous child, proportions, huge orange leaf ears, three forehead tufts, paper/watercolor/felt materials, deep red scarf and front pocket. Do not redesign as rabbit or human.
+
+Create a landscape sheet with a perfectly uniform edge-to-edge #ff00ff background. No shadows, floor, gradients, texture in the background, text, labels, guides, borders, logos, or watermark. Do not use #ff00ff in the pieces.
+
+Use an exact 4-column x 2-row invisible grid with generous uniform gutters. Place exactly one isolated component in each cell in this order:
+ROW 1: torso; pelvis; head shell; tail.
+ROW 2: left ear; right ear; front scarf-and-pocket layer; back scarf-and-trailing-tail layer.
+
+STRICT component definitions:
+1 torso = pale-golden chest/abdomen shell with cream belly marking only; NO pelvis, legs, arms, hands, head, ears, scarf, collar, pocket, or tail.
+2 pelvis = compact pale-golden hip shell only; NO torso, belly, legs, feet, scarf, or tail.
+3 head shell = Ollo's round pale-golden head and three forehead tufts only; NO ears and NO facial features at all: no eyes, pupils, eyelids, brows, nose, muzzle line, cheeks, or mouth.
+4 tail = Ollo's small pale-golden tail only.
+5 and 6 ears = two distinct complete anatomical leaf ears, front-facing, orange inner leaf with pale veins, unattached.
+7 front costume = only Ollo's deep-red front scarf/collar plus front pocket/apron construction, no body.
+8 back costume = only deep-red rear scarf collar plus trailing scarf tail/flap, no body.
+
+Every component must be front-view, fully visible, isolated, non-overlapping, uncropped, surrounded by at least one component-width of magenta gutter, with crisp production edges and restrained paper grain. Jointed attachment pieces need small hidden overlap tabs. Exactly 8 pieces, no duplicates or extras.
+Avoid: assembled character, attached anatomy, fused costume/body, face graphics on head shell, human anatomy, rabbit redesign, action pose, perspective, cast/contact shadows, touching pieces, crop clipping.
+```
+
+### Limb sheet
+
+- File: `candidates/ollo-parts-front-limbs-candidate-c-chroma.png`
+- SHA-256: `0349707a411a9eeb5cde7516ee8264953ef92098d1b0f585b0c4e27715f654f9`
+- Dimensions: `1672x941`
+- Byte length: 1,350,459
+- Declared grid: 6 columns by 2 rows
+- Declared order: upper-arm-left, lower-arm-left, hand-left, upper-arm-right, lower-arm-right, hand-right, upper-leg-left, lower-leg-left, foot-left, upper-leg-right, lower-leg-right, foot-right
+
+Exact built-in image-generation prompt:
+
+```text
+Use case: stylized-concept
+Asset type: explicit separated FRONT limb source sheet for Ollo's production 2D articulated rig
+Identity authority: Image 1 is the original Ollo identity board. Registration authority: Image 2 is the accepted neutral straight-front Ollo source. Preserve Ollo's exact pale-golden species-ambiguous child identity, orange paws, round proportions, and tactile paper/watercolor/felt material. Do not redesign as rabbit or human.
+
+Create a wide landscape sheet with a perfectly uniform edge-to-edge #ff00ff chroma background. No floor, shadows, gradients, background texture, labels, text, numbers, guides, borders, logos, or watermark. Do not use #ff00ff in any piece.
+
+Use an exact 6-column x 2-row invisible grid with wide uniform gutters. Place exactly one isolated component in each cell in this exact order:
+ROW 1: left upper arm; left lower arm; left hand; right upper arm; right lower arm; right hand.
+ROW 2: left upper leg; left lower leg; left foot; right upper leg; right lower leg; right foot.
+
+STRICT:
+- Exactly 12 pieces, no assembled character, no duplicates, no extras.
+- Upper-arm pieces are shoulder-to-elbow tubes ONLY, with NO lower arm and NO hand.
+- Lower-arm pieces are elbow-to-wrist tubes ONLY, with NO upper arm and NO hand.
+- Hand pieces are small complete orange Ollo paws ONLY, with NO arm attached.
+- Upper-leg pieces are hip-to-knee tubes ONLY, with NO lower leg and NO foot.
+- Lower-leg pieces are knee-to-ankle tubes ONLY, with NO upper leg and NO foot.
+- Foot pieces are small complete orange Ollo feet ONLY, with NO leg attached.
+- Every segment has clean rounded overlap tabs extending slightly beyond both joint boundaries so rotation cannot open seams.
+- Anatomical left/right art is distinct and front-view; do not substitute one reused or mirrored item.
+- All pieces fully visible, centered in their cells, isolated, non-overlapping, uncropped, and surrounded by at least one piece-width of magenta gutter.
+- Match Ollo's accepted front-view scale relationships: short childlike limbs, warm cream/golden fur-paper, orange paw tips, crisp cut-paper silhouettes and restrained grain.
+Avoid: hands fused to arms, feet fused to legs, entire limbs, human fingers, realistic human anatomy, rabbit redesign, action pose, perspective, cast/contact shadows, touching pieces, crop clipping.
+```
+
+### Eye, lid, and brow sheet
+
+- File: `candidates/ollo-face-front-eyes-candidate-c-chroma.png`
+- SHA-256: `65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875`
+- Dimensions: `1774x887`
+- Byte length: 1,186,316
+- Declared grid: 7 columns by 2 rows
+- Declared order: eye-white-left, pupil-left, lid-open-left, lid-half-left, lid-closed-left, brow-neutral-left, brow-raised-left, eye-white-right, pupil-right, lid-open-right, lid-half-right, lid-closed-right, brow-neutral-right, brow-raised-right
+
+Exact built-in image-generation prompt:
+
+```text
+Use case: stylized-concept
+Asset type: explicit separated FRONT eye/lid/brow component sheet for Ollo's production 2D articulated rig
+Identity authority: Image 1 is Ollo's original face identity. Registration authority: Image 2 is the accepted exact front-view head scale and facial design. Preserve the same very large dark-brown oval eyes with cream/off-white eye whites, small warm brows, pale-golden paper texture, and child-friendly proportions. No redesign.
+
+Create one wide landscape sheet on a perfectly uniform edge-to-edge #ff00ff chroma background. No shadows, gradients, background texture, floor, labels, text, numbers, guides, borders, logos, watermark, head, face, nose, mouth, ears, character, or props. Do not use #ff00ff in the components.
+
+Use an exact 7-column x 2-row invisible grid with wide uniform gutters. Exactly one isolated component per cell:
+ROW 1, anatomical LEFT components: left eye white; left pupil; left open upper-lid overlay; left half-closed lid overlay; left closed-lid line/overlay; left neutral brow; left raised brow.
+ROW 2, anatomical RIGHT components: right eye white; right pupil; right open upper-lid overlay; right half-closed lid overlay; right closed-lid line/overlay; right neutral brow; right raised brow.
+
+STRICT:
+- Exactly 14 isolated pieces, no duplicates, no extras.
+- The first and second rows must form distinct anatomical left/right pairs that match Ollo's accepted straight-front face, not reused mirror placeholders.
+- Eye whites contain no pupils.
+- Pupils are dark-brown Ollo pupils only, with the same tiny warm highlight treatment.
+- Lid overlays contain only the eyelid shape or closed-eye stroke, no eye white or pupil.
+- Brow pieces contain only the small warm-brown eyebrow shape.
+- All variants for each side share consistent size, position logic, line weight, and material texture so they can be registration-aligned downstream.
+- Every piece fully visible, isolated, non-overlapping, uncropped, centered in its cell, with large clean magenta gutters and crisp production edges.
+Avoid: full eye assemblies, face/head, text, labels, human eyelashes, photorealism, random expressions, touching pieces, crop clipping, cast/contact shadows.
+```
+
+### Mouth and viseme sheet
+
+- File: `candidates/ollo-face-front-mouths-candidate-c-chroma.png`
+- SHA-256: `af31dc7fcc64dc25c82a1061d0faa04db8f7e7ccea2d1daf638044f7e80690d5`
+- Dimensions: `1448x1086`
+- Byte length: 1,125,541
+- Declared grid: 4 columns by 2 rows
+- Declared order: mouth-rest, viseme-ai, viseme-e, viseme-mbp, viseme-oh, viseme-fv, viseme-l, viseme-wq
+
+Exact built-in image-generation prompt:
+
+```text
+Use case: stylized-concept
+Asset type: explicit separated FRONT mouth/viseme source sheet for Ollo's production 2D articulated rig
+Identity authority: Image 1 is Ollo's original mouth and muzzle identity. Registration authority: Image 2 is the accepted exact front-view face scale. Preserve Ollo's tiny warm child-friendly mouth construction, dark cocoa linework, small cream muzzle area only when needed for a clean replacement edge, and the same tactile paper/watercolor material. No redesign.
+
+Create one landscape sheet on a perfectly uniform edge-to-edge #ff00ff chroma background. No shadows, gradients, background texture, floor, text, labels, phoneme letters, numbers, guides, borders, logos, watermark, head, eyes, brows, nose, ears, character, or props. Do not use #ff00ff in the components.
+
+Use an exact 4-column x 2-row invisible grid with wide uniform gutters. Exactly one isolated mouth component per cell:
+ROW 1: neutral closed tiny smile (mouth-rest); wide open A/I viseme; horizontal E viseme; closed-lips M/B/P viseme.
+ROW 2: round O/H viseme; lower-lip-to-upper-teeth F/V viseme; tongue-to-upper-mouth L viseme; small pursed W/Q viseme.
+
+STRICT:
+- Exactly 8 mouth pieces, no duplicates or extras.
+- Each cell contains only the replaceable mouth/muzzle graphic, never a whole face or head.
+- All eight variants share the exact same center, scale family, palette, line weight, and replacement-canvas logic for registration.
+- Shapes must be visually distinct and animation-readable at small size while remaining unmistakably Ollo, not realistic human lips.
+- Neutral rest is a tiny closed smile; A/I is vertically open; E is horizontally stretched; M/B/P fully closed; O/H rounded; F/V shows a simplified lower-lip/upper-tooth contact; L shows a simple tongue cue; W/Q is small and pursed.
+- Fully visible, isolated, non-overlapping, uncropped, centered with large clean magenta gutters and crisp production edges.
+Avoid: text or letters, labels, full faces, photorealistic human mouths/teeth, gore, random expressions, touching pieces, crop clipping, cast/contact shadows.
+```
+
+Candidate C is not accepted merely because every requested grid cell is occupied. Independent visual audit, deterministic crop/matte evidence, identity review, registration review, complete bundle staging, preparation, moving diagnostic, and Preston approval remain mandatory.
+
+## Ollo front rig-source candidate D geometry corrections
+
+Candidate D changes only the rejected core, limb, and eye source tasks. Components are reduced and centered inside true equal-grid safety gutters. The candidate-C mouth sheet remains the proposed mouth source until its replacement-patch semantics receive an explicit ruling.
+
+### Candidate-D core and costume sheet
+
+- File: `candidates/ollo-parts-front-core-candidate-d-chroma.png`
+- SHA-256: `8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d`
+- Dimensions: `1536x1024`
+- Byte length: 1,488,702
+
+Exact built-in image-edit prompt:
+
+```text
+Edit/rebuild Image 1 as a stricter machine-extractable version of the same Ollo core-and-costume sheet. Image 2 remains the only identity authority; Image 3 remains front registration guidance.
+
+Keep exactly the same eight independent components and exact row-major meaning:
+4 equal columns x 2 equal rows.
+ROW 1: torso; pelvis; head shell; tail.
+ROW 2: anatomical left ear; anatomical right ear; front scarf-and-pocket layer; back scarf-and-trailing-tail layer.
+
+CRITICAL GEOMETRY CORRECTION:
+- Reduce every component uniformly enough that it fits well inside its mathematical equal cell.
+- The entire sheet must have four exactly equal columns and two exactly equal rows.
+- Leave a continuous, perfectly empty #ff00ff safety band at least 48 pixels wide centered on every internal vertical boundary at 25%, 50%, and 75% of image width, and at least 48 pixels high centered on the horizontal 50% boundary.
+- Leave at least 48 pixels of empty #ff00ff around the outer sheet boundary.
+- No foreground, antialiasing, paper grain, tab, scarf tip, head tuft, cheek tuft, or ear may enter any safety band.
+- Center exactly one complete component in each cell. No piece may cross, touch, or approach a cell boundary.
+- Keep useful hidden overlap tabs, but shorten them so they remain inside their cell.
+- Preserve each piece fully; no cropping.
+
+Background must be perfectly flat uniform edge-to-edge #ff00ff, no shadows, texture, gradients, floor, labels, text, numbers, grid lines, borders, guides, logos, or watermark. No #ff00ff in pieces.
+Preserve Ollo's exact pale-golden paper/watercolor/felt material, proportions, orange leaf ears, blank head shell with no face, small tail, and deep-red costume. Exactly 8 pieces, no duplicates/extras, no assembled character, no fused body/costume.
+```
+
+### Candidate-D limb sheet
+
+- File: `candidates/ollo-parts-front-limbs-candidate-d-chroma.png`
+- SHA-256: `d6ce2cea45a00ed7ee2447df86d3e6efa05d9a996b4722a11e86c49b7ac406b8`
+- Dimensions: `1672x941`
+- Byte length: 1,237,624
+
+Exact built-in image-edit prompt:
+
+```text
+Edit/rebuild Image 1 as a stricter machine-extractable Ollo FRONT limb sheet. Image 2 remains the only identity authority; Image 3 remains front registration guidance.
+
+Keep exactly 12 independent components and exact row-major meaning in a 6 equal-column x 2 equal-row sheet:
+ROW 1: left upper arm; left lower arm; left hand; right upper arm; right lower arm; right hand.
+ROW 2: left upper leg; left lower leg; left foot; right upper leg; right lower leg; right foot.
+
+CRITICAL GEOMETRY AND IDENTITY CORRECTION:
+- Reduce every component by roughly 15-20% and center it well inside its mathematical equal cell.
+- Leave a continuous perfectly empty #ff00ff safety band at least 40 pixels wide centered on every internal vertical column boundary and at least 48 pixels high centered on the horizontal row boundary.
+- Leave at least 48 pixels of empty #ff00ff around the full sheet boundary.
+- No foreground, antialiasing, paper grain, joint tab, paw, toe, or limb may enter any safety band.
+- No clipping, crossing, touching, or near-boundary content.
+- Preserve true separate upper/lower limb segments and useful short rounded overlap tabs.
+- Hands must match approved Ollo's simple child-friendly FOUR-DIGIT mitten-paw construction: three rounded front fingers plus one side thumb, exactly four digit lobes total. No five-finger or five-lobed human-like hand.
+- Feet remain small simplified Ollo paws, not human feet.
+- Left and right components must be independently drawn anatomical counterparts with small natural paper-texture/asymmetry differences; never identical duplicates and never one mechanically mirrored source.
+
+Background perfectly flat uniform edge-to-edge #ff00ff, no texture, shadows, gradients, floor, text, labels, numbers, grid lines, borders, guides, logos, or watermark. No #ff00ff in pieces.
+Preserve Ollo's pale-golden/cream paper-watercolor-felt material and warm orange paws. Exactly 12 pieces, no duplicates/extras, no assembled character, no fused hands/arms or feet/legs.
+```
+
+### Candidate-D eye, lid, and brow sheet
+
+- File: `candidates/ollo-face-front-eyes-candidate-d-chroma.png`
+- SHA-256: `c01c4445d7a031806f850f9a2fa55ed206ba3100bdefb7a91c724da83140b453`
+- Dimensions: `1774x887`
+- Byte length: 1,075,373
+
+Exact built-in image-edit prompt:
+
+```text
+Edit/rebuild Image 1 as a stricter machine-extractable version of the same Ollo eye/lid/brow sheet. Image 2 is the only identity authority; Image 3 is front registration guidance.
+
+Keep exactly 14 independent components with the same exact row-major meaning in a 7 equal-column x 2 equal-row sheet:
+ROW 1 left: eye white; pupil; open lid; half-closed lid; closed lid; neutral brow; raised brow.
+ROW 2 right: eye white; pupil; open lid; half-closed lid; closed lid; neutral brow; raised brow.
+
+CRITICAL GEOMETRY CORRECTION:
+- Reduce every component by roughly 30% while preserving its shape, style, and readability.
+- The sheet has seven exactly equal mathematical columns and two equal rows.
+- Center one complete component in each cell.
+- Leave a continuous perfectly empty #ff00ff safety band at least 32 pixels wide centered on every internal vertical column boundary, and at least 48 pixels high centered on the horizontal row boundary.
+- Leave at least 48 pixels of empty #ff00ff around the full outer boundary.
+- No foreground, antialiasing, highlight, lid arc, brow, linework, or paper grain may enter any boundary safety band.
+- No component may cross, touch, or approach another cell. No cropping.
+
+Background is perfectly flat uniform edge-to-edge #ff00ff with no texture, shadows, gradients, floor, text, labels, numbers, grid lines, borders, guides, logos, or watermark. No #ff00ff in components.
+Preserve Ollo's exact eye identity and tactile paper/watercolor material. Eye whites have no pupils; pupils are separate; lids contain only lid art; brows contain only brow art; left/right are distinct. Exactly 14 pieces, no duplicates/extras, no face/head/nose/mouth/ears.
+```
+
+Candidate D remains an unapproved, provider-neutral source candidate. Passing cell isolation does not prove identity, scale, head registration, or production authority.
+
+## Candidate E surgical cell corrections
+
+Candidate E is a surgical edit of the candidate-D limb and eye sheets. The limb edit introduces the Pro-required four-digit mitten paw and moves the right hand away from the preceding cell. The eye edit reduces and recenters the half-lid cells. These files remain raw untrusted sources; exact sealed rectangles may be used when a generator's semantic grid does not land on mathematical equal-cell boundaries.
+
+- Limb file: `candidates/ollo-parts-front-limbs-candidate-e-chroma.png`
+- Limb SHA-256: `1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21`
+- Limb dimensions/bytes: `1672x941`; 1,178,287 bytes
+- Eye file: `candidates/ollo-face-front-eyes-candidate-e-chroma.png`
+- Eye SHA-256: `c43ba138267c774e5a8e691f006917a33a52664ce06bfc5a9b0688cec20995df`
+- Eye dimensions/bytes: `1774x887`; 1,067,566 bytes
+
+Exact limb edit prompt:
+
+```text
+Surgical geometry correction to Image 1 only. Preserve the exact 12 Ollo limb pieces, identity, colors, textures, four-digit mitten paws, joint tabs, order, background, and 6 equal columns x 2 equal rows. Image 2 remains identity authority.
+
+The current ROW-1 RIGHT HAND in column 6 is too far left and its antialiased edge crosses into column 5. Correct the sheet as follows:
+- Scale both hand pieces down about 15% while preserving four digit lobes.
+- Place the left hand exactly at the mathematical center of row 1 column 3.
+- Place the right hand exactly at the mathematical center of row 1 column 6; move it substantially to the right so its entire silhouette, tab, antialiasing, and paper grain are at least 48 pixels inside column 6's left and right boundaries.
+- Re-center every other component on its mathematical cell center without changing its semantic order.
+- Every component, including both hands and feet, must have at least 40 pixels of perfectly empty #ff00ff on all four sides before its cell boundary.
+- No foreground pixel or antialiasing may touch or cross a cell boundary.
+- Preserve exactly 12 isolated components: row 1 left upper arm, left lower arm, left hand, right upper arm, right lower arm, right hand; row 2 left upper leg, left lower leg, left foot, right upper leg, right lower leg, right foot.
+- Keep left/right components independently drawn and visibly distinct; no duplication or mechanical mirror.
+
+Perfectly uniform edge-to-edge #ff00ff background. No text, labels, grid lines, guides, borders, shadows, gradients, floor, extra pieces, cropping, touching, or fused parts.
+```
+
+Exact eye edit prompt:
+
+```text
+Surgical geometry correction to Image 1 only. Preserve exactly the same 14 Ollo eye/lid/brow pieces, semantic order, identity, colors, texture, two rows, seven equal mathematical columns, and flat #ff00ff background. Image 2 remains identity authority.
+
+The HALF-CLOSED LID pieces in column 4 of both rows are too wide/right-shifted and touch column 4's right boundary. Correct this:
+- Scale both half-closed lid pieces down by about 20%.
+- Place each exactly at the mathematical center of column 4 in its row.
+- Ensure at least 36 pixels of perfectly empty #ff00ff between every edge/antialiased pixel of each half-lid and both left/right cell boundaries.
+- Re-center every other component exactly within its own mathematical cell without changing semantic order or shape.
+- Every one of the 14 components must have at least 24 pixels of perfectly empty #ff00ff on all four sides before its cell boundary.
+- No foreground, antialiasing, highlight, lid arc, brow, linework, or paper grain may touch or cross any cell boundary.
+- Keep distinct anatomical left/right artwork, not identical duplicates or mechanical mirrors.
+
+Exact order remains:
+Row 1 left: eye white, pupil, open lid, half-closed lid, closed lid, neutral brow, raised brow.
+Row 2 right: eye white, pupil, open lid, half-closed lid, closed lid, neutral brow, raised brow.
+
+Perfectly uniform edge-to-edge #ff00ff. No text, labels, guides, grid lines, borders, shadows, gradients, head, face, nose, mouth, ears, extra components, touching, or cropping.
+```
+
+## Candidate F atomic lower-face sources
+
+Candidate F implements Pro's accepted exclusive lower-face replacement-patch strategy using one generated mouthless nose/muzzle base plus one mouth-only overlay sheet. Repository code must reuse the exact same normalized base bytes for every rest/viseme output and prove zero pixel delta outside the declared mouth-change rectangle.
+
+- Base file: `candidates/ollo-face-front-lower-base-candidate-f-chroma.png`
+- Base SHA-256: `b20a8c344b74dcd9ee3e4b6c0ca93f305cb0e6e9f1bb75a170b8d13a53c0437c`
+- Base dimensions/bytes: `1448x1086`; 1,137,674 bytes
+- Overlay file: `candidates/ollo-face-front-mouth-overlays-candidate-f-chroma.png`
+- Overlay SHA-256: `2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437`
+- Overlay dimensions/bytes: `1448x1086`; 1,045,490 bytes
+
+Exact base-generation prompt:
+
+```text
+Use case: stylized-concept
+Asset type: one static lower-face BASE patch for Ollo's production 2D rig
+Image 2 is the only identity authority. Image 3 is front registration guidance. Image 1 supplies the approved candidate-C lower-face paper/watercolor construction only.
+
+Create exactly ONE isolated, straight-front Ollo lower-face base patch: the warm orange oval nose plus the symmetrical pale cream muzzle/cheek shape beneath it. Preserve the tactile cut-paper/watercolor/felt texture and exact child-friendly Ollo style.
+
+CRITICAL: the base patch must have NO MOUTH WHATSOEVER.
+- no smile line
+- no closed line
+- no open mouth
+- no lips
+- no teeth
+- no tongue
+- no philtrum or vertical connector line below the nose
+- no dark mark beneath the nose
+The cream muzzle beneath the nose must be clean, continuous, and unmarked so separate mouth graphics can be composited later.
+
+Place the single patch centered in a landscape image on a perfectly uniform edge-to-edge #ff00ff background with at least one patch-width of clean gutter on every side. No head, eyes, brows, ears, body, character, extra object, shadows, floor, gradients, background texture, text, labels, guides, borders, logos, or watermark. Do not use #ff00ff in the patch. Crisp isolated production edge, no clipping.
+```
+
+Exact mouth-overlay generation prompt:
+
+```text
+Use case: stylized-concept
+Asset type: MOUTH-ONLY overlay source sheet for Ollo's atomic lower-face replacement patches
+Image 1 provides the eight approved candidate mouth shapes as visual shape reference. Image 2 is the static nose+muzzle base that will remain pixel-identical. Image 3 is Ollo identity authority.
+
+Create exactly eight isolated MOUTH-ONLY graphics on a perfectly uniform edge-to-edge #ff00ff background, arranged in an exact 4 equal-column x 2 equal-row grid:
+ROW 1: neutral closed tiny smile; A/I wide-open mouth; E horizontal mouth; M/B/P fully closed lips.
+ROW 2: O/H round mouth; F/V lower-lip-to-upper-teeth mouth; L tongue-to-upper-mouth cue; W/Q small pursed mouth.
+
+ABSOLUTE EXCLUSION:
+- NO NOSE in any cell.
+- NO CREAM MUZZLE, cheek patch, beige backing shape, or pale face pixels.
+- NO philtrum/vertical line extending upward toward a nose.
+- NO head, face, eyes, brows, ears, body, character, labels, text, phoneme letters, numbers, guides, grid lines, borders, or extra graphics.
+Each cell contains only the dark cocoa/orange mouth line, mouth opening/interior, and any necessary small teeth/tongue/lip pixels.
+
+Registration/geometry:
+- Center every mouth at the same relative x position and the same mouth baseline within its equal cell.
+- Keep all mouth graphics within a consistent compact scale family suitable for compositing beneath Image 2's nose.
+- Leave at least 48 pixels of perfectly empty #ff00ff before every cell boundary; no antialiased pixel may cross or touch a boundary.
+- Exactly one mouth graphic per cell, isolated, uncropped, non-overlapping.
+- Preserve Ollo's warm tactile paper/watercolor line style; simplified child-friendly shapes, not realistic human lips.
+- The eight mouth shapes must be visibly distinct and readable at animation scale.
+
+Perfect flat #ff00ff background, no shadows, gradients, texture, floor, watermark, logo, or cast/contact shadow.
+```
+
+Candidate F is not accepted until the repository proves identical patch dimensions, pivot, nose anchor, alpha boundary, and pixels outside one sealed `mouthChangeBounds`, plus the rapid exposure diagnostic required by Pro.
+
 ## Safe-intake evidence
 
 - Request: `ollo-rig-request-v1.json`
