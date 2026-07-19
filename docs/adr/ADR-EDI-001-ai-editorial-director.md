@@ -1,6 +1,6 @@
 # ADR-EDI-001: AI Editorial Director — filling the `DirectorPlanner` judgment seam
 
-- **Status:** Proposal — for Pro acceptance and Codex feasibility review
+- **Status:** Conditionally accepted with architecture amendment — see `reports/agent-handoffs/2026-07-19-codex-pro-editorial-director-feasibility-ruling.md`
 - **Author:** Kimi (frontend / visual-performance / animation-direction lane)
 - **Date:** 2026-07-19
 - **Lane note:** This is a proposal document only. It changes no contracts, compilers, or product code. Ownership lines from `KIMI_START_HERE.md` are preserved: Codex owns canonical plans, timing, continuity, and validation; this ADR proposes *who writes the first draft*, not who holds authority.
@@ -94,3 +94,13 @@ Compare blind (Preston + Pro): shot-mix distribution vs reference targets, quali
 1. Pro: accept/reject this ADR; if accepted, name the pilot episode and verdict rubric.
 2. Codex: feasibility review of the `DirectorPlanner` seam for an external draft source (schema sufficiency; validation gaps to close before any AI draft is accepted).
 3. Preston: confirm the pilot script (recommend the current Ollo sample for comparability).
+
+## 11. Review disposition
+
+ChatGPT Pro and Codex accepted the diagnosis and provider-neutral proposal
+direction, but rejected the claim that the existing
+`directorProposalDraftSchema` can express the required editorial decisions.
+Implementation is governed by the linked feasibility ruling: a new bounded
+external intent and sealed editorial proposal, asynchronous planning outside
+the compiler, explicit diagnostic-only pilot authority, no silent fallback,
+and an independent P0 fix for current beat-content lineage validation.
