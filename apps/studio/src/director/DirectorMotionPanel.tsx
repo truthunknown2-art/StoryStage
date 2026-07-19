@@ -1,3 +1,4 @@
+import { listDirectorReactionDelayCandidates } from "@storystage/story-engine/director-alpha";
 import type { DirectorProject } from "@storystage/story-engine/director-alpha";
 import { Activity } from "lucide-react";
 
@@ -20,6 +21,12 @@ export function DirectorMotionPanel({
     (item) => item.beatId === beatId,
   );
   const requested = beat.performanceRequirements[0]?.source ?? "living-hold";
+  // Same shared exact (event, shot) pair count that gates the command
+  // control, so this panel never points at a control that is absent.
+  const reactionCandidateCount = listDirectorReactionDelayCandidates(
+    director,
+    beatId,
+  ).length;
 
   return (
     <section className="director-department-panel" aria-label="Motion controls">
@@ -53,9 +60,11 @@ export function DirectorMotionPanel({
       <p>
         Requested: {humanize(requested)} · Current first cut:{" "}
         {humanize(capability?.resolution ?? "proxy-only")}.
-        {reaction
+        {reactionCandidateCount === 1
           ? " Use “Direct this beat” above to retime the reaction."
-          : " This beat has no unique reaction event, so delay editing is unavailable."}
+          : reactionCandidateCount === 0
+            ? " No editable reaction target exists on this beat, so delay editing is unavailable."
+            : " Multiple reaction targets exist on this beat, and explicit target selection is not supported yet."}
       </p>
     </section>
   );

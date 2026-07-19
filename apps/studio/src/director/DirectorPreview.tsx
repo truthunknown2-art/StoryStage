@@ -196,11 +196,14 @@ export function DirectorAnimaticPreview({
   );
   // Shared with the Alpha interpreter via
   // listDirectorReactionDelayCandidates (packages/story-engine
-  // director-patch.ts): the command control is offered only when the selected
-  // beat has exactly one concrete (reaction event, eligible shot) pair — the
-  // exact cardinality the interpreter accepts, so the two paths cannot drift.
-  const selectedBeatReactionEdit =
-    listDirectorReactionDelayCandidates(director, selectedBeatId).length === 1;
+  // director-patch.ts): creator-facing command copy derives from the exact
+  // (reaction event, eligible shot) pair count — 0 (no editable target),
+  // 1 (real command available), 2+ (ambiguous; explicit target selection is
+  // not supported yet) — the exact cardinality the interpreter accepts.
+  const reactionCandidateCount = listDirectorReactionDelayCandidates(
+    director,
+    selectedBeatId,
+  ).length;
   const selectedBeatRenderReady =
     selectedCapabilityItems.length > 0 &&
     selectedCapabilityItems.every((item) => item.resolution === "supported");
@@ -382,7 +385,7 @@ export function DirectorAnimaticPreview({
           </div>
         </div>
         <p className="director-selected-beat-copy">{selectedBeat.text}</p>
-        {selectedBeatReactionEdit ? (
+        {reactionCandidateCount === 1 ? (
           <DirectorCommandPanel
             beatLabel={`Beat ${selectedBeatIndex + 1}`}
             beatText={selectedBeatTitle}
@@ -391,12 +394,17 @@ export function DirectorAnimaticPreview({
             onCommandChange={setCommand}
             onPreview={previewCommand}
           />
-        ) : (
+        ) : reactionCandidateCount === 0 ? (
           <p className="director-command-unavailable">
             <strong>Structured direction unavailable on this beat.</strong>
-            The director currently understands reaction-delay notes only for
-            beats with a concrete reaction event. This beat has none — shape it
-            with the Visual and Motion controls below.
+            No editable reaction target exists here — shape the beat with the
+            Visual and Motion controls below.
+          </p>
+        ) : (
+          <p className="director-command-unavailable">
+            <strong>Multiple reaction targets on this beat.</strong>
+            More than one reaction event could be retimed, and explicit target
+            selection is not supported yet.
           </p>
         )}
         <div
