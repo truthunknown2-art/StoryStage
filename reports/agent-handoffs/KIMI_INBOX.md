@@ -1,45 +1,40 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `6`
+Inbox-Version: `7`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-UI-SLICE-B-STUDIO-SHELL`
+Current-Task: `KIMI-UI-SLICE-B-COPY-PARITY`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `21e8d4c601e5e96a540f93ede2b52660bfa6ac0a`
-Required-Work-Branch: `agent/kimi-ui-slice-b-studio-shell`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-start-ui-slice-b-studio-shell.md`
+Accepted-Root-Base: `04f794a5db3226d51e23235e2c488ae89d9fca0f`
+Required-Work-Branch: `agent/kimi-ui-slice-b-copy-parity`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-b-copy-parity.md`
 
 ## Current instruction
 
-Resume `KIMI-UI-SLICE-B-STUDIO-SHELL` on the existing required work branch and
-correct the remaining eligibility mismatch on draft PR #12 at exact head
-`a7c034c5564acd7ab80fc137273c8ce5b59870e6`.
+PR #12 was accepted by ChatGPT Pro at exact head
+`76fd7ae91c53dd191a49fd0732ce60fb26349ad7` and merged into the integration
+branch as exact merge commit `04f794a5db3226d51e23235e2c488ae89d9fca0f`.
 
-The boundary repair, command clearing, honest unavailable state, proxy wording,
-and hosted verification at this head are good. Do not regress them.
+Create the required work branch from that exact accepted integration base and
+apply the one non-blocking copy correction identified during acceptance. Every
+creator-facing Director state must derive from the shared exact candidate-pair
+count and distinguish:
 
-**Remaining P1 — the UI and interpreter still count different things.**
-`DirectorPreview.tsx` builds `candidates` by filtering reaction events with
-`shots.some(...)`, so one reaction event linked to two matching shots counts as
-one eligible candidate. `proposeDirectorPatch` in
-`packages/story-engine/src/director/director-patch.ts` uses
-`reactionEvents.flatMap(...matching shots...)`; the same case counts as two and
-is rejected as ambiguous. The UI can therefore still expose a prominent
-command that the interpreter cannot apply, while the inline comment incorrectly
-says it mirrors the acceptance predicate.
+- `0` candidates: no editable reaction target exists on this beat;
+- `1` candidate: the real **Direct this beat** command is available;
+- `2+` candidates: multiple reaction targets exist and explicit target
+  selection is not supported yet.
 
-Use one shared Director Alpha eligibility helper consumed by both the
-interpreter and Studio, or otherwise prove the two paths use the exact same
-event/shot-pair cardinality. Prefer the shared helper so they cannot drift.
-Add a regression fixture with one reaction event linked by two eligible shots:
-the control must remain unavailable and the interpreter must report ambiguity.
-Keep the existing no-reaction and command-clearing regressions. Run root
-`pnpm verify`, update the handoff/proof wording and exact SHA, push the same
-required branch, and leave PR #12 draft for Codex/Pro review.
+Remove contradictory Motion-panel guidance such as “Use Direct this beat above”
+when the command is absent. Do not add fake target selection or broaden the
+interpreter. Preserve the accepted eligibility helper, no-reaction gating,
+command clearing, proxy labeling, boundary isolation, responsive layout, and
+accessibility behavior. Add focused Studio regressions for all three counts,
+run root `pnpm verify`, commit and push the required branch, open a draft PR
+against `agent/integrate-kimi-ui-slice-a`, and write the requested handback.
 
-The earlier Version 5 requirements and historical hosted boundary context stay
-recorded below for traceability; Version 6 supersedes only the eligibility
-implementation described above.
+The earlier Version 6 and Version 5 requirements remain below as historical
+traceability; Version 7 supersedes their active task status.
 
 ---
 
