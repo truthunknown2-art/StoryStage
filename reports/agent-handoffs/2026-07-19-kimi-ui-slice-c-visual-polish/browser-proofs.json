@@ -5,31 +5,29 @@
     "title": "Seek to reaction, frame 340",
     "expectedFrame": 340,
     "episodeHash": "cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966",
-    "transportText": "0:11 / 0:26",
-    "laneRange": {
-      "startFrame": 340,
-      "endFrameExclusive": 437
-    },
-    "playheadPct": 0,
     "exactFrame": 340,
+    "paused": true,
     "shotId": "shot-5-main",
-    "beatId": "beat-a3f3e65ef08a",
-    "paused": true
+    "beatId": "beat-a3f3e65ef08a"
+  },
+  "compositionAtExactFrame": {
+    "clip": {
+      "x": 438.31597900390625,
+      "y": 141,
+      "width": 462.5555419921875,
+      "height": 260.1875
+    },
+    "meanLuminance": 22.2,
+    "stddev": 24.15,
+    "uniqueColors16": 13,
+    "samples": 7508
   },
   "pausedPlayer": {
     "episodeHash": "cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966",
-    "transportText": "0:12 / 0:26",
-    "laneRange": {
-      "startFrame": 340,
-      "endFrameExclusive": 437
-    },
-    "playheadPct": 0.35051499999999997,
-    "exactFrame": 373.999955,
-    "shotId": "shot-5-main",
-    "beatId": "beat-a3f3e65ef08a",
+    "exactFrame": 340,
     "paused": true,
-    "coloredNodes": 25,
-    "nonblank": true
+    "shotId": "shot-5-main",
+    "beatId": "beat-a3f3e65ef08a"
   },
   "zoom": {
     "at100": {
@@ -55,12 +53,10 @@
     }
   },
   "hierarchy1920": {
-    "frame": 373.999955,
+    "frame": 340,
     "beatId": "beat-a3f3e65ef08a",
     "shotId": "shot-5-main",
-    "paused": true,
-    "coloredNodes": 25,
-    "nonblank": true
+    "paused": true
   },
   "overflow820": {
     "sw": 820,

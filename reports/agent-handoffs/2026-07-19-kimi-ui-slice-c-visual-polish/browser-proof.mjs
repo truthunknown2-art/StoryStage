@@ -24,7 +24,7 @@
  * Run from the repository root with the studio dev server on 127.0.0.1:5174:
  *   node reports/agent-handoffs/2026-07-19-kimi-ui-slice-c-visual-polish/browser-proof.mjs
  */
-/* global document, window, getComputedStyle, console */
+/* global document, window, getComputedStyle, console, Image */
 import { chromium } from "../../../node_modules/.pnpm/playwright@1.62.0-alpha-1783623505000/node_modules/playwright/index.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -36,15 +36,7 @@ const shot = (name) => resolve(HERE, name);
 
 const readPlayerState = async (page) =>
   page.evaluate(() => {
-    const playhead = document.querySelector(".director-timeline-playhead");
-    const summary = document
-      .querySelector(".director-timeline-drawer summary")
-      ?.textContent.match(/(\d+)–(\d+)f/);
-    const transport = Array.from(
-      document.querySelectorAll(".cv2-director-player *"),
-    )
-      .map((n) => n.textContent?.trim() ?? "")
-      .find((t) => /^\d+:\d\d\s*\/\s*\d+:\d\d$/.test(t));
+    const container = document.querySelector(".cv2-director-player");
     const shotSelect = document.querySelector(
       ".director-department-panel select",
     );
@@ -56,46 +48,67 @@ const readPlayerState = async (page) =>
     const beat = draft?.graph?.scenes
       ?.flatMap((scene) => scene.beats)
       ?.find((candidate) => candidate.text === beatText);
-    const playButton = document.querySelector(
-      '.cv2-director-player button[aria-label*="Play" i]',
-    );
-    const pct = playhead
-      ? parseFloat(playhead.style.left.replace("%", "")) / 100
-      : null;
-    const startFrame = summary ? Number(summary[1]) : null;
-    const endFrameExclusive = summary ? Number(summary[2]) + 1 : null;
-    const exactFrame =
-      pct !== null && startFrame !== null
-        ? startFrame + pct * (endFrameExclusive - startFrame)
-        : null;
     return {
       episodeHash: document
         .querySelector("[data-episode-hash]")
         ?.getAttribute("data-episode-hash"),
-      transportText: transport ?? null,
-      laneRange: summary
-        ? { startFrame, endFrameExclusive }
-        : { startFrame: null, endFrameExclusive: null },
-      playheadPct: pct,
-      exactFrame,
+      exactFrame: Number(container?.getAttribute("data-proof-frame")),
+      paused: container?.getAttribute("data-proof-playing") === "false",
       shotId: shotSelect?.value ?? null,
       beatId: beat?.id ?? null,
-      paused: Boolean(playButton),
     };
   });
 
-const nonblankCheck = async (page) =>
-  page.evaluate(() => {
-    const el = document.querySelector(".cv2-director-player");
-    const colored = Array.from(el.querySelectorAll("*")).filter((n) => {
-      const s = getComputedStyle(n);
-      return (
-        s.backgroundColor &&
-        !["rgba(0, 0, 0, 0)", "rgb(0, 0, 0)"].includes(s.backgroundColor)
-      );
-    }).length;
-    return { coloredNodes: colored, nonblank: colored > 20 };
-  });
+// Composition-scoped nonblank proof: clipped pixels of the .__remotion-player
+// bounding box, decoded in-page, with explicit statistics (mean luminance,
+// stddev, unique 4-bit colors). Transport controls and other chrome live
+// outside that box and are excluded by construction.
+const pixelStatistics = async (page) => {
+  const box = await page.locator(".__remotion-player").boundingBox();
+  if (!box) return { error: "no .__remotion-player box" };
+  const buf = await page.screenshot({ clip: box });
+  const stats = await page.evaluate(
+    async (dataUrl) => {
+      const img = new Image();
+      await new Promise((resolveImg, rejectImg) => {
+        img.onload = resolveImg;
+        img.onerror = rejectImg;
+        img.src = dataUrl;
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const context = canvas.getContext("2d");
+      context.drawImage(img, 0, 0);
+      const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      let sum = 0;
+      let sumSq = 0;
+      let count = 0;
+      const colors = new Set();
+      for (let i = 0; i < data.length; i += 64) {
+        const luminance =
+          0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+        sum += luminance;
+        sumSq += luminance * luminance;
+        count += 1;
+        colors.add(
+          ((data[i] >> 4) << 8) |
+            ((data[i + 1] >> 4) << 4) |
+            (data[i + 2] >> 4),
+        );
+      }
+      const mean = sum / count;
+      return {
+        meanLuminance: Number(mean.toFixed(2)),
+        stddev: Number(Math.sqrt(sumSq / count - mean * mean).toFixed(2)),
+        uniqueColors16: colors.size,
+        samples: count,
+      };
+    },
+    `data:image/png;base64,${buf.toString("base64")}`,
+  );
+  return { clip: box, ...stats };
+};
 
 const measure = async (page) =>
   page.evaluate(() => {
@@ -140,52 +153,63 @@ const laneButton = page
   .first();
 const seekTitle = await laneButton.getAttribute("title");
 const seekFrame = Number(seekTitle.match(/frame (\d+)$/)[1]);
+
+// Exact Player-state protocol: wait for the Player-ref observation to report
+// the exact sought frame (integer equality, no tolerance), then pause.
 await laneButton.click();
-await page.waitForTimeout(500);
-const pausedNow = await page.evaluate(() => {
+await page.waitForFunction(
+  (expected) =>
+    document
+      .querySelector(".cv2-director-player")
+      ?.getAttribute("data-proof-frame") === String(expected),
+  seekFrame,
+  { timeout: 10000 },
+);
+await page.evaluate(() => {
   const pauseButton = document.querySelector(
     '.cv2-director-player button[aria-label*="Pause" i]',
   );
   if (pauseButton) pauseButton.click();
-  return Boolean(
-    document.querySelector('.cv2-director-player button[aria-label*="Play" i]'),
-  );
 });
-assert(pausedNow, "Player did not reach a paused state after the seek");
+await page.waitForFunction(
+  () =>
+    document
+      .querySelector(".cv2-director-player")
+      ?.getAttribute("data-proof-playing") === "false",
+  undefined,
+  { timeout: 5000 },
+);
 proof.seek = {
   title: seekTitle,
   expectedFrame: seekFrame,
   ...(await readPlayerState(page)),
 };
 assert(
-  Math.abs(proof.seek.exactFrame - seekFrame) <= 1,
-  `seek frame mismatch: expected ${seekFrame}, measured ${proof.seek.exactFrame}`,
+  proof.seek.exactFrame === seekFrame,
+  `seek frame mismatch: expected exactly ${seekFrame}, Player-ref reports ${proof.seek.exactFrame}`,
 );
-assert(proof.seek.paused === true, "Player not paused after seek");
+assert(proof.seek.paused === true, "Player-ref does not report paused");
 
-// Deterministic nonblank paused frame inside the same beat
-await page
-  .locator('.cv2-director-player button[aria-label*="Play" i]')
-  .first()
-  .click();
-await page.waitForTimeout(1400);
-await page
-  .locator('.cv2-director-player button[aria-label*="Pause" i]')
-  .first()
-  .click();
-await page.waitForTimeout(800);
-proof.pausedPlayer = {
-  ...(await readPlayerState(page)),
-  ...(await nonblankCheck(page)),
-};
+// Composition-scoped nonblank proof at that same exact frame: clipped
+// composition pixels with explicit statistics. Dark-but-rendered transition
+// frames pass only when the numbers prove real content (not uniform black).
+const composition = await pixelStatistics(page);
+proof.compositionAtExactFrame = composition;
 assert(
-  proof.pausedPlayer.paused === true,
-  "Player not paused after play-pause",
+  composition.meanLuminance > 4 &&
+    composition.stddev > 4 &&
+    composition.uniqueColors16 >= 4,
+  `composition blank at exact frame ${seekFrame}: ${JSON.stringify(composition)}`,
 );
+
+// Both captures happen while the Player-ref still reports the same exact
+// paused frame — no wall-clock playing.
+const beforeCapture = await readPlayerState(page);
 assert(
-  proof.pausedPlayer.nonblank,
-  `paused frame is blank (coloredNodes=${proof.pausedPlayer.coloredNodes})`,
+  beforeCapture.exactFrame === seekFrame && beforeCapture.paused,
+  `frame drifted before 1440 capture: ${JSON.stringify(beforeCapture)}`,
 );
+proof.pausedPlayer = beforeCapture;
 await page.screenshot({
   path: shot("studio-1440x900-direct-command-one-target.png"),
 });
@@ -219,18 +243,25 @@ assert(
   "return to fit did not restore width",
 );
 
-// 1920 hierarchy on the same named paused frame
+// 1920 hierarchy on the same exact paused frame
 const state1920 = await readPlayerState(page);
+assert(
+  state1920.exactFrame === seekFrame && state1920.paused,
+  `frame drifted before 1920 capture: ${JSON.stringify(state1920)}`,
+);
 proof.hierarchy1920 = {
   frame: state1920.exactFrame,
   beatId: state1920.beatId,
   shotId: state1920.shotId,
   paused: state1920.paused,
-  ...(await nonblankCheck(page)),
 };
-assert(proof.hierarchy1920.nonblank, "1920 hierarchy frame is blank");
 await page.setViewportSize({ width: 1920, height: 1080 });
 await page.waitForTimeout(800);
+const state1920Settled = await readPlayerState(page);
+assert(
+  state1920Settled.exactFrame === seekFrame && state1920Settled.paused,
+  `frame drifted during 1920 capture: ${JSON.stringify(state1920Settled)}`,
+);
 await page.screenshot({ path: shot("studio-1920x1080-full-hierarchy.png") });
 
 // Responsive states
