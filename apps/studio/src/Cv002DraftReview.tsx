@@ -42,11 +42,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Cv002TemplateAssignmentPanel } from "./Cv002TemplateAssignmentPanel";
-import {
-  CreatorBeatStrip,
-  CreatorSceneRail,
-  CreatorStudioShell,
-} from "./creator-studio-components";
+import { CreatorStudioShell } from "./creator-studio-components";
 import { DirectorAnimaticPreview } from "./director/DirectorPreview";
 import "./cv002-draft-review.css";
 
@@ -733,15 +729,6 @@ export function Cv002DraftReview({
           </div>
 
           <CreatorStudioShell className="cv2-studio-workspace">
-            {studioDirector ? (
-              <CreatorSceneRail
-                director={studioDirector}
-                onSelectBeat={setSelectedBeatId}
-                project={project}
-                selectedBeatId={selectedBeatId}
-              />
-            ) : null}
-
             <DirectorAnimaticPreview
               capabilityRegistry={capabilityRegistry}
               compileError={directorCompilation.error}
@@ -749,15 +736,6 @@ export function Cv002DraftReview({
               project={project}
               workspace={directorWorkspace}
             />
-
-            {studioDirector ? (
-              <CreatorBeatStrip
-                director={studioDirector}
-                onSelectBeat={setSelectedBeatId}
-                project={project}
-                selectedBeatId={selectedBeatId}
-              />
-            ) : null}
           </CreatorStudioShell>
 
           <details className="cv2-studio-advanced">

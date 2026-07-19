@@ -33,6 +33,7 @@ export type {
 export {
   describeDirectorPatch,
   directorPatchSchema,
+  listDirectorReactionDelayCandidates,
   proposeDirectorPatch,
   proposeDirectorVisualPatch,
   sealDirectorPatch,

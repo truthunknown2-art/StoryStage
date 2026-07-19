@@ -182,9 +182,15 @@ describe("CV-002 editable script breakdown", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "Draft animatic ready",
     );
-    expect(screen.getByLabelText("Studio scenes and beats")).toBeVisible();
-    expect(screen.getByLabelText("Director controls")).toBeVisible();
-    expect(screen.getByLabelText("Compact beat strip")).toBeVisible();
+    const shell = screen.getByLabelText("Directed animatic draft");
+    expect(
+      within(shell).getByLabelText("Studio scenes and beats"),
+    ).toBeVisible();
+    expect(within(shell).getByLabelText("Director controls")).toBeVisible();
+    expect(within(shell).getByLabelText("Compact beat strip")).toBeVisible();
+    expect(
+      within(shell).getByLabelText("Selected-beat timeline"),
+    ).not.toHaveAttribute("open");
     expect(screen.getAllByText("Visual treatment").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Camera").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Sound effect").length).toBeGreaterThan(0);
@@ -233,7 +239,6 @@ describe("CV-002 editable script breakdown", () => {
 
     await user.click(targetBeat);
     expect(targetBeat).toHaveAttribute("aria-pressed", "true");
-    await user.click(screen.getByRole("tab", { name: "Motion" }));
     await user.type(
       screen.getByLabelText("Direction for selected beat"),
       "Make the reaction 6 frames later",
@@ -320,6 +325,14 @@ describe("CV-002 editable script breakdown", () => {
     expect(
       within(strip).getByRole("button", { name: /Scene 3, beat 1/i }),
     ).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(within(rail).getByRole("button", { name: /1\.1 setup/i }));
+    playerHarness.lastSeek = null;
+    await user.click(
+      within(strip).getByRole("button", { name: /Scene 3, beat 1/i }),
+    );
+    expect(playerHarness.lastSeek).toBe(reactionStartFrame);
+    expect(reactionBeat).toHaveAttribute("aria-pressed", "true");
   });
 
   it("applies patch-backed Visual controls and exposes genuine selected-beat lanes", async () => {
@@ -347,12 +360,154 @@ describe("CV-002 editable script breakdown", () => {
     expect(animatic.getAttribute("data-episode-hash")).not.toBe(originalHash);
 
     const timeline = screen.getByLabelText("Selected-beat timeline");
+    expect(timeline).not.toHaveAttribute("open");
+    await user.click(within(timeline).getByText("Selected-beat timeline"));
     expect(within(timeline).getByText("Shots")).toBeVisible();
     expect(within(timeline).getByText("Events")).toBeVisible();
     expect(within(timeline).getByText("Camera")).toBeVisible();
     playerHarness.lastSeek = null;
     await user.click(within(timeline).getAllByRole("button")[0]!);
     expect(playerHarness.lastSeek).not.toBeNull();
+  });
+
+  it("seeks to genuine resolved event frames and tracks playback on the timeline", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const rail = screen.getByLabelText("Studio scenes and beats");
+    await user.click(
+      within(rail).getByRole("button", { name: /3\.1 reaction/i }),
+    );
+
+    const timeline = screen.getByLabelText("Selected-beat timeline");
+    expect(timeline).not.toHaveAttribute("open");
+    await user.click(within(timeline).getByText("Selected-beat timeline"));
+
+    const lanes = Array.from(
+      timeline.querySelectorAll(".director-timeline-label"),
+    ).map((lane) => lane.textContent!.trim());
+    expect(lanes).toEqual(["Shots", "Events", "Camera"]);
+
+    const eventsLane = timeline.querySelector(
+      ".director-timeline-lane.is-events",
+    ) as HTMLElement;
+    expect(eventsLane).not.toBeNull();
+    const marker = within(eventsLane).getAllByRole("button")[0]!;
+    const expectedFrame = Number(
+      marker.getAttribute("title")!.match(/frame (\d+)$/)![1],
+    );
+    playerHarness.lastSeek = null;
+    await user.click(marker);
+    expect(playerHarness.lastSeek).toBe(expectedFrame);
+
+    const rangeText = within(timeline)
+      .getByText(/^\d+–\d+f$/)
+      .textContent!.replace("f", "");
+    const [start, endInclusive] = rangeText.split("–").map(Number);
+    const probeFrame = start! + 10;
+    act(() => {
+      playerHarness.frameListener?.({ detail: { frame: probeFrame } });
+    });
+    const expectedLeft = `${
+      ((probeFrame - start!) / Math.max(1, endInclusive! + 1 - start!)) * 100
+    }%`;
+    const playhead = timeline.querySelector(
+      ".director-timeline-playhead",
+    ) as HTMLElement;
+    expect(playhead.style.left).toBe(expectedLeft);
+  });
+
+  it("keeps the shell honest: draft labels, closed advanced controls, no fake panels", async () => {
+    const user = await openHistoryBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+
+    expect(screen.getAllByText("Draft animatic").length).toBeGreaterThan(0);
+    expect(screen.getByText("Proxy performance")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Final character rig unavailable/),
+    ).toBeInTheDocument();
+
+    expect(screen.getByLabelText("Selected-beat timeline")).not.toHaveAttribute(
+      "open",
+    );
+    expect(
+      screen.getByText("Advanced production details").closest("details"),
+    ).not.toHaveAttribute("open");
+    expect(
+      screen.getByText("Advanced / Preflight").closest("details"),
+    ).not.toHaveAttribute("open");
+
+    expect(
+      screen.queryByRole("button", { name: /export/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /audio/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("tab", { name: /assets/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/waveform/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /trim/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("gates the Director command to beats with a concrete reaction event", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+
+    // The default setup beat (1.1) has no reaction event: the command control
+    // would reject every input, so an honest explanation replaces it.
+    expect(
+      screen.queryByLabelText("Direction for selected beat"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Structured direction unavailable on this beat/),
+    ).toBeInTheDocument();
+
+    // A beat with exactly one concrete reaction event gets the real control.
+    await user.click(
+      within(screen.getByLabelText("Studio scenes and beats")).getByRole(
+        "button",
+        { name: /3\.1 reaction/i },
+      ),
+    );
+    expect(
+      screen.getByLabelText("Direction for selected beat"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Structured direction unavailable on this beat/),
+    ).not.toBeInTheDocument();
+  });
+
+  it("clears a typed direction when the selected beat changes", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const rail = screen.getByLabelText("Studio scenes and beats");
+
+    await user.click(
+      within(rail).getByRole("button", { name: /2\.2 reaction/i }),
+    );
+    const input = screen.getByLabelText(
+      "Direction for selected beat",
+    ) as HTMLInputElement;
+    await user.type(input, "Make the reaction 6 frames later");
+    expect(input.value).toBe("Make the reaction 6 frames later");
+
+    await user.click(
+      within(rail).getByRole("button", { name: /3\.1 reaction/i }),
+    );
+    expect(
+      (screen.getByLabelText("Direction for selected beat") as HTMLInputElement)
+        .value,
+    ).toBe("");
   });
 
   it("restores a verified local direction draft without routing into ProductionComposition", async () => {

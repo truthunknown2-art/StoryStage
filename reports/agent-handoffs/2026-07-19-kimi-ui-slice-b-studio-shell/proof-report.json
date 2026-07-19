@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "1.0",
+  "status": "kimi-ui-slice-b-studio-shell-proof",
+  "task": "KIMI-UI-SLICE-B-STUDIO-SHELL",
+  "branch": "agent/kimi-ui-slice-b-studio-shell",
+  "base": "21e8d4c601e5e96a540f93ede2b52660bfa6ac0a",
+  "implementationCommit": "60cd50f",
+  "capturedAt": "2026-07-19T13:49:05Z",
+  "environment": {
+    "url": "http://127.0.0.1:5174/",
+    "urlNote": "Port 5173 is occupied by another agent's dev server (kvp001 worktree); gates were run against this branch on 5174.",
+    "browser": "Chromium via Playwright 1.62.0-alpha",
+    "vite": "8.1.5",
+    "axe": "axe-core 4.10.3, resultTypes: violations, critical+serious only"
+  },
+  "results": {
+    "kids": {
+      "episodeHash": "19380598d9a2ddccb1b7c78f429cd0916d3ef1b5e8757405fa2e649d19c566bf",
+      "railThumbnailCount": 9,
+      "stripThumbnailCount": 9,
+      "audit": {
+        "criticalSerious": [
+          {
+            "id": "image-alt",
+            "impact": "critical",
+            "targets": ["img"],
+            "elementCount": 1,
+            "source": "Single 2098x750 blob <img> with empty alt rendered inside .__remotion-player by DirectorProductionComposition (packages/remotion-runtime). That package is outside the allowed scope and is byte-identical to the base on this branch; the finding is pre-existing on 21e8d4c. Fixing requires a remotion-runtime change, not a shell change."
+          }
+        ],
+        "scrollWidth": 1440,
+        "innerWidth": 1440
+      }
+    },
+    "history": {
+      "episodeHash": "cd7332009643cdc8d428c0d29901cfdbc73edaf792c46cdd73b72ed5c44990ee",
+      "railThumbnailCount": 9,
+      "stripThumbnailCount": 9,
+      "audit": {
+        "criticalSerious": [],
+        "scrollWidth": 1440,
+        "innerWidth": 1440
+      }
+    }
+  },
+  "responsive": {
+    "kids-1024x768": {
+      "criticalSerious": [
+        "image-alt (same single pre-existing remotion-player img)"
+      ],
+      "scrollWidth": 1024,
+      "innerWidth": 1024
+    },
+    "kids-820x900": {
+      "criticalSerious": [
+        "image-alt (same single pre-existing remotion-player img)"
+      ],
+      "scrollWidth": 820,
+      "innerWidth": 820
+    }
+  },
+  "console": {
+    "errors": [],
+    "warnings": [
+      {
+        "text": "EncodingError: The source image cannot be decoded.",
+        "routes": ["kids"],
+        "source": "Same single pre-existing img inside .__remotion-player (packages/remotion-runtime, unmodified, out of scope)."
+      }
+    ],
+    "historyRouteWarnings": []
+  },
+  "interactionProof": {
+    "railSeekParity": "covered by unit test: strip-card seek equals rail seek to exact beat start frame",
+    "eventMarkerSeek": "covered by unit test: event marker seeks to resolved event frame; playhead tracks playback frames",
+    "patchRebuild": "covered by unit test: applied patch changes data-episode-hash and all rail thumbnails carry the edited hash",
+    "undoRedoHashes": "covered by unit test: undo restores original hash, redo reapplies edited hash, selection retained"
+  },
+  "verification": {
+    "test": "corepack pnpm --filter @storystage/studio test -> 81/81 passed (7 files)",
+    "typecheck": "corepack pnpm --filter @storystage/studio typecheck -> clean",
+    "lint": "corepack pnpm exec eslint apps/studio -> clean",
+    "format": "prettier --check clean on all touched files",
+    "build": "verify:director-capability-assets OK; tsc --noEmit OK; vite build OK (pre-existing >500kB chunk note unchanged)",
+    "diffCheck": "git diff --check clean",
+    "rootVerify": "pnpm verify (repository root, at dad474d) -> exit 0: 19 capability assets verified; privacy 580 files passed; eslint . 0 errors (2 pre-existing render-worker flicker warnings, outside scope); typecheck clean across 10 projects; all tests green incl. director-alpha-boundary, story-engine 254/254, studio 81/81"
+  },
+  "blockerResolution": {
+    "blocker": "PR #12 hosted blocker at 767669f: director-alpha-boundary audit failed — DirectorPreview imported CreatorSceneRail/CreatorBeatStrip from ../creator-studio-components, pulling ten legacy CV-001/showcase files into the audited Director surface via the story-engine index",
+    "fix": "ffee66e: boundary-safe DirectorSceneBeatRail inside apps/studio/src/director/ (director-alpha contracts + DirectorFrameThumbnail only); legacy components removed from creator-studio-components (no remaining consumers); no markup, aria-label, or behavior change",
+    "boundaryTest": "packages/story-engine director-alpha-boundary.test.ts -> passed"
+  },
+  "inboxV5Resolution": {
+    "successorSha": "e13292a",
+    "p1": "DirectorCommandPanel gated to beats with a concrete reaction event; honest unavailability note elsewhere — regression test covers the default/non-reaction beat",
+    "p2": "command state clears on every selection change — regression test covers click-driven beat switch",
+    "wording": "DirectorFrameThumbnail described as deterministic proxy approximation, not canonical frame"
+  },
+  "inboxV6Resolution": {
+    "successorSha": "dad474d",
+    "rootCause": "v5 UI predicate counted reaction events (shots.some) while the interpreter counts (event, shot) pairs (flatMap) — one event linked by two eligible shots read as eligible in the UI but ambiguous to the interpreter",
+    "fix": "listDirectorReactionDelayCandidates in packages/story-engine/src/director/director-patch.ts is the single eligibility source consumed by both proposeDirectorPatch (identical behavior) and the Studio shell gating via director-alpha; drift impossible by construction; Director Alpha boundary audit green",
+    "regressionFixture": "schema-valid forged project with one reaction event linked by two eligible shots: shared list reports 2 candidates, interpreter throws /more than one possible reaction event/i; control stays unavailable for exactly the rejected cases",
+    "storyEngineTests": "254/254 (includes ambiguity-cardinality regression)",
+    "studioTests": "81/81",
+    "rootVerify": "pnpm verify at dad474d -> exit 0 (first attempt green; prior e13292a run's only failure was the unrelated apps/desktop delivery-store parallel-load timeout, green on rerun, flagged for the flake lane)"
+  },
+  "screenshots": [
+    "kids-1440x900.png",
+    "history-1440x900.png",
+    "kids-1024x768.png",
+    "kids-820x900.png"
+  ]
+}
