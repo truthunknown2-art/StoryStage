@@ -1,0 +1,957 @@
+{
+  "schemaVersion": "1.0",
+  "ledgerId": "scene-craft-v1.1-rule-ledger",
+  "status": "non-normative editorial knowledge and evidence classification only",
+  "noAuthority": "This ledger grants no planning, timing, rig, capability, render, audio, export, or production authority. No entry is a validator, threshold, compiler behavior, quality gate, or model instruction. Codex decides later whether any accepted entry becomes behavior.",
+  "milestone": "SCENECRAFT-001 (docs/PRODUCT_ROADMAP.md M3)",
+  "sourceArtifactRegistry": [
+    {
+      "artifactId": "src-scene-craft-v1",
+      "path": "docs/editorial/scene-craft-v1.md",
+      "gitCommit": "0a4f25d8c5eb4956ed508cf3ab05df1c3c92dd3e",
+      "sha256": "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+      "evidenceKind": "established-practice",
+      "supports": "Creative vocabulary, section structure, and the candidate numeric claims this ledger classifies. Does not itself validate any numeric claim; every number inherited from it stays hypothesis, planner-prior, or example-only until measured."
+    },
+    {
+      "artifactId": "src-scene-craft-v1-1",
+      "path": "docs/editorial/scene-craft-v1.1.md",
+      "gitCommit": "3f07a614625e99532672ad366965afbb66f178cd",
+      "sha256": "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2",
+      "evidenceKind": "established-practice",
+      "supports": "The accepted hard-versus-soft ruling, the rule taxonomy, softened section text, and the illustrative treatment. Grants no authority of its own."
+    },
+    {
+      "artifactId": "src-product-roadmap",
+      "path": "docs/PRODUCT_ROADMAP.md",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "428b8af5a8232ff09c2e27cd787e7c14c89f6448f7d7deb84f1b951411c98388",
+      "evidenceKind": "established-practice",
+      "supports": "Milestone SCENECRAFT-001 scope, ownership, and required record fields. Provides no rule evidence."
+    },
+    {
+      "artifactId": "src-reference-direction-study",
+      "path": "docs/REFERENCE-DIRECTION-STUDY.md",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "8626e859ebb83541ff903722728d27a22a39d18c84fc6050ee6e1a661f4b9dd1",
+      "evidenceKind": "established-practice",
+      "supports": "Direction-study context for vocabulary priors. Cannot validate exact StoryStage thresholds."
+    },
+    {
+      "artifactId": "src-refanalysis-kids-dragon-hunt-2",
+      "path": "docs/reference-analysis/kids-dragon-hunt-2-analysis.json",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "f0bfd8e2f4f65b6681be46164abc92d5402230f8d63c8818e9c91e34bd6fbf8d",
+      "evidenceKind": "measured-reference",
+      "supports": "Evidence that established editorial patterns exist in reference kids content. Cannot validate exact StoryStage numeric thresholds or mix percentages."
+    },
+    {
+      "artifactId": "src-refanalysis-sticko-teen",
+      "path": "docs/reference-analysis/sticko-teen-analysis.json",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "7c7366d919dac8de8fb7d9b3a304165cae3f440fc43a533e30a15e5553697f2a",
+      "evidenceKind": "measured-reference",
+      "supports": "Reference-content patterns for coverage, reaction, and pacing vocabulary. Cannot validate exact StoryStage numeric thresholds."
+    },
+    {
+      "artifactId": "src-refanalysis-profile-comparison",
+      "path": "docs/reference-analysis/profile-comparison.md",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "8bd4aef3d1621d5ae5712a87739d507da2a901605679f08d31639ebed777ff11",
+      "evidenceKind": "measured-reference",
+      "supports": "Cross-profile comparison context for grammar priors. Cannot validate exact numeric rules."
+    },
+    {
+      "artifactId": "src-kids-showcase-frame-audit",
+      "path": "docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "7c614aa6d41087359f6d3860b0b3befb0b58d9a27299124112472eeab883c28f",
+      "evidenceKind": "project-regression",
+      "supports": "Project-observed regression evidence: repeated gesture (hand-to-ear listen twice in 6s) and semi-transparent multi-pose smear ghosting around 0:16/0:20 of the test render. Supports existence of those failure modes in this project; cannot support universal numeric rules."
+    },
+    {
+      "artifactId": "src-kids-showcase-proof-report",
+      "path": "docs/design/kids-showcase-proof/proof-report.json",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "75599bdef8b1970daca8a3904ceec3a9b3b9b4892221d83ab64c1e32ba0bbde0",
+      "evidenceKind": "project-regression",
+      "supports": "Proof-run metadata for the regression artifacts. No rule evidence."
+    },
+    {
+      "artifactId": "src-kids-showcase-frame-024",
+      "path": "docs/design/kids-showcase-proof/frame-024.png",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "cffdaa0022ee6e11d05637215b287b6ec219f459999f079a32265f31f6fd68ee",
+      "evidenceKind": "project-regression",
+      "supports": "Frame-level regression artifact referenced by the frame audit."
+    },
+    {
+      "artifactId": "src-kids-showcase-frame-069",
+      "path": "docs/design/kids-showcase-proof/frame-069.png",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "49decff83688b5cae450be47ead3a674b6ea59de60c3554463a9ba277f2f53c4",
+      "evidenceKind": "project-regression",
+      "supports": "Frame-level regression artifact referenced by the frame audit."
+    },
+    {
+      "artifactId": "src-kids-showcase-frame-108",
+      "path": "docs/design/kids-showcase-proof/frame-108.png",
+      "gitCommit": "c7618f06c96bd52a866e87dadaaea7a4cf991e4c",
+      "sha256": "ad6130f43f3465e1f65ce823dc3782c95260ea4055cd5c7a137b6415246ccc55",
+      "evidenceKind": "project-regression",
+      "supports": "Frame-level regression artifact referenced by the frame audit."
+    }
+  ],
+  "rules": [
+    {
+      "id": "SC-001",
+      "title": "Exact source, plan, grammar, asset, timing, and capability lineage",
+      "sourceSection": "v1.1 §Hard-invariant classes",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "continuity",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Compiler/continuity-validator territory (Codex-owned); recorded here as classified knowledge only.",
+      "rationale": "Broken lineage is a mechanical, evidence-bound authority failure, not a taste finding; the v1.1 ruling accepts this class as the only blocking kind."
+    },
+    {
+      "id": "SC-002",
+      "title": "Legal timing and readable-action windows",
+      "sourceSection": "v1.1 §Hard-invariant classes, §3, §5",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "continuity",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Timing-solver and read-window validation (Codex-owned); no editorial quota.",
+      "rationale": "Cutting before a required read window or inside an unsatisfied action envelope is a measurable mechanical failure."
+    },
+    {
+      "id": "SC-003",
+      "title": "Continuity of geography, axis, screen direction, and subject lifecycle",
+      "sourceSection": "v1.1 §Hard-invariant classes, §3, §7",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "continuity",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["declared-transition-logic"],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Continuity validation (Codex-owned); intentional jumps require declared transition logic.",
+      "rationale": "Unexplained axis/geography reversals, teleports, and lifecycle dropouts are causal failures the audience can verify, not taste."
+    },
+    {
+      "id": "SC-004",
+      "title": "Prop ownership, attachment, scale, depth-plane, and position consistency",
+      "sourceSection": "v1.1 §Hard-invariant classes",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "continuity",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Continuity validation (Codex-owned).",
+      "rationale": "Unexplained prop jumps are mechanical discontinuities in the asset/continuity envelope."
+    },
+    {
+      "id": "SC-005",
+      "title": "Executed camera and transition behavior matches its labels",
+      "sourceSection": "v1.1 §Hard-invariant classes, §4, §7",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "quality",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Deterministic validation of rendered samples (Codex-owned).",
+      "rationale": "A camera or transition label that does not match what was rendered is an evidence-bound honesty failure; motivation itself stays editorial."
+    },
+    {
+      "id": "SC-006",
+      "title": "Action, gait, contact, plant, catch, handoff, and causal-response continuity",
+      "sourceSection": "v1.1 §Hard-invariant classes, §3",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "continuity",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Continuity validation (Codex-owned).",
+      "rationale": "Cuts across gait discontinuity or unreadable contact/causal response are mechanical action-consistency failures."
+    },
+    {
+      "id": "SC-007",
+      "title": "No known fake-preview or accidental whole-body pose-swap techniques",
+      "sourceSection": "v1.1 §Hard-invariant classes, §9",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "rig",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["approved-style-capability"],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2",
+        "7c614aa6d41087359f6d3860b0b3befb0b58d9a27299124112472eeab883c28f"
+      ],
+      "sourceArtifacts": [
+        "src-scene-craft-v1-1",
+        "src-kids-showcase-frame-audit"
+      ],
+      "evidenceKind": "project-regression",
+      "confidence": "high",
+      "disposition": "Prohibited unless an approved future style capability explicitly legitimizes a variant.",
+      "rationale": "Accidental opacity-stacked whole-body crossfades were project-observed (frame audit at ~0:16/0:20) and are a renderer-honesty failure; the v1.1 ruling keeps them prohibited."
+    },
+    {
+      "id": "SC-008",
+      "title": "Asset integrity and deterministic honest render output",
+      "sourceSection": "v1.1 §Hard-invariant classes",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "quality",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Renderer authority (Codex-owned).",
+      "rationale": "Output must be what the sealed plan produced; integrity and determinism are mechanical authority properties."
+    },
+    {
+      "id": "SC-009",
+      "title": "No hidden planner fallback",
+      "sourceSection": "v1.1 §Hard-invariant classes",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Planner authority (Codex-owned).",
+      "rationale": "Silent substitution of planner intent is an authority failure; fallback must be declared."
+    },
+    {
+      "id": "SC-010",
+      "title": "Shot with no primary purpose, contradictory purposes, or an unsatisfiable envelope is rejected",
+      "sourceSection": "v1.1 §1",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Plan validation (Codex-owned); multiple useful functions are not a reason to split.",
+      "rationale": "The v1.1 ruling narrows v1's 'exactly one job' to mechanical rejection cases only; the vocabulary itself stays planner knowledge (SC-011)."
+    },
+    {
+      "id": "SC-011",
+      "title": "Shot purpose vocabulary: establish, advance, feel, punctuate, bridge, payoff, with compatible secondaries",
+      "sourceSection": "v1 §1; v1.1 §1",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; no quota.",
+      "rationale": "Purpose labeling is useful planning knowledge and the base for reason codes; it is not a blocking editorial rule."
+    },
+    {
+      "id": "SC-012",
+      "title": "Coverage vocabulary: wide, medium, close-up, insert, two-shot, listener reaction, POV are choices, not a mandatory sequence",
+      "sourceSection": "v1 §2; v1.1 §2",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2",
+        "f0bfd8e2f4f65b6681be46164abc92d5402230f8d63c8818e9c91e34bd6fbf8d"
+      ],
+      "sourceArtifacts": [
+        "src-scene-craft-v1",
+        "src-scene-craft-v1-1",
+        "src-refanalysis-kids-dragon-hunt-2"
+      ],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; distribution judged separately as soft findings (SC-030).",
+      "rationale": "Purposeful coverage is an accepted principle from the roadmap and reference patterns; it is vocabulary, not sequence."
+    },
+    {
+      "id": "SC-013",
+      "title": "Listener reaction is motivated by who is listening or affected, not by a role label",
+      "sourceSection": "v1 §2; v1.1 §2",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; an accepted roadmap principle without quota status.",
+      "rationale": "Reaction coverage is an accepted editorial principle; its frequency is a soft finding, not a gate."
+    },
+    {
+      "id": "SC-014",
+      "title": "Cut motivation vocabulary: cut on action when motion carries the eye; cut on stillness when the completed event is the point",
+      "sourceSection": "v1 §3; v1.1 §3",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [
+        "intentional-jump",
+        "completed-hold",
+        "comic-hold",
+        "new-information"
+      ],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; a cut on a hold is not inherently defective.",
+      "rationale": "Motivated cuts are an accepted principle; only the mechanical failure modes are invariants (SC-002, SC-003, SC-006)."
+    },
+    {
+      "id": "SC-015",
+      "title": "Motivated camera vocabulary: push, pull, pan, track, orbit, locked; one primary intent per shot",
+      "sourceSection": "v1 §4; v1.1 §4",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["declared-compound-reason"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; compound moves allowed with a declared reason and rendered proof (SC-005 governs label honesty).",
+      "rationale": "Motivated camera is an accepted principle; the v1 'never stack' phrasing is superseded by declared-reason compound permission."
+    },
+    {
+      "id": "SC-016",
+      "title": "Scene energy-shape vocabulary: flat-comic, sustained-tension, rising, falling, breather, button, bridge, reveal",
+      "sourceSection": "v1 §5; v1.1 §5",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; scenes are not forced through one universal curve.",
+      "rationale": "Energy shaping is an accepted principle; the v1 single settle→build→peak→release curve is generalized, not quota."
+    },
+    {
+      "id": "SC-017",
+      "title": "Pre-reveal hold is an available directing device, not a quota",
+      "sourceSection": "v1 §5; v1.1 §5",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [
+        "approved-audio-drives-duration",
+        "action-phase-drives-duration"
+      ],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; duration resolved by approved audio, action phase, read windows, grammar, scene energy, and the timing solver.",
+      "rationale": "Reveal preparation is an accepted principle; its duration is not a fixed frame count (SC-025 records the numeric claim as hypothesis)."
+    },
+    {
+      "id": "SC-018",
+      "title": "Transition kinds are planning vocabulary and EditorialTargets priors",
+      "sourceSection": "v1 §7; v1.1 §7",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [
+        "intentional-graphic-rhyme",
+        "time-transition",
+        "emotional-suspension"
+      ],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; an identical-pose dissolve can be intentional — not universally banned. Mechanical transition failures live in SC-048.",
+      "rationale": "Transition grammar is accepted knowledge; the v1 universal dissolve ban is superseded by semantic exceptions."
+    },
+    {
+      "id": "SC-019",
+      "title": "Reveal coverage palette scales with importance: micro, beat, major, set-piece",
+      "sourceSection": "v1 §8; v1.1 §8",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [
+        "micro-importance-single-shot",
+        "beat-subject-plus-response"
+      ],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; the hard failure is unreadable causality (SC-050), not missing palette steps (SC-029 stays hypothesis).",
+      "rationale": "Reveal preparation is an accepted principle; v1's fixed four-shot pattern becomes an importance-scaled palette."
+    },
+    {
+      "id": "SC-020",
+      "title": "Rig capability knowledge: gaze leads motion, anticipation → action → contact/impact → settle, living holds, view-correct facing",
+      "sourceSection": "v1 §9; v1.1 §9",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "rig",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["style-exception", "approved-style-capability"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Capability request knowledge; style targets with intentional exceptions, not universal gates. Numeric micro-timing stays hypothesis (SC-037, SC-038).",
+      "rationale": "Performance follow-through is an accepted principle; overshoot is optional by action and style."
+    },
+    {
+      "id": "SC-021",
+      "title": "Timing authority hierarchy: approved final audio → guide voice → estimated timing; the deterministic solver owns final frames",
+      "sourceSection": "v1 §10; v1.1 §10",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "audio",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Timing authority (Codex-owned); estimated timing never overrides an approved or guide basis.",
+      "rationale": "Audio-led timing is an accepted principle and an authority hierarchy, not an editorial preference; word-count estimates are the fallback, never the master."
+    },
+    {
+      "id": "SC-022",
+      "title": "Cues the plan requests must be exactly synchronized; sound density itself is editorial",
+      "sourceSection": "v1 §10; v1.1 §10",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "audio",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context; the system does not require an effect for every footfall, reveal, whoosh, or magical event.",
+      "rationale": "v1's cue-per-event density is superseded: synchronization is required for requested cues only."
+    },
+    {
+      "id": "SC-023",
+      "title": "J-cut and L-cut audio bridges are available polish, not requirements",
+      "sourceSection": "v1 §10",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "audio",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Planner context for the audio lane when it lands.",
+      "rationale": "Established editorial technique; not a gate."
+    },
+    {
+      "id": "SC-024",
+      "title": "Pre-reveal hold duration of 8–16 frames and the claimed threefold reveal improvement",
+      "sourceSection": "v1 §5; v1.1 §Unvalidated hypotheses",
+      "grammarScope": ["kids-adventure"],
+      "domain": "plan",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration after blind-pilot measurement; no planner quota.",
+      "rationale": "No measured source in this repository supports the exact frame range or the 3× claim; v1.1 lists it as explicitly non-normative."
+    },
+    {
+      "id": "SC-025",
+      "title": "Shot-duration CV < 0.15 flagged as metronomic",
+      "sourceSection": "v1 §5; v1.1 §5, §Unvalidated hypotheses",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "quality",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": 8,
+      "exceptionCodes": [
+        "intentional-montage",
+        "audio-prescribed-intervals",
+        "insufficient-variation-opportunity"
+      ],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration; may become a warning only with the recorded minimum sample and semantic exceptions.",
+      "rationale": "A universal CV threshold has no measured support here; v1.1 permits a future warning only for ≥8 resolved shots with variation opportunity and no montage/audio prescription."
+    },
+    {
+      "id": "SC-026",
+      "title": "No unchanged visual idea longer than 4 seconds",
+      "sourceSection": "v1 §6; v1.1 §6, §Unvalidated hypotheses",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "quality",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["excellent-acting-hold", "intentional-tableau"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration; change is defined semantically (performance, framing, blocking, gaze, prop state, camera, lighting/effect, or audio meaning).",
+      "rationale": "A universal four-second limit is explicitly non-normative in v1.1; a six-second locked close-up with excellent acting is not a static tableau."
+    },
+    {
+      "id": "SC-027",
+      "title": "No identical gesture or pose repeated within 6 seconds; ≥6 distinct gesture programs per character",
+      "sourceSection": "v1 §6; v1.1 §6, §Unvalidated hypotheses",
+      "grammarScope": ["kids-adventure"],
+      "domain": "rig",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["semantic-variation-present"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "7c614aa6d41087359f6d3860b0b3befb0b58d9a27299124112472eeab883c28f"
+      ],
+      "sourceArtifacts": [
+        "src-scene-craft-v1",
+        "src-kids-showcase-frame-audit"
+      ],
+      "evidenceKind": "project-regression",
+      "confidence": "low",
+      "disposition": "The project-observed repeat (hand-to-ear listen twice in 6s) is regression evidence; the universal 6-second limit and six-mandatory-gestures requirement stay unvalidated hypotheses. Repetition is meaningful only when the same semantic program, phase structure, timing, and screen function recur visibly.",
+      "rationale": "The motivating observation is real project evidence, but it supports a warning-class finding, not universal numbers."
+    },
+    {
+      "id": "SC-028",
+      "title": "No more than 2 consecutive same-sized shots without stated justification",
+      "sourceSection": "v1 §6; v1.1 §6",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "quality",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": 3,
+      "exceptionCodes": ["stated-justification", "semantic-context"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration; three same-sized shots may warn unless justified, four or more may warn more strongly, always with semantic context.",
+      "rationale": "Streaks are graded findings per the classification ruling, never automatic rejection."
+    },
+    {
+      "id": "SC-029",
+      "title": "Reveal beats must expand to at least 3 of the 4 pattern shots",
+      "sourceSection": "v1 §8; v1.1 §8, §Unvalidated hypotheses",
+      "grammarScope": ["kids-adventure"],
+      "domain": "quality",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": [
+        "micro-importance-single-shot",
+        "beat-subject-plus-response"
+      ],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration; coverage scales with reveal importance (SC-019).",
+      "rationale": "Three-of-four coverage is explicitly non-normative in v1.1; only unreadable causality is a hard failure (SC-050)."
+    },
+    {
+      "id": "SC-030",
+      "title": "Kids profile shot mix ≈ 25% wide / 40% medium / 25% close / 10% insert, ±10%",
+      "sourceSection": "v1 §2; v1.1 §2",
+      "grammarScope": ["kids-adventure"],
+      "domain": "quality",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": 12,
+      "exceptionCodes": ["semantic-justification", "below-minimum-sample"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Soft reference prior only; distribution not judged below 8 shots, informational at 8–11, and may warn at 12+ only when substantially outside an exact grammar-bound target without valid semantic justification. Any future target must bind grammar-profile, show-pack, reference-analysis, sample-size, confidence, and evaluation-window hashes.",
+      "rationale": "No measured source in this repository validates the exact percentages; kept as a prior, never a quota."
+    },
+    {
+      "id": "SC-031",
+      "title": "Hard cuts are ≥80% of boundaries",
+      "sourceSection": "v1 §7",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "planner-prior",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["style-exception"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1"],
+      "evidenceKind": "established-practice",
+      "confidence": "low",
+      "disposition": "Planner context; transition mix is a graded finding, not a gate.",
+      "rationale": "Established default practice; the exact percentage is unmeasured and must not harden."
+    },
+    {
+      "id": "SC-032",
+      "title": "Dissolve of 8–16 frames requires the subject to change pose or position across it",
+      "sourceSection": "v1 §7; v1.1 §7",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "quality",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": [
+        "intentional-graphic-rhyme",
+        "time-transition",
+        "emotional-suspension"
+      ],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration; an identical-pose dissolve can be intentional. The banned mechanical case is a dissolve concealing an unsupported full-body pose substitution (SC-007, SC-048).",
+      "rationale": "The v1 universal pose-change requirement is softened by v1.1's semantic exceptions; the numeric range is unmeasured."
+    },
+    {
+      "id": "SC-033",
+      "title": "Foreground-occlusion wipe locked to the occluder's motion, 6–10 frames",
+      "sourceSection": "v1 §7; v1.1 §7",
+      "grammarScope": ["kids-adventure"],
+      "domain": "quality",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration; the mechanical failure is a wipe that never occludes (SC-048).",
+      "rationale": "The frame range is unmeasured; the concept is accepted vocabulary (SC-018)."
+    },
+    {
+      "id": "SC-034",
+      "title": "One motivated camera move per shot; never stack push and pan without a stated reason",
+      "sourceSection": "v1 §4; v1.1 §4",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "plan",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["declared-compound-reason"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Superseded by v1.1: compound camera is allowed when every component is supported, a structured reason is declared, and validation confirms the rendered samples (SC-015, SC-005).",
+      "rationale": "Recorded as the v1 claim and its v1.1 resolution; not an active restriction."
+    },
+    {
+      "id": "SC-035",
+      "title": "Pose or expression evolves every 1–2 seconds during holds",
+      "sourceSection": "v1 §9; v1.1 §9",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "rig",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["intentional-stillness"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration; living-hold micro-motion is a style target with intentional exceptions (SC-020).",
+      "rationale": "The interval is unmeasured; the underlying living-hold principle stays a prior."
+    },
+    {
+      "id": "SC-036",
+      "title": "Gaze leads the head by 2–4 frames and the head leads the body by 2–4 frames",
+      "sourceSection": "v1 §9; v1.1 §9",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "rig",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["style-exception"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration; gaze-lead itself is accepted rig knowledge (SC-020) without the numeric offsets.",
+      "rationale": "Exact frame offsets are unmeasured."
+    },
+    {
+      "id": "SC-037",
+      "title": "Blinks every 2.5–4.5 seconds, never on a metronome",
+      "sourceSection": "v1 §9; v1.1 §9",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "rig",
+      "enforcement": "hypothesis",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["style-exception"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "Hold for calibration; blink cadence is a style target with intentional exceptions.",
+      "rationale": "The interval is unmeasured."
+    },
+    {
+      "id": "SC-038",
+      "title": "No semi-transparent multi-pose smear frames; speed is conveyed by spacing and background streaks",
+      "sourceSection": "v1 §9; v1.1 §9",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "rig",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": ["approved-style-capability"],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "7c614aa6d41087359f6d3860b0b3befb0b58d9a27299124112472eeab883c28f"
+      ],
+      "sourceArtifacts": [
+        "src-scene-craft-v1",
+        "src-kids-showcase-frame-audit"
+      ],
+      "evidenceKind": "project-regression",
+      "confidence": "high",
+      "disposition": "Accidental semi-transparent whole-body crossfades remain prohibited; an approved smear drawing style may become a valid future capability.",
+      "rationale": "Project-observed ghosting is regression evidence and v1.1 keeps the accidental variant prohibited while allowing an approved future style capability."
+    },
+    {
+      "id": "SC-039",
+      "title": "15 shots per 30 seconds as a coverage density",
+      "sourceSection": "v1 worked example; v1.1 §Illustrative high-energy treatment",
+      "grammarScope": ["kids-adventure"],
+      "domain": "plan",
+      "enforcement": "example-only",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "74f510efc3ebfb7dbf143eeac2c83fef30e017c2ee59363f0dcc4b6da9ef8138",
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1", "src-scene-craft-v1-1"],
+      "evidenceKind": "unvalidated-hypothesis",
+      "confidence": "low",
+      "disposition": "One illustrative high-energy treatment, never a target or scoring rubric. Example rows must be labelled essential, optional coverage, or alternate before reuse.",
+      "rationale": "The v1 table demonstrates applied vocabulary on one throwaway showcase; its shot count and timings are illustrative per v1.1."
+    },
+    {
+      "id": "SC-040",
+      "title": "Blind-pilot scoring rubric: clarity/causality 25, composition/coverage 20, motivated cuts 20, pacing/holds 15, reactions/performance 10, variety 10",
+      "sourceSection": "v1.1 §Illustrative high-energy treatment",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "quality",
+      "enforcement": "example-only",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "medium",
+      "disposition": "Accepted evaluation contract for human blind review; authorizes no validator or hard gate inside product code, and must not reward matching a proposed shot list.",
+      "rationale": "Recorded as the accepted blind evaluation contract; calibration of numeric thresholds waits for blind-pilot results."
+    },
+    {
+      "id": "SC-048",
+      "title": "Transition mechanical failures: label mismatch, never-occluding wipe, unexplained teleport, background swap during continuous action, lifecycle/position jump, dissolve concealing unsupported full-body pose substitution",
+      "sourceSection": "v1.1 §7",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "continuity",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [
+        "declared-transition-logic",
+        "approved-style-capability"
+      ],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Continuity/renderer validation (Codex-owned).",
+      "rationale": "These are evidence-bound mechanical and authority failures, distinct from transition taste."
+    },
+    {
+      "id": "SC-049",
+      "title": "Cut mechanical failures: before a required read window, between incompatible action phases, across gait discontinuity, before readable contact/causal response, across unexplained axis/geography reversal",
+      "sourceSection": "v1.1 §3",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "continuity",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Continuity validation (Codex-owned); a cut on a hold is not inherently defective.",
+      "rationale": "Mechanical cut failures are measurable; motivation stays editorial (SC-014)."
+    },
+    {
+      "id": "SC-050",
+      "title": "Reveal hard failure: unreadable causality — the audience cannot identify what was noticed, who reacted, or what changed",
+      "sourceSection": "v1.1 §8",
+      "grammarScope": ["kids-adventure", "weird-history"],
+      "domain": "continuity",
+      "enforcement": "hard-invariant",
+      "minimumSampleSize": null,
+      "exceptionCodes": [],
+      "sourceContentHashes": [
+        "8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2"
+      ],
+      "sourceArtifacts": ["src-scene-craft-v1-1"],
+      "evidenceKind": "established-practice",
+      "confidence": "high",
+      "disposition": "Continuity validation (Codex-owned); palette completeness itself stays a soft finding (SC-029).",
+      "rationale": "Causality readability is the only reveal-related blocking condition in the v1.1 ruling."
+    }
+  ],
+  "classificationNotes": {
+    "numericClaims": "Every inherited v1 numeric claim (8–16 frames, CV 0.15, four/six-second limits, gesture counts, reveal counts, shot counts, and percentage mixes) is hypothesis, planner-prior, or example-only. No measured source in this repository validates the exact numbers, and none was invented or upgraded.",
+    "hardInvariantScope": "Hard-invariant is reserved for evidence-bound mechanical/authority failures: exact lineage, timing/read envelopes, causal/continuity/geography/axis/lifecycle/prop/contact/gait/action consistency, capability/approval authority, asset integrity, honest executed camera/transition behavior, deterministic honest render output, and no hidden planner fallback.",
+    "preservedPrinciples": "Purposeful coverage, listener reaction, motivated cuts/camera, energy shaping, reveal preparation, performance follow-through, and audio-led timing are preserved as planner knowledge (planner-prior) without quotas.",
+    "blindPilot": "The blind-pilot rubric is recorded as an accepted human evaluation contract; it authorizes no validator or hard gate inside product code."
+  }
+}
