@@ -1,12 +1,35 @@
 {
-  "pausedPlayer": {
+  "harness": "browser-proof.mjs",
+  "protocol": "playhead-geometry",
+  "seek": {
+    "title": "Seek to reaction, frame 340",
+    "expectedFrame": 340,
     "episodeHash": "cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966",
-    "transportText": "0:12 / 0:26",
-    "seconds": 12,
-    "absoluteFrame": 360,
+    "transportText": "0:11 / 0:26",
+    "laneRange": {
+      "startFrame": 340,
+      "endFrameExclusive": 437
+    },
+    "playheadPct": 0,
+    "exactFrame": 340,
     "shotId": "shot-5-main",
     "beatId": "beat-a3f3e65ef08a",
     "paused": true
+  },
+  "pausedPlayer": {
+    "episodeHash": "cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966",
+    "transportText": "0:12 / 0:26",
+    "laneRange": {
+      "startFrame": 340,
+      "endFrameExclusive": 437
+    },
+    "playheadPct": 0.35051499999999997,
+    "exactFrame": 373.999955,
+    "shotId": "shot-5-main",
+    "beatId": "beat-a3f3e65ef08a",
+    "paused": true,
+    "coloredNodes": 25,
+    "nonblank": true
   },
   "zoom": {
     "at100": {
@@ -14,29 +37,30 @@
       "laneWidth": 1326,
       "scrollable": false,
       "label": "Fit width",
-      "minusDisabled": true,
-      "playheadLeft": "36.0825%"
+      "minusDisabled": true
     },
     "at160": {
       "gridWidth": 2304,
       "laneWidth": 2190,
       "scrollable": true,
       "label": "160%",
-      "minusDisabled": false,
-      "playheadLeft": "36.0825%"
-    },
-    "seek": {
-      "title": "Seek to reaction, frame 340",
-      "afterSeekTransport": "0:11 / 0:26"
+      "minusDisabled": false
     },
     "backToFit": {
       "gridWidth": 1440,
       "laneWidth": 1326,
       "scrollable": false,
       "label": "Fit width",
-      "minusDisabled": true,
-      "playheadLeft": "0%"
+      "minusDisabled": true
     }
+  },
+  "hierarchy1920": {
+    "frame": 373.999955,
+    "beatId": "beat-a3f3e65ef08a",
+    "shotId": "shot-5-main",
+    "paused": true,
+    "coloredNodes": 25,
+    "nonblank": true
   },
   "overflow820": {
     "sw": 820,
