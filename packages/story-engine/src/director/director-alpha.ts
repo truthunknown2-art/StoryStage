@@ -84,11 +84,44 @@ export {
   executableEpisodePlanSchema,
   performanceExecutionSchema,
 } from "./executable-episode-plan";
+export {
+  compileContinuitySequencePlan,
+  assertContinuitySequenceMatchesSources,
+} from "./continuity-compiler";
+export { evaluateContinuityFrame } from "./continuity-frame-evaluator";
+export {
+  continuitySequencePlanSchema,
+  continuityShotStateSchema,
+  continuityTransitionLinkSchema,
+} from "./continuity-sequence-plan";
+export {
+  evaluateLocalPerformance,
+  localPerformanceFrameSchema,
+  localPerformanceInputSchema,
+  resolvedContinuityFrameSchema,
+  rigVisualProgramSchema,
+  verifiedVisualAssetHandleSchema,
+} from "./visual-performance-contract";
 export type {
   ApprovedAssetBinding,
   ExecutableEpisodePlan,
   PerformanceExecution,
   PerformanceProgram,
 } from "./executable-episode-plan";
+export type {
+  ContinuityPerformanceState,
+  ContinuitySequencePlan,
+  ContinuityShotState,
+  ContinuityTransitionLink,
+} from "./continuity-sequence-plan";
+export type {
+  LocalPerformanceFrame,
+  LocalPerformanceInput,
+  ResolvedContinuityFrame,
+  ResolvedEntityFrame,
+  RigVisualProgram,
+  VerifiedVisualAssetHandle,
+  VisualPerformanceRenderer,
+} from "./visual-performance-contract";
 export { createCv002Project, restoreCv002Project } from "../cv002-story-draft";
 export type { Cv002Project, Cv002Grammar } from "../cv002-story-draft";

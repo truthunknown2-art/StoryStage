@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { hashCanonical } from "../canonical-hash";
 import { hashSchema, identifierSchema } from "../model";
+import { assertContinuitySequenceMatchesSources } from "./continuity-compiler";
+import { continuitySequencePlanSchema } from "./continuity-sequence-plan";
 import { directorPlanSchema, type DirectorPlan } from "./director-plan";
 import { timingSolutionSchema, type TimingSolution } from "./timing-solution";
 
@@ -407,10 +409,41 @@ export const proxyTransitionProgramSchema = z
       "foreground-wipe",
       "dissolve",
     ]),
+    progressKeyframes: z
+      .array(
+        z
+          .object({
+            frame: z.number().int().nonnegative(),
+            progress: z.number().min(0).max(1),
+          })
+          .strict(),
+      )
+      .min(2),
+    occluderId: identifierSchema.nullable(),
     contentHash: hashSchema,
   })
   .strict()
-  .superRefine(validateExecutableProgramHash);
+  .superRefine(validateExecutableProgramHash)
+  .superRefine((program, context) => {
+    if (
+      program.progressKeyframes.some(
+        (keyframe, index) =>
+          index > 0 &&
+          keyframe.frame <= program.progressKeyframes[index - 1]!.frame,
+      )
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["progressKeyframes"],
+        message: "Transition progress frames must increase.",
+      });
+    if (program.kind === "foreground-wipe" && program.occluderId === null)
+      context.addIssue({
+        code: "custom",
+        path: ["occluderId"],
+        message: "Foreground wipes require a resolved occluder.",
+      });
+  });
 
 const executableEpisodePlanFields = {
   schemaVersion: z.literal("1.0"),
@@ -419,6 +452,7 @@ const executableEpisodePlanFields = {
   directorPlanContentHash: hashSchema,
   timingSolutionContentHash: hashSchema,
   grammarProfileContentHash: hashSchema,
+  continuitySequencePlan: continuitySequencePlanSchema,
   registryVersions: z
     .object({
       stage: z.string().min(1),
@@ -548,6 +582,19 @@ export function sealExecutableEpisodePlan(
     throw new Error("Executable plan does not match the directing grammar.");
   if (draft.format.durationInFrames !== timing.durationInFrames)
     throw new Error("Executable duration does not match the Timing Solution.");
+  if (
+    draft.continuitySequencePlan.fps !== draft.format.fps ||
+    draft.continuitySequencePlan.durationInFrames !==
+      draft.format.durationInFrames
+  )
+    throw new Error(
+      "Executable format does not match the continuity sequence.",
+    );
+  assertContinuitySequenceMatchesSources(
+    directorPlan,
+    timing,
+    draft.continuitySequencePlan,
+  );
 
   const programIds = new Set(
     draft.performancePrograms.map((program) => program.id),
@@ -618,10 +665,69 @@ export function sealExecutableEpisodePlan(
     draft.proxyCameraPrograms.forEach((program) => {
       if (!directorShotIds.has(program.shotId))
         throw new Error(`${program.id} references an unknown proxy shot.`);
+      const continuityShot = draft.continuitySequencePlan.shots.find(
+        (shot) => shot.shotId === program.shotId,
+      );
+      const directorShot = directorPlan.shots.find(
+        (shot) => shot.id === program.shotId,
+      );
+      if (
+        !continuityShot ||
+        !directorShot ||
+        program.id !== continuityShot.cameraProgram.id ||
+        program.size !== continuityShot.camera.size ||
+        program.movement !== continuityShot.camera.movement ||
+        program.focalRegion !== continuityShot.cameraProgram.focalRegion ||
+        program.purpose !== directorShot.storyFunction ||
+        hashCanonical(program.keyframes) !==
+          hashCanonical(continuityShot.cameraProgram.keyframes)
+      )
+        throw new Error(
+          `${program.id} invents camera motion outside the continuity sequence.`,
+        );
     });
     draft.proxyEntityPrograms?.forEach((program) => {
       if (!directorShotIds.has(program.shotId))
         throw new Error(`${program.id} references an unknown proxy shot.`);
+      const continuityShot = draft.continuitySequencePlan.shots.find(
+        (shot) => shot.shotId === program.shotId,
+      );
+      const entryWorld =
+        continuityShot?.entryWorldState.entities[program.entityId];
+      const exitWorld =
+        continuityShot?.exitWorldState.entities[program.entityId];
+      const entryPerformance = continuityShot?.entryPerformanceState.find(
+        (state) => state.entityId === program.entityId,
+      );
+      const exitPerformance = continuityShot?.exitPerformanceState.find(
+        (state) => state.entityId === program.entityId,
+      );
+      const first = program.keyframes[0];
+      const last = program.keyframes.at(-1);
+      const duration = continuityShot
+        ? continuityShot.endFrameExclusive - continuityShot.startFrame
+        : 0;
+      if (
+        !continuityShot ||
+        !entryWorld ||
+        !exitWorld ||
+        !entryPerformance ||
+        !exitPerformance ||
+        !first ||
+        !last ||
+        first.frame !== 0 ||
+        last.frame !== duration - 1 ||
+        hashCanonical(first.transform) !==
+          hashCanonical(entryWorld.transform) ||
+        hashCanonical(last.transform) !== hashCanonical(exitWorld.transform) ||
+        first.facing !== entryWorld.facing ||
+        last.facing !== exitWorld.facing ||
+        first.actionPhase !== entryPerformance.actionPhase ||
+        last.actionPhase !== exitPerformance.actionPhase
+      )
+        throw new Error(
+          `${program.id} invents root motion outside the continuity sequence.`,
+        );
     });
     draft.proxyCaptionPrograms?.forEach((program) => {
       if (!directorShotIds.has(program.shotId))
@@ -630,6 +736,20 @@ export function sealExecutableEpisodePlan(
     draft.proxyTransitionPrograms?.forEach((program) => {
       if (!directorShotIds.has(program.shotId))
         throw new Error(`${program.id} references an unknown proxy shot.`);
+      const continuityShot = draft.continuitySequencePlan.shots.find(
+        (shot) => shot.shotId === program.shotId,
+      );
+      if (
+        !continuityShot ||
+        program.id !== continuityShot.transitionProgram.id ||
+        program.kind !== continuityShot.transitionProgram.kind ||
+        program.occluderId !== continuityShot.transitionProgram.occluderId ||
+        hashCanonical(program.progressKeyframes) !==
+          hashCanonical(continuityShot.transitionProgram.progressKeyframes)
+      )
+        throw new Error(
+          `${program.id} invents a transition outside the continuity sequence.`,
+        );
     });
     const allPrograms = [
       ...(draft.proxyStagePrograms ?? []),

@@ -16,7 +16,10 @@ import {
   type DirectorProposalDraft,
   type DirectorShotSize,
 } from "./director-proposal";
-import { proxyCameraProgramSchema } from "./executable-episode-plan";
+import {
+  proxyCameraProgramSchema,
+  sealExecutableEpisodePlan,
+} from "./executable-episode-plan";
 
 const sentence =
   "A curious traveler follows a bright clue and pauses when the hidden answer changes everything.";
@@ -206,6 +209,9 @@ describe("Director Studio Alpha compiler", () => {
     expect(first.directorPlan.beats).toHaveLength(beatCount);
     expect(first.directorPlan.shots).toHaveLength(beatCount + 1);
     expect(first.executableEpisodePlan.renderMode).toBe("proxy-animatic");
+    expect(
+      first.executableEpisodePlan.continuitySequencePlan.shots,
+    ).toHaveLength(first.directorPlan.shots.length);
     expect(first.executableEpisodePlan.proxyStagePrograms).toHaveLength(
       story.graph.scenes.length,
     );
@@ -261,6 +267,77 @@ describe("Director Studio Alpha compiler", () => {
           program.contentHash.length === 64 && program.sourceBeatIds.length > 0,
       ),
     ).toBe(true);
+  });
+
+  it("rejects proxy root keyframes that diverge from canonical continuity", () => {
+    const project = compileDirectorProject({
+      storyProject: createCv002Project(
+        "Root authority",
+        script,
+        "kids-adventure",
+      ),
+    });
+    const { contentHash: episodeHash, ...draft } = structuredClone(
+      project.executableEpisodePlan,
+    );
+    expect(episodeHash).toHaveLength(64);
+    const program = draft.proxyEntityPrograms?.[0];
+    if (!program) throw new Error("fixture proxy entity missing");
+    program.keyframes[0]!.transform.x += 0.1;
+    const { contentHash: programHash, ...programDraft } = program;
+    expect(programHash).toHaveLength(64);
+    program.contentHash = hashCanonical(programDraft);
+
+    expect(() =>
+      sealExecutableEpisodePlan(
+        project.directorPlan,
+        project.timingSolution,
+        draft,
+      ),
+    ).toThrow(/invents root motion outside the continuity sequence/);
+  });
+
+  it("rejects camera and transition programs that diverge from continuity", () => {
+    const project = compileDirectorProject({
+      storyProject: createCv002Project(
+        "Picture authority",
+        script,
+        "kids-adventure",
+      ),
+    });
+    const mutateAndReseal = (kind: "camera" | "transition") => {
+      const { contentHash: episodeHash, ...draft } = structuredClone(
+        project.executableEpisodePlan,
+      );
+      expect(episodeHash).toHaveLength(64);
+      const program =
+        kind === "camera"
+          ? draft.proxyCameraPrograms?.[0]
+          : draft.proxyTransitionPrograms?.[0];
+      if (!program) throw new Error(`fixture proxy ${kind} missing`);
+      if (kind === "camera")
+        draft.proxyCameraPrograms![0]!.keyframes.forEach(
+          (keyframe) => (keyframe.x += 2),
+        );
+      else
+        draft.proxyTransitionPrograms![0]!.progressKeyframes[1]!.progress = 0;
+      const { contentHash: programHash, ...programDraft } = program;
+      expect(programHash).toHaveLength(64);
+      program.contentHash = hashCanonical(programDraft);
+      return () =>
+        sealExecutableEpisodePlan(
+          project.directorPlan,
+          project.timingSolution,
+          draft,
+        );
+    };
+
+    expect(mutateAndReseal("camera")).toThrow(
+      /invents camera motion outside the continuity sequence/,
+    );
+    expect(mutateAndReseal("transition")).toThrow(
+      /invents a transition outside the continuity sequence/,
+    );
   });
 
   it("directs Kids Adventure and Weird History with different grammars", () => {

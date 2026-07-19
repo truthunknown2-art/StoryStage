@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hashCanonical } from "../canonical-hash";
+import { sealContinuitySequencePlan } from "./continuity-sequence-plan";
 import { directorPlanDraftSchema, sealDirectorPlan } from "./director-plan";
 import { sealExecutableEpisodePlan } from "./executable-episode-plan";
 import { grammarProfiles } from "./grammar-profile";
@@ -8,6 +9,11 @@ import { sealSceneWorldPlan } from "./scene-world";
 import { sealTimingSolution } from "./timing-solution";
 
 const hash = hashCanonical("fixture");
+
+const sealedFixtureProgram = <T extends Record<string, unknown>>(draft: T) => ({
+  ...draft,
+  contentHash: hashCanonical(draft),
+});
 
 const createDraft = () => ({
   schemaVersion: "1.0" as const,
@@ -262,6 +268,86 @@ describe("Director plan", () => {
       ],
       durationInFrames: 61,
     });
+    const continuitySequencePlan = sealContinuitySequencePlan({
+      schemaVersion: "1.0",
+      directorPlanContentHash: directorPlan.contentHash,
+      timingSolutionContentHash: timing.contentHash,
+      sceneWorldContentHashes: directorPlan.sceneWorldContentHashes,
+      fps: 30,
+      durationInFrames: 61,
+      shots: [
+        {
+          shotId: "shot-one",
+          sceneId: "scene-one",
+          stageId: "forest-stage",
+          beatIds: ["beat-one"],
+          startFrame: 0,
+          endFrameExclusive: 61,
+          cutEventId: "mara-reacts",
+          camera: {
+            axisId: "mara-moth-axis",
+            size: "wide",
+            angle: "eye-level",
+            movement: "locked",
+            subjectIds: ["mara", "moth"],
+            motivation: "Let the audience read both cause and reaction.",
+            screenProjection: { worldXDirection: 1, worldXOffset: 0 },
+          },
+          cameraProgram: sealedFixtureProgram({
+            id: "proxy-camera-shot-one",
+            focalRegion: "left-third" as const,
+            keyframes: [
+              { frame: 0, x: -6, y: 0, scale: 1.08 },
+              { frame: 60, x: -6, y: 0, scale: 1.08 },
+            ],
+          }),
+          transitionProgram: sealedFixtureProgram({
+            id: "proxy-transition-shot-one",
+            kind: "hard-cut" as const,
+            progressKeyframes: [
+              { frame: 0, progress: 1 },
+              { frame: 10, progress: 1 },
+            ],
+            occluderId: null,
+          }),
+          entryWorldState: directorPlan.initialWorldState,
+          exitWorldState: { ...directorPlan.initialWorldState, frame: 60 },
+          entryPerformanceState: [
+            {
+              entityId: "mara",
+              motionMode: "idle",
+              actionPhase: "hold",
+              gaitPhase: null,
+              performanceProgramId: "mara-reaction-program",
+            },
+          ],
+          exitPerformanceState: [
+            {
+              entityId: "mara",
+              motionMode: "reacting",
+              actionPhase: "reaction",
+              gaitPhase: null,
+              performanceProgramId: "mara-reaction-program",
+            },
+          ],
+          pictureEvents: [
+            {
+              source: "director-event",
+              eventId: "notice-moth",
+              frame: 10,
+              subjectIds: ["mara"],
+            },
+            {
+              source: "director-event",
+              eventId: "mara-reacts",
+              frame: 40,
+              subjectIds: ["mara"],
+            },
+          ],
+        },
+      ],
+      transitions: [],
+    });
     const episode = sealExecutableEpisodePlan(directorPlan, timing, {
       schemaVersion: "1.0",
       id: "episode-fixture",
@@ -269,6 +355,7 @@ describe("Director plan", () => {
       directorPlanContentHash: directorPlan.contentHash,
       timingSolutionContentHash: timing.contentHash,
       grammarProfileContentHash: grammarProfiles.kidsAdventure.contentHash,
+      continuitySequencePlan,
       registryVersions: {
         stage: "1.0.0",
         performance: "1.0.0",

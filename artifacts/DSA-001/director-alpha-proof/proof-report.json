@@ -8,10 +8,10 @@
       "grammar": "kids-adventure",
       "compositionId": "StoryStageProduction",
       "storyProjectContentHash": "6a6adb4e04db8477eab10da7642492d6cfd17c11fa6b7f7809b58ba9e3bbce4e",
-      "directorProjectContentHash": "8e5dc25e08cdc09954d3cdc8eafd71cbeafb801660b7355c23a5167d9c5cabf3",
-      "directorPlanContentHash": "1878e3a156c6d75684b153a30fed51c8b0e46292565207a15260b071f257ab09",
-      "timingSolutionContentHash": "ab864e16c72b272d4e069175143a06582f8c33ff181cc2d87e387e2dc04515ee",
-      "executableEpisodePlanContentHash": "5ed33744ca32108abce4038052873fde2a0013b1b0b330ea36dda0b7ab935943",
+      "directorProjectContentHash": "e931bfe01889bf5139ac5696cec9764dbdae3eb86595d2206d1ac14fecd4f172",
+      "directorPlanContentHash": "29cbf69492f04e0b0816ac6dc4f95c1afb9759d020c9430757f4f064c8e1e703",
+      "timingSolutionContentHash": "07db88f89194e22643003fb557dd83f82a4fda5a0e6f2930422bd4f3092f36f6",
+      "executableEpisodePlanContentHash": "aaee81386b6fa96bfc7f278cc9a817c5e364fbaf3191a139b2bfdf88286b08c8",
       "capabilitySummary": {
         "supported": 0,
         "proxyOnly": 11,
@@ -26,18 +26,18 @@
         "contiguous": true
       },
       "directorPatch": {
-        "contentHash": "a104328aacbd6bad74d04a0b36ebdecdf9fc2bf137c86b96cecfbcd53e7e9adb",
-        "baseDirectorProjectContentHash": "8e5dc25e08cdc09954d3cdc8eafd71cbeafb801660b7355c23a5167d9c5cabf3",
-        "editedDirectorProjectContentHash": "a7eec966dac0c5306168935488efb60e394dc3b5106a3034e18e7f22d90d24ed",
-        "editedExecutableEpisodePlanContentHash": "2fb0885b525c22892153a7982143ae8141ed14502ad7cc5ed48a7f9fe013e9bd",
+        "contentHash": "e7b83e9bab0e05e0883c2be0e6e07480a71d911827ef2cd53bd151a4889f58ec",
+        "baseDirectorProjectContentHash": "e931bfe01889bf5139ac5696cec9764dbdae3eb86595d2206d1ac14fecd4f172",
+        "editedDirectorProjectContentHash": "d4af7ce061cf121c9e1ecf940773c94de0c0bc1a870ffb9708c737be0f38dc45",
+        "editedExecutableEpisodePlanContentHash": "fdd34371c1c96f5cee839e22b30547631c54f2ebdddd31dc08353d8571901105",
         "targetBeatId": "beat-79b11a73ddca",
         "reactionDelayFrames": 6,
         "preservedUntouchedPrograms": true,
         "untouchedProgramCount": 47,
         "deterministicStill": {
           "frame": 56,
-          "contentHash": "48e892ced56416931dab16580a02dc3a7c5e7b176282ea9ea70d610c9ee46089",
-          "repeatContentHash": "48e892ced56416931dab16580a02dc3a7c5e7b176282ea9ea70d610c9ee46089"
+          "contentHash": "115f0a31d4b7ce3a489201777e778fdace5f85421c465b4284d3bde812b55f0a",
+          "repeatContentHash": "115f0a31d4b7ce3a489201777e778fdace5f85421c465b4284d3bde812b55f0a"
         }
       },
       "movingShot": {
@@ -59,55 +59,55 @@
         {
           "frame": 0,
           "file": "frame-0000.png",
-          "contentHash": "283c049fc8877519aa588bd0a4728d56286a0a93c7a336b34227502d4abd8d32",
-          "repeatContentHash": "283c049fc8877519aa588bd0a4728d56286a0a93c7a336b34227502d4abd8d32"
+          "contentHash": "645c7b20945d35917d95597b66ed8702c03014f1622ee363a45566015bc69d93",
+          "repeatContentHash": "645c7b20945d35917d95597b66ed8702c03014f1622ee363a45566015bc69d93"
         },
         {
           "frame": 55,
           "file": "frame-0055.png",
-          "contentHash": "b787c004bed4a53a1270aa1b922d2d21152975803c717bafb96c099eb203777b",
-          "repeatContentHash": "b787c004bed4a53a1270aa1b922d2d21152975803c717bafb96c099eb203777b"
+          "contentHash": "983caa2381b379ab9dc36ba3c745c3e6ac59dfae2b20363eb1946906baec02d8",
+          "repeatContentHash": "983caa2381b379ab9dc36ba3c745c3e6ac59dfae2b20363eb1946906baec02d8"
         },
         {
           "frame": 56,
           "file": "frame-0056.png",
-          "contentHash": "48e892ced56416931dab16580a02dc3a7c5e7b176282ea9ea70d610c9ee46089",
-          "repeatContentHash": "48e892ced56416931dab16580a02dc3a7c5e7b176282ea9ea70d610c9ee46089"
+          "contentHash": "115f0a31d4b7ce3a489201777e778fdace5f85421c465b4284d3bde812b55f0a",
+          "repeatContentHash": "115f0a31d4b7ce3a489201777e778fdace5f85421c465b4284d3bde812b55f0a"
         },
         {
           "frame": 79,
           "file": "frame-0079.png",
-          "contentHash": "0a26d308aaa5dff14c0d1548a8f327f7f594adb23dc23da26f1b33fb3a2e69de",
-          "repeatContentHash": "0a26d308aaa5dff14c0d1548a8f327f7f594adb23dc23da26f1b33fb3a2e69de"
+          "contentHash": "3455705db293fd7c42268459169e85baf9b8f51920c8db88379cbf6665a77ab3",
+          "repeatContentHash": "3455705db293fd7c42268459169e85baf9b8f51920c8db88379cbf6665a77ab3"
         },
         {
           "frame": 103,
           "file": "frame-0103.png",
-          "contentHash": "d8e428434b8e66e9bc3bb96fd466ba478d1a58d4c0e72d6abf37c2fa2acdef27",
-          "repeatContentHash": "d8e428434b8e66e9bc3bb96fd466ba478d1a58d4c0e72d6abf37c2fa2acdef27"
+          "contentHash": "94b500dfb1a674947dd6121179f726f020be4cc8e86c5386efc6c91eb492dee2",
+          "repeatContentHash": "94b500dfb1a674947dd6121179f726f020be4cc8e86c5386efc6c91eb492dee2"
         },
         {
           "frame": 264,
           "file": "frame-0264.png",
-          "contentHash": "c610ff1dcbf1e794b0897e6d9fba16cf272c044b1f42388315cfb1158c01ef58",
-          "repeatContentHash": "c610ff1dcbf1e794b0897e6d9fba16cf272c044b1f42388315cfb1158c01ef58"
+          "contentHash": "2274d706814341e41c34d001103ce585ec5395436dff0595b7e4e00c405cf4b6",
+          "repeatContentHash": "2274d706814341e41c34d001103ce585ec5395436dff0595b7e4e00c405cf4b6"
         },
         {
           "frame": 502,
           "file": "frame-0502.png",
-          "contentHash": "0b5c94e4176d371577a92f856064b59dfff03172b1ade89de6e4923902c3793c",
-          "repeatContentHash": "0b5c94e4176d371577a92f856064b59dfff03172b1ade89de6e4923902c3793c"
+          "contentHash": "0768d3deac28c586f18b009722ba6381b9e1ceeed588d95b0870d1ede5a125d3",
+          "repeatContentHash": "0768d3deac28c586f18b009722ba6381b9e1ceeed588d95b0870d1ede5a125d3"
         },
         {
           "frame": 837,
           "file": "frame-0837.png",
-          "contentHash": "946344d5f5c8955a117a4e294d8a6b41a99dea8932f2f38ac9683b3e2d61cd5e",
-          "repeatContentHash": "946344d5f5c8955a117a4e294d8a6b41a99dea8932f2f38ac9683b3e2d61cd5e"
+          "contentHash": "1847a82ba4cdc353db165bfecb56c2e1c7cd2fd4c09de8d551e6ae1ed85a84f4",
+          "repeatContentHash": "1847a82ba4cdc353db165bfecb56c2e1c7cd2fd4c09de8d551e6ae1ed85a84f4"
         }
       ],
       "video": {
         "file": "arbitrary-kids.mp4",
-        "contentHash": "ebab86f0d59064b43568f0f8ab9c3675237704b10ed1c536ceb2a896b2159532"
+        "contentHash": "074b64a11966f8d74a7155496ce2ffe948c54db1536afc2f8452b4b8eb5f8b8c"
       }
     },
     {
@@ -116,10 +116,10 @@
       "grammar": "weird-history",
       "compositionId": "StoryStageProduction",
       "storyProjectContentHash": "41149f5f882ff55cd0cba572614f46d6a14d0cbc1199b63f94e57fa246588adf",
-      "directorProjectContentHash": "5fa3aa8fee8b54c39c73bef4c12d62b48f54ea152bcf7e1d8dda5f65afe40c3e",
-      "directorPlanContentHash": "0d791b15d6b428c91adfa67e1590aae0cad933edce3d783957c9d3e512606fdd",
-      "timingSolutionContentHash": "7cb7e2cffb63d506e0b87ba99f91aaef269a4e21a3cc14a42e9fdc5be10d6eab",
-      "executableEpisodePlanContentHash": "e0cf4bbcb705f113d64a2ae51dbb58878fb2b71094322165087027667c47786a",
+      "directorProjectContentHash": "b211c9c69577fbdbd50a5cbe9f520e909af5691219f3b1d47fa2e1be1c901802",
+      "directorPlanContentHash": "2cc9993daceaf46051dffef97197cb376754ca5e2690e628229f285de174c9fb",
+      "timingSolutionContentHash": "c8496c30b051c1fe34288dfd002afb74835bcd3fce0ae14f0c7830ea8d99b6a9",
+      "executableEpisodePlanContentHash": "1e0cbe947b34902cbc3280e9aeb7438d3fac04d5a43accb911a8ebe4a8a6dd6b",
       "capabilitySummary": {
         "supported": 0,
         "proxyOnly": 10,
@@ -134,18 +134,18 @@
         "contiguous": true
       },
       "directorPatch": {
-        "contentHash": "d4de179e8bca60cd96a7e8fa90a213fa4aeb407f1472e7593e61cc0ee6e6a290",
-        "baseDirectorProjectContentHash": "5fa3aa8fee8b54c39c73bef4c12d62b48f54ea152bcf7e1d8dda5f65afe40c3e",
-        "editedDirectorProjectContentHash": "c117479a405d57d50fd60834e8782a1f5c60c6c5252830ff738a93fc8f8553a9",
-        "editedExecutableEpisodePlanContentHash": "c998b3e5e9abf0ea96cf4fa5a6ed3530b5efe53a19cf23ee7faa87fd014c09a8",
+        "contentHash": "f6016a152449a3d25705b1d19a0cef98c5d458f39f1a1e691d73be7fde781cb3",
+        "baseDirectorProjectContentHash": "b211c9c69577fbdbd50a5cbe9f520e909af5691219f3b1d47fa2e1be1c901802",
+        "editedDirectorProjectContentHash": "b0825acbb760dba2bed19c6a19afdca6781f34197401aa6be33970ee66aec443",
+        "editedExecutableEpisodePlanContentHash": "957fec89ed48a8ac43fc582c16d529344c9ed8fd52f004f44914c46fd1efb14f",
         "targetBeatId": "beat-51030d2004d5",
         "reactionDelayFrames": 6,
         "preservedUntouchedPrograms": true,
         "untouchedProgramCount": 46,
         "deterministicStill": {
           "frame": 159,
-          "contentHash": "806a21c8b2ebb28861f64773ba8ac31d9499f22431f94d4b02c3a077f1feb1fc",
-          "repeatContentHash": "806a21c8b2ebb28861f64773ba8ac31d9499f22431f94d4b02c3a077f1feb1fc"
+          "contentHash": "e666b96f570761bc8c4187ed8628b6aab3723368cb3acb09fd10d91213b5fd92",
+          "repeatContentHash": "e666b96f570761bc8c4187ed8628b6aab3723368cb3acb09fd10d91213b5fd92"
         }
       },
       "movingShot": {
@@ -167,61 +167,61 @@
         {
           "frame": 0,
           "file": "frame-0000.png",
-          "contentHash": "d9bb9130a9090a75d7ffaac923fd5a56b93c9208e2ea49494c69e979b07a3a7d",
-          "repeatContentHash": "d9bb9130a9090a75d7ffaac923fd5a56b93c9208e2ea49494c69e979b07a3a7d"
+          "contentHash": "1dfb3d8f92e2598dd916dc6f5ce29cfbdf383bc6756424465ecff7c7841ff95b",
+          "repeatContentHash": "1dfb3d8f92e2598dd916dc6f5ce29cfbdf383bc6756424465ecff7c7841ff95b"
         },
         {
           "frame": 84,
           "file": "frame-0084.png",
-          "contentHash": "d7346cbd93347a4f70712fdccfdb4f1c5881871c4a79350303b891324dc14ac1",
-          "repeatContentHash": "d7346cbd93347a4f70712fdccfdb4f1c5881871c4a79350303b891324dc14ac1"
+          "contentHash": "e24147ca9275d3fab7801db4731825d50a4351db0a402165ad798453fb9938db",
+          "repeatContentHash": "e24147ca9275d3fab7801db4731825d50a4351db0a402165ad798453fb9938db"
         },
         {
           "frame": 85,
           "file": "frame-0085.png",
-          "contentHash": "5e0d4fe148808cb5c21cc1a4c277eb3948a9c91facf50fb60a5dae765584a6f0",
-          "repeatContentHash": "5e0d4fe148808cb5c21cc1a4c277eb3948a9c91facf50fb60a5dae765584a6f0"
+          "contentHash": "efb8c1c8169eb740177767b4a27eec868b3a3b19e9bf658bac1e288890be72c1",
+          "repeatContentHash": "efb8c1c8169eb740177767b4a27eec868b3a3b19e9bf658bac1e288890be72c1"
         },
         {
           "frame": 114,
           "file": "frame-0114.png",
-          "contentHash": "5ca4d4350b7b1ab5fe6a4c7a22dca2f1842b9f4b1b291f0d681e9159752d259e",
-          "repeatContentHash": "5ca4d4350b7b1ab5fe6a4c7a22dca2f1842b9f4b1b291f0d681e9159752d259e"
+          "contentHash": "75206caa85c90d1189fe5c1b08f07e6d6fa19cab21dd06711b12990782010eb6",
+          "repeatContentHash": "75206caa85c90d1189fe5c1b08f07e6d6fa19cab21dd06711b12990782010eb6"
         },
         {
           "frame": 136,
           "file": "frame-0136.png",
-          "contentHash": "51d7a3571f1f6cbaccf890c5196e863d3e0e897cdf0f9c5a60f02265f340fedd",
-          "repeatContentHash": "51d7a3571f1f6cbaccf890c5196e863d3e0e897cdf0f9c5a60f02265f340fedd"
+          "contentHash": "cbd619b2a2af825c5a3d9d08ef99072a3e57620d3a27d1ffe2d093cad13424b4",
+          "repeatContentHash": "cbd619b2a2af825c5a3d9d08ef99072a3e57620d3a27d1ffe2d093cad13424b4"
         },
         {
           "frame": 158,
           "file": "frame-0158.png",
-          "contentHash": "26472bc2eeb784cd8e86d696e31342eba88bdefd9b0c39867a1542167c18edbc",
-          "repeatContentHash": "26472bc2eeb784cd8e86d696e31342eba88bdefd9b0c39867a1542167c18edbc"
+          "contentHash": "68a8597b0aa7b319877e9e7f7c141022f4580eee739d39f07bbfc238627e5190",
+          "repeatContentHash": "68a8597b0aa7b319877e9e7f7c141022f4580eee739d39f07bbfc238627e5190"
         },
         {
           "frame": 159,
           "file": "frame-0159.png",
-          "contentHash": "806a21c8b2ebb28861f64773ba8ac31d9499f22431f94d4b02c3a077f1feb1fc",
-          "repeatContentHash": "806a21c8b2ebb28861f64773ba8ac31d9499f22431f94d4b02c3a077f1feb1fc"
+          "contentHash": "e666b96f570761bc8c4187ed8628b6aab3723368cb3acb09fd10d91213b5fd92",
+          "repeatContentHash": "e666b96f570761bc8c4187ed8628b6aab3723368cb3acb09fd10d91213b5fd92"
         },
         {
           "frame": 327,
           "file": "frame-0327.png",
-          "contentHash": "3fca151c74dcf1ef2e7b1a8cff919a6f90fd7a242ccfc0d408b1ddb0c39ac2c3",
-          "repeatContentHash": "3fca151c74dcf1ef2e7b1a8cff919a6f90fd7a242ccfc0d408b1ddb0c39ac2c3"
+          "contentHash": "9c1619c9bcf193a8ec9ce87e3448434637f49eec190fb84e97a8b90edd56fc34",
+          "repeatContentHash": "9c1619c9bcf193a8ec9ce87e3448434637f49eec190fb84e97a8b90edd56fc34"
         },
         {
           "frame": 477,
           "file": "frame-0477.png",
-          "contentHash": "682365e8c2e3b2ba7710153a6eab24edb27064b8526c0a1c28e2561d025038bc",
-          "repeatContentHash": "682365e8c2e3b2ba7710153a6eab24edb27064b8526c0a1c28e2561d025038bc"
+          "contentHash": "76b460e5212f11d4a78bc46d608f53495145adb38acb300a8ff0373e9a74baf6",
+          "repeatContentHash": "76b460e5212f11d4a78bc46d608f53495145adb38acb300a8ff0373e9a74baf6"
         }
       ],
       "video": {
         "file": "arbitrary-history.mp4",
-        "contentHash": "8312ddd7fa2bc5112cddaa1e3b828c1b349c532d3a86c58e88df159f7cf39aaf"
+        "contentHash": "c31328c45990442d4b1b13bcff15e7b6d0abc1512f2143cdfad362100701fb8e"
       }
     }
   ]

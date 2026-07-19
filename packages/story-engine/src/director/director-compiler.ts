@@ -12,6 +12,7 @@ import {
   resolveDirectorCapabilities,
   type CapabilityRegistry,
 } from "./capability-report";
+import { compileContinuitySequencePlan } from "./continuity-compiler";
 import { sealDirectorPlan, type DirectorPlanDraft } from "./director-plan";
 import {
   sealExecutableEpisodePlan,
@@ -933,6 +934,29 @@ function buildExecutable(
         .map((asset) => [asset.assetId, asset]),
     ).values(),
   ];
+  const continuitySequencePlan = compileContinuitySequencePlan({
+    directorPlan: plan,
+    timingSolution: timing,
+    sceneWorlds: worlds,
+    fps: format.fps,
+    performancePrograms: performancePrograms.map((program) => {
+      if (
+        !program.contentHash ||
+        !program.sourceShotIds ||
+        !program.sourceShotIds.length
+      )
+        throw new Error(
+          `${program.id} cannot participate in continuity without sealed shot lineage.`,
+        );
+      return {
+        id: program.id,
+        entityId: program.entityId,
+        kind: program.kind,
+        contentHash: program.contentHash,
+        sourceShotIds: program.sourceShotIds,
+      };
+    }),
+  });
   const proxyStagePrograms = worlds.map((world, sceneIndex) => {
     const sourceScene = plan.scenes.find(
       (scene) => scene.sceneId === world.sceneId,
@@ -957,13 +981,11 @@ function buildExecutable(
     const duration =
       executableShots[shotIndex]!.endFrameExclusive -
       executableShots[shotIndex]!.startFrame;
-    const beat = beatById.get(shot.beatIds[0]!)!;
-    const beatPlan = plan.beats.find(
-      (candidate) => candidate.beatId === beat.id,
-    )!;
-    const active =
-      shot.camera.subjectIds[0] ??
-      beatPlan.performanceRequirements[0]!.entityId;
+    const continuityShot = continuitySequencePlan.shots.find(
+      (candidate) => candidate.shotId === shot.id,
+    );
+    if (!continuityShot)
+      throw new Error(`${shot.id} is missing canonical continuity state.`);
     const entitySpecs = isKids
       ? [
           {
@@ -971,14 +993,12 @@ function buildExecutable(
             label: "Lead",
             shape: "person" as const,
             color: "#f26f5f",
-            baseX: 0.28,
           },
           {
             id: "support",
             label: "Partner",
             shape: "creature" as const,
             color: "#4f8f8a",
-            baseX: 0.68,
           },
         ]
       : [
@@ -987,39 +1007,39 @@ function buildExecutable(
             label: "Presenter",
             shape: "presenter" as const,
             color: "#ef563f",
-            baseX: 0.25,
           },
           {
             id: "evidence",
             label: "Evidence",
             shape: "evidence" as const,
             color: "#f0c868",
-            baseX: 0.68,
           },
         ];
-    return entitySpecs.map((entity, entityIndex) => {
-      const isActive = entity.id === active;
-      const eventDelayFrames = beatPlan.eventTimingAdjustments
-        .filter(
-          (adjustment) =>
-            adjustment.sourceShotId === shot.id &&
-            plan.events
-              .find((event) => event.id === adjustment.eventId)
-              ?.subjectIds.includes(entity.id),
-        )
-        .reduce((total, adjustment) => total + adjustment.frames, 0);
-      const actionTravel =
-        beat.role === "action" && isActive
-          ? entityIndex === 0
-            ? 0.1
-            : -0.08
-          : 0;
-      const reactionLift =
-        (beat.role === "reaction" || eventDelayFrames > 0) && isActive
-          ? -0.055
-          : isActive
-            ? -0.02
-            : 0;
+    return entitySpecs.map((entity) => {
+      const entryWorld = continuityShot.entryWorldState.entities[entity.id];
+      const exitWorld = continuityShot.exitWorldState.entities[entity.id];
+      const entryPerformance = continuityShot.entryPerformanceState.find(
+        (state) => state.entityId === entity.id,
+      );
+      const exitPerformance = continuityShot.exitPerformanceState.find(
+        (state) => state.entityId === entity.id,
+      );
+      if (!entryWorld || !exitWorld || !entryPerformance || !exitPerformance)
+        throw new Error(
+          `${shot.id} is missing complete continuity for ${entity.id}.`,
+        );
+      const middleFrame = Math.max(
+        1,
+        Math.min(duration - 2, Math.round(duration * 0.5)),
+      );
+      const middleTransform = {
+        x: (entryWorld.transform.x + exitWorld.transform.x) / 2,
+        y: (entryWorld.transform.y + exitWorld.transform.y) / 2,
+        z: (entryWorld.transform.z + exitWorld.transform.z) / 2,
+        scale: (entryWorld.transform.scale + exitWorld.transform.scale) / 2,
+        rotation:
+          (entryWorld.transform.rotation + exitWorld.transform.rotation) / 2,
+      };
       return sealExecutableProgram({
         id: `proxy-entity-${shot.id}-${entity.id}`,
         sourceSceneIds: [shot.sceneId],
@@ -1037,175 +1057,34 @@ function buildExecutable(
         keyframes: [
           {
             frame: 0,
-            transform: {
-              x: entity.baseX,
-              y: entity.shape === "evidence" ? 0.48 : 0.72,
-              z: entityIndex,
-              scale: 1,
-              rotation: 0,
-            },
-            facing: entityIndex === 0 ? ("right" as const) : ("left" as const),
-            actionPhase: "anticipation" as const,
+            transform: entryWorld.transform,
+            facing: entryWorld.facing,
+            actionPhase: entryPerformance.actionPhase,
           },
           {
-            frame: Math.min(
-              duration - 2,
-              Math.max(1, Math.round(duration * 0.46) + eventDelayFrames),
-            ),
-            transform: {
-              x: entity.baseX + actionTravel * 0.6,
-              y: (entity.shape === "evidence" ? 0.48 : 0.72) + reactionLift,
-              z: entityIndex,
-              scale: isActive ? 1.06 : 0.98,
-              rotation: isActive ? (entityIndex === 0 ? -2 : 2) : 0,
-            },
-            facing: entityIndex === 0 ? ("right" as const) : ("left" as const),
-            actionPhase:
-              beat.role === "reaction" || eventDelayFrames > 0
-                ? ("reaction" as const)
-                : ("action" as const),
+            frame: middleFrame,
+            transform: middleTransform,
+            facing: exitWorld.facing,
+            actionPhase: exitPerformance.actionPhase,
           },
           {
             frame: duration - 1,
-            transform: {
-              x: entity.baseX + actionTravel,
-              y: entity.shape === "evidence" ? 0.48 : 0.72,
-              z: entityIndex,
-              scale: 1,
-              rotation: 0,
-            },
-            facing: entityIndex === 0 ? ("right" as const) : ("left" as const),
-            actionPhase: "hold" as const,
+            transform: exitWorld.transform,
+            facing: exitWorld.facing,
+            actionPhase: exitPerformance.actionPhase,
           },
         ],
       });
     });
   });
-  const proxyCameraPrograms = plan.shots.map((shot, index) => {
-    const duration =
-      executableShots[index]!.endFrameExclusive -
-      executableShots[index]!.startFrame;
-    const scaleBySize = {
-      "extreme-wide": 1,
-      wide: 1.08,
-      medium: 1.2,
-      "close-up": 1.38,
-      insert: 1.62,
-    } as const;
-    const scale = scaleBySize[shot.camera.size];
-    const focalX =
-      shot.composition.focalRegion === "left-third"
-        ? -6
-        : shot.composition.focalRegion === "right-third"
-          ? 6
-          : 0;
-    const focalY =
-      shot.composition.focalRegion === "upper-third"
-        ? -4
-        : shot.composition.focalRegion === "lower-third"
-          ? 4
-          : 0;
-    const endFrame = duration - 1;
-    const constantScale = (value: number) => ({ scale: value });
-    const movementKeyframes = (() => {
-      switch (shot.camera.movement) {
-        case "locked":
-          return [
-            {
-              frame: 0,
-              x: focalX,
-              y: focalY,
-              ...constantScale(scale),
-            },
-            {
-              frame: endFrame,
-              x: focalX,
-              y: focalY,
-              ...constantScale(scale),
-            },
-          ];
-        case "pan":
-          return [
-            {
-              frame: 0,
-              x: focalX - 5,
-              y: focalY,
-              ...constantScale(scale),
-            },
-            {
-              frame: endFrame,
-              x: focalX + 5,
-              y: focalY,
-              ...constantScale(scale),
-            },
-          ];
-        case "track": {
-          const subject =
-            proxyEntityPrograms.find(
-              (program) =>
-                program.shotId === shot.id &&
-                program.entityId === shot.camera.subjectIds[0],
-            ) ??
-            proxyEntityPrograms.find((program) => program.shotId === shot.id);
-          if (!subject)
-            throw new Error(`${shot.id} cannot track without a proxy subject.`);
-          const origin = subject.keyframes[0]!.transform;
-          return subject.keyframes.map((keyframe) => ({
-            frame: keyframe.frame,
-            x: focalX - (keyframe.transform.x - origin.x) * 100,
-            y: focalY - (keyframe.transform.y - origin.y) * 100,
-            ...constantScale(scale),
-          }));
-        }
-        case "push":
-          return [
-            {
-              frame: 0,
-              x: focalX,
-              y: focalY,
-              scale: scale * 0.96,
-            },
-            {
-              frame: endFrame,
-              x: focalX,
-              y: focalY,
-              scale: scale * 1.04,
-            },
-          ];
-        case "pull":
-          return [
-            {
-              frame: 0,
-              x: focalX,
-              y: focalY,
-              scale: scale * 1.04,
-            },
-            {
-              frame: endFrame,
-              x: focalX,
-              y: focalY,
-              scale: scale * 0.96,
-            },
-          ];
-        case "reframe":
-          return [
-            {
-              frame: 0,
-              x: focalX >= 0 ? focalX - 5 : focalX + 5,
-              y: focalY >= 0 ? focalY + 3 : focalY - 3,
-              ...constantScale(scale),
-            },
-            {
-              frame: endFrame,
-              x: focalX,
-              y: focalY,
-              ...constantScale(scale),
-            },
-          ];
-      }
-    })();
+  const proxyCameraPrograms = plan.shots.map((shot) => {
+    const continuityShot = continuitySequencePlan.shots.find(
+      (candidate) => candidate.shotId === shot.id,
+    );
+    if (!continuityShot)
+      throw new Error(`${shot.id} is missing canonical camera samples.`);
     return sealExecutableProgram({
-      id: `proxy-camera-${shot.id}`,
+      id: continuityShot.cameraProgram.id,
       sourceSceneIds: [shot.sceneId],
       sourceBeatIds: shot.beatIds,
       sourceShotIds: [shot.id],
@@ -1214,9 +1093,9 @@ function buildExecutable(
       shotId: shot.id,
       purpose: shot.storyFunction,
       size: shot.camera.size,
-      focalRegion: shot.composition.focalRegion,
+      focalRegion: continuityShot.cameraProgram.focalRegion,
       movement: shot.camera.movement,
-      keyframes: movementKeyframes,
+      keyframes: continuityShot.cameraProgram.keyframes,
     });
   });
   const proxyCaptionPrograms = plan.shots
@@ -1240,18 +1119,25 @@ function buildExecutable(
         emphasis: directionByBeat.get(beat.id)!.textEmphasis,
       });
     });
-  const proxyTransitionPrograms = plan.shots.map((shot) =>
-    sealExecutableProgram({
-      id: `proxy-transition-${shot.id}`,
+  const proxyTransitionPrograms = plan.shots.map((shot) => {
+    const continuityShot = continuitySequencePlan.shots.find(
+      (candidate) => candidate.shotId === shot.id,
+    );
+    if (!continuityShot)
+      throw new Error(`${shot.id} is missing canonical transition samples.`);
+    return sealExecutableProgram({
+      id: continuityShot.transitionProgram.id,
       sourceSceneIds: [shot.sceneId],
       sourceBeatIds: shot.beatIds,
       sourceShotIds: [shot.id],
       rendererId: "director-proxy-transition",
       rendererVersion: "1.0.0",
       shotId: shot.id,
-      kind: shot.transition.kind,
-    }),
-  );
+      kind: continuityShot.transitionProgram.kind,
+      progressKeyframes: continuityShot.transitionProgram.progressKeyframes,
+      occluderId: continuityShot.transitionProgram.occluderId,
+    });
+  });
   const audioCues = plan.beats.flatMap((beat) =>
     beat.sound.effectEventIds.map((eventId, index) => ({
       id: `audio-${beat.beatId.slice(-8)}-${index + 1}`,
@@ -1267,6 +1153,7 @@ function buildExecutable(
     directorPlanContentHash: plan.contentHash,
     timingSolutionContentHash: timing.contentHash,
     grammarProfileContentHash: getGrammarProfile(project.grammar).contentHash,
+    continuitySequencePlan,
     registryVersions: {
       stage: "director-alpha-1",
       performance: capabilityRegistry.version,
