@@ -106,9 +106,14 @@ describe("CV-001 creator shell", () => {
     ).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: /Weird History/ })).toBeEnabled();
     expect(
-      screen.getByRole("button", { name: /Storybook Cutout/ }),
+      screen.getByRole("button", { name: /Storybook Watercolor/ }),
     ).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: /Ink & Wash/ })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /Cut Paper Collage/ }),
+    ).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: /Soft 2D Digital Illustration/ }),
+    ).toBeEnabled();
     expect(
       screen.queryByText("Production confidence", { exact: false }),
     ).not.toBeInTheDocument();
@@ -122,7 +127,9 @@ describe("CV-001 creator shell", () => {
     await user.clear(script);
     await user.type(script, "Only one paragraph");
 
-    expect(screen.getByText(/Paste 100 to 300 words/)).toBeInTheDocument();
+    expect(
+      screen.getAllByText(/Paste 100 to 300 words/).length,
+    ).toBeGreaterThan(0);
     expect(
       screen.getByRole("button", { name: "Create first cut" }),
     ).toBeDisabled();
@@ -135,17 +142,15 @@ describe("CV-001 creator shell", () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(
-      screen.getByRole("button", { name: "Load a longer Kids script sample" }),
+      screen.getByRole("button", {
+        name: "Load an Ollo & Friends sample script",
+      }),
     );
     const title = (screen.getByLabelText("Title") as HTMLInputElement).value;
     const script = (screen.getByLabelText("Script") as HTMLTextAreaElement)
       .value;
-    const expectedIds = createCv002Project(
-      title,
-      script,
-      "kids-adventure",
-    ).graph.scenes
-      .flatMap((scene) => scene.beats)
+    const expectedIds = createCv002Project(title, script, "kids-adventure")
+      .graph.scenes.flatMap((scene) => scene.beats)
       .slice(0, 4)
       .map((beat) => beat.id);
     const preview = screen.getByLabelText("Preview of natural beats");

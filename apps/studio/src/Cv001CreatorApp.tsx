@@ -14,17 +14,22 @@ import {
 import {
   ArrowRight,
   Check,
+  ChevronDown,
   Clapperboard,
-  Feather,
   FileText,
+  Layers,
   Play,
   Sparkles,
-  Trees,
+  Upload,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Cv001CreatorStudio } from "./Cv001CreatorStudio";
 import { Cv002DraftReview } from "./Cv002DraftReview";
 import { KidsShowcaseStudio } from "./KidsShowcaseStudio";
+import artDirectionCollage from "./assets/art-direction-cut-paper-collage.jpg";
+import artDirectionSoft2d from "./assets/art-direction-soft-2d-illustration.jpg";
+import artDirectionStorybook from "./assets/art-direction-storybook-watercolor.jpg";
+import olloFriendsCastArt from "./assets/ollo-friends-cast-v1.jpg";
 import "./cv001-creator-studio.css";
 
 type CreatorScreen =
@@ -33,6 +38,10 @@ type CreatorScreen =
   | "draft-review"
   | "kids-showcase";
 type StudioEntryMode = "new-first-cut" | "continue-saved";
+type KidsArtDirection =
+  | "storybook-watercolor"
+  | "cut-paper-collage"
+  | "soft-2d-illustration";
 
 const CV002_DRAFT_STORAGE_KEY = "storystage.cv002.draft.v1";
 const HISTORY_SAMPLE = `In 1867, Alaska was sold to the United States for 7.2 million dollars. Newspapers mocked the deal as a frozen mistake, because many editors imagined nothing but ice, fog, and very expensive polar bears. The purchase looked like a punchline waiting for history to finish it.
@@ -40,23 +49,39 @@ const HISTORY_SAMPLE = `In 1867, Alaska was sold to the United States for 7.2 mi
 Then prospectors found gold, fishing fleets found enormous waters, and geologists found oil. The supposedly useless territory became strategically important as well. During the Second World War, Alaska sat on the shortest route between North America and Asia, which made the old bargain look far less ridiculous.
 
 The strangest part is that Russia did not simply forget Alaska's value. Its treasury was strained, the colony was difficult to defend, and leaders feared Britain might seize it in another war. Selling to the United States turned a vulnerable outpost into cash - and accidentally created one of history's most famous real-estate jokes.`;
-const KIDS_TEMPLATE_SAMPLE = `Mara follows a trail of blue feathers until she reaches a quiet clearing. A small lantern hums beneath an old stump, and she freezes when its light follows her gaze. She kneels beside it and whispers that she has never seen anything glow like that before.
+const OLLO_FRIENDS_SAMPLE = `Ollo bounces down the forest path, certain that today hides an adventure. Tix flutters beside him, asking him to slow down and look carefully. A soft golden glow drifts between the ferns, and Dot floats after it without a sound.
 
-The handle is cold, so Mara tests it with one finger before reaching with both hands. She leans forward, lifts the lantern slowly, and steadies it against her chest. Tiny paper stars spill from the glass while the forest seems to hold its breath.
+The glow slips under the roots of an old oak and becomes a tiny leaf-shaped lantern. Ollo gasps, then reaches for it with both paws before Tix can whisper a warning. The lantern flickers awake, and a gentle voice introduces itself as the Storylight, a guide who loves stories and lights the way.
 
-Mara gasps, then turns the lantern toward her friends at the edge of the clearing. She raises it proudly as the stars circle her head and the group cheers. The lantern settles into a warm golden glow, and Mara grins because their next path has appeared.`;
+Ollo gasps with delight, then promises to carry the Storylight carefully while Tix sighs with relief. The lantern glows brighter, drawing a warm trail through the trees. Dot lands on Ollo's scarf, and together the friends follow the light toward the oldest story in the Little Wood.`;
 
-const KIDS_STYLE_REFERENCES = [
-  "/show-packs/kids/moonlit-ruins/v1/sets/moonlit-forest/background-v1.png",
-  "/show-packs/kids/moonlit-ruins/v1/concepts/mara-milo-model-sheet-v1.png",
-  "/show-packs/kids/moonlit-ruins/v1/sets/moon-hall/background-v1.png",
-  "/show-packs/kids/moonlit-ruins/v1/sets/dawn-clearing/background-v1.png",
-];
-const HISTORY_STYLE_REFERENCES = [
-  "/show-packs/weird-history/rook/v1/neutral-pose.png",
-  "/show-packs/weird-history/rook/v1/talk-pose.png",
-  "/show-packs/weird-history/rook/v1/reaction-pose.png",
-  "/show-packs/weird-history/rook/v1/identity-sheet.png",
+const HISTORY_STYLE_REFERENCE =
+  "/show-packs/weird-history/rook/v1/identity-sheet.png";
+
+const KIDS_ART_DIRECTIONS: Array<{
+  id: KidsArtDirection;
+  name: string;
+  detail: string;
+  image: string;
+}> = [
+  {
+    id: "storybook-watercolor",
+    name: "Storybook Watercolor & Paper Cutout",
+    detail: "Warm light, gentle textures, layered-paper feel",
+    image: artDirectionStorybook,
+  },
+  {
+    id: "cut-paper-collage",
+    name: "Cut Paper Collage & Mixed Media",
+    detail: "Bold silhouettes, fabric and craft-paper texture",
+    image: artDirectionCollage,
+  },
+  {
+    id: "soft-2d-illustration",
+    name: "Soft 2D Digital Illustration",
+    detail: "Smooth shapes, warm pastels, clean and cozy",
+    image: artDirectionSoft2d,
+  },
 ];
 
 const countWords = (value: string) =>
@@ -68,6 +93,13 @@ const countParagraphs = (value: string) =>
         .split(/\r?\n[\t ]*\r?\n/)
         .filter((paragraph) => paragraph.trim()).length
     : 0;
+/* Rough narration-pace estimate from the real word count (~150 words per minute). */
+const estimateSeconds = (words: number) =>
+  Math.max(10, Math.round(words / 2.5 / 5) * 5);
+const beatCaption = (text: string) => {
+  const words = text.split(/\s+/);
+  return words.length > 7 ? `${words.slice(0, 7).join(" ")}…` : text;
+};
 
 export function Cv001CreatorApp({
   onOpenLegacy,
@@ -78,6 +110,11 @@ export function Cv001CreatorApp({
   const [title, setTitle] = useState("The Lantern Discovery");
   const [script, setScript] = useState(CV001_DEFAULT_SCRIPT);
   const [grammar, setGrammar] = useState<Cv002Grammar>("kids-adventure");
+  const [artDirection, setArtDirection] = useState<KidsArtDirection>(
+    "storybook-watercolor",
+  );
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const restored = useMemo(() => {
     const serialized = window.localStorage.getItem(CV001_CREATOR_STORAGE_KEY);
     if (!serialized) return { project: null, notice: null };
@@ -160,16 +197,25 @@ export function Cv001CreatorApp({
       return null;
     }
   }, [draftScriptError, grammar, isLanternRoute, script, title]);
+  const allDraftBeats = useMemo(
+    () =>
+      draftPreviewProject?.graph.scenes.flatMap((scene) => scene.beats) ?? [],
+    [draftPreviewProject],
+  );
   const beatPreview = isLanternRoute
-    ? parseCv001ThreeBeatScript(script)
-    : (draftPreviewProject?.graph.scenes
-        .flatMap((scene) => scene.beats)
-        .slice(0, 4)
-        .map((beat) => beat.text) ?? []);
-  const styleReferences =
-    grammar === "kids-adventure"
-      ? KIDS_STYLE_REFERENCES
-      : HISTORY_STYLE_REFERENCES;
+    ? parseCv001ThreeBeatScript(script).map((text, index) => ({
+        id: null as string | null,
+        text,
+        ordinal: index + 1,
+      }))
+    : allDraftBeats.slice(0, 4).map((beat, index) => ({
+        id: beat.id,
+        text: beat.text,
+        ordinal: index + 1,
+      }));
+  const totalBeatCount = isLanternRoute
+    ? beatPreview.length
+    : allDraftBeats.length;
 
   const saveProject = (next: Cv001CreatorProjectState) => {
     window.localStorage.setItem(
@@ -177,11 +223,13 @@ export function Cv001CreatorApp({
       JSON.stringify(next),
     );
     setProjectState(next);
+    setLastSavedAt(new Date());
   };
 
   const saveDraftProject = (next: Cv002Project) => {
     window.localStorage.setItem(CV002_DRAFT_STORAGE_KEY, JSON.stringify(next));
     setDraftProjectState(next);
+    setLastSavedAt(new Date());
   };
 
   const createFirstCut = (confirmed = false) => {
@@ -215,6 +263,23 @@ export function Cv001CreatorApp({
   const submitProject = () =>
     isLanternRoute ? createFirstCut() : createDraft();
 
+  const importScriptFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        setNotice("StoryStage could not read that file as plain text.");
+        return;
+      }
+      setScript(reader.result);
+      const baseName = file.name.replace(/\.[^.]+$/, "").trim();
+      if (baseName) setTitle(baseName);
+      setNotice(null);
+    };
+    reader.onerror = () =>
+      setNotice("StoryStage could not read that file. Try a plain .txt file.");
+    reader.readAsText(file);
+  };
+
   if (screen === "kids-showcase")
     return <KidsShowcaseStudio onBack={() => setScreen("creator-create")} />;
 
@@ -238,6 +303,13 @@ export function Cv001CreatorApp({
       />
     );
 
+  const createDisabled = Boolean(scriptError) || !title.trim();
+  const createDisabledReason = scriptError
+    ? scriptError
+    : !title.trim()
+      ? "Add a project title to continue."
+      : null;
+
   return (
     <main className="cv-create">
       <header className="cv-create-topbar">
@@ -245,16 +317,21 @@ export function Cv001CreatorApp({
           <span>
             <Clapperboard size={18} />
           </span>
-          <div>
-            <strong>StoryStage</strong>
-            <small>New project</small>
-          </div>
+          <strong>StoryStage</strong>
+          <em>New project</em>
         </div>
         <div className="cv-create-top-actions">
-          <span className="cv-create-save-state">
-            <Check size={13} />
-            Drafts save locally
-          </span>
+          {lastSavedAt ? (
+            <span className="cv-create-save-state">
+              <Check size={13} />
+              Saved just now
+            </span>
+          ) : project || draftProject ? (
+            <span className="cv-create-save-state">
+              <Check size={13} />
+              Saved on this device
+            </span>
+          ) : null}
           <button
             className="cv-open-showcase"
             onClick={() => setScreen("kids-showcase")}
@@ -268,23 +345,12 @@ export function Cv001CreatorApp({
 
       <div className="cv-create-layout is-mock-layout">
         <section className="cv-create-copy">
-          <p className="cv-kicker">New production</p>
           <h1>Turn your script into an animated first cut</h1>
           <p>
-            StoryStage finds the natural beats, directs each scene, and builds
-            an editable first cut you can shape before final production.
+            StoryStage finds the natural beats in your script, directs each
+            scene, and builds an editable first cut you review before any final
+            media.
           </p>
-          <div className="cv-create-proof">
-            <span>
-              <Check size={14} />
-            </span>
-            <div>
-              <strong>You stay in control of every beat</strong>
-              <small>
-                Review the structure before final art, voice, motion, or export.
-              </small>
-            </div>
-          </div>
         </section>
 
         <form
@@ -302,15 +368,6 @@ export function Cv001CreatorApp({
                 <p>The words stay editable throughout production.</p>
               </div>
             </header>
-
-            <label className="cv-create-label" htmlFor="cv-title">
-              Title
-            </label>
-            <input
-              id="cv-title"
-              onChange={(event) => setTitle(event.target.value)}
-              value={title}
-            />
 
             <label className="cv-create-label" htmlFor="cv-script">
               Script
@@ -331,73 +388,104 @@ export function Cv001CreatorApp({
               <span>
                 {scriptError ??
                   (isLanternRoute
-                    ? "Animated lantern demo · 3 beats ready"
-                    : `${scriptWords} words · ${scriptParagraphs} paragraphs · ready for breakdown`)}
+                    ? "3 beats · 10-second animated demo"
+                    : `${scriptWords} words · about ${estimateSeconds(scriptWords)} seconds · ${totalBeatCount} beats found`)}
               </span>
               <small>
                 {isLanternRoute
-                  ? "This exact scene has an assigned rig and motion template."
-                  : "New scripts compile into an honest directed proxy animatic before final animation capabilities are assigned."}
+                  ? "Demo scene with Mara engineering proof art and an assigned rig — not Ollo & Friends channel branding."
+                  : "New scripts compile into an honest directed animatic draft before final art, voice, or export."}
               </small>
             </div>
-            {grammar === "weird-history" && script === CV001_DEFAULT_SCRIPT ? (
-              <button
-                className="cv-load-sample"
-                onClick={() => {
-                  setTitle("The Alaska Bargain");
-                  setScript(HISTORY_SAMPLE);
+            <div className="cv-script-tools">
+              <input
+                accept=".txt,text/plain"
+                aria-label="Import a .txt script file"
+                className="cv-script-file-input"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (file) importScriptFile(file);
                 }}
+                ref={fileInputRef}
+                type="file"
+              />
+              <button
+                className="cv-import-script"
+                onClick={() => fileInputRef.current?.click()}
                 type="button"
               >
-                <FileText size={15} />
-                Load a Weird History sample
+                <Upload size={14} />
+                Import .txt
               </button>
-            ) : null}
-            {grammar === "kids-adventure" && isLanternRoute ? (
-              <button
-                className="cv-load-sample"
-                onClick={() => {
-                  setTitle("The Blue Lantern Trail");
-                  setScript(KIDS_TEMPLATE_SAMPLE);
-                }}
-                type="button"
-              >
-                <FileText size={15} />
-                Load a longer Kids script sample
-              </button>
-            ) : null}
+              {grammar === "weird-history" &&
+              script === CV001_DEFAULT_SCRIPT ? (
+                <button
+                  className="cv-load-sample"
+                  onClick={() => {
+                    setTitle("The Alaska Bargain");
+                    setScript(HISTORY_SAMPLE);
+                  }}
+                  type="button"
+                >
+                  <FileText size={14} />
+                  Load a Weird History sample
+                </button>
+              ) : null}
+              {grammar === "kids-adventure" && isLanternRoute ? (
+                <button
+                  className="cv-load-sample"
+                  onClick={() => {
+                    setTitle("The Storylight in the Little Wood");
+                    setScript(OLLO_FRIENDS_SAMPLE);
+                  }}
+                  type="button"
+                >
+                  <FileText size={14} />
+                  Load an Ollo & Friends sample script
+                </button>
+              ) : null}
+            </div>
 
             <section
               aria-label="Preview of natural beats"
               className="cv-beat-preview"
             >
               <header>
-                <div>
-                  <small>Story structure</small>
-                  <strong>Preview of natural beats</strong>
-                </div>
-                <span>Style references only</span>
+                <strong>Preview of natural beats</strong>
+                <span>
+                  {scriptError
+                    ? "Waiting for a valid script"
+                    : `${totalBeatCount} ${totalBeatCount === 1 ? "beat" : "beats"} found${totalBeatCount > beatPreview.length ? ` · first ${beatPreview.length} shown` : ""}`}
+                </span>
               </header>
-              <div>
-                {beatPreview.map((beat, index) => (
-                  <article
-                    data-beat-id={
-                      draftPreviewProject?.graph.scenes
-                        .flatMap((scene) => scene.beats)[index]?.id
-                    }
-                    key={`${index}-${beat}`}
-                  >
-                    {/* Creator-workspace thumbnail, not Remotion composition media. */}
-                    {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
-                    <img alt="" src={styleReferences[index]} />
-                    <span>Beat {index + 1}</span>
-                    <strong>
-                      {beat.split(/\s+/).slice(0, 7).join(" ")}
-                      {beat.split(/\s+/).length > 7 ? "…" : ""}
-                    </strong>
-                  </article>
-                ))}
-              </div>
+              {beatPreview.length > 0 && !scriptError ? (
+                <ol className="cv-beat-chips">
+                  {beatPreview.map((beat) => (
+                    <li key={`${beat.ordinal}-${beat.text}`}>
+                      {beat.ordinal > 1 ? (
+                        <ArrowRight
+                          aria-hidden
+                          className="cv-beat-arrow"
+                          size={14}
+                        />
+                      ) : null}
+                      <span
+                        className="cv-beat-chip"
+                        data-beat-id={beat.id ?? undefined}
+                      >
+                        <em>{beat.ordinal}</em>
+                        <strong>{beatCaption(beat.text)}</strong>
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="cv-beat-empty">
+                  Add a valid script and StoryStage will outline its natural
+                  beats here.
+                </p>
+              )}
             </section>
           </section>
 
@@ -415,12 +503,18 @@ export function Cv001CreatorApp({
                 >
                   {/* Creator-workspace thumbnail, not Remotion composition media. */}
                   {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
-                  <img alt="" src={KIDS_STYLE_REFERENCES[1]} />
-                  <span>
-                    <Trees size={18} />
-                  </span>
+                  <img
+                    alt="Ollo, Tix, Dot, and the Storylight — approved Ollo & Friends cast identity"
+                    src={olloFriendsCastArt}
+                  />
                   <strong>Kids Adventure</strong>
-                  <small>Character-led · warm holds</small>
+                  <small>
+                    Ollo & Friends · clear actions, expressive reactions,
+                    playful camera
+                  </small>
+                  <em className="cv-cast-status">
+                    Cast identity approved · character rigs in progress
+                  </em>
                   {grammar === "kids-adventure" ? <Check size={14} /> : null}
                 </button>
                 <button
@@ -431,12 +525,9 @@ export function Cv001CreatorApp({
                 >
                   {/* Creator-workspace thumbnail, not Remotion composition media. */}
                   {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
-                  <img alt="" src={HISTORY_STYLE_REFERENCES[3]} />
-                  <span>
-                    <Feather size={18} />
-                  </span>
+                  <img alt="" src={HISTORY_STYLE_REFERENCE} />
                   <strong>Weird History Explainer</strong>
-                  <small>Evidence-led · fast cuts</small>
+                  <small>Fast cuts, evidence, deadpan punchlines</small>
                   {grammar === "weird-history" ? <Check size={14} /> : null}
                 </button>
               </div>
@@ -444,39 +535,52 @@ export function Cv001CreatorApp({
 
             <fieldset className="cv-create-choice-panel cv-style-panel">
               <legend>
-                <span>3</span> Style reference
+                <span>3</span> Choose an art direction
               </legend>
-              <div className="cv-choice-grid is-three">
-                <button
-                  aria-pressed={grammar === "kids-adventure"}
-                  className={grammar === "kids-adventure" ? "is-selected" : ""}
-                  disabled={grammar !== "kids-adventure"}
-                  type="button"
-                >
-                  <span className="cv-style-swatch is-cut-paper" />
-                  <strong>Storybook Cutout</strong>
-                  <small>
-                    {isLanternRoute ? "Animated demo" : "Direction reference"}
-                  </small>
-                  {grammar === "kids-adventure" ? <Check size={14} /> : null}
-                </button>
-                <button disabled type="button">
-                  <span className="cv-style-swatch is-ink" />
-                  <strong>Ink & Wash</strong>
-                  <small>Coming later</small>
-                </button>
-                <button
-                  aria-pressed={grammar === "weird-history"}
-                  className={grammar === "weird-history" ? "is-selected" : ""}
-                  disabled={grammar !== "weird-history"}
-                  type="button"
-                >
-                  <span className="cv-style-swatch is-collage" />
+              {grammar === "kids-adventure" ? (
+                <div className="cv-choice-grid is-three">
+                  {KIDS_ART_DIRECTIONS.map((direction) => (
+                    <button
+                      aria-pressed={artDirection === direction.id}
+                      className={
+                        artDirection === direction.id ? "is-selected" : ""
+                      }
+                      key={direction.id}
+                      onClick={() => setArtDirection(direction.id)}
+                      type="button"
+                    >
+                      {/* Creator-workspace thumbnail, not Remotion composition media. */}
+                      {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
+                      <img alt="" src={direction.image} />
+                      <strong>{direction.name}</strong>
+                      <small>{direction.detail}</small>
+                      {artDirection === direction.id ? (
+                        <Check size={14} />
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="cv-static-choice" aria-label="Art direction">
+                  {/* Creator-workspace thumbnail, not Remotion composition media. */}
+                  {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
+                  <img alt="" src={HISTORY_STYLE_REFERENCE} />
                   <strong>Editorial collage</strong>
-                  <small>Direction reference</small>
-                  {grammar === "weird-history" ? <Check size={14} /> : null}
-                </button>
-              </div>
+                  <small>The approved Weird History reference</small>
+                </div>
+              )}
+              <p className="cv-art-honest">
+                Your choice guides the asset step — final art is generated
+                later, after you review the beats.
+              </p>
+              <p className="cv-layer-line">
+                <Layers size={13} />
+                <span>Scenes are staged in layers when art is generated:</span>
+                <b>Background</b>
+                <b>Midground</b>
+                <b>Characters</b>
+                <b>Foreground</b>
+              </p>
             </fieldset>
 
             <section className="cv-create-format-panel">
@@ -505,38 +609,65 @@ export function Cv001CreatorApp({
                 </label>
               </div>
               <small>
-                Voice stays off until a real recording or approved track is
-                attached.
+                Voice generation arrives in a later milestone. This build
+                renders one format — 16:9 · 1080p, English.
               </small>
             </section>
 
-            <button
-              className="cv-create-action"
-              disabled={Boolean(scriptError) || !title.trim()}
-              type="submit"
-            >
-              {isLanternRoute ? (
-                <>
-                  <Play fill="currentColor" size={16} />
-                  Create animated first cut
-                </>
-              ) : (
-                <>
-                  <ArrowRight size={17} />
-                  Create first cut
-                </>
-              )}
-            </button>
-            <p className="cv-create-review-note">
-              <Sparkles size={15} /> You’ll review every beat before final media
-              or export.
-            </p>
-            <p className="cv-create-boundary">
-              {isLanternRoute
-                ? "Prototype art · real articulated motion · no voice or export yet"
-                : "Draft breakdown only · no generated art, voice, animation, or export"}
-            </p>
+            <details className="cv-more-options">
+              <summary>
+                More options
+                <ChevronDown aria-hidden size={15} />
+              </summary>
+              <div>
+                <label className="cv-create-label" htmlFor="cv-title">
+                  Title
+                </label>
+                <input
+                  id="cv-title"
+                  onChange={(event) => setTitle(event.target.value)}
+                  value={title}
+                />
+                <p className="cv-create-boundary">
+                  {isLanternRoute
+                    ? "Prototype art · real articulated motion · no voice or export yet"
+                    : "Draft breakdown only · no generated art, voice, animation, or export"}
+                </p>
+              </div>
+            </details>
           </aside>
+
+          <footer className="cv-create-footer">
+            <p>
+              <Sparkles size={15} />
+              You’ll review the script beats before any final media or export.
+            </p>
+            <div>
+              {createDisabledReason ? (
+                <span className="cv-create-action-reason">
+                  {createDisabledReason}
+                </span>
+              ) : null}
+              <button
+                className="cv-create-action"
+                disabled={createDisabled}
+                type="submit"
+              >
+                {isLanternRoute ? (
+                  <>
+                    <Play fill="currentColor" size={16} />
+                    Create animated first cut
+                  </>
+                ) : (
+                  <>
+                    <ArrowRight size={17} />
+                    Create first cut
+                  </>
+                )}
+              </button>
+            </div>
+          </footer>
+
           {replaceConfirmOpen ? (
             <div
               className="cv-replace-confirm"

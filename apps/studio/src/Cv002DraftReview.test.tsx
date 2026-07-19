@@ -81,7 +81,9 @@ async function openKidsBreakdown() {
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    screen.getByRole("button", { name: "Load a longer Kids script sample" }),
+    screen.getByRole("button", {
+      name: "Load an Ollo & Friends sample script",
+    }),
   );
   await user.click(screen.getByRole("button", { name: "Create first cut" }));
   return user;
@@ -277,7 +279,7 @@ describe("CV-002 editable script breakdown", () => {
     render(<App />);
     await user.click(
       screen.getByRole("button", {
-        name: /Continue direction draftThe Blue Lantern Trail/,
+        name: /Continue direction draftThe Storylight in the Little Wood/,
       }),
     );
     await user.click(screen.getByRole("button", { name: /Direction draft/ }));
@@ -523,7 +525,7 @@ describe("CV-002 editable script breakdown", () => {
     render(<App />);
     await user.click(
       screen.getByRole("button", {
-        name: /Continue direction draftThe Blue Lantern Trail/,
+        name: /Continue direction draftThe Storylight in the Little Wood/,
       }),
     );
     await user.click(screen.getByRole("button", { name: /Direction draft/ }));
