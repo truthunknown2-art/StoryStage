@@ -2,6 +2,40 @@
 
 Task: `KIMI-UI-SLICE-C-CORRECTIONS`
 
+## Final composition-viewport correction after exact review of `04e2a5`
+
+The real Player-ref observation, optimistic-state regression, exact integer
+frame 340, exact paused state, and both same-state captures are accepted. Do not
+rewrite them. Fix only this remaining defect:
+
+10. **Prove pixels from the actual composition viewport, not the enclosing
+    Player with controls.** `.__remotion-player` includes transport text, the
+    progress bar, and controls in the committed evidence. Both frame-340
+    screenshots show a black composition while those controls supply the
+    recorded luminance variance and colors, so the present nonblank assertion
+    is invalid.
+
+    Locate the exact rendered composition surface inside the Player (the
+    aspect-ratio video/composition viewport, excluding every transport/control
+    descendant) and screenshot that rectangle alone. Persist that clipped PNG
+    beside the other evidence. Record and assert its SHA-256, integer clip
+    bounds, total pixel count, nonblack pixel count and ratio, luminance mean
+    and variance/standard deviation, unique-color count, and an explicit
+    uniform/blank rejection result. Use all pixels or a documented deterministic
+    sampling rule. The harness must fail for a uniform-black composition even
+    when Player controls are visible. It must also prove the chosen clip does
+    not intersect the transport-controls rectangle. If exact paused frame 340
+    is genuinely black, select and name another exact nonblank integer frame,
+    then use that same exact paused frame for both 1440 and 1920 captures; do
+    not weaken the threshold or count chrome.
+
+    Correct the stale `playhead-geometry` protocol name/comments to describe
+    the Player-ref exact-frame protocol. Regenerate the JSON, clipped artifact,
+    and two screenshots with the committed harness; rerun focused Studio tests,
+    Studio typecheck/lint, root verification, commit, push, update the handback,
+    and wait. Change no product code unless a read-only selector/test hook is
+    strictly necessary to identify the existing composition viewport.
+
 Continue on `agent/kimi-ui-slice-c-visual-polish` from exact reviewed head
 `55873d2b489c8c69e2110817bb6c4accb91e50d0`. Keep PR #17 draft. Do not rewrite
 history and do not broaden this Studio-only correction.

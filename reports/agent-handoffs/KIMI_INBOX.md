@@ -1,28 +1,37 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `14`
+Inbox-Version: `15`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-C-CORRECTIONS`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `852e776720aafbea92bd63373d807d45d233ce16`
+Accepted-Root-Base: `04e2a534e896f002f34895c545afa7089cefbf3a`
 Required-Work-Branch: `agent/kimi-ui-slice-c-visual-polish`
 Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-corrections.md`
 
 ## Current instruction
 
 Exact-head successor review at
-`852e776720aafbea92bd63373d807d45d233ce16` accepts the Mara Engineering-demo
-gate, ordinary Ollo registry/capability truth, accessibility, zoom, responsive
-layout, and visibly nonblank screenshots. One P2 proof defect remains: the
-committed harness derives the claimed frame from optimistic timeline CSS state
-instead of `PlayerRef.getCurrentFrame()`, permits a one-frame mismatch, captures
-another wall-clock frame, and counts Player chrome as nonblank composition.
-Execute only correction 9 in the brief. Do not broaden into engine, runtime,
-renderer, timing, continuity, or asset-authority changes.
+`04e2a534e896f002f34895c545afa7089cefbf3a` accepts the real
+`PlayerRef.getCurrentFrame()` / `isPlaying()` observation, the optimistic-state
+regression, and exact paused frame 340 for both captures. One P2 proof defect
+remains: `.__remotion-player` includes transport chrome, so its pixel statistics
+can call a uniform-black composition nonblank. Execute only correction 10 in
+the brief: clip the actual composition viewport, persist the clipped PNG and
+hash/nonblack/uniformity evidence, and correct the protocol label. Do not
+broaden into engine, runtime, renderer, timing, continuity, asset authority, or
+already accepted UI work.
 
-Version 14 supersedes Version 13 as the active task. Version 13 remains below
+Version 15 supersedes Version 14 as the active task. Version 14 remains below
 as historical traceability.
+
+---
+
+Previous Version 14 instruction:
+
+Exact-head review at `852e776` accepted the Mara gate and narrowed work to real
+Player-ref exact-frame evidence. Kimi delivered `04e2a5`; Version 15 accepts
+that exact Player observation and retains only the composition-viewport proof.
 
 ---
 
