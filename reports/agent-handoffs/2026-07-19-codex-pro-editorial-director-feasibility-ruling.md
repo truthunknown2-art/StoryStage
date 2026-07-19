@@ -77,6 +77,76 @@ does not mean the same prompt always produces the same model response.
 The production planner interface remains separate from the asynchronous model
 stage. No network call belongs inside deterministic compilation.
 
+## Required contract amendments
+
+### Separate semantic direction from invocation provenance
+
+The semantic proposal hash must not change merely because GPT, Kimi, a
+heuristic, or Preston authored the same creative choices. Use two artifacts:
+
+```ts
+type EditorialDirectorProposalV1 = {
+  // Creative proposal only.
+  contentHash: Hash;
+};
+
+type EditorialPlanningInvocationReceipt = {
+  proposalContentHash: Hash;
+  providerId: string;
+  modelId: string;
+  modelVersion: string;
+  promptTemplateContentHash: Hash;
+  contextContentHashes: Hash[];
+  rawResponseContentHash: Hash;
+  startedAt: string;
+  completedAt: string;
+  contentHash: Hash;
+};
+```
+
+The Director plan binds the semantic proposal. Orchestration and history bind
+the invocation receipt separately.
+
+### Proposal-owned shot identities
+
+Every proposed shot needs a stable identity derived from proposal-local
+semantics such as scene, ordinal, beat IDs, coverage type, and subjects. The
+compiler derives the canonical DirectorShotId and preserves a one-to-one
+`sourceEditorialShotId` lineage. A proposal may reference only scene, beat,
+entity, prop, landmark, causal-event, grammar, target, and capability
+inventories present in the exact request. Invented references fail closed.
+
+### No hidden compiler direction
+
+The proposal owns shot coverage, coverage type, subjects, props, framing,
+angle, composition intent, camera intent, transition intent, read bias, reason
+codes, rationale, and scene energy function. The compiler validates, rejects,
+and deterministically resolves them. It may not silently restore modulo focal
+rotation, facing rotation, the one-multi-shot cap, role-to-size tables,
+word-count-only duration, or templated motivations. Those rules remain only in
+`HeuristicEditorialPlanner` as an explicit baseline implementation.
+
+### Explicit outcomes, fallback, and revisions
+
+Planning returns an explicit accepted or rejected outcome. Rejection binds the
+rejected proposal when available plus an exact diagnostics hash. An optional
+production fallback creates a new heuristic proposal and records requested
+planner, rejected AI proposal, fallback planner, and reason hash. The blind
+pilot uses `fallbackAllowed: false` and at most one bounded revision round.
+
+A quality revision is a new artifact binding prior proposal, quality report,
+addressed finding IDs, and the complete successor proposal. It never mutates an
+accepted or failed proposal in place.
+
+### Heuristic behavioral-equivalence fixtures
+
+Before comparing planners, freeze one Kids and one Weird History fixture.
+Moving existing direction logic into `HeuristicEditorialPlanner` must preserve
+scene order, beat coverage, shot count and purpose, subjects, framing, camera
+and transition intent, timing, continuity, executable program, and episode
+duration. If proposal-owned IDs make byte equality impossible, record and test
+an explicit semantic-equivalence mapping instead of pretending hashes match.
+
 ## Minimal external intent
 
 The pilot intent is bounded and hash-free except for the exact trusted request
