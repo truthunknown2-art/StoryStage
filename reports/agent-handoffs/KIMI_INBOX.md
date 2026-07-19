@@ -1,26 +1,35 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `12`
+Inbox-Version: `13`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-UI-SLICE-C-CORRECTIONS`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `55873d2b489c8c69e2110817bb6c4accb91e50d0`
+Accepted-Root-Base: `e54547ffaef722b18f9d31b2fe6a3932b6076fb5`
 Required-Work-Branch: `agent/kimi-ui-slice-c-visual-polish`
 Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ui-slice-c-corrections.md`
 
 ## Current instruction
 
-ChatGPT Pro's exact-head review of Slice C at
-`55873d2b489c8c69e2110817bb6c4accb91e50d0` found two P1 blockers plus two P2
-follow-ups and an invalid visual-proof capture. Continue on the existing
-required work branch and execute the expanded correction brief. The ordinary
-Ollo/Mara capability truth fix must stay inside Studio composition/registry
-selection and tests; do not broaden into engine, runtime, renderer, timing,
+Exact-head successor review at
+`e54547ffaef722b18f9d31b2fe6a3932b6076fb5` accepts the ordinary Director
+registry, capability wording, zoom geometry, accessibility metadata, and narrow
+topbar repairs, but found one remaining P1 Mara workflow leak and one P2 proof
+defect. Continue on the same work branch and execute the new successor section
+in the correction brief. Do not broaden into engine, runtime, renderer, timing,
 continuity, or asset-authority changes.
 
-Version 12 supersedes Version 11 as the active task. Version 11 remains below
+Version 13 supersedes Version 12 as the active task. Version 12 remains below
 as historical traceability.
+
+---
+
+Previous Version 12 instruction:
+
+ChatGPT Pro rejected `55873d2` pending ordinary Ollo/Mara identity separation,
+truthful fit-width zoom, 44px targets, narrow layout, accessible metadata, and
+deterministic Player evidence. Kimi delivered successor `e54547f`; Version 13
+retains only the two exact-head defects still open.
 
 ---
 

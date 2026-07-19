@@ -6,6 +6,38 @@ Continue on `agent/kimi-ui-slice-c-visual-polish` from exact reviewed head
 `55873d2b489c8c69e2110817bb6c4accb91e50d0`. Keep PR #17 draft. Do not rewrite
 history and do not broaden this Studio-only correction.
 
+## Successor correction after exact review of `e54547f`
+
+The ordinary Director compilation, capability labels, zoom geometry, 44px
+targets, accessible duration/capability names, and narrow topbar are accepted.
+Do not rewrite those repairs. Fix only these remaining defects:
+
+7. **P1: put every Mara selection behind an explicitly named Engineering demo
+   entry, not merely an after-the-fact preview label.**
+   `Cv002TemplateAssignmentPanel` still appears inside an ordinary Ollo project
+   as `One supported animation template`, exposes the Mara character picker,
+   and enables `Verify and assign template`. The words `Engineering demo` only
+   appear after the preview opens. That is still an ordinary Ollo workflow
+   binding Mara. Gate the entire assignment surface behind an explicit action
+   or mode visibly named `Open engineering animation demo` / `Engineering
+   demo` before Mara can be selected. Ordinary Ollo Studio must neither show a
+   selectable Mara asset nor describe it as a supported normal template. Add a
+   regression proving Mara is absent from the ordinary Ollo surface until the
+   named demo action is taken, and that the demo mode remains visibly labeled
+   throughout selection, assignment, and playback.
+
+8. **P2: make browser evidence directly prove exact Player state.**
+   `0:11 / 0:26` cannot prove frame 340 at 30fps; it only proves frames 330-359.
+   The JSON also asserts frame 360, shot, beat, episode hash, and paused state
+   without a committed reproducible capture script or direct Player-state
+   measurement tied to the screenshot. Add a small committed browser-proof
+   script or equivalent deterministic harness that reads the Player's exact
+   `currentFrame` and paused state, records the episode/shot/beat IDs from the
+   same app state, performs the timeline seek, asserts exact frame equality,
+   then captures the screenshot and writes the proof JSON. Recapture the 1920
+   full-hierarchy screenshot on a named nonblank paused frame too, or qualify it
+   explicitly instead of calling a black Player a full visual proof.
+
 ## Required corrections
 
 1. **P1: never present Mara engineering art as ordinary Ollo readiness.**
