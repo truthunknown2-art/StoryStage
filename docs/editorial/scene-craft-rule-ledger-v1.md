@@ -57,7 +57,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every compiled plan
 - **Minimum sample:** n/a — a single instance proves the failure
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a…`, sha-256 `8a128f2e…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`, sha-256 `8a128f2ecdd7616e801940d6c07e28d0a69aff0af9119ac1b1c9e602458d90e2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned; no calibration pending)
 - **Future consumer:** compiler & continuity validators · **Implementation owner:** Codex
@@ -71,7 +71,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every cut boundary and action phrase
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §3, §5 (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §3, §5 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** timing solver & read-window validation · **Implementation owner:** Codex
@@ -85,7 +85,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every shot boundary and scene transition
 - **Minimum sample:** n/a
 - **Exception codes:** `declared-transition-logic`
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §3, §7 (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §3, §7 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** continuity validation · **Implementation owner:** Codex
@@ -99,7 +99,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every shot containing a tracked prop
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** continuity validation · **Implementation owner:** Codex
@@ -113,7 +113,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every camera program and transition boundary
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §4, §7 (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §4, §7 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** deterministic sample validation · **Implementation owner:** Codex
@@ -127,7 +127,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every action phrase and cut boundary
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §3 (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §3 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** continuity validation · **Implementation owner:** Codex
@@ -141,7 +141,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every render
 - **Minimum sample:** n/a
 - **Exception codes:** `approved-style-capability`
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §9 (blob `3b3cd1a…`) + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (blob `e9cc015…`, sha-256 `7c614aa6…`) · project regression
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes, §9 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (blob `e9cc015cd9f8f05f414d431f05055f70f02ab53c`, sha-256 `7c614aa6d41087359f6d3860b0b3befb0b58d9a27299124112472eeab883c28f`) · project regression
 - **Measured sample:** 1 render (30s kids showcase proof; ghosting observed around 0:16/0:20)
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** renderer & rig validation · **Implementation owner:** Codex
@@ -155,7 +155,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every render and delivery
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** renderer authority & media verification · **Implementation owner:** Codex
@@ -169,7 +169,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every planning pass and preview
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Hard-invariant classes (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** planner authority · **Implementation owner:** Codex
@@ -183,7 +183,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every planned shot
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §1 (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §1 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** plan validation · **Implementation owner:** Codex
@@ -197,7 +197,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every timed episode
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §10 (blob `5ca8a0d…`) + `docs/editorial/scene-craft-v1.1.md` §10 (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §10 (blob `5ca8a0d763f75188e7b8bcb469d96b251971c005`) + `docs/editorial/scene-craft-v1.1.md` §10 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** timing authority · **Implementation owner:** Codex
@@ -211,13 +211,13 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every render
 - **Minimum sample:** n/a
 - **Exception codes:** `approved-style-capability`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 (blob `5ca8a0d…`) + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (blob `e9cc015…`) · project regression
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 (blob `5ca8a0d763f75188e7b8bcb469d96b251971c005`) + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (blob `e9cc015cd9f8f05f414d431f05055f70f02ab53c`) · project regression
 - **Measured sample:** 1 render (30s kids showcase proof)
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** renderer & rig validation · **Implementation owner:** Codex
 - **Notes:** Project-observed ghosting; approved smear drawings may become a valid future capability.
 
-### SC-048 — Transition mechanical failures
+### SC-041 — Transition mechanical failures
 
 - **Principle:** Hard-block transition label mismatch, a wipe that never occludes, an unexplained teleport, a background swap during falsely continuous action, a lifecycle/position jump without declared logic, and a dissolve concealing an unsupported full-body pose substitution.
 - **Domain:** continuity · **Grammar scope:** kids-adventure, weird-history
@@ -225,13 +225,13 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every transition boundary
 - **Minimum sample:** n/a
 - **Exception codes:** `declared-transition-logic`, `approved-style-capability`
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §7 (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §7 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** continuity & renderer validation · **Implementation owner:** Codex
 - **Notes:** Mechanical failures only; transition taste is graded separately (SC-018, SC-031, SC-032, SC-033).
 
-### SC-049 — Cut mechanical failures
+### SC-042 — Cut mechanical failures
 
 - **Principle:** Hard-block cuts before a required read window, between incompatible action phases, across gait discontinuity, before readable contact/causal response, and across unexplained axis/geography reversals.
 - **Domain:** continuity · **Grammar scope:** kids-adventure, weird-history
@@ -239,13 +239,13 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every cut boundary
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §3 (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §3 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** continuity validation · **Implementation owner:** Codex
 - **Notes:** A cut on a hold is not inherently defective; only the mechanical cases block.
 
-### SC-050 — Reveal hard failure: unreadable causality
+### SC-043 — Reveal hard failure: unreadable causality
 
 - **Principle:** A reveal blocks only when the audience cannot identify what was noticed, who reacted, or what changed.
 - **Domain:** continuity · **Grammar scope:** kids-adventure, weird-history
@@ -253,7 +253,7 @@ compiler/continuity validators, not in this document.
 - **Evaluation window:** every reveal-class beat
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §8 (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §8 (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted (authority-owned)
 - **Future consumer:** continuity validation · **Implementation owner:** Codex
@@ -263,7 +263,7 @@ compiler/continuity validators, not in this document.
 
 Accepted planning knowledge: purposeful coverage, listener reactions,
 motivated cuts/camera, scene energy shaping, reveal preparation, performance
-follow-through, and audio-led timing. These guide a planner; they are never
+follow-through, and audio-led timing. These guide a planner; they are not
 quotas.
 
 ### SC-011 — Shot purpose vocabulary: one primary purpose plus zero to two compatible secondaries
@@ -274,7 +274,7 @@ quotas.
 - **Evaluation window:** planner context per shot
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §1 + `docs/editorial/scene-craft-v1.1.md` §1 (blobs `5ca8a0d…`, `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §1 + `docs/editorial/scene-craft-v1.1.md` §1 (blobs `5ca8a0d763f75188e7b8bcb469d96b251971c005`, `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary (non-normative)
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi (with Codex planner contracts)
@@ -288,7 +288,7 @@ quotas.
 - **Evaluation window:** planner context per scene
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §2 + `docs/editorial/scene-craft-v1.1.md` §2 + `docs/reference-analysis/kids-dragon-hunt-2-analysis.json` (patterns exist in reference content) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §2 + `docs/editorial/scene-craft-v1.1.md` §2 + `docs/reference-analysis/kids-dragon-hunt-2-analysis.json` (patterns exist in reference content) (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2, 918678ab0a1ed6397e086aa721b2e3f35bb26361) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi
@@ -302,7 +302,7 @@ quotas.
 - **Evaluation window:** planner context per dialogue beat
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §2 + `docs/editorial/scene-craft-v1.1.md` §2 · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §2 + `docs/editorial/scene-craft-v1.1.md` §2 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi
@@ -316,11 +316,11 @@ quotas.
 - **Evaluation window:** planner context per cut
 - **Minimum sample:** n/a
 - **Exception codes:** `intentional-jump`, `completed-hold`, `comic-hold`, `new-information`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §3 + `docs/editorial/scene-craft-v1.1.md` §3 · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §3 + `docs/editorial/scene-craft-v1.1.md` §3 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi
-- **Notes:** A cut on a hold is not inherently defective; only mechanical cut failures block (SC-049).
+- **Notes:** A cut on a hold is not inherently defective; the mechanical cases are hard invariants (SC-042).
 
 ### SC-015 — Motivated camera vocabulary: push, pull, pan, track, orbit, locked
 
@@ -330,7 +330,7 @@ quotas.
 - **Evaluation window:** planner context per shot
 - **Minimum sample:** n/a
 - **Exception codes:** `declared-compound-reason`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §4 + `docs/editorial/scene-craft-v1.1.md` §4 · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §4 + `docs/editorial/scene-craft-v1.1.md` §4 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi
@@ -344,7 +344,7 @@ quotas.
 - **Evaluation window:** planner context per scene
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §5 + `docs/editorial/scene-craft-v1.1.md` §5 · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §5 + `docs/editorial/scene-craft-v1.1.md` §5 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi
@@ -358,7 +358,7 @@ quotas.
 - **Evaluation window:** planner context per reveal-class beat
 - **Minimum sample:** n/a
 - **Exception codes:** `approved-audio-drives-duration`, `action-phase-drives-duration`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §5 + `docs/editorial/scene-craft-v1.1.md` §5 · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §5 + `docs/editorial/scene-craft-v1.1.md` §5 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi
@@ -372,11 +372,11 @@ quotas.
 - **Evaluation window:** planner context per transition
 - **Minimum sample:** n/a
 - **Exception codes:** `intentional-graphic-rhyme`, `time-transition`, `emotional-suspension`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §7 + `docs/editorial/scene-craft-v1.1.md` §7 · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §7 + `docs/editorial/scene-craft-v1.1.md` §7 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi
-- **Notes:** An identical-pose dissolve can be intentional; only the mechanical cases block (SC-048).
+- **Notes:** An identical-pose dissolve can be intentional; the mechanical cases are hard invariants (SC-041).
 
 ### SC-019 — Reveal coverage scales with narrative importance: micro, beat, major, set-piece
 
@@ -386,11 +386,11 @@ quotas.
 - **Evaluation window:** planner context per reveal-class beat
 - **Minimum sample:** n/a
 - **Exception codes:** `micro-importance-single-shot`, `beat-subject-plus-response`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §8 + `docs/editorial/scene-craft-v1.1.md` §8 · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §8 + `docs/editorial/scene-craft-v1.1.md` §8 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** AI planner context · **Implementation owner:** Kimi
-- **Notes:** The fixed four-shot pattern becomes a palette; only unreadable causality blocks (SC-050).
+- **Notes:** The fixed four-shot pattern becomes a palette; only unreadable causality is a hard invariant (SC-043).
 
 ### SC-020 — Rig capability knowledge: gaze leads motion, phrase arc, living holds, view-correct facing
 
@@ -400,7 +400,7 @@ quotas.
 - **Evaluation window:** planner context per performance beat
 - **Minimum sample:** n/a
 - **Exception codes:** `style-exception`, `approved-style-capability`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 + `docs/editorial/scene-craft-v1.1.md` §9 · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 + `docs/editorial/scene-craft-v1.1.md` §9 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** rig capability requests (only when a plan requires them) · **Implementation owner:** Codex
@@ -414,7 +414,7 @@ quotas.
 - **Evaluation window:** planner context per audio plan
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §10 + `docs/editorial/scene-craft-v1.1.md` §10 · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §10 + `docs/editorial/scene-craft-v1.1.md` §10 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** audio lane · **Implementation owner:** Codex
@@ -428,7 +428,7 @@ quotas.
 - **Evaluation window:** planner context per scene transition
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §10 (blob `5ca8a0d…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §10 (blob `5ca8a0d763f75188e7b8bcb469d96b251971c005`) · established editorial practice
 - **Measured sample:** n/a
 - **Calibration status:** accepted as planner vocabulary
 - **Future consumer:** audio lane · **Implementation owner:** Codex
@@ -448,7 +448,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration (none accepted)
 - **Minimum sample:** pending calibration
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §5 + `docs/editorial/scene-craft-v1.1.md` §Unvalidated hypotheses · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §5 + `docs/editorial/scene-craft-v1.1.md` §Unvalidated hypotheses (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
@@ -462,7 +462,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration; a future graded finding may consider it only for ≥8 resolved shots
 - **Minimum sample:** 8 resolved shots
 - **Exception codes:** `intentional-montage`, `audio-prescribed-intervals`, `insufficient-variation-opportunity`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §5 + `docs/editorial/scene-craft-v1.1.md` §5, §Unvalidated hypotheses · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §5 + `docs/editorial/scene-craft-v1.1.md` §5, §Unvalidated hypotheses (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
@@ -476,7 +476,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** `excellent-acting-hold`, `intentional-tableau`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §6 + `docs/editorial/scene-craft-v1.1.md` §6, §Unvalidated hypotheses · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §6 + `docs/editorial/scene-craft-v1.1.md` §6, §Unvalidated hypotheses (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
@@ -490,7 +490,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** `semantic-variation-present`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §6 + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (the hand-to-ear listen repeated twice in 6s) · project regression (observation) with unvalidated universal limit
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §6 + `docs/design/kids-showcase-proof/pro-encoded-frame-audit-v3.md` (the hand-to-ear listen repeated twice in 6s) (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, e9cc015cd9f8f05f414d431f05055f70f02ab53c) · project regression
 - **Measured sample:** 1 render (30s kids showcase proof; one observed repetition)
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
@@ -504,11 +504,11 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** 3 consecutive (observation threshold only)
 - **Exception codes:** `stated-justification`, `semantic-context`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §6 + `docs/editorial/scene-craft-v1.1.md` §6 · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §6 + `docs/editorial/scene-craft-v1.1.md` §6 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
-- **Notes:** Streaks are observations, never automatic rejection.
+- **Notes:** Streaks are observations, not automatic rejection.
 
 ### SC-029 — Reveal coverage of at least three of four pattern shots
 
@@ -518,11 +518,11 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** `micro-importance-single-shot`, `beat-subject-plus-response`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §8 + `docs/editorial/scene-craft-v1.1.md` §8, §Unvalidated hypotheses · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §8 + `docs/editorial/scene-craft-v1.1.md` §8, §Unvalidated hypotheses (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
-- **Notes:** Three-of-four coverage is explicitly non-normative; only unreadable causality blocks (SC-050).
+- **Notes:** Three-of-four coverage is explicitly non-normative; only unreadable causality is a hard invariant (SC-043).
 
 ### SC-030 — Kids profile shot mix ≈ 25/40/25/10 (wide/medium/close/insert), ±10%
 
@@ -532,11 +532,11 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** not judged below 8 shots; informational at 8–11; a future graded finding may consider 12+ only when substantially outside the bound target without valid semantic justification
 - **Minimum sample:** 12 shots (for any future warning variant)
 - **Exception codes:** `semantic-justification`, `below-minimum-sample`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §2 + `docs/editorial/scene-craft-v1.1.md` §2 · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §2 + `docs/editorial/scene-craft-v1.1.md` §2 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
-- **Notes:** No measured source validates the exact percentages; kept as a prior, never a quota.
+- **Notes:** No measured source validates the exact percentages; kept as a prior, not a quota.
 
 ### SC-031 — Hard cuts as the default majority of boundaries
 
@@ -546,7 +546,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** `style-exception`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §7 · established editorial practice (the default) with an unvalidated percentage
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §7 (blob 5ca8a0d763f75188e7b8bcb469d96b251971c005) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
@@ -560,11 +560,11 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** `intentional-graphic-rhyme`, `time-transition`, `emotional-suspension`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §7 + `docs/editorial/scene-craft-v1.1.md` §7 · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §7 + `docs/editorial/scene-craft-v1.1.md` §7 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
-- **Notes:** The mechanical pose-substitution case is a hard invariant (SC-048); the universal pose-change preference stays unvalidated.
+- **Notes:** The mechanical pose-substitution case is a hard invariant (SC-041); the universal pose-change preference stays unvalidated.
 
 ### SC-033 — Foreground-occlusion wipe locked to the occluder's motion, 6–10 frames
 
@@ -574,13 +574,13 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §7 · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §7 (blob 5ca8a0d763f75188e7b8bcb469d96b251971c005) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** quality report (only after calibration) · **Implementation owner:** Codex (calibration), none today
-- **Notes:** The mechanical failure is a wipe that never occludes (SC-048); the frame range is unmeasured.
+- **Notes:** The mechanical failure is a wipe that does not occlude (SC-041); the frame range is unmeasured.
 
-### SC-034 — v1 claim: one motivated move per shot, never stacked without a stated reason
+### SC-034 — v1 claim: one motivated move per shot (superseded compound-camera phrasing)
 
 - **Principle:** Recorded as the v1 phrasing; superseded by v1.1's declared-reason compound permission (SC-015).
 - **Domain:** plan · **Grammar scope:** kids-adventure, weird-history
@@ -588,7 +588,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** superseded by SC-015 (v1.1 §4)
 - **Minimum sample:** n/a
 - **Exception codes:** `declared-compound-reason`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §4 + `docs/editorial/scene-craft-v1.1.md` §4 · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §4 + `docs/editorial/scene-craft-v1.1.md` §4 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** superseded — recorded for traceability, not an active restriction
 - **Future consumer:** none · **Implementation owner:** none
@@ -602,7 +602,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** `intentional-stillness`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 + `docs/editorial/scene-craft-v1.1.md` §9 · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 + `docs/editorial/scene-craft-v1.1.md` §9 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** rig capability requests (after calibration) · **Implementation owner:** Codex (calibration), none today
@@ -616,13 +616,13 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** `style-exception`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 + `docs/editorial/scene-craft-v1.1.md` §9 · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 + `docs/editorial/scene-craft-v1.1.md` §9 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** rig capability requests (after calibration) · **Implementation owner:** Codex (calibration), none today
 - **Notes:** Gaze-lead itself is accepted knowledge (SC-020) without the numeric offsets.
 
-### SC-037 — Blink cadence of 2.5–4.5 seconds, never metronomic
+### SC-037 — Blink cadence varies within a human range (2.5–4.5 seconds)
 
 - **Principle:** Blinks vary within a human range; the interval is a style target.
 - **Domain:** rig · **Grammar scope:** kids-adventure, weird-history
@@ -630,7 +630,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** pending blind-pilot calibration
 - **Minimum sample:** pending calibration
 - **Exception codes:** `style-exception`
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 + `docs/editorial/scene-craft-v1.1.md` §9 · unvalidated hypothesis
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §9 + `docs/editorial/scene-craft-v1.1.md` §9 (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · unvalidated hypothesis
 - **Measured sample:** none in this repository
 - **Calibration status:** uncalibrated — pending blind pilot
 - **Future consumer:** rig capability requests (after calibration) · **Implementation owner:** Codex (calibration), none today
@@ -646,7 +646,7 @@ language is deliberately avoided; these rows inform future graded findings only.
 - **Evaluation window:** illustration only — not a target, not the pilot rubric, not a required shot count
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.md` §Worked example + `docs/editorial/scene-craft-v1.1.md` §Illustrative high-energy treatment · worked example
+- **Evidence:** `docs/editorial/scene-craft-v1.md` §Worked example + `docs/editorial/scene-craft-v1.1.md` §Illustrative high-energy treatment (blobs 5ca8a0d763f75188e7b8bcb469d96b251971c005, 3b3cd1a9beb12dca42d4523335d68386f520ccc2) · worked example
 - **Measured sample:** 1 illustrative edit (30s throwaway showcase)
 - **Calibration status:** accepted as worked example (non-normative); rows must be labelled essential, optional coverage, or alternate before reuse
 - **Future consumer:** planner examples (a later task) · **Implementation owner:** Kimi
@@ -654,13 +654,13 @@ language is deliberately avoided; these rows inform future graded findings only.
 
 ### SC-040 — Blind-pilot scoring rubric
 
-- **Principle:** Human blind review scores clarity/causality 25, composition/coverage 20, motivated cuts 20, pacing/holds 15, reactions/performance 10, variety 10; it never rewards matching a proposed shot list.
+- **Principle:** Human blind review scores clarity/causality 25, composition/coverage 20, motivated cuts 20, pacing/holds 15, reactions/performance 10, variety 10; it does not reward matching a proposed shot list.
 - **Domain:** quality · **Grammar scope:** kids-adventure, weird-history
 - **Enforcement:** example only · **Confidence:** medium
 - **Evaluation window:** human blind pilot review
 - **Minimum sample:** n/a
 - **Exception codes:** —
-- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Illustrative high-energy treatment (blob `3b3cd1a…`) · established editorial practice
+- **Evidence:** `docs/editorial/scene-craft-v1.1.md` §Illustrative high-energy treatment (blob `3b3cd1a9beb12dca42d4523335d68386f520ccc2`) · worked example
 - **Measured sample:** n/a
 - **Calibration status:** accepted as the human evaluation contract; authorizes no validator or hard gate inside product code
 - **Future consumer:** human blind review · **Implementation owner:** Pro + Preston (review), none in product

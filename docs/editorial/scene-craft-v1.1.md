@@ -175,7 +175,7 @@ incompatible action phases, across a gait discontinuity, before contact or
 causal response is readable, or across an unexplained axis/geography reversal.
 A cut on a hold is not inherently defective.
 
-_Ledger rules: SC-014 (planner-prior vocabulary), SC-049 (hard-invariant
+_Ledger rules: SC-014 (planner-prior vocabulary), SC-042 (hard-invariant
 mechanical cut failures)._
 
 ## 4. Motivated camera
@@ -249,7 +249,7 @@ block only when:
 An identical-pose dissolve can be an intentional graphic rhyme, time
 transition, or emotional suspension; it is not universally banned.
 
-_Ledger rules: SC-018 (planner-prior vocabulary), SC-048 (hard-invariant
+_Ledger rules: SC-018 (planner-prior vocabulary), SC-041 (hard-invariant
 mechanical transition failures), SC-032 (dissolve pose-change claim,
 hypothesis), SC-033 (occlusion wipe timing, hypothesis)._
 
@@ -270,7 +270,7 @@ type RevealImportance = "micro" | "beat" | "major" | "set-piece";
 The hard failure is unreadable causality: the audience cannot identify what
 was noticed, who reacted, or what changed.
 
-_Ledger rules: SC-019 (importance-scaled palette, planner-prior), SC-050
+_Ledger rules: SC-019 (importance-scaled palette, planner-prior), SC-043
 (unreadable causality, hard-invariant), SC-029 (three-of-four coverage,
 hypothesis)._
 
