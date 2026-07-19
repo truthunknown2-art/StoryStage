@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
+import { createCv002ArtDirectionSelection } from "../cv002-art-direction";
 import { applyDirectorPatch } from "./apply-director-patch";
 import { createCapabilityRegistry } from "./capability-report";
 import { compileDirectorProject } from "./director-compiler";
@@ -22,11 +23,21 @@ const script = Array.from(
   (_, index) => `${sentence.slice(0, -1)} ${index + 1}.`,
 ).join(" ");
 
+const reseal = <T extends { contentHash: string }>(value: T): T => {
+  const { contentHash: _contentHash, ...draft } = value;
+  void _contentHash;
+  return { ...draft, contentHash: hashCanonical(draft) } as T;
+};
+
 const fixture = () => {
   const storyProject = createCv002Project(
     "Workspace proof",
     script,
     "kids-adventure",
+    createCv002ArtDirectionSelection(
+      "kids-adventure",
+      "cut-paper-collage-mixed-media",
+    ),
   );
   const firstCut = compileDirectorProject({ storyProject });
   const selectedBeatId = firstCut.directorPlan.events.find(
@@ -51,6 +62,10 @@ describe("Director workspace", () => {
       "Registry continuity",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const registryA = createCapabilityRegistry({
       version: "workspace-registry-a",
@@ -163,6 +178,10 @@ describe("Director workspace", () => {
       "Another workspace",
       script.replaceAll("traveler", "inventor"),
       "weird-history",
+      createCv002ArtDirectionSelection(
+        "weird-history",
+        "weird-history-editorial-collage",
+      ),
     );
     const otherFirstCut = compileDirectorProject({
       storyProject: otherStoryProject,
@@ -183,5 +202,103 @@ describe("Director workspace", () => {
         expectedStoryProject,
       ),
     ).toThrow(/another story graph/i);
+  });
+
+  it("rejects a zero-patch workspace whose H0 substitutes a same-grammar art direction", () => {
+    const storybookStory = createCv002Project(
+      "Same graph",
+      script,
+      "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "storybook-watercolor-paper-cutout",
+      ),
+    );
+    const collageStory = createCv002Project(
+      "Same graph",
+      script,
+      "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
+    );
+    const originalFirstCut = compileDirectorProject({
+      storyProject: storybookStory,
+    });
+    const forgedFirstCut = reseal({
+      ...originalFirstCut,
+      storyProjectContentHash: collageStory.contentHash,
+    });
+    const workspace = createDirectorWorkspaceState(
+      forgedFirstCut,
+      forgedFirstCut.directorPlan.beats[0]!.beatId,
+    );
+
+    expect(() =>
+      restoreDirectorWorkspaceState(JSON.stringify(workspace), collageStory),
+    ).toThrow(/another art direction/i);
+  });
+
+  it("rejects a same-grammar art-direction substitution in patched history", () => {
+    const storybookStory = createCv002Project(
+      "Patched graph",
+      script,
+      "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "storybook-watercolor-paper-cutout",
+      ),
+    );
+    const collageStory = createCv002Project(
+      "Patched graph",
+      script,
+      "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
+    );
+    const firstCut = compileDirectorProject({ storyProject: storybookStory });
+    const selectedBeatId = firstCut.directorPlan.events.find(
+      (event) => event.kind === "reaction",
+    )!.beatId;
+    const patch = proposeDirectorPatch({
+      baseDirectorProject: firstCut,
+      targetBeatId: selectedBeatId,
+      command: "Make the reaction 6 frames later",
+    });
+    const revisedCut = applyDirectorPatch({
+      storyProject: storybookStory,
+      baseDirectorProject: firstCut,
+      patch,
+    });
+
+    const forgedFirstCut = reseal({
+      ...firstCut,
+      storyProjectContentHash: collageStory.contentHash,
+      artDirectionSelection: collageStory.artDirectionSelection,
+    });
+    const forgedPatch = reseal({
+      ...patch,
+      baseDirectorProjectContentHash: forgedFirstCut.contentHash,
+    });
+    const forgedRevision = reseal({
+      ...revisedCut,
+      storyProjectContentHash: collageStory.contentHash,
+      revision: {
+        baseDirectorProjectContentHash: forgedFirstCut.contentHash,
+        directorPatchContentHash: forgedPatch.contentHash,
+      },
+    });
+    const workspace = recordDirectorWorkspaceRevision(
+      createDirectorWorkspaceState(forgedFirstCut, selectedBeatId),
+      forgedPatch,
+      forgedRevision,
+    );
+
+    expect(() =>
+      restoreDirectorWorkspaceState(JSON.stringify(workspace), collageStory),
+    ).toThrow(/revision 1 belongs to another art direction/i);
   });
 });

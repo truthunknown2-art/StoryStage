@@ -9,7 +9,6 @@ import {
 } from "@storystage/story-engine/director-alpha";
 import {
   AbsoluteFill,
-  Img,
   interpolate,
   Sequence,
   staticFile,
@@ -23,6 +22,10 @@ import {
   type LocalPartsV1Execution,
   type VerifiedPartsRigAsset,
 } from "./partsRigRuntime";
+import {
+  decodeVerifiedImageBlob,
+  VerifiedRasterImage,
+} from "./VerifiedRasterImage";
 
 type ProxyEntity = NonNullable<
   ExecutableEpisodePlan["proxyEntityPrograms"]
@@ -123,6 +126,7 @@ const useVerifiedAssetUrl = (
   const [verifiedUrl, setVerifiedUrl] = useState<string | null>(null);
   const { cancelRender, continueRender, delayRender } = useDelayRender();
   useEffect(() => {
+    setVerifiedUrl(null);
     const handle = delayRender(`Verifying approved ${binding.assetId} bytes`);
     const controller = new AbortController();
     let active = true;
@@ -146,9 +150,9 @@ const useVerifiedAssetUrl = (
           throw new Error(
             `Approved Director asset ${binding.assetId} failed browser byte verification.`,
           );
-        objectUrl = URL.createObjectURL(
-          new Blob([bytes], { type: "image/png" }),
-        );
+        const verifiedBlob = new Blob([bytes], { type: "image/png" });
+        await decodeVerifiedImageBlob(verifiedBlob, binding.assetId);
+        objectUrl = URL.createObjectURL(verifiedBlob);
         if (active) setVerifiedUrl(objectUrl);
         else URL.revokeObjectURL(objectUrl);
         settled = true;
@@ -218,14 +222,7 @@ const useVerifiedPartsRigAssets = (
                 `Approved Director asset ${binding.assetId} failed browser byte verification.`,
               );
             const verifiedBlob = new Blob([bytes], { type: "image/png" });
-            try {
-              const decoded = await createImageBitmap(verifiedBlob);
-              decoded.close();
-            } catch {
-              throw new Error(
-                `Approved Director asset ${binding.assetId} failed browser decode.`,
-              );
-            }
+            await decodeVerifiedImageBlob(verifiedBlob, binding.assetId);
             const verifiedUrl = URL.createObjectURL(verifiedBlob);
             objectUrls.push(verifiedUrl);
             return { binding, verifiedUrl };
@@ -272,7 +269,9 @@ const AtlasFrame: React.FC<{
         width: atlasFrame.source.width,
       }}
     >
-      <Img
+      <VerifiedRasterImage
+        alternative={{ kind: "decorative" }}
+        assetId={execution.assetId}
         src={relativeFile}
         style={{
           height: execution.atlasHeight,
@@ -397,7 +396,9 @@ const ArticulatedPart: React.FC<{
           width: part.source.width,
         }}
       >
-        <Img
+        <VerifiedRasterImage
+          alternative={{ kind: "decorative" }}
+          assetId={execution.assetId}
           src={relativeFile}
           style={{
             height: execution.sheetHeight,

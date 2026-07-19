@@ -44,6 +44,7 @@ export * from "./cv001-rig-kinematics";
 export * from "./cv001-scene-compiler";
 export * from "./cv001-proof-fixture";
 export * from "./cv001-creator-direction";
+export * from "./cv002-art-direction";
 export * from "./cv002-story-draft";
 export * from "./cv002-template-assignment";
 export * from "./kids-showcase";

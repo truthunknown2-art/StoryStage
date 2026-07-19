@@ -29,6 +29,7 @@ import { STORY_STAGE_PRODUCTION_COMPOSITION_ID } from "@storystage/remotion-runt
 import {
   compileDirectorProject,
   createCv002Project,
+  createCv002ArtDirectionSelection,
   createKvp001ProofFixture,
   evaluateContinuityFrame,
   hashCanonical,
@@ -259,6 +260,10 @@ const compileOrdinaryReactionSmoke = () => {
       " ",
     ),
     "kids-adventure",
+    createCv002ArtDirectionSelection(
+      "kids-adventure",
+      "cut-paper-collage-mixed-media",
+    ),
   );
   const proxy = compileDirectorProject({ storyProject });
   const requirement = proxy.directorPlan.beats

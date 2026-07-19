@@ -1,6 +1,7 @@
 import {
   compileDirectorProject,
   createCv002Project,
+  createCv002ArtDirectionSelection,
   evaluateContinuityFrame,
   hashCanonical,
   listArticulatedRigAssetReferences,
@@ -29,6 +30,10 @@ const localPartsFixture = () => {
     "Local parts runtime",
     script,
     "kids-adventure",
+    createCv002ArtDirectionSelection(
+      "kids-adventure",
+      "cut-paper-collage-mixed-media",
+    ),
   );
   const proxy = compileDirectorProject({ storyProject });
   const requirement = proxy.directorPlan.beats

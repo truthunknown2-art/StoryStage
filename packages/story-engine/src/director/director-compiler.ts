@@ -1341,6 +1341,7 @@ export function compileDirectorProject(
     schemaVersion: "1.0" as const,
     id: `director-project-${storyProject.graph.contentHash.slice(0, 12)}`,
     storyProjectContentHash: storyProject.contentHash,
+    artDirectionSelection: storyProject.artDirectionSelection,
     planningArtifact: proposal,
     sceneWorlds: worlds,
     directorPlan,

@@ -24,7 +24,6 @@ export function DirectorTimelineDrawer({
     <details
       aria-label="Selected-beat timeline"
       className="director-timeline-drawer"
-      open
     >
       <summary>
         <span>
