@@ -8,7 +8,7 @@ canonical contracts, deterministic compiler, persistence, security boundaries,
 renderer integration, and final merge. ChatGPT Pro is the product architect and
 acceptance reviewer. Preston is the final creative authority.
 
-## First assignment: read-only product audit
+## First assignment: read-only product and performance audit
 
 Do not change product code yet. Inspect:
 
@@ -29,7 +29,27 @@ defects. For each defect, name the exact component/CSS area and the smallest
 honest correction. Also critique whether the current moving output reads as
 genuine character performance or engineering proxy motion.
 
-Write only the audit and proposed file plan to
+Your existing observation that the renderer swaps a few whole-body images,
+leaves several compiled action types without visual performance, and has thin
+camera/transition/audio behavior is useful. Turn that into a source-linked
+audit rather than starting implementation from chat assumptions. Propose the
+smallest visual-performance layer that could own:
+
+- parts-based character rigs and authored exposures;
+- internal body/face performance, walk/idle/reaction cycles, easing, blinking,
+  and lip-sync visuals;
+- camera and transition execution that consumes canonical camera intent;
+- reusable motion programs that consume, but never independently invent,
+  canonical root motion, facing, gaze, gait phase, action phase, visibility,
+  prop attachment, or shot-boundary state.
+
+Codex owns those canonical continuity states in a new hash-bound
+`ContinuitySequencePlan` inside the existing `ExecutableEpisodePlan`. Your
+audit must name the exact TypeScript boundary you recommend between that plan
+and the visual-performance implementation so the two lanes cannot create
+competing root-motion, camera, or timing authority.
+
+Write only the audit, proposed rig/performance interface, and proposed file plan to
 `reports/agent-handoffs/kimi-ui-audit.md`, commit it, push
 `agent/kimi-frontend`, and open a draft PR. Do not implement until Pro/Codex
 accept the file plan.
