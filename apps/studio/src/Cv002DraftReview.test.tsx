@@ -114,9 +114,10 @@ async function openKidsBreakdown() {
 }
 
 async function assignKidsTemplate(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(
-    screen.getByRole("button", { name: /Review direction draft/ }),
-  );
+  const reviewDirection = screen.queryByRole("button", {
+    name: /Review direction draft/,
+  });
+  if (reviewDirection) await user.click(reviewDirection);
   await openAdvancedProductionDetails(user);
   const scene = screen.getByLabelText("Three-beat scene") as HTMLSelectElement;
   await user.selectOptions(scene, scene.options[1]!.value);
@@ -148,6 +149,11 @@ async function openAdvancedProductionDetails(
 ) {
   await user.click(screen.getByText("Advanced production details"));
   await user.click(screen.getByText("Animation capability prototype"));
+  // The Mara template surface only opens through the named demo action.
+  const demoGate = screen.queryByRole("button", {
+    name: "Open engineering animation demo",
+  });
+  if (demoGate) await user.click(demoGate);
 }
 
 describe("CV-002 editable script breakdown", () => {
@@ -653,6 +659,47 @@ Ollo gasps with delight, then promises to carry the Storylight carefully while T
     );
   });
 
+  it("hides Mara behind the named Engineering demo action on ordinary Ollo projects", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    await user.click(screen.getByText("Advanced production details"));
+    await user.click(screen.getByText("Animation capability prototype"));
+
+    // Before the named action: no Mara asset, no template picker, no verify —
+    // the ordinary Ollo surface cannot bind Mara at all.
+    expect(
+      screen.queryByRole("button", { name: /Mara paper-cut prototype/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Verify and assign template" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("One supported animation template"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/not Ollo & Friends production capability/),
+    ).toBeInTheDocument();
+
+    // The named demo action opens the visibly labeled demo surface.
+    await user.click(
+      screen.getByRole("button", { name: "Open engineering animation demo" }),
+    );
+    expect(screen.getAllByText(/Engineering demo/).length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("button", { name: /Mara paper-cut prototype/ }),
+    ).toBeInTheDocument();
+
+    // The label persists through selection, assignment, and preview playback.
+    await assignKidsTemplate(user);
+    expect(screen.getAllByText(/Engineering demo/).length).toBeGreaterThan(0);
+    await user.click(
+      screen.getByRole("button", { name: "Preview animated scene" }),
+    );
+    expect(screen.getAllByText(/Engineering demo/).length).toBeGreaterThan(0);
+  });
+
   it("zooms timeline lanes honestly from fit width and back", async () => {
     const user = await openKidsBreakdown();
     await user.click(
@@ -762,6 +809,18 @@ Ollo gasps with delight, then promises to carry the Storylight carefully while T
       screen.getByRole("button", { name: /Review direction draft/ }),
     );
 
+    // Before the named demo action the Mara surface is hidden entirely.
+    expect(
+      screen.queryByRole("heading", {
+        name: "Map a Kids scene to real motion",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Verify and assign template" }),
+    ).not.toBeInTheDocument();
+
+    await openAdvancedProductionDetails(user);
+
     expect(
       screen.getByRole("heading", { name: "Map a Kids scene to real motion" }),
     ).toBeInTheDocument();
@@ -821,7 +880,7 @@ Ollo gasps with delight, then promises to carry the Storylight carefully while T
     expect(
       screen.getByLabelText("Assigned animated scene preview"),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Engineering demo/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Engineering demo/).length).toBeGreaterThan(0);
     expect(
       (playerHarness.lastProps as Record<string, unknown> | null)?.component,
     ).toBe(ProductionComposition);

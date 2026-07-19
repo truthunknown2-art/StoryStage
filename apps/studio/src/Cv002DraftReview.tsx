@@ -198,6 +198,13 @@ export function Cv002DraftReview({
       }
     },
   );
+  // The Mara template surface stays hidden behind the explicitly named
+  // Engineering demo action; an existing assignment implies the action was
+  // already taken, so the labeled demo mode opens automatically.
+  const [engineeringDemoOpen, setEngineeringDemoOpen] = useState(false);
+  useEffect(() => {
+    if (assignment) setEngineeringDemoOpen(true);
+  }, [assignment]);
   useEffect(() => {
     const directorProject = directorCompilation.directorProject;
     if (!directorProject) {
@@ -769,11 +776,37 @@ export function Cv002DraftReview({
             </p>
             <details className="cv2-advanced-capabilities">
               <summary>Animation capability prototype</summary>
-              <Cv002TemplateAssignmentPanel
-                assignment={assignment}
-                onAssignmentChange={saveAssignment}
-                project={project}
-              />
+              {project.grammar === "kids-adventure" && !engineeringDemoOpen ? (
+                <div className="cv2-demo-gate">
+                  <p>
+                    This is an engineering demo with Mara prototype art. It is
+                    not Ollo &amp; Friends production capability, and no
+                    approved Ollo character rig exists yet.
+                  </p>
+                  <button
+                    onClick={() => setEngineeringDemoOpen(true)}
+                    type="button"
+                  >
+                    <Clapperboard size={15} />
+                    Open engineering animation demo
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {project.grammar === "kids-adventure" ? (
+                    <p className="cv2-demo-mode-tag">
+                      <Clapperboard size={14} />
+                      Engineering demo · Mara prototype art — not Ollo
+                      production capability
+                    </p>
+                  ) : null}
+                  <Cv002TemplateAssignmentPanel
+                    assignment={assignment}
+                    onAssignmentChange={saveAssignment}
+                    project={project}
+                  />
+                </>
+              )}
             </details>
 
             <div className="cv2-direction-scenes">

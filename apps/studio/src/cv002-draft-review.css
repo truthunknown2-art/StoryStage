@@ -3060,3 +3060,47 @@
     justify-self: end;
   }
 }
+
+/* Engineering demo gate + persistent demo-mode tag */
+.cv2-demo-gate {
+  padding: 14px;
+}
+
+.cv2-demo-gate p {
+  color: #aebbb4;
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.cv2-demo-gate button {
+  align-items: center;
+  background: rgba(223, 193, 110, 0.1);
+  border: 1px solid rgba(223, 193, 110, 0.35);
+  border-radius: 9px;
+  color: #dfc16e;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+}
+
+.cv2-demo-gate button:hover {
+  background: rgba(223, 193, 110, 0.18);
+}
+
+.cv2-demo-mode-tag {
+  align-items: center;
+  background: rgba(223, 193, 110, 0.08);
+  border: 1px solid rgba(223, 193, 110, 0.3);
+  border-radius: 8px;
+  color: #dfc16e;
+  display: flex;
+  font-size: 10.5px;
+  font-weight: 750;
+  gap: 7px;
+  margin: 10px 14px 0;
+  padding: 8px 11px;
+}
