@@ -15,12 +15,48 @@ import {
   evaluateCandidateRigReviewPerformance,
   genericCandidateRigReviewRendererContract,
 } from "./candidate-rig-review";
+import { candidateRigReviewImplementationReceipt } from "./candidate-rig-review-implementation-receipt.generated";
+import { buildCandidateRigReviewImplementationReceipt } from "./candidate-rig-review-implementation-receipt";
+import { evaluateCandidateRigReviewRuntimeFrame } from "./candidate-rig-review-runtime";
 import {
   evaluateActorLocalPerformanceKernel,
   rigVisualProgramSchema,
 } from "./director/visual-performance-contract";
 
 const hash = (value: string) => hashCanonical(value);
+
+const readImplementationSources = async () => {
+  const sourceRoot = dirname(fileURLToPath(import.meta.url));
+  const entries = {
+    evaluatorSource: resolve(sourceRoot, "candidate-rig-review-evaluator.ts"),
+    exerciseSource: resolve(sourceRoot, "candidate-rig-review-exercise.ts"),
+    runtimeWrapperSource: resolve(
+      sourceRoot,
+      "candidate-rig-review-runtime.ts",
+    ),
+    publicBoundarySource: resolve(sourceRoot, "candidate-rig-review.ts"),
+    actorLocalKernelSource: resolve(
+      sourceRoot,
+      "director/visual-performance-contract.ts",
+    ),
+    receiptBuilderSource: resolve(
+      sourceRoot,
+      "candidate-rig-review-implementation-receipt.ts",
+    ),
+    generatorSource: resolve(
+      sourceRoot,
+      "../../../scripts/generate-candidate-rig-review-implementation-receipt.ts",
+    ),
+  };
+  return Object.fromEntries(
+    await Promise.all(
+      Object.entries(entries).map(async ([key, file]) => [
+        key,
+        await readFile(file, "utf8"),
+      ]),
+    ),
+  ) as Record<keyof typeof entries, string>;
+};
 
 const createReviewProgram = (
   view: "front" | "profile-left" | "profile-right" = "front",
@@ -38,6 +74,14 @@ const createReviewProgram = (
     identityLockContentHash: hash("identity"),
     topologyTemplateContentHash: hash("template"),
     rendererContract: genericCandidateRigReviewRendererContract,
+    rendererImplementationReceiptContentHash:
+      genericCandidateRigReviewRendererContract.implementationReceiptContentHash,
+    rendererEvaluatorSourceContentHash:
+      genericCandidateRigReviewRendererContract.evaluatorSourceContentHash,
+    rendererCanonicalBehaviorContentHash:
+      genericCandidateRigReviewRendererContract.canonicalBehaviorContentHash,
+    exerciseDefinitionContentHash:
+      genericCandidateRigReviewRendererContract.exerciseDefinitionContentHash,
     view,
     sourceBindings: [
       { candidateId: "front-face-atlas", contentHash: hash("face") },
@@ -150,6 +194,199 @@ describe("candidate rig source-review visual contract", () => {
         input: unknown,
       ) => unknown;
     expect(() => oldInjectionShape(copiedIdentityLiar, program)).toThrow();
+  });
+
+  it("seals exact evaluator source and canonical behavior into every dependent hash", async () => {
+    const sources = await readImplementationSources();
+    const exactReceipt = buildCandidateRigReviewImplementationReceipt(sources);
+    expect(exactReceipt).toEqual(candidateRigReviewImplementationReceipt);
+    expect(exactReceipt.evaluatedModes).toEqual(["clean", "overlay", "motion"]);
+    expect(exactReceipt.evaluatedViews).toEqual([
+      "front",
+      "profile-left",
+      "profile-right",
+    ]);
+    expect(exactReceipt.evaluatedMotionFramesPerView).toBe(180);
+    expect(exactReceipt.evaluatedMotionFrameCount).toBe(540);
+    expect(exactReceipt.renderedMediaReceipt).toBe(false);
+    expect(exactReceipt.approvalAuthority).toBe(false);
+    expect(exactReceipt.capabilityAuthority).toBe(false);
+    expect(exactReceipt.productionBindable).toBe(false);
+
+    const sourceDrift = buildCandidateRigReviewImplementationReceipt({
+      ...sources,
+      evaluatorSource: `${sources.evaluatorSource}\n// behavior-neutral source drift`,
+    });
+    expect(sourceDrift.evaluatorSourceContentHash).not.toBe(
+      exactReceipt.evaluatorSourceContentHash,
+    );
+    expect(sourceDrift.contentHash).not.toBe(exactReceipt.contentHash);
+
+    const behaviorDrift = buildCandidateRigReviewImplementationReceipt({
+      ...sources,
+      runtimeWrapperSource: `${sources.runtimeWrapperSource}\n// wrapper drift`,
+    });
+    expect(behaviorDrift.evaluatorSourceContentHash).toBe(
+      exactReceipt.evaluatorSourceContentHash,
+    );
+    expect(behaviorDrift.runtimeWrapperSourceContentHash).not.toBe(
+      exactReceipt.runtimeWrapperSourceContentHash,
+    );
+    expect(behaviorDrift.canonicalBehaviorContentHash).toBe(
+      exactReceipt.canonicalBehaviorContentHash,
+    );
+    expect(behaviorDrift.contentHash).not.toBe(exactReceipt.contentHash);
+
+    const exerciseDrift = buildCandidateRigReviewImplementationReceipt({
+      ...sources,
+      exerciseSource: sources.exerciseSource.replace(
+        '"profile-left": "left"',
+        '"profile-left": "right"',
+      ),
+    });
+    expect(exerciseDrift.exerciseSourceContentHash).not.toBe(
+      exactReceipt.exerciseSourceContentHash,
+    );
+    expect(exerciseDrift.contentHash).not.toBe(exactReceipt.contentHash);
+    const publicBoundaryDrift = buildCandidateRigReviewImplementationReceipt({
+      ...sources,
+      publicBoundarySource: `${sources.publicBoundarySource}\n// public boundary drift`,
+    });
+    expect(publicBoundaryDrift.publicBoundarySourceContentHash).not.toBe(
+      exactReceipt.publicBoundarySourceContentHash,
+    );
+    expect(publicBoundaryDrift.contentHash).not.toBe(exactReceipt.contentHash);
+    expect(buildCandidateRigReviewImplementationReceipt.length).toBe(1);
+
+    expect(
+      compileCandidateRigReviewPerformanceInput(
+        createReviewProgram("profile-left"),
+        "motion",
+        0,
+      ).facing,
+    ).toBe("left");
+    expect(
+      compileCandidateRigReviewPerformanceInput(
+        createReviewProgram("profile-right"),
+        "motion",
+        0,
+      ).facing,
+    ).toBe("right");
+
+    const program = createReviewProgram();
+    const motion = compileCandidateRigReviewMotionProgram(program);
+    const render = compileCandidateRigReviewRenderInput(
+      "motion",
+      program,
+      motion,
+    );
+    for (const dependent of [program, motion, render]) {
+      expect(dependent.rendererImplementationReceiptContentHash).toBe(
+        exactReceipt.contentHash,
+      );
+      expect(dependent.rendererEvaluatorSourceContentHash).toBe(
+        exactReceipt.evaluatorSourceContentHash,
+      );
+      expect(dependent.rendererCanonicalBehaviorContentHash).toBe(
+        exactReceipt.canonicalBehaviorContentHash,
+      );
+      expect(dependent.exerciseDefinitionContentHash).toBe(
+        exactReceipt.exerciseDefinitionContentHash,
+      );
+    }
+    const driftedContractDraft = {
+      ...genericCandidateRigReviewRendererContract,
+      implementationContentHash: behaviorDrift.contentHash,
+      implementationReceiptContentHash: behaviorDrift.contentHash,
+      evaluatorSourceContentHash: behaviorDrift.evaluatorSourceContentHash,
+      canonicalBehaviorContentHash: behaviorDrift.canonicalBehaviorContentHash,
+      exerciseDefinitionContentHash:
+        behaviorDrift.exerciseDefinitionContentHash,
+    } as Record<string, unknown>;
+    delete driftedContractDraft.contentHash;
+    const driftedContract = {
+      ...driftedContractDraft,
+      contentHash: hashCanonical(driftedContractDraft),
+    };
+    const driftedProgramDraft = {
+      ...program,
+      rendererContract: driftedContract,
+      rendererImplementationReceiptContentHash: behaviorDrift.contentHash,
+      rendererEvaluatorSourceContentHash:
+        behaviorDrift.evaluatorSourceContentHash,
+      rendererCanonicalBehaviorContentHash:
+        behaviorDrift.canonicalBehaviorContentHash,
+      exerciseDefinitionContentHash:
+        behaviorDrift.exerciseDefinitionContentHash,
+    } as Record<string, unknown>;
+    delete driftedProgramDraft.contentHash;
+    const driftedProgramContentHash = hashCanonical(driftedProgramDraft);
+    const driftedMotionDraft = {
+      ...motion,
+      candidateRigReviewVisualProgramContentHash: driftedProgramContentHash,
+      rendererContractContentHash: driftedContract.contentHash,
+      rendererImplementationContentHash: behaviorDrift.contentHash,
+      rendererImplementationReceiptContentHash: behaviorDrift.contentHash,
+      rendererEvaluatorSourceContentHash:
+        behaviorDrift.evaluatorSourceContentHash,
+      rendererCanonicalBehaviorContentHash:
+        behaviorDrift.canonicalBehaviorContentHash,
+      exerciseDefinitionContentHash:
+        behaviorDrift.exerciseDefinitionContentHash,
+    } as Record<string, unknown>;
+    delete driftedMotionDraft.contentHash;
+    const driftedMotionContentHash = hashCanonical(driftedMotionDraft);
+    const driftedRenderDraft = {
+      ...render,
+      candidateRigReviewVisualProgramContentHash: driftedProgramContentHash,
+      candidateRigReviewMotionProgramContentHash: driftedMotionContentHash,
+      rendererContractContentHash: driftedContract.contentHash,
+      rendererImplementationContentHash: behaviorDrift.contentHash,
+      rendererImplementationReceiptContentHash: behaviorDrift.contentHash,
+      rendererEvaluatorSourceContentHash:
+        behaviorDrift.evaluatorSourceContentHash,
+      rendererCanonicalBehaviorContentHash:
+        behaviorDrift.canonicalBehaviorContentHash,
+      exerciseDefinitionContentHash:
+        behaviorDrift.exerciseDefinitionContentHash,
+    } as Record<string, unknown>;
+    delete driftedRenderDraft.contentHash;
+    const driftedDependentHashes = [
+      driftedProgramContentHash,
+      driftedMotionContentHash,
+      hashCanonical(driftedRenderDraft),
+    ];
+    expect(driftedDependentHashes).not.toEqual([
+      program.contentHash,
+      motion.contentHash,
+      render.contentHash,
+    ]);
+  });
+
+  it("keeps the exported public boundary exhaustively equivalent to the sealed runtime", () => {
+    for (const view of ["front", "profile-left", "profile-right"] as const) {
+      const program = createReviewProgram(view);
+      for (const mode of ["clean", "overlay"] as const) {
+        const input = compileCandidateRigReviewPerformanceInput(
+          program,
+          mode,
+          0,
+        );
+        expect(evaluateCandidateRigReviewPerformance(program, mode, 0)).toEqual(
+          evaluateCandidateRigReviewRuntimeFrame(input),
+        );
+      }
+      for (let localFrame = 0; localFrame < 180; localFrame += 1) {
+        const input = compileCandidateRigReviewPerformanceInput(
+          program,
+          "motion",
+          localFrame,
+        );
+        expect(
+          evaluateCandidateRigReviewPerformance(program, "motion", localFrame),
+        ).toEqual(evaluateCandidateRigReviewRuntimeFrame(input));
+      }
+    }
   });
 
   it("derives every performance value from the exact motion program and local frame", () => {

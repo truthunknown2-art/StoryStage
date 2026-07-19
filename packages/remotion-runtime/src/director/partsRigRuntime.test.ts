@@ -121,6 +121,14 @@ describe("partsRigRuntime", () => {
       identityLockContentHash: hashCanonical("candidate-identity"),
       topologyTemplateContentHash: hashCanonical("candidate-template"),
       rendererContract: genericCandidateRigReviewRendererContract,
+      rendererImplementationReceiptContentHash:
+        genericCandidateRigReviewRendererContract.implementationReceiptContentHash,
+      rendererEvaluatorSourceContentHash:
+        genericCandidateRigReviewRendererContract.evaluatorSourceContentHash,
+      rendererCanonicalBehaviorContentHash:
+        genericCandidateRigReviewRendererContract.canonicalBehaviorContentHash,
+      exerciseDefinitionContentHash:
+        genericCandidateRigReviewRendererContract.exerciseDefinitionContentHash,
       view: "front" as const,
       sourceBindings: [
         {

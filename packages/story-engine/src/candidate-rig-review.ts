@@ -15,11 +15,16 @@ import {
   continuityMotionModeSchema,
 } from "./director/continuity-sequence-plan";
 import {
-  evaluateActorLocalPerformanceKernel,
   isReservedActorLocalPartId,
   localPerformanceFrameSchema,
 } from "./director/visual-performance-contract";
 import { hashSchema, identifierSchema } from "./model";
+import {
+  candidateRigReviewExerciseDefinitionContentHash,
+  deriveCandidateRigReviewExerciseState as deriveCanonicalCandidateRigReviewExerciseState,
+} from "./candidate-rig-review-exercise";
+import { candidateRigReviewImplementationReceipt } from "./candidate-rig-review-implementation-receipt.generated";
+import { evaluateCandidateRigReviewRuntimeFrame } from "./candidate-rig-review-runtime";
 
 const candidateRigReviewViewSchema = z.enum([
   "front",
@@ -38,61 +43,6 @@ const deepFreezeCandidateRigReviewValue = <T>(value: T): T => {
   return value;
 };
 
-const genericCandidateRigReviewImplementation = {
-  implementationId: "generic-recipe-driven-2d-source-review",
-  implementationVersion: "1.0.0",
-  evaluator: "module-owned-no-injection",
-  exercise: "canonical-180-frame-actor-local-v1",
-  output: "allowlisted-identity-parts-with-actor-local-exercise-offsets-v1",
-  formulas: {
-    wave: "round6(((localFrame % 30) - 15) / 15)",
-    partY: "round6(wave * alternating(2,-2))",
-    partRotation: "round6(wave * alternating(1,-1))",
-    partScaleOpacity: "scaleX=1;scaleY=1;opacity=1",
-    socket: "x=0;y=0;rotation=0;scale=1",
-    face: "derived-gaze-reaction-and-allowlisted-viseme",
-    localEffects: "empty",
-  },
-} as const;
-
-const genericCandidateRigReviewImplementationContentHash = hashCanonical(
-  genericCandidateRigReviewImplementation,
-);
-
-const candidateRigReviewExerciseDefinition = {
-  id: "generic-rig-source-review-exercise",
-  version: "1.0.0",
-  fps: 30,
-  durationInFrames: 180,
-  segments: [
-    { start: 0, end: 30, motionMode: "idle", actionPhase: "hold" },
-    {
-      start: 30,
-      end: 60,
-      motionMode: "performing",
-      actionPhase: "anticipation",
-    },
-    { start: 60, end: 90, motionMode: "walking", actionPhase: "action" },
-    {
-      start: 90,
-      end: 120,
-      motionMode: "reacting",
-      actionPhase: "reaction",
-    },
-    {
-      start: 120,
-      end: 150,
-      motionMode: "performing",
-      actionPhase: "action",
-    },
-    { start: 150, end: 180, motionMode: "idle", actionPhase: "settle" },
-  ],
-} as const;
-
-const candidateRigReviewExerciseDefinitionContentHash = hashCanonical(
-  candidateRigReviewExerciseDefinition,
-);
-
 const candidateRigReviewRendererContractFields = {
   schemaVersion: z.literal("1.0"),
   contractKind: z.literal("candidate-rig-review-renderer"),
@@ -106,6 +56,10 @@ const candidateRigReviewRendererContractFields = {
     .regex(/^[a-z0-9][a-z0-9._-]*$/),
   implementationModel: z.literal("generic-recipe-driven-2d"),
   implementationContentHash: hashSchema,
+  implementationReceiptContentHash: hashSchema,
+  evaluatorSourceContentHash: hashSchema,
+  canonicalBehaviorContentHash: hashSchema,
+  exerciseDefinitionContentHash: hashSchema,
   inputAuthority: z.literal("actor-local-only"),
   viewPolicy: z.literal("native-no-mirror"),
   identitySpecializationIds: z.array(identifierSchema).length(0),
@@ -126,6 +80,24 @@ export const candidateRigReviewRendererContractSchema = z
         path: ["contentHash"],
         message: "Candidate rig review renderer contract hash is invalid.",
       });
+    if (
+      contract.implementationContentHash !==
+        candidateRigReviewImplementationReceipt.contentHash ||
+      contract.implementationReceiptContentHash !==
+        candidateRigReviewImplementationReceipt.contentHash ||
+      contract.evaluatorSourceContentHash !==
+        candidateRigReviewImplementationReceipt.evaluatorSourceContentHash ||
+      contract.canonicalBehaviorContentHash !==
+        candidateRigReviewImplementationReceipt.canonicalBehaviorContentHash ||
+      contract.exerciseDefinitionContentHash !==
+        candidateRigReviewImplementationReceipt.exerciseDefinitionContentHash
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["implementationReceiptContentHash"],
+        message:
+          "Candidate rig review renderer contract must bind the exact generated implementation receipt.",
+      });
   });
 
 export type CandidateRigReviewRendererContract = z.infer<
@@ -140,7 +112,16 @@ const genericCandidateRigReviewRendererContractDraft = {
   rendererId: "candidate-rig-review-generic",
   rendererVersion: "1.0.0",
   implementationModel: "generic-recipe-driven-2d" as const,
-  implementationContentHash: genericCandidateRigReviewImplementationContentHash,
+  implementationContentHash:
+    candidateRigReviewImplementationReceipt.contentHash,
+  implementationReceiptContentHash:
+    candidateRigReviewImplementationReceipt.contentHash,
+  evaluatorSourceContentHash:
+    candidateRigReviewImplementationReceipt.evaluatorSourceContentHash,
+  canonicalBehaviorContentHash:
+    candidateRigReviewImplementationReceipt.canonicalBehaviorContentHash,
+  exerciseDefinitionContentHash:
+    candidateRigReviewImplementationReceipt.exerciseDefinitionContentHash,
   inputAuthority: "actor-local-only" as const,
   viewPolicy: "native-no-mirror" as const,
   identitySpecializationIds: [] as string[],
@@ -170,6 +151,10 @@ const candidateRigReviewVisualProgramFields = {
   identityLockContentHash: hashSchema,
   topologyTemplateContentHash: hashSchema,
   rendererContract: candidateRigReviewRendererContractSchema,
+  rendererImplementationReceiptContentHash: hashSchema,
+  rendererEvaluatorSourceContentHash: hashSchema,
+  rendererCanonicalBehaviorContentHash: hashSchema,
+  exerciseDefinitionContentHash: hashSchema,
   view: candidateRigReviewViewSchema,
   sourceBindings: z
     .array(
@@ -216,6 +201,22 @@ export const candidateRigReviewVisualProgramSchema = z
         path: ["rendererContract"],
         message:
           "Candidate rig review visual program must embed the exact generic renderer contract.",
+      });
+    if (
+      program.rendererImplementationReceiptContentHash !==
+        genericCandidateRigReviewRendererContract.implementationReceiptContentHash ||
+      program.rendererEvaluatorSourceContentHash !==
+        genericCandidateRigReviewRendererContract.evaluatorSourceContentHash ||
+      program.rendererCanonicalBehaviorContentHash !==
+        genericCandidateRigReviewRendererContract.canonicalBehaviorContentHash ||
+      program.exerciseDefinitionContentHash !==
+        genericCandidateRigReviewRendererContract.exerciseDefinitionContentHash
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["rendererImplementationReceiptContentHash"],
+        message:
+          "Candidate rig review visual program must bind the exact generated implementation receipt, evaluator source, behavior, and exercise.",
       });
     for (const [key, values] of Object.entries({
       sourceBindings: program.sourceBindings.map(
@@ -299,6 +300,10 @@ const candidateRigReviewMotionProgramFields = {
     .regex(/^[a-z0-9][a-z0-9._-]*$/),
   rendererContractContentHash: hashSchema,
   rendererImplementationContentHash: hashSchema,
+  rendererImplementationReceiptContentHash: hashSchema,
+  rendererEvaluatorSourceContentHash: hashSchema,
+  rendererCanonicalBehaviorContentHash: hashSchema,
+  exerciseDefinitionContentHash: hashSchema,
   exerciseProfile: z
     .object({
       id: z.literal("generic-rig-source-review-exercise"),
@@ -336,7 +341,15 @@ export const candidateRigReviewMotionProgramSchema = z
       program.rendererContractContentHash !==
         genericCandidateRigReviewRendererContract.contentHash ||
       program.rendererImplementationContentHash !==
-        genericCandidateRigReviewRendererContract.implementationContentHash
+        genericCandidateRigReviewRendererContract.implementationContentHash ||
+      program.rendererImplementationReceiptContentHash !==
+        genericCandidateRigReviewRendererContract.implementationReceiptContentHash ||
+      program.rendererEvaluatorSourceContentHash !==
+        genericCandidateRigReviewRendererContract.evaluatorSourceContentHash ||
+      program.rendererCanonicalBehaviorContentHash !==
+        genericCandidateRigReviewRendererContract.canonicalBehaviorContentHash ||
+      program.exerciseDefinitionContentHash !==
+        genericCandidateRigReviewRendererContract.exerciseDefinitionContentHash
     )
       context.addIssue({
         code: "custom",
@@ -367,6 +380,10 @@ const candidateRigReviewRenderInputFields = {
     .regex(/^[a-z0-9][a-z0-9._-]*$/),
   rendererContractContentHash: hashSchema,
   rendererImplementationContentHash: hashSchema,
+  rendererImplementationReceiptContentHash: hashSchema,
+  rendererEvaluatorSourceContentHash: hashSchema,
+  rendererCanonicalBehaviorContentHash: hashSchema,
+  exerciseDefinitionContentHash: hashSchema,
   width: z.literal(1920),
   height: z.literal(1080),
   frameCount: z.union([z.literal(1), z.literal(180)]),
@@ -407,7 +424,15 @@ export const candidateRigReviewRenderInputSchema = z
       input.rendererContractContentHash !==
         genericCandidateRigReviewRendererContract.contentHash ||
       input.rendererImplementationContentHash !==
-        genericCandidateRigReviewRendererContract.implementationContentHash
+        genericCandidateRigReviewRendererContract.implementationContentHash ||
+      input.rendererImplementationReceiptContentHash !==
+        genericCandidateRigReviewRendererContract.implementationReceiptContentHash ||
+      input.rendererEvaluatorSourceContentHash !==
+        genericCandidateRigReviewRendererContract.evaluatorSourceContentHash ||
+      input.rendererCanonicalBehaviorContentHash !==
+        genericCandidateRigReviewRendererContract.canonicalBehaviorContentHash ||
+      input.exerciseDefinitionContentHash !==
+        genericCandidateRigReviewRendererContract.exerciseDefinitionContentHash
     )
       context.addIssue({
         code: "custom",
@@ -590,6 +615,14 @@ export const compileCandidateRigReviewVisualProgram = (
     identityLockContentHash: request.identityLock.contentHash,
     topologyTemplateContentHash: request.rigProfile.templateContentHash,
     rendererContract: genericCandidateRigReviewRendererContract,
+    rendererImplementationReceiptContentHash:
+      genericCandidateRigReviewRendererContract.implementationReceiptContentHash,
+    rendererEvaluatorSourceContentHash:
+      genericCandidateRigReviewRendererContract.evaluatorSourceContentHash,
+    rendererCanonicalBehaviorContentHash:
+      genericCandidateRigReviewRendererContract.canonicalBehaviorContentHash,
+    exerciseDefinitionContentHash:
+      genericCandidateRigReviewRendererContract.exerciseDefinitionContentHash,
     view: recipe.view,
     sourceBindings,
     semanticRoles: [
@@ -639,6 +672,14 @@ export const compileCandidateRigReviewMotionProgram = (
     rendererContractContentHash: rendererContract.contentHash,
     rendererImplementationContentHash:
       rendererContract.implementationContentHash,
+    rendererImplementationReceiptContentHash:
+      rendererContract.implementationReceiptContentHash,
+    rendererEvaluatorSourceContentHash:
+      rendererContract.evaluatorSourceContentHash,
+    rendererCanonicalBehaviorContentHash:
+      rendererContract.canonicalBehaviorContentHash,
+    exerciseDefinitionContentHash:
+      rendererContract.exerciseDefinitionContentHash,
     exerciseProfile: {
       id: "generic-rig-source-review-exercise" as const,
       version: "1.0.0" as const,
@@ -697,6 +738,14 @@ export const compileCandidateRigReviewRenderInput = (
     rendererContractContentHash: rendererContract.contentHash,
     rendererImplementationContentHash:
       rendererContract.implementationContentHash,
+    rendererImplementationReceiptContentHash:
+      rendererContract.implementationReceiptContentHash,
+    rendererEvaluatorSourceContentHash:
+      rendererContract.evaluatorSourceContentHash,
+    rendererCanonicalBehaviorContentHash:
+      rendererContract.canonicalBehaviorContentHash,
+    exerciseDefinitionContentHash:
+      rendererContract.exerciseDefinitionContentHash,
     width: 1920 as const,
     height: 1080 as const,
     frameCount: mode === "motion" ? (180 as const) : (1 as const),
@@ -709,85 +758,20 @@ export const compileCandidateRigReviewRenderInput = (
   });
 };
 
-const roundExerciseValue = (value: number) => Math.round(value * 1e6) / 1e6;
-
 function deriveCandidateRigReviewExerciseState(
   program: CandidateRigReviewVisualProgram,
   motionProgram: CandidateRigReviewMotionProgram | null,
   mode: z.infer<typeof candidateRigReviewModeSchema>,
   localFrame: number,
 ) {
-  const facing = {
-    front: "front",
-    "profile-left": "left",
-    "profile-right": "right",
-  }[program.view] as "front" | "left" | "right";
-  if (mode !== "motion")
-    return {
-      fps: 30,
-      motionMode: "idle" as const,
-      actionPhase: "hold" as const,
-      phaseProgress: 1,
-      gaitPhase: null,
-      facing,
-      gazeVectorLocal: null,
-      visemeId: null,
-      microMotionSeed: hashCanonical({
-        exercise: candidateRigReviewExerciseDefinitionContentHash,
-        program: program.contentHash,
-        mode,
-        localFrame: 0,
-      }),
-    };
-  if (
-    !motionProgram ||
-    localFrame < 0 ||
-    localFrame >= candidateRigReviewExerciseDefinition.durationInFrames
-  )
-    throw new Error(
-      "Candidate rig review motion frame is outside the canonical exercise.",
-    );
-  const segment = candidateRigReviewExerciseDefinition.segments.find(
-    (entry) => localFrame >= entry.start && localFrame < entry.end,
-  );
-  if (!segment)
-    throw new Error("Candidate rig review exercise has no frame segment.");
-  const segmentFrame = localFrame - segment.start;
-  const phaseProgress = roundExerciseValue(
-    segmentFrame / (segment.end - segment.start - 1),
-  );
-  const gaitPhase =
-    segment.motionMode === "walking"
-      ? roundExerciseValue((segmentFrame % 15) / 15)
-      : null;
-  const gazeVectorLocal =
-    segment.motionMode === "performing" || segment.motionMode === "reacting"
-      ? {
-          x: roundExerciseValue(((localFrame % 11) - 5) / 10),
-          y: roundExerciseValue(((localFrame % 7) - 3) / 12),
-        }
-      : null;
-  const visemeId =
-    localFrame >= 120 && localFrame < 150 && program.visemeIds.length > 0
-      ? program.visemeIds[
-          Math.floor((localFrame - 120) / 5) % program.visemeIds.length
-        ]!
-      : null;
-  return {
-    fps: motionProgram.fps,
-    motionMode: segment.motionMode,
-    actionPhase: segment.actionPhase,
-    phaseProgress,
-    gaitPhase,
-    facing,
-    gazeVectorLocal,
-    visemeId,
-    microMotionSeed: hashCanonical({
-      exercise: motionProgram.exerciseProfile.contentHash,
-      motionProgram: motionProgram.contentHash,
-      localFrame,
-    }),
-  };
+  return deriveCanonicalCandidateRigReviewExerciseState({
+    mode,
+    view: program.view,
+    localFrame,
+    visualProgramContentHash: program.contentHash,
+    motionProgramContentHash: motionProgram?.contentHash ?? null,
+    visemeIds: program.visemeIds,
+  });
 }
 
 export const candidateRigReviewPerformanceInputSchema = z
@@ -937,49 +921,8 @@ export const compileCandidateRigReviewPerformanceInput = (
 };
 
 const genericCandidateRigReviewRenderer = Object.freeze({
-  implementationContentHash: genericCandidateRigReviewImplementationContentHash,
-  evaluate(input: CandidateRigReviewPerformanceInput): unknown {
-    const motion = input.mode === "motion";
-    const wave = motion
-      ? roundExerciseValue(((input.localFrame % 30) - 15) / 15)
-      : 0;
-    const mouthExposureId =
-      input.visemeId === null
-        ? null
-        : (input.program.semanticRoles.find(
-            (binding) => binding.semanticRole === input.visemeId,
-          )?.componentId ?? null);
-    return {
-      parts: Object.fromEntries(
-        input.program.partIds.map((partId, index) => [
-          partId,
-          {
-            x: 0,
-            y: roundExerciseValue(wave * (index % 2 === 0 ? 2 : -2)),
-            rotation: roundExerciseValue(wave * (index % 2 === 0 ? 1 : -1)),
-            scaleX: 1,
-            scaleY: 1,
-            opacity: 1,
-            exposureId: null,
-          },
-        ]),
-      ),
-      face: {
-        eyeOpen: input.actionPhase === "impact" ? 0.6 : 1,
-        pupilX: input.gazeVectorLocal?.x ?? 0,
-        pupilY: input.gazeVectorLocal?.y ?? 0,
-        brow: input.motionMode === "reacting" ? 0.5 : 0,
-        mouthExposureId,
-      },
-      sockets: Object.fromEntries(
-        input.program.socketIds.map((socketId) => [
-          socketId,
-          { x: 0, y: 0, rotation: 0, scale: 1 },
-        ]),
-      ),
-      localEffects: [],
-    };
-  },
+  implementationContentHash:
+    candidateRigReviewImplementationReceipt.contentHash,
 });
 
 /**
@@ -1004,11 +947,7 @@ export const evaluateCandidateRigReviewPerformance = (
     throw new Error(
       "Candidate rig review renderer implementation does not match its exact module-owned contract.",
     );
-  return evaluateActorLocalPerformanceKernel(
-    genericCandidateRigReviewRenderer,
-    input,
-    input.program,
-  );
+  return evaluateCandidateRigReviewRuntimeFrame(input);
 };
 
 export const candidateRigReviewPacketConstructionStatus = Object.freeze({
