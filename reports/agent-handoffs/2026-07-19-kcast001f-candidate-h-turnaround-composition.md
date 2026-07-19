@@ -1,7 +1,8 @@
 # KCAST-001F — Candidate H turnaround composition
 
-Status: implemented and locally verified; not committed or pushed by this
-agent.
+Status: implemented, independently audited, locally and hosted verified, pushed
+on PR #9, and accepted by Pro at exact implementation head
+`afe7fa6d391eb46641d17bf0a9d775bebe51941e`.
 
 ## What changed
 
