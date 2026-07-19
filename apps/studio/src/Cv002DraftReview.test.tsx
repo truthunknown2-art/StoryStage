@@ -80,11 +80,6 @@ async function openHistoryBreakdown() {
 async function openKidsBreakdown() {
   const user = userEvent.setup();
   render(<App />);
-  await user.click(
-    screen.getByRole("button", {
-      name: "Load an Ollo & Friends sample script",
-    }),
-  );
   await user.click(screen.getByRole("button", { name: "Create first cut" }));
   return user;
 }
