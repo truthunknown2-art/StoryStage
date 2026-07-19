@@ -11,15 +11,43 @@ import axe from "axe-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProductionComposition } from "@storystage/remotion-runtime";
 import { DirectorProductionComposition } from "@storystage/remotion-runtime/director";
+import {
+  createCv002Project,
+  createCv002ArtDirectionSelection,
+} from "@storystage/story-engine";
+import {
+  alphaCapabilityRegistry,
+  compileDirectorProject,
+} from "@storystage/story-engine/director-alpha";
 import { App } from "./App";
 
-const playerHarness = vi.hoisted(() => ({
-  lastProps: null as Record<string, unknown> | null,
-  lastSeek: null as number | null,
-  frameListener: null as
-    | ((event: { detail: { frame: number } }) => void)
-    | null,
-}));
+const playerHarness = vi.hoisted(() => {
+  const listeners = new Map<
+    string,
+    Set<(event: { detail: unknown }) => void>
+  >();
+  return {
+    lastProps: null as Record<string, unknown> | null,
+    lastSeek: null as number | null,
+    currentFrame: 0,
+    playing: false,
+    frameListener: null as
+      | ((event: { detail: { frame: number } }) => void)
+      | null,
+    listeners,
+    emit(name: string, detail: unknown) {
+      listeners.get(name)?.forEach((listener) => listener({ detail }));
+    },
+    reset() {
+      this.lastProps = null;
+      this.lastSeek = null;
+      this.currentFrame = 0;
+      this.playing = false;
+      this.frameListener = null;
+      this.listeners.clear();
+    },
+  };
+});
 
 vi.mock("@remotion/player", async () => {
   const React = await import("react");
@@ -32,20 +60,31 @@ vi.mock("@remotion/player", async () => {
       React.useImperativeHandle(ref, () => ({
         addEventListener: (
           name: string,
-          listener: typeof playerHarness.frameListener,
+          listener: (event: { detail: unknown }) => void,
         ) => {
-          if (name === "frameupdate") playerHarness.frameListener = listener;
+          // The last-registered frameupdate listener is the shell's playback
+          // sync (registered after the proof observer); legacy tests fire it
+          // directly. All listeners remain reachable via emit().
+          if (name === "frameupdate")
+            playerHarness.frameListener = listener as
+              | ((event: { detail: { frame: number } }) => void)
+              | null;
+          const set =
+            playerHarness.listeners.get(name) ??
+            new Set<(event: { detail: unknown }) => void>();
+          set.add(listener);
+          playerHarness.listeners.set(name, set);
         },
         removeEventListener: (
           name: string,
-          listener: typeof playerHarness.frameListener,
+          listener: (event: { detail: unknown }) => void,
         ) => {
-          if (
-            name === "frameupdate" &&
-            playerHarness.frameListener === listener
-          )
+          if (playerHarness.frameListener === listener)
             playerHarness.frameListener = null;
+          playerHarness.listeners.get(name)?.delete(listener);
         },
+        getCurrentFrame: () => playerHarness.currentFrame,
+        isPlaying: () => playerHarness.playing,
         seekTo: (frame: number) => {
           playerHarness.lastSeek = frame;
         },
@@ -79,9 +118,7 @@ vi.mock("@storystage/story-engine/director-alpha", async () => {
 
 afterEach(() => {
   cleanup();
-  playerHarness.lastProps = null;
-  playerHarness.lastSeek = null;
-  playerHarness.frameListener = null;
+  playerHarness.reset();
   candidateCountOverride.count = null;
   window.localStorage.clear();
   delete window.storyStage;
@@ -106,9 +143,10 @@ async function openKidsBreakdown() {
 }
 
 async function assignKidsTemplate(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(
-    screen.getByRole("button", { name: /Review direction draft/ }),
-  );
+  const reviewDirection = screen.queryByRole("button", {
+    name: /Review direction draft/,
+  });
+  if (reviewDirection) await user.click(reviewDirection);
   await openAdvancedProductionDetails(user);
   const scene = screen.getByLabelText("Three-beat scene") as HTMLSelectElement;
   await user.selectOptions(scene, scene.options[1]!.value);
@@ -140,6 +178,11 @@ async function openAdvancedProductionDetails(
 ) {
   await user.click(screen.getByText("Advanced production details"));
   await user.click(screen.getByText("Animation capability prototype"));
+  // The Mara template surface only opens through the named demo action.
+  const demoGate = screen.queryByRole("button", {
+    name: "Open engineering animation demo",
+  });
+  if (demoGate) await user.click(demoGate);
 }
 
 describe("CV-002 editable script breakdown", () => {
@@ -387,7 +430,10 @@ describe("CV-002 editable script breakdown", () => {
     expect(within(timeline).getByText("Events")).toBeVisible();
     expect(within(timeline).getByText("Camera")).toBeVisible();
     playerHarness.lastSeek = null;
-    await user.click(within(timeline).getAllByRole("button")[0]!);
+    const shotsLane = timeline.querySelector(
+      ".director-timeline-lane.is-shots",
+    ) as HTMLElement;
+    await user.click(within(shotsLane).getAllByRole("button")[0]!);
     expect(playerHarness.lastSeek).not.toBeNull();
   });
 
@@ -446,7 +492,7 @@ describe("CV-002 editable script breakdown", () => {
     );
 
     expect(screen.getAllByText("Draft animatic").length).toBeGreaterThan(0);
-    expect(screen.getByText("Proxy performance")).toBeInTheDocument();
+    expect(screen.getAllByText("Proxy performance").length).toBeGreaterThan(0);
     expect(
       screen.getByText(/Final character rig unavailable/),
     ).toBeInTheDocument();
@@ -583,6 +629,167 @@ describe("CV-002 editable script breakdown", () => {
     ).toBeInTheDocument();
   });
 
+  it("exposes rail duration and proxy performance state to assistive technology with exact wording", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const rail = screen.getByLabelText("Studio scenes and beats");
+
+    // Accessible names carry duration + performance-capability wording (the
+    // explicit aria-label replaces the visible descendants for AT). Ordinary
+    // Ollo binds no Mara fixture, so every beat reports proxy performance.
+    expect(
+      within(rail).getByRole("button", {
+        name: /1\.1 setup.*2\.5 seconds, Proxy performance/i,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(rail).getByRole("button", {
+        name: /2\.2 reaction.*3\.2 seconds, Proxy performance/i,
+      }),
+    ).toBeInTheDocument();
+
+    // No readiness wording may appear anywhere in the ordinary Ollo shell.
+    expect(screen.queryByText("Performance ready")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Render-ready performance"),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText("Proxy performance").length).toBeGreaterThan(0);
+  });
+
+  it("binds zero Mara engineering fixtures and zero ready performances on ordinary Ollo projects", () => {
+    const director = compileDirectorProject({
+      storyProject: createCv002Project(
+        "Mara boundary proof",
+        `Ollo bounces down the forest path, certain that today hides an adventure. Tix flutters beside him, asking him to slow down and look carefully. A soft golden glow drifts between the ferns, and Dot floats after it without a sound.
+
+The glow slips under the roots of an old oak and becomes a tiny leaf-shaped lantern. Ollo gasps, then reaches for it with both paws before Tix can whisper a warning. The lantern flickers awake, and a gentle voice introduces itself as the Storylight, a guide who loves stories and lights the way.
+
+Ollo gasps with delight, then promises to carry the Storylight carefully while Tix sighs with relief. The lantern glows brighter, drawing a warm trail through the trees. Dot lands on Ollo's scarf, and together the friends follow the light toward the oldest story in the Little Wood.`,
+        "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
+      ),
+      capabilities: alphaCapabilityRegistry,
+    });
+
+    // The ordinary Ollo registry selection never binds Mara engineering art.
+    expect(JSON.stringify(director)).not.toMatch(/mara-/i);
+    expect(
+      director.capabilityReport.items.filter(
+        (item) => item.resolution === "supported",
+      ),
+    ).toHaveLength(0);
+    expect(director.capabilityReport.summary.proxyOnly).toBe(
+      director.capabilityReport.items.length,
+    );
+  });
+
+  it("observes the real Player state, never the optimistic timeline state", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const container = screen.getByTestId("director-player-proof");
+
+    // The mock Player sits at frame 0. Selecting a beat moves the optimistic
+    // timeline seek to 340 — the proof surface must NOT follow it; only the
+    // Player's own report counts.
+    await user.click(
+      within(screen.getByLabelText("Studio scenes and beats")).getByRole(
+        "button",
+        { name: /2\.2 reaction/i },
+      ),
+    );
+    expect(playerHarness.lastSeek).toBe(340);
+    expect(container.getAttribute("data-proof-frame")).not.toBe("340");
+    expect(container.getAttribute("data-proof-frame")).toBe("0");
+
+    // When the real Player reports reaching the frame, the observation
+    // matches it exactly.
+    playerHarness.currentFrame = 340;
+    act(() => {
+      playerHarness.emit("seeked", { frame: 340 });
+    });
+    expect(container.getAttribute("data-proof-frame")).toBe("340");
+
+    // And the paused state comes from the Player, not the UI.
+    expect(container.getAttribute("data-proof-playing")).toBe("false");
+    playerHarness.playing = true;
+    act(() => {
+      playerHarness.emit("play", {});
+    });
+    expect(container.getAttribute("data-proof-playing")).toBe("true");
+  });
+
+  it("hides Mara behind the named Engineering demo action on ordinary Ollo projects", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    await user.click(screen.getByText("Advanced production details"));
+    await user.click(screen.getByText("Animation capability prototype"));
+
+    // Before the named action: no Mara asset, no template picker, no verify —
+    // the ordinary Ollo surface cannot bind Mara at all.
+    expect(
+      screen.queryByRole("button", { name: /Mara paper-cut prototype/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Verify and assign template" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("One supported animation template"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/not Ollo & Friends production capability/),
+    ).toBeInTheDocument();
+
+    // The named demo action opens the visibly labeled demo surface.
+    await user.click(
+      screen.getByRole("button", { name: "Open engineering animation demo" }),
+    );
+    expect(screen.getAllByText(/Engineering demo/).length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("button", { name: /Mara paper-cut prototype/ }),
+    ).toBeInTheDocument();
+
+    // The label persists through selection, assignment, and preview playback.
+    await assignKidsTemplate(user);
+    expect(screen.getAllByText(/Engineering demo/).length).toBeGreaterThan(0);
+    await user.click(
+      screen.getByRole("button", { name: "Preview animated scene" }),
+    );
+    expect(screen.getAllByText(/Engineering demo/).length).toBeGreaterThan(0);
+  });
+
+  it("zooms timeline lanes honestly from fit width and back", async () => {
+    const user = await openKidsBreakdown();
+    await user.click(
+      screen.getByRole("button", { name: /Review direction draft/ }),
+    );
+    const timeline = screen.getByLabelText("Selected-beat timeline");
+    await user.click(within(timeline).getByText("Selected-beat timeline"));
+
+    const grid = screen.getByTestId("director-timeline-grid");
+    expect(grid.style.width).toBe("100%");
+    expect(screen.getByText("Fit width")).toBeInTheDocument();
+    const minus = screen.getByRole("button", { name: "Zoom timeline out" });
+    expect(minus).toBeDisabled();
+
+    const range = screen.getByLabelText("Timeline zoom level");
+    fireEvent.change(range, { target: { value: "1.6" } });
+    expect(grid.style.width).toBe("160%");
+    expect(minus).toBeEnabled();
+
+    fireEvent.change(range, { target: { value: "1" } });
+    expect(grid.style.width).toBe("100%");
+    expect(minus).toBeDisabled();
+  });
+
   it("clears a typed direction when the selected beat changes", async () => {
     const user = await openKidsBreakdown();
     await user.click(
@@ -668,6 +875,18 @@ describe("CV-002 editable script breakdown", () => {
       screen.getByRole("button", { name: /Review direction draft/ }),
     );
 
+    // Before the named demo action the Mara surface is hidden entirely.
+    expect(
+      screen.queryByRole("heading", {
+        name: "Map a Kids scene to real motion",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Verify and assign template" }),
+    ).not.toBeInTheDocument();
+
+    await openAdvancedProductionDetails(user);
+
     expect(
       screen.getByRole("heading", { name: "Map a Kids scene to real motion" }),
     ).toBeInTheDocument();
@@ -727,6 +946,7 @@ describe("CV-002 editable script breakdown", () => {
     expect(
       screen.getByLabelText("Assigned animated scene preview"),
     ).toBeInTheDocument();
+    expect(screen.getAllByText(/Engineering demo/).length).toBeGreaterThan(0);
     expect(
       (playerHarness.lastProps as Record<string, unknown> | null)?.component,
     ).toBe(ProductionComposition);

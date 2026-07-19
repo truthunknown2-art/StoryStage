@@ -19,6 +19,45 @@ const firstFrameForBeat = (director: DirectorProject, beatId: string) => {
   );
 };
 
+/** Real per-beat duration from the resolved timing solution, in seconds. */
+const beatDurationSeconds = (director: DirectorProject, beatId: string) => {
+  const shotIds = new Set(
+    director.directorPlan.shots
+      .filter((shot) => shot.beatIds.includes(beatId))
+      .map((shot) => shot.id),
+  );
+  const frames = director.timingSolution.resolvedShots
+    .filter((shot) => shotIds.has(shot.shotId))
+    .reduce(
+      (total, shot) => total + (shot.endFrameExclusive - shot.startFrame),
+      0,
+    );
+  return frames / director.executableEpisodePlan.format.fps;
+};
+
+/** Honest capability state for the beat: performance-ready only when every
+ * performance requirement resolved to a supported executable program. This is
+ * performance-capability specific — ordinary rendering is still proxy-only,
+ * so the creator-facing label must not imply full-beat render readiness. */
+const beatIsPerformanceReady = (director: DirectorProject, beatId: string) => {
+  const items = director.capabilityReport.items.filter(
+    (item) => item.beatId === beatId,
+  );
+  return (
+    items.length > 0 && items.every((item) => item.resolution === "supported")
+  );
+};
+
+/** Accessible beat state suffix for the rail button name: the explicit
+ * aria-label replaces descendant text, so duration and capability wording
+ * must live in the name itself. */
+const beatA11yMeta = (director: DirectorProject, beatId: string) =>
+  `${beatDurationSeconds(director, beatId).toFixed(1)} seconds, ${
+    beatIsPerformanceReady(director, beatId)
+      ? "Performance ready"
+      : "Proxy performance"
+  }`;
+
 /**
  * Boundary-safe scene rail for the Director Alpha surface. Mirrors the
  * creator-studio rail markup but imports only Director Alpha contracts, so the
@@ -55,9 +94,13 @@ export function DirectorSceneRail({
             </header>
             {scene.beats.map((beat, beatIndex) => {
               const frame = firstFrameForBeat(director, beat.id);
+              const performanceReady = beatIsPerformanceReady(
+                director,
+                beat.id,
+              );
               return (
                 <button
-                  aria-label={`${sceneIndex + 1}.${beatIndex + 1} ${humanize(beat.role)} — Scene ${sceneIndex + 1}, beat ${beatIndex + 1}: ${beat.text}`}
+                  aria-label={`${sceneIndex + 1}.${beatIndex + 1} ${humanize(beat.role)} — Scene ${sceneIndex + 1}, beat ${beatIndex + 1}: ${beat.text} · ${beatA11yMeta(director, beat.id)}`}
                   aria-pressed={beat.id === selectedBeatId}
                   key={beat.id}
                   onClick={() => onSelectBeat(beat.id)}
@@ -72,6 +115,20 @@ export function DirectorSceneRail({
                   <span className="cv2-direction-rail-copy">
                     <strong>{humanize(beat.role)}</strong>
                     <small>{beat.text}</small>
+                    <span className="cv2-direction-rail-meta">
+                      <em>
+                        {beatDurationSeconds(director, beat.id).toFixed(1)}s
+                      </em>
+                      <i
+                        className={
+                          performanceReady ? "is-render-ready" : "is-proxy"
+                        }
+                      >
+                        {performanceReady
+                          ? "Performance ready"
+                          : "Proxy performance"}
+                      </i>
+                    </span>
                   </span>
                 </button>
               );
@@ -108,7 +165,7 @@ export function DirectorBeatStrip({
             const frame = firstFrameForBeat(director, beat.id);
             return (
               <button
-                aria-label={`${sceneIndex + 1}.${beatIndex + 1} ${humanize(beat.role)} — Scene ${sceneIndex + 1}, beat ${beatIndex + 1}: ${beat.text}`}
+                aria-label={`${sceneIndex + 1}.${beatIndex + 1} ${humanize(beat.role)} — Scene ${sceneIndex + 1}, beat ${beatIndex + 1}: ${beat.text} · ${beatDurationSeconds(director, beat.id).toFixed(1)} seconds`}
                 aria-pressed={beat.id === selectedBeatId}
                 key={beat.id}
                 onClick={() => onSelectBeat(beat.id)}
@@ -119,6 +176,9 @@ export function DirectorBeatStrip({
                   {sceneIndex + 1}.{beatIndex + 1}
                 </span>
                 <small>{humanize(beat.role)}</small>
+                <em className="cv2-beat-strip-duration">
+                  {beatDurationSeconds(director, beat.id).toFixed(1)}s
+                </em>
               </button>
             );
           }),

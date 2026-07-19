@@ -2757,3 +2757,350 @@
 .cv2-direction-page .cv2-direction-rail nav .cv2-direction-rail-copy strong {
   color: #eef4f0;
 }
+
+/* ------------------------------------------------------------------
+   Slice C — visible Studio polish (mockup parity, no new capability)
+   ------------------------------------------------------------------ */
+
+/* Production header tags */
+.cv2-project-tags {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cv2-tag {
+  align-items: center;
+  background: rgba(129, 214, 168, 0.08);
+  border: 1px solid rgba(129, 214, 168, 0.22);
+  border-radius: 999px;
+  color: #a9c7b6;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  font-weight: 700;
+  gap: 6px;
+  letter-spacing: 0.02em;
+  padding: 5px 11px;
+  white-space: nowrap;
+}
+
+.cv2-tag svg {
+  color: #91ddb3;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 1040px) {
+  .cv2-project-tags {
+    display: none;
+  }
+}
+
+/* Scene-rail metadata: real duration + honest capability state */
+.cv2-direction-rail-meta {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+  margin-top: 5px;
+}
+
+.cv2-direction-rail-meta em {
+  color: #72827a;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 9.5px;
+  font-style: normal;
+}
+
+.cv2-direction-rail-meta i {
+  border-radius: 999px;
+  font-size: 8.5px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  text-transform: uppercase;
+}
+
+.cv2-direction-rail-meta i.is-render-ready {
+  background: rgba(129, 214, 168, 0.14);
+  border: 1px solid rgba(129, 214, 168, 0.32);
+  color: #93e2b6;
+}
+
+.cv2-direction-rail-meta i.is-proxy {
+  background: rgba(223, 193, 110, 0.1);
+  border: 1px solid rgba(223, 193, 110, 0.3);
+  color: #dfc16e;
+}
+
+/* Beat-strip duration */
+.cv2-beat-strip-duration {
+  color: #72827a;
+  display: block;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+/* Player frame */
+.cv2-director-player {
+  padding: 14px 16px 6px;
+}
+
+.cv2-director-player > div {
+  border: 1px solid rgba(151, 202, 176, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+/* Director inspector rhythm */
+.director-department-tabs {
+  background: #0d1412;
+  border: 1px solid #27322d;
+  border-radius: 11px;
+  gap: 4px;
+  padding: 4px;
+}
+
+.director-department-tabs button {
+  border-radius: 8px;
+}
+
+/* Mint primary action hierarchy (Apply-direction equivalent) */
+.director-command-row button:not(:disabled),
+.director-apply-change:not(:disabled),
+.director-department-panel > button:not(:disabled) {
+  background: #82e6b2;
+  border: 1px solid #82e6b2;
+  color: #0b1a12;
+  font-weight: 750;
+}
+
+.director-command-row button:not(:disabled):hover,
+.director-apply-change:not(:disabled):hover,
+.director-department-panel > button:not(:disabled):hover {
+  background: #97efc3;
+  border-color: #97efc3;
+  color: #0b1a12;
+}
+
+.director-command-row button:focus-visible,
+.director-apply-change:focus-visible,
+.director-department-panel > button:focus-visible {
+  outline: 2px solid #c9f7de;
+  outline-offset: 2px;
+}
+
+/* Timeline tools: hint + real zoom control */
+.director-timeline-tools {
+  align-items: center;
+  border-top: 1px solid #27312c;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 8px 15px 0;
+}
+
+.director-timeline-hint {
+  color: #72807a;
+  font-size: 10px;
+}
+
+.director-timeline-zoom {
+  align-items: center;
+  display: flex;
+  gap: 7px;
+}
+
+.director-timeline-zoom button {
+  align-items: center;
+  background: #16201c;
+  border: 1px solid #2c3a33;
+  border-radius: 7px;
+  color: #a9b8af;
+  display: flex;
+  height: 26px;
+  justify-content: center;
+  width: 26px;
+}
+
+.director-timeline-zoom button:not(:disabled):hover {
+  background: #1d2a24;
+  color: #d5e6db;
+}
+
+.director-timeline-zoom button:disabled {
+  opacity: 0.4;
+}
+
+.director-timeline-zoom input[type="range"] {
+  accent-color: #82e6b2;
+  width: 96px;
+}
+
+.director-timeline-zoom small {
+  color: #72827a;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 9.5px;
+  min-width: 34px;
+  text-align: right;
+}
+
+/* Timeline scroll + ruler */
+.director-timeline-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.director-timeline-lane.is-ruler {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  height: 20px;
+}
+
+.director-timeline-lane.is-ruler > span {
+  border-left: 1px solid #2c3833;
+  color: #66746c;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 9px;
+  height: 100%;
+  padding-left: 4px;
+  position: absolute;
+  top: 0;
+}
+
+.director-timeline-label > i {
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 7px;
+  width: 7px;
+}
+
+.director-timeline-label > i.is-shots {
+  background: #7fe0a8;
+}
+
+.director-timeline-label > i.is-events {
+  background: #e8c15f;
+}
+
+.director-timeline-label > i.is-camera {
+  background: #b78ef0;
+}
+
+/* Wide-desktop hierarchy (1600/1920): keep the strip cards readable */
+@media (min-width: 1600px) {
+  .cv2-beat-strip > div {
+    gap: 14px;
+  }
+
+  .cv2-beat-strip button {
+    flex: 0 0 168px;
+  }
+}
+
+@media (min-width: 1900px) {
+  .cv2-director-preview {
+    grid-template-columns: minmax(252px, 18fr) minmax(0, 56fr) minmax(
+        320px,
+        26fr
+      );
+  }
+}
+
+/* Reduced-motion compatibility for the polish additions */
+@media (prefers-reduced-motion: reduce) {
+  .director-timeline-drawer > summary > svg,
+  .director-timeline-playhead,
+  .cv2-director-player > div {
+    transition: none;
+  }
+}
+
+/* Topbar zones with production tags present: back | brand | tags | actions */
+.cv2-topbar {
+  grid-template-columns: auto auto 1fr auto;
+}
+
+.cv2-topbar .cv2-project-tags {
+  justify-self: start;
+  margin-left: 12px;
+}
+
+@media (min-width: 861px) {
+  .cv2-review.is-direction-screen .cv2-topbar {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+}
+
+/* Zoom targets: 44x44 hit area, small icon retained */
+.director-timeline-zoom button {
+  height: 44px;
+  width: 44px;
+}
+
+/* Narrow topbar cascade: two-column layout at <=760px (final override) */
+@media (max-width: 760px) {
+  .cv2-topbar {
+    grid-template-columns: auto 1fr;
+    height: auto;
+    min-height: 56px;
+    padding: 6px 14px;
+    row-gap: 4px;
+  }
+
+  .cv2-topbar .cv2-history-actions {
+    grid-column: 2;
+    justify-self: end;
+  }
+}
+
+/* Engineering demo gate + persistent demo-mode tag */
+.cv2-demo-gate {
+  padding: 14px;
+}
+
+.cv2-demo-gate p {
+  color: #aebbb4;
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0 0 12px;
+}
+
+.cv2-demo-gate button {
+  align-items: center;
+  background: rgba(223, 193, 110, 0.1);
+  border: 1px solid rgba(223, 193, 110, 0.35);
+  border-radius: 9px;
+  color: #dfc16e;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+}
+
+.cv2-demo-gate button:hover {
+  background: rgba(223, 193, 110, 0.18);
+}
+
+.cv2-demo-mode-tag {
+  align-items: center;
+  background: rgba(223, 193, 110, 0.08);
+  border: 1px solid rgba(223, 193, 110, 0.3);
+  border-radius: 8px;
+  color: #dfc16e;
+  display: flex;
+  font-size: 10.5px;
+  font-weight: 750;
+  gap: 7px;
+  margin: 10px 14px 0;
+  padding: 8px 11px;
+}
