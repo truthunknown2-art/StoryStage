@@ -19,7 +19,7 @@ Real-data visual polish of the accepted Director Studio shell: production header
 
 **P2 — narrow topbar cascade.** Slice C's global four-column topbar rule overrode the 760px two-column layout. Final narrow override added (`grid-template-columns: auto 1fr`, actions pinned right); 740px evidence shows a clean two-row cascade with no horizontal overflow (measured 740=740).
 
-**Player proof replaced.** The prior one-target screenshot was black at 0:17 (same blank frame exists in Slice B base evidence; the beat-start frame is a dark cut/transition frame). Recaptured after deterministic seek-settle-play-pause: `studio-1440x900-direct-command-one-target.png` is a **nonblank paused frame** with metadata — episode `cc68cfd33d43013e…`, absolute frame 360 (0:12), shot `shot-5-main`, beat `beat-a3f3e65ef08a`, paused=true (see `browser-proofs.json`).
+**Player proof replaced.** The prior one-target screenshot was black at 0:17 (same blank frame exists in Slice B base evidence). Current accepted evidence: `studio-1440x900-direct-command-one-target.png` is a **nonblank paused frame at exact frame 342** with metadata — episode `cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966`, shot `shot-5-main`, beat `beat-a3f3e65ef08a`, paused=true, proven through the real Player ref with zero tolerance (see `browser-proofs.json`). (Earlier frame-360/374 figures are superseded history from the pre-exact-frame protocol.)
 
 ## Successor corrections (inbox v13, commit `f6ebf6d`)
 
@@ -71,7 +71,7 @@ Commit `1daf540` + `f6ebf6d` (corrections):
 ## Browser proofs (`browser-proofs.json`)
 
 - **Zoom geometry:** 100% → grid 1440 / lane 1326 px, `Fit width`, minus disabled, not scrollable; 160% → grid 2304 / lane 2190 px, scrollable; seek to `reaction, frame 340` exact; back to fit.
-- **Paused player:** episode `cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966`, frame 360, shot `shot-5-main`, beat `beat-a3f3e65ef08a`, paused=true.
+- **Paused player:** episode `cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966`, exact frame 342 (`Seek to anticipation`), shot `shot-5-main`, beat `beat-a3f3e65ef08a`, paused=true — measured by the Player-ref observation, not transport text.
 - **Responsive:** 820×900 and 740×900 measured overflow-free (sw=iw); 740 topbar renders the two-column cascade (2 rows).
 
 ## Screenshots (this directory, actual app)
@@ -108,4 +108,4 @@ Commit `1daf540` + `f6ebf6d` (corrections):
 
 ## Integration instructions
 
-Branch is `206ff36` + `1daf540` + `f6ebf6d` + `2f153f9` + this handback on top of `2de764c`. Draft PR #17 targets `agent/kcast001-provider-neutral-rig`. Do not merge — Codex and Pro review the immutable head. After integration, `corepack pnpm --filter @storystage/studio test` should remain 88/88.
+Branch state: `f11dcaa11208e8b5bdf87590b26ec1ea8a7fce41` (accepted implementation/proof head) plus this documentation-only handback correction as the immediate successor commit; the exact successor SHA is reported on PR #17. Draft PR #17 targets `agent/kcast001-provider-neutral-rig`. Do not merge — Codex and Pro review the immutable head. After integration, `corepack pnpm --filter @storystage/studio test` should remain 88/88.
