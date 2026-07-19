@@ -11,7 +11,9 @@ import {
   Sequence,
   staticFile,
   useCurrentFrame,
+  useDelayRender,
 } from "remotion";
+import { useEffect, useState } from "react";
 
 type ProxyEntity = NonNullable<
   ExecutableEpisodePlan["proxyEntityPrograms"]
@@ -70,11 +72,93 @@ const entityStateAt = (program: ProxyEntity, frame: number) => {
   };
 };
 
-const assetFile = (assets: ApprovedAssetBinding[], assetId: string): string => {
+const approvedAsset = (
+  assets: ApprovedAssetBinding[],
+  assetId: string,
+): ApprovedAssetBinding & {
+  byteLength: number;
+  immutableLocationId: string;
+  relativeFile: string;
+} => {
   const binding = assets.find((asset) => asset.assetId === assetId);
-  if (binding?.status !== "approved" || !binding.relativeFile)
+  if (
+    binding?.status !== "approved" ||
+    !binding.relativeFile ||
+    !binding.byteLength ||
+    binding.immutableLocationId !== `sha256:${binding.contentHash}` ||
+    !binding.relativeFile.includes(binding.contentHash)
+  )
     throw new Error(`${assetId} is not bound to an approved renderable file.`);
-  return binding.relativeFile;
+  return binding as ApprovedAssetBinding & {
+    byteLength: number;
+    immutableLocationId: string;
+    relativeFile: string;
+  };
+};
+
+const sha256 = async (bytes: ArrayBuffer) =>
+  [...new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", bytes))]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+
+const useVerifiedAssetUrl = (
+  binding: ReturnType<typeof approvedAsset>,
+): string | null => {
+  const [verifiedUrl, setVerifiedUrl] = useState<string | null>(null);
+  const { cancelRender, continueRender, delayRender } = useDelayRender();
+  useEffect(() => {
+    const handle = delayRender(`Verifying approved ${binding.assetId} bytes`);
+    const controller = new AbortController();
+    let active = true;
+    let settled = false;
+    let objectUrl: string | null = null;
+    void (async () => {
+      try {
+        const response = await fetch(staticFile(binding.relativeFile), {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok)
+          throw new Error(
+            `Approved Director asset ${binding.assetId} could not be loaded.`,
+          );
+        const bytes = await response.arrayBuffer();
+        if (
+          bytes.byteLength !== binding.byteLength ||
+          (await sha256(bytes)) !== binding.contentHash
+        )
+          throw new Error(
+            `Approved Director asset ${binding.assetId} failed browser byte verification.`,
+          );
+        objectUrl = URL.createObjectURL(
+          new Blob([bytes], { type: "image/png" }),
+        );
+        if (active) setVerifiedUrl(objectUrl);
+        else URL.revokeObjectURL(objectUrl);
+        settled = true;
+        continueRender(handle);
+      } catch (error) {
+        if (!active) return;
+        settled = true;
+        cancelRender(error);
+      }
+    })();
+    return () => {
+      active = false;
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      if (!settled) continueRender(handle);
+    };
+  }, [
+    binding.assetId,
+    binding.byteLength,
+    binding.contentHash,
+    binding.relativeFile,
+    cancelRender,
+    continueRender,
+    delayRender,
+  ]);
+  return verifiedUrl;
 };
 
 const AtlasFrame: React.FC<{
@@ -95,7 +179,7 @@ const AtlasFrame: React.FC<{
       }}
     >
       <Img
-        src={staticFile(relativeFile)}
+        src={relativeFile}
         style={{
           height: execution.atlasHeight,
           left: -atlasFrame.source.x,
@@ -120,6 +204,9 @@ const AtlasPerformanceRenderer: React.FC<{
   const frame = useCurrentFrame();
   const state = entityStateAt(proxy, frame);
   const execution = performance.execution;
+  const verifiedUrl = useVerifiedAssetUrl(
+    approvedAsset(approvedAssets, execution.assetId),
+  );
   const firstX = proxy.keyframes[0]!.transform.x;
   const frameIndex =
     execution.kind === "atlas-cycle"
@@ -144,7 +231,7 @@ const AtlasPerformanceRenderer: React.FC<{
     state.scale *
     (formatWidth / 1920) *
     (execution.kind === "atlas-cycle" ? 0.82 : 0.92);
-  return (
+  return verifiedUrl ? (
     <div
       data-performance-kind={execution.kind}
       data-performance-program={performance.id}
@@ -160,10 +247,10 @@ const AtlasPerformanceRenderer: React.FC<{
       <AtlasFrame
         execution={execution}
         frameIndex={frameIndex}
-        relativeFile={assetFile(approvedAssets, execution.assetId)}
+        relativeFile={verifiedUrl}
       />
     </div>
-  );
+  ) : null;
 };
 
 const rotationAt = (
@@ -214,7 +301,7 @@ const ArticulatedPart: React.FC<{
         }}
       >
         <Img
-          src={staticFile(relativeFile)}
+          src={relativeFile}
           style={{
             height: execution.sheetHeight,
             left: -part.source.x,
@@ -257,8 +344,10 @@ const ArticulatedPerformanceRenderer: React.FC<{
   const state = entityStateAt(proxy, frame);
   const execution = performance.execution;
   const progress = frame / Math.max(1, durationInFrames - 1);
-  const relativeFile = assetFile(approvedAssets, execution.assetId);
-  return (
+  const relativeFile = useVerifiedAssetUrl(
+    approvedAsset(approvedAssets, execution.assetId),
+  );
+  return relativeFile ? (
     <div
       data-performance-kind={execution.kind}
       data-performance-program={performance.id}
@@ -284,7 +373,7 @@ const ArticulatedPerformanceRenderer: React.FC<{
           />
         ))}
     </div>
-  );
+  ) : null;
 };
 
 const ExecutablePerformanceRenderer: React.FC<{
