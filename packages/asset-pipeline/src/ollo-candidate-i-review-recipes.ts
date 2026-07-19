@@ -6,11 +6,17 @@ import {
   characterRigImportReceiptSchema,
   characterRigPartRoleSchema,
   characterRigStagingReportSchema,
+  compileCandidateRigReviewMotionProgram,
+  compileCandidateRigReviewRenderInput,
+  compileCandidateRigReviewVisualProgram,
   createCharacterRigPreparationRecipe,
   hashCanonical,
   kidsBipedV1TopologyTemplate,
   validateCharacterRigImportReceipt,
   type CandidateRigReviewRegistrationPlan,
+  type CandidateRigReviewMotionProgram,
+  type CandidateRigReviewRenderInput,
+  type CandidateRigReviewVisualProgram,
   type CharacterRigPreparationRecipe,
 } from "@storystage/story-engine";
 
@@ -489,4 +495,71 @@ export const createOlloCandidateIProposedReviewRecipes = (
       approvalRequired: true,
     });
   });
+};
+
+export type OlloCandidateISourceReviewPlanView = {
+  view: ReviewView;
+  recipe: CharacterRigPreparationRecipe;
+  program: CandidateRigReviewVisualProgram;
+  motionProgram: CandidateRigReviewMotionProgram;
+  cleanRenderInput: CandidateRigReviewRenderInput;
+  overlayRenderInput: CandidateRigReviewRenderInput;
+  motionRenderInput: CandidateRigReviewRenderInput;
+};
+
+export type OlloCandidateISourceReviewPlan = {
+  status: "blocked-awaiting-verified-artifact-route";
+  views: OlloCandidateISourceReviewPlanView[];
+  providerAuthority: false;
+  approvalAuthority: false;
+  approvalRequired: true;
+  productionBindable: false;
+};
+
+/**
+ * Derives the complete Candidate I review plan from exact mechanical evidence,
+ * atlas maps, and proposed registrations. Recipes/programs are deliberately not
+ * accepted as inputs, so they cannot become a parallel caller-authored truth.
+ *
+ * This is not a packet constructor. It remains blocked until asset-pipeline has
+ * a private route that renders and then verifies actual artifact bytes.
+ */
+export const createOlloCandidateISourceReviewPlan = (
+  input: OlloCandidateIReviewRecipeInput,
+): OlloCandidateISourceReviewPlan => {
+  const recipes = createOlloCandidateIProposedReviewRecipes(input);
+  const views = recipes.map((recipe) => {
+    const program = compileCandidateRigReviewVisualProgram(
+      input.request,
+      input.bundle,
+      input.stagingReport,
+      input.importReceipt,
+      recipe,
+    );
+    const motionProgram = compileCandidateRigReviewMotionProgram(program);
+    return {
+      view: recipe.view,
+      recipe,
+      program,
+      motionProgram,
+      cleanRenderInput: compileCandidateRigReviewRenderInput("clean", program),
+      overlayRenderInput: compileCandidateRigReviewRenderInput(
+        "overlay",
+        program,
+      ),
+      motionRenderInput: compileCandidateRigReviewRenderInput(
+        "motion",
+        program,
+        motionProgram,
+      ),
+    };
+  });
+  return {
+    status: "blocked-awaiting-verified-artifact-route",
+    views,
+    providerAuthority: false,
+    approvalAuthority: false,
+    approvalRequired: true,
+    productionBindable: false,
+  };
 };

@@ -5,7 +5,10 @@ import {
   hashCanonical,
   listArticulatedRigAssetReferences,
 } from "@storystage/story-engine/director-alpha";
-import { candidateRigReviewVisualProgramSchema } from "@storystage/story-engine";
+import {
+  candidateRigReviewVisualProgramSchema,
+  genericCandidateRigReviewRendererContract,
+} from "@storystage/story-engine";
 import { describe, expect, it } from "vitest";
 import { createBundledKidsCapabilityRegistry } from "./bundledKidsCapabilities";
 import {
@@ -117,6 +120,7 @@ describe("partsRigRuntime", () => {
       preparationRecipeContentHash: hashCanonical("candidate-recipe"),
       identityLockContentHash: hashCanonical("candidate-identity"),
       topologyTemplateContentHash: hashCanonical("candidate-template"),
+      rendererContract: genericCandidateRigReviewRendererContract,
       view: "front" as const,
       sourceBindings: [
         {

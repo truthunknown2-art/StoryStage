@@ -22,6 +22,7 @@ import {
   decodeCandidateRigReviewPng,
 } from "./candidate-rig-review-raster";
 import {
+  createOlloCandidateISourceReviewPlan,
   createOlloCandidateIProposedReviewRecipes,
   type OlloCandidateIAtlasMap,
   type OlloCandidateIRegistrationPlan,
@@ -271,6 +272,37 @@ const createStaging = async (
 };
 
 describe("Candidate I source-review-only foundation", () => {
+  it("derives the exact private render plan without accepting parallel recipe authority", async () => {
+    const { fixture, registrationPlans, recipes } = await buildRecipes();
+    const plan = createOlloCandidateISourceReviewPlan({
+      ...fixture,
+      registrationPlans,
+    });
+    expect(plan.status).toBe("blocked-awaiting-verified-artifact-route");
+    expect(plan.views.map((view) => view.view)).toEqual([
+      "front",
+      "profile-left",
+      "profile-right",
+    ]);
+    expect(plan.views.map((view) => view.recipe.contentHash)).toEqual(
+      recipes.map((recipe) => recipe.contentHash),
+    );
+    expect(plan.providerAuthority).toBe(false);
+    expect(plan.approvalAuthority).toBe(false);
+    expect(plan.productionBindable).toBe(false);
+
+    const substituted = createOlloCandidateISourceReviewPlan({
+      ...fixture,
+      registrationPlans,
+      recipes: [{ contentHash: hashCanonical("attacker-recipe") }],
+      programs: [{ contentHash: hashCanonical("attacker-program") }],
+    } as Parameters<typeof createOlloCandidateISourceReviewPlan>[0] & {
+      recipes: unknown[];
+      programs: unknown[];
+    });
+    expect(substituted).toEqual(plan);
+  });
+
   it("requires explicit hash-bound registration and is deterministic under atlas role reorder", async () => {
     const fixture = await loadCandidateIFixture();
     expect(() => createOlloCandidateIProposedReviewRecipes(fixture)).toThrow(
