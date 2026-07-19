@@ -45,3 +45,32 @@ The only lint output is the two pre-existing KVP Remotion non-pure-animation war
 ## Review request
 
 Review the exact implementation commit above for ACCEPTED / CONDITIONAL / REJECTED before this preparation contract is used to produce the Ollo front/profile diagnostic views. In particular, verify that no authoritative prepared pixels or prepared-view manifest can be produced without the exact complete import receipt and reopened source evidence.
+
+## Pro topology rejection and correction
+
+Pro rejected implementation commit `9bf48cb1101de29106e51abe75976ac3b6709fdc` for one P1: it enforced an arbitrary acyclic tree but did not enforce the actual `kids-biped-v1` anatomical topology or exposure targets.
+
+Exact correction commit: `86cf1d89e27c352c9eb0e9e27a188a2899ebcaa5`
+
+The correction adds canonical, versioned, deeply frozen topology authority `6ab97203293ff1736587a224b515d9ce5562825442d02e8cd31b98c4db588c83`. Executable requests must bind that exact hash. Preparation now enforces:
+
+- 29 exact part roles and one torso root;
+- torso -> pelvis/head/shoulders/secondary layers;
+- pelvis -> same-side hips and tail;
+- shoulder -> elbow -> wrist chains;
+- hip -> knee -> ankle chains;
+- head -> ears/eyes/brows/mouth and eye-white -> pupil/open-lid hierarchy;
+- exact semantic socket ownership with no left/right cross-wiring;
+- 13 exact exposure roles: lid variants target the corresponding open lid, raised brows target the corresponding neutral brow, and all visemes target `mouth-rest`.
+
+Regressions reject the former all-children-under-torso success fixture, `hand-left` on the right arm chain, `viseme-ai` targeting a lid/eye, an arbitrary request template hash, and mutation of the frozen topology authority. The canonical articulated chain remains deterministic and byte-identical on retry.
+
+The Ollo incomplete intake evidence was regenerated and re-proved at the correction:
+
+- request: `82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310`
+- candidate bundle: `52b0395e9780183e8fc4abb09213f3808914a5d774eeeeb92f4fbaf168ae54d4`
+- staging report: `405408d488ffa8b8c73002fa1dbb9216ff48527819e96d726b73057b8237616b`
+- exact turnaround candidate bytes remain `e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e`
+- status remains honestly `incomplete`, provider-neutral, unapproved, and approval-required.
+
+Independent Codex verification at the correction passed `pnpm verify` in 50.6 seconds: Story Engine 247, asset pipeline 63, contracts 11, asset worker 5, runtime 16, render worker 15, desktop 11, and Studio 72. The standalone KCAST intake proof also returned PASS with the exact regenerated hashes above. Only the two pre-existing KVP Remotion warnings remain.
