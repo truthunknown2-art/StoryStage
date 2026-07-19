@@ -1,0 +1,51 @@
+{
+  "pausedPlayer": {
+    "episodeHash": "cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966",
+    "transportText": "0:12 / 0:26",
+    "seconds": 12,
+    "absoluteFrame": 360,
+    "shotId": "shot-5-main",
+    "beatId": "beat-a3f3e65ef08a",
+    "paused": true
+  },
+  "zoom": {
+    "at100": {
+      "gridWidth": 1440,
+      "laneWidth": 1326,
+      "scrollable": false,
+      "label": "Fit width",
+      "minusDisabled": true,
+      "playheadLeft": "36.0825%"
+    },
+    "at160": {
+      "gridWidth": 2304,
+      "laneWidth": 2190,
+      "scrollable": true,
+      "label": "160%",
+      "minusDisabled": false,
+      "playheadLeft": "36.0825%"
+    },
+    "seek": {
+      "title": "Seek to reaction, frame 340",
+      "afterSeekTransport": "0:11 / 0:26"
+    },
+    "backToFit": {
+      "gridWidth": 1440,
+      "laneWidth": 1326,
+      "scrollable": false,
+      "label": "Fit width",
+      "minusDisabled": true,
+      "playheadLeft": "0%"
+    }
+  },
+  "overflow820": {
+    "sw": 820,
+    "iw": 820
+  },
+  "topbar740": {
+    "sw": 740,
+    "iw": 740,
+    "columns": "106.469px 605.531px",
+    "distinctRowCount": 2
+  }
+}
