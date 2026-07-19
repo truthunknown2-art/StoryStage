@@ -6,6 +6,7 @@ export * from "./asset-review";
 export * from "./asset-resolver";
 export * from "./canonical-hash";
 export * from "./candidate-rig-review";
+export * from "./candidate-rig-registration-measurement";
 export * from "./character-rig-acquisition";
 export * from "./character-rig-preparation";
 export * from "./candidate-set-validation";
