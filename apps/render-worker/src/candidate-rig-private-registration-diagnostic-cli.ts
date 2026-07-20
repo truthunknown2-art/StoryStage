@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { isAbsolute, resolve } from "node:path";
+import { dirname, isAbsolute, resolve } from "node:path";
 import type {
   OlloCandidateIReviewRecipeInput,
   OlloCandidateISourceReviewPlan,
@@ -12,7 +12,14 @@ import {
 
 const cliArgs = process.argv.slice(2);
 if (cliArgs[0] === "--") cliArgs.shift();
-const [inputFile, trustedStagingRoot, stagingRoot, jobId, view] = cliArgs;
+const [
+  inputFile,
+  trustedStagingRoot,
+  stagingRoot,
+  jobId,
+  view,
+  authoredMaskManifestFile,
+] = cliArgs;
 if (
   !inputFile ||
   !trustedStagingRoot ||
@@ -24,7 +31,7 @@ if (
     view !== "all")
 )
   throw new Error(
-    "Usage: candidate-rig-private-registration-diagnostic-cli <input.json> <trusted-staging-root> <staging-root> <job-id> <front|profile-left|profile-right|all>",
+    "Usage: candidate-rig-private-registration-diagnostic-cli <input.json> <trusted-staging-root> <staging-root> <job-id> <front|profile-left|profile-right|all> [authored-mask-manifest.json]",
   );
 
 const cliWorkspaceRoot = resolve(
@@ -40,6 +47,17 @@ if (!input.evidence || !input.sourceReviewPlan)
   throw new Error(
     "Private registration diagnostic input must contain exact evidence and its exact compiled source-review plan.",
   );
+const authoredMaskManifestPath = authoredMaskManifestFile
+  ? fromWorkspace(authoredMaskManifestFile)
+  : null;
+const authoredMaskOptions = authoredMaskManifestPath
+  ? {
+      authoredMaskManifest: JSON.parse(
+        await readFile(authoredMaskManifestPath, "utf8"),
+      ) as unknown,
+      authoredMaskManifestRoot: dirname(authoredMaskManifestPath),
+    }
+  : {};
 
 const shared = {
   jobId,
@@ -47,6 +65,7 @@ const shared = {
   stagingRoot: fromWorkspace(stagingRoot),
   evidence: input.evidence,
   sourceReviewPlan: input.sourceReviewPlan,
+  ...authoredMaskOptions,
 };
 
 if (view === "all") {

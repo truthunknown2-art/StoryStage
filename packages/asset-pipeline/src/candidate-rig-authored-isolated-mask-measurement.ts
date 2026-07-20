@@ -17,7 +17,7 @@ import {
 } from "./candidate-rig-review-input";
 
 const COMPILER_ID = "authored-isolated-decoration-mask-compiler" as const;
-const COMPILER_VERSION = "1.0.0" as const;
+const COMPILER_VERSION = "1.1.0" as const;
 const MICRO = 1_000_000;
 
 type Mask = CandidateRigAuthoredIsolatedMaskEvidence["guideTabMask"];
@@ -239,9 +239,36 @@ export const createCandidateRigAuthoredIsolatedMaskMeasurement = (input: {
   const components = structuredClone(base.components);
   const requirements = structuredClone(base.requirements);
   const evidenceHashes: string[] = [];
+  const sourceManifestHashes = new Set<string>();
   const seenComponents = new Set<string>();
 
   for (const authored of input.authoredMasks) {
+    if (typeof authored.evidence !== "object" || authored.evidence === null)
+      throw new CandidateRigAuthoredIsolatedMaskMeasurementError(
+        "invalid-authored-mask-evidence",
+        "Authored mask evidence must be an exact hash-bound object.",
+      );
+    const rawEvidence = authored.evidence as Record<string, unknown>;
+    const v11LineageFieldCount = [
+      "sourceManifestContentHash",
+      "guideMaskPngContentHash",
+      "authoredRegionsContentHash",
+      "sentinelsContentHash",
+    ].filter((field) => rawEvidence[field] !== undefined).length;
+    const expectedV11LineageFieldCount =
+      rawEvidence.schemaVersion === "1.1"
+        ? 4
+        : rawEvidence.schemaVersion === "1.0"
+          ? 0
+          : null;
+    if (
+      expectedV11LineageFieldCount !== null &&
+      v11LineageFieldCount !== expectedV11LineageFieldCount
+    )
+      throw new CandidateRigAuthoredIsolatedMaskMeasurementError(
+        "invalid-authored-mask-evidence",
+        "The compiler rejects partial v1.1 authored-mask lineage, including downgraded and rehashed evidence.",
+      );
     const evidence = candidateRigAuthoredIsolatedMaskEvidenceSchema.parse(
       authored.evidence,
     );
@@ -350,6 +377,12 @@ export const createCandidateRigAuthoredIsolatedMaskMeasurement = (input: {
         evidence.guideTabMask.runLengthEncodingContentHash,
       retainedSemanticSupportRunLengthEncodingContentHash:
         evidence.retainedSemanticSupportMask.runLengthEncodingContentHash,
+      ...(evidence.sourceManifestContentHash && evidence.guideMaskPngContentHash
+        ? {
+            sourceManifestContentHash: evidence.sourceManifestContentHash,
+            guideMaskPngContentHash: evidence.guideMaskPngContentHash,
+          }
+        : {}),
       originalAndMaskedDistinct: true as const,
       semanticSupportRetained: true as const,
       guideTabPixelsRemoved: true as const,
@@ -402,6 +435,8 @@ export const createCandidateRigAuthoredIsolatedMaskMeasurement = (input: {
     );
     requirement.outcome = { status: "detected", candidateIds: [candidateId] };
     evidenceHashes.push(evidence.contentHash);
+    if (evidence.sourceManifestContentHash)
+      sourceManifestHashes.add(evidence.sourceManifestContentHash);
     seenComponents.add(evidence.componentId);
   }
 
@@ -428,6 +463,9 @@ export const createCandidateRigAuthoredIsolatedMaskMeasurement = (input: {
       implementationContentHash: compilerImplementationContentHash,
       evidenceContentHashes: evidenceHashes.sort((left, right) =>
         left.localeCompare(right),
+      ),
+      sourceManifestContentHashes: [...sourceManifestHashes].sort(
+        (left, right) => left.localeCompare(right),
       ),
       exactSourceRgbaVerified: true as const,
       originalAndMaskedDistinct: true as const,

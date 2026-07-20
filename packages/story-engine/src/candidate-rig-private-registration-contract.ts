@@ -28,6 +28,12 @@ const rectSchema = z
     height: z.number().int().positive(),
   })
   .strict();
+const pixelPointSchema = z
+  .object({
+    x: z.number().int().nonnegative(),
+    y: z.number().int().nonnegative(),
+  })
+  .strict();
 const runSchema = z
   .object({
     y: z.number().int().nonnegative(),
@@ -121,7 +127,7 @@ const maskEvidenceSchema = z
   });
 
 export const candidateRigAuthoredIsolatedMaskEvidenceSchema = hashBound({
-  schemaVersion: z.literal("1.0"),
+  schemaVersion: z.enum(["1.0", "1.1"]),
   evidenceKind: z.literal("candidate-rig-authored-isolated-mask-evidence"),
   authorityDomain: z.literal("private-source-review-registration"),
   evidenceId: identifierSchema,
@@ -136,6 +142,10 @@ export const candidateRigAuthoredIsolatedMaskEvidenceSchema = hashBound({
   maskedRgbaContentHash: hashSchema,
   guideTabMask: maskEvidenceSchema,
   retainedSemanticSupportMask: maskEvidenceSchema,
+  sourceManifestContentHash: hashSchema.optional(),
+  guideMaskPngContentHash: hashSchema.optional(),
+  authoredRegionsContentHash: hashSchema.optional(),
+  sentinelsContentHash: hashSchema.optional(),
   sourceMeasuredBeforeMasking: z.literal(true),
   maskOnly: z.literal(true),
   providerAuthority: z.literal(false),
@@ -167,10 +177,150 @@ export const candidateRigAuthoredIsolatedMaskEvidenceSchema = hashBound({
         message:
           "Authored isolated-mask evidence must use exact source-component dimensions.",
       });
+  const v11LineageFieldCount = [
+    evidence.sourceManifestContentHash,
+    evidence.guideMaskPngContentHash,
+    evidence.authoredRegionsContentHash,
+    evidence.sentinelsContentHash,
+  ].filter((value) => value !== undefined).length;
+  const expectedV11LineageFieldCount = evidence.schemaVersion === "1.1" ? 4 : 0;
+  if (v11LineageFieldCount !== expectedV11LineageFieldCount)
+    context.addIssue({
+      code: "custom",
+      message:
+        "Version 1.0 authored mask evidence must omit all v1.1 lineage fields, while version 1.1 must bind all four.",
+    });
 });
 
 export type CandidateRigAuthoredIsolatedMaskEvidence = z.infer<
   typeof candidateRigAuthoredIsolatedMaskEvidenceSchema
+>;
+
+const authoredDecorationMaskEntrySchema = z
+  .object({
+    entryId: identifierSchema,
+    view: viewSchema,
+    componentId: identifierSchema,
+    componentRole: z.enum(["secondary-front", "secondary-back"]),
+    baseMeasurementContentHash: hashSchema,
+    sourceCandidateId: identifierSchema,
+    sourceContentHash: hashSchema,
+    sourceRgbaContentHash: hashSchema,
+    sourceRect: rectSchema,
+    maskRelativeFile: z.string().min(1).max(256),
+    maskPngContentHash: hashSchema,
+    maskWidth: z.number().int().positive().max(8192),
+    maskHeight: z.number().int().positive().max(8192),
+    bitsPerSample: z.literal(1),
+    paletteBitDepth: z.literal(1),
+    unselectedPixelValue: z.literal(0),
+    selectedPixelValue: z.literal(255),
+    selectedPixelCount: z.number().int().positive(),
+    selectedBounds: rectSchema,
+    authoredRegions: z.array(rectSchema).min(1),
+    selectedGuideSeeds: z.array(pixelPointSchema).min(1),
+    retainedSemanticSentinels: z.array(pixelPointSchema).min(1),
+    transparentSentinels: z.array(pixelPointSchema).min(1),
+    guideSemantic: z.literal("non-semantic-source-registration-tab"),
+    sourceMeasuredBeforeMasking: z.literal(true),
+    maskOnly: z.literal(true),
+    providerAuthority: z.literal(false),
+    approvalAuthority: z.literal(false),
+    capabilityAuthority: z.literal(false),
+    productionBindable: z.literal(false),
+  })
+  .strict()
+  .superRefine((entry, context) => {
+    const allPoints = [
+      ...entry.selectedGuideSeeds,
+      ...entry.retainedSemanticSentinels,
+      ...entry.transparentSentinels,
+    ];
+    const invalidPath =
+      entry.maskRelativeFile.includes("\\") ||
+      entry.maskRelativeFile.startsWith("/") ||
+      entry.maskRelativeFile.includes(":") ||
+      entry.maskRelativeFile
+        .split("/")
+        .some((segment) => !segment || segment === "." || segment === "..") ||
+      !/^[a-z0-9][a-z0-9./-]*\.png$/.test(entry.maskRelativeFile);
+    const rects = [entry.selectedBounds, ...entry.authoredRegions];
+    if (
+      invalidPath ||
+      entry.maskWidth !== entry.sourceRect.width ||
+      entry.maskHeight !== entry.sourceRect.height ||
+      allPoints.some(
+        (point) => point.x >= entry.maskWidth || point.y >= entry.maskHeight,
+      ) ||
+      rects.some(
+        (rect) =>
+          rect.x + rect.width > entry.maskWidth ||
+          rect.y + rect.height > entry.maskHeight,
+      ) ||
+      entry.selectedGuideSeeds.some(
+        (point) =>
+          !entry.authoredRegions.some(
+            (rect) =>
+              point.x >= rect.x &&
+              point.y >= rect.y &&
+              point.x < rect.x + rect.width &&
+              point.y < rect.y + rect.height,
+          ),
+      )
+    )
+      context.addIssue({
+        code: "custom",
+        message:
+          "Authored decoration-mask paths, dimensions, regions, and sentinels must remain exact and in bounds.",
+      });
+  });
+
+export const candidateRigAuthoredDecorationMaskManifestSchema = hashBound({
+  schemaVersion: z.literal("1.0"),
+  manifestKind: z.literal("candidate-rig-authored-decoration-mask-manifest"),
+  authorityDomain: z.literal("private-source-review-registration"),
+  manifestId: identifierSchema,
+  sourceReviewInputContentHash: hashSchema,
+  entries: z.array(authoredDecorationMaskEntrySchema).length(6),
+  semanticRgbaMutationForbidden: z.literal(true),
+  runtimeGlobalThresholdingAllowed: z.literal(false),
+  runtimeConnectivityInferenceAllowed: z.literal(false),
+  noColorCandidateStored: z.literal(true),
+  sourceMeasuredBeforeMasking: z.literal(true),
+  providerAuthority: z.literal(false),
+  approvalAuthority: z.literal(false),
+  capabilityAuthority: z.literal(false),
+  productionBindable: z.literal(false),
+}).superRefine((manifest, context) => {
+  const pairs = manifest.entries.map(
+    (entry) => `${entry.view}:${entry.componentRole}`,
+  );
+  const expected = [
+    "front:secondary-back",
+    "front:secondary-front",
+    "profile-left:secondary-back",
+    "profile-left:secondary-front",
+    "profile-right:secondary-back",
+    "profile-right:secondary-front",
+  ];
+  if (
+    new Set(manifest.entries.map((entry) => entry.entryId)).size !==
+      manifest.entries.length ||
+    new Set(manifest.entries.map((entry) => entry.maskRelativeFile)).size !==
+      manifest.entries.length ||
+    new Set(manifest.entries.map((entry) => entry.maskPngContentHash)).size !==
+      manifest.entries.length ||
+    hashCanonical([...pairs].sort()) !== hashCanonical(expected)
+  )
+    context.addIssue({
+      code: "custom",
+      message:
+        "Authored decoration-mask manifest must contain exactly one front/profile-left/profile-right entry for each decoration role with distinct ids, files, and PNG hashes.",
+    });
+});
+
+export type CandidateRigAuthoredDecorationMaskManifest = z.infer<
+  typeof candidateRigAuthoredDecorationMaskManifestSchema
 >;
 
 const pixelSetForMask = (mask: z.infer<typeof maskEvidenceSchema>) => {
@@ -325,6 +475,8 @@ const attachmentCandidateSchema = z
         maskedRgbaContentHash: hashSchema,
         guideTabMaskRunLengthEncodingContentHash: hashSchema,
         retainedSemanticSupportRunLengthEncodingContentHash: hashSchema,
+        sourceManifestContentHash: hashSchema.optional(),
+        guideMaskPngContentHash: hashSchema.optional(),
         originalAndMaskedDistinct: z.literal(true),
         semanticSupportRetained: z.literal(true),
         guideTabPixelsRemoved: z.literal(true),
@@ -379,6 +531,10 @@ const attachmentCandidateSchema = z
       (candidate.authoredMaskEvidence !== undefined &&
         (candidate.authoredMaskEvidence.originalRgbaContentHash !==
           candidate.sourceRgbaContentHash ||
+          (candidate.authoredMaskEvidence.sourceManifestContentHash !==
+            undefined) !==
+            (candidate.authoredMaskEvidence.guideMaskPngContentHash !==
+              undefined) ||
           candidate.authoredMaskEvidence
             .guideTabMaskRunLengthEncodingContentHash !==
             candidate.selectedSupport.runLengthEncodingContentHash)) ||
@@ -543,10 +699,11 @@ const measurementReportFields = {
   authoredMaskCompiler: z
     .object({
       id: z.literal("authored-isolated-decoration-mask-compiler"),
-      version: z.literal("1.0.0"),
+      version: z.literal("1.1.0"),
       baseMeasurementContentHash: hashSchema,
       implementationContentHash: hashSchema,
       evidenceContentHashes: z.array(hashSchema).min(1),
+      sourceManifestContentHashes: z.array(hashSchema),
       exactSourceRgbaVerified: z.literal(true),
       originalAndMaskedDistinct: z.literal(true),
       semanticSupportRetained: z.literal(true),
@@ -577,6 +734,17 @@ export const candidateRigExactAttachmentMeasurementReportSchema = hashBound(
         : [],
     )
     .sort((left, right) => left.localeCompare(right));
+  const authoredManifestHashes = [
+    ...new Set(
+      report.components
+        .flatMap((component) => component.candidates)
+        .flatMap((candidate) =>
+          candidate.authoredMaskEvidence?.sourceManifestContentHash
+            ? [candidate.authoredMaskEvidence.sourceManifestContentHash]
+            : [],
+        ),
+    ),
+  ].sort((left, right) => left.localeCompare(right));
   if (
     (report.schemaVersion === "1.1") !==
       (report.authoredMaskCompiler !== undefined) ||
@@ -585,7 +753,13 @@ export const candidateRigExactAttachmentMeasurementReportSchema = hashBound(
         report.authoredMaskCompiler.evidenceContentHashes.length ||
         hashCanonical(
           [...report.authoredMaskCompiler.evidenceContentHashes].sort(),
-        ) !== hashCanonical(authoredEvidenceHashes)))
+        ) !== hashCanonical(authoredEvidenceHashes) ||
+        new Set(report.authoredMaskCompiler.sourceManifestContentHashes)
+          .size !==
+          report.authoredMaskCompiler.sourceManifestContentHashes.length ||
+        hashCanonical(
+          [...report.authoredMaskCompiler.sourceManifestContentHashes].sort(),
+        ) !== hashCanonical(authoredManifestHashes)))
   )
     context.addIssue({
       code: "custom",
