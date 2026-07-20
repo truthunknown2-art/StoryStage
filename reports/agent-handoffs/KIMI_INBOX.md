@@ -1,15 +1,31 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `32`
+Inbox-Version: `33`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F1-PROJECTS-CREATE-FINISH`
+Current-Task: `F1-PROJECTS-CREATE-ACCEPTANCE-CORRECTIONS`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `9f3d6fac522f99b693c163c822334076ee9584bd`
+Accepted-Root-Base: `00299eb351f24a1cf1be5b34cb08f6c77c039af5`
 Required-Work-Branch: `agent/kimi-ui-v2`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-projects-create-finish-v32.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-acceptance-corrections-v33.md`
 
 ## Current instruction
+
+Version 33 rejects exact pushed candidate `00299eb` at the F1 acceptance gate.
+Claim GitHub issue #34 and apply only the bounded correction brief on the
+existing branch and draft PR #33: preserve the old `LegacyApp` behind the new
+Product v1 default, route only the two old proof harnesses to that export,
+remove the 1440×900 Language/footer overlap, meet the 4.5:1 required-text
+contrast gate, rerun the full required commands, and replace every stale
+screenshot/handback fact. Push an immutable successor, update the PR, and stop.
+Do not begin F2 or backend work.
+
+Version 33 supersedes Version 32. Version 32 remains below as historical
+traceability.
+
+---
+
+Previous Version 32 instruction:
 
 Version 32 continues and finishes only F1 — Projects + Create on the existing
 declared work branch. The current uncommitted implementation is useful, but it
