@@ -1,15 +1,30 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `49`
+Inbox-Version: `50`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-MILESTONE-PRO-AUDIT-WAIT`
+Current-Task: `F3-PLAN-PRO-PRESTON-REVIEW-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
-Required-Work-Branch: `agent/kimi-f2-phase-evidence-wp4`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-milestone-pro-audit-wait-v49.md`
+Required-Work-Branch: `agent/codex-f3-plan`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f3-plan-review-wait-v50.md`
 
 ## Current instruction
+
+Version 50 records Codex, ChatGPT Pro, and Preston acceptance of F2 at exact
+`product/v1` head `87c01f9b684642e39cf470f06be2aaf6797cd3d7` and the
+documentation-only F3 plan candidate at exact
+`c7beef09234de4de25a334e5191668eb4e840303` in draft PR #47. Kimi remains on
+`WAIT` while Pro audits and Preston accepts the persisted four-package F3
+decomposition. Do not implement F3-WP1, begin WP2+, start F4, or start backend
+work. A higher inbox version is required for the bounded F3-WP1 assignment.
+
+Version 50 supersedes Version 49. Version 49 remains below as historical
+traceability.
+
+---
+
+Previous Version 49 instruction:
 
 Version 49 records F2-WP4 integrated into exact `product/v1` head
 `87c01f9b684642e39cf470f06be2aaf6797cd3d7`. Repository-root verification passes
