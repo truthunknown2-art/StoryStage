@@ -1,15 +1,32 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `53`
+Inbox-Version: `54`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `G0-ROADMAP-CORRECTIONS-FINAL-AUDIT-WAIT`
+Current-Task: `G0-ROADMAP-FINAL-HEAD-AUDIT-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
 Required-Work-Branch: `none-planning-hold`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-corrections-final-audit-wait-v53.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-final-head-audit-wait-v54.md`
 
 ## Current instruction
+
+Version 54 records the immutable correction content at `44bd2385...` and the
+current status-corrected PR #48 audit head
+`0694ad6a49aed52ad425547aa6f4aae14e1ddc70`. The status follow-up removes the
+hard-coded Kimi version and resolves coordination state live, so later inbox
+updates do not make the product ledger stale. Local roadmap/format/diff checks
+pass; hosted run `29785642789` and Pro final acceptance are pending. Kimi
+remains on `WAIT`; no implementation branch is authorized. Do not implement
+F3-WP1, begin later frontend work, or start backend work. A higher inbox version
+will be issued only after exact-SHA Pro and Preston acceptance.
+
+Version 54 supersedes Version 53. Version 53 remains below as historical
+traceability.
+
+---
+
+Previous Version 53 instruction:
 
 Version 53 records Pro's exact-SHA correction verdict on `fdc4c155...` and
 Codex's bounded correction candidate at exact remote head

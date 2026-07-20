@@ -1,8 +1,8 @@
 # StoryStage live roadmap status
 
 Schema-Version: `1`
-Status-Version: `3`
-Updated-At: `2026-07-20T15:54:51-07:00`
+Status-Version: `4`
+Updated-At: `2026-07-20T15:58:00-07:00`
 Updated-By: `Codex`
 
 ## Repository truth
@@ -49,9 +49,9 @@ Updated-By: `Codex`
 - Exact-Base-SHA: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
 - Active-Roadmap-Branch: `agent/codex-full-product-roadmap`
 - Active-Roadmap-PR: `https://github.com/truthunknown2-art/StoryStage/pull/48`
-- Active-Roadmap-Head: `44bd2385fa3a744b034dddc571858a7f46ab90df`
-- Active-Roadmap-Check-State: `local corrected G0 checks PASS; hosted exact-head run 29785438661 pending`
-- Pro-R0-Verdict: `CORRECTIONS REQUIRED on fdc4c155; corrected 44bd238 pending final audit`
+- Active-Roadmap-Head: `0694ad6a49aed52ad425547aa6f4aae14e1ddc70`
+- Active-Roadmap-Check-State: `local corrected G0 checks PASS; hosted exact-head run 29785642789 pending`
+- Pro-R0-Verdict: `CORRECTIONS REQUIRED on fdc4c155; corrected 0694ad6 pending final audit`
 - Preston-R0-Verdict: `PENDING`
 
 ## Superseded work
@@ -64,11 +64,11 @@ Updated-By: `Codex`
 
 ## Kimi coordination
 
-- Kimi-Inbox-Version: `53`
+- Kimi-Inbox-Version: `54`
 - Kimi-Inbox-Status: `WAIT`
-- Kimi-Current-Task: `G0-ROADMAP-CORRECTIONS-FINAL-AUDIT-WAIT`
+- Kimi-Current-Task: `G0-ROADMAP-FINAL-HEAD-AUDIT-WAIT`
 - Kimi-Full-Brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-corrections-final-audit-wait-v53.md`
+  `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-final-head-audit-wait-v54.md`
 - Kimi-Implementation-Authority: `none`
 
 ## Next and forbidden actions
