@@ -1424,6 +1424,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   display: grid;
   gap: 16px;
   align-content: start;
+  grid-template-columns: minmax(0, 1fr);
   overflow-y: auto;
   padding-right: 14px;
 }
@@ -1803,5 +1804,79 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 @media (max-width: 1024px) {
   .pv1-playhead {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* F2-WP3: keyboard hint, motion with reduced-motion guard, compact regions */
+
+.pv1-rail-hint {
+  color: var(--pv1-faint);
+  font-size: 10px;
+  line-height: 1.45;
+  margin: 0 0 4px;
+}
+
+.pv1-rail-scene,
+.pv1-overview-scene,
+.pv1-group-toggle,
+.pv1-hidden-selection button {
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+
+.pv1-playhead input[type="range"] {
+  transition: accent-color 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv1-rail-scene,
+  .pv1-overview-scene,
+  .pv1-group-toggle,
+  .pv1-hidden-selection button,
+  .pv1-playhead input[type="range"] {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Compact (≤1024px): deliberate ordered stacked regions, no crushed columns. */
+@media (max-width: 1024px) {
+  .pv1-studio-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pv1-studio-rail {
+    border-bottom: 1px solid var(--line);
+    border-right: 0;
+    order: 1;
+    padding: 0 0 14px;
+  }
+
+  .pv1-rail-sequence {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pv1-rail-sequence > h3,
+  .pv1-rail-sequence > .pv1-hidden-selection {
+    grid-column: 1 / -1;
+  }
+
+  .pv1-studio-board {
+    order: 2;
+  }
+
+  .pv1-studio-inspector {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    order: 3;
+    padding: 14px 0 0;
+  }
+
+  .pv1-studio-overview {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    order: 4;
   }
 }
