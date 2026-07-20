@@ -74,11 +74,19 @@ needs one deliverable, explicit non-goals, and a return condition.
 - `packages/remotion-runtime` remains deterministic and browser-safe.
 - Godot is the pinned articulated 2D performance worker; Remotion remains the
   single canonical episode compositor.
+- Codex is the first supported in-product AI Director. StoryStage launches a
+  pinned/verified local Codex App Server, Codex owns official ChatGPT sign-in
+  and token state, and StoryStage exposes only a least-privilege MCP/typed-command
+  surface. Do not add API-key UI, cookie/session reuse, chatgpt.com automation,
+  silent fallback, arbitrary project/file mutation, or a generic agent framework.
 - `apps/render-worker` owns rendering and output creation.
 - `apps/desktop` owns privileged orchestration and local persistence.
 - `apps/studio` remains an unprivileged frontend using typed host adapters.
 - AI may propose bounded creative intent. Deterministic code owns timing,
   continuity, assets, capabilities, rendering, and saved project state.
+- A model proposal becomes canonical only after visible scope/impact review,
+  deterministic validation, and explicit apply through the same command layer
+  used by manual controls. Unrelated ranges must remain unchanged.
 
 ## Anti-overengineering rules
 

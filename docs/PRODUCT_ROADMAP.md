@@ -4,8 +4,8 @@
 - **Frontend/UI/UX owner:** Kimi CLI
 - **Backend/rendering/integration owner:** Codex
 - **Milestone auditor:** ChatGPT Pro
-- **Status:** canonical candidate; implementation remains on planning hold until accepted
-- **Roadmap base:** `product/v1@87c01f9b684642e39cf470f06be2aaf6797cd3d7`
+- **Status:** G0 AI-native amendment candidate; implementation remains on planning hold until accepted
+- **Roadmap base:** `product/v1@b648ff0c6224d25461aea648fd6337bec96334d2`
 - **Last reconciled:** 2026-07-20
 
 This is the dependency-ordered execution plan from product definition through a
@@ -51,9 +51,10 @@ launch-ready only when Preston can:
 2. create a project from a screenplay and reopen it after closing the app;
 3. review and edit acts, sequences, scenes, beats, direction, assets, rigs,
    narration, SFX, music, and timeline state through Projects → Create → Studio;
-4. use one approved provider-neutral AI Director adapter or the deterministic
-   non-AI planner without giving a provider authority over IDs, timing, assets,
-   capabilities, or saved state;
+4. use Codex inside StoryStage through official ChatGPT subscription sign-in to
+   draft or revise a screenplay and direct an episode, scene, beat, or selected
+   range without giving the model authority over IDs, timing, assets,
+   capabilities, rendering, or saved state;
 5. import approved image assets, prepare a layered set, and use a genuine
    articulated Ollo rig rendered by pinned Godot;
 6. record narration, select takes, obtain approximate editable lip sync, place
@@ -77,8 +78,9 @@ path, mandatory TTS, automatic telemetry, and automatic browser/session control.
 ## 3. Production architecture fixed by this roadmap
 
 ```text
-screenplay + grammar + art direction
-  → AI-assisted editable direction proposal
+Show Pack + creative brief or screenplay + grammar + art direction
+  → subscription-backed Codex conversation through App Server + StoryStage MCP
+  → editable script hierarchy and/or scoped direction proposal
   → deterministic validation and canonical episode plan
   → approved assets + Godot character-performance jobs
   → RGBA character passes + layered environment/camera/audio plan
@@ -95,13 +97,18 @@ screenplay + grammar + art direction
 - **Remotion:** the single canonical episode compositor for layered sets,
   Godot passes, camera, edits, captions, narration, SFX, music, preview, and
   final output.
-- **Director intelligence:** provider-neutral bounded proposals. One launch
-  adapter requires explicit user consent and a privacy/provider decision;
-  deterministic local planning remains available. Kimi CLI and ChatGPT Pro are
-  development collaborators, not hidden product runtimes.
+- **Director intelligence:** Codex is the first supported product agent. The
+  desktop host launches a pinned/verified Codex App Server locally; Codex owns
+  official ChatGPT sign-in and credential state; StoryStage supplies a bounded
+  MCP server plus typed proposal/application commands. The creator sees native
+  conversation, scope, progress, impact, approval, and undo UI. The MCP command
+  vocabulary may remain agent-neutral, but v1 does not build a generic agent
+  framework or accept arbitrary provider plugins.
 - **Image creation:** v1 produces exact prompt/request packs and imports files
-  created through the user's chosen image tool. It does not automate the
-  ChatGPT website or expose account sessions. A direct API is optional later.
+  created through the user's chosen image tool. Codex subscription auth does not
+  imply access to consumer ChatGPT Images, Sora, or Voice. StoryStage does not
+  automate chatgpt.com, copy cookies, expose account sessions, or silently fall
+  back to an API key.
 - **Specialist tools:** Blender/After Effects receive bounded job packages and
   return pre-rendered media only after B8 is explicitly activated.
 
@@ -154,8 +161,9 @@ Failed gate → IMPLEMENTING on the same package
 | E0 Godot/Remotion feasibility   | Accepted             | integrated at `81a0e64`; 120 deterministic RGBA frames and Remotion MP4 |
 | F1 Projects + Create            | Accepted             | integrated PR #33 at `7a46867`                                          |
 | F2 Long-form Studio shell       | Accepted             | Pro + Preston accepted `product/v1@87c01f9`                             |
-| G0 roadmap/truth reconciliation | Active planning hold | this document and bootstrap must be reviewed and integrated             |
-| F3–F6 frontend                  | Not started          | begins only with accepted F3-WP1 ticket                                 |
+| G0 roadmap/truth reconciliation | Amendment review     | AI-native Codex bridge amendment must be reviewed and accepted          |
+| E1 Codex/StoryStage bridge       | Not started          | bounded read-only feasibility gate after accepted G0                    |
+| F3–F6 frontend                  | Not started          | F3 begins only after accepted E1 and a separate F3-WP1 ticket           |
 | Frontend Gate                   | Blocked              | requires accepted F1–F6 click-through                                   |
 | B1–B8 backend/product           | Blocked              | B1 begins only after Frontend Gate                                      |
 | Private launch                  | Blocked              | requires F3–F6/FG, B1–B7, R1–R2, and L1                                 |
@@ -165,6 +173,7 @@ Critical path:
 
 ```text
 G0 roadmap acceptance
+→ E1 read-only Codex bridge feasibility
 → F3 → F4 → F5 → F6 → Frontend Gate
 → B1 → B2 → B3 → B4 → B5 → R1 → B6 → B7
 → B8 only when a real specialist shot requires it
@@ -188,7 +197,8 @@ row says conditional.
 | F1        | P0                 | frontend sequence                                    |
 | F2        | F1                 | frontend sequence                                    |
 | G0        | F2                 | truth reconciliation                                 |
-| F3        | G0                 | G0 accepted and separately authorized                |
+| E1        | G0                 | bounded pre-F3 feasibility exception                 |
+| F3        | E1                 | E1 accepted and F3 separately authorized             |
 | F4        | F3                 | frontend sequence                                    |
 | F5        | F4                 | frontend sequence                                    |
 | F6        | F5                 | frontend sequence and Frontend Gate                  |
@@ -455,13 +465,25 @@ the exact-SHA audit, Kimi remains waiting, and Preston accepts the roadmap.
 - **Verify/complete:** governance, frontend, contracts, media, long-form, and
   release examples resolve to the correct checks and evidence.
 
-#### G0-WP5 — Governance gate
+#### G0-WP5 — AI-native product amendment
+
+- **Tasks:** reconcile the user-requested Hearth-style in-product agent workflow
+  with official Codex App Server, ChatGPT sign-in, and MCP behavior; add E1;
+  update frontend, backend, packaging, security, risks, and launch requirements;
+  replace the earlier provider/API default without weakening human approval or
+  deterministic StoryStage authority.
+- **Non-goals:** executing Hearth, copying its code, building a generic agent
+  host, API-key fallback, chatgpt.com automation, or starting E1/F3 product work.
+- **Verify/complete:** Product Plan, Roadmap, G0/E1 plans, status, and operating
+  boundary agree on the exact auth/process/tool model and next gate.
+
+#### G0-WP6 — Governance gate
 
 - **Tasks:** push one docs-only candidate, run consistency/cold-start checks,
   obtain Pro's exact-SHA audit, record Preston's decision, and leave status WAIT.
-- **Non-goals:** silently issuing F3-WP1 after the merge.
+- **Non-goals:** silently issuing E1-WP1 or F3-WP1 after the merge.
 - **Verify/complete:** exact candidate SHA, changed files, checks, audit, and
-  Preston verdict are recorded; only a later status change can start F3-WP1.
+  Preston verdict are recorded; only a later status change can start E1-WP1.
 
 **Required evidence:** exact diff, stale-reference report, consistency results,
 cold-start transcript, candidate SHA, Pro audit, and Preston decision.
@@ -469,6 +491,74 @@ cold-start transcript, candidate SHA, Pro audit, and Preston decision.
 **Milestone gate:** a fresh task resumes coherently from the five sources,
 hosted drift checks pass, Pro accepts the exact remote head, Preston accepts the
 roadmap, and no implementation package starts implicitly.
+
+### E1 — ChatGPT-subscription StoryStage agent bridge feasibility
+
+**Objective:** prove the supported local Codex integration that the creator UX
+and later B3 product path will use, before F3 designs around unverified events or
+auth assumptions.
+
+**Milestone invariant:** a pinned local Codex App Server, signed in through
+Codex's official ChatGPT flow, can read one synthetic StoryStage scene through a
+read-only MCP server and return one schema-valid proposal while StoryStage never
+receives credentials or permits a project mutation.
+
+**Dependencies/owners:** after accepted G0; Codex implements the isolated lab,
+Pro audits the exact evidence, Kimi remains waiting, and Preston accepts or
+rejects the bridge before F3.
+
+#### E1-WP1 — Runtime, protocol, and auth preflight
+
+- **Tasks:** pin one Codex/App Server version; generate its exact protocol
+  schema; launch over stdio; initialize; discover account/model/usage state; use
+  Codex-owned browser/device sign-in; record stable versus experimental methods;
+  cancel and shut down cleanly.
+- **Non-goals:** API key entry, StoryStage credential storage, webview login,
+  remote WebSocket transport, production packaging, or creator-facing UI.
+- **Verify/complete:** installed/not-installed, signed-in/out, initialize,
+  thread/turn, interrupt, and shutdown tests pass with a redacted process receipt.
+
+#### E1-WP2 — Read-only StoryStage MCP scene context
+
+- **Tasks:** expose one synthetic scene through a local stdio MCP server with a
+  minimal allowlist such as project summary, selected scene/beat, direction
+  state, available demo assets/rig capabilities, and proposal submission; keep
+  all context under a lab root and reject write/render/approval requests.
+- **Non-goals:** real project files, broad filesystem/shell access, asset
+  generation, rendering, persistence, or a reusable generic MCP framework.
+- **Verify/complete:** tool/schema tests prove scope, path containment, size
+  limits, no canonical-authority fields, and fail-closed MCP startup.
+
+#### E1-WP3 — Streamed structured-proposal round trip
+
+- **Tasks:** connect App Server to the E1 MCP server; start one project-scoped
+  thread; request one direction revision; stream agent/tool/progress events;
+  validate one typed proposal; show context, impact, Preview/Apply/Reject-style
+  approval states in an isolated lab surface while Apply remains disabled.
+- **Non-goals:** F3 product UI, live mutation, rendering, autonomous loops,
+  screenplay generation, image generation, or background operation.
+- **Verify/complete:** one captured round trip is reproducible, schema-valid,
+  explicitly read-only, cancellable, and understandable without terminal output.
+
+#### E1-WP4 — Failure, security, and feasibility gate
+
+- **Tasks:** exercise revoked/expired session, offline, usage limit, incompatible
+  protocol, MCP failure, malformed/adversarial proposal, prompt injection,
+  cancellation, child crash/restart, log redaction, and lab-root containment;
+  record license/distribution questions and the productization delta for F3/B3/R1.
+- **Non-goals:** claiming production security, bundling Codex, or fixing later B3
+  product concerns inside the spike.
+- **Verify/complete:** no StoryStage project or credential changes; every failure
+  is visible and recoverable; exact versions, schemas, tests, recording, and
+  limitations are pushed for Pro and Preston review.
+
+**Required evidence:** pinned version/hash and generated schema, redacted auth/
+account-state receipts, MCP tool contract/tests, one recorded streamed proposal,
+negative/failure matrix, no-secret scan, and exact remote SHA.
+
+**Milestone gate:** Pro and Preston accept the read-only bridge and its known
+compatibility risk. Only then may a separate ticket start F3-WP1; E1 does not
+authorize B1, B3, production mutation, or a silent API/website fallback.
 
 ## 7. Frontend-first phases — Kimi implementation, Codex review
 
@@ -478,14 +568,16 @@ rendering.
 
 ### F3 — Director workspace
 
-**Objective:** provide understandable, scoped manual direction editing before
-AI or backend integration.
+**Objective:** provide understandable scoped manual direction plus the truthful
+creator-facing AI Director shell that later consumes the proven E1 event and
+proposal model.
 
-**Milestone invariant:** Direct, Visual, and Motion edits have explicit
-scene/beat scope, every visible action is real local state, and committed edits
-can be undone without leaking into another beat.
+**Milestone invariant:** Direct, Visual, Motion, and AI proposal interactions
+have explicit episode/sequence/scene/beat/range scope; every visible action is
+real local state or clearly labelled demo/unavailable state; and committed edits
+can be undone without leaking into unrelated work.
 
-**Dependencies/owners:** after G0; Kimi implements packages in listed order,
+**Dependencies/owners:** after accepted E1; Kimi implements packages in listed order,
 Codex reviews, Pro audits the milestone, and Preston accepts it.
 
 #### F3-WP1 — Scope and workspace foundation
@@ -518,21 +610,39 @@ Codex reviews, Pro audits the milestone, and Preston accepts it.
 - **Verify/complete:** each control has observable state; cross-panel history and
   scope tests; Direct/Visual/Motion screenshots; no animation/render wording.
 
-#### F3-WP4 — Responsive/accessibility/evidence gate
+#### F3-WP4 — AI Director conversation and proposal shell
+
+- **Tasks:** add a normal creator-facing AI Director panel using explicit E1-
+  derived fixture states: Codex connection/auth/usage state, persistent thread,
+  episode/scene/beat/range scope, streamed progress, tool activity summary,
+  structured script/direction proposal cards, affected-range/asset impact,
+  Preview, Apply, Revise, Reject, and Undo; add a Create entry for "Write with
+  AI" using Show Pack, cast, target duration, and brief.
+- **Non-goals:** live Codex/App Server connection, API key field, terminal as the
+  ordinary UI, real project mutation, image generation, rendering, background
+  autonomy, or pretending fixture output came from AI.
+- **Verify/complete:** local labelled fixtures cover connected/signed-out/offline/
+  limited/error/cancelled states; scope and proposal actions change only bounded
+  local demo state; creator can understand and reverse one proposed change.
+
+#### F3-WP5 — Responsive/accessibility/evidence gate
 
 - **Tasks:** keyboard and focus flow for beats/tabs/fields/actions; compact
-  layout; reduced motion; exact screenshots/hashes; click-through/evidence.
-- **Non-goals:** F4 assets, persistence, AI, media, or backend work.
+  layout; AI Director thread/proposal focus and live-region semantics; reduced
+  motion; exact screenshots/hashes; click-through/evidence.
+- **Non-goals:** F4 assets, live AI, persistence, media, or backend work.
 - **Verify/complete:** Studio tests, typecheck/build, root verify, 1920×1080,
   1440×900, and 1024×800 browser audit, zero console/page errors, Codex/Pro
   review, Preston acceptance.
 
-**Required evidence:** Direct/Visual/Motion screenshots, scoped edit and
-undo/redo tests across beats/scenes, keyboard/compact captures, exact handback,
-hosted verification, and Pro audit.
+**Required evidence:** Direct/Visual/Motion and AI Director screenshots, scoped
+edit and proposal/undo tests across beats/scenes, truthful connection/error
+states, keyboard/compact captures, exact handback, hosted verification, and Pro
+audit.
 
-**Milestone gate:** Preston can edit, undo, and review direction without state
-leakage or any false production claim.
+**Milestone gate:** Preston can manually edit and undo direction, request or
+review a clearly scoped AI proposal through the truthful local demo, and
+understand what would change without state leakage or any false production claim.
 
 ### F4 — Assets and rigs workspace
 
@@ -906,104 +1016,122 @@ scene review.
 **Milestone gate:** Preston accepts the coherent scene with grounded articulated
 motion and no sliding, clipping, disappearing, ghosting, or nonsensical cuts.
 
-### B3 — Director automation
+### B3 — Subscription-backed AI Director automation
 
-**Objective:** turn screenplay context, approved assets, timing, continuity, and
-the governed multi-shot framework into editable, validated direction proposals.
+**Objective:** productize the accepted E1 Codex bridge so a creator can draft a
+15–20 minute screenplay from a Show Pack brief, turn it into an editable episode
+hierarchy and multi-shot plan, and reiterate one scene or range inside Studio.
 
-**Milestone invariant:** two different scripts receive sensible, editable,
-capability-aware direction proposals while deterministic code retains identity,
-timing, continuity, asset, and render authority.
+**Milestone invariant:** Codex may reason, converse, inspect bounded StoryStage
+context, and propose typed changes; only deterministic StoryStage commands may
+validate and apply approved state. Unrelated scenes, IDs, assets, timing, and
+renders remain unchanged unless the creator explicitly includes them.
 
-**Dependencies/owners:** after B2; Codex implements contracts/provider/validation,
-Kimi reviews proposal editing, Pro audits, and Preston accepts provider policy
-and benchmark quality.
+**Dependencies/owners:** after B2 and accepted E1/F3; Codex implements the host,
+MCP, contracts, validation, and session path; Kimi reviews the product UI; Pro
+audits editorial behavior; Preston accepts privacy, agent authority, and quality.
 
-#### B3-WP1 — Provider and privacy decision
+#### B3-WP1 — Productized Codex bridge and privacy contract
 
-- **Tasks:** select one launch adapter; document explicit consent and request
-  preview, screenplay transmission, credentials in Windows Credential Manager,
-  retention/logging, model/version receipt, visible budget, offline behavior,
-  and the deterministic planner option.
-- **Non-goals:** cookies/session automation, hidden spend, automatic transmission,
-  or binding the product contract to one vendor.
-- **Verify/complete:** Preston accepts the ADR/privacy policy, redacted receipt,
-  and provider-offline behavior before any external request ships.
+- **Tasks:** convert the E1 evidence into one launch ADR; pin/discover the
+  supported Codex runtime and generated App Server schema; use local stdio;
+  delegate sign-in, token refresh, sign-out, account, model, and usage state to
+  Codex; define explicit script/context transmission, retention/logging,
+  diagnostics redaction, offline behavior, and manual/deterministic fallback.
+- **Non-goals:** OpenAI API key UI, provider billing, cookie/session automation,
+  remote WebSocket exposure, arbitrary agent plugins, or silent API fallback.
+- **Verify/complete:** Preston accepts the data/authority policy; signed-out,
+  revoked, offline, limited, incompatible, and crash states are product-truthful;
+  no credential enters a project, backup, log, diagnostic bundle, or Git.
 
-#### B3-WP2 — Multi-shot proposal contract
+#### B3-WP2 — Shared command layer and StoryStage MCP surface
 
-- **Tasks:** implement the retained multi-shot framework as structured episode →
-  sequence → scene → beat → shot intent; purpose, duration bounds, composition,
-  camera, blocking, performance, props/layers, continuity in/out, narration/SFX/
-  music cues, capability requests, confidence, fallback, rationale; follow the
-  governed
-  [`crosswalk`](editorial/multi-shot-prompt-framework-crosswalk.md) rather than
-  the generator-oriented source rules.
-- **Non-goals:** fixed 15-second quota, camera variation for its own sake, final
-  frame numbers, canonical hashes from AI, or generated-video prompts.
-- **Verify/complete:** schema/semantic tests and human-readable examples for a
-  quiet Kids scene and an active Kids scene.
+- **Tasks:** route manual UI and AI actions through the same typed application
+  commands; expose least-privilege read tools for project/show/script/selection/
+  assets/rigs/layers/continuity/timing plus proposal, preview, apply, undo, and
+  selected-range render requests; add scope, size, path, cancellation, and
+  permission checks with human confirmation for every durable or costly action.
+- **Non-goals:** raw project-file mutation, general shell/filesystem access,
+  model-authored IDs/hashes/frames, asset approval, or an agent-specific domain.
+- **Verify/complete:** UI and MCP parity tests, tool authorization matrix,
+  idempotency/stale-version checks, prompt-injection cases, and fail-closed MCP
+  startup prove one command path and one source of project truth.
 
-#### B3-WP3 — Deterministic baseline and validation
+#### B3-WP3 — Hierarchical screenplay and multi-shot proposal contract
 
-- **Tasks:** extract current heuristic behavior behind one planner interface;
-  validate source lineage, hierarchy, durations, screen direction, geography,
-  character/prop continuity, asset/capability availability, camera bounds, and
-  renderability; return warnings/fallback requests rather than silent invention.
-- **Non-goals:** provider call, quality claims, or automatic acceptance.
-- **Verify/complete:** frozen equivalence fixtures, adversarial invalid proposals,
-  deterministic validation results, no provider logic in compiler/runtime.
+- **Tasks:** define typed creative brief → screenplay → episode → sequence →
+  scene → beat → shot proposals; include Show Pack/cast, target duration,
+  dialogue/narration, dramatic purpose, duration bounds, composition, camera,
+  blocking, performance, props/layers, continuity in/out, narration/SFX/music
+  cues, capability requests, confidence, fallback, rationale, and affected scope;
+  follow the governed
+  [`crosswalk`](editorial/multi-shot-prompt-framework-crosswalk.md).
+- **Non-goals:** fixed 15-second or shot quotas, final frame numbers, canonical
+  hashes from AI, generated-video prompts, or accepting prose as project state.
+- **Verify/complete:** schema/semantic/migration tests and readable examples for
+  a complete Kids episode brief, a quiet scene, and an active scene.
 
-#### B3-WP4 — Provider-neutral AI bridge
+#### B3-WP4 — Deterministic planning, validation, and compilation
 
-- **Tasks:** provider-neutral desktop adapter for the approved B3-WP1 provider;
-  exact input package; JSON-only output; invocation receipt; timeout,
-  cancellation, log redaction, schema validation, explicit no-fallback behavior;
-  manual structured import/export; no credentials in repository/project.
-- **Non-goals:** ChatGPT website automation, hidden session reuse, model-authored
-  IDs/hashes/frames, or mandatory paid API.
-- **Verify/complete:** success/invalid/timeout/cancel/offline/adversarial tests;
-  secret scans; same proposal imports manually; adapter remains replaceable.
+- **Tasks:** retain a deterministic/manual planning path; validate source
+  lineage, hierarchy, total/scene duration bounds, screen direction, geography,
+  character/prop continuity, asset/capability availability, camera bounds, audio
+  timing, and renderability; compile only accepted intent into bounded Godot jobs
+  and the canonical Remotion plan; explain warnings and fallback requests.
+- **Non-goals:** model/provider call, automatic creative acceptance, taste score,
+  or silent invention of assets/capabilities.
+- **Verify/complete:** adversarial proposals fail predictably; accepted proposals
+  compile deterministically; no agent/provider logic enters Godot or Remotion.
 
-#### B3-WP5 — Proposal review, patch, and range regeneration
+#### B3-WP5 — AI Director sessions, context, and proposal streaming
 
-- **Tasks:** connect accepted F3 Director UI to real proposal state; diff;
-  accept/reject/edit by scene/beat/shot; apply deterministic patch; undo/redo;
-  regenerate only selected range; stale proposal detection after source change.
-- **Non-goals:** silent auto-apply, entire-episode regeneration for one edit, or
-  persistence outside B1 project path.
-- **Verify/complete:** edit survives reopen; unaffected hashes/ranges remain
-  stable; rejected proposal cannot reach compiler; UI truth states match.
+- **Tasks:** connect the accepted F3 panel to persistent project/episode/scene
+  threads; assemble only the selected bounded context; stream messages, tool
+  activity, progress, approvals, cancellation, and errors; support "Write a
+  15-minute Ollo episode" and scene/beat/range revision prompts; validate typed
+  output before it appears as a proposal; preserve model/version/invocation
+  receipts without exposing engineering jargon in normal UI.
+- **Non-goals:** background autonomous production, whole-project context on every
+  turn, hidden retries/spend, image/voice entitlement assumptions, or auto-apply.
+- **Verify/complete:** create/resume/compact/cancel/restart and stale-context tests
+  pass; a long-form draft and scoped scene revision remain reviewable and do not
+  mutate canonical state.
 
-#### B3-WP6 — Editorial quality and continuity evaluator
+#### B3-WP6 — Proposal review, patch, undo, and selected-range rebuild
 
-- **Tasks:** encode only evidence-backed Scene Craft hard rules as blockers;
-  warnings/priors remain advisory; purposeful coverage, listener reaction,
-  motivated cut/camera, action follow-through, energy/reveal, audio-led timing;
-  semantic exception reasons and audit report.
-- **Non-goals:** universal shot quotas, equal durations, automated taste score as
-  authority, or overfitting the Mr. Kipley reference.
-- **Verify/complete:** rule taxonomy tests, exceptions, zero false production
-  authority, Pro review on varied scenes.
+- **Tasks:** show before/after script/direction diff, affected shots/range/assets,
+  accept/reject/edit by hierarchy level, preview the proposal, apply through the
+  deterministic command layer, undo/redo, regenerate only selected scope, and
+  mark proposals stale when source/context changes.
+- **Non-goals:** silent auto-apply, entire-episode regeneration for one scene,
+  or persistence outside the B1 project path.
+- **Verify/complete:** accepted edits survive reopen; rejected/stale proposals
+  cannot compile; unaffected project/range hashes remain stable; UI truth matches.
 
-#### B3-WP7 — Two-script and 30-second benchmark gate
+#### B3-WP7 — Editorial evaluator and two-brief milestone gate
 
-- **Tasks:** run one unseen Kids script and one materially different Weird
-  History script; compare deterministic and AI proposals blind; exercise the
-  retained multi-shot grammar with original StoryStage content/assets through
-  the ordinary path; record failures, edits, receipts, and capability gaps.
-- **Non-goals:** copying characters/art, generated-video service, or special
-  benchmark composition.
-- **Verify/complete:** outputs are distinct, coherent, editable, capability-valid,
-  and not noun-substitution templates; Preston accepts the assisted workflow.
+- **Tasks:** encode only evidence-backed Scene Craft hard rules as blockers while
+  keeping taste priors advisory; test purposeful coverage, reactions, motivated
+  cuts/camera, action follow-through, energy/reveal, audio-led timing, and
+  continuity; run one unseen 15–20 minute Kids brief plus one materially different
+  Weird History brief through script and direction proposal; compare/edit blind
+  and record capability gaps.
+- **Non-goals:** equal durations, universal shot quotas, overfitting Mr. Kipley,
+  copying reference art/characters, generated-video services, or a benchmark-only
+  composition.
+- **Verify/complete:** plans are distinct, coherent, editable, capability-valid,
+  and not noun-substitution templates; scoped revision leaves unrelated work
+  stable; Pro and Preston accept the assisted workflow.
 
-**Required evidence:** typed proposal/schema tests, privacy and provider-offline
-states, rule/fallback explanations, deterministic compile results, edit/accept/
-reject/regenerate flows, and two materially different script benchmarks.
+**Required evidence:** exact App Server/schema/runtime receipts, auth/privacy and
+failure states, MCP/tool authority tests, typed screenplay/proposal examples,
+deterministic compile results, persistent session evidence, edit/preview/apply/
+reject/undo/range-regeneration flows, and two materially different briefs.
 
-**Milestone gate:** Pro and Preston accept sensible, materially different plans
-for two scripts; deterministic validation blocks unrenderable or incoherent
-direction and all proposals remain editable.
+**Milestone gate:** Pro and Preston accept a sensible editable long-form Kids
+script/plan, a distinct Weird History proposal, and a coherent scene-level
+revision; deterministic validation blocks unrenderable or unauthorized changes,
+and StoryStage contains no API-key or website/session automation path.
 
 ### B4 — Narration and sound engine
 
@@ -1149,8 +1277,9 @@ made, corrected, rendered, and backed up through the ordinary product path.
 before long-form reliability and release-candidate testing.
 
 **Milestone invariant:** a clean Windows profile can run the pinned application,
-Godot, ffmpeg, and Remotion path without the development repository, separate
-developer tools, or hidden secrets. R1 depends on B5 and precedes B6.
+Godot, ffmpeg, Remotion, and supported Codex/App Server path without the
+development repository, a Node/pnpm toolchain, API keys, or hidden secrets. R1
+depends on B5 and precedes B6.
 
 **Dependencies/owners:** Codex owns packaging/runtime work, Pro audits clean-
 machine evidence, and Preston decides signing and update policy.
@@ -1159,7 +1288,9 @@ machine evidence, and Preston decides signing and update policy.
 
 - **Tasks:** select one Windows packager; pin and bundle Electron/Chromium,
   Studio, workers, Godot, Remotion/ffmpeg, Sharp/native modules, fonts, assets,
-  versions, licenses, runtime discovery, and preflight.
+  versions, licenses, runtime discovery, and preflight; choose and license-review
+  either a pinned supported Codex runtime distribution or verified installed-
+  client discovery, including generated App Server protocol compatibility.
 - **Non-goals:** auto-updating dependencies or bundling unlicensed binaries.
 - **Verify/complete:** manifest and missing-runtime checks prove one reproducible
   package with plain incompatible-machine guidance.
@@ -1185,17 +1316,19 @@ machine evidence, and Preston decides signing and update policy.
 #### R1-WP4 — Clean-machine matrix
 
 - **Tasks:** test standard users, fresh accounts, spaces/non-ASCII paths, offline
-  launch, multiple measured hardware profiles, project open, B5 playback, and
-  ordinary render without Node, pnpm, a checkout, or manual runtime installs.
+  launch, signed-out/signed-in Codex, expired/revoked/usage-limited sessions,
+  multiple measured hardware profiles, project open, B5 playback, and ordinary
+  render without Node, pnpm, a checkout, or undocumented runtime installs.
 - **Non-goals:** guessed hardware promises or unsupported platforms.
 - **Verify/complete:** clean-machine videos/logs establish the draft supported
   matrix and the packaged B5 workflow succeeds.
 
 #### R1-WP5 — Diagnostics, privacy, and notices
 
-- **Tasks:** user-triggered redacted support bundle, runtime/toolchain report,
-  safe cache repair, actionable worker failure guidance, privacy review, third-
-  party notices, engine attribution, and known limitations.
+- **Tasks:** user-triggered redacted support bundle, runtime/toolchain/App Server
+  compatibility report, safe cache repair, actionable worker/auth/MCP failure
+  guidance, privacy review, third-party notices, engine/agent attribution, and
+  known limitations without Codex auth state or conversation content by default.
 - **Non-goals:** automatic telemetry/upload or evidence jargon in normal UI.
 - **Verify/complete:** injected Godot/ffmpeg/device/media failures are actionable;
   no token or personal media leaks without explicit inclusion.
@@ -1428,9 +1561,11 @@ Pro audits the release candidate, and Preston accepts the RC and known issues.
 
 #### R2-WP1 — Security and privacy
 
-- **Tasks:** Electron threat model; CSP/navigation/IPC; credential vault;
-  provider/log redaction; path containment; untrusted media limits; support-
-  bundle privacy; no-secret scans.
+- **Tasks:** Electron threat model; CSP/navigation/IPC; Codex child-process and
+  stdio isolation; App Server version/schema pinning; Codex-owned auth boundary;
+  StoryStage MCP tool allowlist and approval matrix; prompt-injection and
+  malicious-project tests; log/conversation redaction; path containment;
+  untrusted media limits; support-bundle privacy; no-secret scans.
 - **Non-goals:** enterprise certification or automatic telemetry.
 - **Verify/complete:** security packet passes with no open P0/P1 finding.
 
@@ -1470,7 +1605,8 @@ Pro audits the release candidate, and Preston accepts the RC and known issues.
 
 #### R2-WP6 — Full regression, help, and RC build
 
-- **Tasks:** F1-F6, B1-B7, Kids 20-minute, Weird History, provider offline,
+- **Tasks:** E1, F1-F6, B1-B7, Kids 20-minute, Weird History, Codex not-installed/
+  signed-out/revoked/offline/usage-limit/incompatible/MCP-failure states,
   install/uninstall, render/delivery, support bundle; concise first-run/help and
   sample projects; classify every defect against one immutable build.
 - **Non-goals:** new features or widening supported hardware during RC.
@@ -1629,6 +1765,9 @@ The following never wait until launch:
   behavior before it is advertised.
 - **Security/privacy:** no credentials/sessions in Git, projects, screenshots, or
   support bundles; subprocess and file boundaries are explicit.
+- **AI authority:** every model-visible context is explicitly scoped; durable or
+  costly actions require a reviewable typed proposal and human approval; manual
+  UI and MCP use the same validated command layer.
 - **Evidence:** exact remote SHA, tests, actual UI/render/audio, limitations, and
   hosted checks are recorded before acceptance.
 
@@ -1649,6 +1788,9 @@ Do not proceed to private launch when any of the following is true:
   supported Windows configuration;
 - the packaged app requires developer tools, a repository checkout, hidden
   credentials, or undocumented machine state;
+- the Codex/App Server bridge lacks an honest installed/auth/offline/usage-limit/
+  incompatible-version state, can expose credentials, or can bypass the
+  StoryStage MCP allowlist and proposal approval path;
 - required provider privacy, media rights, citation, accessibility, or support
   ownership remains unresolved.
 
@@ -1660,8 +1802,10 @@ Do not proceed to private launch when any of the following is true:
 | Old proofs mistaken for product               | B1 reuse-versus-retire audit; no proof counts as phase completion                  | B1-WP1                 |
 | Ollo source/rig inconsistency                 | exact readiness audit and Preston registration/motion gates                        | B2-WP1–3               |
 | Godot/Remotion mismatch                       | pinned Godot RGBA passes; one Remotion preview/final composition                   | B2-WP5–6               |
-| AI produces incoherent/random direction       | structured proposal, deterministic validation, human edits, two-script benchmark   | B3                     |
-| ChatGPT subscription treated as API           | no website/session automation; prompt packs/manual import; optional real API later | F4/B3                  |
+| AI produces incoherent/random direction       | structured proposal, deterministic validation, human edits, two-brief benchmark     | B3                     |
+| ChatGPT subscription treated as an API/session | Codex owns official ChatGPT auth; no key/cookie/web automation or silent fallback  | E1/B3/R2               |
+| Agent gains hidden production authority       | least-privilege MCP, one command layer, typed diff, approval, undo, scoped context  | E1/F3/B3/R2            |
+| App Server protocol changes                    | pinned runtime/schema, stable-method preference, compatibility preflight and gate   | E1/B3/R1               |
 | Audio underestimated                          | F5 UI then B4 engine before finished pilot                                         | F5/B4                  |
 | 20-minute memory/render failure               | selected-range caches, chunks, resume, exact 36,000-frame soak                     | B6                     |
 | Unlicensed Google/stock/SFX/media             | source/license metadata and hard delivery readiness rules                          | F4/B4/B7/R2            |
@@ -1673,8 +1817,9 @@ Do not proceed to private launch when any of the following is true:
 | Decision                     | Recommended default                                                                                                                                     | Deadline        |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
 | Private-launch grammar scope | Kids 20-minute workflow and one Weird History pilot are both required                                                                                   | G0 gate         |
-| AI provider                  | One provider-neutral cloud API adapter with explicit consent, user key in Windows Credential Manager, visible estimate, and deterministic local planner | B3-WP1          |
-| Screenplay privacy           | No transmission until explicitly enabled and disclosed; no cookies/session automation                                                                   | B3-WP1          |
+| AI agent                     | Codex first through local App Server + official ChatGPT sign-in + StoryStage MCP; no API-key or website-session fallback                                 | E1/B3-WP1       |
+| Agent extensibility          | Keep domain commands agent-neutral, but do not build or ship a generic provider/plugin framework in v1                                                     | B3-WP2          |
+| Screenplay privacy           | Show scope before each request; Codex owns auth; no cookies, raw tokens, API keys, silent background transmission, or conversation content in diagnostics | E1/B3-WP1/R2    |
 | TTS                          | Not required; user recording/import first                                                                                                               | F5 gate         |
 | Stock/archive/audio          | Approved sources and license policy; no unlicensed scraping                                                                                             | B7-WP2          |
 | Windows signing              | Obtain a certificate if practical; otherwise explicitly accept unsigned private-beta friction                                                           | R1-WP2          |
@@ -1694,6 +1839,6 @@ pilot exists. The private-launch product is complete only after B7, R2, and L1
 acceptance. B8 is either `NOT REQUIRED` or complete only for the exact activated
 specialist shot class. S1 closes the first stabilization cycle.
 
-The next permissible action after this roadmap is accepted is **F3-WP1 only**.
-No F3 implementation, later frontend phase, backend phase, or launch package is
-authorized merely by this document existing.
+The next permissible action after this amended roadmap is accepted is
+**E1-WP1 only**. No later E1 package, F3 implementation, later frontend phase,
+backend phase, or launch package is authorized merely by this document existing.

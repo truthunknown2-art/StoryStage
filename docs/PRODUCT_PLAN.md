@@ -29,6 +29,10 @@ It does **not** generate finished video through Veo, Seedance, or a similar serv
 - Approximate 6–8-viseme lip sync with manual correction, not expensive perfect facial solving.
 - Real imported or locally stored SFX and music.
 - ChatGPT-assisted image creation through an explicit manual request/import workflow first.
+- Codex as the first supported in-product AI Director, launched locally through
+  the official Codex App Server and signed in through Codex's browser-mediated
+  **Sign in with ChatGPT** flow. StoryStage never asks for an OpenAI API key,
+  never copies browser cookies, and never stores the user's ChatGPT credentials.
 - Godot 4.x as the free, open-source 2D character/performance engine; no paid
   animation runtime or per-export dependency is required for ordinary episodes.
 - Remotion as the canonical episode editor, compositor, timing/audio authority,
@@ -59,19 +63,28 @@ A simple episode list with thumbnail, title, grammar/style, duration, and honest
 
 ### Create
 
-- Paste or import a script.
+- Start from a pasted/imported script or ask the AI Director to draft one for a
+  selected Show Pack, grammar, target duration, cast, and creative brief.
 - Choose Kids Adventure or Weird History.
 - Choose an art direction.
 - Choose estimated, guide, imported, or record-later narration.
 - Show estimated duration.
-- Preview detected acts, sequences, scenes, and natural beats.
-- Create an editable first cut.
+- Preview the proposed episode → sequence → scene → beat hierarchy before it
+  becomes project state.
+- Revise, approve, or reject the script/hierarchy proposal, then create an
+  editable first cut. A request such as "write a 15-minute Ollo episode" never
+  silently renders or overwrites a project.
 
 ### Studio
 
 - **Left:** collapsible acts, sequences, scenes, and beats.
 - **Center:** authoritative Remotion preview and real transport controls.
 - **Right:** Direct, Visual/Camera, Motion, Assets/Rigs, and Audio inspectors.
+- **AI Director:** a persistent creator-facing conversation that clearly shows
+  whether it is scoped to the episode, sequence, scene, beat, or selected range;
+  streams progress; explains proposed changes; and offers Preview, Apply,
+  Revise, Reject, and Undo. Accepted changes use the same validated commands as
+  manual controls.
 - **Bottom:** compact episode overview plus expanded tracks for the selected scene.
 - **Tracks:** characters, props, camera, voice, SFX, and music.
 - **Top-right:** Preview and Export.
@@ -92,7 +105,7 @@ Codex reviews and integrates these phases but does not start unrelated backend i
 | ------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | **F1 — Projects + Create**            | One unified entry, project list, and Create screen matching the approved product direction     | 1440×900 and 1920×1080 screenshots; script import, selections, demo loading, and navigation work; no dead success controls |
 | **F2 — Long-form Studio shell**       | Hierarchical scene rail, preview area, transport, and 20-minute episode overview               | The complete demo episode is navigable without losing selection, flooding the screen, or freezing                          |
-| **F3 — Director workspace**           | Direct, Visual, and Motion panels with explicit beat/scene scope and undo                      | Every visible control changes local state or clearly explains why it is unavailable                                        |
+| **F3 — Director workspace**           | Direct, Visual, Motion, and AI Director proposal/review surfaces with explicit scope and undo   | Every visible control changes local state or clearly explains why it is unavailable                                        |
 | **F4 — Assets and rigs**              | Characters, rigs, locations, layered sets, props, and asset-request views                      | Every scene exposes understandable asset needs and honest readiness                                                        |
 | **F5 — Narration and sound**          | Recording states, take management, voice track, SFX placement, and music controls              | Record/retake/import/mute/retime UX is complete, including permission and missing-device errors                            |
 | **F6 — Timeline, export, and polish** | Track editing, zoom, trim/drag prototypes, export drawer, accessibility, and final visual pass | Preston accepts the complete Projects → Create → Studio click-through as understandable and visually coherent              |
@@ -140,6 +153,42 @@ a roadmap amendment before further engine work. Passing E0 permits Godot to
 remain the planned B2 engine. It does not accept a final rig, final character
 art, visual quality, the frontend gate, or B2.
 
+### E1 — approved ChatGPT-subscription agent-bridge feasibility spike
+
+Before F3, StoryStage proves the exact AI integration surface that F3 will
+design around. Like E0, E1 is an isolated research exception: it is not backend
+product implementation and it does not connect production projects, rendering,
+or durable mutation.
+
+The spike must:
+
+- launch one pinned Codex App Server child process over local stdio and complete
+  the documented initialize, thread, turn, streaming, cancellation, and shutdown
+  lifecycle;
+- use Codex's official **Sign in with ChatGPT** browser flow and existing Codex
+  credential state. StoryStage must not request, receive, log, back up, or store
+  the user's password, browser cookies, API key, access token, or refresh token;
+- connect Codex to a read-only StoryStage MCP server exposing only one bounded,
+  synthetic scene and a small allowlisted context/tool vocabulary;
+- ask for one structured direction revision, validate it against a pinned schema,
+  and display streamed progress plus an approval request in an isolated lab UI;
+- prove that no command can change a project, call a renderer, approve an asset,
+  write outside the lab root, or invent canonical IDs, hashes, timings, or files;
+- demonstrate honest not-installed, signed-out, expired/revoked, offline,
+  usage-limited, incompatible-version, MCP-startup-failed, cancel, and child-
+  process-crash states; and
+- record the exact Codex/App Server version, generated protocol schema, launch
+  command, supported stable versus experimental methods, checks, and known
+  compatibility risk without committing credentials or Codex state.
+
+E1 passes only when the read-only round trip works and the failure/security
+matrix is truthful. A pass authorizes F3 to build fixture-backed creator UX
+against the proven event/proposal model. It does not authorize B1/B3, live
+project mutation, background autonomy, or image generation through the consumer
+ChatGPT Images product. A failure keeps F3 paused and requires a new integration
+decision; StoryStage does not silently fall back to an API key or website
+automation.
+
 ## 4. Backend delivery — Codex
 
 Godot is the planned articulated 2D performance worker. StoryStage generates
@@ -154,24 +203,33 @@ captions, and editorial timing.
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | **B1 — One durable project path**   | Approved UI connected to real save/load and long-form project state                                                                                | Create, edit, close, and reopen without using hidden Legacy surfaces                                                         |
 | **B2 — Ollo visual engine**         | Godot-driven real Ollo rig and action graph; Remotion-driven layered Little Wood set, foreground occlusion, ambient motion, and canonical playback | One coherent 25–30 second scene with grounded articulated motion and no sliding, clipping, disappearing, or nonsensical cuts |
-| **B3 — Director automation**        | Natural scene/beat/shot planning, continuity, camera, action, props, and editable AI proposals                                                     | Two different scripts create sensible, editable plans rather than fixture output                                             |
+| **B3 — AI Director automation**     | Subscription-backed Codex sessions, 15–20 minute script/hierarchy drafting, scene/shot planning, continuity, camera, action, props, and editable proposals | Two different briefs create sensible, editable scripts/plans and one scene can be revised without disturbing unrelated work  |
 | **B4 — Narration and sound engine** | Microphone recording, WAV storage, take editing, approximate lip sync, SFX, music, and final mix                                                   | Audio survives reload and exported MP4 contains synchronized picture and sound                                               |
 | **B5 — Finished Kids pilot**        | Complete 2–3 minute Ollo episode through ordinary Studio                                                                                           | Preston accepts direction, animation, sound, and downloadable MP4                                                            |
 | **B6 — Long-form production**       | Long-script ingest, caching, selected-range preview, chunked/stitch rendering                                                                      | Reliable exact 36,000-frame, 20-minute, 30 fps export without memory failure                                                 |
 | **B7 — Weird History grammar**      | Archival/stock media, kinetic type, evidence cards, and faster editorial pacing                                                                    | One publishable Weird History pilot through the same product                                                                 |
 | **B8 — Specialist shot bridge**     | Blender/After Effects job package and pre-render import                                                                                            | Added only when an approved shot has a need the 2D system cannot reasonably satisfy                                          |
 
-### B3 multi-shot directing adaptation
+### B3 AI Director and multi-shot directing adaptation
 
-The Director will adapt cinematic multi-shot prompt practice into an editable,
-structured production proposal rather than send compressed prose to a
-generated-video service. Its inputs combine the screenplay scene, project
-grammar and art direction, approved assets and rig capabilities, location
-layers and props, selected audio timing, and incoming continuity state. Its
-output describes motivated shots with purpose, duration constraints, cut
-motivation, composition, camera intent, character blocking and performance,
-prop and layer behavior, continuity in/out, audio cues, capability requests,
-and honest fallbacks.
+The first supported AI Director is Codex launched locally through the Codex App
+Server and signed in through Codex's official ChatGPT subscription flow. A
+StoryStage MCP server exposes bounded context and typed commands. The normal
+creator UI shows the conversation, scope, progress, proposals, effects, and
+approval/undo controls; an advanced console may expose diagnostics, but a
+terminal is never required for ordinary creation.
+
+At episode scope, the Director can turn a Show Pack, cast, grammar, target
+duration, and creative brief into an editable screenplay and episode → sequence
+→ scene → beat hierarchy. At scene or beat scope, it adapts cinematic
+multi-shot practice into an editable structured production proposal rather than
+send compressed prose to a generated-video service. Inputs combine the current
+script, project grammar and art direction, approved assets and rig capabilities,
+location layers and props, selected audio timing, incoming continuity, and the
+creator's selected range. Output describes motivated shots with purpose,
+duration constraints, cut motivation, composition, camera intent, character
+blocking and performance, prop/layer behavior, continuity in/out, audio cues,
+capability requests, impact summary, and honest fallbacks.
 
 There is no fixed 15-second duration, shot-count quota, 1,500-character limit,
 forced camera variation, or diegetic-only audio rule. Timing follows dialogue,
@@ -180,8 +238,12 @@ validated and compiled into bounded Godot performance jobs plus the canonical
 Remotion camera, layer, edit, caption, and audio plan. The detailed retained B3
 reference is
 [`editorial/multi-shot-director-adaptation.md`](editorial/multi-shot-director-adaptation.md).
-This retained knowledge grants no implementation authority before the accepted
-Frontend Gate and a separately authorized B3 package.
+Codex may propose changes, preview them, and ask StoryStage to apply them only
+through the same validated command layer used by manual UI controls. It cannot
+directly rewrite canonical project JSON, approve assets, fabricate receipts, or
+silently regenerate unrelated ranges. This retained knowledge and the accepted
+E1 spike grant no backend implementation authority before the Frontend Gate and
+a separately authorized B3 package.
 
 ## 5. Animation production rules
 
@@ -207,7 +269,13 @@ Reusable deterministic motion includes leaf/grass sway, lantern flicker, water d
 
 ### Direction and continuity
 
-The AI Director proposes the screenplay hierarchy, dramatic beat, shot purpose, composition, camera, blocking, action, prop use, transition, narration timing, sound cues, and continuity requirements. The creator can edit or reject those proposals. Deterministic code validates identity, timing, scene state, camera samples, asset availability, and renderability.
+The AI Director proposes the screenplay hierarchy, dramatic beat, shot purpose,
+composition, camera, blocking, action, prop use, transition, narration timing,
+sound cues, and continuity requirements. The creator can preview, revise, apply,
+reject, and undo those proposals at an explicit episode, sequence, scene, beat,
+or selected-range scope. Deterministic code validates identity, timing, scene
+state, camera samples, asset availability, and renderability before an accepted
+proposal becomes canonical.
 
 Characters, props, screen direction, and scene geography persist across cuts unless an authored transition changes them. Shot duration follows performance and narration; scenes are not forced into equal lengths.
 
