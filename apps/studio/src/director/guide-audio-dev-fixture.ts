@@ -18,11 +18,13 @@ import {
   GUIDE_FIXTURE_SAMPLE_RATE,
 } from "./guide-fixture-wav";
 
-export function createGuideAudioFixturePlayback(format: {
-  fps: number;
-  durationInFrames: number;
-}): DirectorGuideAudioPlayback {
-  const script = "Guide timing read fixture.";
+export function createGuideAudioFixturePlayback(
+  format: {
+    fps: number;
+    durationInFrames: number;
+  },
+  script = "Guide timing read fixture.",
+): DirectorGuideAudioPlayback {
   const samplesPerFrame = GUIDE_FIXTURE_SAMPLE_RATE / format.fps;
   if (!Number.isSafeInteger(samplesPerFrame))
     throw new Error("Fixture requires an integer samples-per-frame rate.");

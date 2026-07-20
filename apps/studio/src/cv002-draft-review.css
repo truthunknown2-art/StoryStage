@@ -1456,6 +1456,23 @@
   font-size: 11px;
 }
 
+.guide-audio-strip.is-stale {
+  background: rgba(223, 193, 110, 0.05);
+}
+
+.guide-audio-strip.is-stale .guide-audio-strip-heading strong {
+  color: #dfc16e;
+}
+
+.guide-audio-stale-note {
+  border-left: 2px solid rgba(223, 193, 110, 0.55);
+  color: #c9b98c;
+  font-size: 10.5px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 2px 0 2px 10px;
+}
+
 .director-stage-caption small,
 .director-stage-caption strong {
   display: block;

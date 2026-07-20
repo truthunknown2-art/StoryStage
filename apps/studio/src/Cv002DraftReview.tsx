@@ -186,22 +186,25 @@ export function Cv002DraftReview({
     );
   const pendingSelectedBeatId = useRef<string | null>(null);
   // Explicit development/test fixture: only when the dev server runs with
-  // `?guide-audio-fixture=1`. The production path never fabricates guide
-  // audio — without a host-supplied `guideAudio` prop the Studio renders the
-  // honest silent state.
+  // exactly `?guide-audio-fixture=1`. The production path never fabricates
+  // guide audio — without a host-supplied `guideAudio` prop the Studio
+  // renders the honest silent state. The fixture seals once against the
+  // compiled source cut and is never resealed after Director revisions, so a
+  // retimed cut honestly reports the guide as stale.
   const devFixtureGuideAudio = useMemo(() => {
     if (!import.meta.env.DEV) return null;
     if (
-      !new URLSearchParams(window.location.search).has("guide-audio-fixture")
+      new URLSearchParams(window.location.search).get(
+        "guide-audio-fixture",
+      ) !== "1"
     )
       return null;
-    const director = directorWorkspace
-      ? currentDirectorWorkspaceProject(directorWorkspace)
-      : directorCompilation.directorProject;
-    return director
-      ? createGuideAudioFixturePlayback(director.executableEpisodePlan.format)
+    return directorCompilation.directorProject
+      ? createGuideAudioFixturePlayback(
+          directorCompilation.directorProject.executableEpisodePlan.format,
+        )
       : null;
-  }, [directorCompilation.directorProject, directorWorkspace]);
+  }, [directorCompilation.directorProject]);
   const effectiveGuideAudio = guideAudio ?? devFixtureGuideAudio;
   const [splitCursor, setSplitCursor] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
