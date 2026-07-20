@@ -36,6 +36,7 @@ type ProxyCamera = NonNullable<
 type ProxyStage = NonNullable<
   ExecutableEpisodePlan["proxyStagePrograms"]
 >[number];
+type StageKit = ExecutableEpisodePlan["stageKits"][number];
 type AtlasPerformanceExecution = Extract<
   NonNullable<PerformanceProgram["execution"]>,
   { kind: "atlas-cycle" | "living-hold" }
@@ -179,6 +180,79 @@ const useVerifiedAssetUrl = (
     delayRender,
   ]);
   return verifiedUrl;
+};
+
+export const resolveLayeredStagePlateAssetIds = (stageKit: StageKit) => {
+  const [backgroundAssetId, ...foregroundAssetIds] = stageKit.assetIds;
+  return {
+    backgroundAssetId: backgroundAssetId ?? null,
+    foregroundAssetIds,
+  };
+};
+
+const VerifiedStagePlate: React.FC<{
+  approvedAssets: ApprovedAssetBinding[];
+  assetId: string;
+  depth: "background" | "foreground";
+  parallaxX: number;
+  parallaxY: number;
+}> = ({ approvedAssets, assetId, depth, parallaxX, parallaxY }) => {
+  const verifiedUrl = useVerifiedAssetUrl(
+    approvedAsset(approvedAssets, assetId),
+  );
+  if (!verifiedUrl) return null;
+  const overscan = depth === "background" ? 6 : 3;
+  return (
+    <VerifiedRasterImage
+      alternative={{ kind: "decorative" }}
+      assetId={assetId}
+      data-stage-plate={depth}
+      src={verifiedUrl}
+      style={{
+        height: `${100 + overscan * 2}%`,
+        left: `${-overscan + parallaxX}%`,
+        maxWidth: "none",
+        objectFit: "cover",
+        position: "absolute",
+        top: `${-overscan + parallaxY}%`,
+        width: `${100 + overscan * 2}%`,
+        zIndex: depth === "background" ? 0 : 12,
+      }}
+    />
+  );
+};
+
+const LayeredStagePlates: React.FC<{
+  approvedAssets: ApprovedAssetBinding[];
+  cameraX: number;
+  cameraY: number;
+  stageKit: StageKit;
+}> = ({ approvedAssets, cameraX, cameraY, stageKit }) => {
+  const { backgroundAssetId, foregroundAssetIds } =
+    resolveLayeredStagePlateAssetIds(stageKit);
+  return (
+    <>
+      {backgroundAssetId ? (
+        <VerifiedStagePlate
+          approvedAssets={approvedAssets}
+          assetId={backgroundAssetId}
+          depth="background"
+          parallaxX={cameraX * -0.18}
+          parallaxY={cameraY * -0.12}
+        />
+      ) : null}
+      {foregroundAssetIds.map((assetId, index) => (
+        <VerifiedStagePlate
+          approvedAssets={approvedAssets}
+          assetId={assetId}
+          depth="foreground"
+          key={assetId}
+          parallaxX={cameraX * (0.2 + index * 0.05)}
+          parallaxY={cameraY * (0.14 + index * 0.03)}
+        />
+      ))}
+    </>
+  );
 };
 
 const useVerifiedPartsRigAssets = (
@@ -781,6 +855,7 @@ const ProxyShot: React.FC<{
   performancePrograms: PerformanceProgram[];
   shotStartFrame: number;
   stage: ProxyStage;
+  stageKit: StageKit;
 }> = ({
   approvedAssets,
   camera,
@@ -791,6 +866,7 @@ const ProxyShot: React.FC<{
   performancePrograms,
   shotStartFrame,
   stage,
+  stageKit,
 }) => {
   const frame = useCurrentFrame();
   const canonicalFrame = evaluateContinuityFrame(
@@ -828,6 +904,9 @@ const ProxyShot: React.FC<{
       : 0;
   const diagram = camera.purpose === "diagram";
   const textEmphasis = camera.purpose === "text-emphasis";
+  const stagePlates = resolveLayeredStagePlateAssetIds(stageKit);
+  const hasBackgroundPlate = stagePlates.backgroundAssetId !== null;
+  const hasForegroundPlates = stagePlates.foregroundAssetIds.length > 0;
   return (
     <AbsoluteFill
       style={{
@@ -841,49 +920,59 @@ const ProxyShot: React.FC<{
           transform: `translate(${canonicalFrame.camera.x + transitionCarry}%, ${canonicalFrame.camera.y}%) scale(${canonicalFrame.camera.scale}) rotate(${canonicalFrame.camera.rotation}deg)`,
         }}
       >
-        <AbsoluteFill
-          style={{
-            background: `linear-gradient(180deg, ${stage.palette.sky} 0%, ${stage.palette.sky} 58%, ${stage.palette.ground} 58%, ${stage.palette.ground} 100%)`,
-          }}
+        <LayeredStagePlates
+          approvedAssets={approvedAssets}
+          cameraX={canonicalFrame.camera.x}
+          cameraY={canonicalFrame.camera.y}
+          stageKit={stageKit}
         />
-        <div
-          style={{
-            background: stage.palette.accent,
-            borderRadius: "50%",
-            height: 310,
-            opacity: 0.35,
-            position: "absolute",
-            right: 130,
-            top: 82,
-            width: 310,
-          }}
-        />
-        <div
-          style={{
-            border: `8px solid ${stage.palette.ink}`,
-            borderRadius: "50% 50% 0 0",
-            bottom: 205,
-            height: 190,
-            left: 160,
-            opacity: 0.22,
-            position: "absolute",
-            width: 300,
-          }}
-        />
-        <div
-          style={{
-            background: stage.palette.ink,
-            bottom: -85,
-            clipPath:
-              "polygon(0 70%, 15% 45%, 31% 72%, 48% 35%, 66% 68%, 82% 42%, 100% 64%, 100% 100%, 0 100%)",
-            height: 340,
-            left: 0,
-            opacity: 0.18,
-            position: "absolute",
-            width: "100%",
-            zIndex: 8,
-          }}
-        />
+        {!hasBackgroundPlate ? (
+          <>
+            <AbsoluteFill
+              style={{
+                background: `linear-gradient(180deg, ${stage.palette.sky} 0%, ${stage.palette.sky} 58%, ${stage.palette.ground} 58%, ${stage.palette.ground} 100%)`,
+              }}
+            />
+            <div
+              style={{
+                background: stage.palette.accent,
+                borderRadius: "50%",
+                height: 310,
+                opacity: 0.35,
+                position: "absolute",
+                right: 130,
+                top: 82,
+                width: 310,
+              }}
+            />
+            <div
+              style={{
+                border: `8px solid ${stage.palette.ink}`,
+                borderRadius: "50% 50% 0 0",
+                bottom: 205,
+                height: 190,
+                left: 160,
+                opacity: 0.22,
+                position: "absolute",
+                width: 300,
+              }}
+            />
+            <div
+              style={{
+                background: stage.palette.ink,
+                bottom: -85,
+                clipPath:
+                  "polygon(0 70%, 15% 45%, 31% 72%, 48% 35%, 66% 68%, 82% 42%, 100% 64%, 100% 100%, 0 100%)",
+                height: 340,
+                left: 0,
+                opacity: 0.18,
+                position: "absolute",
+                width: "100%",
+                zIndex: 8,
+              }}
+            />
+          </>
+        ) : null}
         {renderableEntities.map(({ entity, performance, resolved }) => {
           if (!resolved.visible) return null;
           return performance ? (
@@ -987,19 +1076,21 @@ const ProxyShot: React.FC<{
             That changed everything.
           </div>
         ) : null}
-        <div
-          style={{
-            background: stage.palette.ink,
-            bottom: -40,
-            clipPath:
-              "polygon(0 62%, 8% 38%, 14% 66%, 20% 32%, 29% 70%, 36% 45%, 42% 66%, 50% 40%, 58% 70%, 67% 36%, 73% 68%, 83% 42%, 90% 66%, 100% 36%, 100% 100%, 0 100%)",
-            height: 220,
-            opacity: 0.38,
-            position: "absolute",
-            width: "100%",
-            zIndex: 12,
-          }}
-        />
+        {!hasForegroundPlates ? (
+          <div
+            style={{
+              background: stage.palette.ink,
+              bottom: -40,
+              clipPath:
+                "polygon(0 62%, 8% 38%, 14% 66%, 20% 32%, 29% 70%, 36% 45%, 42% 66%, 50% 40%, 58% 70%, 67% 36%, 73% 68%, 83% 42%, 90% 66%, 100% 36%, 100% 100%, 0 100%)",
+              height: 220,
+              opacity: 0.38,
+              position: "absolute",
+              width: "100%",
+              zIndex: 12,
+            }}
+          />
+        ) : null}
       </AbsoluteFill>
       <div style={{ left: 48, position: "absolute", top: 42 }}>
         <div
@@ -1096,6 +1187,11 @@ export const DirectorEpisodeRenderer: React.FC<{
           throw new Error(
             `${shot.id} is missing its concrete proxy stage or camera program.`,
           );
+        const stageKit = plan.stageKits.find(
+          (candidate) => candidate.id === shot.stageKitId,
+        );
+        if (!stageKit)
+          throw new Error(`${shot.id} is missing its executable stage kit.`);
         const entities =
           plan.proxyEntityPrograms?.filter(
             (program) => program.shotId === shot.directorShotId,
@@ -1119,6 +1215,7 @@ export const DirectorEpisodeRenderer: React.FC<{
               performancePrograms={plan.performancePrograms}
               shotStartFrame={shot.startFrame}
               stage={stage}
+              stageKit={stageKit}
             />
           </Sequence>
         );
