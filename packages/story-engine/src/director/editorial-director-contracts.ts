@@ -25,6 +25,17 @@ import {
   directorCameraMovementSchema,
   directorShotSizeSchema,
 } from "./director-proposal";
+import {
+  assertGuideClockAbEquality,
+  assertGuideVoiceClockMatchesSources,
+  assertGuideVoiceTimingBasisMatchesClock,
+  bindGuideVoiceClockToFrames,
+  guideVoiceClockSchema,
+  guideVoiceTimingBasisSchema,
+  type GuideVoiceClockSources,
+  type GuideVoiceClockV1,
+  type GuideVoiceTimingBasisV1,
+} from "../guide-voice-clock";
 
 const unique = (
   values: readonly string[],
@@ -509,12 +520,198 @@ export function sealEstimatedEditorialTimingBudget(input: {
   return editorialTimingBudgetSchema.parse(seal(draft));
 }
 
+const editorialSourceRangeSchema = z
+  .object({
+    start: z.number().int().nonnegative().safe(),
+    end: z.number().int().positive().safe(),
+  })
+  .strict()
+  .refine((range) => range.end > range.start, {
+    message: "Editorial source range must have positive length.",
+  });
+
+const textSha256 = (text: string) =>
+  bytesToHex(sha256(new TextEncoder().encode(text)));
+
+const estimatedEditorialTimingBindingSchema = sealedSchema(
+  {
+    schemaVersion: z.literal("1.0"),
+    kind: z.literal("estimated"),
+    timingBudgetContentHash: hashSchema,
+    authority: z.literal("editorial-timing-binding-diagnostic-only"),
+    productionBindable: z.literal(false),
+  },
+  "Estimated editorial timing binding hash is invalid.",
+);
+
+const guideEditorialTimingBindingSchema = sealedSchema(
+  {
+    schemaVersion: z.literal("1.0"),
+    kind: z.literal("guide-audio"),
+    guideVoiceClockContentHash: hashSchema,
+    guideVoiceTimingBasisContentHash: hashSchema,
+    scriptContentHash: hashSchema,
+    audioContentHash: hashSchema,
+    clauseRegistryContentHash: hashSchema,
+    frameGridContentHash: hashSchema,
+    authority: z.literal("editorial-timing-binding-diagnostic-only"),
+    productionBindable: z.literal(false),
+  },
+  "Guide-audio editorial timing binding hash is invalid.",
+);
+
+export const editorialTimingBindingV1Schema = z.union([
+  estimatedEditorialTimingBindingSchema,
+  guideEditorialTimingBindingSchema,
+]);
+
+export type EditorialTimingBindingV1 = z.infer<
+  typeof editorialTimingBindingV1Schema
+>;
+
+const editorialGuideClauseSchema = z
+  .object({
+    clauseRef: identifierSchema,
+    sourceGuideClauseId: identifierSchema,
+    ownerSceneRef: identifierSchema,
+    sourceRange: editorialSourceRangeSchema,
+    text: z.string().min(1),
+    textContentHash: hashSchema,
+    speakerRef: identifierSchema.nullable(),
+    startSample: z.number().int().nonnegative().safe(),
+    endSampleExclusive: z.number().int().positive().safe(),
+  })
+  .strict()
+  .superRefine((clause, context) => {
+    if (clause.endSampleExclusive <= clause.startSample)
+      context.addIssue({
+        code: "custom",
+        path: ["endSampleExclusive"],
+        message:
+          "Editorial guide clause sample range must have positive length.",
+      });
+    if (textSha256(clause.text) !== clause.textContentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["textContentHash"],
+        message: "Editorial guide clause text hash is invalid.",
+      });
+  });
+
+export const editorialGuideClauseRegistryV1Schema = sealedSchema(
+  {
+    schemaVersion: z.literal("1.0"),
+    authority: z.literal("editorial-guide-clause-registry-host-owned"),
+    productionBindable: z.literal(false),
+    guideVoiceClockContentHash: hashSchema,
+    scriptContentHash: hashSchema,
+    audioContentHash: hashSchema,
+    sourceRangeUnit: z.literal("utf16-code-unit-v1"),
+    clauses: z.array(editorialGuideClauseSchema).min(1),
+  },
+  "Editorial guide clause registry hash is invalid.",
+).superRefine((registry, context) => {
+  unique(
+    registry.clauses.map((clause) => clause.clauseRef),
+    ["clauses"],
+    "editorial guide clause ref",
+    context,
+  );
+  registry.clauses.forEach((clause, index) => {
+    const previous = registry.clauses[index - 1];
+    if (
+      previous &&
+      (clause.sourceRange.start < previous.sourceRange.end ||
+        clause.startSample < previous.endSampleExclusive)
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["clauses", index],
+        message:
+          "Editorial guide clauses must preserve source and sample order.",
+      });
+  });
+  unique(
+    registry.clauses.map((clause) => clause.sourceGuideClauseId),
+    ["clauses"],
+    "source guide clause ID",
+    context,
+  );
+});
+
+export type EditorialGuideClauseRegistryV1 = z.infer<
+  typeof editorialGuideClauseRegistryV1Schema
+>;
+
+const editorialGuideFrameClauseSchema = z
+  .object({
+    clauseRef: identifierSchema,
+    startFrame: z.number().int().nonnegative().safe(),
+    endFrameExclusive: z.number().int().positive().safe(),
+  })
+  .strict()
+  .refine((clause) => clause.endFrameExclusive > clause.startFrame, {
+    message: "Editorial guide frame range must have positive length.",
+  });
+
+export const editorialGuideFrameGridV1Schema = sealedSchema(
+  {
+    schemaVersion: z.literal("1.0"),
+    authority: z.literal("editorial-guide-frame-grid-host-owned"),
+    productionBindable: z.literal(false),
+    guideVoiceClockContentHash: hashSchema,
+    guideVoiceTimingBasisContentHash: hashSchema,
+    clauseRegistryContentHash: hashSchema,
+    fps: z.number().int().min(1).max(240),
+    samplesPerFrame: z.number().int().positive().safe(),
+    clauses: z.array(editorialGuideFrameClauseSchema).min(1),
+  },
+  "Editorial guide frame grid hash is invalid.",
+).superRefine((grid, context) => {
+  unique(
+    grid.clauses.map((clause) => clause.clauseRef),
+    ["clauses"],
+    "editorial guide frame clause ref",
+    context,
+  );
+  grid.clauses.forEach((clause, index) => {
+    const previous = grid.clauses[index - 1];
+    if (previous && clause.startFrame < previous.endFrameExclusive)
+      context.addIssue({
+        code: "custom",
+        path: ["clauses", index],
+        message: "Editorial guide frame clauses must preserve frame order.",
+      });
+  });
+});
+
+export type EditorialGuideFrameGridV1 = z.infer<
+  typeof editorialGuideFrameGridV1Schema
+>;
+
+const editorialGuideClauseOwnershipSchema = z
+  .array(
+    z
+      .object({
+        sourceGuideClauseId: identifierSchema,
+        ownerSceneRef: identifierSchema,
+      })
+      .strict(),
+  )
+  .min(1);
+
+export type EditorialGuideClauseOwnership = z.infer<
+  typeof editorialGuideClauseOwnershipSchema
+>;
+
 const beatBindingSchema = z
   .object({
     beatRef: identifierSchema,
     sourceBeatId: identifierSchema,
     sourceBeatContentHash: hashSchema,
     sourceOrder: z.number().int().nonnegative(),
+    sourceRange: editorialSourceRangeSchema,
+    clauseRefs: z.array(identifierSchema),
     role: cv002BeatRoleSchema,
     text: z.string().min(1),
     causalActionRef: identifierSchema,
@@ -596,6 +793,8 @@ const requestSceneSchema = z
     sourceSceneId: identifierSchema,
     sourceSceneContentHash: hashSchema,
     sourceOrder: z.number().int().nonnegative(),
+    sourceRange: editorialSourceRangeSchema,
+    clauseRefs: z.array(identifierSchema),
     sceneWorldContentHash: hashSchema,
     beats: z.array(beatBindingSchema).min(1),
     stages: z.array(stageBindingSchema).min(1),
@@ -610,6 +809,15 @@ const requestSceneSchema = z
       ["beats"],
       "beat ref",
       context,
+    );
+    unique(scene.clauseRefs, ["clauseRefs"], "scene clause ref", context);
+    scene.beats.forEach((beat, beatIndex) =>
+      unique(
+        beat.clauseRefs,
+        ["beats", beatIndex, "clauseRefs"],
+        "beat clause ref",
+        context,
+      ),
     );
     unique(
       scene.stages.map((stage) => stage.stageRef),
@@ -707,9 +915,10 @@ const requestVocabularySchema = z
   .strict();
 
 const editorialPlanningRequestFields = {
-  schemaVersion: z.literal("0.2-pilot"),
+  schemaVersion: z.literal("0.3-pilot"),
   authority: z.literal("editorial-planning-request-diagnostic-only"),
   productionBindable: z.literal(false),
+  sourceRangeUnit: z.literal("utf16-code-unit-v1"),
   pilotId: identifierSchema,
   grammar: cv002GrammarSchema,
   storyProjectContentHash: hashSchema,
@@ -719,7 +928,7 @@ const editorialPlanningRequestFields = {
   showPackContentHash: hashSchema,
   editorialTargetsContentHash: hashSchema,
   capabilityRegistryContentHash: hashSchema,
-  timingBudgetContentHash: hashSchema,
+  timingBinding: editorialTimingBindingV1Schema,
   output: outputFormatSchema,
   sceneWorldContentHashes: z.array(hashSchema).min(1),
   episode: z
@@ -754,6 +963,35 @@ export const editorialPlanningRequestSchema = sealedSchema(
         message: "Request scenes must preserve source order.",
       });
   });
+  const sceneClauseRefs = sequence.scenes.flatMap((scene) => scene.clauseRefs);
+  unique(
+    sceneClauseRefs,
+    ["episode", "sequences", 0, "scenes"],
+    "globally owned guide clause ref",
+    context,
+  );
+  if (
+    request.timingBinding.kind === "estimated" &&
+    sequence.scenes.some(
+      (scene) =>
+        scene.clauseRefs.length > 0 ||
+        scene.beats.some((beat) => beat.clauseRefs.length > 0),
+    )
+  )
+    context.addIssue({
+      code: "custom",
+      path: ["episode"],
+      message: "Estimated requests cannot masquerade as guide-bound requests.",
+    });
+  if (
+    request.timingBinding.kind === "guide-audio" &&
+    sceneClauseRefs.length === 0
+  )
+    context.addIssue({
+      code: "custom",
+      path: ["episode"],
+      message: "Guide-bound requests require host-owned clause refs.",
+    });
   if (
     !same(
       request.sceneWorldContentHashes,
@@ -783,22 +1021,51 @@ export type EditorialPlanningRequestSources = {
   output: EditorialOutputFormat;
 };
 
-export function createEditorialPlanningRequest(
+export type EditorialGuideBindingExpectation = Readonly<{
+  expectedGuideVoiceClockContentHash: string;
+  expectedGuideVoiceTimingBasisContentHash: string;
+}>;
+
+export type GuideBoundEditorialPlanningRequestSources =
+  EditorialPlanningRequestSources & {
+    guideVoiceClock: GuideVoiceClockV1;
+    guideVoiceTimingBasis: GuideVoiceTimingBasisV1;
+    guideVoiceSources: GuideVoiceClockSources;
+    guideBindingExpectation: EditorialGuideBindingExpectation;
+    clauseOwnership: EditorialGuideClauseOwnership;
+  };
+
+type EditorialGuideRequestArtifacts = Readonly<{
+  timingBinding: Extract<EditorialTimingBindingV1, { kind: "guide-audio" }>;
+  clauseRegistry: EditorialGuideClauseRegistryV1;
+}>;
+
+function createEditorialPlanningRequestInternal(
   input: EditorialPlanningRequestSources,
+  guideArtifacts?: EditorialGuideRequestArtifacts,
 ): EditorialPlanningRequest {
-  const pilotId = identifierSchema.parse(input.pilotId);
-  const storyProject = cv002ProjectSchema.parse(input.storyProject);
-  const showPack = showPackSchema.parse(input.showPack);
-  const grammarProfile = grammarProfileSchema.parse(input.grammarProfile);
-  const sceneWorlds = input.sceneWorlds.map((world) =>
+  const pilotIdSource = input.pilotId;
+  const storyProjectSource = input.storyProject;
+  const showPackSource = input.showPack;
+  const grammarProfileSource = input.grammarProfile;
+  const sceneWorldSources = input.sceneWorlds;
+  const capabilityRegistrySource = input.capabilityRegistry;
+  const editorialTargetsSource = input.editorialTargets;
+  const timingBudgetSource = input.timingBudget;
+  const outputSource = input.output;
+  const pilotId = identifierSchema.parse(pilotIdSource);
+  const storyProject = cv002ProjectSchema.parse(storyProjectSource);
+  const showPack = showPackSchema.parse(showPackSource);
+  const grammarProfile = grammarProfileSchema.parse(grammarProfileSource);
+  const sceneWorlds = sceneWorldSources.map((world) =>
     sceneWorldPlanSchema.parse(world),
   );
   const capabilityRegistry = capabilityRegistrySchema.parse(
-    input.capabilityRegistry,
+    capabilityRegistrySource,
   );
-  const editorialTargets = editorialTargetsSchema.parse(input.editorialTargets);
-  const timingBudget = editorialTimingBudgetSchema.parse(input.timingBudget);
-  const output = outputFormatSchema.parse(input.output);
+  const editorialTargets = editorialTargetsSchema.parse(editorialTargetsSource);
+  const timingBudget = editorialTimingBudgetSchema.parse(timingBudgetSource);
+  const output = outputFormatSchema.parse(outputSource);
   if (!verifyShowPackHash(showPack))
     throw new Error("Show Pack hash is invalid.");
   if (
@@ -851,6 +1118,7 @@ export function createEditorialPlanningRequest(
     });
   const capabilityRefFor = (contentHash: string) =>
     opaqueRef("capability", { contentHash });
+  const guideClauses = guideArtifacts?.clauseRegistry.clauses ?? [];
 
   const scenes = storyProject.graph.scenes.map((sourceScene, sceneIndex) => {
     const world = sceneWorlds[sceneIndex]!;
@@ -866,11 +1134,23 @@ export function createEditorialPlanningRequest(
     const sceneRef = opaqueRef("scene", {
       sourceSceneContentHash: sourceScene.contentHash,
     });
+    const sceneClauseRefs = guideClauses
+      .filter((clause) => clause.ownerSceneRef === sceneRef)
+      .map((clause) => clause.clauseRef);
     const beats = sourceScene.beats.map((beat, beatIndex) => ({
       beatRef: opaqueRef("beat", { sourceBeatContentHash: beat.contentHash }),
       sourceBeatId: beat.id,
       sourceBeatContentHash: beat.contentHash,
       sourceOrder: beatIndex,
+      sourceRange: beat.sourceRange,
+      clauseRefs: guideClauses
+        .filter(
+          (clause) =>
+            clause.ownerSceneRef === sceneRef &&
+            clause.sourceRange.start < beat.sourceRange.end &&
+            beat.sourceRange.start < clause.sourceRange.end,
+        )
+        .map((clause) => clause.clauseRef),
       role: beat.role,
       text: beat.text,
       causalActionRef: opaqueRef("causal-action", {
@@ -963,6 +1243,8 @@ export function createEditorialPlanningRequest(
       sourceSceneId: sourceScene.id,
       sourceSceneContentHash: sourceScene.contentHash,
       sourceOrder: sceneIndex,
+      sourceRange: sourceScene.sourceRange,
+      clauseRefs: sceneClauseRefs,
       sceneWorldContentHash: world.contentHash,
       beats,
       stages,
@@ -972,10 +1254,22 @@ export function createEditorialPlanningRequest(
     };
   });
 
+  const timingBinding = guideArtifacts
+    ? guideEditorialTimingBindingSchema.parse(guideArtifacts.timingBinding)
+    : estimatedEditorialTimingBindingSchema.parse(
+        seal({
+          schemaVersion: "1.0" as const,
+          kind: "estimated" as const,
+          timingBudgetContentHash: timingBudget.contentHash,
+          authority: "editorial-timing-binding-diagnostic-only" as const,
+          productionBindable: false as const,
+        }),
+      );
   const draft = {
-    schemaVersion: "0.2-pilot" as const,
+    schemaVersion: "0.3-pilot" as const,
     authority: "editorial-planning-request-diagnostic-only" as const,
     productionBindable: false as const,
+    sourceRangeUnit: "utf16-code-unit-v1" as const,
     pilotId,
     grammar: storyProject.grammar,
     storyProjectContentHash: storyProject.contentHash,
@@ -986,7 +1280,7 @@ export function createEditorialPlanningRequest(
     showPackContentHash: showPack.contentHash,
     editorialTargetsContentHash: editorialTargets.contentHash,
     capabilityRegistryContentHash: capabilityRegistry.contentHash,
-    timingBudgetContentHash: timingBudget.contentHash,
+    timingBinding,
     output,
     sceneWorldContentHashes: scenes.map((scene) => scene.sceneWorldContentHash),
     episode: {
@@ -1013,6 +1307,243 @@ export function createEditorialPlanningRequest(
     maximumRevisionRounds: 1 as const,
   };
   return editorialPlanningRequestSchema.parse(seal(draft));
+}
+
+export function createEditorialPlanningRequest(
+  input: EditorialPlanningRequestSources,
+): EditorialPlanningRequest {
+  return createEditorialPlanningRequestInternal(input);
+}
+
+const editorialGuideBindingExpectationSchema = z
+  .object({
+    expectedGuideVoiceClockContentHash: hashSchema,
+    expectedGuideVoiceTimingBasisContentHash: hashSchema,
+  })
+  .strict();
+
+const snapshotGuideBoundPlanningSources = (
+  input: GuideBoundEditorialPlanningRequestSources,
+): GuideBoundEditorialPlanningRequestSources => {
+  const pilotId = input.pilotId;
+  const storyProject = input.storyProject;
+  const showPack = input.showPack;
+  const grammarProfile = input.grammarProfile;
+  const sceneWorlds = [...input.sceneWorlds];
+  const capabilityRegistry = input.capabilityRegistry;
+  const editorialTargets = input.editorialTargets;
+  const timingBudget = input.timingBudget;
+  const output = input.output;
+  const guideVoiceClock = guideVoiceClockSchema.parse(input.guideVoiceClock);
+  const guideVoiceTimingBasis = guideVoiceTimingBasisSchema.parse(
+    input.guideVoiceTimingBasis,
+  );
+  const sourceInput = input.guideVoiceSources;
+  const script = sourceInput.script;
+  const sourceAudioBytes = sourceInput.audioBytes;
+  if (!(sourceAudioBytes instanceof Uint8Array))
+    throw new Error("Guide audio must be supplied as WAV bytes.");
+  const audioBytes = sourceAudioBytes.slice();
+  const guideBindingExpectation = editorialGuideBindingExpectationSchema.parse(
+    input.guideBindingExpectation,
+  );
+  const clauseOwnership = editorialGuideClauseOwnershipSchema.parse(
+    input.clauseOwnership,
+  );
+  return {
+    pilotId,
+    storyProject,
+    showPack,
+    grammarProfile,
+    sceneWorlds,
+    capabilityRegistry,
+    editorialTargets,
+    timingBudget,
+    output,
+    guideVoiceClock,
+    guideVoiceTimingBasis,
+    guideVoiceSources: { script, audioBytes },
+    guideBindingExpectation,
+    clauseOwnership,
+  };
+};
+
+export type GuideBoundEditorialPlanningArtifacts = Readonly<{
+  request: EditorialPlanningRequest;
+  timingBinding: Extract<EditorialTimingBindingV1, { kind: "guide-audio" }>;
+  clauseRegistry: EditorialGuideClauseRegistryV1;
+  frameGrid: EditorialGuideFrameGridV1;
+}>;
+
+function deriveGuideBoundEditorialPlanningArtifacts(
+  sources: GuideBoundEditorialPlanningRequestSources,
+): GuideBoundEditorialPlanningArtifacts {
+  const storyProject = cv002ProjectSchema.parse(sources.storyProject);
+  const output = outputFormatSchema.parse(sources.output);
+  const clock = assertGuideVoiceClockMatchesSources(
+    sources.guideVoiceClock,
+    sources.guideVoiceSources,
+    {
+      expectedContentHash:
+        sources.guideBindingExpectation.expectedGuideVoiceClockContentHash,
+    },
+  );
+  const basis = assertGuideVoiceTimingBasisMatchesClock(
+    sources.guideVoiceTimingBasis,
+    clock,
+    {
+      expectedContentHash:
+        sources.guideBindingExpectation
+          .expectedGuideVoiceTimingBasisContentHash,
+    },
+  );
+  if (sources.guideVoiceSources.script !== storyProject.sourceText)
+    throw new Error(
+      "Guide-bound editorial planning requires the exact story source script.",
+    );
+  if (basis.fps !== output.fps)
+    throw new Error(
+      "Guide timing basis FPS must equal the editorial request output FPS.",
+    );
+
+  if (sources.clauseOwnership.length !== clock.clauses.length)
+    throw new Error(
+      "Guide clause ownership must cover every clock clause exactly once.",
+    );
+  const clauses = clock.clauses.map((sourceClause, index) => {
+    const ownership = sources.clauseOwnership[index]!;
+    if (ownership.sourceGuideClauseId !== sourceClause.clauseId)
+      throw new Error(
+        "Guide clause ownership must preserve the exact clock clause order and identity.",
+      );
+    const matchingScenes = storyProject.graph.scenes.filter(
+      (scene) =>
+        scene.sourceRange.start <= sourceClause.sourceRange.start &&
+        sourceClause.sourceRange.end <= scene.sourceRange.end,
+    );
+    if (matchingScenes.length !== 1)
+      throw new Error(
+        `Guide clause ${sourceClause.clauseId} crosses or falls outside a source scene.`,
+      );
+    const sourceScene = matchingScenes[0]!;
+    const ownerSceneRef = opaqueRef("scene", {
+      sourceSceneContentHash: sourceScene.contentHash,
+    });
+    if (ownership.ownerSceneRef !== ownerSceneRef)
+      throw new Error(
+        `Guide clause ${sourceClause.clauseId} has a foreign scene owner.`,
+      );
+    const text = storyProject.sourceText.slice(
+      sourceClause.sourceRange.start,
+      sourceClause.sourceRange.end,
+    );
+    const textContentHash = textSha256(text);
+    const clauseRef = opaqueRef("guide-clause", {
+      guideVoiceClockContentHash: clock.contentHash,
+      sourceGuideClauseId: sourceClause.clauseId,
+      ownerSceneRef,
+      sourceRange: sourceClause.sourceRange,
+      textContentHash,
+    });
+    return {
+      clauseRef,
+      sourceGuideClauseId: sourceClause.clauseId,
+      ownerSceneRef,
+      sourceRange: sourceClause.sourceRange,
+      text,
+      textContentHash,
+      speakerRef: sourceClause.speakerRef,
+      startSample: sourceClause.startSample,
+      endSampleExclusive: sourceClause.endSampleExclusive,
+    };
+  });
+  const clauseRegistry = editorialGuideClauseRegistryV1Schema.parse(
+    seal({
+      schemaVersion: "1.0" as const,
+      authority: "editorial-guide-clause-registry-host-owned" as const,
+      productionBindable: false as const,
+      guideVoiceClockContentHash: clock.contentHash,
+      scriptContentHash: clock.scriptContentHash,
+      audioContentHash: clock.audioContentHash,
+      sourceRangeUnit: "utf16-code-unit-v1" as const,
+      clauses,
+    }),
+  );
+  const frameClauses = bindGuideVoiceClockToFrames(clock, basis, {
+    expectedClockContentHash: clock.contentHash,
+    expectedTimingBasisContentHash: basis.contentHash,
+  });
+  const clauseRefBySourceId = new Map(
+    clauseRegistry.clauses.map(
+      (clause) => [clause.sourceGuideClauseId, clause.clauseRef] as const,
+    ),
+  );
+  const frameGrid = editorialGuideFrameGridV1Schema.parse(
+    seal({
+      schemaVersion: "1.0" as const,
+      authority: "editorial-guide-frame-grid-host-owned" as const,
+      productionBindable: false as const,
+      guideVoiceClockContentHash: clock.contentHash,
+      guideVoiceTimingBasisContentHash: basis.contentHash,
+      clauseRegistryContentHash: clauseRegistry.contentHash,
+      fps: basis.fps,
+      samplesPerFrame: basis.samplesPerFrame,
+      clauses: frameClauses.map((clause) => ({
+        clauseRef: clauseRefBySourceId.get(clause.clauseId)!,
+        startFrame: clause.startFrame,
+        endFrameExclusive: clause.endFrameExclusive,
+      })),
+    }),
+  );
+  const timingBinding = guideEditorialTimingBindingSchema.parse(
+    seal({
+      schemaVersion: "1.0" as const,
+      kind: "guide-audio" as const,
+      guideVoiceClockContentHash: clock.contentHash,
+      guideVoiceTimingBasisContentHash: basis.contentHash,
+      scriptContentHash: clock.scriptContentHash,
+      audioContentHash: clock.audioContentHash,
+      clauseRegistryContentHash: clauseRegistry.contentHash,
+      frameGridContentHash: frameGrid.contentHash,
+      authority: "editorial-timing-binding-diagnostic-only" as const,
+      productionBindable: false as const,
+    }),
+  );
+  const request = createEditorialPlanningRequestInternal(sources, {
+    timingBinding,
+    clauseRegistry,
+  });
+  return { request, timingBinding, clauseRegistry, frameGrid };
+}
+
+export function createGuideBoundEditorialPlanningArtifacts(
+  input: GuideBoundEditorialPlanningRequestSources,
+): GuideBoundEditorialPlanningArtifacts {
+  return deriveGuideBoundEditorialPlanningArtifacts(
+    snapshotGuideBoundPlanningSources(input),
+  );
+}
+
+export function createGuideBoundEditorialPlanningRequest(
+  input: GuideBoundEditorialPlanningRequestSources,
+): EditorialPlanningRequest {
+  return createGuideBoundEditorialPlanningArtifacts(input).request;
+}
+
+export function restoreGuideBoundEditorialPlanningRequest(
+  serialized: string,
+  input: GuideBoundEditorialPlanningRequestSources,
+): EditorialPlanningRequest {
+  const sources = snapshotGuideBoundPlanningSources(input);
+  const restored = editorialPlanningRequestSchema.parse(
+    JSON.parse(serialized) as unknown,
+  );
+  const expected = deriveGuideBoundEditorialPlanningArtifacts(sources);
+  if (!same(restored, expected.request))
+    throw new Error(
+      "Guide-bound editorial planning request does not match its exact source artifacts.",
+    );
+  return restored;
 }
 
 export function restoreEditorialPlanningRequest(
@@ -1095,6 +1626,190 @@ export function restoreEditorialPlanningRunSpec(input: {
   });
 }
 
+const editorialPilotPairSpecV1Fields = {
+  schemaVersion: z.literal("1.0"),
+  requestContentHash: hashSchema,
+  timingBindingContentHash: hashSchema,
+  cutARunSpecContentHash: hashSchema,
+  cutBRunSpecContentHash: hashSchema,
+  cutALane: z.literal("heuristic-control"),
+  cutBLane: z.union([
+    z.literal("external-candidate"),
+    z.literal("manual-candidate"),
+  ]),
+  fallbackAllowed: z.literal(false),
+  authority: z.literal("editorial-pilot-pair-diagnostic-only"),
+  productionBindable: z.literal(false),
+};
+
+export const editorialPilotPairSpecV1Schema = sealedSchema(
+  editorialPilotPairSpecV1Fields,
+  "Editorial pilot pair spec hash is invalid.",
+);
+
+export type EditorialPilotPairSpecV1 = z.infer<
+  typeof editorialPilotPairSpecV1Schema
+>;
+
+export function sealEditorialPilotPairSpecV1(input: {
+  request: EditorialPlanningRequest;
+  cutARunSpec: EditorialPlanningRunSpec;
+  cutBRunSpec: EditorialPlanningRunSpec;
+}): EditorialPilotPairSpecV1 {
+  const request = editorialPlanningRequestSchema.parse(input.request);
+  if (request.timingBinding.kind !== "guide-audio")
+    throw new Error("Editorial pilot A/B pairs require guide-audio timing.");
+  const cutARunSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.cutARunSpec,
+  });
+  const cutBRunSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.cutBRunSpec,
+  });
+  if (cutARunSpec.lane !== "heuristic-control")
+    throw new Error("Editorial pilot Cut A must be the heuristic control.");
+  if (
+    cutBRunSpec.lane !== "external-candidate" &&
+    cutBRunSpec.lane !== "manual-candidate"
+  )
+    throw new Error(
+      "Editorial pilot Cut B must be an external or manual candidate.",
+    );
+  return editorialPilotPairSpecV1Schema.parse(
+    seal({
+      schemaVersion: "1.0" as const,
+      requestContentHash: request.contentHash,
+      timingBindingContentHash: request.timingBinding.contentHash,
+      cutARunSpecContentHash: cutARunSpec.contentHash,
+      cutBRunSpecContentHash: cutBRunSpec.contentHash,
+      cutALane: "heuristic-control" as const,
+      cutBLane: cutBRunSpec.lane,
+      fallbackAllowed: false as const,
+      authority: "editorial-pilot-pair-diagnostic-only" as const,
+      productionBindable: false as const,
+    }),
+  );
+}
+
+export function verifyEditorialPilotPair(input: {
+  pairSpec: EditorialPilotPairSpecV1;
+  request: EditorialPlanningRequest;
+  cutARunSpec: EditorialPlanningRunSpec;
+  cutBRunSpec: EditorialPlanningRunSpec;
+  planningSources: EditorialPlanningRequestSources;
+  guideVoiceClock: GuideVoiceClockV1;
+  guideVoiceTimingBasis: GuideVoiceTimingBasisV1;
+  cutAGuideVoiceSources: GuideVoiceClockSources;
+  cutBGuideVoiceSources: GuideVoiceClockSources;
+  clauseOwnership: EditorialGuideClauseOwnership;
+  clauseRegistry: EditorialGuideClauseRegistryV1;
+  frameGrid: EditorialGuideFrameGridV1;
+}): EditorialPilotPairSpecV1 {
+  const rawPairSpec = input.pairSpec;
+  const rawRequest = input.request;
+  const rawCutARunSpec = input.cutARunSpec;
+  const rawCutBRunSpec = input.cutBRunSpec;
+  const planningSources = input.planningSources;
+  const guideVoiceClock = guideVoiceClockSchema.parse(input.guideVoiceClock);
+  const guideVoiceTimingBasis = guideVoiceTimingBasisSchema.parse(
+    input.guideVoiceTimingBasis,
+  );
+  const cutASourceInput = input.cutAGuideVoiceSources;
+  const cutBSourceInput = input.cutBGuideVoiceSources;
+  const clauseOwnership = editorialGuideClauseOwnershipSchema.parse(
+    input.clauseOwnership,
+  );
+  const clauseRegistry = editorialGuideClauseRegistryV1Schema.parse(
+    input.clauseRegistry,
+  );
+  const frameGrid = editorialGuideFrameGridV1Schema.parse(input.frameGrid);
+  const pairSpec = editorialPilotPairSpecV1Schema.parse(rawPairSpec);
+  const request = editorialPlanningRequestSchema.parse(rawRequest);
+  if (request.timingBinding.kind !== "guide-audio")
+    throw new Error(
+      "Editorial pilot A/B verification requires guide-audio timing.",
+    );
+  const cutAScript = cutASourceInput.script;
+  const cutAAudioInput = cutASourceInput.audioBytes;
+  const cutBScript = cutBSourceInput.script;
+  const cutBAudioInput = cutBSourceInput.audioBytes;
+  if (
+    !(cutAAudioInput instanceof Uint8Array) ||
+    !(cutBAudioInput instanceof Uint8Array)
+  )
+    throw new Error(
+      "Editorial pilot guide audio must be supplied as WAV bytes.",
+    );
+  const cutASources = {
+    script: cutAScript,
+    audioBytes: cutAAudioInput.slice(),
+  };
+  const cutBSources = {
+    script: cutBScript,
+    audioBytes: cutBAudioInput.slice(),
+  };
+  assertGuideClockAbEquality(
+    {
+      ...cutASources,
+      clock: guideVoiceClock,
+      timingBasis: guideVoiceTimingBasis,
+    },
+    {
+      ...cutBSources,
+      clock: guideVoiceClock,
+      timingBasis: guideVoiceTimingBasis,
+    },
+    {
+      expectedClockContentHash:
+        request.timingBinding.guideVoiceClockContentHash,
+      expectedTimingBasisContentHash:
+        request.timingBinding.guideVoiceTimingBasisContentHash,
+    },
+  );
+  const commonGuideSources = {
+    ...planningSources,
+    guideVoiceClock,
+    guideVoiceTimingBasis,
+    guideBindingExpectation: {
+      expectedGuideVoiceClockContentHash:
+        request.timingBinding.guideVoiceClockContentHash,
+      expectedGuideVoiceTimingBasisContentHash:
+        request.timingBinding.guideVoiceTimingBasisContentHash,
+    },
+    clauseOwnership,
+  };
+  const cutAArtifacts = createGuideBoundEditorialPlanningArtifacts({
+    ...commonGuideSources,
+    guideVoiceSources: cutASources,
+  });
+  const cutBArtifacts = createGuideBoundEditorialPlanningArtifacts({
+    ...commonGuideSources,
+    guideVoiceSources: cutBSources,
+  });
+  if (
+    !same(request, cutAArtifacts.request) ||
+    !same(request, cutBArtifacts.request) ||
+    !same(clauseRegistry, cutAArtifacts.clauseRegistry) ||
+    !same(clauseRegistry, cutBArtifacts.clauseRegistry) ||
+    !same(frameGrid, cutAArtifacts.frameGrid) ||
+    !same(frameGrid, cutBArtifacts.frameGrid)
+  )
+    throw new Error(
+      "Editorial pilot A/B artifacts do not match their exact guide sources.",
+    );
+  const expected = sealEditorialPilotPairSpecV1({
+    request,
+    cutARunSpec: rawCutARunSpec,
+    cutBRunSpec: rawCutBRunSpec,
+  });
+  if (!same(pairSpec, expected))
+    throw new Error(
+      "Editorial pilot pair spec does not match its request and run specs.",
+    );
+  return pairSpec;
+}
+
 const purposeSchema = z
   .object({
     primaryPurpose: editorialPrimaryPurposeSchema,
@@ -1113,10 +1828,21 @@ const subjectBlockingSchema = z
   })
   .strict();
 
+export const externalEditorialShotTimingIntentSchema = z.union([
+  z.object({ kind: z.literal("estimated") }).strict(),
+  z
+    .object({
+      kind: z.literal("guide-audio"),
+      clauseRefs: z.array(identifierSchema).min(1),
+    })
+    .strict(),
+]);
+
 const externalEditorialShotSchema = z
   .object({
     localOrdinal: z.number().int().nonnegative(),
     beatRefs: z.array(identifierSchema).min(1),
+    timingIntent: externalEditorialShotTimingIntentSchema,
     coverageRole: editorialCoverageRoleSchema,
     stageRef: identifierSchema,
     subjectBlocking: z.array(subjectBlockingSchema),
@@ -1188,7 +1914,7 @@ const externalSequenceSchema = z
  */
 export const externalEditorialIntentDraftSchema = z
   .object({
-    schemaVersion: z.literal("0.2-pilot"),
+    schemaVersion: z.literal("0.3-pilot"),
     requestContentHash: hashSchema,
     episode: z
       .object({
@@ -1302,7 +2028,7 @@ const proposalSequenceSchema = z
   .strict();
 
 const editorialDirectorProposalFields = {
-  schemaVersion: z.literal("1.0"),
+  schemaVersion: z.literal("1.1"),
   authority: z.literal("editorial-pilot-diagnostic-only"),
   productionBindable: z.literal(false),
   requestContentHash: hashSchema,
@@ -1441,9 +2167,19 @@ export function bindEditorialDirectorProposalV1(input: {
       const beatIndexByRef = new Map(
         requestScene.beats.map((beat, index) => [beat.beatRef, index] as const),
       );
+      const clauseIndexByRef = new Map(
+        requestScene.clauseRefs.map(
+          (clauseRef, index) => [clauseRef, index] as const,
+        ),
+      );
       const actionRefByBeat = new Map(
         requestScene.beats.map(
           (beat) => [beat.beatRef, beat.causalActionRef] as const,
+        ),
+      );
+      const clauseRefsByBeatRef = new Map(
+        requestScene.beats.map(
+          (beat) => [beat.beatRef, new Set(beat.clauseRefs)] as const,
         ),
       );
       const subjectRefs = new Set(
@@ -1460,6 +2196,9 @@ export function bindEditorialDirectorProposalV1(input: {
       );
       let previousFirstBeatIndex = -1;
       let previousLastBeatIndex = -1;
+      let previousFirstClauseIndex = -1;
+      let previousLastClauseIndex = -1;
+      const coveredClauseRefs = new Set<string>();
       const editorialShots = scene.editorialShots.map((shot, shotIndex) => {
         if (shot.localOrdinal !== shotIndex)
           throw new Error(
@@ -1490,6 +2229,75 @@ export function bindEditorialDirectorProposalV1(input: {
           );
         previousFirstBeatIndex = firstBeatIndex;
         previousLastBeatIndex = lastBeatIndex;
+        if (request.timingBinding.kind === "estimated") {
+          if (shot.timingIntent.kind !== "estimated")
+            throw new Error(
+              "Estimated editorial requests require estimated shot timing intent.",
+            );
+        } else {
+          if (shot.timingIntent.kind !== "guide-audio")
+            throw new Error(
+              "Guide-bound editorial requests require guide-audio shot timing intent.",
+            );
+          const timingIntent = shot.timingIntent;
+          if (
+            new Set(timingIntent.clauseRefs).size !==
+            timingIntent.clauseRefs.length
+          )
+            throw new Error("Guide-audio shot clause refs must be unique.");
+          const clauseIndexes = timingIntent.clauseRefs.map((clauseRef) => {
+            const clauseIndex = clauseIndexByRef.get(clauseRef);
+            if (clauseIndex == null)
+              throw new Error(
+                `Foreign or cross-scene guide clause ref ${clauseRef}.`,
+              );
+            coveredClauseRefs.add(clauseRef);
+            return clauseIndex;
+          });
+          if (
+            clauseIndexes.some(
+              (clauseIndex, index) => clauseIndex !== clauseIndexes[0]! + index,
+            )
+          )
+            throw new Error(
+              "Guide-audio shot clause refs must be forward, ordered, and contiguous.",
+            );
+          const allowedClauseRefs = new Set(
+            shot.beatRefs.flatMap((beatRef) => [
+              ...(clauseRefsByBeatRef.get(beatRef) ?? []),
+            ]),
+          );
+          if (
+            timingIntent.clauseRefs.some(
+              (clauseRef) => !allowedClauseRefs.has(clauseRef),
+            )
+          )
+            throw new Error(
+              "Guide-audio shot clause refs must belong to its claimed request beats.",
+            );
+          if (
+            shot.beatRefs.some((beatRef) => {
+              const beatClauseRefs = clauseRefsByBeatRef.get(beatRef)!;
+              return !timingIntent.clauseRefs.some((clauseRef) =>
+                beatClauseRefs.has(clauseRef),
+              );
+            })
+          )
+            throw new Error(
+              "Every claimed editorial beat must intersect a cited guide timing clause.",
+            );
+          const firstClauseIndex = clauseIndexes[0]!;
+          const lastClauseIndex = clauseIndexes[clauseIndexes.length - 1]!;
+          if (
+            firstClauseIndex < previousFirstClauseIndex ||
+            lastClauseIndex < previousLastClauseIndex
+          )
+            throw new Error(
+              "Guide-audio editorial shots must preserve nondecreasing first and last clause order.",
+            );
+          previousFirstClauseIndex = firstClauseIndex;
+          previousLastClauseIndex = lastClauseIndex;
+        }
         const stage = stageByRef.get(shot.stageRef);
         if (!stage)
           throw new Error(`Foreign editorial stage ${shot.stageRef}.`);
@@ -1654,6 +2462,15 @@ export function bindEditorialDirectorProposalV1(input: {
       const shotsByOrdinal = new Map(
         editorialShots.map((shot) => [shot.localOrdinal, shot] as const),
       );
+      if (
+        request.timingBinding.kind === "guide-audio" &&
+        requestScene.clauseRefs.some(
+          (clauseRef) => !coveredClauseRefs.has(clauseRef),
+        )
+      )
+        throw new Error(
+          "Guide-bound editorial scene clauses must all be covered by at least one shot.",
+        );
       const coverageCounts = new Map<string, number>();
       const beats = scene.beats.map((beatCoverage, beatIndex) => {
         const requestBeat = requestScene.beats[beatIndex]!;
@@ -1695,7 +2512,7 @@ export function bindEditorialDirectorProposalV1(input: {
   });
 
   const draft = {
-    schemaVersion: "1.0" as const,
+    schemaVersion: "1.1" as const,
     authority: "editorial-pilot-diagnostic-only" as const,
     productionBindable: false as const,
     requestContentHash: request.contentHash,
@@ -1711,7 +2528,7 @@ export function bindEditorialDirectorProposalV1(input: {
 const externalIntentFromProposal = (
   proposal: EditorialDirectorProposalV1,
 ): ExternalEditorialIntentDraft => ({
-  schemaVersion: "0.2-pilot",
+  schemaVersion: "0.3-pilot",
   requestContentHash: proposal.requestContentHash,
   episode: {
     episodeRef: proposal.episode.episodeRef,
