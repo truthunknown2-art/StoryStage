@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   cleanup,
   fireEvent,
@@ -550,5 +552,118 @@ describe("F2-WP2 — long-form navigation and bounded rendering", () => {
       ).getByRole("button", { name: /Scene 1 The Home Nook/ }),
     );
     expect(studio).toHaveTextContent("0:00 / 2:30");
+  });
+});
+
+describe("F2-WP3 — keyboard navigation and responsive quality", () => {
+  async function openDemoStudio(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: /Open local demo project The Storylight in the Little Wood/,
+      }),
+    );
+    return screen.findByTestId("pv1-studio");
+  }
+
+  it("drives the rail keyboard contract across boundaries with focus follow", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const railNav = within(studio).getByRole("navigation", {
+      name: "Episode hierarchy",
+    });
+
+    const sceneButton = (name: RegExp) =>
+      within(railNav).getByRole("button", { name });
+
+    sceneButton(/Scene 1 The Home Nook/).focus();
+    await user.keyboard("{ArrowDown}");
+    expect(
+      within(studio).getByRole("heading", { name: "Forest Path" }),
+    ).toBeInTheDocument();
+    expect(sceneButton(/Scene 2 Forest Path/)).toHaveFocus();
+    expect(sceneButton(/Scene 2 Forest Path/)).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+
+    // Sequence boundary: Scene 2 (seq 1) → Scene 3 (seq 2).
+    await user.keyboard("{ArrowDown}");
+    expect(
+      within(studio).getByRole("heading", { name: "Berry Patch" }),
+    ).toBeInTheDocument();
+    // Act boundary: Scene 4 (act I) → Scene 5 (act II).
+    await user.keyboard("{ArrowDown}");
+    await user.keyboard("{ArrowDown}");
+    expect(
+      within(studio).getByRole("heading", { name: "Lantern Bridge" }),
+    ).toBeInTheDocument();
+    expect(
+      within(studio).getByText(/Scene 5 of 8 · 170s · episode 10:00–12:50 of 20:00/),
+    ).toBeInTheDocument();
+
+    // First/last clamps.
+    await user.keyboard("{End}");
+    expect(
+      within(studio).getByRole("heading", { name: "Back Home" }),
+    ).toBeInTheDocument();
+    await user.keyboard("{ArrowDown}");
+    expect(
+      within(studio).getByRole("heading", { name: "Back Home" }),
+    ).toBeInTheDocument();
+    await user.keyboard("{Home}");
+    expect(
+      within(studio).getByRole("heading", { name: "The Home Nook" }),
+    ).toBeInTheDocument();
+    await user.keyboard("{ArrowUp}");
+    expect(
+      within(studio).getByRole("heading", { name: "The Home Nook" }),
+    ).toBeInTheDocument();
+    expect(sceneButton(/Scene 1 The Home Nook/)).toHaveFocus();
+  });
+
+  it("reveals collapsed ancestors when keyboard navigation targets a hidden scene", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const railNav = within(studio).getByRole("navigation", {
+      name: "Episode hierarchy",
+    });
+
+    // Collapse Sequence 3 (Scenes 5–6), then keyboard from Scene 4 to 5.
+    await user.click(
+      within(railNav).getByRole("button", { name: "Sequence 3 · The journey" }),
+    );
+    const scene4 = within(railNav).getByRole("button", {
+      name: /Scene 4 Little Stream/,
+    });
+    scene4.focus();
+    await user.keyboard("{ArrowDown}");
+
+    expect(
+      within(railNav).getByRole("button", { name: /Scene 5 Lantern Bridge/ }),
+    ).toHaveAttribute("aria-current", "true");
+    expect(
+      within(railNav).getByRole("button", { name: "Sequence 3 · The journey" }),
+    ).toHaveAttribute("aria-expanded", "true");
+    expect(
+      within(studio).getByRole("heading", { name: "Lantern Bridge" }),
+    ).toBeInTheDocument();
+  });
+
+  it("pins the motion, compact-layout, and focus contracts in the stylesheet", () => {
+    const cssPath = resolve(process.cwd(), "src/styles.css");
+    const css = readFileSync(cssPath, "utf8");
+    // Selection motion exists and is disabled under reduced motion.
+    const motionBlock = css.match(
+      /@media \(prefers-reduced-motion: reduce\) \{[^}]*\.pv1-rail-scene[^}]*\}/s,
+    );
+    expect(motionBlock, "reduced-motion block must cover pv1 controls").not.toBeNull();
+    // Compact treatment: stacked ordered regions below 1024px.
+    const compactBlock = css.match(
+      /@media \(max-width: 1024px\) \{[^]*?\.pv1-studio-layout \{[^}]*flex-direction: column/s,
+    );
+    expect(compactBlock, "compact stacked layout rule").not.toBeNull();
+    // Visible keyboard focus contract is global.
+    expect(css).toContain(":focus-visible");
   });
 });

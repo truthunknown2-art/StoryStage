@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import {
   ArrowLeft,
   ChevronDown,
@@ -97,18 +98,67 @@ export function StudioShell({
     return null;
   }, [selectedSceneId]);
 
+  const revealScene = (sceneId: string) => {
+    for (const act of OLLO_DEMO_PROJECT.acts)
+      for (const sequence of act.sequences)
+        if (sequence.scenes.some((scene) => scene.id === sceneId)) {
+          setCollapsedActs((current) => {
+            if (!current.has(act.id)) return current;
+            const next = new Set(current);
+            next.delete(act.id);
+            return next;
+          });
+          setCollapsedSequences((current) => {
+            if (!current.has(sequence.id)) return current;
+            const next = new Set(current);
+            next.delete(sequence.id);
+            return next;
+          });
+          return;
+        }
+  };
+
   const revealSelectedScene = () => {
     if (!sceneLocation) return;
-    setCollapsedActs((current) => {
-      const next = new Set(current);
-      next.delete(sceneLocation.actId);
-      return next;
-    });
-    setCollapsedSequences((current) => {
-      const next = new Set(current);
-      next.delete(sceneLocation.sequenceId);
-      return next;
-    });
+    revealScene(selectedSceneId);
+  };
+
+  const pendingRailFocusId = useRef<string | null>(null);
+
+  /** One authoritative selection path for every surface. Keyboard-driven
+   * changes also reveal collapsed ancestors and return rail focus. */
+  const selectScene = (sceneId: string, returnRailFocus = false) => {
+    setSelectedSceneId(sceneId);
+    revealScene(sceneId);
+    if (returnRailFocus) pendingRailFocusId.current = sceneId;
+  };
+
+  useEffect(() => {
+    if (!pendingRailFocusId.current) return;
+    const focusId = pendingRailFocusId.current;
+    pendingRailFocusId.current = null;
+    document.getElementById(`pv1-rail-scene-${focusId}`)?.focus();
+  });
+
+  /* Rail keyboard contract (documented): ArrowDown/ArrowRight selects the
+   * next scene, ArrowUp/ArrowLeft the previous, Home/End the first/last.
+   * Navigation crosses sequence and act boundaries, clamps at first/last,
+   * reveals collapsed ancestors of the target, and moves focus with the
+   * selection — always through the same authoritative scene state. */
+  const onRailSceneKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    let target: number | null = null;
+    if (event.key === "ArrowDown" || event.key === "ArrowRight")
+      target = Math.min(index + 1, OLLO_DEMO_SCENES.length - 1);
+    else if (event.key === "ArrowUp" || event.key === "ArrowLeft")
+      target = Math.max(index - 1, 0);
+    else if (event.key === "Home") target = 0;
+    else if (event.key === "End") target = OLLO_DEMO_SCENES.length - 1;
+    if (target === null || target === index) return;
+    event.preventDefault();
+    selectScene(OLLO_DEMO_SCENES[target]!.id, true);
   };
 
   return (
@@ -141,6 +191,9 @@ export function StudioShell({
           </p>
         ) : null}
         <nav aria-label="Episode hierarchy" className="pv1-studio-rail">
+          <p className="pv1-rail-hint">
+            Arrow keys move between scenes · Home/End jump to first/last
+          </p>
           {OLLO_DEMO_PROJECT.acts.map((act) => {
             const actCollapsed = collapsedActs.has(act.id);
             const actHidesSelected =
@@ -226,8 +279,10 @@ export function StudioShell({
                                       }
                                       aria-label={`Scene ${index + 1} ${scene.title} — ${scene.seconds} seconds, not produced`}
                                       className={`pv1-rail-scene ${isSelected ? "is-selected" : ""}`}
-                                      onClick={() =>
-                                        setSelectedSceneId(scene.id)
+                                      id={`pv1-rail-scene-${scene.id}`}
+                                      onClick={() => selectScene(scene.id)}
+                                      onKeyDown={(event) =>
+                                        onRailSceneKeyDown(event, index)
                                       }
                                       type="button"
                                     >
@@ -324,7 +379,7 @@ export function StudioShell({
               aria-label="Previous scene"
               disabled={!previousScene}
               onClick={() =>
-                previousScene && setSelectedSceneId(previousScene.id)
+                previousScene && selectScene(previousScene.id)
               }
               type="button"
             >
@@ -339,7 +394,7 @@ export function StudioShell({
             <button
               aria-label="Next scene"
               disabled={!nextScene}
-              onClick={() => nextScene && setSelectedSceneId(nextScene.id)}
+              onClick={() => nextScene && selectScene(nextScene.id)}
               type="button"
             >
               Next <ChevronRight size={16} aria-hidden />
@@ -385,7 +440,7 @@ export function StudioShell({
               aria-label={`Scene ${index + 1} ${scene.title} — ${scene.seconds} seconds`}
               className={`pv1-overview-scene ${isSelected ? "is-selected" : ""}`}
               key={scene.id}
-              onClick={() => setSelectedSceneId(scene.id)}
+              onClick={() => selectScene(scene.id)}
               type="button"
             >
               <span className="pv1-scene-index">{index + 1}</span>
