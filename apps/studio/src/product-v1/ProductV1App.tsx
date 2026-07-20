@@ -1,6 +1,10 @@
 import { useState } from "react";
 import type { CreateDraft } from "./CreateProject";
-import { CreateProject } from "./CreateProject";
+import {
+  ART_STYLE_LABELS,
+  CreateProject,
+  GRAMMAR_LABELS,
+} from "./CreateProject";
 import { OLLO_DEMO_PROJECT } from "./demo-project";
 import { ProjectsHome } from "./ProjectsHome";
 import { StudioShell } from "./StudioShell";
@@ -49,14 +53,19 @@ export function ProductV1App({
   if (screen === "studio")
     return (
       <StudioShell
+        artStyleLabel={ART_STYLE_LABELS[draft.artStyle]}
+        grammarLabel={GRAMMAR_LABELS[draft.grammar]}
         onBackToProjects={() => setScreen("projects")}
         projectTitle={projectNameFor(draft.script)}
+        usesLayoutDemo
       />
     );
 
   if (screen === "demo")
     return (
       <StudioShell
+        artStyleLabel={OLLO_DEMO_PROJECT.artStyle}
+        grammarLabel={OLLO_DEMO_PROJECT.grammar}
         onBackToProjects={() => setScreen("projects")}
         projectTitle={OLLO_DEMO_PROJECT.title}
       />

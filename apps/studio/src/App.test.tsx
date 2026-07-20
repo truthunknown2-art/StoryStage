@@ -306,6 +306,35 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     expect(previous).toBeEnabled();
   });
 
+  it("shows the creator's actual grammar and art style, with the layout-demo disclosure", async () => {
+    const user = userEvent.setup();
+    await openCreate(user);
+    await user.click(screen.getByRole("button", { name: /Weird History/ }));
+    await user.click(screen.getByRole("button", { name: /Paper Collage/ }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
+      target: { value: SAMPLE_SCRIPT },
+    });
+    await user.click(
+      screen.getByRole("button", { name: "Create first cut" }),
+    );
+    const studio = await screen.findByTestId("pv1-studio");
+    const topbar = studio.querySelector(".pv1-topbar")!;
+    expect(topbar).toHaveTextContent("Weird History");
+    expect(topbar).toHaveTextContent("Paper Collage");
+    expect(topbar).not.toHaveTextContent("Kids Adventure");
+    expect(topbar).not.toHaveTextContent("Storybook Cutout");
+    expect(studio).toHaveTextContent(/Layout demo — the eight scenes below are the bounded Ollo demo plan, not scenes from your script/);
+    expect(studio).toHaveTextContent(/Script-specific scenes have not been planned or generated yet/);
+  });
+
+  it("keeps the seeded demo badges without the layout-demo disclosure", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    expect(studio).toHaveTextContent("Kids Adventure");
+    expect(studio).toHaveTextContent("Storybook Cutout");
+    expect(studio).not.toHaveTextContent(/Layout demo —/);
+  });
+
   it("shows only honest Studio controls: no pretend Director fields or fake media", async () => {
     const user = userEvent.setup();
     const studio = await openDemoStudio(user);

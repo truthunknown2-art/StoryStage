@@ -37,11 +37,19 @@ const sceneStart = (sceneId: string) => {
  * controls arrive in F3.
  */
 export function StudioShell({
+  artStyleLabel,
+  grammarLabel,
   onBackToProjects,
   projectTitle,
+  usesLayoutDemo = false,
 }: {
+  artStyleLabel: string;
+  grammarLabel: string;
   onBackToProjects: () => void;
   projectTitle: string;
+  /** True when the visible hierarchy is the bounded Ollo layout demo rather
+   * than a plan derived from the creator's own script. */
+  usesLayoutDemo?: boolean;
 }) {
   const [selectedSceneId, setSelectedSceneId] = useState<string>(
     OLLO_DEMO_SCENES[0]!.id,
@@ -64,8 +72,8 @@ export function StudioShell({
         <span className="pv1-brand">StoryStage</span>
         <span className="pv1-topbar-context">{projectTitle}</span>
         <span className="pv1-studio-badges">
-          <span className="pv1-badge">{OLLO_DEMO_PROJECT.grammar}</span>
-          <span className="pv1-badge">{OLLO_DEMO_PROJECT.artStyle}</span>
+          <span className="pv1-badge">{grammarLabel}</span>
+          <span className="pv1-badge">{artStyleLabel}</span>
         </span>
         <span className="pv1-banner" role="note">
           {LOCAL_DEMO_BANNER}
@@ -80,6 +88,13 @@ export function StudioShell({
       </header>
 
       <div className="pv1-studio-layout">
+        {usesLayoutDemo ? (
+          <p className="pv1-layout-demo-note" role="note">
+            Layout demo — the eight scenes below are the bounded Ollo demo
+            plan, not scenes from your script. Script-specific scenes have
+            not been planned or generated yet.
+          </p>
+        ) : null}
         <nav aria-label="Episode hierarchy" className="pv1-studio-rail">
           {OLLO_DEMO_PROJECT.acts.map((act) => (
             <section className="pv1-rail-act" key={act.id}>
