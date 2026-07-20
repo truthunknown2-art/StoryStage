@@ -1,15 +1,30 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `48`
+Inbox-Version: `49`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP4-ACCEPTED-INTEGRATION-WAIT`
+Current-Task: `F2-MILESTONE-PRO-AUDIT-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `0a88945585865ffb9deb957fe145efd3f5b17742`
+Accepted-Root-Base: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
 Required-Work-Branch: `agent/kimi-f2-phase-evidence-wp4`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp4-accepted-v48.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-milestone-pro-audit-wait-v49.md`
 
 ## Current instruction
+
+Version 49 records F2-WP4 integrated into exact `product/v1` head
+`87c01f9b684642e39cf470f06be2aaf6797cd3d7`. Repository-root verification passes
+locally on that merge, and hosted Verify StoryStage run `29775357576`, attempt
+2, passes on the unchanged exact merge. Kimi remains on `WAIT` while ChatGPT
+Pro performs the F2 milestone audit and Preston makes the phase decision. Do
+not begin F3 or backend work. A higher inbox version is required for any new
+assignment.
+
+Version 49 supersedes Version 48. Version 48 remains below as historical
+traceability.
+
+---
+
+Previous Version 48 instruction:
 
 Version 48 accepts Kimi's completed immutable F2-WP4 handback at exact pushed
 head `372a5336525e0127f8c74e1a30fb8b498ef8c904`. Scoped checks, root verification,
