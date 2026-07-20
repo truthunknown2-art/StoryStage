@@ -1392,3 +1392,316 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
     transition-duration: 0.01ms !important;
   }
 }
+
+/* F2-WP1 Studio shell */
+
+.pv1-studio-badges {
+  display: flex;
+  gap: 8px;
+}
+
+.pv1-badge {
+  background: rgba(145, 228, 179, 0.1);
+  border: 1px solid rgba(145, 228, 179, 0.35);
+  border-radius: 999px;
+  color: var(--green);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+}
+
+.pv1-studio-layout {
+  display: grid;
+  flex: 1;
+  gap: 18px;
+  grid-template-columns: 250px minmax(0, 1fr) 290px;
+  min-height: 0;
+  padding: 18px 24px;
+}
+
+.pv1-studio-rail {
+  border-right: 1px solid var(--line);
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  overflow-y: auto;
+  padding-right: 14px;
+}
+
+.pv1-rail-act h2 {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.pv1-rail-sequence h3 {
+  color: var(--pv1-faint);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 10px 0 6px;
+  text-transform: uppercase;
+}
+
+.pv1-rail-sequence {
+  display: grid;
+  gap: 6px;
+}
+
+.pv1-rail-scene {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: flex;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.pv1-rail-scene:hover {
+  border-color: var(--green);
+}
+
+.pv1-rail-scene.is-selected {
+  border-color: var(--green);
+  box-shadow: 0 0 0 1px var(--green);
+}
+
+.pv1-rail-scene-body {
+  display: grid;
+  gap: 2px;
+}
+
+.pv1-rail-scene-body strong {
+  color: #dfe7e3;
+  font-size: 12.5px;
+}
+
+.pv1-rail-scene-body small {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+}
+
+.pv1-studio-board {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-width: 0;
+}
+
+.pv1-board-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.pv1-board-heading small {
+  color: var(--pv1-faint);
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pv1-board-heading h1 {
+  color: #f4f7f5;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+
+.pv1-board-canvas {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.pv1-board-canvas img {
+  aspect-ratio: 16 / 9;
+  display: block;
+  object-fit: cover;
+  width: 100%;
+}
+
+.pv1-board-note {
+  border-top: 1px solid var(--line);
+  color: var(--pv1-faint);
+  font-size: 11px;
+  padding: 9px 14px;
+}
+
+.pv1-board-beats {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.pv1-board-beats h2 {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.pv1-board-beats ol {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-board-beats li {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.pv1-board-beats li strong {
+  color: #dfe7e3;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.pv1-board-beats li span {
+  color: var(--pv1-faint);
+  font-size: 11px;
+}
+
+.pv1-transport {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.pv1-transport button {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  color: var(--ink);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+}
+
+.pv1-transport button:disabled {
+  color: var(--pv1-faint);
+  opacity: 0.55;
+}
+
+.pv1-transport button:not(:disabled):hover {
+  border-color: var(--green);
+}
+
+.pv1-transport-readout {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.pv1-studio-inspector {
+  border-left: 1px solid var(--line);
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  overflow-y: auto;
+  padding-left: 16px;
+}
+
+.pv1-inspector-block {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.pv1-inspector-block h2 {
+  align-items: center;
+  color: #dfe7e3;
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+}
+
+.pv1-inspector-block p,
+.pv1-inspector-block small {
+  color: var(--pv1-faint);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.pv1-inspector-block .pv1-primary:disabled,
+.pv1-inspector-block .pv1-secondary:disabled {
+  opacity: 0.55;
+}
+
+.pv1-studio-overview {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  padding: 14px 24px 18px;
+}
+
+.pv1-overview-scene {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  min-height: 44px;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.pv1-overview-scene:hover {
+  border-color: var(--green);
+}
+
+.pv1-overview-scene.is-selected {
+  border-color: var(--green);
+  box-shadow: 0 0 0 1px var(--green);
+}
+
+.pv1-overview-scene strong {
+  color: #dfe7e3;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.pv1-overview-scene small {
+  color: var(--pv1-faint);
+  font-size: 10px;
+}
+
+@media (max-width: 1024px) {
+  .pv1-studio-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pv1-studio-rail,
+  .pv1-studio-inspector {
+    border: 0;
+    padding: 0;
+  }
+
+  .pv1-studio-overview {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
