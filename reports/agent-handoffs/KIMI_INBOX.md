@@ -1,15 +1,27 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `45`
+Inbox-Version: `46`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP3-RESPONSIVE-KEYBOARD-VISUAL-QUALITY-ACCEPTED`
-Status: `WAIT`
+Current-Task: `F2-WP4-PHASE-EVIDENCE-INTEGRATION-GATE`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `4218da84437aa4e202a4d48d79899cf270e7cdde`
-Required-Work-Branch: `agent/kimi-f2-responsive-keyboard-wp3`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp3-accepted-v45.md`
+Accepted-Root-Base: `0a88945585865ffb9deb957fe145efd3f5b17742`
+Required-Work-Branch: `agent/kimi-f2-phase-evidence-wp4`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp4-phase-evidence-v46.md`
 
 ## Current instruction
+
+Version 46 starts only F2-WP4 from verified `product/v1` integration head
+`0a88945585865ffb9deb957fe145efd3f5b17742`. Claim issue #45, branch from that
+exact base, publish the evidence-only final F2 package, and stop. Do not modify
+product source, begin F3, or start backend work.
+
+Version 46 supersedes Version 45. Version 45 remains below as historical
+traceability.
+
+---
+
+Previous Version 45 instruction:
 
 Version 45 accepts exact F2-WP3 handback/evidence head
 `8d0aee79835e38b9e27dcd27d937524f57050a49`. The scoped, repository-root, and
