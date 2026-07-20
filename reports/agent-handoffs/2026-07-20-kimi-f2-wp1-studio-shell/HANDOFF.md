@@ -150,3 +150,63 @@ handback directory — no merge conflicts expected.
 
 Stopping here: no WP2, F3, or backend work. Continuing the 15-minute
 read-only inbox poll.
+
+---
+
+## v39 correction — created-project truth (inbox v39)
+
+Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-created-project-truth-v39.md`
+Rejected head: `c6defdb6370ec84c9f6af42f0ad87d0a6fb6145a`
+
+### Correction applied
+
+`StudioShell` now receives the visible grammar/art-style labels as props.
+The seeded Ollo route passes `OLLO_DEMO_PROJECT.grammar`/`.artStyle`; the
+created-project route passes the creator's actual choices via the existing
+`GRAMMAR_LABELS`/`ART_STYLE_LABELS` maps. On the created-project path only,
+a visible disclosure strip states: the eight scenes are the bounded Ollo
+layout demo, not scenes from the creator's script, and script-specific
+scenes have not been planned or generated yet.
+
+### v39 changed files
+
+- `apps/studio/src/product-v1/StudioShell.tsx` — label props +
+  created-project disclosure strip.
+- `apps/studio/src/product-v1/ProductV1App.tsx` — routes pass the real
+  labels; created route sets the disclosure.
+- `apps/studio/src/styles.css` — `.pv1-layout-demo-note` (F2 section).
+- `apps/studio/src/App.test.tsx` — two regressions.
+- `reports/agent-handoffs/2026-07-20-kimi-f2-wp1-studio-shell/**` — this
+  note + new screenshot + updated click-through report.
+
+### v39 regressions (suite now 14 tests, all pass)
+
+- Choose Weird History + Paper Collage, create first cut: the top bar shows
+  exactly those badges, the Kids Adventure / Storybook Cutout badges are
+  absent, and the layout-demo disclosure is visible.
+- Seeded demo path: Ollo badges remain and no disclosure appears.
+
+### v39 verification
+
+1. `pnpm --filter @storystage/studio test` — **64/64 pass**.
+2. `pnpm --filter @storystage/studio typecheck` — clean.
+3. `pnpm --filter @storystage/studio build` — clean.
+4. `pnpm verify` — **exit 0**.
+
+### v39 screenshot (actual app, 1440×900)
+
+| File | State | SHA-256 |
+| --- | --- | --- |
+| `screenshots/studio-created-project-weird-history-1440x900.png` | created project with Weird History + Paper Collage badges and the layout-demo disclosure | `8d5a7ce42756a17eb9b0c03bbd1b644097b63f2f5459b1fbf4547abe5d4f345a` |
+
+Console status for this capture: no console errors, no warnings, no page
+errors. The screenshot is also recorded in
+`screenshots/clickthrough-report.json`.
+
+### v39 control/state truth
+
+- Grammar/art-style badges: read-only-real — the seeded route shows the
+  Ollo demo labels; the created route shows the creator's actual Create
+  choices.
+- Layout-demo disclosure: visible only on the created-project route —
+  honest continuity between a pasted script and the borrowed demo plan.
