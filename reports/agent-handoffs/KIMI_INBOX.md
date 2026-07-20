@@ -1,15 +1,31 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `35`
+Inbox-Version: `36`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F1-PROJECTS-CREATE-GATE-REVIEW`
 Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `60ea6fbb50f9fbc159f2a08d1d4c8cdc39dfba64`
+Accepted-Root-Base: `7517d8e93af12938b3095da915614e15f3bece9c`
 Required-Work-Branch: `agent/kimi-ui-v2`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-integrated-gate-wait-v35.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-final-combined-wait-v36.md`
 
 ## Current instruction
+
+Version 36 updates the exact F1 gate head to
+`7517d8e93af12938b3095da915614e15f3bece9c`. After E0 passed Pro audit and
+merged into `product/v1`, Codex merged that accepted product head into the F1
+branch to remove the final divergent-history caveat. The merge adds only the
+already-accepted E0 experiment directory; no frontend files changed. Root
+`pnpm verify` passed on the exact combined head. Continue to wait for hosted
+verification and Pro's final exact-head disposition. Do not change PR #33 or
+begin F2/backend work.
+
+Version 36 supersedes Version 35. Version 35 remains below as historical
+traceability.
+
+---
+
+Previous Version 35 instruction:
 
 Version 35 updates the immutable gate candidate to exact integrated head
 `60ea6fbb50f9fbc159f2a08d1d4c8cdc39dfba64`. Codex merged only the accepted
