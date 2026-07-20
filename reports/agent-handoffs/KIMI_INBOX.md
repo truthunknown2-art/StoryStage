@@ -1,15 +1,29 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `44`
+Inbox-Version: `45`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP3-RESPONSIVE-KEYBOARD-VISUAL-QUALITY`
-Status: `START-NOW`
+Current-Task: `F2-WP3-RESPONSIVE-KEYBOARD-VISUAL-QUALITY-ACCEPTED`
+Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `4218da84437aa4e202a4d48d79899cf270e7cdde`
 Required-Work-Branch: `agent/kimi-f2-responsive-keyboard-wp3`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp3-responsive-quality-v44.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp3-accepted-v45.md`
 
 ## Current instruction
+
+Version 45 accepts exact F2-WP3 handback/evidence head
+`8d0aee79835e38b9e27dcd27d937524f57050a49`. The scoped, repository-root, and
+hosted checks pass; responsive screenshots and hashes are accepted; the
+keyboard, compact-layout, focus, truthfulness, and reduced-motion contracts are
+satisfied. Stop on `WAIT`. Do not modify PR #44 or begin WP4, F3, or backend
+work. A higher inbox version is required for any new assignment.
+
+Version 45 supersedes Version 44. Version 44 remains below as historical
+traceability.
+
+---
+
+Previous Version 44 instruction:
 
 Version 44 starts only F2-WP3 from verified `product/v1` integration head
 `4218da84437aa4e202a4d48d79899cf270e7cdde`. Claim issue #43, branch from that
