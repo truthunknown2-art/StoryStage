@@ -151,11 +151,11 @@ describe("F1 — Projects + Create", () => {
       }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByTestId("pv1-handoff"),
+      screen.queryByTestId("pv1-studio"),
     ).not.toBeInTheDocument();
   });
 
-  it("opens the honest local Studio handoff for a valid script and never claims generation", async () => {
+  it("opens the honest Studio shell for a valid script and never claims generation", async () => {
     const user = userEvent.setup();
     await openCreate(user);
     fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
@@ -164,22 +164,20 @@ describe("F1 — Projects + Create", () => {
     await user.click(
       screen.getByRole("button", { name: "Create first cut" }),
     );
-    const handoff = await screen.findByTestId("pv1-handoff");
-    expect(handoff).toHaveTextContent(
+    const studio = await screen.findByTestId("pv1-studio");
+    expect(studio).toHaveTextContent(
       "Local UI demo — production services are not connected.",
     );
-    expect(handoff).toHaveTextContent(/No imagery,\s*animation,\s*audio,\s*or render was generated/);
-    expect(handoff).toHaveTextContent("Detected beats (5)");
+    expect(studio).toHaveTextContent("Reference board — not animation");
+    expect(studio).toHaveTextContent(/no imagery,\s*animation,\s*audio,\s*or render exists/i);
+    expect(studio).toHaveTextContent("Director controls arrive in F3");
     expect(
-      within(handoff).getByRole("button", { name: /Edit script/ }),
+      within(studio).getByRole("button", { name: /Back to projects/ }),
     ).toBeEnabled();
-    expect(
-      within(handoff).getByRole("button", { name: /Back to projects/ }),
-    ).toBeEnabled();
-    expect(handoff).not.toHaveTextContent(/rendered|exported|generated video/i);
+    expect(studio).not.toHaveTextContent(/rendered|exported/i);
   });
 
-  it("opens the bounded long-form Ollo demo, visibly labelled Local UI demo", async () => {
+  it("opens the bounded long-form Ollo demo in the same Studio shell, visibly labelled", async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.click(
@@ -187,14 +185,18 @@ describe("F1 — Projects + Create", () => {
         name: /Open local demo project The Storylight in the Little Wood/,
       }),
     );
-    const demo = await screen.findByTestId("pv1-demo");
-    expect(demo).toHaveTextContent(
+    const studio = await screen.findByTestId("pv1-studio");
+    expect(studio).toHaveTextContent("The Storylight in the Little Wood");
+    expect(studio).toHaveTextContent(
       "Local UI demo — production services are not connected.",
     );
-    expect(demo).toHaveTextContent("~20 min episode");
-    expect(demo).toHaveTextContent("Scenes · 8 · 20 min planned");
-    expect(demo).toHaveTextContent(/no imagery,\s*animation,\s*audio,\s*or render exists/i);
-    expect(demo).toHaveTextContent("not produced");
+    expect(studio).toHaveTextContent("Kids Adventure");
+    expect(studio).toHaveTextContent("Storybook Cutout");
+    expect(studio).toHaveTextContent("Act I · Everyday Problem");
+    expect(studio).toHaveTextContent("Act II · The Little Elsewhere");
+    expect(
+      within(studio).getAllByRole("button", { name: /not produced/ }).length,
+    ).toBe(8);
   });
 
   it("shows an understandable empty state when the demo project is absent", async () => {
@@ -208,5 +210,159 @@ describe("F1 — Projects + Create", () => {
     expect(
       screen.getByText(/Create your first story/),
     ).toBeInTheDocument();
+  });
+});
+
+describe("F2-WP1 — Studio shell selection invariant", () => {
+  async function openDemoStudio(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: /Open local demo project The Storylight in the Little Wood/,
+      }),
+    );
+    return screen.findByTestId("pv1-studio");
+  }
+
+  it("drives every surface from one selected scene: rail selection", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    const rail = within(studio).getByRole("navigation", {
+      name: "Episode hierarchy",
+    });
+    await user.click(
+      within(rail).getByRole("button", { name: /Scene 3 Berry Patch/ }),
+    );
+
+    // Board, transport, overview, and rail all agree on Scene 3.
+    expect(
+      within(studio).getByRole("heading", { name: "Berry Patch" }),
+    ).toBeInTheDocument();
+    expect(
+      within(studio).getByText(/Scene 3 of 8 · 140s · episode 5:10–7:30 of 20:00/),
+    ).toBeInTheDocument();
+    expect(
+      within(rail).getByRole("button", { name: /Scene 3 Berry Patch/ }),
+    ).toHaveAttribute("aria-current", "true");
+    const overview = within(studio).getByRole("navigation", {
+      name: "Episode overview",
+    });
+    expect(
+      within(overview).getByRole("button", { name: /Scene 3 Berry Patch/ }),
+    ).toHaveAttribute("aria-current", "true");
+    // Beats belong to the selected scene only.
+    expect(studio).toHaveTextContent("Dot finds a trail of dropped berries");
+  });
+
+  it("drives every surface from one selected scene: overview selection", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    const overview = within(studio).getByRole("navigation", {
+      name: "Episode overview",
+    });
+    await user.click(
+      within(overview).getByRole("button", { name: /Scene 5 Lantern Bridge/ }),
+    );
+
+    expect(
+      within(studio).getByRole("heading", { name: "Lantern Bridge" }),
+    ).toBeInTheDocument();
+    expect(
+      within(studio).getByText(/Scene 5 of 8 · 170s · episode 10:00–12:50 of 20:00/),
+    ).toBeInTheDocument();
+    const rail = within(studio).getByRole("navigation", {
+      name: "Episode hierarchy",
+    });
+    expect(
+      within(rail).getByRole("button", { name: /Scene 5 Lantern Bridge/ }),
+    ).toHaveAttribute("aria-current", "true");
+    expect(studio).toHaveTextContent("The bridge lanterns wake one by one");
+  });
+
+  it("keeps previous/next boundaries honest at both ends", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    const previous = within(studio).getByRole("button", {
+      name: "Previous scene",
+    });
+    const next = within(studio).getByRole("button", { name: "Next scene" });
+    expect(previous).toBeDisabled();
+    expect(next).toBeEnabled();
+
+    await user.click(next);
+    expect(
+      within(studio).getByRole("heading", { name: "Forest Path" }),
+    ).toBeInTheDocument();
+    expect(previous).toBeEnabled();
+
+    for (let index = 0; index < 6; index += 1) await user.click(next);
+    expect(
+      within(studio).getByRole("heading", { name: "Back Home" }),
+    ).toBeInTheDocument();
+    expect(next).toBeDisabled();
+    expect(previous).toBeEnabled();
+  });
+
+  it("shows the creator's actual grammar and art style, with the layout-demo disclosure", async () => {
+    const user = userEvent.setup();
+    await openCreate(user);
+    await user.click(screen.getByRole("button", { name: /Weird History/ }));
+    await user.click(screen.getByRole("button", { name: /Paper Collage/ }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
+      target: { value: SAMPLE_SCRIPT },
+    });
+    await user.click(
+      screen.getByRole("button", { name: "Create first cut" }),
+    );
+    const studio = await screen.findByTestId("pv1-studio");
+    const topbar = studio.querySelector(".pv1-topbar")!;
+    expect(topbar).toHaveTextContent("Weird History");
+    expect(topbar).toHaveTextContent("Paper Collage");
+    expect(topbar).not.toHaveTextContent("Kids Adventure");
+    expect(topbar).not.toHaveTextContent("Storybook Cutout");
+    expect(studio).toHaveTextContent(/Layout demo — the eight scenes below are the bounded Ollo demo plan, not scenes from your script/);
+    expect(studio).toHaveTextContent(/Script-specific scenes have not been planned or generated yet/);
+  });
+
+  it("keeps the seeded demo badges without the layout-demo disclosure", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    expect(studio).toHaveTextContent("Kids Adventure");
+    expect(studio).toHaveTextContent("Storybook Cutout");
+    expect(studio).not.toHaveTextContent(/Layout demo —/);
+  });
+
+  it("shows only honest Studio controls: no pretend Director fields or fake media", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    expect(studio).toHaveTextContent("Director controls arrive in F3");
+    expect(
+      within(studio).queryByRole("button", { name: /Apply/i }),
+    ).not.toBeInTheDocument();
+    // No shot/action/camera control fields exist in this slice.
+    expect(
+      within(studio).queryByRole("combobox", {
+        name: /shot|action|camera/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(studio).getByRole("button", { name: "Preview" }),
+    ).toBeDisabled();
+    expect(
+      within(studio).getByRole("button", { name: "Export" }),
+    ).toBeDisabled();
+    expect(
+      studio.textContent?.includes("A real preview arrives with the WP2 Studio playhead."),
+    ).toBe(true);
+    expect(
+      studio.textContent?.includes("Export unlocks when production services connect."),
+    ).toBe(true);
+    expect(
+      within(studio).queryByRole("button", { name: /Play|Pause|Scrub/i }),
+    ).not.toBeInTheDocument();
   });
 });

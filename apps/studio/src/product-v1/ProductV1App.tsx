@@ -1,11 +1,15 @@
 import { useState } from "react";
 import type { CreateDraft } from "./CreateProject";
-import { CreateProject } from "./CreateProject";
-import { LocalStudioHandoff } from "./LocalStudioHandoff";
-import { LongFormDemo } from "./LongFormDemo";
+import {
+  ART_STYLE_LABELS,
+  CreateProject,
+  GRAMMAR_LABELS,
+} from "./CreateProject";
+import { OLLO_DEMO_PROJECT } from "./demo-project";
 import { ProjectsHome } from "./ProjectsHome";
+import { StudioShell } from "./StudioShell";
 
-type ProductScreen = "projects" | "create" | "handoff" | "demo";
+type ProductScreen = "projects" | "create" | "studio" | "demo";
 
 const INITIAL_DRAFT: CreateDraft = {
   script: "",
@@ -24,9 +28,9 @@ const projectNameFor = (script: string): string => {
 };
 
 /**
- * F1 creator journey: Projects → Create → honest local Studio handoff,
- * plus the bounded long-form Ollo demo. Local UI state only — production
- * services stay disconnected and are labelled as such.
+ * F1/F2 creator journey: Projects → Create → Studio shell, plus the
+ * bounded long-form Ollo demo entering the same shell. Local UI state only
+ * — production services stay disconnected and are labelled as such.
  */
 export function ProductV1App({
   showDemoProject = true,
@@ -41,23 +45,31 @@ export function ProductV1App({
       <CreateProject
         draft={draft}
         onBackToProjects={() => setScreen("projects")}
-        onCreateFirstCut={() => setScreen("handoff")}
+        onCreateFirstCut={() => setScreen("studio")}
         onDraftChange={setDraft}
       />
     );
 
-  if (screen === "handoff")
+  if (screen === "studio")
     return (
-      <LocalStudioHandoff
-        draft={draft}
+      <StudioShell
+        artStyleLabel={ART_STYLE_LABELS[draft.artStyle]}
+        grammarLabel={GRAMMAR_LABELS[draft.grammar]}
         onBackToProjects={() => setScreen("projects")}
-        onEditScript={() => setScreen("create")}
-        projectName={projectNameFor(draft.script)}
+        projectTitle={projectNameFor(draft.script)}
+        usesLayoutDemo
       />
     );
 
   if (screen === "demo")
-    return <LongFormDemo onBackToProjects={() => setScreen("projects")} />;
+    return (
+      <StudioShell
+        artStyleLabel={OLLO_DEMO_PROJECT.artStyle}
+        grammarLabel={OLLO_DEMO_PROJECT.grammar}
+        onBackToProjects={() => setScreen("projects")}
+        projectTitle={OLLO_DEMO_PROJECT.title}
+      />
+    );
 
   return (
     <ProjectsHome
