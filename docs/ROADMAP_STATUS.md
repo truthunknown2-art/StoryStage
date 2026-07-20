@@ -61,8 +61,8 @@ verification from the live PR checks.
 - ChatGPT Pro authored the full launch roadmap and multi-shot governance
   requirements, then requested bounded G0 corrections at exact audit head
   `fdc4c155...`. Corrected exact-SHA acceptance remains pending.
-- Kimi remains `WAIT` on coordination inbox v52 at exact coordination commit
-  `f2e0481fe7a1b65a2a96c028eccc5bc35f2fa68b`.
+- Kimi must remain `WAIT`; resolve its exact live inbox version and coordination
+  head from `origin/agent/kimi-frontend` on every cold start and consistency run.
 - PR #47 is closed, unmerged, and superseded; it grants no F3 authority.
 
 ## Allowed transitions
