@@ -111,6 +111,12 @@ describe("private Candidate-I registration static diagnostic boundary", () => {
       ),
     ]);
     expect(publicIndex).not.toMatch(/private-registration|source-review/i);
+    expect(route).toMatch(
+      /createCandidateRigAuthoredDecorationMaskSourceInput/,
+    );
+    expect(route).toMatch(
+      /authoredMaskManifest[^]*authoredMaskManifestRoot[^]*require both the exact manifest and its fixed root/,
+    );
     expect(route).not.toMatch(/renderMedia|renderFrames|\.mp4|180/);
     expect(entry).toMatch(/<Still/);
     expect(entry).not.toMatch(/<Composition|durationInFrames|fps=/);
