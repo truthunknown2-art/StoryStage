@@ -1,10 +1,19 @@
+import { createHash } from "node:crypto";
 import { copyFile, mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { hashCanonical } from "@storystage/story-engine";
-import { candidateRigExactAttachmentMeasurementReportSchema } from "@storystage/story-engine/private-candidate-rig-registration";
+import {
+  candidateRigAuthoredIsolatedMaskEvidenceSchema,
+  candidateRigExactAttachmentMeasurementReportSchema,
+  type CandidateRigAuthoredIsolatedMaskEvidence,
+} from "@storystage/story-engine/private-candidate-rig-registration";
+import {
+  CandidateRigAuthoredIsolatedMaskMeasurementError,
+  createCandidateRigAuthoredIsolatedMaskMeasurement,
+} from "./candidate-rig-authored-isolated-mask-measurement";
 import { createCandidateRigReviewInput } from "./candidate-rig-review-input";
 import { createCandidateRigExactAttachmentMeasurement } from "./candidate-rig-exact-attachment-measurement";
 import { createCandidateRigGapOrbitMeasurementReport } from "./candidate-rig-gap-orbit-measurement";
@@ -30,6 +39,76 @@ const exactSources: Record<string, string> = {
     "ollo-parts-profile-right-source-set-i-alpha.png",
   "ollo-face-profile-right-source-set-i-alpha":
     "ollo-face-profile-right-source-set-i-alpha.png",
+};
+
+const sha256 = (bytes: Uint8Array) =>
+  createHash("sha256").update(bytes).digest("hex");
+
+const exactCrop = (
+  atlas: { width: number; rgbaPixels: Buffer },
+  rect: { x: number; y: number; width: number; height: number },
+) => {
+  const rgba = Buffer.alloc(rect.width * rect.height * 4);
+  for (let y = 0; y < rect.height; y += 1) {
+    const sourceStart = ((rect.y + y) * atlas.width + rect.x) * 4;
+    const targetStart = y * rect.width * 4;
+    atlas.rgbaPixels.copy(
+      rgba,
+      targetStart,
+      sourceStart,
+      sourceStart + rect.width * 4,
+    );
+  }
+  return rgba;
+};
+
+const maskFor = (pixels: Set<number>, width: number, height: number) => {
+  const runs: Array<{ y: number; x: number; length: number }> = [];
+  let left = width;
+  let top = height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < height; y += 1) {
+    let x = 0;
+    while (x < width) {
+      if (!pixels.has(y * width + x)) {
+        x += 1;
+        continue;
+      }
+      const start = x;
+      while (x < width && pixels.has(y * width + x)) x += 1;
+      runs.push({ y, x: start, length: x - start });
+      left = Math.min(left, start);
+      top = Math.min(top, y);
+      right = Math.max(right, x - 1);
+      bottom = Math.max(bottom, y);
+    }
+  }
+  return {
+    width,
+    height,
+    runs,
+    runLengthEncodingContentHash: hashCanonical(runs),
+    pixelCount: pixels.size,
+    bounds:
+      pixels.size === 0
+        ? null
+        : {
+            x: left,
+            y: top,
+            width: right - left + 1,
+            height: bottom - top + 1,
+          },
+  };
+};
+
+const rehashEvidence = (evidence: CandidateRigAuthoredIsolatedMaskEvidence) => {
+  const { contentHash: ignored, ...draft } = evidence;
+  void ignored;
+  return candidateRigAuthoredIsolatedMaskEvidenceSchema.parse({
+    ...draft,
+    contentHash: hashCanonical(draft),
+  });
 };
 
 describe("exact Candidate-I attachment measurement", () => {
@@ -70,6 +149,87 @@ describe("exact Candidate-I attachment measurement", () => {
   afterAll(async () => {
     if (root) await rm(root, { recursive: true, force: true });
   });
+
+  const authoredMaskFixture = async () => {
+    const view = input.sourceReviewPlan.views.find(
+      (candidate) => candidate.view === "front",
+    )!;
+    const runtime = await createCandidateRigReviewInput({
+      request: input.evidence.request,
+      bundle: input.evidence.bundle,
+      stagingReport: input.evidence.stagingReport,
+      importReceipt: input.evidence.importReceipt,
+      recipe: view.recipe,
+      reviewProgram: view.program,
+      registrationPlan: view.registrationPlan,
+      trustedStagingRoot: root,
+      stagingRoot,
+    });
+    const baseMeasurement = await createCandidateRigExactAttachmentMeasurement({
+      review: runtime,
+      recipe: view.recipe,
+    });
+    const component = baseMeasurement.components.find(
+      (candidate) => candidate.semanticRole === "secondary-front",
+    )!;
+    const atlas = runtime.atlases.find(
+      (candidate) => candidate.candidateId === component.sourceCandidateId,
+    )!;
+    const original = exactCrop(atlas, component.sourceRect);
+    const support = new Set<number>();
+    for (let pixel = 0; pixel < original.length / 4; pixel += 1)
+      if (original[pixel * 4 + 3]! > 0) support.add(pixel);
+    const guide = new Set([...support].slice(0, 2));
+    const retained = new Set([...support].filter((pixel) => !guide.has(pixel)));
+    const masked = Buffer.from(original);
+    for (const pixel of guide) masked.fill(0, pixel * 4, pixel * 4 + 4);
+    const draft = {
+      schemaVersion: "1.0" as const,
+      evidenceKind: "candidate-rig-authored-isolated-mask-evidence" as const,
+      authorityDomain: "private-source-review-registration" as const,
+      evidenceId: "front-secondary-front-authored-mask-v1",
+      baseMeasurementContentHash: baseMeasurement.contentHash,
+      view: "front" as const,
+      componentId: component.componentId,
+      componentRole: "secondary-front" as const,
+      sourceCandidateId: component.sourceCandidateId,
+      sourceContentHash: component.sourceContentHash,
+      sourceRgbaContentHash: component.sourceRgbaContentHash,
+      sourceRect: component.sourceRect,
+      maskedRgbaContentHash: sha256(masked),
+      guideTabMask: maskFor(
+        guide,
+        component.sourceRect.width,
+        component.sourceRect.height,
+      ),
+      retainedSemanticSupportMask: maskFor(
+        retained,
+        component.sourceRect.width,
+        component.sourceRect.height,
+      ),
+      sourceMeasuredBeforeMasking: true as const,
+      maskOnly: true as const,
+      providerAuthority: false as const,
+      approvalAuthority: false as const,
+      capabilityAuthority: false as const,
+      productionBindable: false as const,
+    };
+    const evidence = candidateRigAuthoredIsolatedMaskEvidenceSchema.parse({
+      ...draft,
+      contentHash: hashCanonical(draft),
+    });
+    return {
+      view,
+      runtime,
+      baseMeasurement,
+      component,
+      original,
+      masked,
+      guide,
+      retained,
+      evidence,
+    };
+  };
 
   it("reopens all six exact atlases and reproduces typed fail-closed geometry outcomes", async () => {
     const expected = {
@@ -311,5 +471,171 @@ describe("exact Candidate-I attachment measurement", () => {
         contentHash: hashCanonical(reusedDraft),
       }),
     ).toThrow(/physical attachment feature/i);
+  }, 30_000);
+
+  it("accepts exact authored guide-tab removal while preserving authority-false mask-only provenance", async () => {
+    const fixture = await authoredMaskFixture();
+    const measurement = createCandidateRigAuthoredIsolatedMaskMeasurement({
+      review: fixture.runtime,
+      recipe: fixture.view.recipe,
+      baseMeasurement: fixture.baseMeasurement,
+      authoredMasks: [
+        {
+          evidence: fixture.evidence,
+          maskedRgbaPixels: fixture.masked,
+        },
+      ],
+    });
+    expect(measurement.schemaVersion).toBe("1.1");
+    expect(measurement.authoredMaskCompiler).toMatchObject({
+      baseMeasurementContentHash: fixture.baseMeasurement.contentHash,
+      evidenceContentHashes: [fixture.evidence.contentHash],
+      exactSourceRgbaVerified: true,
+      originalAndMaskedDistinct: true,
+      semanticSupportRetained: true,
+      guideTabPixelsRemoved: true,
+      providerAuthority: false,
+      approvalAuthority: false,
+      capabilityAuthority: false,
+      productionBindable: false,
+    });
+    const requirement = measurement.requirements.find(
+      (candidate) => candidate.requirementId === "front-secondary-front-mask",
+    )!;
+    expect(requirement.outcome.status).toBe("detected");
+    const candidateId =
+      requirement.outcome.status === "detected"
+        ? requirement.outcome.candidateIds[0]!
+        : "";
+    const candidate = measurement.components
+      .flatMap((component) => component.candidates)
+      .find((entry) => entry.candidateId === candidateId)!;
+    expect(candidate).toMatchObject({
+      featureClass: "mask-only",
+      transformAuthority: false,
+      authoredMaskEvidence: {
+        evidenceContentHash: fixture.evidence.contentHash,
+        originalRgbaContentHash: fixture.evidence.sourceRgbaContentHash,
+        maskedRgbaContentHash: fixture.evidence.maskedRgbaContentHash,
+        originalAndMaskedDistinct: true,
+        semanticSupportRetained: true,
+        guideTabPixelsRemoved: true,
+        maskAuthority: false,
+        transformAuthority: false,
+        runtimeNodeCreated: false,
+        motionChannelCreated: false,
+        approvalAuthority: false,
+        productionBindable: false,
+      },
+    });
+    const proposal = createCandidateRigUnapprovedRegistrationProposal({
+      measurement,
+      registrationPlan: fixture.view.registrationPlan,
+      recipe: fixture.view.recipe,
+    });
+    expect(proposal.maskOnlySupports).toContainEqual({
+      componentRole: "secondary-front",
+      requirementIds: ["front-secondary-front-mask"],
+      sourceFeatureIds: [candidateId],
+      plausibilityRegionContentHash:
+        fixture.component.plausibilityRegion.contentHash,
+      transformAuthority: false,
+      runtimeNodeCreated: false,
+      motionChannelCreated: false,
+    });
+    expect(proposal.providerAuthority).toBe(false);
+    expect(proposal.approvalAuthority).toBe(false);
+    expect(proposal.capabilityAuthority).toBe(false);
+    expect(proposal.productionBindable).toBe(false);
+    const images = await createCandidateRigPrivateRegistrationComponentImages({
+      review: fixture.runtime,
+      recipe: fixture.view.recipe,
+      measurement,
+      proposal,
+    });
+    const maskedImage = images.find(
+      (image) => image.componentId === fixture.component.componentId,
+    )!;
+    expect(maskedImage.maskedPixelCount).toBe(fixture.guide.size);
+    expect(maskedImage.originalPngContentHash).not.toBe(
+      maskedImage.maskedPngContentHash,
+    );
+    expect(maskedImage.maskAuthority).toBe(false);
+    expect(maskedImage.transformAuthority).toBe(false);
+  }, 30_000);
+
+  it("rejects stale, substituted, identity-drifted, no-op, semantic-loss, and tab-retention evidence", async () => {
+    const fixture = await authoredMaskFixture();
+    const compile = (
+      evidence: unknown,
+      maskedRgbaPixels: Uint8Array = fixture.masked,
+    ) =>
+      createCandidateRigAuthoredIsolatedMaskMeasurement({
+        review: fixture.runtime,
+        recipe: fixture.view.recipe,
+        baseMeasurement: fixture.baseMeasurement,
+        authoredMasks: [{ evidence, maskedRgbaPixels }],
+      });
+
+    const stale = rehashEvidence({
+      ...fixture.evidence,
+      baseMeasurementContentHash: "a".repeat(64),
+    });
+    expect(() => compile(stale)).toThrow(
+      CandidateRigAuthoredIsolatedMaskMeasurementError,
+    );
+
+    const substituted = rehashEvidence({
+      ...fixture.evidence,
+      componentRole: "secondary-back",
+    });
+    expect(() => compile(substituted)).toThrow(
+      CandidateRigAuthoredIsolatedMaskMeasurementError,
+    );
+
+    const identityDrifted = {
+      ...fixture.evidence,
+      evidenceId: "identity-drifted-without-rehash",
+    };
+    expect(() => compile(identityDrifted)).toThrow(/hash/i);
+
+    const noOpDraft = {
+      ...fixture.evidence,
+      maskedRgbaContentHash: fixture.evidence.sourceRgbaContentHash,
+    };
+    const { contentHash: ignoredNoOpHash, ...noOpWithoutHash } = noOpDraft;
+    void ignoredNoOpHash;
+    const noOp = {
+      ...noOpWithoutHash,
+      contentHash: hashCanonical(noOpWithoutHash),
+    };
+    expect(() => compile(noOp, fixture.original)).toThrow(/change/i);
+
+    const semanticLossPixels = Buffer.from(fixture.masked);
+    const lostPixel = [...fixture.retained][0]!;
+    semanticLossPixels.fill(0, lostPixel * 4, lostPixel * 4 + 4);
+    const semanticLoss = rehashEvidence({
+      ...fixture.evidence,
+      maskedRgbaContentHash: sha256(semanticLossPixels),
+    });
+    expect(() => compile(semanticLoss, semanticLossPixels)).toThrow(
+      /semantic-support pixel/i,
+    );
+
+    const tabRetentionPixels = Buffer.from(fixture.masked);
+    const retainedTabPixel = [...fixture.guide][0]!;
+    fixture.original.copy(
+      tabRetentionPixels,
+      retainedTabPixel * 4,
+      retainedTabPixel * 4,
+      retainedTabPixel * 4 + 4,
+    );
+    const tabRetention = rehashEvidence({
+      ...fixture.evidence,
+      maskedRgbaContentHash: sha256(tabRetentionPixels),
+    });
+    expect(() => compile(tabRetention, tabRetentionPixels)).toThrow(
+      /guide-tab pixel/i,
+    );
   }, 30_000);
 });

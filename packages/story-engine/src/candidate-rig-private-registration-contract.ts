@@ -120,6 +120,59 @@ const maskEvidenceSchema = z
       });
   });
 
+export const candidateRigAuthoredIsolatedMaskEvidenceSchema = hashBound({
+  schemaVersion: z.literal("1.0"),
+  evidenceKind: z.literal("candidate-rig-authored-isolated-mask-evidence"),
+  authorityDomain: z.literal("private-source-review-registration"),
+  evidenceId: identifierSchema,
+  baseMeasurementContentHash: hashSchema,
+  view: viewSchema,
+  componentId: identifierSchema,
+  componentRole: z.enum(["secondary-front", "secondary-back"]),
+  sourceCandidateId: identifierSchema,
+  sourceContentHash: hashSchema,
+  sourceRgbaContentHash: hashSchema,
+  sourceRect: rectSchema,
+  maskedRgbaContentHash: hashSchema,
+  guideTabMask: maskEvidenceSchema,
+  retainedSemanticSupportMask: maskEvidenceSchema,
+  sourceMeasuredBeforeMasking: z.literal(true),
+  maskOnly: z.literal(true),
+  providerAuthority: z.literal(false),
+  approvalAuthority: z.literal(false),
+  capabilityAuthority: z.literal(false),
+  productionBindable: z.literal(false),
+}).superRefine((evidence, context) => {
+  if (
+    evidence.sourceRgbaContentHash === evidence.maskedRgbaContentHash ||
+    evidence.guideTabMask.pixelCount === 0 ||
+    evidence.retainedSemanticSupportMask.pixelCount === 0
+  )
+    context.addIssue({
+      code: "custom",
+      message:
+        "Authored isolated-mask evidence must be non-empty and change the exact source RGBA.",
+    });
+  for (const [name, mask] of [
+    ["guideTabMask", evidence.guideTabMask],
+    ["retainedSemanticSupportMask", evidence.retainedSemanticSupportMask],
+  ] as const)
+    if (
+      mask.width !== evidence.sourceRect.width ||
+      mask.height !== evidence.sourceRect.height
+    )
+      context.addIssue({
+        code: "custom",
+        path: [name],
+        message:
+          "Authored isolated-mask evidence must use exact source-component dimensions.",
+      });
+});
+
+export type CandidateRigAuthoredIsolatedMaskEvidence = z.infer<
+  typeof candidateRigAuthoredIsolatedMaskEvidenceSchema
+>;
+
 const pixelSetForMask = (mask: z.infer<typeof maskEvidenceSchema>) => {
   const pixels = new Set<number>();
   for (const run of mask.runs)
@@ -264,6 +317,26 @@ const attachmentCandidateSchema = z
     derivedBeforeMasking: z.literal(true),
     guideCoordinatesUsed: z.literal(false),
     transformAuthority: z.literal(false),
+    authoredMaskEvidence: z
+      .object({
+        evidenceId: identifierSchema,
+        evidenceContentHash: hashSchema,
+        originalRgbaContentHash: hashSchema,
+        maskedRgbaContentHash: hashSchema,
+        guideTabMaskRunLengthEncodingContentHash: hashSchema,
+        retainedSemanticSupportRunLengthEncodingContentHash: hashSchema,
+        originalAndMaskedDistinct: z.literal(true),
+        semanticSupportRetained: z.literal(true),
+        guideTabPixelsRemoved: z.literal(true),
+        maskAuthority: z.literal(false),
+        transformAuthority: z.literal(false),
+        runtimeNodeCreated: z.literal(false),
+        motionChannelCreated: z.literal(false),
+        approvalAuthority: z.literal(false),
+        productionBindable: z.literal(false),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
   .superRefine((candidate, context) => {
@@ -282,6 +355,9 @@ const attachmentCandidateSchema = z
       seed: candidate.seed,
       seam: candidate.seam,
       selectedSupport: candidate.selectedSupport,
+      ...(candidate.authoredMaskEvidence
+        ? { authoredMaskEvidence: candidate.authoredMaskEvidence }
+        : {}),
     });
     const seamPoints = [
       candidate.seam.startMicropixels,
@@ -298,6 +374,14 @@ const attachmentCandidateSchema = z
       candidate.semanticCoreOverlapPixelCount !== overlap ||
       candidate.physicalFeatureContentHash !==
         expectedPhysicalFeatureContentHash ||
+      (candidate.featureClass === "mask-only") !==
+        (candidate.authoredMaskEvidence !== undefined) ||
+      (candidate.authoredMaskEvidence !== undefined &&
+        (candidate.authoredMaskEvidence.originalRgbaContentHash !==
+          candidate.sourceRgbaContentHash ||
+          candidate.authoredMaskEvidence
+            .guideTabMaskRunLengthEncodingContentHash !==
+            candidate.selectedSupport.runLengthEncodingContentHash)) ||
       candidate.seed.side !== candidate.seam.side ||
       candidate.seed.x >= candidate.sourceRect.width ||
       candidate.seed.y >= candidate.sourceRect.height ||
@@ -410,7 +494,7 @@ const attachmentRequirementSchema = z
   .strict();
 
 const measurementReportFields = {
-  schemaVersion: z.literal("1.0"),
+  schemaVersion: z.enum(["1.0", "1.1"]),
   reportKind: z.literal("candidate-rig-exact-attachment-measurement"),
   authorityDomain: z.literal("private-source-review-registration"),
   reportId: identifierSchema,
@@ -456,6 +540,24 @@ const measurementReportFields = {
   components: z.array(componentMeasurementSchema).min(1),
   requirements: z.array(attachmentRequirementSchema).min(1),
   blockerRequirementIds: z.array(identifierSchema),
+  authoredMaskCompiler: z
+    .object({
+      id: z.literal("authored-isolated-decoration-mask-compiler"),
+      version: z.literal("1.0.0"),
+      baseMeasurementContentHash: hashSchema,
+      implementationContentHash: hashSchema,
+      evidenceContentHashes: z.array(hashSchema).min(1),
+      exactSourceRgbaVerified: z.literal(true),
+      originalAndMaskedDistinct: z.literal(true),
+      semanticSupportRetained: z.literal(true),
+      guideTabPixelsRemoved: z.literal(true),
+      providerAuthority: z.literal(false),
+      approvalAuthority: z.literal(false),
+      capabilityAuthority: z.literal(false),
+      productionBindable: z.literal(false),
+    })
+    .strict()
+    .optional(),
   sourceMeasuredBeforeMasking: z.literal(true),
   guideCoordinatesUsedForMeasurement: z.literal(false),
   proposedRegistrationAuthority: z.literal(false),
@@ -467,6 +569,30 @@ const measurementReportFields = {
 export const candidateRigExactAttachmentMeasurementReportSchema = hashBound(
   measurementReportFields,
 ).superRefine((report, context) => {
+  const authoredEvidenceHashes = report.components
+    .flatMap((component) => component.candidates)
+    .flatMap((candidate) =>
+      candidate.authoredMaskEvidence
+        ? [candidate.authoredMaskEvidence.evidenceContentHash]
+        : [],
+    )
+    .sort((left, right) => left.localeCompare(right));
+  if (
+    (report.schemaVersion === "1.1") !==
+      (report.authoredMaskCompiler !== undefined) ||
+    (report.authoredMaskCompiler !== undefined &&
+      (new Set(report.authoredMaskCompiler.evidenceContentHashes).size !==
+        report.authoredMaskCompiler.evidenceContentHashes.length ||
+        hashCanonical(
+          [...report.authoredMaskCompiler.evidenceContentHashes].sort(),
+        ) !== hashCanonical(authoredEvidenceHashes)))
+  )
+    context.addIssue({
+      code: "custom",
+      path: ["authoredMaskCompiler"],
+      message:
+        "Version 1.1 measurement must bind every authored isolated-mask evidence hash exactly once.",
+    });
   const blockers = report.requirements
     .filter((requirement) => requirement.outcome.status !== "detected")
     .map((requirement) => requirement.requirementId)
