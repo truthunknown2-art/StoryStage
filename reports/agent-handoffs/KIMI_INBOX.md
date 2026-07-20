@@ -1,15 +1,28 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `30`
+Inbox-Version: `31`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `PRODUCT-RESET-PLANNING-HOLD`
-Status: `HOLD`
+Current-Task: `F1-PROJECTS-CREATE`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `e4c5f7eb92c8a09423bc80ed079813c1f51ca721`
-Required-Work-Branch: `agent/kimi-guide-audio-studio-review`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-product-reset-hold-v30.md`
+Accepted-Root-Base: `9f3d6fac522f99b693c163c822334076ee9584bd`
+Required-Work-Branch: `agent/kimi-ui-v2`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-f1-projects-create-v31.md`
 
 ## Current instruction
+
+Version 31 starts only F1 — Projects + Create from exact product-plan commit
+`9f3d6fac522f99b693c163c822334076ee9584bd`. Create the declared work branch,
+complete the full frontend-only brief, run its checks, capture the actual app,
+push one draft PR to `product/v1`, leave the exact handback, and stop. Do not
+begin F2, backend work, PR #31 corrections, or any unlisted file change.
+
+Version 31 supersedes Version 30. Version 30 remains below as historical
+traceability.
+
+---
+
+Previous Version 30 instruction:
 
 Version 30 records the user's temporary implementation stop. Do not begin or
 resume product code, review corrections, screenshots, merges, or new tasks.
