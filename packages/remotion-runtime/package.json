@@ -11,7 +11,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run src/cv001-rig-contract.test.ts src/director/bundledKidsCapabilities.test.ts src/director/partsRigRuntime.test.ts src/director/VerifiedRasterImage.test.ts",
+    "test": "vitest run src/cv001-rig-contract.test.ts src/director/bundledKidsCapabilities.test.ts src/director/DirectorGuideAudioLayer.test.ts src/director/partsRigRuntime.test.ts src/director/VerifiedRasterImage.test.ts",
     "verify:director-capability-assets": "node ../../scripts/generate-director-capability-asset-catalog.mjs --check"
   },
   "dependencies": {

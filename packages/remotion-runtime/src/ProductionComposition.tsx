@@ -32,7 +32,10 @@ import {
   type Cv001WorldTransform,
 } from "./cv001-rig-kinematics";
 import { assertDirectedSceneMotion } from "./production-motion-binding";
-import { DirectorEpisodeRenderer } from "./director/DirectorEpisodeRenderer";
+import {
+  DirectorProductionComposition,
+  type DirectorProductionCompositionProps,
+} from "./director/DirectorProductionComposition";
 
 export type CharacterPlaybackAsset = {
   type: "character-rig";
@@ -79,6 +82,7 @@ export type LegacyProductionCompositionProps = {
 export type DirectorEpisodeProductionProps = {
   mode: "director-episode";
   episodePlan: ExecutableEpisodePlan;
+  guideAudio?: DirectorProductionCompositionProps["guideAudio"];
   previewWatermark?: string;
   directedSceneMotion?: never;
 };
@@ -547,7 +551,12 @@ export const ProductionComposition: React.FC<ProductionCompositionProps> = (
   props,
 ) => {
   if (props.mode === "director-episode")
-    return <DirectorEpisodeRenderer episodePlan={props.episodePlan} />;
+    return (
+      <DirectorProductionComposition
+        episodePlan={props.episodePlan}
+        guideAudio={props.guideAudio}
+      />
+    );
   const {
     plan,
     playbackAssets,
