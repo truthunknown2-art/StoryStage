@@ -1,15 +1,29 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `34`
+Inbox-Version: `35`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F1-PROJECTS-CREATE-GATE-REVIEW`
 Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `1a90a0b2dee5f18fd36e51a1bab6424cffd6382a`
+Accepted-Root-Base: `60ea6fbb50f9fbc159f2a08d1d4c8cdc39dfba64`
 Required-Work-Branch: `agent/kimi-ui-v2`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-gate-review-wait-v34.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-integrated-gate-wait-v35.md`
 
 ## Current instruction
+
+Version 35 updates the immutable gate candidate to exact integrated head
+`60ea6fbb50f9fbc159f2a08d1d4c8cdc39dfba64`. Codex merged only the accepted
+`product/v1` roadmap lineage into Kimi's already-audited Version 33 handback;
+no frontend files changed, and repository-root `pnpm verify` passed on the
+combined head. Continue to wait while hosted verification and Pro's exact-head
+gate review finish. Do not change PR #33 or begin F2/backend work.
+
+Version 35 supersedes Version 34. Version 34 remains below as historical
+traceability.
+
+---
+
+Previous Version 34 instruction:
 
 Version 34 records that Kimi completed the Version 33 correction handback at
 exact pushed tip `1a90a0b2dee5f18fd36e51a1bab6424cffd6382a`. Local, hosted,
