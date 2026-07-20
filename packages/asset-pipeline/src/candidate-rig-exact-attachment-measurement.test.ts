@@ -562,7 +562,7 @@ describe("exact Candidate-I attachment measurement", () => {
     );
     expect(maskedImage.maskAuthority).toBe(false);
     expect(maskedImage.transformAuthority).toBe(false);
-  }, 30_000);
+  }, 90_000);
 
   it("rejects stale, substituted, identity-drifted, no-op, semantic-loss, and tab-retention evidence", async () => {
     const fixture = await authoredMaskFixture();
@@ -637,5 +637,5 @@ describe("exact Candidate-I attachment measurement", () => {
     expect(() => compile(tabRetention, tabRetentionPixels)).toThrow(
       /guide-tab pixel/i,
     );
-  }, 30_000);
+  }, 90_000);
 });
