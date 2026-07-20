@@ -38,7 +38,7 @@ $start = Read-RepoFile 'CODEX_START_HERE.md'
 $readme = Read-RepoFile 'README.md'
 $projectState = Read-RepoFile 'docs/PROJECT_STATE.md'
 
-Require ($plan -match '(?m)^\*\*Status:\*\* Binding product and architecture charter$') 'PRODUCT_PLAN must be the stable product and architecture charter.'
+Require ($plan -match '(?m)^\*\*Status:\*\* Binding product and architecture charter\s*$') 'PRODUCT_PLAN must be the stable product and architecture charter.'
 Require ($plan -notmatch '(?im)^\*\*Active phase:') 'PRODUCT_PLAN must not declare an active phase.'
 Require ($plan -notmatch 'agent/kimi-ui-v2') 'PRODUCT_PLAN must not hard-code an implementation branch.'
 Require ($plan -notmatch 'during the F2 frontend phase') 'PRODUCT_PLAN contains a stale F2 authorization boundary.'
