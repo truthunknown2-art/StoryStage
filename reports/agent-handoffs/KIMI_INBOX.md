@@ -1,15 +1,28 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `25`
+Inbox-Version: `26`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-OLLO-GATE1-REVIEW-UI-A-CORRECTIONS`
+Current-Task: `KIMI-OLLO-GATE1-REVIEW-UI-A-RECEIPT`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `c934021f9580fe200aef8e54573383e07eb24932`
+Accepted-Root-Base: `92e026357269e759364c087aaf551b6328e8d9e2`
 Required-Work-Branch: `agent/kimi-ollo-gate1-review-ui-a`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ollo-gate1-review-ui-a-v24-corrections.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ollo-gate1-review-ui-a-v26-receipt.md`
 
 ## Current instruction
+
+Version 26 accepts the Version 24 UI implementation and screenshots at audited
+tip `bdc3bb4e54d364d32219726e6df2067e9c75868a`. Apply only the documentation
+receipt corrections in the Version 26 brief, update PR #25 to the exact final
+tip, rerun hosted verification, report the result, and wait. Do not rework the
+accepted UI or broaden scope.
+
+Version 26 supersedes Version 25. Version 25 remains below as historical
+traceability.
+
+---
+
+Previous Version 25 instruction:
 
 Version 25 is a wake-up reissue of the unchanged Version 24 correction. As of
 2026-07-19 19:23 America/Vancouver, the required work branch was still at the
