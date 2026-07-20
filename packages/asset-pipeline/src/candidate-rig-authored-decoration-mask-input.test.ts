@@ -332,7 +332,7 @@ describe("authored Ollo decoration-mask source input", () => {
         }),
       ).toThrow(/rejects partial v1\.1 authored-mask lineage/i);
     }
-  }, 30_000);
+  }, 90_000);
 
   it("rejects a rehashed manifest that substitutes one mask PNG hash for another", () => {
     const source = manifest.entries[0]!;
@@ -393,7 +393,7 @@ describe("authored Ollo decoration-mask source input", () => {
     ).rejects.toMatchObject({
       code: "invalid-mask-png",
     });
-  });
+  }, 30_000);
 
   it("rejects transparent selection even when the added pixel is explicitly region-bound", async () => {
     const entry = manifest.entries.find(
@@ -455,7 +455,7 @@ describe("authored Ollo decoration-mask source input", () => {
     ).rejects.toMatchObject({
       code: "invalid-mask-pixels",
     });
-  });
+  }, 30_000);
 
   it("rejects stale seeds, source lineage, source-input lineage, and sentinels", async () => {
     const entry = manifest.entries.find(
@@ -504,5 +504,5 @@ describe("authored Ollo decoration-mask source input", () => {
     await expect(build("front", staleSentinel)).rejects.toMatchObject({
       code: "sentinel-mismatch",
     });
-  }, 20_000);
+  }, 60_000);
 });

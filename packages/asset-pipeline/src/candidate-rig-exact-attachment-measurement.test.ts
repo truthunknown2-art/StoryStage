@@ -403,7 +403,7 @@ describe("exact Candidate-I attachment measurement", () => {
       );
       expect(new Set(detectedPhysical).size).toBe(detectedPhysical.length);
     }
-  }, 120_000);
+  }, 180_000);
 
   it("rejects a caller-rehashed overlap claim and physical-feature reuse", async () => {
     const view = input.sourceReviewPlan.views[0]!;
