@@ -56,12 +56,14 @@ Kimi while B1/B2 remain unauthorized. The exact verdict is recorded on PR #32.
 - Scope: pinned stable Godot Skeleton2D/Bone2D four-second transparent sequence,
   repeated determinism proof, then isolated Remotion composite/render/evidence
 - Draft PR: `https://github.com/truthunknown2-art/StoryStage/pull/35`
-- Current exact head: `cc5a472932f3ede6ed79cbda30ce35f5750a2e06`
+- Current exact head: `b85075048e5890e52f37a0b56ffb94e9be8faf3f`
 - Status: two fresh 120-frame renders use a real transparent `SubViewport` and
   match with zero raw-byte mismatches; every frame decodes as 1920×1080 RGBA8;
   the exact Remotion MP4/still verifier and full repository `pnpm verify` pass
-- Hosted `verify` for `cc5a472` is in progress; do not integrate or declare the
-  final E0 gate closed until it passes
+- The corrected evidence branch now includes accepted roadmap parent
+  `9f6cef48`; repository-root and hosted `verify` pass at the exact integrated
+  head. Final E0 closure still waits for Pro's separate exact-head evidence
+  audit
 - This proof cannot advance or satisfy B1/B2 and must not alter product code
 
 ## Restart procedure
