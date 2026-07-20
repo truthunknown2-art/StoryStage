@@ -3,6 +3,7 @@ import { lstat, readFile, realpath } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 import {
   candidateRigReviewVisualProgramSchema,
+  candidateRigReviewRegistrationPlanSchema,
   characterRigAssetRequestSchema,
   characterRigCandidateBundleSchema,
   characterRigImportReceiptSchema,
@@ -11,6 +12,7 @@ import {
   compileCandidateRigReviewVisualProgram,
   hashCanonical,
   type CandidateRigReviewVisualProgram,
+  type CandidateRigReviewRegistrationPlan,
   type CharacterRigPreparationRecipe,
 } from "@storystage/story-engine";
 import {
@@ -51,6 +53,7 @@ export type CreateCandidateRigReviewInput = {
   importReceipt: unknown;
   recipe: unknown;
   reviewProgram: unknown;
+  registrationPlan: unknown;
   trustedStagingRoot: string;
   stagingRoot: string;
 };
@@ -66,6 +69,7 @@ export type CandidateRigReviewAtlasHandle = {
   width: number;
   height: number;
   channels: 4;
+  rgbaContentHash: string;
   transform: "none";
   componentIds: string[];
   roleIds: string[];
@@ -78,6 +82,8 @@ export type CandidateRigReviewRuntimeInput = {
   view: "front" | "profile-left" | "profile-right";
   preparationRecipeContentHash: string;
   candidateRigReviewVisualProgramContentHash: string;
+  registrationPlanContentHash: string;
+  registrationPlan: CandidateRigReviewRegistrationPlan;
   program: CandidateRigReviewVisualProgram;
   atlases: CandidateRigReviewAtlasHandle[];
   ephemeral: true;
@@ -85,6 +91,21 @@ export type CandidateRigReviewRuntimeInput = {
   approvalRequired: true;
   productionBindable: false;
 };
+
+const verifiedReviewInputs = new WeakSet<object>();
+
+export const isVerifiedCandidateRigReviewRuntimeInput = (
+  value: unknown,
+): value is CandidateRigReviewRuntimeInput =>
+  value !== null &&
+  typeof value === "object" &&
+  verifiedReviewInputs.has(value) &&
+  (value as CandidateRigReviewRuntimeInput).authority ===
+    "candidate-source-review" &&
+  (value as CandidateRigReviewRuntimeInput).ephemeral === true &&
+  (value as CandidateRigReviewRuntimeInput).providerAuthority === false &&
+  (value as CandidateRigReviewRuntimeInput).approvalRequired === true &&
+  (value as CandidateRigReviewRuntimeInput).productionBindable === false;
 
 const sha256 = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
@@ -218,6 +239,9 @@ export const createCandidateRigReviewInput = async (
   const program = candidateRigReviewVisualProgramSchema.parse(
     input.reviewProgram,
   );
+  const registrationPlan = candidateRigReviewRegistrationPlanSchema.parse(
+    input.registrationPlan,
+  );
   const expectedProgram = compileCandidateRigReviewVisualProgram(
     request,
     bundle,
@@ -230,6 +254,43 @@ export const createCandidateRigReviewInput = async (
       "lineage-mismatch",
       "Candidate review program is not the exact compiler output for its recipe.",
     );
+  if (
+    registrationPlan.view !== recipe.view ||
+    registrationPlan.requestContentHash !== request.contentHash ||
+    registrationPlan.candidateBundleContentHash !== bundle.contentHash ||
+    registrationPlan.stagingReportContentHash !== report.contentHash ||
+    registrationPlan.importReceiptContentHash !== receipt.contentHash ||
+    registrationPlan.identityLockContentHash !==
+      recipe.identityLockContentHash ||
+    registrationPlan.topologyTemplateContentHash !== recipe.templateContentHash
+  )
+    throw new CandidateRigReviewInputError(
+      "lineage-mismatch",
+      "Candidate review registration input is not bound to the exact evidence and native view.",
+    );
+  const registrationPartByRole = new Map(
+    registrationPlan.parts.map((part) => [part.role, part]),
+  );
+  for (const part of recipe.parts) {
+    const registrationPart = registrationPartByRole.get(part.role);
+    if (
+      !registrationPart ||
+      hashCanonical({
+        childPivot: part.childPivot,
+        restTransform: part.restTransform,
+        sockets: part.sockets,
+      }) !==
+        hashCanonical({
+          childPivot: registrationPart.childPivot,
+          restTransform: registrationPart.restTransform,
+          sockets: registrationPart.sockets,
+        })
+    )
+      throw new CandidateRigReviewInputError(
+        "lineage-mismatch",
+        `Candidate review registration input drifted from recipe role ${part.role}.`,
+      );
+  }
   if (receipt.providerAuthority || !receipt.approvalRequired)
     throw new CandidateRigReviewInputError(
       "invalid-evidence",
@@ -368,18 +429,21 @@ export const createCandidateRigReviewInput = async (
       width: decoded.info.width,
       height: decoded.info.height,
       channels: 4,
+      rgbaContentHash: sha256(decoded.data),
       transform: "none",
       componentIds: components.map((component) => component.id).sort(),
       roleIds: components.map((component) => component.role).sort(),
       rgbaPixels: decoded.data,
     });
   }
-  return {
+  const runtime: CandidateRigReviewRuntimeInput = {
     schemaVersion: "1.0",
     authority: "candidate-source-review",
     view: recipe.view,
     preparationRecipeContentHash: recipe.contentHash,
     candidateRigReviewVisualProgramContentHash: program.contentHash,
+    registrationPlanContentHash: registrationPlan.contentHash,
+    registrationPlan,
     program,
     atlases,
     ephemeral: true,
@@ -387,4 +451,6 @@ export const createCandidateRigReviewInput = async (
     approvalRequired: true,
     productionBindable: false,
   };
+  verifiedReviewInputs.add(runtime);
+  return runtime;
 };
