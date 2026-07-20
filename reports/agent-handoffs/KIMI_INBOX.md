@@ -1,15 +1,31 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `55`
+Inbox-Version: `56`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `G0-ROADMAP-PRO-FINAL-VERDICT-WAIT`
+Current-Task: `G0-MERGED-PRESTON-DECISION-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
 Required-Work-Branch: `none-planning-hold`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-pro-final-verdict-wait-v55.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-merged-preston-decision-wait-v56.md`
 
 ## Current instruction
+
+Version 56 records ChatGPT Pro's final `ACCEPT` verdict for exact PR #48 head
+`febc42ad94d716abf3893c59ce31389685ef87ae`, hosted Verify run `29785772872`
+PASS, and integration into `product/v1` at merge commit
+`ebbbcbb3721bb63b0a43dd97bfadd5962a63effc`. Corrections remaining: none. Kimi
+remains on `WAIT` for Preston's G0 phase decision and a separately published
+`START_NOW` package. Do not implement F3-WP1, begin later frontend work, or
+start backend work. A higher inbox version is required for any implementation
+task.
+
+Version 56 supersedes Version 55. Version 55 remains below as historical
+traceability.
+
+---
+
+Previous Version 55 instruction:
 
 Version 55 records exact PR #48 audit head
 `febc42ad94d716abf3893c59ce31389685ef87ae` and hosted Verify run
