@@ -1,0 +1,102 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://spike.gd" id="1_spike"]
+
+[node name="RenderViewport" type="SubViewport"]
+size = Vector2i(1920, 1080)
+transparent_bg = true
+render_target_update_mode = 4
+
+[node name="EngineSpike" type="Node2D" parent="."]
+script = ExtResource("1_spike")
+
+[node name="Skeleton2D" type="Skeleton2D" parent="EngineSpike"]
+position = Vector2(960, 620)
+
+[node name="Hip" type="Bone2D" parent="EngineSpike/Skeleton2D"]
+rest = Transform2D(1, 0, 0, 1, 0, 0)
+default_length = 80.0
+
+[node name="Tail" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip"]
+position = Vector2(-54, 10)
+rest = Transform2D(1, 0, 0, 1, -54, 10)
+default_length = 105.0
+
+[node name="Torso" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip"]
+position = Vector2(0, -80)
+rest = Transform2D(1, 0, 0, 1, 0, -80)
+default_length = 130.0
+
+[node name="Head" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/Torso"]
+position = Vector2(0, -130)
+rest = Transform2D(1, 0, 0, 1, 0, -130)
+default_length = 70.0
+
+[node name="EarLeft" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/Torso/Head"]
+position = Vector2(-43, -42)
+rest = Transform2D(1, 0, 0, 1, -43, -42)
+default_length = 54.0
+
+[node name="EarRight" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/Torso/Head"]
+position = Vector2(43, -42)
+rest = Transform2D(1, 0, 0, 1, 43, -42)
+default_length = 54.0
+
+[node name="UpperArmLeft" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/Torso"]
+position = Vector2(-72, -52)
+rest = Transform2D(1, 0, 0, 1, -72, -52)
+default_length = 92.0
+
+[node name="LowerArmLeft" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/Torso/UpperArmLeft"]
+position = Vector2(0, 88)
+rest = Transform2D(1, 0, 0, 1, 0, 88)
+default_length = 82.0
+
+[node name="HandLeft" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/Torso/UpperArmLeft/LowerArmLeft"]
+position = Vector2(0, 78)
+rest = Transform2D(1, 0, 0, 1, 0, 78)
+default_length = 34.0
+
+[node name="UpperArmRight" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/Torso"]
+position = Vector2(72, -52)
+rest = Transform2D(1, 0, 0, 1, 72, -52)
+default_length = 92.0
+
+[node name="LowerArmRight" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/Torso/UpperArmRight"]
+position = Vector2(0, 88)
+rest = Transform2D(1, 0, 0, 1, 0, 88)
+default_length = 82.0
+
+[node name="HandRight" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/Torso/UpperArmRight/LowerArmRight"]
+position = Vector2(0, 78)
+rest = Transform2D(1, 0, 0, 1, 0, 78)
+default_length = 34.0
+
+[node name="ThighLeft" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip"]
+position = Vector2(-38, 18)
+rest = Transform2D(1, 0, 0, 1, -38, 18)
+default_length = 104.0
+
+[node name="ShinLeft" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/ThighLeft"]
+position = Vector2(0, 100)
+rest = Transform2D(1, 0, 0, 1, 0, 100)
+default_length = 104.0
+
+[node name="FootLeft" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/ThighLeft/ShinLeft"]
+position = Vector2(0, 100)
+rest = Transform2D(1, 0, 0, 1, 0, 100)
+default_length = 62.0
+[node name="ThighRight" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip"]
+position = Vector2(38, 18)
+rest = Transform2D(1, 0, 0, 1, 38, 18)
+default_length = 104.0
+
+[node name="ShinRight" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/ThighRight"]
+position = Vector2(0, 100)
+rest = Transform2D(1, 0, 0, 1, 0, 100)
+default_length = 104.0
+
+[node name="FootRight" type="Bone2D" parent="EngineSpike/Skeleton2D/Hip/ThighRight/ShinRight"]
+position = Vector2(0, 100)
+rest = Transform2D(1, 0, 0, 1, 0, 100)
+default_length = 62.0
