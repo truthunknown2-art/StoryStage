@@ -1,5 +1,9 @@
 # StoryStage v1 product plan
 
+> Stable product and architecture charter. Read the full execution sequence in
+> [`PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md) and the only live phase/package state
+> in [`ROADMAP_STATUS.md`](ROADMAP_STATUS.md).
+
 **Status:** Binding execution plan
 
 **Product owner:** Preston
@@ -7,8 +11,6 @@
 **Accepted reset base:** `e4c5f7eb92c8a09423bc80ed079813c1f51ca721`
 
 **Integration branch:** `product/v1`
-
-**Active phase:** F2 — Long-form Studio shell
 
 **Updated:** 2026-07-20
 
