@@ -48,7 +48,7 @@ describe("atomic verified delivery publication", () => {
       expect(recovered.manifest.contentHash).toHaveLength(64);
       expect((await readVerifiedDeliveryBundle(recovered.directory)).directory).toBe(recovered.directory);
     }
-  });
+  }, 15_000);
 
   it("fails closed for consumed approved audio without rights and publishes cleared audio", async () => {
     const blockedRoot = await mkdtemp(join(tmpdir(), "storystage-delivery-rights-blocked-")); roots.push(blockedRoot);

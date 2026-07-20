@@ -25,7 +25,6 @@ import {
   type DirectorProject,
   type DirectorWorkspaceState,
 } from "@storystage/story-engine/director-alpha";
-import { createBundledKidsPilotCapabilityRegistry } from "@storystage/remotion-runtime/director";
 import {
   ArrowLeft,
   ArrowRight,
@@ -43,6 +42,19 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Cv002TemplateAssignmentPanel } from "./Cv002TemplateAssignmentPanel";
 import { CreatorStudioShell } from "./creator-studio-components";
+
+const GRAMMAR_LABEL: Record<Cv002Project["grammar"], string> = {
+  "kids-adventure": "Kids Adventure",
+  "weird-history": "Weird History",
+};
+
+/** Short creator-facing labels for the sealed art-direction option ids. */
+const ART_DIRECTION_LABEL: Record<string, string> = {
+  "storybook-watercolor-paper-cutout": "Storybook Cutout",
+  "cut-paper-collage-mixed-media": "Cut Paper Collage",
+  "soft-2d-digital-illustration": "Soft 2D",
+  "weird-history-editorial-collage": "Editorial Collage",
+};
 import { DirectorAnimaticPreview } from "./director/DirectorPreview";
 import "./cv002-draft-review.css";
 
@@ -128,17 +140,13 @@ export function Cv002DraftReview({
     () => project.graph.scenes.flatMap((scene) => scene.beats),
     [project.graph],
   );
-  const firstBeatRole = allBeats[0]!.role;
-  const capabilityRegistry = useMemo(() => {
-    if (project.grammar !== "kids-adventure") return alphaCapabilityRegistry;
-    const kind =
-      firstBeatRole === "setup" || firstBeatRole === "explanation"
-        ? "living-hold"
-        : firstBeatRole === "action"
-          ? "atlas-cycle"
-          : "articulated-rig";
-    return createBundledKidsPilotCapabilityRegistry(kind);
-  }, [firstBeatRole, project.grammar]);
+  // Ordinary Ollo & Friends projects compile against the empty Director Alpha
+  // registry: zero Mara engineering fixtures bind, every performance
+  // requirement resolves proxy-only, and nothing can read as ordinary Ollo
+  // readiness. Mara art remains only in the explicit engineering-demo
+  // surfaces (the Cv001 demo and the verified template preview), which carry
+  // their own fixtures and are visibly labeled as demos.
+  const capabilityRegistry = alphaCapabilityRegistry;
   const directorCompilation = useMemo<{
     directorProject: DirectorProject | null;
     error: string | null;
@@ -190,6 +198,13 @@ export function Cv002DraftReview({
       }
     },
   );
+  // The Mara template surface stays hidden behind the explicitly named
+  // Engineering demo action; an existing assignment implies the action was
+  // already taken, so the labeled demo mode opens automatically.
+  const [engineeringDemoOpen, setEngineeringDemoOpen] = useState(false);
+  useEffect(() => {
+    if (assignment) setEngineeringDemoOpen(true);
+  }, [assignment]);
   useEffect(() => {
     const directorProject = directorCompilation.directorProject;
     if (!directorProject) {
@@ -412,6 +427,21 @@ export function Cv002DraftReview({
             <strong>StoryStage</strong>
             <small>{project.title}</small>
           </div>
+        </div>
+        <div aria-label="Project setup" className="cv2-project-tags">
+          <span className="cv2-tag">
+            {project.grammar === "kids-adventure" ? (
+              <Trees size={13} />
+            ) : (
+              <Feather size={13} />
+            )}
+            {GRAMMAR_LABEL[project.grammar]}
+          </span>
+          <span className="cv2-tag">
+            <Sparkles size={13} />
+            {ART_DIRECTION_LABEL[project.artDirectionSelection.optionId] ??
+              humanize(project.artDirectionSelection.optionId)}
+          </span>
         </div>
         <div className="cv2-history-actions">
           <button
@@ -746,11 +776,37 @@ export function Cv002DraftReview({
             </p>
             <details className="cv2-advanced-capabilities">
               <summary>Animation capability prototype</summary>
-              <Cv002TemplateAssignmentPanel
-                assignment={assignment}
-                onAssignmentChange={saveAssignment}
-                project={project}
-              />
+              {project.grammar === "kids-adventure" && !engineeringDemoOpen ? (
+                <div className="cv2-demo-gate">
+                  <p>
+                    This is an engineering demo with Mara prototype art. It is
+                    not Ollo &amp; Friends production capability, and no
+                    approved Ollo character rig exists yet.
+                  </p>
+                  <button
+                    onClick={() => setEngineeringDemoOpen(true)}
+                    type="button"
+                  >
+                    <Clapperboard size={15} />
+                    Open engineering animation demo
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {project.grammar === "kids-adventure" ? (
+                    <p className="cv2-demo-mode-tag">
+                      <Clapperboard size={14} />
+                      Engineering demo · Mara prototype art — not Ollo
+                      production capability
+                    </p>
+                  ) : null}
+                  <Cv002TemplateAssignmentPanel
+                    assignment={assignment}
+                    onAssignmentChange={saveAssignment}
+                    project={project}
+                  />
+                </>
+              )}
             </details>
 
             <div className="cv2-direction-scenes">
