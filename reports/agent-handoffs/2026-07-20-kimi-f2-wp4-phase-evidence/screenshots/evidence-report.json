@@ -1,0 +1,253 @@
+{
+  "url": "http://127.0.0.1:5174/",
+  "capturedAt": "2026-07-20T19:23:58.274Z",
+  "checklist": [
+    {
+      "id": "E1",
+      "name": "all eight scenes selectable; rail/board/transport/overview agree",
+      "pass": true
+    },
+    {
+      "id": "E2",
+      "name": "exactly two beat rows, all for the selected scene",
+      "pass": true
+    },
+    {
+      "id": "E3",
+      "name": "collapsed selected sequence keeps summary with selection intact",
+      "pass": true
+    },
+    {
+      "id": "E4",
+      "name": "Reveal restores the hidden selected scene",
+      "pass": true
+    },
+    {
+      "id": "E5",
+      "name": "ArrowDown crosses act boundary and carries focus",
+      "pass": true
+    },
+    {
+      "id": "E6",
+      "name": "End jumps to last scene and ArrowDown clamps",
+      "pass": true
+    },
+    {
+      "id": "E7",
+      "name": "Home jumps to first scene and ArrowUp clamps",
+      "pass": true
+    },
+    {
+      "id": "E8",
+      "name": "visible keyboard focus (outline ≥ 2px)",
+      "pass": true
+    },
+    {
+      "id": "E9",
+      "name": "scene-relative playhead moves with numeric readout",
+      "pass": true
+    },
+    {
+      "id": "E10",
+      "name": "playhead resets deterministically on scene change",
+      "pass": true
+    },
+    {
+      "id": "E11",
+      "name": "permanent local-demo banner",
+      "pass": true
+    },
+    {
+      "id": "E12",
+      "name": "reference-art label",
+      "pass": true
+    },
+    {
+      "id": "E13",
+      "name": "local-timing disclosure",
+      "pass": true
+    },
+    {
+      "id": "E14",
+      "name": "Preview disabled with reason",
+      "pass": true
+    },
+    {
+      "id": "E15",
+      "name": "Export disabled with reason",
+      "pass": true
+    },
+    {
+      "id": "E16",
+      "name": "no horizontal overflow at 1440×900",
+      "pass": true
+    },
+    {
+      "id": "E17",
+      "name": "zero console warnings/errors (desktop)",
+      "pass": true
+    },
+    {
+      "id": "E18",
+      "name": "zero page errors (desktop)",
+      "pass": true
+    },
+    {
+      "id": "E19",
+      "name": "no horizontal overflow at 1920×1080",
+      "pass": true
+    },
+    {
+      "id": "E20",
+      "name": "zero console warnings/errors (1920)",
+      "pass": true
+    },
+    {
+      "id": "E21",
+      "name": "zero page errors (1920)",
+      "pass": true
+    },
+    {
+      "id": "E22",
+      "name": "1024 layout stacks in deliberate order",
+      "pass": true
+    },
+    {
+      "id": "E23",
+      "name": "rail, inspector, transport, overview reachable at 1024",
+      "pass": true
+    },
+    {
+      "id": "E24",
+      "name": "compact selection still drives the board",
+      "pass": true
+    },
+    {
+      "id": "E25",
+      "name": "no horizontal overflow at 1024×800",
+      "pass": true
+    },
+    {
+      "id": "E26",
+      "name": "zero console warnings/errors (1024)",
+      "pass": true
+    },
+    {
+      "id": "E27",
+      "name": "zero page errors (1024)",
+      "pass": true
+    },
+    {
+      "id": "E28",
+      "name": "reduced motion disables Studio transitions (no animation-dependent meaning)",
+      "pass": true
+    }
+  ],
+  "measurements": {
+    "1440x900": {
+      "viewport": {
+        "w": 1440,
+        "h": 900
+      },
+      "scrollW": 1440,
+      "rail": {
+        "x": 24,
+        "y": -20,
+        "w": 250,
+        "h": 799
+      },
+      "board": {
+        "x": 292,
+        "y": -20,
+        "w": 816,
+        "h": 799
+      },
+      "inspector": {
+        "x": 1126,
+        "y": -20,
+        "w": 290,
+        "h": 799
+      },
+      "overview": {
+        "x": 0,
+        "y": 797,
+        "w": 1440,
+        "h": 103
+      },
+      "transport": {
+        "x": 292,
+        "y": 616,
+        "w": 816,
+        "h": 44
+      }
+    },
+    "1920x1080": {
+      "scrollW": 1920,
+      "clientW": 1920
+    },
+    "1024x800": {
+      "scrollW": 1024,
+      "clientW": 1024,
+      "order": {
+        "rail": 1,
+        "board": 2,
+        "inspector": 3,
+        "overview": 4
+      }
+    },
+    "reducedMotion": {
+      "railSceneTransitionDuration": "1e-05s"
+    }
+  },
+  "screenshots": [
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp4-phase-evidence\\screenshots\\wp4-desktop-expanded-navigation.png",
+      "note": "desktop expanded navigation at initial scene",
+      "viewport": "1440x900",
+      "sha256": "dcf3546add39f34e34495ce3618059c059798887ca37aa923d448f170995bb17"
+    },
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp4-phase-evidence\\screenshots\\wp4-desktop-collapsed-hidden-selection.png",
+      "note": "collapsed Sequence 2 hides Scene 3; summary + Reveal visible",
+      "viewport": "1440x900",
+      "sha256": "2db4e7611b69d698dfb08fe850753ef0638d04708e612bedc25c7d746f86bc58"
+    },
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp4-phase-evidence\\screenshots\\wp4-desktop-keyboard-selected-act-boundary.png",
+      "note": "keyboard-selected Scene 5 across the act boundary; focus visible",
+      "viewport": "1440x900",
+      "sha256": "f64bdeb63e0f166a2007f025edb36c6093fedb9cc24f7ef5e0ea610e5ffadcef"
+    },
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp4-phase-evidence\\screenshots\\wp4-synchronized-overview-playhead.png",
+      "note": "overview + board + transport + playhead synchronized at Scene 5, 0:45",
+      "viewport": "1440x900",
+      "sha256": "7a61453710d0450e2ab7a32c335bda9ccb0559c64b83fd78d0c5782dfd5b0b23"
+    },
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp4-phase-evidence\\screenshots\\wp4-1024x800-compact-stacked.png",
+      "note": "compact stacked regions at 1024×800; Scene 3 selected",
+      "viewport": "1024x800",
+      "sha256": "410491b99be6fc3807c37618b35731c15717633e07f8226aa1fe2a1c39c2b3cf"
+    }
+  ],
+  "consoles": {
+    "1440x900": {
+      "consoleMessages": [],
+      "pageErrors": []
+    },
+    "1920x1080": {
+      "consoleMessages": [],
+      "pageErrors": []
+    },
+    "1024x800": {
+      "consoleMessages": [],
+      "pageErrors": []
+    }
+  },
+  "summary": {
+    "total": 28,
+    "passed": 28,
+    "failed": 0
+  }
+}
