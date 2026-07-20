@@ -1,6 +1,6 @@
 # StoryStage — current Codex execution state
 
-Updated: 2026-07-20 10:31 America/Vancouver
+Updated: 2026-07-20 10:52 America/Vancouver
 
 This file is a restart pointer, not a product specification. GitHub branches,
 pull requests, issues, hosted checks, and exact remote SHAs remain authoritative.
@@ -44,25 +44,27 @@ merged into `product/v1` as `7a468673`.
 - Local root `pnpm verify`: passed at exact combined product head
 - Hosted integration run: `29761209150` passed at exact combined product head
 
-## Active F2 work package
+## Accepted F2-WP2 package — integration pending
 
 - Package: **F2-WP2 — Long-form navigation and bounded rendering**
 - Owner: Kimi CLI
 - Required branch: `agent/kimi-f2-longform-navigation-wp2`
 - Exact base: `1982407c201d68ce78c98a5f530cda348a15c8ed`
 - Issue: `https://github.com/truthunknown2-art/StoryStage/issues/41`
-- Rejected exact head: `5eb684ebcbf62886a5371311cf8226a48220df0a`
+- Rejected predecessor: `5eb684ebcbf62886a5371311cf8226a48220df0a`
+- Accepted correction: `420b4bd6c180e17c6e4c9bd371528e6792eb3ffd`
+- Accepted exact head: `ee900201d40aca2e38e559e19b40e9ec2b6282f0`
 - Draft PR: `https://github.com/truthunknown2-art/StoryStage/pull/42`
-- Canonical inbox: version `42` (`START-NOW` correction)
+- Canonical inbox: version `43` (`WAIT`)
 - Full brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-bounded-beat-count-v42.md`
+  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-accepted-v43.md`
 
 Codex accepted the hierarchy collapse/reveal, scene/playhead synchronization,
-truthful controls, scope, screenshots, 69/69 Studio tests, typecheck, build,
-and hosted verification. One blocker remains: the candidate renders the same
-two selected-scene beats twice (four tagged rows), while the brief requires the
-rendered beat-row count not to exceed the selected scene's beat count. Only the
-v42 correction is authorized. WP3, F3, and backend work remain blocked.
+truthful controls, scope, recaptured screenshots, 69/69 Studio tests,
+typecheck, build, and hosted run `29764722843`. The v42 blocker is resolved:
+each two-beat scene now renders exactly two beat rows, only in the hierarchy
+rail, and every row belongs to the selected scene. PR #42 remains draft and
+unmerged. Kimi is on `WAIT`; WP3, F3, and backend work remain blocked.
 
 ## Pro audit
 

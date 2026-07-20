@@ -1,15 +1,28 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `42`
+Inbox-Version: `43`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP2-BOUNDED-BEAT-COUNT-CORRECTION`
-Status: `START-NOW`
+Current-Task: `F2-WP2-LONG-FORM-NAVIGATION-ACCEPTED`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `5eb684ebcbf62886a5371311cf8226a48220df0a`
+Accepted-Root-Base: `ee900201d40aca2e38e559e19b40e9ec2b6282f0`
 Required-Work-Branch: `agent/kimi-f2-longform-navigation-wp2`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-bounded-beat-count-v42.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-accepted-v43.md`
 
 ## Current instruction
+
+Version 43 accepts exact F2-WP2 head
+`ee900201d40aca2e38e559e19b40e9ec2b6282f0`. The v42 bounded beat-row defect is
+resolved, the scoped and hosted checks pass, and the committed screenshots are
+accepted. Stop on `WAIT`. Do not modify PR #42 or begin WP3, F3, or backend
+work. A higher inbox version is required for any new assignment.
+
+Version 43 supersedes Version 42. Version 42 remains below as historical
+traceability.
+
+---
+
+Previous Version 42 instruction:
 
 Version 42 rejects exact F2-WP2 head
 `5eb684ebcbf62886a5371311cf8226a48220df0a` for one bounded-DOM defect: each
