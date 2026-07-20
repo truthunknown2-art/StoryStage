@@ -5,15 +5,24 @@ Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ollo-gate1-review-ui-a-v24-
 Branch: `agent/kimi-ollo-gate1-review-ui-a` (successor to rejected head
 `a375209586758acc235a4ff0621cca6fd8760163`, draft PR #25)
 
+Receipt note (inbox v26): this file was corrected documentation-only after the
+audited UI tip — the SHA chain and delta counts below are the exact ones; the
+earlier "branch tip"/"two-commit" wording was wrong and has been removed.
+
 ## SHAs
 
 - Accepted upstream base: `c934021f9580fe200aef8e54573383e07eb24932`
+- Provider base (PR #25 target, inbox v25 retarget): `92e026357269e759364c087aaf551b6328e8d9e2`
 - Prior rejected head: `a375209586758acc235a4ff0621cca6fd8760163`
-- Implementation head (this correction): `6c3e695029ba06ee4a78ee851f68699b8893b43d`
-- Branch tip at push: the handback commit recorded in the PR body.
+- Accepted implementation commit: `6c3e695029ba06ee4a78ee851f68699b8893b43d`
+- Accepted screenshot/handback commit: `4efcd27d55e9e26d44b5ec2818c0ed7e1742bbf8`
+- Immutable audited UI tip: `bdc3bb4e54d364d32219726e6df2067e9c75868a`
 
-The delta is two commits on top of the rejected head: one implementation
-commit, one handback commit (this file + screenshots).
+The correction delta from the rejected head through the audited UI tip is
+three commits: the implementation commit, the screenshot/handback commit, and
+the retarget-note commit. The later receipt commit that carries this
+correction is documentation-only and is named separately in the PR body; no
+branch-tip claim is made here.
 
 ## Corrections applied
 
@@ -58,7 +67,7 @@ commit, one handback commit (this file + screenshots).
    labelled, keyboard-focusable horizontal scroll region
    (`role="region"`, `tabIndex="0"`, aria-label describing horizontal
    scrolling) so the `+15°` column is always reachable.
-6. **Exact handback.** This document names exact SHAs, the true two-commit
+6. **Exact handback.** This document names exact SHAs, the true three-commit
    delta, every changed file by path, exact verification results, screenshot
    hashes, and a truthful accessibility checklist.
 
@@ -182,11 +191,11 @@ All four captures: no console errors, no console warnings, no page errors.
 PR #25 was retargeted by Codex (inbox v25) and now drafts into
 `agent/kcast001-provider-neutral-rig` at accepted merge
 `92e026357269e759364c087aaf551b6328e8d9e2`. Fast-forward or squash-merge the
-draft there. The successor adds two commits on top of the rejected head
-`a3752095…`; the branch still touches only `apps/registration-review/`,
-`pnpm-lock.yaml`, and `reports/agent-handoffs/`. If `pnpm-lock.yaml` drifted
-upstream, regenerate with `corepack pnpm install --lockfile-only` after
-merge.
+draft there. The UI/evidence delta adds three commits on top of the rejected
+head `a3752095…` (implementation, screenshot/handback, retarget note); the
+branch still touches only `apps/registration-review/`, `pnpm-lock.yaml`, and
+`reports/agent-handoffs/`. If `pnpm-lock.yaml` drifted upstream, regenerate
+with `corepack pnpm install --lockfile-only` after merge.
 
 Stopping here per the brief: no patch authoring, no Player, no approval,
 motion, export, render, publish, or production authority exercised.
