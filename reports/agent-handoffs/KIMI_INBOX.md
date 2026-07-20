@@ -1,15 +1,30 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `54`
+Inbox-Version: `55`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `G0-ROADMAP-FINAL-HEAD-AUDIT-WAIT`
+Current-Task: `G0-ROADMAP-PRO-FINAL-VERDICT-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
 Required-Work-Branch: `none-planning-hold`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-final-head-audit-wait-v54.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-pro-final-verdict-wait-v55.md`
 
 ## Current instruction
+
+Version 55 records exact PR #48 audit head
+`febc42ad94d716abf3893c59ce31389685ef87ae` and hosted Verify run
+`29785772872` PASS. The final one-line successor made the newly hosted roadmap
+guard accept Windows CRLF; it changed no roadmap scope or product code. Kimi
+remains on `WAIT`; Pro's final exact-SHA verdict and Preston's G0 decision are
+pending. Do not implement F3-WP1, begin later frontend work, or start backend
+work. A higher inbox version is required for any implementation task.
+
+Version 55 supersedes Version 54. Version 54 remains below as historical
+traceability.
+
+---
+
+Previous Version 54 instruction:
 
 Version 54 records the immutable correction content at `44bd2385...` and the
 current status-corrected PR #48 audit head
