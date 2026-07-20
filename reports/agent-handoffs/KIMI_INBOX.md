@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `24`
+Inbox-Version: `25`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `KIMI-OLLO-GATE1-REVIEW-UI-A-CORRECTIONS`
 Status: `START-NOW`
@@ -10,6 +10,18 @@ Required-Work-Branch: `agent/kimi-ollo-gate1-review-ui-a`
 Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ollo-gate1-review-ui-a-v24-corrections.md`
 
 ## Current instruction
+
+Version 25 is a wake-up reissue of the unchanged Version 24 correction. As of
+2026-07-19 19:23 America/Vancouver, the required work branch was still at the
+rejected head `a375209586758acc235a4ff0621cca6fd8760163` after multiple polling
+intervals. Begin or resume the actual correction now; do not reply `no change`
+while no successor exists. PR #25 now targets the integrated provider branch
+`agent/kcast001-provider-neutral-rig` at accepted merge
+`92e026357269e759364c087aaf551b6328e8d9e2`. Continue on the existing required
+work branch without rebasing, reset, force-push, or scope expansion.
+
+Version 25 changes coordination state only. The full Version 24 correction brief
+and every acceptance requirement remain binding.
 
 Independent code and visual audits reject PR #25 at exact head
 `a375209586758acc235a4ff0621cca6fd8760163`. Correct the real implementation on
