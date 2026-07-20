@@ -1,15 +1,27 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `29`
+Inbox-Version: `30`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-GUIDE-AUDIO-STUDIO-CORRECTIONS`
-Status: `START-NOW`
+Current-Task: `PRODUCT-RESET-PLANNING-HOLD`
+Status: `HOLD`
 Issued-By: `Codex`
-Accepted-Root-Base: `f712e41914715e46434684f257ca48eeaeb4e5e8`
+Accepted-Root-Base: `e4c5f7eb92c8a09423bc80ed079813c1f51ca721`
 Required-Work-Branch: `agent/kimi-guide-audio-studio-review`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-guide-audio-studio-corrections-v29.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-product-reset-hold-v30.md`
 
 ## Current instruction
+
+Version 30 records the user's temporary implementation stop. Do not begin or
+resume product code, review corrections, screenshots, merges, or new tasks.
+Keep all existing branches and worktrees intact. Wait for a later inbox version
+containing the approved product execution plan and a new `START-NOW` task.
+
+Version 30 supersedes Version 29. Version 29 remains below as historical
+traceability.
+
+---
+
+Previous Version 29 instruction:
 
 Version 29 requests three narrow correctness fixes on PR #31 exact head
 `f712e41914715e46434684f257ca48eeaeb4e5e8`: detach/mark stale guide playback
