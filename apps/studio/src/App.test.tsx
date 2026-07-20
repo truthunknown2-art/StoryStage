@@ -435,7 +435,7 @@ describe("F2-WP2 — long-form navigation and bounded rendering", () => {
 
     // Initial scene: exactly its two beats exist in the DOM (board + rail).
     let beatRows = studio.querySelectorAll("[data-beat-for]");
-    expect(beatRows.length).toBe(4);
+    expect(beatRows.length).toBe(2);
     for (const row of beatRows)
       expect(row.getAttribute("data-beat-for")).toBe("scene-1");
 
@@ -445,7 +445,7 @@ describe("F2-WP2 — long-form navigation and bounded rendering", () => {
       }),
     );
     beatRows = studio.querySelectorAll("[data-beat-for]");
-    expect(beatRows.length).toBe(4);
+    expect(beatRows.length).toBe(2);
     for (const row of beatRows)
       expect(row.getAttribute("data-beat-for")).toBe("scene-5");
     expect(studio).toHaveTextContent("The bridge lanterns wake one by one");

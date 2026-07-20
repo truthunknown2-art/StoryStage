@@ -292,17 +292,6 @@ export function StudioShell({
               render exists for this scene.
             </p>
           </div>
-          <div className="pv1-board-beats">
-            <h2>Beats in this scene</h2>
-            <ol>
-              {selectedScene.beats.map((beat) => (
-                <li data-beat-for={selectedScene.id} key={beat.title}>
-                  <strong>{beat.title}</strong>
-                  <span>{beat.seconds}s</span>
-                </li>
-              ))}
-            </ol>
-          </div>
           <div className="pv1-playhead">
             <label htmlFor="pv1-playhead-slider">
               Scene playhead{" "}
