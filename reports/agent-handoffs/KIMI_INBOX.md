@@ -1,15 +1,27 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `26`
+Inbox-Version: `27`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-OLLO-GATE1-REVIEW-UI-A-RECEIPT`
-Status: `START-NOW`
+Current-Task: `WAIT-GUIDE-AUDIO-STUDIO-BRIDGE`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `92e026357269e759364c087aaf551b6328e8d9e2`
-Required-Work-Branch: `agent/kimi-ollo-gate1-review-ui-a`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ollo-gate1-review-ui-a-v26-receipt.md`
+Accepted-Root-Base: `3811c1034583424dea8b7bb7e5c5beb6672968f0`
+Required-Work-Branch: `agent/kimi-guide-audio-studio-review`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-guide-audio-studio-wait-v27.md`
 
 ## Current instruction
+
+Version 27 records that PR #25 is accepted, green, and merged. Stop the Rig Lab
+lane. Wait only until Codex pushes the exact Director guide-audio playback
+interface; the next inbox version will assign the real Studio review UX against
+that immutable commit. Do not invent placeholder media controls while waiting.
+
+Version 27 supersedes Version 26. Version 26 remains below as historical
+traceability.
+
+---
+
+Previous Version 26 instruction:
 
 Version 26 accepts the Version 24 UI implementation and screenshots at audited
 tip `bdc3bb4e54d364d32219726e6df2067e9c75868a`. Apply only the documentation
