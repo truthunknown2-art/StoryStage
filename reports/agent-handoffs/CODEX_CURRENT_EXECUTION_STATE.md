@@ -1,6 +1,6 @@
 # StoryStage — current Codex execution state
 
-Updated: 2026-07-20 00:50 America/Vancouver
+Updated: 2026-07-20 01:35 America/Vancouver
 
 This file is a restart pointer, not a product specification. GitHub branches,
 pull requests, issues, hosted checks, and exact remote SHAs remain authoritative.
@@ -9,7 +9,7 @@ pull requests, issues, hosted checks, and exact remote SHAs remain authoritative
 
 - Repository: `truthunknown2-art/StoryStage`
 - Governing branch: `product/v1`
-- Governing SHA: `e759c54d513b628ff04b4d7782cb1522b7beec85`
+- Governing SHA: `9f6cef48a031fb09f1a0539652fbed4274f5ff9b`
 - Binding plan: `docs/PRODUCT_PLAN.md`
 - Plan PR: `https://github.com/truthunknown2-art/StoryStage/pull/32`
 - Plan verification: hosted `verify` passed at the governing SHA
@@ -34,12 +34,19 @@ reported 39 deterministic legacy-suite failures. Inbox v33 authorizes only the
 bounded F1 corrections. Do not advance F2 until the immutable successor is
 green and accepted.
 
+Kimi claimed issue #34 after the 01:04 scheduler wake. At the 01:34 scheduled
+check, no successor had been pushed; the remote work branch remained at the
+rejected `00299eb` candidate. Do not inspect or interfere with Kimi's live local
+worktree. The next scheduled remote check is approximately 01:49.
+
 ## Pro audit
 
-ChatGPT Pro received governing SHA `e759c54` and PR #32 with explicit roadmap
-acceptance questions. At this update Pro is still finalizing the exact-SHA
-verdict. Only the completed response tied to that SHA counts, and Codex must
-copy the verdict to GitHub before treating the audit as durable.
+ChatGPT Pro rejected the former roadmap SHA `e759c54` for three narrow E0
+governance defects. Codex corrected only those defects and pushed successor
+`9f6cef48a031fb09f1a0539652fbed4274f5ff9b`. Repository-root `pnpm verify` and
+hosted `verify` passed. Pro then **ACCEPTED** that exact successor, confirmed
+all three blockers resolved with no scope expansion, and kept F1 active under
+Kimi while B1/B2 remain unauthorized. The exact verdict is recorded on PR #32.
 
 ## E0 engine feasibility proof
 
@@ -48,7 +55,13 @@ copy the verdict to GitHub before treating the audit as durable.
   `C:\Projects\StoryStage-godot-spike`
 - Scope: pinned stable Godot Skeleton2D/Bone2D four-second transparent sequence,
   repeated determinism proof, then isolated Remotion composite/render/evidence
-- Status at this update: delegated agent running; no remote candidate yet
+- Draft PR: `https://github.com/truthunknown2-art/StoryStage/pull/35`
+- Current exact head: `cc5a472932f3ede6ed79cbda30ce35f5750a2e06`
+- Status: two fresh 120-frame renders use a real transparent `SubViewport` and
+  match with zero raw-byte mismatches; every frame decodes as 1920×1080 RGBA8;
+  the exact Remotion MP4/still verifier and full repository `pnpm verify` pass
+- Hosted `verify` for `cc5a472` is in progress; do not integrate or declare the
+  final E0 gate closed until it passes
 - This proof cannot advance or satisfy B1/B2 and must not alter product code
 
 ## Restart procedure
