@@ -2528,6 +2528,7 @@ export function sealEditorialRejectedResult(input: {
     runSpec,
   );
   if (
+    rejectedIntent &&
     "rawIntentContentHash" in attemptReceipt &&
     attemptReceipt.rawIntentContentHash !== rejectedIntentContentHash
   )

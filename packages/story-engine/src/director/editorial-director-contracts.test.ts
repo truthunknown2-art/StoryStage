@@ -1306,6 +1306,64 @@ describe("AI Editorial Director planning boundary", () => {
       }),
     ).toEqual(rawRejected);
 
+    const rawIntentLaneAttempts = [
+      {
+        runSpec: runSpecFor(request, "heuristic-control"),
+        createAttempt: (laneRunSpec: EditorialPlanningRunSpec) =>
+          sealEditorialHeuristicPlanningAttemptReceipt({
+            request,
+            runSpec: laneRunSpec,
+            plannerId: "heuristic-editorial-planner",
+            plannerVersion: "1.0.0",
+            rawIntentContentHash: hash("schema-invalid-heuristic-intent"),
+          }),
+      },
+      {
+        runSpec: runSpecFor(request, "manual-candidate"),
+        createAttempt: (laneRunSpec: EditorialPlanningRunSpec) =>
+          sealEditorialManualPlanningAttemptReceipt({
+            request,
+            runSpec: laneRunSpec,
+            authorId: "manual-editor",
+            authorshipEvidenceContentHash: hash("manual-authorship"),
+            rawIntentContentHash: hash("schema-invalid-manual-intent"),
+          }),
+      },
+    ] as const;
+
+    for (const { runSpec: rawIntentRunSpec, createAttempt } of
+      rawIntentLaneAttempts) {
+      const rawIntentAttempt = createAttempt(rawIntentRunSpec);
+      const laneRejected = sealEditorialRejectedResult({
+        request,
+        runSpec: rawIntentRunSpec,
+        rejectedProposal: null,
+        rejectedIntent: null,
+        diagnostics: diagnostic("schema-invalid"),
+        attemptReceipt: rawIntentAttempt,
+        proposalBindingReceipt: null,
+        reasonCodes: ["schema-invalid"],
+        revisionRound: 0,
+      });
+      expect(laneRejected).toMatchObject({
+        rejectedIntentContentHash: null,
+        rejectedProposalContentHash: null,
+        attemptReceiptContentHash: rawIntentAttempt.contentHash,
+        proposalBindingReceiptContentHash: null,
+      });
+      expect(
+        restoreEditorialPlanningResult({
+          serialized: JSON.stringify(laneRejected),
+          request,
+          runSpec: rawIntentRunSpec,
+          proposals: [],
+          attemptReceipts: [rawIntentAttempt],
+          proposalBindingReceipts: [],
+          diagnostics: [diagnostic("schema-invalid")],
+        }),
+      ).toEqual(laneRejected);
+    }
+
     const staleIntent = externalIntentFor(request);
     staleIntent.requestContentHash = hash("stale-request");
     const foreignIntent = externalIntentFor(request);
