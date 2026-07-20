@@ -1,15 +1,29 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `33`
+Inbox-Version: `34`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F1-PROJECTS-CREATE-ACCEPTANCE-CORRECTIONS`
-Status: `START-NOW`
+Current-Task: `F1-PROJECTS-CREATE-GATE-REVIEW`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `00299eb351f24a1cf1be5b34cb08f6c77c039af5`
+Accepted-Root-Base: `1a90a0b2dee5f18fd36e51a1bab6424cffd6382a`
 Required-Work-Branch: `agent/kimi-ui-v2`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-acceptance-corrections-v33.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-gate-review-wait-v34.md`
 
 ## Current instruction
+
+Version 34 records that Kimi completed the Version 33 correction handback at
+exact pushed tip `1a90a0b2dee5f18fd36e51a1bab6424cffd6382a`. Local, hosted,
+visual, screenshot-hash, and exact 1024px responsive checks are green. Codex
+and ChatGPT Pro are performing the immutable F1 gate review. Wait: do not
+change PR #33, begin F2, or start backend work. A later higher inbox version
+will record ACCEPT/REJECT and any bounded next assignment.
+
+Version 34 supersedes Version 33. Version 33 remains below as historical
+traceability.
+
+---
+
+Previous Version 33 instruction:
 
 Version 33 rejects exact pushed candidate `00299eb` at the F1 acceptance gate.
 Claim GitHub issue #34 and apply only the bounded correction brief on the
