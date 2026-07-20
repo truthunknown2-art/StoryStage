@@ -9,15 +9,15 @@ completedMilestones:
   F1: 7a468673c0a33a37b96b94d965b5d2a857150fac
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
 authorization:
-  state: REVIEW
+  state: PRO_GATE
   milestone: G0
   package: G0-WP5
   owner: Codex
   exactBase: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   branch: agent/codex-full-product-roadmap
   issue: null
-  pr: null
-  candidateHead: null
+  pr: 48
+  candidateHead: bcb8ae26ed307227dbf87a7f77dfe447d38f2f47
 checks:
   local: roadmap-consistency+links+package-count+diff-check-pass
   hosted: null
