@@ -179,12 +179,14 @@ All four captures: no console errors, no console warnings, no page errors.
 
 ## Merge instructions
 
-Fast-forward or squash-merge PR #25 into
-`agent/kcast001i-registration-measurement-v2`. The successor adds two commits
-on top of the rejected head `a3752095…`; the branch still touches only
-`apps/registration-review/`, `pnpm-lock.yaml`, and `reports/agent-handoffs/`.
-If `pnpm-lock.yaml` drifted upstream, regenerate with
-`corepack pnpm install --lockfile-only` after merge.
+PR #25 was retargeted by Codex (inbox v25) and now drafts into
+`agent/kcast001-provider-neutral-rig` at accepted merge
+`92e026357269e759364c087aaf551b6328e8d9e2`. Fast-forward or squash-merge the
+draft there. The successor adds two commits on top of the rejected head
+`a3752095…`; the branch still touches only `apps/registration-review/`,
+`pnpm-lock.yaml`, and `reports/agent-handoffs/`. If `pnpm-lock.yaml` drifted
+upstream, regenerate with `corepack pnpm install --lockfile-only` after
+merge.
 
 Stopping here per the brief: no patch authoring, no Player, no approval,
 motion, export, render, publish, or production authority exercised.
