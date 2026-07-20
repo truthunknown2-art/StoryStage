@@ -1,0 +1,214 @@
+# StoryStage v1 product plan
+
+**Status:** Binding execution plan
+
+**Product owner:** Preston
+
+**Accepted reset base:** `e4c5f7eb92c8a09423bc80ed079813c1f51ca721`
+
+**Integration branch:** `product/v1`
+
+**Active phase:** F1 — Projects + Create
+
+**Updated:** 2026-07-19
+
+## 1. Product definition
+
+StoryStage is a single-user desktop animation studio that turns a script into an editable, layered animation production. It directs scenes and shots, prepares reusable art and rigs, animates 2D characters and multiplane environments, records or imports narration, places real sound, and exports through Remotion.
+
+It does **not** generate finished video through Veo, Seedance, or a similar service. It builds animation from controlled assets, rigs, backgrounds, layers, props, motion programs, camera direction, audio, editing, and deterministic rendering.
+
+### Initial production defaults
+
+- Kids Adventure first: Ollo, Tix, Dot, and Storylight.
+- Storybook watercolor / cut-paper mixed-media art direction.
+- 16:9, 1920×1080, 30 fps.
+- User-recorded narration first, with import and record-later states.
+- Approximate 6–8-viseme lip sync with manual correction, not expensive perfect facial solving.
+- Real imported or locally stored SFX and music.
+- ChatGPT-assisted image creation through an explicit manual request/import workflow first.
+- Final target: approximately 20-minute episodes.
+- Proof gates: one coherent 25–30 second scene, one finished 2–3 minute pilot, then one reliable 20-minute episode.
+
+## 2. Creator experience
+
+There are only three creator-facing screens:
+
+```text
+Projects
+  → Create
+    → Studio
+       ├─ Direct
+       ├─ Visual / Camera
+       ├─ Motion
+       ├─ Assets & Rigs
+       ├─ Narration / SFX / Music
+       └─ Export
+```
+
+### Projects
+
+A simple episode list with thumbnail, title, grammar/style, duration, and honest status: Draft, Missing assets, Ready, or Exporting. The primary actions are Continue and New project. There are no accounts, enterprise dashboards, or production bureaucracy.
+
+### Create
+
+- Paste or import a script.
+- Choose Kids Adventure or Weird History.
+- Choose an art direction.
+- Choose estimated, guide, imported, or record-later narration.
+- Show estimated duration.
+- Preview detected acts, sequences, scenes, and natural beats.
+- Create an editable first cut.
+
+### Studio
+
+- **Left:** collapsible acts, sequences, scenes, and beats.
+- **Center:** authoritative Remotion preview and real transport controls.
+- **Right:** Direct, Visual/Camera, Motion, Assets/Rigs, and Audio inspectors.
+- **Bottom:** compact episode overview plus expanded tracks for the selected scene.
+- **Tracks:** characters, props, camera, voice, SFX, and music.
+- **Top-right:** Preview and Export.
+
+A 20-minute project never renders thousands of expanded beat cards. The overview stays scene-level; only the selected sequence or scene expands.
+
+During frontend development, a bounded local Ollo demo drives the complete 20-minute information architecture. It must always show:
+
+> Local UI demo — production services are not connected.
+
+No control may fake a generated, uploaded, recorded, rendered, or exported success state.
+
+## 3. Frontend-first delivery — Kimi
+
+Codex reviews and integrates these phases but does not start unrelated backend implementation.
+
+| Phase                                 | Visible delivery                                                                               | Acceptance gate                                                                                                            |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **F1 — Projects + Create**            | One unified entry, project list, and Create screen matching the approved product direction     | 1440×900 and 1920×1080 screenshots; script import, selections, demo loading, and navigation work; no dead success controls |
+| **F2 — Long-form Studio shell**       | Hierarchical scene rail, preview area, transport, and 20-minute episode overview               | The complete demo episode is navigable without losing selection, flooding the screen, or freezing                          |
+| **F3 — Director workspace**           | Direct, Visual, and Motion panels with explicit beat/scene scope and undo                      | Every visible control changes local state or clearly explains why it is unavailable                                        |
+| **F4 — Assets and rigs**              | Characters, rigs, locations, layered sets, props, and asset-request views                      | Every scene exposes understandable asset needs and honest readiness                                                        |
+| **F5 — Narration and sound**          | Recording states, take management, voice track, SFX placement, and music controls              | Record/retake/import/mute/retime UX is complete, including permission and missing-device errors                            |
+| **F6 — Timeline, export, and polish** | Track editing, zoom, trim/drag prototypes, export drawer, accessibility, and final visual pass | Preston accepts the complete Projects → Create → Studio click-through as understandable and visually coherent              |
+
+**Frontend Gate:** F1–F6 are accepted by Preston. Only then may normal backend product implementation begin.
+
+## 4. Backend delivery — Codex
+
+| Phase                               | Real delivery                                                                                    | Acceptance gate                                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| **B1 — One durable project path**   | Approved UI connected to real save/load and long-form project state                              | Create, edit, close, and reopen without using hidden Legacy surfaces                         |
+| **B2 — Ollo visual engine**         | Real Ollo rig, layered Little Wood set, foreground occlusion, ambient motion, canonical playback | One coherent 25–30 second scene with no sliding, clipping, disappearing, or nonsensical cuts |
+| **B3 — Director automation**        | Natural scene/beat/shot planning, continuity, camera, action, props, and editable AI proposals   | Two different scripts create sensible, editable plans rather than fixture output             |
+| **B4 — Narration and sound engine** | Microphone recording, WAV storage, take editing, approximate lip sync, SFX, music, and final mix | Audio survives reload and exported MP4 contains synchronized picture and sound               |
+| **B5 — Finished Kids pilot**        | Complete 2–3 minute Ollo episode through ordinary Studio                                         | Preston accepts direction, animation, sound, and downloadable MP4                            |
+| **B6 — Long-form production**       | Long-script ingest, caching, selected-range preview, chunked/stitch rendering                    | Reliable exact 36,000-frame, 20-minute, 30 fps export without memory failure                 |
+| **B7 — Weird History grammar**      | Archival/stock media, kinetic type, evidence cards, and faster editorial pacing                  | One publishable Weird History pilot through the same product                                 |
+| **B8 — Specialist shot bridge**     | Blender/After Effects job package and pre-render import                                          | Added only when an approved shot has a need the 2D system cannot reasonably satisfy          |
+
+## 5. Animation production rules
+
+### Character tiers
+
+- **Recurring heroes:** front and genuine left/right views; separated padded parts; stable pivots; expressions, blinks, and mouth shapes; reusable idle, talk, walk, run, reach, point, react, enter, and exit performances.
+- **Important one-scene character:** limited cutout rig sufficient for the approved shots.
+- **Background extra:** sprite plus a small ambient loop.
+
+Feet remain grounded, travel matches the facing direction, and profile movement uses a genuine profile. Characters do not slide sideways while staring at camera.
+
+### Environments
+
+Each useful location can become a restrained multiplane set:
+
+1. far background;
+2. midground elements;
+3. character and prop plane;
+4. foreground occluders aligned to their original image positions;
+5. ambient elements.
+
+Reusable deterministic motion includes leaf/grass sway, lantern flicker, water drift, floating pollen/fireflies, and small distant creature loops. Ambient motion serves the shot; every object does not move. Motion blur is a deliberate direction choice and normally affects selected moving layers or the background—not a default blur over a running character.
+
+### Direction and continuity
+
+The AI Director proposes the screenplay hierarchy, dramatic beat, shot purpose, composition, camera, blocking, action, prop use, transition, narration timing, sound cues, and continuity requirements. The creator can edit or reject those proposals. Deterministic code validates identity, timing, scene state, camera samples, asset availability, and renderability.
+
+Characters, props, screen direction, and scene geography persist across cuts unless an authored transition changes them. Shot duration follows performance and narration; scenes are not forced into equal lengths.
+
+### Narration and lip sync
+
+Narration is recorded or imported by scene/beat while the preview can loop. A take supports arm, record, stop, audition, keep/discard, trim, gain, replace, and restore. Selected narration becomes timing authority only through an explicit action.
+
+Initial lip sync maps speech timing to a small editable viseme set. It is allowed to be approximate; it is not allowed to be random or disconnected from the selected take.
+
+### Sound effects and music
+
+The Director proposes concrete cues such as “two light footsteps,” “soft leaf rustle,” or “Storylight chime.” Cues are filled with real licensed/imported audio and retain source/license metadata when required. Music supports loop, trim, fade, gain, and narration ducking. Suno or another provider may be added later, but provider integration cannot block the first finished episode.
+
+## 6. Team workflow and Git protocol
+
+### Source of truth
+
+- Repository: `truthunknown2-art/StoryStage`.
+- Integration branch: `product/v1`.
+- Existing proof branches are read-only references unless an active ticket names one.
+- Kimi coordination branch: `agent/kimi-frontend`.
+- Kimi implementation branch for the frontend program: `agent/kimi-ui-v2`, unless a later inbox version explicitly changes it.
+
+### Roles
+
+- Kimi owns frontend/UI/UX work in `apps/studio` during F1–F6.
+- Codex owns backend, Remotion/runtime, desktop services, rendering, integration, and review.
+- Pro audits actual milestone evidence rather than continuously expanding architecture.
+- Preston accepts or rejects each phase gate.
+
+### One-ticket protocol
+
+Every ticket names:
+
+- exact base SHA and work branch;
+- allowed files;
+- one visible deliverable;
+- explicit non-goals;
+- real interactions versus intentionally unavailable controls;
+- tests and screenshot/render sizes;
+- acceptance criteria and PR target.
+
+At completion the owner commits, pushes, reports the exact SHA/files/tests/evidence/limitations, and stops. A ticket never silently rolls into another.
+
+### Kimi polling
+
+Every 15 minutes Kimi fetches and reads, without switching branches:
+
+```text
+origin/agent/kimi-frontend:reports/agent-handoffs/KIMI_INBOX.md
+```
+
+- `HOLD` / `WAIT`: do not code.
+- `START-NOW`: execute only the referenced brief on its declared branch.
+- `DONE`: push the handback and wait for a higher inbox version.
+
+Polling is read-only: no merge, rebase, reset, cherry-pick, or force-push.
+
+Codex separately monitors the remote inbox and declared work branch. A new Kimi commit or handback authorizes review, not automatic merge or the next phase. Codex records a verdict, advances the inbox to WAIT/corrections/next ticket as appropriate, and stops at Preston's phase gates.
+
+## 7. Model routing
+
+- **Unattended root default:** GPT-5.6 Sol Medium.
+- **Sol High/XHigh subagent:** bounded planning, hard debugging, architecture, visual quality, and phase audits.
+- **Terra Low/Medium subagent:** scans, logs, tests, and mechanical tasks.
+- **Sol Ultra:** only a genuinely parallel milestone audit.
+
+Use the lowest effort that reliably completes a bounded task. Model choice never expands ticket scope.
+
+## 8. Scope exclusions before the first publishable Kids pilot
+
+- Generated-video APIs.
+- Accounts, collaboration, cloud sync, billing, or marketplace.
+- A generic Premiere, CapCut, Character Animator, Blender, or After Effects clone.
+- New art grammars before the Kids pipeline passes.
+- Automatic Blender/After Effects integration without a real approved specialist shot.
+- Production UI that exposes internal hashes, evidence ledgers, or capability bureaucracy.
+- New schemas, proof applications, or parallel preview/render paths without an active-phase requirement.
+
+## 9. Gate discipline
+
+Every phase ends in something Preston can see, click, hear, or download. If the acceptance gate fails, the next phase does not begin. Corrections remain inside the failed phase. Product progress is measured by the creator journey and finished media—not by the number of schemas, proofs, reports, or lines of code.

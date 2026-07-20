@@ -2,7 +2,7 @@
 
 StoryStage is a directable local animation-production studio. It turns a pasted script into an inspectable profile-driven plan, manages a human-approved manual ChatGPT Images exchange, prepares and versions local assets, and compiles approved production meaning into deterministic Remotion frames.
 
-SS-001 is the workstation regression skeleton. SS-002 is the active real asset-to-frame production path. The project is not yet a finished automatic episode factory; see [Project state](docs/PROJECT_STATE.md) for the blunt status and [Product roadmap](docs/PRODUCT_ROADMAP.md) for the binding completion order.
+SS-001 is the workstation regression skeleton. SS-002 is the active real asset-to-frame production path. The project is not yet a finished automatic episode factory; see [Project state](docs/PROJECT_STATE.md) for the blunt status and the binding [StoryStage v1 product plan](docs/PRODUCT_PLAN.md) for the completion order.
 
 ## Requirements
 

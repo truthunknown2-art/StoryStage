@@ -1,27 +1,68 @@
-# StoryStage Codex operating rules
+# StoryStage operating contract
 
-## Product contract
+Read [`docs/PRODUCT_PLAN.md`](docs/PRODUCT_PLAN.md) before changing this repository. It is the binding product plan. GitHub is the source of truth; chat history, local-only worktrees, and old proof branches are not.
 
-StoryStage is a directable studio, not a one-click generative-video slot machine. AI may propose structured production objects; deterministic code renders approved objects. Generated objects must eventually support accept, reject, compare, regenerate, lock, and restore semantics.
+## Current phase
 
-## Architecture boundaries
+- Active product phase: **F1 — Projects + Create**.
+- Phase owner: **Kimi** (frontend/UI/UX).
+- Codex is review-and-integration only during the frontend phases. Backend product work remains on hold until Preston accepts the Frontend Gate after F6.
+- The live Kimi assignment is the highest-version `reports/agent-handoffs/KIMI_INBOX.md` on `origin/agent/kimi-frontend`.
+- Only one phase and one ticket per agent may be active. A finished ticket does not authorize the next ticket.
 
-1. `packages/contracts` is the shared vocabulary and contains no fixtures.
-2. `packages/fixtures` holds schema-valid sample data; never invent a looser mock type universe.
-3. `packages/remotion-runtime` is deterministic and contains no Node, Electron, filesystem, timer, randomness, or network behavior.
-4. `apps/render-worker` alone owns Remotion bundling, rendering, progress, and output creation.
-5. `apps/desktop` owns privileged orchestration and file opening, but does not render.
-6. `apps/studio` is an unprivileged browser app. Capability differences flow through host adapters, not scattered Electron checks.
-7. Every IPC and worker message is narrow, typed, and validated at both ends.
+If a request conflicts with the active phase, ownership, allowed files, or acceptance gate, stop and report the conflict. Do not improvise a second workstream.
 
-## Implementation rules
+## Team ownership
 
-- Keep TypeScript strict.
-- Drive Remotion motion only with frames, sequences, and deterministic props.
-- Never accept output paths, entry points, executables, or arbitrary channels from the renderer.
-- Report worker progress and failure as job data; failures must remain retryable without freezing the UI.
-- Keep edits ticket-scoped and preserve the documented product boundaries.
+- **Preston:** product owner and final acceptance authority.
+- **Kimi:** `apps/studio` frontend, UI/UX, responsive behavior, and frontend tests on the branch named in its current inbox brief.
+- **Codex:** contracts, story/director engine, desktop host, asset/audio workers, Remotion runtime, render worker, integration, and Kimi review. During F1–F6, Codex changes frontend only to review or correct an accepted ticket—not to start a competing design.
+- **ChatGPT Pro:** milestone audit of actual screenshots, click-throughs, or renders. Pro advises; it does not create unbounded architecture or silently change the roadmap.
+
+## Required work loop
+
+1. Fetch Git and read this file, `docs/PRODUCT_PLAN.md`, and the active ticket.
+2. State the active phase, owner, visible deliverable, allowed files, and non-goals.
+3. Make the smallest change that satisfies that ticket.
+4. Run the ticket's tests and capture its visible evidence.
+5. Commit and push the exact branch; report SHA, files, tests, screenshots/render, and limitations.
+6. Stop. The next phase requires a new ticket and Preston's gate decision where specified.
+
+No “while I’m here” work. No silent rollover into the next phase.
+
+## Subagent model routing
+
+The unattended root default is **GPT-5.6 Sol Medium**. Root-model selection remains a user setting; Codex routes bounded subagents as follows:
+
+- **Sol High/XHigh:** difficult planning, architecture decisions, hard debugging, visual-quality review, and phase-gate audits.
+- **Terra Low/Medium:** repository scans, test/log analysis, mechanical edits, and other routine bounded work.
+- **Sol Ultra:** only for a milestone audit that genuinely splits into independent parallel reviews. It is not the normal implementation setting.
+- **Root Sol Medium:** ordinary scoped implementation and integration.
+
+Always use the lowest effort that reliably completes the bounded task. Never assign a subagent an open-ended instruction such as “keep building StoryStage.” Every delegated task needs one deliverable, explicit non-goals, and a return condition.
+
+## Product and architecture boundaries
+
+- StoryStage is a directable animation studio, not a one-click generated-video service.
+- Creator-facing product surfaces are only **Projects → Create → Studio**.
+- `packages/contracts` is shared vocabulary, not fixtures.
+- `packages/remotion-runtime` remains deterministic and browser-safe.
+- `apps/render-worker` owns rendering and output creation.
+- `apps/desktop` owns privileged orchestration and local persistence.
+- `apps/studio` remains an unprivileged frontend using typed host adapters.
+- AI may propose bounded creative intent. Deterministic code owns timing, continuity, assets, capabilities, rendering, and saved project state.
+
+## Anti-overengineering rules
+
+- No new schema unless the active approved UI operation needs missing data.
+- No new demo app, proof composition, preview path, or framework during product phases.
+- No backend product work before the Frontend Gate.
+- No second art grammar before the Kids workflow passes its pilot gate.
+- No Blender/After Effects automation until a real approved shot requires it.
+- No accounts, collaboration, cloud sync, billing, marketplace, or generic Adobe clone.
+- No engineering hashes, evidence ledgers, or approval jargon in the normal creator UI.
+- No visible control may pretend generation, recording, upload, rendering, or export succeeded.
 
 ## Definition of done
 
-Run lint, type-check, tests, builds, real render, two-pass determinism, desktop success/failure acceptance, and representative visual inspection. Record exact evidence, meaningful deviations, limitations, and the next proposed ticket in `reports/`.
+A ticket is done only when its user-visible result works, scoped checks pass, evidence is captured, and the exact commit is pushed. A phase is done only when its acceptance gate in `docs/PRODUCT_PLAN.md` passes. Technical groundwork without a visible result is not phase completion.
