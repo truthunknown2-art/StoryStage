@@ -27,6 +27,11 @@ It does **not** generate finished video through Veo, Seedance, or a similar serv
 - Approximate 6–8-viseme lip sync with manual correction, not expensive perfect facial solving.
 - Real imported or locally stored SFX and music.
 - ChatGPT-assisted image creation through an explicit manual request/import workflow first.
+- Godot 4.x as the free, open-source 2D character/performance engine; no paid
+  animation runtime or per-export dependency is required for ordinary episodes.
+- Remotion as the canonical episode editor, compositor, timing/audio authority,
+  preview surface, and final renderer. Godot supplies deterministic animated
+  character/prop passes; it does not replace the StoryStage edit or export path.
 - Final target: approximately 20-minute episodes.
 - Proof gates: one coherent 25–30 second scene, one finished 2–3 minute pilot, then one reliable 20-minute episode.
 
@@ -92,12 +97,48 @@ Codex reviews and integrates these phases but does not start unrelated backend i
 
 **Frontend Gate:** F1–F6 are accepted by Preston. Only then may normal backend product implementation begin.
 
+### E0 — approved Godot/Remotion feasibility spike
+
+Preston authorizes one isolated, non-shipping engine spike while the frontend
+gate remains active. This is research evidence, not backend product
+implementation and not permission to advance B1 or B2.
+
+The spike must:
+
+- install and record one pinned stable Godot 4.x build locally without checking
+  the engine binary, installer, cache, or credentials into Git;
+- create one four-second, 120-frame, 1920×1080, 30 fps 2D cutout performance
+  using `Skeleton2D`/`Bone2D` and real articulated motion—not whole-pose image
+  swapping or a character sliding across the frame;
+- use approved existing Ollo parts only if their public provenance and rig
+  readiness are already valid; otherwise use an original visibly labelled
+  engine-test puppet rather than weakening an asset gate;
+- render a transparent PNG sequence at fixed frame rate from an unattended
+  command, then composite those exact frames in a small Remotion composition;
+- render a downloadable MP4 and representative stills, with commands, versions,
+  file hashes, frame count, and known limitations recorded in Git;
+- repeat the Godot render and prove whether corresponding frame bytes are
+  deterministic; any mismatch must be reported rather than hidden;
+- remain outside the creator UI, desktop persistence, Director contracts, and
+  production render path, and stop after the evidence handback.
+
+Passing E0 permits Godot to remain the planned B2 engine. It does not accept a
+final rig, final character art, visual quality, the frontend gate, or B2.
+
 ## 4. Backend delivery — Codex
+
+Godot is the planned articulated 2D performance worker. StoryStage generates
+or updates its rigs and animation jobs through Godot's documented scene,
+resource, GDScript, and command-line interfaces; StoryStage does not
+reverse-engineer proprietary editor formats. Remotion remains the single
+episode composition used for preview and final output, layering Godot character
+passes with multiplane environments, camera direction, narration, SFX, music,
+captions, and editorial timing.
 
 | Phase                               | Real delivery                                                                                    | Acceptance gate                                                                              |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
 | **B1 — One durable project path**   | Approved UI connected to real save/load and long-form project state                              | Create, edit, close, and reopen without using hidden Legacy surfaces                         |
-| **B2 — Ollo visual engine**         | Real Ollo rig, layered Little Wood set, foreground occlusion, ambient motion, canonical playback | One coherent 25–30 second scene with no sliding, clipping, disappearing, or nonsensical cuts |
+| **B2 — Ollo visual engine**         | Godot-driven real Ollo rig and action graph; Remotion-driven layered Little Wood set, foreground occlusion, ambient motion, and canonical playback | One coherent 25–30 second scene with grounded articulated motion and no sliding, clipping, disappearing, or nonsensical cuts |
 | **B3 — Director automation**        | Natural scene/beat/shot planning, continuity, camera, action, props, and editable AI proposals   | Two different scripts create sensible, editable plans rather than fixture output             |
 | **B4 — Narration and sound engine** | Microphone recording, WAV storage, take editing, approximate lip sync, SFX, music, and final mix | Audio survives reload and exported MP4 contains synchronized picture and sound               |
 | **B5 — Finished Kids pilot**        | Complete 2–3 minute Ollo episode through ordinary Studio                                         | Preston accepts direction, animation, sound, and downloadable MP4                            |
@@ -202,6 +243,9 @@ Use the lowest effort that reliably completes a bounded task. Model choice never
 ## 8. Scope exclusions before the first publishable Kids pilot
 
 - Generated-video APIs.
+- A paid or proprietary animation engine required for the ordinary Kids
+  pipeline, reverse-engineering Rive or another proprietary editor/file format,
+  or rebuilding a generic Rive/game-engine clone.
 - Accounts, collaboration, cloud sync, billing, or marketplace.
 - A generic Premiere, CapCut, Character Animator, Blender, or After Effects clone.
 - New art grammars before the Kids pipeline passes.
