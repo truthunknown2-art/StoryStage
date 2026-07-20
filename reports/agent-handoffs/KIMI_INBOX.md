@@ -1,15 +1,29 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `38`
+Inbox-Version: `39`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP1-STUDIO-SHELL-FOUNDATION`
+Current-Task: `F2-WP1-CREATED-PROJECT-TRUTH-CORRECTION`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `fb3033f8cc5ce536476066708aebb472704de936`
+Accepted-Root-Base: `c6defdb6370ec84c9f6af42f0ad87d0a6fb6145a`
 Required-Work-Branch: `agent/kimi-f2-studio-shell-wp1`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-studio-shell-v38.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-created-project-truth-v39.md`
 
 ## Current instruction
+
+Version 39 rejects exact F2-WP1 head
+`c6defdb6370ec84c9f6af42f0ad87d0a6fb6145a` for one creator-truth defect:
+created projects discard the selected grammar/art style and present Ollo demo
+scenes without disclosing that they are layout-demo data. Continue on the
+existing branch, apply only the bounded correction brief, rerun evidence,
+push one immutable successor, and stop. Do not begin WP2, F3, or backend work.
+
+Version 39 supersedes Version 38. Version 38 remains below as historical
+traceability.
+
+---
+
+Previous Version 38 instruction:
 
 Version 38 records Preston's F1 acceptance, the merged F1 and F2-plan lineage,
 and starts only F2-WP1 from exact product base
