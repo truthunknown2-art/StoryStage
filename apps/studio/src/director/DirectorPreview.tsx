@@ -1,5 +1,6 @@
 import { Player, type PlayerRef } from "@remotion/player";
 import { DirectorProductionComposition } from "@storystage/remotion-runtime/director";
+import type { DirectorGuideAudioPlayback } from "@storystage/remotion-runtime/director";
 import {
   applyDirectorPatch,
   currentDirectorProject,
@@ -41,6 +42,7 @@ import { DirectorCommandPanel } from "./DirectorCommandPanel";
 import { DirectorMotionPanel } from "./DirectorMotionPanel";
 import { DirectorTimelineDrawer } from "./DirectorTimelineDrawer";
 import { DirectorVisualPanel } from "./DirectorVisualPanel";
+import { GuideAudioReviewStrip } from "./GuideAudioReviewStrip";
 import { createDirectorTimelineViewModel } from "./director-timeline-view-model";
 
 const beatRange = (director: DirectorProject, beatId: string) => {
@@ -71,12 +73,14 @@ const beatRange = (director: DirectorProject, beatId: string) => {
 export function DirectorAnimaticPreview({
   capabilityRegistry,
   compileError,
+  guideAudio,
   onWorkspaceChange,
   project,
   workspace,
 }: {
   capabilityRegistry: CapabilityRegistry;
   compileError: string | null;
+  guideAudio?: DirectorGuideAudioPlayback | null;
   onWorkspaceChange: Dispatch<SetStateAction<DirectorWorkspaceState | null>>;
   project: Cv002Project;
   workspace: DirectorWorkspaceState | null;
@@ -85,6 +89,19 @@ export function DirectorAnimaticPreview({
   const [proposal, setProposal] = useState<DirectorPatch | null>(null);
   const [commandError, setCommandError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  // Host mute truth: seed the local review mute from the supplied playback
+  // and resynchronize whenever the guide identity changes. A user toggle only
+  // changes the local Player prop for the current identity — it never
+  // mutates or reseals episode/guide artifacts.
+  const guideIdentity =
+    guideAudio?.expectedGuideVoiceClockContentHash ?? null;
+  const hostGuideMuted = guideAudio?.muted ?? false;
+  const [guideMuted, setGuideMuted] = useState(hostGuideMuted);
+  const lastGuideIdentity = useRef(guideIdentity);
+  if (lastGuideIdentity.current !== guideIdentity) {
+    lastGuideIdentity.current = guideIdentity;
+    setGuideMuted(hostGuideMuted);
+  }
   const [activeDepartment, setActiveDepartment] = useState<"visual" | "motion">(
     "visual",
   );
@@ -201,6 +218,21 @@ export function DirectorAnimaticPreview({
     );
 
   const episode = director.executableEpisodePlan;
+  // Stale-guide guard: the Player guide is derived from the current compiled
+  // episode. A Director patch can retime the cut; if the supplied guide no
+  // longer matches the episode's exact fps/frame count, it is detached from
+  // Player input and reported honestly instead of crashing or silently
+  // retiming, stretching, or resealing the guide.
+  const guideFrames = guideAudio
+    ? guideAudio.timingBasis.durationSamples /
+      guideAudio.timingBasis.samplesPerFrame
+    : 0;
+  const guideCompatible = Boolean(
+    guideAudio &&
+      guideAudio.timingBasis.fps === episode.format.fps &&
+      Number.isSafeInteger(guideFrames) &&
+      guideFrames === episode.format.durationInFrames,
+  );
   const shots = director.directorPlan.shots.length;
   const beats = director.directorPlan.beats.length;
   const scenes = director.directorPlan.scenes.length;
@@ -368,7 +400,16 @@ export function DirectorAnimaticPreview({
             controls
             durationInFrames={episode.format.durationInFrames}
             fps={episode.format.fps}
-            inputProps={{ episodePlan: episode }}
+            inputProps={{
+              episodePlan: episode,
+              // Guide mute is a review-only Player prop: the episode plan
+              // object and picture timing never change. A guide that no
+              // longer matches the current episode is detached, never
+              // retimed.
+              ...(guideAudio && guideCompatible
+                ? { guideAudio: { ...guideAudio, muted: guideMuted } }
+                : {}),
+            }}
             loop
             ref={playerRef}
             style={{
@@ -378,6 +419,12 @@ export function DirectorAnimaticPreview({
             }}
           />
         </div>
+        <GuideAudioReviewStrip
+          incompatible={guideAudio != null && !guideCompatible}
+          muted={guideMuted}
+          onToggleMuted={() => setGuideMuted((current) => !current)}
+          playback={guideAudio}
+        />
         <div className="director-stage-caption">
           <div>
             <small>Now directing</small>
