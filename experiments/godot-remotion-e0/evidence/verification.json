@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "1.0",
+  "passed": true,
+  "checks": {
+    "frameVerificationPassed": true,
+    "codecIsH264": true,
+    "dimensionsAre1920x1080": true,
+    "frameRateIs30": true,
+    "frameCountIs120": true,
+    "videoStreamDurationIsFourSeconds": true,
+    "representativeStillsAre1920x1080": true
+  },
+  "frames": {
+    "relativeManifest": "evidence/frame-verification.json",
+    "aggregateFrameSha256": "10cebaf5e036c5aa6c51ada66dc4a5e860ed1c4fe93f2a0f7f293722cea13d1f",
+    "deterministic": true,
+    "transparentRgbaVerified": true,
+    "runAFrameCount": 120,
+    "runBFrameCount": 120,
+    "mismatchCount": 0,
+    "failures": []
+  },
+  "mp4": {
+    "relativeFile": "evidence/godot-remotion-e0.mp4",
+    "sha256": "10650e0e7fff3a7f2f86dc123f74c56f4c5f0859ad803db511ec80c4eb5eac78",
+    "videoStreamDurationSeconds": 4,
+    "containerDurationSeconds": 4.053333,
+    "probe": {
+      "programs": [],
+      "stream_groups": [],
+      "streams": [
+        {
+          "codec_name": "h264",
+          "width": 1920,
+          "height": 1080,
+          "r_frame_rate": "30/1",
+          "duration": "4.000000",
+          "nb_read_frames": "120",
+          "side_data_list": [{}]
+        }
+      ],
+      "format": {
+        "duration": "4.053333"
+      }
+    }
+  },
+  "stills": [
+    {
+      "relativeFile": "evidence/stills/composite-frame-0000.png",
+      "sha256": "3c61f4555acf9256d30c03b7f387d0f6d32b94e0521d131211e13bd3ede397c4",
+      "byteLength": 331605,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "relativeFile": "evidence/stills/composite-frame-0041.png",
+      "sha256": "e06c2ba5d1421f1988b01417dd3d8a59023b94b64f27b35d724d8dd137756896",
+      "byteLength": 331099,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "relativeFile": "evidence/stills/composite-frame-0078.png",
+      "sha256": "b0d1e21567cf883883a90d53e4472c37a93ec06f878b0941a99505c0e2c228da",
+      "byteLength": 340098,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "relativeFile": "evidence/stills/composite-frame-0088.png",
+      "sha256": "58d91360dc2354d707b2de07f9dfda985a2b8d7425de0dfb5b56d34b2e4794ad",
+      "byteLength": 358641,
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "relativeFile": "evidence/stills/composite-frame-0119.png",
+      "sha256": "33ca531091f4a06a7dd4e73fd36b8b977add2534dacb62003d299b039818a0b2",
+      "byteLength": 336208,
+      "width": 1920,
+      "height": 1080
+    }
+  ]
+}
