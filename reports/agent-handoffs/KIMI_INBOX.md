@@ -1,15 +1,29 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `50`
+Inbox-Version: `51`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-PLAN-PRO-PRESTON-REVIEW-WAIT`
+Current-Task: `R0-FULL-ROADMAP-PRO-AUTHORING-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
-Required-Work-Branch: `agent/codex-f3-plan`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f3-plan-review-wait-v50.md`
+Required-Work-Branch: `none-planning-hold`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-r0-full-roadmap-authoring-wait-v51.md`
 
 ## Current instruction
+
+Version 51 records that the F3-only plan and draft PR #47 are superseded. The
+active stage is R0: ChatGPT Pro authors/audits and Codex encodes one detailed
+implementation-to-private-launch roadmap plus a fresh-task Git bootstrap. Kimi
+remains on `WAIT`; no implementation branch is authorized. Do not implement
+F3-WP1, begin later frontend work, or start backend work. A higher inbox version
+will be issued only after R0 passes Pro and Preston acceptance.
+
+Version 51 supersedes Version 50. Version 50 remains below as historical
+traceability.
+
+---
+
+Previous Version 50 instruction:
 
 Version 50 records Codex, ChatGPT Pro, and Preston acceptance of F2 at exact
 `product/v1` head `87c01f9b684642e39cf470f06be2aaf6797cd3d7` and the
