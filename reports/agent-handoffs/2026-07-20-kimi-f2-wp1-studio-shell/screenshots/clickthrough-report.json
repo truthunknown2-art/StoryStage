@@ -1,0 +1,58 @@
+{
+  "checks": [
+    {
+      "name": "demo enters Studio at initial scene",
+      "ok": true
+    },
+    {
+      "name": "previous disabled on first scene",
+      "ok": true
+    },
+    {
+      "name": "rail selection drives all surfaces",
+      "ok": true
+    },
+    {
+      "name": "overview selection drives all surfaces",
+      "ok": true
+    },
+    {
+      "name": "next disabled on last scene",
+      "ok": true
+    },
+    {
+      "name": "last scene is Back Home",
+      "ok": true
+    },
+    {
+      "name": "previous disabled again on first scene",
+      "ok": true
+    },
+    {
+      "name": "create first cut enters the same shell",
+      "ok": true
+    },
+    {
+      "name": "create-derived project title",
+      "ok": true
+    },
+    {
+      "name": "back to projects",
+      "ok": true
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp1-studio-shell\\screenshots\\studio-initial-scene-1440x900.png",
+      "viewport": "1440x900",
+      "sha256": "4cd6d5510bb1f6e5343b03cb61edfc96c69bd0359d471309c82eb08961b4e022"
+    },
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp1-studio-shell\\screenshots\\studio-selected-scene-3-1440x900.png",
+      "viewport": "1440x900",
+      "sha256": "28e1e9d3df5def07a5beb7ad1a071c5117b9baeb2561d88543aae342a4a2c89d"
+    }
+  ],
+  "console": [],
+  "pageErrors": []
+}
