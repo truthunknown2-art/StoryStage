@@ -1,15 +1,28 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `39`
+Inbox-Version: `40`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP1-CREATED-PROJECT-TRUTH-CORRECTION`
-Status: `START-NOW`
+Current-Task: `F2-WP1-STUDIO-SHELL-ACCEPTED`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `c6defdb6370ec84c9f6af42f0ad87d0a6fb6145a`
+Accepted-Root-Base: `220d7f5d6c39c62309e449d8a7c57dd86c3f36b0`
 Required-Work-Branch: `agent/kimi-f2-studio-shell-wp1`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-created-project-truth-v39.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-accepted-v40.md`
 
 ## Current instruction
+
+Version 40 accepts exact F2-WP1 head
+`220d7f5d6c39c62309e449d8a7c57dd86c3f36b0`. The bounded created-project
+truth correction, independent checks, hosted check, and screenshot evidence
+all pass. Stop on `WAIT`: do not modify PR #39, begin WP2 or F3, or start
+backend product work. A later assignment requires a higher inbox version.
+
+Version 40 supersedes Version 39. Version 39 remains below as historical
+traceability.
+
+---
+
+Previous Version 39 instruction:
 
 Version 39 rejects exact F2-WP1 head
 `c6defdb6370ec84c9f6af42f0ad87d0a6fb6145a` for one creator-truth defect:

@@ -1,6 +1,6 @@
 # StoryStage — current Codex execution state
 
-Updated: 2026-07-20 08:21 America/Vancouver
+Updated: 2026-07-20 08:58 America/Vancouver
 
 This file is a restart pointer, not a product specification. GitHub branches,
 pull requests, issues, hosted checks, and exact remote SHAs remain authoritative.
@@ -42,18 +42,17 @@ merged into `product/v1` as `7a468673`.
 - Required branch: `agent/kimi-f2-studio-shell-wp1`
 - Exact base: `fb3033f8cc5ce536476066708aebb472704de936`
 - Issue: `https://github.com/truthunknown2-art/StoryStage/issues/38`
-- Rejected exact head: `c6defdb6370ec84c9f6af42f0ad87d0a6fb6145a`
+- Accepted exact head: `220d7f5d6c39c62309e449d8a7c57dd86c3f36b0`
 - Draft PR: `https://github.com/truthunknown2-art/StoryStage/pull/39`
-- Canonical inbox: version `39` (`START-NOW` correction)
+- Canonical inbox: version `40` (`WAIT`)
 - Full brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-created-project-truth-v39.md`
+  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-accepted-v40.md`
 
-Codex independently accepted the shell layout, selection invariant, transport,
-disabled-control honesty, screenshots/hashes, 62/62 Studio tests, typecheck,
-build, local root verify, and hosted run `29753859695`. One blocker remains:
-the created-project route discards the selected grammar/art style and does not
-disclose that its Ollo scene hierarchy is layout-demo data. Only that WP1
-correction is authorized. WP2, F3, and backend work remain blocked.
+Codex independently accepted the corrected created-project truth, shell layout,
+selection invariant, transport, disabled-control honesty, screenshots/hashes,
+64/64 Studio tests, typecheck, build, local root verify, and hosted run
+`29756683147`. F2-WP1 is review-clean at the exact head above but remains
+unmerged. Kimi is on `WAIT`; WP2, F3, and backend work remain blocked.
 
 ## Pro audit
 
