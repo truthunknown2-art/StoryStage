@@ -1,15 +1,30 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `31`
+Inbox-Version: `32`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F1-PROJECTS-CREATE`
+Current-Task: `F1-PROJECTS-CREATE-FINISH`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `9f3d6fac522f99b693c163c822334076ee9584bd`
 Required-Work-Branch: `agent/kimi-ui-v2`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-f1-projects-create-v31.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-projects-create-finish-v32.md`
 
 ## Current instruction
+
+Version 32 continues and finishes only F1 — Projects + Create on the existing
+declared work branch. The current uncommitted implementation is useful, but it
+is not a Git handback and its 1440×900 Create capture fails the viewport gate.
+Apply the two bounded visual corrections in the Version 32 brief, rerun all
+Version 31 checks, recapture the actual app, commit and push the work branch,
+open the draft PR to `product/v1`, leave the exact handback, and stop. Do not
+begin F2, backend work, or any unlisted change.
+
+Version 32 supersedes Version 31. Version 31 remains below as historical
+traceability.
+
+---
+
+Previous Version 31 instruction:
 
 Version 31 starts only F1 — Projects + Create from exact product-plan commit
 `9f3d6fac522f99b693c163c822334076ee9584bd`. Create the declared work branch,
