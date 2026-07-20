@@ -1,15 +1,28 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `27`
+Inbox-Version: `28`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `WAIT-GUIDE-AUDIO-STUDIO-BRIDGE`
-Status: `WAIT`
+Current-Task: `KIMI-GUIDE-AUDIO-STUDIO-REVIEW`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `3811c1034583424dea8b7bb7e5c5beb6672968f0`
+Accepted-Root-Base: `4e4cff3ba88427c90f7db0cfec016b42945eee2e`
 Required-Work-Branch: `agent/kimi-guide-audio-studio-review`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-guide-audio-studio-wait-v27.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-guide-audio-studio-v28.md`
 
 ## Current instruction
+
+Version 28 starts the real Director Studio guide-audio review UX against exact
+runtime commit `4e4cff3ba88427c90f7db0cfec016b42945eee2e`. Create the required branch,
+implement the full Version 28 brief, test and capture the actual Studio, push a
+stacked draft PR, report the exact result, then wait. This is frontend product
+work; do not broaden into audio providers, final-voice approval, or new schemas.
+
+Version 28 supersedes Version 27. Version 27 remains below as historical
+traceability.
+
+---
+
+Previous Version 27 instruction:
 
 Version 27 records that PR #25 is accepted, green, and merged. Stop the Rig Lab
 lane. Wait only until Codex pushes the exact Director guide-audio playback
