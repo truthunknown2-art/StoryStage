@@ -25,6 +25,7 @@ import {
   type DirectorProject,
   type DirectorWorkspaceState,
 } from "@storystage/story-engine/director-alpha";
+import type { DirectorGuideAudioPlayback } from "@storystage/remotion-runtime/director";
 import {
   ArrowLeft,
   ArrowRight,
@@ -42,6 +43,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Cv002TemplateAssignmentPanel } from "./Cv002TemplateAssignmentPanel";
 import { CreatorStudioShell } from "./creator-studio-components";
+import { createGuideAudioFixturePlayback } from "./director/guide-audio-dev-fixture";
 
 const GRAMMAR_LABEL: Record<Cv002Project["grammar"], string> = {
   "kids-adventure": "Kids Adventure",
@@ -127,10 +129,12 @@ function GrammarBadge({ grammar }: { grammar: Cv002Project["grammar"] }) {
 }
 
 export function Cv002DraftReview({
+  guideAudio,
   onBack,
   onProjectChange,
   project,
 }: {
+  guideAudio?: DirectorGuideAudioPlayback | null;
   onBack: () => void;
   onProjectChange: (project: Cv002Project) => void;
   project: Cv002Project;
@@ -181,6 +185,24 @@ export function Cv002DraftReview({
         : null,
     );
   const pendingSelectedBeatId = useRef<string | null>(null);
+  // Explicit development/test fixture: only when the dev server runs with
+  // `?guide-audio-fixture=1`. The production path never fabricates guide
+  // audio — without a host-supplied `guideAudio` prop the Studio renders the
+  // honest silent state.
+  const devFixtureGuideAudio = useMemo(() => {
+    if (!import.meta.env.DEV) return null;
+    if (
+      !new URLSearchParams(window.location.search).has("guide-audio-fixture")
+    )
+      return null;
+    const director = directorWorkspace
+      ? currentDirectorWorkspaceProject(directorWorkspace)
+      : directorCompilation.directorProject;
+    return director
+      ? createGuideAudioFixturePlayback(director.executableEpisodePlan.format)
+      : null;
+  }, [directorCompilation.directorProject, directorWorkspace]);
+  const effectiveGuideAudio = guideAudio ?? devFixtureGuideAudio;
   const [splitCursor, setSplitCursor] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -762,6 +784,7 @@ export function Cv002DraftReview({
             <DirectorAnimaticPreview
               capabilityRegistry={capabilityRegistry}
               compileError={directorCompilation.error}
+              guideAudio={effectiveGuideAudio}
               onWorkspaceChange={setDirectorWorkspace}
               project={project}
               workspace={directorWorkspace}
