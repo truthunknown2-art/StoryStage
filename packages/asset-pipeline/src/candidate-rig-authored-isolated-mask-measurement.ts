@@ -440,6 +440,7 @@ export const createCandidateRigAuthoredIsolatedMaskMeasurement = (input: {
     },
   };
   const { contentHash: _baseContentHash, ...withoutBaseHash } = draft;
+  void _baseContentHash;
   return candidateRigExactAttachmentMeasurementReportSchema.parse({
     ...withoutBaseHash,
     contentHash: hashCanonical(withoutBaseHash),
