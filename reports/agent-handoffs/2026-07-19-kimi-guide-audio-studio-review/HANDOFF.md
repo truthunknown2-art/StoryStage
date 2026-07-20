@@ -5,6 +5,10 @@ Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-guide-audio-studio-v28.md`
 Branch: `agent/kimi-guide-audio-studio-review`
 Draft PR target: `agent/guide-audio-director-pilot`
 
+v29 receipt note: this handback was updated for the v29 corrections
+(`reports/agent-handoffs/2026-07-19-codex-kimi-guide-audio-studio-corrections-v29.md`);
+see the "v29 corrections" section for the exact successor state.
+
 ## SHAs
 
 - Required base branch: `agent/guide-audio-director-pilot`
@@ -161,3 +165,96 @@ were modified.
 Stopping here per the brief: no music, SFX, recording, provider/API,
 persistence, approval, export, render progress, or production authority
 added.
+
+---
+
+## v29 corrections (successor)
+
+Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-guide-audio-studio-corrections-v29.md`
+Immutable base: `f712e41914715e46434684f257ca48eeaeb4e5e8`
+
+### Corrections applied
+
+1. **Stale-guide guard.** `DirectorAnimaticPreview` now derives the Player
+   guide from the current compiled episode: if the supplied playback's timing
+   basis no longer matches the episode's exact fps/frame count (e.g. after a
+   retiming Director patch), the guide is omitted from Player `inputProps`
+   and the strip renders an honest stale state (`Guide read detached — stale
+   for the revised cut`, with the hashes kept as evidence and an explicit
+   "not retimed, stretched, regenerated, or resealed" note). No crash, no
+   silent retime.
+2. **Host mute truth.** Local review mute is seeded from the supplied
+   playback's `muted` value and resynchronizes whenever the guide identity
+   (`expectedGuideVoiceClockContentHash`) changes; a user toggle affects only
+   the local Player prop for the current identity and never mutates or
+   reseals artifacts. Implemented with the render-time identity-adjustment
+   pattern (no effect reset races).
+3. **Exact fixture gate.** The dev fixture now activates only for the exact
+   query value `guide-audio-fixture=1`; `=0`, empty, `=true`, and other
+   values render the honest absent state, as do production builds. The
+   fixture also seals once against the compiled source cut and is never
+   resealed after Director revisions, so the stale state is genuinely
+   demonstrable in the dev server.
+
+### v29 regressions (all pass, suite now 9 tests)
+
+- Real reaction-delay patch with a guide attached: Player receives the
+  revised plan, does not throw, the stale guide is omitted from input props,
+  and the stale label renders.
+- Host guide with `muted: true` reaches the Player initially muted.
+- Replacing guide A with guide B reseeds mute from B's supplied value; A's
+  user toggle does not leak.
+- An unchanged compatible guide stays attached across rerenders and the user
+  toggle persists; mute still changes only `inputProps.guideAudio.muted`.
+- The dev fixture activates for exactly `?guide-audio-fixture=1`, not `=0`,
+  empty, `=true`, or absent.
+
+### v29 verification
+
+- `corepack pnpm --filter @storystage/studio exec vitest run src/director/GuideAudioReviewStrip.test.tsx`
+  — 9/9 pass.
+- `corepack pnpm --filter @storystage/studio test` — 98/98 pass (full suite
+  including the guide suite).
+- `corepack pnpm --filter @storystage/story-engine exec vitest run src/director/director-alpha-boundary.test.ts`
+  — pass.
+- `corepack pnpm --filter @storystage/studio typecheck` / `build` — clean.
+- Root `pnpm verify` — three attempts (two parallel, one serialized):
+  privacy checks, lint, and typecheck pass; the test phase stops in
+  `packages/asset-pipeline`, where 1–2 upstream heavyweight tests exceed
+  their hardcoded 5000 ms budgets by ~60–200 ms under current machine load
+  (observed 5058–5215 ms; they pass in ~3.7 s isolated and on hosted CI).
+  Unmodified by this branch; no timeouts or upstream tests were changed.
+
+### v29 screenshot (stale state — new visible state)
+
+| File | Viewport | State | SHA-256 |
+| --- | --- | --- | --- |
+| `screenshots/desktop-1536x960-guide-stale.png` | 1536×960 | dev fixture guide detached after the real 6-frame reaction-delay patch; revised cut 0:28 plays, stale strip shows hashes + honest note | `103730cbea99c658dffe76546fdf546512d4a90229c6a8505018e2c3336ea0ff` |
+
+Console status for this capture: no console errors, no warnings, no page
+errors. The v28 present/absent captures remain valid — those states are
+visually unchanged by v29.
+
+### v29 changed files
+
+- `apps/studio/src/director/DirectorPreview.tsx` — stale-guide guard, mute
+  seeding + identity resync.
+- `apps/studio/src/director/GuideAudioReviewStrip.tsx` — stale state UI.
+- `apps/studio/src/Cv002DraftReview.tsx` — exact `=1` gate; fixture seals
+  once, never reseals after revisions.
+- `apps/studio/src/director/guide-audio-dev-fixture.ts` — optional script
+  parameter (test identity variants).
+- `apps/studio/src/cv002-draft-review.css` — stale state styles.
+- `apps/studio/src/director/GuideAudioReviewStrip.test.tsx` — five new
+  regressions.
+- `reports/agent-handoffs/2026-07-19-kimi-guide-audio-studio-review/**` —
+  this handback update + the stale capture.
+
+### v29 limitations
+
+- Root verify remains red on this machine only for the documented upstream
+  asset-pipeline timeout-margin tests; hosted verification is the deciding
+  gate.
+- After a retiming patch, the guide stays detached until a host supplies a
+  fresh guide for the revised cut — there is no re-guide authoring path yet
+  (by design, per scope).

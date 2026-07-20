@@ -19,5 +19,13 @@
     "sha256": "6936545b09e21a89dfa099bc16fb29b0ca5f8aab9e28302175ee1c99390a7b27",
     "console": [],
     "pageErrors": []
+  },
+  {
+    "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-19-kimi-guide-audio-studio-review\\screenshots\\desktop-1536x960-guide-stale.png",
+    "viewport": "1536x960",
+    "state": "stale guide detached after real retiming patch (dev fixture)",
+    "sha256": "103730cbea99c658dffe76546fdf546512d4a90229c6a8505018e2c3336ea0ff",
+    "console": [],
+    "pageErrors": []
   }
 ]
