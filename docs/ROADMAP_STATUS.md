@@ -17,19 +17,19 @@ authorization:
   branch: agent/codex-full-product-roadmap
   issue: null
   pr: 48
-  candidateHead: bcb8ae26ed307227dbf87a7f77dfe447d38f2f47
+  candidateHead: 539154524f1804c12a30abaf32fccec4e5d29fef
 checks:
   local: roadmap-consistency+links+package-count+diff-check-pass
-  hosted: null
+  hosted: pending
 verdicts:
-  codex: null
+  codex: candidate-ready-for-exact-sha-audit
   pro: authoring-spec-accepted
   preston: null
 blockers:
-  - canonical roadmap candidate is not yet pushed and accepted
+  - canonical roadmap candidate awaits exact-SHA Pro audit and Preston acceptance
 nextAuthorizedAction:
   type: PLANNING_ONLY
-  text: Encode, validate, and push the canonical roadmap and bootstrap documents.
+  text: Audit PR 48 exact remote head; do not start F3 or backend implementation.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -50,8 +50,8 @@ implementation base merely because it is newer.
 
 - Accepted product state ends at F2 on exact `87c01f9b...`.
 - G0 is planning/documentation only. No F3 or backend product work is authorized.
-- ChatGPT Pro accepted the proposed five-source structure as an authoring
-  specification, not yet as an exact Git candidate.
+- ChatGPT Pro authored the full launch roadmap and multi-shot governance
+  requirements. Exact Git candidate acceptance remains pending.
 - Kimi remains `WAIT` on coordination inbox v51.
 - Draft PR #47 is superseded and cannot authorize F3-WP1.
 
