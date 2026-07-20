@@ -1,15 +1,31 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `51`
+Inbox-Version: `52`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `R0-FULL-ROADMAP-PRO-AUTHORING-WAIT`
+Current-Task: `G0-FULL-ROADMAP-EXACT-SHA-AUDIT-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
 Required-Work-Branch: `none-planning-hold`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-r0-full-roadmap-authoring-wait-v51.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-exact-sha-audit-wait-v52.md`
 
 ## Current instruction
+
+Version 52 records that ChatGPT Pro authored the detailed roadmap specification
+and Codex pushed the reconciled G0 candidate as draft PR #48 at exact remote
+head `fdc4c155001f53716177908fc868960df3517f2f`. Local roadmap, link,
+package-count, and diff checks pass; the exact-head hosted check and Pro audit
+are pending. Kimi remains on `WAIT`; no implementation branch is authorized.
+Do not implement F3-WP1, begin later frontend work, or start backend work. A
+higher inbox version will be issued only after exact-SHA Pro and Preston
+acceptance.
+
+Version 52 supersedes Version 51. Version 51 remains below as historical
+traceability.
+
+---
+
+Previous Version 51 instruction:
 
 Version 51 records that the F3-only plan and draft PR #47 are superseded. The
 active stage is R0: ChatGPT Pro authors/audits and Codex encodes one detailed

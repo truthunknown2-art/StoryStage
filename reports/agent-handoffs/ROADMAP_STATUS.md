@@ -1,8 +1,8 @@
 # StoryStage live roadmap status
 
 Schema-Version: `1`
-Status-Version: `1`
-Updated-At: `2026-07-20T14:30:00-07:00`
+Status-Version: `2`
+Updated-At: `2026-07-20T15:16:00-07:00`
 Updated-By: `Codex`
 
 ## Repository truth
@@ -19,10 +19,10 @@ Updated-By: `Codex`
 
 - Product-Plan: `docs/PRODUCT_PLAN.md@product/v1`
 - Current-Product-Roadmap: `docs/PRODUCT_ROADMAP.md@product/v1`
-- Current-Product-Roadmap-State: `superseded pointer; R0 replacement required`
+- Current-Product-Roadmap-State: `G0 candidate in draft PR #48; exact audit pending`
 - Historical-Detailed-Roadmap:
   `docs/PRODUCT_ROADMAP.md@73fa4a22c1126f213fa0dbe075126fd180ed25a6`
-- Active-Milestone-Plan: `none accepted`
+- Active-Milestone-Plan: `docs/plans/milestone-G0.md@fdc4c155001f53716177908fc868960df3517f2f`
 - Team-Protocol:
   `origin/agent/kimi-frontend:reports/agent-handoffs/TEAM_OPERATING_PROTOCOL.md`
 
@@ -40,16 +40,17 @@ Updated-By: `Codex`
 
 ## Active planning state
 
-- Active-Stage: `R0 — canonical implementation-to-launch roadmap`
-- Active-State: `PLANNING-HOLD`
+- Active-Stage: `G0 — canonical roadmap and repository-truth reconciliation`
+- Active-State: `PRO-GATE`
 - Primary-Authors: `ChatGPT Pro (proposal/audit), Codex (Git encoding/integration)`
 - Product-Implementation-Owner: `none while R0 is unaccepted`
 - Visible-Deliverable: `one detailed Git roadmap from ideation through private launch`
 - Primary-Invariant: `a fresh task can identify the complete plan and exact next action from Git without chat memory`
 - Exact-Base-SHA: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
-- Active-Roadmap-Branch: `none pushed yet`
-- Active-Roadmap-PR: `none`
-- Active-Roadmap-Check-State: `not started`
+- Active-Roadmap-Branch: `agent/codex-full-product-roadmap`
+- Active-Roadmap-PR: `https://github.com/truthunknown2-art/StoryStage/pull/48`
+- Active-Roadmap-Head: `fdc4c155001f53716177908fc868960df3517f2f`
+- Active-Roadmap-Check-State: `local PASS; hosted exact-head run pending`
 - Pro-R0-Verdict: `PENDING`
 - Preston-R0-Verdict: `PENDING`
 
@@ -63,19 +64,19 @@ Updated-By: `Codex`
 
 ## Kimi coordination
 
-- Kimi-Inbox-Version: `51`
+- Kimi-Inbox-Version: `52`
 - Kimi-Inbox-Status: `WAIT`
-- Kimi-Current-Task: `R0-FULL-ROADMAP-PRO-AUTHORING-WAIT`
+- Kimi-Current-Task: `G0-FULL-ROADMAP-EXACT-SHA-AUDIT-WAIT`
 - Kimi-Full-Brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-r0-full-roadmap-authoring-wait-v51.md`
+  `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-exact-sha-audit-wait-v52.md`
 - Kimi-Implementation-Authority: `none`
 
 ## Next and forbidden actions
 
-- Next-Authorized-Action: `Pro authors; Codex encodes and pushes the full R0 roadmap candidate for exact-SHA audit`
+- Next-Authorized-Action: `Pro audits PR #48 exact remote head; Codex records the verdict; Preston accepts or returns G0 corrections`
 - Next-Product-Package-After-R0-Acceptance: `F3-WP1 only`
 - Forbidden: `F3 implementation, later frontend phases, backend B1+, F4, roadmap inference from chat, PR #47 integration`
-- Blocker: `R0 full roadmap and fresh-task bootstrap are not yet accepted`
+- Blocker: `G0 exact candidate awaits hosted verification, Pro audit, and Preston acceptance`
 
 ## Private launch scope under planning
 
