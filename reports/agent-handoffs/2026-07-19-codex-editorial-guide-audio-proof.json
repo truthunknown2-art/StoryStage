@@ -1,0 +1,125 @@
+{
+  "schemaVersion": "1.0",
+  "status": "pass",
+  "authority": "private-guide-audio-proof-only",
+  "productionBindable": false,
+  "privacy": {
+    "rawScriptCopied": false,
+    "rawGuideWavCopied": false,
+    "rawClauseFileCopied": false,
+    "reportContainsBasenamesAndContentHashesOnly": true
+  },
+  "inputs": {
+    "script": {
+      "file": "script.txt",
+      "byteLength": 671,
+      "contentHash": "f95b0558a263979f765fd463990b8ace7cab9ab5b7fd804290f5916a73988374"
+    },
+    "wav": {
+      "file": "guide.wav",
+      "byteLength": 2432044,
+      "contentHash": "95a47a37e6f5d2dabf392a058f654bfcba906f0cf680eba44a94260d3ee1bff0"
+    },
+    "clauses": {
+      "file": "clauses.json",
+      "byteLength": 6342,
+      "contentHash": "2b15f44cd85fbf57ff9d4fec8d774355e2dadd79044b7a6518e32398e7544f9e",
+      "count": 9
+    }
+  },
+  "guide": {
+    "reopenedAudioContentHash": "95a47a37e6f5d2dabf392a058f654bfcba906f0cf680eba44a94260d3ee1bff0",
+    "guideVoiceClockContentHash": "8fd04b0b0dd2a18a601b65288d467eb1ac653c4f74ccaeca1e6528bcfae12b99",
+    "guideVoiceTimingBasisContentHash": "b5c299f8079a5c9bb28e8d717a535da8d0a156e226f721277d78dedc678e7f13",
+    "scriptContentHash": "8a2f2305bd13bba58b399ea302400e3e83f05ce1de1d2f983417a71df4aa1b21",
+    "audioContentHash": "95a47a37e6f5d2dabf392a058f654bfcba906f0cf680eba44a94260d3ee1bff0",
+    "sampleRate": 48000,
+    "channels": 1,
+    "durationSamples": 1216000,
+    "clauseCount": 9,
+    "directorTimingBasis": {
+      "kind": "guide-audio",
+      "contentHash": "8fd04b0b0dd2a18a601b65288d467eb1ac653c4f74ccaeca1e6528bcfae12b99"
+    }
+  },
+  "lineage": {
+    "storyProjectContentHash": "d90735eacc708ad968c64643d100fc972f903ef3910cabb54933e7cebb57ba30",
+    "directorProjectContentHash": "2a525b37d7dbbec6b4b8cfb590e27129c8733f1c261c50555b7d1e32a0de0a01",
+    "directorPlanContentHash": "b34bc6f0e6c2d6078c5a3713707ca403e47449e73cccfd3ebaa1269d379a2c4e",
+    "timingSolutionContentHash": "47ac9611cefd8a6eaeabbba5d54c76007c5127de6781d946910e2bc3e9edf81a",
+    "executableEpisodePlanContentHash": "b7b276566c014349222c963d45904b006c4847566e1c945198d84f7cff96fe0f",
+    "editorialPlanningRequestContentHash": "5e045676451a00c2742ce725f6b5d4a13c70290ec66b656ceee943a58a61577f",
+    "editorialTimingBindingContentHash": "4eb8b5a0e9c4c57fa130a3e9a71b04645e65065ae260eeecb80bb0d8955c0627",
+    "editorialClauseRegistryContentHash": "7eb52f5a03a02a0534fb9c6359583b819dd4c5a6dcf77607703a2acefd261e06",
+    "editorialFrameGridContentHash": "8029981553ed502880bbadd8bd122011da9019083eef236bba33ffff7f6406af"
+  },
+  "visualScope": {
+    "capabilitySummary": {
+      "supported": 0,
+      "proxyOnly": 10,
+      "blocked": 0
+    },
+    "approvedOlloAssetBound": false,
+    "limitation": "This proves guide-bound Director timing and paired render transport; it does not claim an approved Ollo rig or final character performance."
+  },
+  "timingScope": {
+    "guideBoundEditorialArtifactsCreated": true,
+    "episodeTotalDurationMatchesGuide": true,
+    "acceptedEditorialProposalBound": false,
+    "pictureCutTimingSource": "existing-deterministic-director-plan",
+    "limitation": "This proof binds the guide clock to editorial artifacts and the episode total duration; it does not claim that an accepted editorial proposal has retimed individual picture cuts."
+  },
+  "renderContract": {
+    "compositionId": "StoryStageProduction",
+    "mode": "director-episode",
+    "picturePropsContentHash": "933aa5bda4d8f1e1c9b8ed3866fcbc4036775ac2535cae9e014d77a794a5bb20",
+    "identicalPictureAndEpisodeProps": true,
+    "rendererMutedOptionUsed": true,
+    "format": {
+      "width": 1920,
+      "height": 1080,
+      "fps": 30,
+      "durationInFrames": 760
+    },
+    "durationSeconds": 25.333333333333332,
+    "isExactlyThirtySeconds": false
+  },
+  "renders": {
+    "audioOn": {
+      "file": "audio-on.mp4",
+      "contentHash": "ff9fe58bc714b896b13a7f00a0039b8f7c1da23581c618d4db0342bfc4a26793",
+      "byteLength": 3221265,
+      "probe": {
+        "video": {
+          "codec": "h264",
+          "width": 1920,
+          "height": 1080,
+          "fps": 30,
+          "frameCount": 760
+        },
+        "audio": [
+          {
+            "codec": "aac",
+            "channels": 2,
+            "sampleRate": 48000
+          }
+        ]
+      }
+    },
+    "muted": {
+      "file": "muted.mp4",
+      "contentHash": "84038c01de2716e8edaf1e3643df2630f16e00acd7bd70312b94a3559b8007aa",
+      "byteLength": 2194831,
+      "probe": {
+        "video": {
+          "codec": "h264",
+          "width": 1920,
+          "height": 1080,
+          "fps": 30,
+          "frameCount": 760
+        },
+        "audio": []
+      }
+    }
+  }
+}
