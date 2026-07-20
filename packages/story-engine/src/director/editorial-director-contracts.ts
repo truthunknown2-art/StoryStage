@@ -2716,7 +2716,7 @@ export function sealEditorialAcceptedResult(input: {
     runSpecContentHash: runSpec.contentHash,
     attemptReceiptContentHash: attemptReceipt.contentHash,
     externalParseReceiptContentHash:
-      input.externalParseReceipt?.contentHash ?? null,
+      proposalBindingReceipt.externalParseReceiptContentHash,
     status: "accepted" as const,
     proposalContentHash: proposal.contentHash,
     diagnosticsContentHash: diagnostics.contentHash,
@@ -2942,7 +2942,7 @@ export function sealEditorialRevisionResult(input: {
     runSpecContentHash: runSpec.contentHash,
     attemptReceiptContentHash: successorAttemptReceipt.contentHash,
     externalParseReceiptContentHash:
-      input.successorExternalParseReceipt?.contentHash ?? null,
+      successorProposalBindingReceipt.externalParseReceiptContentHash,
     status: "revision" as const,
     priorProposalContentHash: prior.contentHash,
     qualityDiagnosticsContentHash: diagnostics.contentHash,

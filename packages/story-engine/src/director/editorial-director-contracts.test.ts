@@ -1365,6 +1365,118 @@ describe("AI Editorial Director planning boundary", () => {
     ).toThrow(/does not restore/i);
   });
 
+  it("derives accepted and revision parse lineage from the validated binding receipt once", () => {
+    const { request } = fixture();
+    const runSpec = runSpecFor(request);
+    const intentA = externalIntentFor(request);
+    const responseA = JSON.stringify(intentA);
+    const attemptA = externalAttemptFor(request, runSpec, responseA);
+    const parseA = externalEvidenceFor(
+      request,
+      runSpec,
+      attemptA,
+      responseA,
+    ).externalParseReceipt;
+    const proposalA = bindEditorialDirectorProposalV1({
+      request,
+      externalIntent: intentA,
+    });
+    const bindingA = sealEditorialProposalBindingReceipt({
+      request,
+      runSpec,
+      attemptReceipt: attemptA,
+      externalParseReceipt: parseA,
+      externalRawResponse: responseA,
+      proposal: proposalA,
+    });
+
+    const intentB = externalIntentFor(request);
+    intentB.episode.sequences[0]!.scenes[0]!.editorialShots[0]!.cameraIntent = {
+      movement: "push",
+      reasonCodes: ["increase-emphasis"],
+    };
+    const responseB = JSON.stringify(intentB);
+    const attemptB = externalAttemptFor(request, runSpec, responseB);
+    const parseB = externalEvidenceFor(
+      request,
+      runSpec,
+      attemptB,
+      responseB,
+    ).externalParseReceipt;
+    const proposalB = bindEditorialDirectorProposalV1({
+      request,
+      externalIntent: intentB,
+    });
+    const bindingB = sealEditorialProposalBindingReceipt({
+      request,
+      runSpec,
+      attemptReceipt: attemptB,
+      externalParseReceipt: parseB,
+      externalRawResponse: responseB,
+      proposal: proposalB,
+    });
+    const clean = sealEditorialPlanningDiagnostics({
+      request,
+      proposal: proposalA,
+      findings: [],
+    });
+
+    let acceptedParseReads = 0;
+    const accepted = sealEditorialAcceptedResult({
+      request,
+      runSpec,
+      proposal: proposalA,
+      diagnostics: clean,
+      attemptReceipt: attemptA,
+      get externalParseReceipt() {
+        acceptedParseReads += 1;
+        return acceptedParseReads === 1 ? parseA : parseB;
+      },
+      externalRawResponse: responseA,
+      proposalBindingReceipt: bindingA,
+      revisionRound: 0,
+    });
+    expect(acceptedParseReads).toBe(1);
+    expect(accepted.externalParseReceiptContentHash).toBe(
+      bindingA.externalParseReceiptContentHash,
+    );
+    expect(accepted.externalParseReceiptContentHash).toBe(parseA.contentHash);
+
+    const revisionDiagnostics = sealEditorialPlanningDiagnostics({
+      request,
+      proposal: proposalA,
+      findings: [
+        {
+          id: "quality-revision",
+          severity: "warning",
+          code: "shot-mix-prior",
+          message: "Revise the camera emphasis.",
+        },
+      ],
+    });
+    let revisionParseReads = 0;
+    const revision = sealEditorialRevisionResult({
+      request,
+      runSpec,
+      priorProposal: proposalA,
+      qualityDiagnostics: revisionDiagnostics,
+      addressedFindingIds: ["quality-revision"],
+      successorProposal: proposalB,
+      successorAttemptReceipt: attemptB,
+      get successorExternalParseReceipt() {
+        revisionParseReads += 1;
+        return revisionParseReads === 1 ? parseB : parseA;
+      },
+      successorExternalRawResponse: responseB,
+      successorProposalBindingReceipt: bindingB,
+    });
+    expect(revisionParseReads).toBe(1);
+    expect(revision.externalParseReceiptContentHash).toBe(
+      bindingB.externalParseReceiptContentHash,
+    );
+    expect(revision.externalParseReceiptContentHash).toBe(parseB.contentHash);
+  });
+
   it("seals invalid UTF-8 as an auditable schema-invalid external rejection", () => {
     const { request } = fixture();
     const runSpec = runSpecFor(request);
