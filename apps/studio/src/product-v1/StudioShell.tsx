@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import {
   ArrowLeft,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clapperboard,
   Film,
+  LocateFixed,
 } from "lucide-react";
 import olloCastArt from "../assets/ollo-friends-cast-v1.jpg";
 import {
@@ -30,11 +32,20 @@ const sceneStart = (sceneId: string) => {
   return offset;
 };
 
+const toggle = (set: Set<string>, id: string) => {
+  const next = new Set(set);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  return next;
+};
+
 /**
- * F2-WP1 Studio shell: one selected scene identity drives the hierarchy
- * rail, the center scene-board, the transport readout, and the episode
- * overview. Frontend-only; reference art is labelled honestly; Director
- * controls arrive in F3.
+ * F2 Studio shell (WP1 + WP2): one selected scene identity drives the
+ * hierarchy rail, center scene-board, transport, episode overview, and the
+ * scene-relative playhead. Act/sequence groups expand and collapse; beat
+ * rows render only for the selected scene; a collapsed selected scene keeps
+ * an explicit reachable summary. The playhead is local UI timing — never
+ * media playback. Director controls arrive in F3.
  */
 export function StudioShell({
   artStyleLabel,
@@ -54,6 +65,18 @@ export function StudioShell({
   const [selectedSceneId, setSelectedSceneId] = useState<string>(
     OLLO_DEMO_SCENES[0]!.id,
   );
+  const [collapsedActs, setCollapsedActs] = useState<Set<string>>(new Set());
+  const [collapsedSequences, setCollapsedSequences] = useState<Set<string>>(
+    new Set(),
+  );
+  // Scene-relative playhead resets deterministically to zero on every scene
+  // change (render-time adjustment, no effect races).
+  const [playheadSeconds, setPlayheadSeconds] = useState(0);
+  const [lastSceneId, setLastSceneId] = useState(selectedSceneId);
+  if (lastSceneId !== selectedSceneId) {
+    setLastSceneId(selectedSceneId);
+    setPlayheadSeconds(0);
+  }
 
   const selectedIndex = useMemo(
     () => OLLO_DEMO_SCENES.findIndex((scene) => scene.id === selectedSceneId),
@@ -65,6 +88,28 @@ export function StudioShell({
     selectedIndex < OLLO_DEMO_SCENES.length - 1
       ? OLLO_DEMO_SCENES[selectedIndex + 1]!
       : null;
+
+  const sceneLocation = useMemo(() => {
+    for (const act of OLLO_DEMO_PROJECT.acts)
+      for (const sequence of act.sequences)
+        if (sequence.scenes.some((scene) => scene.id === selectedSceneId))
+          return { actId: act.id, sequenceId: sequence.id };
+    return null;
+  }, [selectedSceneId]);
+
+  const revealSelectedScene = () => {
+    if (!sceneLocation) return;
+    setCollapsedActs((current) => {
+      const next = new Set(current);
+      next.delete(sceneLocation.actId);
+      return next;
+    });
+    setCollapsedSequences((current) => {
+      const next = new Set(current);
+      next.delete(sceneLocation.sequenceId);
+      return next;
+    });
+  };
 
   return (
     <main className="pv1-page" data-testid="pv1-studio">
@@ -96,36 +141,133 @@ export function StudioShell({
           </p>
         ) : null}
         <nav aria-label="Episode hierarchy" className="pv1-studio-rail">
-          {OLLO_DEMO_PROJECT.acts.map((act) => (
-            <section className="pv1-rail-act" key={act.id}>
-              <h2>{act.title}</h2>
-              {act.sequences.map((sequence) => (
-                <div className="pv1-rail-sequence" key={sequence.id}>
-                  <h3>{sequence.title}</h3>
-                  {sequence.scenes.map((scene) => {
-                    const index = OLLO_DEMO_SCENES.indexOf(scene);
-                    const isSelected = scene.id === selectedSceneId;
-                    return (
-                      <button
-                        aria-current={isSelected ? "true" : undefined}
-                        aria-label={`Scene ${index + 1} ${scene.title} — ${scene.seconds} seconds, not produced`}
-                        className={`pv1-rail-scene ${isSelected ? "is-selected" : ""}`}
-                        key={scene.id}
-                        onClick={() => setSelectedSceneId(scene.id)}
-                        type="button"
-                      >
-                        <span className="pv1-scene-index">{index + 1}</span>
-                        <span className="pv1-rail-scene-body">
-                          <strong>{scene.title}</strong>
-                          <small>{scene.seconds}s · not produced</small>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ))}
-            </section>
-          ))}
+          {OLLO_DEMO_PROJECT.acts.map((act) => {
+            const actCollapsed = collapsedActs.has(act.id);
+            const actHidesSelected =
+              sceneLocation?.actId === act.id && actCollapsed;
+            return (
+              <section className="pv1-rail-act" key={act.id}>
+                <h2>
+                  <button
+                    aria-expanded={!actCollapsed}
+                    className="pv1-group-toggle"
+                    onClick={() =>
+                      setCollapsedActs((current) => toggle(current, act.id))
+                    }
+                    type="button"
+                  >
+                    {actCollapsed ? (
+                      <ChevronRight size={13} aria-hidden />
+                    ) : (
+                      <ChevronDown size={13} aria-hidden />
+                    )}
+                    {act.title}
+                  </button>
+                </h2>
+                {actHidesSelected ? (
+                  <p className="pv1-hidden-selection" role="note">
+                    <span>
+                      Selected scene {selectedIndex + 1} · {selectedScene.title}
+                    </span>
+                    <button onClick={revealSelectedScene} type="button">
+                      <LocateFixed size={12} aria-hidden /> Reveal
+                    </button>
+                  </p>
+                ) : null}
+                {!actCollapsed
+                  ? act.sequences.map((sequence) => {
+                      const sequenceCollapsed = collapsedSequences.has(
+                        sequence.id,
+                      );
+                      const sequenceHidesSelected =
+                        sceneLocation?.sequenceId === sequence.id &&
+                        sequenceCollapsed;
+                      return (
+                        <div className="pv1-rail-sequence" key={sequence.id}>
+                          <h3>
+                            <button
+                              aria-expanded={!sequenceCollapsed}
+                              className="pv1-group-toggle"
+                              onClick={() =>
+                                setCollapsedSequences((current) =>
+                                  toggle(current, sequence.id),
+                                )
+                              }
+                              type="button"
+                            >
+                              {sequenceCollapsed ? (
+                                <ChevronRight size={12} aria-hidden />
+                              ) : (
+                                <ChevronDown size={12} aria-hidden />
+                              )}
+                              {sequence.title}
+                            </button>
+                          </h3>
+                          {sequenceHidesSelected ? (
+                            <p className="pv1-hidden-selection" role="note">
+                              <span>
+                                Selected scene {selectedIndex + 1} ·{" "}
+                                {selectedScene.title}
+                              </span>
+                              <button onClick={revealSelectedScene} type="button">
+                                <LocateFixed size={12} aria-hidden /> Reveal
+                              </button>
+                            </p>
+                          ) : null}
+                          {!sequenceCollapsed
+                            ? sequence.scenes.map((scene) => {
+                                const index = OLLO_DEMO_SCENES.indexOf(scene);
+                                const isSelected = scene.id === selectedSceneId;
+                                return (
+                                  <div key={scene.id}>
+                                    <button
+                                      aria-current={
+                                        isSelected ? "true" : undefined
+                                      }
+                                      aria-label={`Scene ${index + 1} ${scene.title} — ${scene.seconds} seconds, not produced`}
+                                      className={`pv1-rail-scene ${isSelected ? "is-selected" : ""}`}
+                                      onClick={() =>
+                                        setSelectedSceneId(scene.id)
+                                      }
+                                      type="button"
+                                    >
+                                      <span className="pv1-scene-index">
+                                        {index + 1}
+                                      </span>
+                                      <span className="pv1-rail-scene-body">
+                                        <strong>{scene.title}</strong>
+                                        <small>
+                                          {scene.seconds}s · not produced
+                                        </small>
+                                      </span>
+                                    </button>
+                                    {isSelected ? (
+                                      <ol
+                                        aria-label={`Beats in ${scene.title}`}
+                                        className="pv1-rail-beats"
+                                      >
+                                        {scene.beats.map((beat) => (
+                                          <li
+                                            data-beat-for={scene.id}
+                                            key={beat.title}
+                                          >
+                                            <span>{beat.title}</span>
+                                            <small>{beat.seconds}s</small>
+                                          </li>
+                                        ))}
+                                      </ol>
+                                    ) : null}
+                                  </div>
+                                );
+                              })
+                            : null}
+                        </div>
+                      );
+                    })
+                  : null}
+              </section>
+            );
+          })}
         </nav>
 
         <section aria-label="Scene board" className="pv1-studio-board">
@@ -154,12 +296,35 @@ export function StudioShell({
             <h2>Beats in this scene</h2>
             <ol>
               {selectedScene.beats.map((beat) => (
-                <li key={beat.title}>
+                <li data-beat-for={selectedScene.id} key={beat.title}>
                   <strong>{beat.title}</strong>
                   <span>{beat.seconds}s</span>
                 </li>
               ))}
             </ol>
+          </div>
+          <div className="pv1-playhead">
+            <label htmlFor="pv1-playhead-slider">
+              Scene playhead{" "}
+              <small>local UI timing — not media playback</small>
+            </label>
+            <input
+              aria-label={`Scene playhead for ${selectedScene.title} — local UI timing, not media playback`}
+              aria-valuetext={`${formatClock(playheadSeconds)} of ${formatClock(selectedScene.seconds)}`}
+              id="pv1-playhead-slider"
+              max={selectedScene.seconds}
+              min={0}
+              onChange={(event) =>
+                setPlayheadSeconds(Number(event.target.value))
+              }
+              step={1}
+              type="range"
+              value={playheadSeconds}
+            />
+            <span aria-live="polite" className="pv1-playhead-readout">
+              {formatClock(playheadSeconds)} /{" "}
+              {formatClock(selectedScene.seconds)}
+            </span>
           </div>
           <div
             aria-label="Scene transport"
@@ -211,7 +376,9 @@ export function StudioShell({
             <button className="pv1-secondary" disabled type="button">
               Preview
             </button>
-            <small>A real preview arrives with the WP2 Studio playhead.</small>
+            <small>
+              A real preview arrives after the WP2 Studio playhead work.
+            </small>
             <button className="pv1-primary" disabled type="button">
               Export
             </button>

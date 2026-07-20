@@ -356,7 +356,7 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
       within(studio).getByRole("button", { name: "Export" }),
     ).toBeDisabled();
     expect(
-      studio.textContent?.includes("A real preview arrives with the WP2 Studio playhead."),
+      studio.textContent?.includes("A real preview arrives after the WP2 Studio playhead work."),
     ).toBe(true);
     expect(
       studio.textContent?.includes("Export unlocks when production services connect."),
@@ -364,5 +364,191 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     expect(
       within(studio).queryByRole("button", { name: /Play|Pause|Scrub/i }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("F2-WP2 — long-form navigation and bounded rendering", () => {
+  async function openDemoStudio(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: /Open local demo project The Storylight in the Little Wood/,
+      }),
+    );
+    return screen.findByTestId("pv1-studio");
+  }
+
+  const rail = (studio: HTMLElement) =>
+    within(studio).getByRole("navigation", { name: "Episode hierarchy" });
+
+  it("expands and collapses every act and sequence with semantic state", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const railNav = rail(studio);
+
+    for (const title of [
+      "Act I · Everyday Problem",
+      "Act II · The Little Elsewhere",
+    ]) {
+      const actToggle = within(railNav).getByRole("button", { name: title });
+      expect(actToggle).toHaveAttribute("aria-expanded", "true");
+      await user.click(actToggle);
+      expect(actToggle).toHaveAttribute("aria-expanded", "false");
+      await user.click(actToggle);
+      expect(actToggle).toHaveAttribute("aria-expanded", "true");
+    }
+    for (const title of [
+      "Sequence 1 · A quiet ordinary",
+      "Sequence 2 · First signs",
+      "Sequence 3 · The journey",
+      "Sequence 4 · Resolution",
+    ]) {
+      const sequenceToggle = within(railNav).getByRole("button", {
+        name: title,
+      });
+      expect(sequenceToggle).toHaveAttribute("aria-expanded", "true");
+      await user.click(sequenceToggle);
+      expect(sequenceToggle).toHaveAttribute("aria-expanded", "false");
+      await user.click(sequenceToggle);
+      expect(sequenceToggle).toHaveAttribute("aria-expanded", "true");
+    }
+    // Every scene is reachable after the traversal.
+    for (const name of [
+      "Scene 1 The Home Nook",
+      "Scene 2 Forest Path",
+      "Scene 3 Berry Patch",
+      "Scene 4 Little Stream",
+      "Scene 5 Lantern Bridge",
+      "Scene 6 Folded Hills",
+      "Scene 7 Sunflower Field",
+      "Scene 8 Back Home",
+    ]) {
+      expect(
+        within(railNav).getByRole("button", { name: new RegExp(name) }),
+      ).toBeInTheDocument();
+    }
+  });
+
+  it("renders beat rows only for the selected scene", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    // Initial scene: exactly its two beats exist in the DOM (board + rail).
+    let beatRows = studio.querySelectorAll("[data-beat-for]");
+    expect(beatRows.length).toBe(4);
+    for (const row of beatRows)
+      expect(row.getAttribute("data-beat-for")).toBe("scene-1");
+
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Scene 5 Lantern Bridge/,
+      }),
+    );
+    beatRows = studio.querySelectorAll("[data-beat-for]");
+    expect(beatRows.length).toBe(4);
+    for (const row of beatRows)
+      expect(row.getAttribute("data-beat-for")).toBe("scene-5");
+    expect(studio).toHaveTextContent("The bridge lanterns wake one by one");
+    expect(studio).not.toHaveTextContent("Morning light through the round window");
+  });
+
+  it("keeps a hidden selection reachable behind a collapsed sequence with reveal", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const railNav = rail(studio);
+
+    await user.click(
+      within(railNav).getByRole("button", { name: /Scene 3 Berry Patch/ }),
+    );
+    await user.click(
+      within(railNav).getByRole("button", { name: "Sequence 2 · First signs" }),
+    );
+
+    // Selection survives; the board still shows it; the summary explains.
+    expect(
+      within(studio).getByRole("heading", { name: "Berry Patch" }),
+    ).toBeInTheDocument();
+    expect(
+      within(railNav).queryByRole("button", { name: /Scene 3 Berry Patch/ }),
+    ).not.toBeInTheDocument();
+    const summary = within(railNav).getByRole("note");
+    expect(summary).toHaveTextContent("Selected scene 3 · Berry Patch");
+
+    await user.click(
+      within(summary).getByRole("button", { name: /Reveal/ }),
+    );
+    expect(
+      within(railNav).getByRole("button", { name: /Scene 3 Berry Patch/ }),
+    ).toHaveAttribute("aria-current", "true");
+  });
+
+  it("keeps a hidden selection reachable behind a collapsed act with reveal", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const railNav = rail(studio);
+
+    await user.click(
+      within(railNav).getByRole("button", { name: /Scene 5 Lantern Bridge/ }),
+    );
+    await user.click(
+      within(railNav).getByRole("button", {
+        name: "Act II · The Little Elsewhere",
+      }),
+    );
+
+    expect(
+      within(studio).getByRole("heading", { name: "Lantern Bridge" }),
+    ).toBeInTheDocument();
+    const summary = within(railNav).getByRole("note");
+    expect(summary).toHaveTextContent("Selected scene 5 · Lantern Bridge");
+
+    await user.click(
+      within(summary).getByRole("button", { name: /Reveal/ }),
+    );
+    expect(
+      within(railNav).getByRole("button", { name: /Scene 5 Lantern Bridge/ }),
+    ).toHaveAttribute("aria-current", "true");
+  });
+
+  it("moves the scene-relative playhead honestly and resets it on scene change", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    const slider = within(studio).getByRole("slider", {
+      name: /Scene playhead for The Home Nook/,
+    });
+    expect(slider).toHaveValue("0");
+    expect(studio).toHaveTextContent("0:00 / 2:30");
+    expect(studio).toHaveTextContent("local UI timing — not media playback");
+
+    fireEvent.change(slider, { target: { value: "42" } });
+    expect(studio).toHaveTextContent("0:42 / 2:30");
+
+    // Deterministic reset to zero on scene change (the chosen clamp/reset
+    // behavior, encoded here).
+    await user.click(
+      within(studio).getByRole("button", { name: "Next scene" }),
+    );
+    expect(studio).toHaveTextContent("0:00 / 2:40");
+    expect(
+      within(studio).getByRole("slider", {
+        name: /Scene playhead for Forest Path/,
+      }),
+    ).toHaveValue("0");
+
+    // Rail selection and overview selection share the same reset.
+    fireEvent.change(
+      within(studio).getByRole("slider", {
+        name: /Scene playhead for Forest Path/,
+      }),
+      { target: { value: "80" } },
+    );
+    expect(studio).toHaveTextContent("1:20 / 2:40");
+    await user.click(
+      within(
+        within(studio).getByRole("navigation", { name: "Episode overview" }),
+      ).getByRole("button", { name: /Scene 1 The Home Nook/ }),
+    );
+    expect(studio).toHaveTextContent("0:00 / 2:30");
   });
 });
