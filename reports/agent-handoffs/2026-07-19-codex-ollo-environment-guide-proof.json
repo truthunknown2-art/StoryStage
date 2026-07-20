@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "1.0",
+  "status": "pass",
+  "authority": "private-render-proof",
+  "productionBindable": false,
+  "format": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "durationInFrames": 760
+  },
+  "episodePlanContentHash": "24f761a96d42941ded7642626a394ac9f4494a3e8e50d115f6ca50f00d2d27a1",
+  "picturePropsContentHash": "203fc5838ea326ff9c9979b26b6bfe6e437f7d767b895df83c3dca9b5bf399c4",
+  "environmentAssets": [
+    {
+      "assetId": "little-wood-hollow-log-background-v1",
+      "contentHash": "1e550fd7d07d9e084f439a90aa084d142c350a83eb7ba1b0850dabef87400ba0"
+    },
+    {
+      "assetId": "little-wood-hollow-log-foreground-v1",
+      "contentHash": "0194924d3d0a94eb537176e464dce386af30a8dcac4e2bb67e5246a43dc946d1"
+    }
+  ],
+  "renders": {
+    "audioOn": "865c23b6ed02a5b157c9800076fba71181e22630ee96b17a5bc420edf058466a",
+    "muted": "eb5897f7ec714ece3b12ec37707e54c1d2690178f561ee4d028dfb7aba30ce26",
+    "contactSheet": "ba7f07b7175e551873451cf6d7f72585442a87042a60b38941043baf1ed63c33"
+  },
+  "approvedEnvironmentBound": true,
+  "approvedOlloRigBound": false,
+  "limitation": "Layered scenery is approved and verified; performers remain proxy-only."
+}
