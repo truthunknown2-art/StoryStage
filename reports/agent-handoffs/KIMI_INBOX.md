@@ -1,15 +1,29 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `37`
+Inbox-Version: `38`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F1-PROJECTS-CREATE-GATE-REVIEW`
-Status: `WAIT`
+Current-Task: `F2-WP1-STUDIO-SHELL-FOUNDATION`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `7517d8e93af12938b3095da915614e15f3bece9c`
-Required-Work-Branch: `agent/kimi-ui-v2`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-preston-gate-wait-v37.md`
+Accepted-Root-Base: `fb3033f8cc5ce536476066708aebb472704de936`
+Required-Work-Branch: `agent/kimi-f2-studio-shell-wp1`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-studio-shell-v38.md`
 
 ## Current instruction
+
+Version 38 records Preston's F1 acceptance, the merged F1 and F2-plan lineage,
+and starts only F2-WP1 from exact product base
+`fb3033f8cc5ce536476066708aebb472704de936`. Claim issue #38, create the
+declared branch from that exact base, build the bounded frontend-only Studio
+shell foundation, run the listed checks, push a draft PR and exact handback,
+then stop. Do not begin WP2, F3, or backend work.
+
+Version 38 supersedes Version 37. Version 37 remains below as historical
+traceability.
+
+---
+
+Previous Version 37 instruction:
 
 Version 37 records Pro's completed F1 acceptance audit and the green live PR
 head `7517d8e93af12938b3095da915614e15f3bece9c`. All named correction blockers

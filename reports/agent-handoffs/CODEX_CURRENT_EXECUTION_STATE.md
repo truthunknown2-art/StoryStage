@@ -1,6 +1,6 @@
 # StoryStage — current Codex execution state
 
-Updated: 2026-07-20 03:05 America/Vancouver
+Updated: 2026-07-20 07:40 America/Vancouver
 
 This file is a restart pointer, not a product specification. GitHub branches,
 pull requests, issues, hosted checks, and exact remote SHAs remain authoritative.
@@ -9,31 +9,44 @@ pull requests, issues, hosted checks, and exact remote SHAs remain authoritative
 
 - Repository: `truthunknown2-art/StoryStage`
 - Governing branch: `product/v1`
-- Governing SHA: `81a0e64dedad5bab9e4f2f285c40341e1343412f`
+- Governing SHA: `fb3033f8cc5ce536476066708aebb472704de936`
 - Binding plan: `docs/PRODUCT_PLAN.md`
-- Plan PR: `https://github.com/truthunknown2-art/StoryStage/pull/32`
-- Active product phase: **F1 — Projects + Create**
-- F2 and backend B1+ are not authorized to start
+- F2 package plan: `docs/plans/milestone-2.md`
+- F2 plan PRs: `#36`, `#37`
+- Active product phase: **F2 — Long-form Studio shell**
+- Backend B1+ is not authorized to start
 
-## F1 frontend gate
+## Completed F1 frontend gate
 
 - Owner: Kimi CLI
 - Required branch: `agent/kimi-ui-v2`
 - Audited Kimi handback: `1a90a0b2dee5f18fd36e51a1bab6424cffd6382a`
 - Exact combined gate head: `7517d8e93af12938b3095da915614e15f3bece9c`
-- Draft PR: `https://github.com/truthunknown2-art/StoryStage/pull/33`
-- Task/claim issue: `https://github.com/truthunknown2-art/StoryStage/issues/34`
-- Canonical inbox version: `37` (`WAIT`)
-- Gate-wait brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-f1-preston-gate-wait-v37.md`
+- Merged PR: `https://github.com/truthunknown2-art/StoryStage/pull/33`
+- Closed issue: `https://github.com/truthunknown2-art/StoryStage/issues/34`
+- Product merge: `7a468673c0a33a37b96b94d965b5d2a857150fac`
 
 Kimi's bounded v33 correction is complete. Codex independently verified all 58
 Studio tests, root `pnpm verify`, screenshot hashes, five captures, contrast,
 and exact 1024×800 responsive behavior. The unchanged hosted rerun passed. Codex
 then merged the current accepted `product/v1` lineage into the candidate. Root
 `pnpm verify` and hosted run `29731549778` passed at exact head `7517d8e9`.
-Pro accepted F1 with no blocking defects. Do not advance F2 until Preston
-explicitly accepts F1.
+Pro accepted F1 with no blocking defects. Preston resumed the project and
+accepted continuation from the F1 gate. Exact reviewed F1 head `7517d8e9`
+merged into `product/v1` as `7a468673`.
+
+## Active F2 work package
+
+- Package: **F2-WP1 — Studio shell foundation**
+- Owner: Kimi CLI
+- Required branch: `agent/kimi-f2-studio-shell-wp1`
+- Exact base: `fb3033f8cc5ce536476066708aebb472704de936`
+- Issue: `https://github.com/truthunknown2-art/StoryStage/issues/38`
+- Canonical inbox: version `38` (`START-NOW`)
+- Full brief:
+  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-studio-shell-v38.md`
+
+Only WP1 is authorized. WP2, F3, and backend work remain blocked.
 
 ## Pro audit
 
@@ -58,9 +71,10 @@ presenting it to Preston; Pro's verdict does not authorize F2.
 
 1. Read `C:\Projects\AGENTS.md` and the repository `AGENTS.md`.
 2. Fetch relevant branches without rewriting worktrees.
-3. Read canonical `KIMI_INBOX.md`, its full brief, issue #34, and PR #33.
+3. Read canonical `KIMI_INBOX.md`, its full brief, issue #38, and the active
+   F2-WP1 PR if Kimi has opened it.
 4. Inspect exact remote heads and hosted checks; never review local-only work.
 5. Inspect Pro's latest StoryStage response and record each exact-SHA verdict on
    GitHub.
-6. Continue only the first unblocked gate. Do not start F2 or backend work while
-   F1 is unaccepted.
+6. Continue only F2-WP1 review/integration. Do not start WP2, F3, or backend
+   work until their explicit gates advance.
