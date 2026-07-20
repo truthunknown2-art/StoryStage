@@ -3,6 +3,7 @@ import type { GuideVoiceClause } from "@storystage/story-engine/guide-clock";
 import {
   assertIdenticalPictureAndEpisodeProps,
   assertReopenedGuideAudioMatches,
+  bindApprovedOlloEnvironment,
   createEditorialGuideEpisodeContext,
   createEditorialGuideRenderProps,
   parseGuideClauseTimings,
@@ -61,6 +62,28 @@ const clausesFor = (
 };
 
 describe("editorial guide-audio proof", () => {
+  it("binds the exact creator-approved Little Wood plates to every stage", () => {
+    const context = createEditorialGuideEpisodeContext(script);
+    const rebound = bindApprovedOlloEnvironment(context.episodePlan);
+
+    expect(rebound.contentHash).toBe(context.episodePlan.contentHash);
+    expect(rebound.stageKits.every((stage) => stage.assetIds.length >= 2)).toBe(
+      true,
+    );
+    expect(
+      rebound.stageKits.every(
+        (stage) =>
+          stage.assetIds[0] === "little-wood-hollow-log-background-v1" &&
+          stage.assetIds.at(-1) === "little-wood-hollow-log-foreground-v1",
+      ),
+    ).toBe(true);
+    expect(
+      rebound.approvedAssets.filter((asset) =>
+        asset.assetId.startsWith("little-wood-hollow-log-"),
+      ),
+    ).toHaveLength(2);
+  });
+
   it("seals one exact guide clock into identical Director picture props", () => {
     const context = createEditorialGuideEpisodeContext(script);
     const durationSamples = context.episodePlan.format.durationInFrames * 1_600;

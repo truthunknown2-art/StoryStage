@@ -17,8 +17,11 @@ import {
   compileDirectorProject,
   createCv002ArtDirectionSelection,
   createCv002Project,
+  executableEpisodePlanSchema,
   hashCanonical,
+  type ApprovedAssetBinding,
   type DirectorTimingBasis,
+  type ExecutableEpisodePlan,
 } from "@storystage/story-engine/director-alpha";
 import {
   createEditorialPlanningRequest,
@@ -47,6 +50,66 @@ const proofRoot = resolve(
 const execFileAsync = promisify(execFile);
 const sha256 = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
+
+const OLLO_ENVIRONMENT_ASSETS = [
+  {
+    assetId: "little-wood-hollow-log-background-v1",
+    version: "1",
+    status: "approved",
+    contentHash:
+      "1e550fd7d07d9e084f439a90aa084d142c350a83eb7ba1b0850dabef87400ba0",
+    relativeFile:
+      "show-packs/kids/ollo-friends/v1/environments/little-wood/hollow-log/background-v1-1e550fd7d07d9e084f439a90aa084d142c350a83eb7ba1b0850dabef87400ba0.png",
+    byteLength: 3_047_230,
+    immutableLocationId:
+      "sha256:1e550fd7d07d9e084f439a90aa084d142c350a83eb7ba1b0850dabef87400ba0",
+  },
+  {
+    assetId: "little-wood-hollow-log-foreground-v1",
+    version: "1",
+    status: "approved",
+    contentHash:
+      "0194924d3d0a94eb537176e464dce386af30a8dcac4e2bb67e5246a43dc946d1",
+    relativeFile:
+      "show-packs/kids/ollo-friends/v1/environments/little-wood/hollow-log/foreground-v1-0194924d3d0a94eb537176e464dce386af30a8dcac4e2bb67e5246a43dc946d1.png",
+    byteLength: 1_062_968,
+    immutableLocationId:
+      "sha256:0194924d3d0a94eb537176e464dce386af30a8dcac4e2bb67e5246a43dc946d1",
+  },
+] as const satisfies readonly ApprovedAssetBinding[];
+
+export function bindApprovedOlloEnvironment(
+  episodePlan: ExecutableEpisodePlan,
+): ExecutableEpisodePlan {
+  const { contentHash: sourceContentHash, ...draft } = episodePlan;
+  void sourceContentHash;
+  const environmentAssetIds = new Set<string>(
+    OLLO_ENVIRONMENT_ASSETS.map((asset) => asset.assetId),
+  );
+  const enhancedDraft = {
+    ...draft,
+    stageKits: draft.stageKits.map((stageKit) => ({
+      ...stageKit,
+      assetIds: [
+        OLLO_ENVIRONMENT_ASSETS[0].assetId,
+        ...stageKit.assetIds.filter(
+          (assetId) => !environmentAssetIds.has(assetId),
+        ),
+        OLLO_ENVIRONMENT_ASSETS[1].assetId,
+      ],
+    })),
+    approvedAssets: [
+      ...draft.approvedAssets.filter(
+        (asset) => !environmentAssetIds.has(asset.assetId),
+      ),
+      ...OLLO_ENVIRONMENT_ASSETS,
+    ],
+  };
+  return executableEpisodePlanSchema.parse({
+    ...enhancedDraft,
+    contentHash: hashCanonical(enhancedDraft),
+  });
+}
 
 export type EditorialGuideAudioProofPaths = Readonly<{
   script: string;
@@ -140,7 +203,9 @@ export function createEditorialGuideEpisodeContext(
     throw new Error(
       "Director project changed across identical guide-proof compiles.",
     );
-  const episodePlan = directorProject.executableEpisodePlan;
+  const episodePlan = bindApprovedOlloEnvironment(
+    directorProject.executableEpisodePlan,
+  );
   const output = {
     width: episodePlan.format.width,
     height: episodePlan.format.height,
@@ -583,8 +648,12 @@ export async function runEditorialGuideAudioProof(
     visualScope: {
       capabilitySummary: prepared.directorProject.capabilityReport.summary,
       approvedOlloAssetBound: false,
+      approvedOlloEnvironmentAssetsBound: true,
+      approvedOlloEnvironmentAssetIds: OLLO_ENVIRONMENT_ASSETS.map(
+        (asset) => asset.assetId,
+      ),
       limitation:
-        "This proves guide-bound Director timing and paired render transport; it does not claim an approved Ollo rig or final character performance.",
+        "This proves creator-approved layered Ollo environment media with guide-bound Director timing and paired render transport; it does not claim an approved Ollo rig or final character performance.",
     },
     timingScope: {
       guideBoundEditorialArtifactsCreated: true,
