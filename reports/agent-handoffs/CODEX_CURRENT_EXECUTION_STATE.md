@@ -1,6 +1,6 @@
 # StoryStage — current Codex execution state
 
-Updated: 2026-07-20 08:58 America/Vancouver
+Updated: 2026-07-20 09:57 America/Vancouver
 
 This file is a restart pointer, not a product specification. GitHub branches,
 pull requests, issues, hosted checks, and exact remote SHAs remain authoritative.
@@ -9,7 +9,7 @@ pull requests, issues, hosted checks, and exact remote SHAs remain authoritative
 
 - Repository: `truthunknown2-art/StoryStage`
 - Governing branch: `product/v1`
-- Governing SHA: `fb3033f8cc5ce536476066708aebb472704de936`
+- Governing SHA: `1982407c201d68ce78c98a5f530cda348a15c8ed`
 - Binding plan: `docs/PRODUCT_PLAN.md`
 - F2 package plan: `docs/plans/milestone-2.md`
 - F2 plan PRs: `#36`, `#37`
@@ -35,24 +35,29 @@ Pro accepted F1 with no blocking defects. Preston resumed the project and
 accepted continuation from the F1 gate. Exact reviewed F1 head `7517d8e9`
 merged into `product/v1` as `7a468673`.
 
+## Completed F2-WP1 package
+
+- Accepted head: `220d7f5d6c39c62309e449d8a7c57dd86c3f36b0`
+- Merged PR: `https://github.com/truthunknown2-art/StoryStage/pull/39`
+- Product merge: `1ab5f4338e7fc8cd4d8674429e67bd16582b23c4`
+- Director-plan merge after WP1: `1982407c201d68ce78c98a5f530cda348a15c8ed`
+- Local root `pnpm verify`: passed at exact combined product head
+- Hosted integration run: `29761209150` passed at exact combined product head
+
 ## Active F2 work package
 
-- Package: **F2-WP1 — Studio shell foundation**
+- Package: **F2-WP2 — Long-form navigation and bounded rendering**
 - Owner: Kimi CLI
-- Required branch: `agent/kimi-f2-studio-shell-wp1`
-- Exact base: `fb3033f8cc5ce536476066708aebb472704de936`
-- Issue: `https://github.com/truthunknown2-art/StoryStage/issues/38`
-- Accepted exact head: `220d7f5d6c39c62309e449d8a7c57dd86c3f36b0`
-- Draft PR: `https://github.com/truthunknown2-art/StoryStage/pull/39`
-- Canonical inbox: version `40` (`WAIT`)
+- Required branch: `agent/kimi-f2-longform-navigation-wp2`
+- Exact base: `1982407c201d68ce78c98a5f530cda348a15c8ed`
+- Issue: `https://github.com/truthunknown2-art/StoryStage/issues/41`
+- Pull request: not opened yet
+- Canonical inbox: version `41` (`START-NOW`)
 - Full brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-accepted-v40.md`
+  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-navigation-v41.md`
 
-Codex independently accepted the corrected created-project truth, shell layout,
-selection invariant, transport, disabled-control honesty, screenshots/hashes,
-64/64 Studio tests, typecheck, build, local root verify, and hosted run
-`29756683147`. F2-WP1 is review-clean at the exact head above but remains
-unmerged. Kimi is on `WAIT`; WP2, F3, and backend work remain blocked.
+WP2 is frontend-only. Kimi owns implementation; Codex reviews and integrates.
+WP3, F3, and backend product work remain blocked.
 
 ## Pro audit
 
@@ -77,10 +82,10 @@ presenting it to Preston; Pro's verdict does not authorize F2.
 
 1. Read `C:\Projects\AGENTS.md` and the repository `AGENTS.md`.
 2. Fetch relevant branches without rewriting worktrees.
-3. Read canonical `KIMI_INBOX.md`, its full brief, issue #38, and the active
-   F2-WP1 PR if Kimi has opened it.
+3. Read canonical `KIMI_INBOX.md`, its full brief, issue #41, and the active
+   F2-WP2 PR if Kimi has opened it.
 4. Inspect exact remote heads and hosted checks; never review local-only work.
 5. Inspect Pro's latest StoryStage response and record each exact-SHA verdict on
    GitHub.
-6. Continue only F2-WP1 review/integration. Do not start WP2, F3, or backend
-   work until their explicit gates advance.
+6. Continue only F2-WP2 assignment/review/integration. Do not start WP3, F3, or
+   backend work until their explicit gates advance.

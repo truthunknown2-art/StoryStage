@@ -1,15 +1,27 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `40`
+Inbox-Version: `41`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP1-STUDIO-SHELL-ACCEPTED`
-Status: `WAIT`
+Current-Task: `F2-WP2-LONG-FORM-NAVIGATION`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `220d7f5d6c39c62309e449d8a7c57dd86c3f36b0`
-Required-Work-Branch: `agent/kimi-f2-studio-shell-wp1`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp1-accepted-v40.md`
+Accepted-Root-Base: `1982407c201d68ce78c98a5f530cda348a15c8ed`
+Required-Work-Branch: `agent/kimi-f2-longform-navigation-wp2`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-navigation-v41.md`
 
 ## Current instruction
+
+Version 41 starts only F2-WP2 from verified `product/v1` integration head
+`1982407c201d68ce78c98a5f530cda348a15c8ed`. Claim issue #41, branch from that
+exact base, implement the bounded long-form navigation brief, publish one
+immutable handback, and stop. Do not begin WP3, F3, or backend work.
+
+Version 41 supersedes Version 40. Version 40 remains below as historical
+traceability.
+
+---
+
+Previous Version 40 instruction:
 
 Version 40 accepts exact F2-WP1 head
 `220d7f5d6c39c62309e449d8a7c57dd86c3f36b0`. The bounded created-project
