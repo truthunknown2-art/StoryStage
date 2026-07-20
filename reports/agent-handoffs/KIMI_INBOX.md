@@ -1,15 +1,32 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `23`
+Inbox-Version: `24`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-OLLO-GATE1-REVIEW-UI-A`
+Current-Task: `KIMI-OLLO-GATE1-REVIEW-UI-A-CORRECTIONS`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `c934021f9580fe200aef8e54573383e07eb24932`
 Required-Work-Branch: `agent/kimi-ollo-gate1-review-ui-a`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ollo-gate1-review-ui-a-v23.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ollo-gate1-review-ui-a-v24-corrections.md`
 
 ## Current instruction
+
+Independent code and visual audits reject PR #25 at exact head
+`a375209586758acc235a4ff0621cca6fd8760163`. Correct the real implementation on
+the existing work branch: atomic cross-view issue selection; exact `32/29/29`
+joint-evidence truth; correct Profile-right Seams/Rest hashes; visible exact
+evidence identity; real roving tabs, 44px targets, and reduced-motion coverage;
+a visible fixed authority footer; a reachable full orbit table; and an exact,
+non-exaggerated handback. Recapture evidence, run the full required verification,
+push an immutable successor to PR #25, update its body, then wait. Do not add any
+authority or broaden scope.
+
+Version 24 supersedes Version 23 as the active correction. Version 23 remains
+below as historical traceability.
+
+---
+
+Previous Version 23 instruction:
 
 Create the first real private Ollo registration-review frontend on a new branch
 from exact Gate 1 v8 head `c934021f9580fe200aef8e54573383e07eb24932`.
@@ -21,7 +38,7 @@ requirements, and keep approval, motion, capability, export, and production
 authority visibly locked. Push a draft PR stacked on the Gate 1 branch, capture
 the required screenshots, leave the exact handback, then wait.
 
-Version 23 supersedes Version 22 as the active task. Version 22 remains below
+Version 23 superseded Version 22 as the active task. Version 22 remains below
 as historical traceability.
 
 ---
