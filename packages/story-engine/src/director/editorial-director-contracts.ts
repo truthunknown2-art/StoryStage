@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import { hashCanonical } from "../canonical-hash";
 import {
   cv002BeatRoleSchema,
@@ -1780,6 +1782,29 @@ export type SourceEditorialShotLineage = z.infer<
   typeof sourceEditorialShotLineageSchema
 >;
 
+export type EditorialExternalRawResponse = string | Uint8Array;
+
+const requireExternalEvidence = <T>(
+  value: T | undefined,
+  message: string,
+): T => {
+  if (value === undefined) throw new Error(message);
+  return value;
+};
+
+const copyExternalRawResponseBytes = (
+  rawResponse: EditorialExternalRawResponse,
+) => {
+  if (typeof rawResponse === "string")
+    return new TextEncoder().encode(rawResponse);
+  if (!(rawResponse instanceof Uint8Array))
+    throw new Error("External raw response must be text or exact bytes.");
+  return new Uint8Array(rawResponse);
+};
+
+const hashExternalRawResponse = (rawResponse: EditorialExternalRawResponse) =>
+  bytesToHex(sha256(copyExternalRawResponseBytes(rawResponse)));
+
 export function createSourceEditorialShotLineage(input: {
   request: EditorialPlanningRequest;
   proposal: EditorialDirectorProposalV1;
@@ -1850,7 +1875,7 @@ export function sealEditorialExternalPlanningAttemptReceipt(input: {
   modelVersion: string;
   promptTemplateContentHash: string;
   contextContentHashes: readonly string[];
-  rawResponseContentHash: string;
+  rawResponse: EditorialExternalRawResponse;
   startedAt: string;
   completedAt: string;
 }): EditorialExternalPlanningAttemptReceipt {
@@ -1880,7 +1905,7 @@ export function sealEditorialExternalPlanningAttemptReceipt(input: {
       input.contextContentHashes,
       "Invocation context hash",
     ),
-    rawResponseContentHash: hashSchema.parse(input.rawResponseContentHash),
+    rawResponseContentHash: hashExternalRawResponse(input.rawResponse),
     startedAt: input.startedAt,
     completedAt: input.completedAt,
   };
@@ -1891,6 +1916,7 @@ export function restoreEditorialExternalPlanningAttemptReceipt(input: {
   serialized: string;
   request: EditorialPlanningRequest;
   runSpec: EditorialPlanningRunSpec;
+  rawResponse: EditorialExternalRawResponse;
 }): EditorialExternalPlanningAttemptReceipt {
   const restored = editorialExternalPlanningAttemptReceiptSchema.parse(
     JSON.parse(input.serialized),
@@ -1903,13 +1929,167 @@ export function restoreEditorialExternalPlanningAttemptReceipt(input: {
     modelVersion: restored.modelVersion,
     promptTemplateContentHash: restored.promptTemplateContentHash,
     contextContentHashes: restored.contextContentHashes,
-    rawResponseContentHash: restored.rawResponseContentHash,
+    rawResponse: input.rawResponse,
     startedAt: restored.startedAt,
     completedAt: restored.completedAt,
   });
   if (!same(restored, expected))
     throw new Error(
       "External attempt receipt does not restore against exact artifacts.",
+    );
+  return restored;
+}
+
+const externalResponseParserId = "strict-json-external-intent" as const;
+const externalResponseParserVersion = "1.0.0" as const;
+
+const externalResponseParseReceiptBase = {
+  schemaVersion: z.literal("1.0"),
+  authority: z.literal("editorial-external-response-parse-provenance"),
+  productionBindable: z.literal(false),
+  requestContentHash: hashSchema,
+  runSpecContentHash: hashSchema,
+  externalAttemptReceiptContentHash: hashSchema,
+  rawResponseContentHash: hashSchema,
+  parserId: z.literal(externalResponseParserId),
+  parserVersion: z.literal(externalResponseParserVersion),
+};
+
+export const editorialExternalResponseParseReceiptSchema = z
+  .discriminatedUnion("status", [
+    z
+      .object({
+        ...externalResponseParseReceiptBase,
+        status: z.literal("schema-invalid"),
+        parsedIntentContentHash: z.null(),
+        contentHash: hashSchema,
+      })
+      .strict(),
+    z
+      .object({
+        ...externalResponseParseReceiptBase,
+        status: z.literal("intent-parsed"),
+        parsedIntentContentHash: hashSchema,
+        contentHash: hashSchema,
+      })
+      .strict(),
+  ])
+  .superRefine((receipt, context) => {
+    const { contentHash, ...draft } = receipt;
+    if (hashCanonical(draft) !== contentHash)
+      context.addIssue({
+        code: "custom",
+        path: ["contentHash"],
+        message: "Editorial external response parse receipt hash is invalid.",
+      });
+  });
+
+export type EditorialExternalResponseParseReceipt = z.infer<
+  typeof editorialExternalResponseParseReceiptSchema
+>;
+
+const parseExternalResponseIntent = (
+  rawResponse: EditorialExternalRawResponse,
+): ExternalEditorialIntentDraft | null => {
+  try {
+    const bytes = copyExternalRawResponseBytes(rawResponse);
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    const roundTrip = new TextEncoder().encode(text);
+    if (
+      roundTrip.length !== bytes.length ||
+      roundTrip.some((value, index) => value !== bytes[index])
+    )
+      return null;
+    return externalEditorialIntentDraftSchema.parse(JSON.parse(text));
+  } catch {
+    return null;
+  }
+};
+
+export function sealEditorialExternalResponseParseReceipt(input: {
+  request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
+  attemptReceipt: EditorialExternalPlanningAttemptReceipt;
+  rawResponse: EditorialExternalRawResponse;
+}): EditorialExternalResponseParseReceipt {
+  const rawResponse = copyExternalRawResponseBytes(input.rawResponse);
+  const request = editorialPlanningRequestSchema.parse(input.request);
+  const runSpec = assertEditorialPlanningRunSpecMatchesRequest({
+    request,
+    runSpec: input.runSpec,
+  });
+  const attemptReceipt = assertEditorialPlanningAttemptReceiptMatchesArtifacts({
+    request,
+    runSpec,
+    attemptReceipt: input.attemptReceipt,
+  });
+  if (attemptReceipt.lane !== "external-candidate")
+    throw new Error(
+      "External response parse receipts require an external attempt receipt.",
+    );
+  const rawResponseContentHash = hashExternalRawResponse(rawResponse);
+  if (attemptReceipt.rawResponseContentHash !== rawResponseContentHash)
+    throw new Error(
+      "External raw response does not match its exact attempt receipt.",
+    );
+  const parsedIntent = parseExternalResponseIntent(rawResponse);
+  const draft = {
+    schemaVersion: "1.0" as const,
+    authority: "editorial-external-response-parse-provenance" as const,
+    productionBindable: false as const,
+    requestContentHash: request.contentHash,
+    runSpecContentHash: runSpec.contentHash,
+    externalAttemptReceiptContentHash: attemptReceipt.contentHash,
+    rawResponseContentHash,
+    parserId: externalResponseParserId,
+    parserVersion: externalResponseParserVersion,
+    status: parsedIntent
+      ? ("intent-parsed" as const)
+      : ("schema-invalid" as const),
+    parsedIntentContentHash: parsedIntent
+      ? hashCanonical(canonicalizeExternalIntent(parsedIntent))
+      : null,
+  };
+  return editorialExternalResponseParseReceiptSchema.parse(seal(draft));
+}
+
+export function restoreEditorialExternalResponseParseReceipt(input: {
+  serialized: string;
+  request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
+  attemptReceipt: EditorialExternalPlanningAttemptReceipt;
+  rawResponse: EditorialExternalRawResponse;
+}): EditorialExternalResponseParseReceipt {
+  return assertEditorialExternalResponseParseReceiptMatchesArtifacts({
+    request: input.request,
+    runSpec: input.runSpec,
+    attemptReceipt: input.attemptReceipt,
+    rawResponse: input.rawResponse,
+    parseReceipt: editorialExternalResponseParseReceiptSchema.parse(
+      JSON.parse(input.serialized),
+    ),
+  });
+}
+
+export function assertEditorialExternalResponseParseReceiptMatchesArtifacts(input: {
+  request: EditorialPlanningRequest;
+  runSpec: EditorialPlanningRunSpec;
+  attemptReceipt: EditorialExternalPlanningAttemptReceipt;
+  rawResponse: EditorialExternalRawResponse;
+  parseReceipt: EditorialExternalResponseParseReceipt;
+}): EditorialExternalResponseParseReceipt {
+  const restored = editorialExternalResponseParseReceiptSchema.parse(
+    input.parseReceipt,
+  );
+  const expected = sealEditorialExternalResponseParseReceipt({
+    request: input.request,
+    runSpec: input.runSpec,
+    attemptReceipt: input.attemptReceipt,
+    rawResponse: input.rawResponse,
+  });
+  if (!same(restored, expected))
+    throw new Error(
+      "External response parse receipt does not restore against exact raw response evidence.",
     );
   return restored;
 }
@@ -2105,6 +2285,7 @@ const editorialProposalBindingReceiptFields = {
   runSpecContentHash: hashSchema,
   lane: editorialPlanningLaneSchema,
   attemptReceiptContentHash: hashSchema,
+  externalParseReceiptContentHash: hashSchema.nullable(),
   externalIntentContentHash: hashSchema,
   proposalContentHash: hashSchema,
 };
@@ -2122,6 +2303,8 @@ export function sealEditorialProposalBindingReceipt(input: {
   request: EditorialPlanningRequest;
   runSpec: EditorialPlanningRunSpec;
   attemptReceipt: EditorialPlanningAttemptReceipt;
+  externalParseReceipt?: EditorialExternalResponseParseReceipt;
+  externalRawResponse?: EditorialExternalRawResponse;
   proposal: EditorialDirectorProposalV1;
 }): EditorialProposalBindingReceipt {
   const request = editorialPlanningRequestSchema.parse(input.request);
@@ -2138,6 +2321,38 @@ export function sealEditorialProposalBindingReceipt(input: {
     request,
     proposal: input.proposal,
   });
+  const externalParseReceipt =
+    attemptReceipt.lane === "external-candidate"
+      ? assertEditorialExternalResponseParseReceiptMatchesArtifacts({
+          request,
+          runSpec,
+          attemptReceipt,
+          rawResponse: requireExternalEvidence(
+            input.externalRawResponse,
+            "External proposal binding requires its exact raw response.",
+          ),
+          parseReceipt: requireExternalEvidence(
+            input.externalParseReceipt,
+            "External proposal binding requires its exact parse receipt.",
+          ),
+        })
+      : null;
+  if (
+    attemptReceipt.lane !== "external-candidate" &&
+    (input.externalParseReceipt || input.externalRawResponse !== undefined)
+  )
+    throw new Error(
+      "Heuristic and manual proposal bindings cannot carry external parse evidence.",
+    );
+  if (
+    externalParseReceipt &&
+    (externalParseReceipt.status !== "intent-parsed" ||
+      externalParseReceipt.parsedIntentContentHash !==
+        proposal.externalIntentContentHash)
+  )
+    throw new Error(
+      "External response parsed intent does not match its bound proposal.",
+    );
   if (
     "rawIntentContentHash" in attemptReceipt &&
     attemptReceipt.rawIntentContentHash !== proposal.externalIntentContentHash
@@ -2153,6 +2368,7 @@ export function sealEditorialProposalBindingReceipt(input: {
     runSpecContentHash: runSpec.contentHash,
     lane: runSpec.lane,
     attemptReceiptContentHash: attemptReceipt.contentHash,
+    externalParseReceiptContentHash: externalParseReceipt?.contentHash ?? null,
     externalIntentContentHash: proposal.externalIntentContentHash,
     proposalContentHash: proposal.contentHash,
   };
@@ -2163,6 +2379,8 @@ export function assertEditorialProposalBindingReceiptMatchesArtifacts(input: {
   request: EditorialPlanningRequest;
   runSpec: EditorialPlanningRunSpec;
   attemptReceipt: EditorialPlanningAttemptReceipt;
+  externalParseReceipt?: EditorialExternalResponseParseReceipt;
+  externalRawResponse?: EditorialExternalRawResponse;
   proposal: EditorialDirectorProposalV1;
   proposalBindingReceipt: EditorialProposalBindingReceipt;
 }): EditorialProposalBindingReceipt {
@@ -2173,6 +2391,8 @@ export function assertEditorialProposalBindingReceiptMatchesArtifacts(input: {
     request: input.request,
     runSpec: input.runSpec,
     attemptReceipt: input.attemptReceipt,
+    externalParseReceipt: input.externalParseReceipt,
+    externalRawResponse: input.externalRawResponse,
     proposal: input.proposal,
   });
   if (!same(restored, expected))
@@ -2187,12 +2407,16 @@ export function restoreEditorialProposalBindingReceipt(input: {
   request: EditorialPlanningRequest;
   runSpec: EditorialPlanningRunSpec;
   attemptReceipt: EditorialPlanningAttemptReceipt;
+  externalParseReceipt?: EditorialExternalResponseParseReceipt;
+  externalRawResponse?: EditorialExternalRawResponse;
   proposal: EditorialDirectorProposalV1;
 }): EditorialProposalBindingReceipt {
   return assertEditorialProposalBindingReceiptMatchesArtifacts({
     request: input.request,
     runSpec: input.runSpec,
     attemptReceipt: input.attemptReceipt,
+    externalParseReceipt: input.externalParseReceipt,
+    externalRawResponse: input.externalRawResponse,
     proposal: input.proposal,
     proposalBindingReceipt: editorialProposalBindingReceiptSchema.parse(
       JSON.parse(input.serialized),
@@ -2309,6 +2533,7 @@ const planningResultBase = {
   requestContentHash: hashSchema,
   runSpecContentHash: hashSchema,
   attemptReceiptContentHash: hashSchema,
+  externalParseReceiptContentHash: hashSchema.nullable(),
 };
 
 const acceptedResultFields = {
@@ -2411,6 +2636,8 @@ const assertProposalBindingReceipt = (
   runSpec: EditorialPlanningRunSpec,
   attemptReceipt: EditorialPlanningAttemptReceipt,
   proposal: EditorialDirectorProposalV1,
+  externalParseReceipt?: EditorialExternalResponseParseReceipt,
+  externalRawResponse?: EditorialExternalRawResponse,
 ) => {
   if (!proposalBindingReceipt)
     throw new Error(
@@ -2420,6 +2647,8 @@ const assertProposalBindingReceipt = (
     request,
     runSpec,
     attemptReceipt,
+    externalParseReceipt,
+    externalRawResponse,
     proposal,
     proposalBindingReceipt,
   });
@@ -2448,6 +2677,8 @@ export function sealEditorialAcceptedResult(input: {
   proposal: EditorialDirectorProposalV1;
   diagnostics: EditorialPlanningDiagnostics;
   attemptReceipt: EditorialPlanningAttemptReceipt;
+  externalParseReceipt?: EditorialExternalResponseParseReceipt;
+  externalRawResponse?: EditorialExternalRawResponse;
   proposalBindingReceipt: EditorialProposalBindingReceipt;
   revisionRound: 0 | 1;
 }): EditorialPlanningResult {
@@ -2474,6 +2705,8 @@ export function sealEditorialAcceptedResult(input: {
     runSpec,
     attemptReceipt,
     proposal,
+    input.externalParseReceipt,
+    input.externalRawResponse,
   );
   const draft = {
     schemaVersion: "1.0" as const,
@@ -2482,6 +2715,8 @@ export function sealEditorialAcceptedResult(input: {
     requestContentHash: request.contentHash,
     runSpecContentHash: runSpec.contentHash,
     attemptReceiptContentHash: attemptReceipt.contentHash,
+    externalParseReceiptContentHash:
+      input.externalParseReceipt?.contentHash ?? null,
     status: "accepted" as const,
     proposalContentHash: proposal.contentHash,
     diagnosticsContentHash: diagnostics.contentHash,
@@ -2499,6 +2734,8 @@ export function sealEditorialRejectedResult(input: {
   rejectedIntent: ExternalEditorialIntentDraft | null;
   diagnostics: EditorialPlanningDiagnostics;
   attemptReceipt: EditorialPlanningAttemptReceipt;
+  externalParseReceipt?: EditorialExternalResponseParseReceipt;
+  externalRawResponse?: EditorialExternalRawResponse;
   proposalBindingReceipt: EditorialProposalBindingReceipt | null;
   reasonCodes: readonly z.infer<
     typeof rejectedResultFields.reasonCodes.element
@@ -2527,6 +2764,29 @@ export function sealEditorialRejectedResult(input: {
     request,
     runSpec,
   );
+  const externalParseReceipt =
+    attemptReceipt.lane === "external-candidate"
+      ? assertEditorialExternalResponseParseReceiptMatchesArtifacts({
+          request,
+          runSpec,
+          attemptReceipt,
+          rawResponse: requireExternalEvidence(
+            input.externalRawResponse,
+            "External rejection requires its exact raw response.",
+          ),
+          parseReceipt: requireExternalEvidence(
+            input.externalParseReceipt,
+            "External rejection requires its exact parse receipt.",
+          ),
+        })
+      : null;
+  if (
+    attemptReceipt.lane !== "external-candidate" &&
+    (input.externalParseReceipt || input.externalRawResponse !== undefined)
+  )
+    throw new Error(
+      "Heuristic and manual rejections cannot carry external parse evidence.",
+    );
   if (
     rejectedIntent &&
     "rawIntentContentHash" in attemptReceipt &&
@@ -2543,6 +2803,39 @@ export function sealEditorialRejectedResult(input: {
   if (proposal && !rejectedIntent)
     throw new Error("A rejected proposal must retain its exact bound intent.");
   const schemaInvalid = input.reasonCodes.includes("schema-invalid");
+  if (
+    externalParseReceipt?.status === "intent-parsed" &&
+    externalParseReceipt.parsedIntentContentHash !== rejectedIntentContentHash
+  )
+    throw new Error(
+      "External response parsed intent does not match its rejected intent.",
+    );
+  if (
+    externalParseReceipt?.status === "schema-invalid" &&
+    (!schemaInvalid ||
+      rejectedIntent ||
+      proposal ||
+      input.proposalBindingReceipt)
+  )
+    throw new Error(
+      "Schema-invalid external response evidence cannot carry intent, proposal, or binding evidence.",
+    );
+  if (
+    externalParseReceipt &&
+    schemaInvalid &&
+    externalParseReceipt.status !== "schema-invalid"
+  )
+    throw new Error(
+      "External schema-invalid rejection requires a schema-invalid parse receipt.",
+    );
+  if (
+    externalParseReceipt &&
+    !schemaInvalid &&
+    externalParseReceipt.status !== "intent-parsed"
+  )
+    throw new Error(
+      "External parsed-intent rejection requires an intent-parsed receipt.",
+    );
   if (schemaInvalid && rejectedIntent)
     throw new Error(
       "A schema-invalid raw response cannot claim parsed intent evidence.",
@@ -2563,6 +2856,8 @@ export function sealEditorialRejectedResult(input: {
         runSpec,
         attemptReceipt,
         proposal,
+        externalParseReceipt ?? undefined,
+        input.externalRawResponse,
       )
     : null;
   const draft = {
@@ -2572,6 +2867,7 @@ export function sealEditorialRejectedResult(input: {
     requestContentHash: request.contentHash,
     runSpecContentHash: runSpec.contentHash,
     attemptReceiptContentHash: attemptReceipt.contentHash,
+    externalParseReceiptContentHash: externalParseReceipt?.contentHash ?? null,
     status: "rejected" as const,
     rejectedProposalContentHash: proposal?.contentHash ?? null,
     rejectedIntentContentHash,
@@ -2593,6 +2889,8 @@ export function sealEditorialRevisionResult(input: {
   addressedFindingIds: readonly string[];
   successorProposal: EditorialDirectorProposalV1;
   successorAttemptReceipt: EditorialPlanningAttemptReceipt;
+  successorExternalParseReceipt?: EditorialExternalResponseParseReceipt;
+  successorExternalRawResponse?: EditorialExternalRawResponse;
   successorProposalBindingReceipt: EditorialProposalBindingReceipt;
 }): EditorialPlanningResult {
   const request = editorialPlanningRequestSchema.parse(input.request);
@@ -2633,6 +2931,8 @@ export function sealEditorialRevisionResult(input: {
     runSpec,
     successorAttemptReceipt,
     successor,
+    input.successorExternalParseReceipt,
+    input.successorExternalRawResponse,
   );
   const draft = {
     schemaVersion: "1.0" as const,
@@ -2641,6 +2941,8 @@ export function sealEditorialRevisionResult(input: {
     requestContentHash: request.contentHash,
     runSpecContentHash: runSpec.contentHash,
     attemptReceiptContentHash: successorAttemptReceipt.contentHash,
+    externalParseReceiptContentHash:
+      input.successorExternalParseReceipt?.contentHash ?? null,
     status: "revision" as const,
     priorProposalContentHash: prior.contentHash,
     qualityDiagnosticsContentHash: diagnostics.contentHash,
@@ -2686,6 +2988,11 @@ export function restoreEditorialPlanningResult(input: {
   runSpec: EditorialPlanningRunSpec;
   proposals: readonly EditorialDirectorProposalV1[];
   attemptReceipts: readonly EditorialPlanningAttemptReceipt[];
+  externalParseReceipts?: readonly EditorialExternalResponseParseReceipt[];
+  externalRawResponses?: readonly {
+    attemptReceiptContentHash: string;
+    rawResponse: EditorialExternalRawResponse;
+  }[];
   proposalBindingReceipts: readonly EditorialProposalBindingReceipt[];
   diagnostics: readonly EditorialPlanningDiagnostics[];
   rejectedIntents?: readonly ExternalEditorialIntentDraft[];
@@ -2711,6 +3018,28 @@ export function restoreEditorialPlanningResult(input: {
       (receipt) => [receipt.contentHash, receipt] as const,
     ),
   );
+  const externalParseReceiptByHash = new Map(
+    (input.externalParseReceipts ?? []).map(
+      (receipt) => [receipt.contentHash, receipt] as const,
+    ),
+  );
+  const externalRawResponseByAttemptHash = new Map<
+    string,
+    EditorialExternalRawResponse
+  >();
+  for (const evidence of input.externalRawResponses ?? []) {
+    const attemptReceiptContentHash = hashSchema.parse(
+      evidence.attemptReceiptContentHash,
+    );
+    if (externalRawResponseByAttemptHash.has(attemptReceiptContentHash))
+      throw new Error(
+        "External result restore received duplicate raw response evidence.",
+      );
+    externalRawResponseByAttemptHash.set(
+      attemptReceiptContentHash,
+      evidence.rawResponse,
+    );
+  }
   const proposalBindingReceiptByHash = new Map(
     input.proposalBindingReceipts.map(
       (receipt) => [receipt.contentHash, receipt] as const,
@@ -2727,14 +3056,24 @@ export function restoreEditorialPlanningResult(input: {
     const diagnostics = diagnosticsByHash.get(restored.diagnosticsContentHash);
     if (!proposal || !diagnostics)
       throw new Error("Accepted result restore is missing bound artifacts.");
+    const attemptReceipt =
+      attemptReceiptByHash.get(restored.attemptReceiptContentHash) ??
+      missingAttemptReceipt("accepted");
+    const externalParseReceipt = restored.externalParseReceiptContentHash
+      ? externalParseReceiptByHash.get(restored.externalParseReceiptContentHash)
+      : undefined;
+    const externalRawResponse =
+      attemptReceipt.lane === "external-candidate"
+        ? externalRawResponseByAttemptHash.get(attemptReceipt.contentHash)
+        : undefined;
     expected = sealEditorialAcceptedResult({
       request,
       runSpec,
       proposal,
       diagnostics,
-      attemptReceipt:
-        attemptReceiptByHash.get(restored.attemptReceiptContentHash) ??
-        missingAttemptReceipt("accepted"),
+      attemptReceipt,
+      externalParseReceipt,
+      externalRawResponse,
       proposalBindingReceipt:
         proposalBindingReceiptByHash.get(
           restored.proposalBindingReceiptContentHash,
@@ -2755,15 +3094,25 @@ export function restoreEditorialPlanningResult(input: {
     const diagnostics = diagnosticsByHash.get(restored.diagnosticsContentHash);
     if (!diagnostics)
       throw new Error("Rejected result restore is missing diagnostics.");
+    const attemptReceipt =
+      attemptReceiptByHash.get(restored.attemptReceiptContentHash) ??
+      missingAttemptReceipt("rejected");
+    const externalParseReceipt = restored.externalParseReceiptContentHash
+      ? externalParseReceiptByHash.get(restored.externalParseReceiptContentHash)
+      : undefined;
+    const externalRawResponse =
+      attemptReceipt.lane === "external-candidate"
+        ? externalRawResponseByAttemptHash.get(attemptReceipt.contentHash)
+        : undefined;
     expected = sealEditorialRejectedResult({
       request,
       runSpec,
       rejectedProposal: proposal,
       rejectedIntent: intent,
       diagnostics,
-      attemptReceipt:
-        attemptReceiptByHash.get(restored.attemptReceiptContentHash) ??
-        missingAttemptReceipt("rejected"),
+      attemptReceipt,
+      externalParseReceipt,
+      externalRawResponse,
       proposalBindingReceipt: restored.proposalBindingReceiptContentHash
         ? (proposalBindingReceiptByHash.get(
             restored.proposalBindingReceiptContentHash,
@@ -2780,6 +3129,21 @@ export function restoreEditorialPlanningResult(input: {
     );
     if (!prior || !successor || !diagnostics)
       throw new Error("Revision result restore is missing bound artifacts.");
+    const successorAttemptReceipt =
+      attemptReceiptByHash.get(restored.attemptReceiptContentHash) ??
+      missingAttemptReceipt("revision successor");
+    const successorExternalParseReceipt =
+      restored.externalParseReceiptContentHash
+        ? externalParseReceiptByHash.get(
+            restored.externalParseReceiptContentHash,
+          )
+        : undefined;
+    const successorExternalRawResponse =
+      successorAttemptReceipt.lane === "external-candidate"
+        ? externalRawResponseByAttemptHash.get(
+            successorAttemptReceipt.contentHash,
+          )
+        : undefined;
     expected = sealEditorialRevisionResult({
       request,
       runSpec,
@@ -2787,9 +3151,9 @@ export function restoreEditorialPlanningResult(input: {
       qualityDiagnostics: diagnostics,
       addressedFindingIds: restored.addressedFindingIds,
       successorProposal: successor,
-      successorAttemptReceipt:
-        attemptReceiptByHash.get(restored.attemptReceiptContentHash) ??
-        missingAttemptReceipt("revision successor"),
+      successorAttemptReceipt,
+      successorExternalParseReceipt,
+      successorExternalRawResponse,
       successorProposalBindingReceipt:
         proposalBindingReceiptByHash.get(
           restored.successorProposalBindingReceiptContentHash,

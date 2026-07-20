@@ -25,6 +25,7 @@ import {
   externalEditorialIntentDraftSchema,
   restoreEditorialDirectorProposalV1,
   restoreEditorialExternalPlanningAttemptReceipt,
+  restoreEditorialExternalResponseParseReceipt,
   restoreEditorialHeuristicPlanningAttemptReceipt,
   restoreEditorialManualPlanningAttemptReceipt,
   restoreEditorialPlanningRequest,
@@ -35,6 +36,7 @@ import {
   sealEditorialAcceptedResult,
   sealEditorialFallbackResult,
   sealEditorialExternalPlanningAttemptReceipt,
+  sealEditorialExternalResponseParseReceipt,
   sealEditorialHeuristicPlanningAttemptReceipt,
   sealEditorialManualPlanningAttemptReceipt,
   sealEditorialPlanningDiagnostics,
@@ -47,6 +49,7 @@ import {
   type EditorialPlanningRequestSources,
   type EditorialPlanningRunSpec,
   type EditorialPlanningAttemptReceipt,
+  type EditorialExternalRawResponse,
   type EditorialDirectorProposalV1,
   type ExternalEditorialIntentDraft,
 } from "./editorial-director-contracts";
@@ -298,7 +301,9 @@ const runSpecFor = (
 const externalAttemptFor = (
   request: EditorialPlanningRequest,
   runSpec: EditorialPlanningRunSpec = runSpecFor(request),
-  rawResponseContentHash = hash("response"),
+  rawResponse: EditorialExternalRawResponse = JSON.stringify(
+    externalIntentFor(request),
+  ),
 ) =>
   sealEditorialExternalPlanningAttemptReceipt({
     request,
@@ -308,21 +313,52 @@ const externalAttemptFor = (
     modelVersion: "2026-07-19",
     promptTemplateContentHash: hash("prompt"),
     contextContentHashes: [hash("context")],
-    rawResponseContentHash,
+    rawResponse,
     startedAt: "2026-07-19T08:00:00.000Z",
     completedAt: "2026-07-19T08:00:01.000Z",
   });
+
+const externalEvidenceFor = (
+  request: EditorialPlanningRequest,
+  runSpec: EditorialPlanningRunSpec,
+  attemptReceipt: Extract<
+    EditorialPlanningAttemptReceipt,
+    { lane: "external-candidate" }
+  >,
+  externalRawResponse: EditorialExternalRawResponse = JSON.stringify(
+    externalIntentFor(request),
+  ),
+) => ({
+  externalRawResponse,
+  externalParseReceipt: sealEditorialExternalResponseParseReceipt({
+    request,
+    runSpec,
+    attemptReceipt,
+    rawResponse: externalRawResponse,
+  }),
+});
 
 const bindingFor = (
   request: EditorialPlanningRequest,
   runSpec: EditorialPlanningRunSpec,
   attemptReceipt: EditorialPlanningAttemptReceipt,
   proposal: EditorialDirectorProposalV1,
+  externalRawResponse: EditorialExternalRawResponse = JSON.stringify(
+    externalIntentFor(request),
+  ),
 ) =>
   sealEditorialProposalBindingReceipt({
     request,
     runSpec,
     attemptReceipt,
+    ...(attemptReceipt.lane === "external-candidate"
+      ? externalEvidenceFor(
+          request,
+          runSpec,
+          attemptReceipt,
+          externalRawResponse,
+        )
+      : {}),
     proposal,
   });
 
@@ -721,6 +757,18 @@ describe("AI Editorial Director planning boundary", () => {
     const proposal = proposalFor(request);
     const successor = revisedProposalFor(request);
     const runSpec = runSpecFor(request);
+    const rawResponse = JSON.stringify(externalIntentFor(request));
+    const successorRawResponse = JSON.stringify(
+      (() => {
+        const intent = externalIntentFor(request);
+        intent.episode.sequences[0]!.scenes[0]!.editorialShots[0]!.cameraIntent =
+          {
+            movement: "push",
+            reasonCodes: ["increase-emphasis"],
+          };
+        return intent;
+      })(),
+    );
     const forged = structuredClone(proposal);
     forged.externalIntentContentHash = hash("substituted-external-intent");
     const { contentHash: _forgedHash, ...forgedDraft } = forged;
@@ -749,7 +797,7 @@ describe("AI Editorial Director planning boundary", () => {
       modelVersion: "2026-07-19",
       promptTemplateContentHash: hash("prompt"),
       contextContentHashes: [hash("context")],
-      rawResponseContentHash: hash("response"),
+      rawResponse,
       startedAt: "2026-07-19T08:00:00.000Z",
       completedAt: "2026-07-19T08:00:01.000Z",
     } as const;
@@ -763,13 +811,26 @@ describe("AI Editorial Director planning boundary", () => {
       request,
       runSpec,
       ...receiptEvidence,
-      rawResponseContentHash: hash("successor-response"),
+      rawResponse: successorRawResponse,
     });
     const successorProposalBinding = bindingFor(
       request,
       runSpec,
       successorAttempt,
       successor,
+      successorRawResponse,
+    );
+    const externalEvidence = externalEvidenceFor(
+      request,
+      runSpec,
+      attempt,
+      rawResponse,
+    );
+    const successorExternalEvidence = externalEvidenceFor(
+      request,
+      runSpec,
+      successorAttempt,
+      successorRawResponse,
     );
     const clean = sealEditorialPlanningDiagnostics({
       request,
@@ -794,6 +855,7 @@ describe("AI Editorial Director planning boundary", () => {
       proposal,
       diagnostics: clean,
       attemptReceipt: attempt,
+      ...externalEvidence,
       proposalBindingReceipt: proposalBinding,
       revisionRound: 0,
     });
@@ -804,6 +866,7 @@ describe("AI Editorial Director planning boundary", () => {
       rejectedIntent: externalIntentFor(request),
       diagnostics: hard,
       attemptReceipt: attempt,
+      ...externalEvidence,
       proposalBindingReceipt: proposalBinding,
       reasonCodes: ["continuity-invalid"],
       revisionRound: 0,
@@ -816,6 +879,10 @@ describe("AI Editorial Director planning boundary", () => {
       addressedFindingIds: ["hard-one"],
       successorProposal: successor,
       successorAttemptReceipt: successorAttempt,
+      successorExternalParseReceipt:
+        successorExternalEvidence.externalParseReceipt,
+      successorExternalRawResponse:
+        successorExternalEvidence.externalRawResponse,
       successorProposalBindingReceipt: successorProposalBinding,
     });
     const requestBindingError = /exact request-bound external intent/i;
@@ -1060,13 +1127,14 @@ describe("AI Editorial Director planning boundary", () => {
     const { request } = fixture();
     const proposal = proposalFor(request);
     const runSpec = runSpecFor(request);
+    const rawResponse = JSON.stringify(externalIntentFor(request));
     const shared = {
       request,
       runSpec,
       modelVersion: "2026-07-19",
       promptTemplateContentHash: hash("prompt"),
       contextContentHashes: [hash("context")],
-      rawResponseContentHash: hash("response"),
+      rawResponse,
       startedAt: "2026-07-19T08:00:00.000Z",
       completedAt: "2026-07-19T08:00:01.000Z",
     };
@@ -1093,8 +1161,268 @@ describe("AI Editorial Director planning boundary", () => {
         serialized: JSON.stringify(openai),
         request,
         runSpec,
+        rawResponse,
       }),
     ).toEqual(openai);
+  });
+
+  it("binds external proposals and rejections to one exact parsed response", () => {
+    const { request } = fixture();
+    const runSpec = runSpecFor(request);
+    const intentA = externalIntentFor(request);
+    const responseA = JSON.stringify(intentA);
+    const attemptA = externalAttemptFor(request, runSpec, responseA);
+    const parseA = sealEditorialExternalResponseParseReceipt({
+      request,
+      runSpec,
+      attemptReceipt: attemptA,
+      rawResponse: responseA,
+    });
+    const proposalA = bindEditorialDirectorProposalV1({
+      request,
+      externalIntent: intentA,
+    });
+    const intentB = externalIntentFor(request);
+    intentB.episode.sequences[0]!.scenes[0]!.editorialShots[0]!.cameraIntent = {
+      movement: "push",
+      reasonCodes: ["increase-emphasis"],
+    };
+    const proposalB = bindEditorialDirectorProposalV1({
+      request,
+      externalIntent: intentB,
+    });
+
+    expect(parseA).toMatchObject({
+      productionBindable: false,
+      status: "intent-parsed",
+      parsedIntentContentHash: proposalA.externalIntentContentHash,
+      externalAttemptReceiptContentHash: attemptA.contentHash,
+      rawResponseContentHash: attemptA.rawResponseContentHash,
+      parserId: "strict-json-external-intent",
+      parserVersion: "1.0.0",
+    });
+    expect(
+      restoreEditorialExternalResponseParseReceipt({
+        serialized: JSON.stringify(parseA),
+        request,
+        runSpec,
+        attemptReceipt: attemptA,
+        rawResponse: responseA,
+      }),
+    ).toEqual(parseA);
+    expect(() =>
+      sealEditorialProposalBindingReceipt({
+        request,
+        runSpec,
+        attemptReceipt: attemptA,
+        externalParseReceipt: parseA,
+        externalRawResponse: responseA,
+        proposal: proposalB,
+      }),
+    ).toThrow(/parsed intent does not match its bound proposal/i);
+
+    const rejectedDiagnostics = sealEditorialPlanningDiagnostics({
+      request,
+      proposal: null,
+      findings: [
+        {
+          id: "hard-continuity",
+          severity: "hard",
+          code: "continuity-invalid",
+          message: "Reject the parsed intent before proposal binding.",
+        },
+      ],
+    });
+    expect(() =>
+      sealEditorialRejectedResult({
+        request,
+        runSpec,
+        rejectedProposal: null,
+        rejectedIntent: intentB,
+        diagnostics: rejectedDiagnostics,
+        attemptReceipt: attemptA,
+        externalParseReceipt: parseA,
+        externalRawResponse: responseA,
+        proposalBindingReceipt: null,
+        reasonCodes: ["continuity-invalid"],
+        revisionRound: 0,
+      }),
+    ).toThrow(/parsed intent does not match its rejected intent/i);
+
+    const bindingA = sealEditorialProposalBindingReceipt({
+      request,
+      runSpec,
+      attemptReceipt: attemptA,
+      externalParseReceipt: parseA,
+      externalRawResponse: responseA,
+      proposal: proposalA,
+    });
+    const clean = sealEditorialPlanningDiagnostics({
+      request,
+      proposal: proposalA,
+      findings: [],
+    });
+    const accepted = sealEditorialAcceptedResult({
+      request,
+      runSpec,
+      proposal: proposalA,
+      diagnostics: clean,
+      attemptReceipt: attemptA,
+      externalParseReceipt: parseA,
+      externalRawResponse: responseA,
+      proposalBindingReceipt: bindingA,
+      revisionRound: 0,
+    });
+    expect(
+      restoreEditorialPlanningResult({
+        serialized: JSON.stringify(accepted),
+        request,
+        runSpec,
+        proposals: [proposalA],
+        attemptReceipts: [attemptA],
+        externalParseReceipts: [parseA],
+        externalRawResponses: [
+          {
+            attemptReceiptContentHash: attemptA.contentHash,
+            rawResponse: responseA,
+          },
+        ],
+        proposalBindingReceipts: [bindingA],
+        diagnostics: [clean],
+      }),
+    ).toEqual(accepted);
+
+    expect(() =>
+      restoreEditorialExternalResponseParseReceipt({
+        serialized: JSON.stringify(parseA),
+        request,
+        runSpec,
+        attemptReceipt: attemptA,
+        rawResponse: `${responseA} `,
+      }),
+    ).toThrow(/exact attempt receipt/i);
+    expect(() =>
+      restoreEditorialPlanningResult({
+        serialized: JSON.stringify(accepted),
+        request,
+        runSpec,
+        proposals: [proposalA],
+        attemptReceipts: [attemptA],
+        externalParseReceipts: [parseA],
+        externalRawResponses: [
+          {
+            attemptReceiptContentHash: attemptA.contentHash,
+            rawResponse: `${responseA} `,
+          },
+        ],
+        proposalBindingReceipts: [bindingA],
+        diagnostics: [clean],
+      }),
+    ).toThrow(/exact attempt receipt/i);
+
+    const substitutedParse = structuredClone(parseA);
+    if (substitutedParse.status !== "intent-parsed")
+      throw new Error("Test fixture expected a parsed intent receipt.");
+    substitutedParse.parsedIntentContentHash =
+      proposalB.externalIntentContentHash;
+    const { contentHash: _parseHash, ...substitutedParseDraft } =
+      substitutedParse;
+    void _parseHash;
+    substitutedParse.contentHash = hashCanonical(substitutedParseDraft);
+    expect(() =>
+      restoreEditorialExternalResponseParseReceipt({
+        serialized: JSON.stringify(substitutedParse),
+        request,
+        runSpec,
+        attemptReceipt: attemptA,
+        rawResponse: responseA,
+      }),
+    ).toThrow(/does not restore/i);
+    const substitutedResult = structuredClone(accepted);
+    substitutedResult.externalParseReceiptContentHash =
+      substitutedParse.contentHash;
+    const { contentHash: _resultHash, ...substitutedResultDraft } =
+      substitutedResult;
+    void _resultHash;
+    substitutedResult.contentHash = hashCanonical(substitutedResultDraft);
+    expect(() =>
+      restoreEditorialPlanningResult({
+        serialized: JSON.stringify(substitutedResult),
+        request,
+        runSpec,
+        proposals: [proposalA],
+        attemptReceipts: [attemptA],
+        externalParseReceipts: [substitutedParse],
+        externalRawResponses: [
+          {
+            attemptReceiptContentHash: attemptA.contentHash,
+            rawResponse: responseA,
+          },
+        ],
+        proposalBindingReceipts: [bindingA],
+        diagnostics: [clean],
+      }),
+    ).toThrow(/does not restore/i);
+  });
+
+  it("seals invalid UTF-8 as an auditable schema-invalid external rejection", () => {
+    const { request } = fixture();
+    const runSpec = runSpecFor(request);
+    const invalidUtf8 = Uint8Array.of(0xc3, 0x28);
+    const attempt = externalAttemptFor(request, runSpec, invalidUtf8);
+    const evidence = externalEvidenceFor(
+      request,
+      runSpec,
+      attempt,
+      invalidUtf8,
+    );
+    expect(evidence.externalParseReceipt).toMatchObject({
+      status: "schema-invalid",
+      parsedIntentContentHash: null,
+      productionBindable: false,
+    });
+    const diagnostics = sealEditorialPlanningDiagnostics({
+      request,
+      proposal: null,
+      findings: [
+        {
+          id: "hard-schema-invalid",
+          severity: "hard",
+          code: "schema-invalid",
+          message: "The exact external bytes are not valid UTF-8 JSON intent.",
+        },
+      ],
+    });
+    const rejected = sealEditorialRejectedResult({
+      request,
+      runSpec,
+      rejectedProposal: null,
+      rejectedIntent: null,
+      diagnostics,
+      attemptReceipt: attempt,
+      ...evidence,
+      proposalBindingReceipt: null,
+      reasonCodes: ["schema-invalid"],
+      revisionRound: 0,
+    });
+    expect(
+      restoreEditorialPlanningResult({
+        serialized: JSON.stringify(rejected),
+        request,
+        runSpec,
+        proposals: [],
+        attemptReceipts: [attempt],
+        externalParseReceipts: [evidence.externalParseReceipt],
+        externalRawResponses: [
+          {
+            attemptReceiptContentHash: attempt.contentHash,
+            rawResponse: invalidUtf8,
+          },
+        ],
+        proposalBindingReceipts: [],
+        diagnostics: [diagnostics],
+      }),
+    ).toEqual(rejected);
   });
 
   it("binds every candidate lane to an exact sealed run spec and mandatory lane receipt", () => {
@@ -1180,6 +1508,9 @@ describe("AI Editorial Director planning boundary", () => {
         proposal,
         diagnostics: clean,
         attemptReceipt,
+        ...(attemptReceipt.lane === "external-candidate"
+          ? externalEvidenceFor(request, runSpec, attemptReceipt)
+          : {}),
         proposalBindingReceipt,
         revisionRound: 0,
       });
@@ -1231,7 +1562,7 @@ describe("AI Editorial Director planning boundary", () => {
         modelVersion: "2026-07-19",
         promptTemplateContentHash: hash("prompt"),
         contextContentHashes: [],
-        rawResponseContentHash: hash("response"),
+        rawResponse: JSON.stringify(externalIntentFor(request)),
         startedAt: "2026-07-19T08:00:00.000Z",
         completedAt: "2026-07-19T08:00:01.000Z",
       }),
@@ -1252,10 +1583,17 @@ describe("AI Editorial Director planning boundary", () => {
   it("seals and restores rejection evidence at raw, intent, and proposal stages", () => {
     const { request } = fixture();
     const runSpec = runSpecFor(request);
-    const attempt = externalAttemptFor(
+    const invalidRawResponse = "{not-json";
+    const invalidAttempt = externalAttemptFor(
       request,
       runSpec,
-      hash("schema-invalid-raw-response"),
+      invalidRawResponse,
+    );
+    const invalidEvidence = externalEvidenceFor(
+      request,
+      runSpec,
+      invalidAttempt,
+      invalidRawResponse,
     );
     const diagnostic = (
       code:
@@ -1283,7 +1621,8 @@ describe("AI Editorial Director planning boundary", () => {
       rejectedProposal: null,
       rejectedIntent: null,
       diagnostics: diagnostic("schema-invalid"),
-      attemptReceipt: attempt,
+      attemptReceipt: invalidAttempt,
+      ...invalidEvidence,
       proposalBindingReceipt: null,
       reasonCodes: ["schema-invalid"],
       revisionRound: 0,
@@ -1291,7 +1630,9 @@ describe("AI Editorial Director planning boundary", () => {
     expect(rawRejected).toMatchObject({
       rejectedIntentContentHash: null,
       rejectedProposalContentHash: null,
-      attemptReceiptContentHash: attempt.contentHash,
+      attemptReceiptContentHash: invalidAttempt.contentHash,
+      externalParseReceiptContentHash:
+        invalidEvidence.externalParseReceipt.contentHash,
       proposalBindingReceiptContentHash: null,
     });
     expect(
@@ -1300,7 +1641,14 @@ describe("AI Editorial Director planning boundary", () => {
         request,
         runSpec,
         proposals: [],
-        attemptReceipts: [attempt],
+        attemptReceipts: [invalidAttempt],
+        externalParseReceipts: [invalidEvidence.externalParseReceipt],
+        externalRawResponses: [
+          {
+            attemptReceiptContentHash: invalidAttempt.contentHash,
+            rawResponse: invalidRawResponse,
+          },
+        ],
         proposalBindingReceipts: [],
         diagnostics: [diagnostic("schema-invalid")],
       }),
@@ -1331,8 +1679,10 @@ describe("AI Editorial Director planning boundary", () => {
       },
     ] as const;
 
-    for (const { runSpec: rawIntentRunSpec, createAttempt } of
-      rawIntentLaneAttempts) {
+    for (const {
+      runSpec: rawIntentRunSpec,
+      createAttempt,
+    } of rawIntentLaneAttempts) {
       const rawIntentAttempt = createAttempt(rawIntentRunSpec);
       const laneRejected = sealEditorialRejectedResult({
         request,
@@ -1382,13 +1732,26 @@ describe("AI Editorial Director planning boundary", () => {
         bindEditorialDirectorProposalV1({ request, externalIntent: intent }),
       ).toThrow();
       const diagnostics = diagnostic(code);
+      const intentRawResponse = JSON.stringify(intent);
+      const intentAttempt = externalAttemptFor(
+        request,
+        runSpec,
+        intentRawResponse,
+      );
+      const intentEvidence = externalEvidenceFor(
+        request,
+        runSpec,
+        intentAttempt,
+        intentRawResponse,
+      );
       const rejected = sealEditorialRejectedResult({
         request,
         runSpec,
         rejectedProposal: null,
         rejectedIntent: intent,
         diagnostics,
-        attemptReceipt: attempt,
+        attemptReceipt: intentAttempt,
+        ...intentEvidence,
         proposalBindingReceipt: null,
         reasonCodes: [code],
         revisionRound: 0,
@@ -1403,7 +1766,14 @@ describe("AI Editorial Director planning boundary", () => {
           request,
           runSpec,
           proposals: [],
-          attemptReceipts: [attempt],
+          attemptReceipts: [intentAttempt],
+          externalParseReceipts: [intentEvidence.externalParseReceipt],
+          externalRawResponses: [
+            {
+              attemptReceiptContentHash: intentAttempt.contentHash,
+              rawResponse: intentRawResponse,
+            },
+          ],
           proposalBindingReceipts: [],
           diagnostics: [diagnostics],
           rejectedIntents: [intent],
@@ -1412,11 +1782,24 @@ describe("AI Editorial Director planning boundary", () => {
     }
 
     const proposal = proposalFor(request);
+    const proposalRawResponse = JSON.stringify(externalIntentFor(request));
+    const proposalAttempt = externalAttemptFor(
+      request,
+      runSpec,
+      proposalRawResponse,
+    );
+    const proposalEvidence = externalEvidenceFor(
+      request,
+      runSpec,
+      proposalAttempt,
+      proposalRawResponse,
+    );
     const proposalBindingReceipt = bindingFor(
       request,
       runSpec,
-      attempt,
+      proposalAttempt,
       proposal,
+      proposalRawResponse,
     );
     const postProposalDiagnostics = sealEditorialPlanningDiagnostics({
       request,
@@ -1436,7 +1819,8 @@ describe("AI Editorial Director planning boundary", () => {
       rejectedProposal: proposal,
       rejectedIntent: externalIntentFor(request),
       diagnostics: postProposalDiagnostics,
-      attemptReceipt: attempt,
+      attemptReceipt: proposalAttempt,
+      ...proposalEvidence,
       proposalBindingReceipt,
       reasonCodes: ["continuity-invalid"],
       revisionRound: 0,
@@ -1452,7 +1836,14 @@ describe("AI Editorial Director planning boundary", () => {
     const { request } = fixture();
     const runSpec = runSpecFor(request);
     const proposal = proposalFor(request);
-    const attempt = externalAttemptFor(request, runSpec);
+    const rawResponse = JSON.stringify(externalIntentFor(request));
+    const attempt = externalAttemptFor(request, runSpec, rawResponse);
+    const externalEvidence = externalEvidenceFor(
+      request,
+      runSpec,
+      attempt,
+      rawResponse,
+    );
     const proposalBindingReceipt = bindingFor(
       request,
       runSpec,
@@ -1470,6 +1861,7 @@ describe("AI Editorial Director planning boundary", () => {
       proposal,
       diagnostics,
       attemptReceipt: attempt,
+      ...externalEvidence,
       proposalBindingReceipt,
       revisionRound: 0,
     });
@@ -1537,10 +1929,23 @@ describe("AI Editorial Director planning boundary", () => {
     ).toThrow(/lane does not match|stale for its exact artifacts/i);
 
     const successor = revisedProposalFor(request);
+    const successorIntent = externalIntentFor(request);
+    successorIntent.episode.sequences[0]!.scenes[0]!.editorialShots[0]!.cameraIntent =
+      {
+        movement: "push",
+        reasonCodes: ["increase-emphasis"],
+      };
+    const successorRawResponse = JSON.stringify(successorIntent);
     const successorAttempt = externalAttemptFor(
       request,
       runSpec,
-      hash("successor-attempt"),
+      successorRawResponse,
+    );
+    const successorExternalEvidence = externalEvidenceFor(
+      request,
+      runSpec,
+      successorAttempt,
+      successorRawResponse,
     );
     const revisionDiagnostics = sealEditorialPlanningDiagnostics({
       request,
@@ -1563,12 +1968,24 @@ describe("AI Editorial Director planning boundary", () => {
         addressedFindingIds: ["quality-revision"],
         successorProposal: successor,
         successorAttemptReceipt: successorAttempt,
+        successorExternalParseReceipt:
+          successorExternalEvidence.externalParseReceipt,
+        successorExternalRawResponse:
+          successorExternalEvidence.externalRawResponse,
         successorProposalBindingReceipt: proposalBindingReceipt,
       }),
     ).toThrow(/proposal binding receipt does not match/i);
 
     const staleIntent = externalIntentFor(request);
     staleIntent.requestContentHash = hash("stale-request");
+    const staleRawResponse = JSON.stringify(staleIntent);
+    const staleAttempt = externalAttemptFor(request, runSpec, staleRawResponse);
+    const staleExternalEvidence = externalEvidenceFor(
+      request,
+      runSpec,
+      staleAttempt,
+      staleRawResponse,
+    );
     const staleDiagnostics = sealEditorialPlanningDiagnostics({
       request,
       proposal: null,
@@ -1587,7 +2004,8 @@ describe("AI Editorial Director planning boundary", () => {
       rejectedProposal: null,
       rejectedIntent: staleIntent,
       diagnostics: staleDiagnostics,
-      attemptReceipt: attempt,
+      attemptReceipt: staleAttempt,
+      ...staleExternalEvidence,
       proposalBindingReceipt: null,
       reasonCodes: ["stale-request"],
       revisionRound: 0,
@@ -1600,7 +2018,14 @@ describe("AI Editorial Director planning boundary", () => {
         request,
         runSpec,
         proposals: [],
-        attemptReceipts: [attempt],
+        attemptReceipts: [staleAttempt],
+        externalParseReceipts: [staleExternalEvidence.externalParseReceipt],
+        externalRawResponses: [
+          {
+            attemptReceiptContentHash: staleAttempt.contentHash,
+            rawResponse: staleRawResponse,
+          },
+        ],
         proposalBindingReceipts: [],
         diagnostics: [staleDiagnostics],
         rejectedIntents: [substitutedIntent],
@@ -1673,18 +2098,45 @@ describe("AI Editorial Director planning boundary", () => {
     const proposal = proposalFor(request);
     const successor = revisedProposalFor(request);
     const runSpec = runSpecFor(request);
-    const attempt = externalAttemptFor(request, runSpec);
-    const proposalBinding = bindingFor(request, runSpec, attempt, proposal);
+    const rawResponse = JSON.stringify(externalIntentFor(request));
+    const attempt = externalAttemptFor(request, runSpec, rawResponse);
+    const externalEvidence = externalEvidenceFor(
+      request,
+      runSpec,
+      attempt,
+      rawResponse,
+    );
+    const proposalBinding = bindingFor(
+      request,
+      runSpec,
+      attempt,
+      proposal,
+      rawResponse,
+    );
+    const successorIntent = externalIntentFor(request);
+    successorIntent.episode.sequences[0]!.scenes[0]!.editorialShots[0]!.cameraIntent =
+      {
+        movement: "push",
+        reasonCodes: ["increase-emphasis"],
+      };
+    const successorRawResponse = JSON.stringify(successorIntent);
     const successorAttempt = externalAttemptFor(
       request,
       runSpec,
-      hash("successor-response"),
+      successorRawResponse,
+    );
+    const successorExternalEvidence = externalEvidenceFor(
+      request,
+      runSpec,
+      successorAttempt,
+      successorRawResponse,
     );
     const successorProposalBinding = bindingFor(
       request,
       runSpec,
       successorAttempt,
       successor,
+      successorRawResponse,
     );
     const clean = sealEditorialPlanningDiagnostics({
       request,
@@ -1704,6 +2156,7 @@ describe("AI Editorial Director planning boundary", () => {
       proposal,
       diagnostics: clean,
       attemptReceipt: attempt,
+      ...externalEvidence,
       proposalBindingReceipt: proposalBinding,
       revisionRound: 0,
     });
@@ -1714,6 +2167,13 @@ describe("AI Editorial Director planning boundary", () => {
         runSpec,
         proposals: [proposal],
         attemptReceipts: [attempt],
+        externalParseReceipts: [externalEvidence.externalParseReceipt],
+        externalRawResponses: [
+          {
+            attemptReceiptContentHash: attempt.contentHash,
+            rawResponse,
+          },
+        ],
         proposalBindingReceipts: [proposalBinding],
         diagnostics: [clean],
       }),
@@ -1738,6 +2198,7 @@ describe("AI Editorial Director planning boundary", () => {
       rejectedIntent: externalIntentFor(request),
       diagnostics: hard,
       attemptReceipt: attempt,
+      ...externalEvidence,
       proposalBindingReceipt: proposalBinding,
       reasonCodes: ["continuity-invalid"],
       revisionRound: 0,
@@ -1749,6 +2210,13 @@ describe("AI Editorial Director planning boundary", () => {
         runSpec,
         proposals: [proposal],
         attemptReceipts: [attempt],
+        externalParseReceipts: [externalEvidence.externalParseReceipt],
+        externalRawResponses: [
+          {
+            attemptReceiptContentHash: attempt.contentHash,
+            rawResponse,
+          },
+        ],
         proposalBindingReceipts: [proposalBinding],
         diagnostics: [hard],
         rejectedIntents: [externalIntentFor(request)],
@@ -1763,6 +2231,10 @@ describe("AI Editorial Director planning boundary", () => {
       addressedFindingIds: ["hard-one"],
       successorProposal: successor,
       successorAttemptReceipt: successorAttempt,
+      successorExternalParseReceipt:
+        successorExternalEvidence.externalParseReceipt,
+      successorExternalRawResponse:
+        successorExternalEvidence.externalRawResponse,
       successorProposalBindingReceipt: successorProposalBinding,
     });
     expect(
@@ -1772,6 +2244,13 @@ describe("AI Editorial Director planning boundary", () => {
         runSpec,
         proposals: [proposal, successor],
         attemptReceipts: [successorAttempt],
+        externalParseReceipts: [successorExternalEvidence.externalParseReceipt],
+        externalRawResponses: [
+          {
+            attemptReceiptContentHash: successorAttempt.contentHash,
+            rawResponse: successorRawResponse,
+          },
+        ],
         proposalBindingReceipts: [successorProposalBinding],
         diagnostics: [hard],
       }),
