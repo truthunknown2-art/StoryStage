@@ -1,0 +1,325 @@
+{
+  "schemaVersion": "1.0",
+  "reportKind": "ollo-tail-socket-corrections-v11-hash-report",
+  "authorityDomain": "private-source-review-registration",
+  "sourceReviewInputContentHash": "f1df00a73a4221dda74b23b679e517aecd35cffe3da259ec01a206c51c072b01",
+  "correctedRegistrationPlansContentHash": "87ca06cec4cdb246d23173d48257d9c399fdea383b0f96478d0a9a843e90915f",
+  "correctedSourceReviewPlanContentHash": "3afd888e58068fc7e405fc5637df68578e19aedc8ca96b78617f9d42b45e70a3",
+  "authoredMaskManifestContentHash": "74e5b22a48da03517c182a926dda3f66c528cc0d5f00e3875c1fd21f6d1adf1f",
+  "correctionScope": [
+    "front-pelvis-tail-base-distal",
+    "profile-left-pelvis-tail-base-distal"
+  ],
+  "views": [
+    {
+      "view": "front",
+      "requirementId": "front-pelvis-tail-base-distal",
+      "pointMicropixels": { "x": 236000000, "y": 126000000 },
+      "plausibilityRegionContentHash": "9e0d51038258a1be4cf07c9dfe2cdaf58de46d09bd91e7c56b7c9c42945f1ab4",
+      "sourceUnresolvedRequirementIds": [],
+      "recipeCorrection": {
+        "fieldsChanged": [
+          "parts[role=tail].childPivot.{x,y}",
+          "parts[role=tail].restTransform.{x,y}"
+        ],
+        "before": {
+          "childPivot": { "x": 168, "y": 213 },
+          "restTransform": { "x": 112, "y": 6 },
+          "recipeContentHash": "ff0f424c11357420a0c580f651f32f358a597fe5f2c7d88038db692cb09005f9"
+        },
+        "after": {
+          "childPivot": { "x": 141, "y": 201 },
+          "restTransform": { "x": 76, "y": 35 },
+          "recipeContentHash": "87a5ed0b99290885ff69046a7bb3a78e0dcc117edbfc827205bba21cbbcc8517"
+        },
+        "unchanged": {
+          "rotation": true,
+          "scaleX": true,
+          "scaleY": true,
+          "zIndex": true
+        }
+      },
+      "before": {
+        "maxGapMicropixels": 31989515,
+        "tailGapOrbit": [
+          {
+            "angleDegrees": -15,
+            "parentSocketMicropixels": { "x": 347280008, "y": 677100004 },
+            "childPivotMicropixels": { "x": 357470584, "y": 656494619 },
+            "gapMicropixels": 22987600,
+            "heat": "fail"
+          },
+          {
+            "angleDegrees": 0,
+            "parentSocketMicropixels": { "x": 347280008, "y": 677100004 },
+            "childPivotMicropixels": { "x": 357558730, "y": 651795848 },
+            "gapMicropixels": 27312130,
+            "heat": "fail"
+          },
+          {
+            "angleDegrees": 15,
+            "parentSocketMicropixels": { "x": 347280008, "y": 677100004 },
+            "childPivotMicropixels": { "x": 358860004, "y": 647279998 },
+            "gapMicropixels": 31989515,
+            "heat": "fail"
+          }
+        ],
+        "sourceReportContentHash": "63e0e3d66ed81d6fe506b6dc6d0eef3c8b198fe2fc1f084a7fa0b5804540839e",
+        "diagnosticReceiptContentHash": "0c273079f52d84e01169ab02f750a32578c517d28d520107311c201c9e34456a",
+        "diagnosticReceiptRelativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-corrected-front/0c273079f52d84e01169ab02f750a32578c517d28d520107311c201c9e34456a.private-registration-diagnostic.json"
+      },
+      "after": {
+        "maxGapMicropixels": 300000,
+        "tailGapOrbit": [
+          {
+            "angleDegrees": -15,
+            "parentSocketMicropixels": { "x": 347280008, "y": 677100004 },
+            "childPivotMicropixels": { "x": 347020200, "y": 677250004 },
+            "gapMicropixels": 300000,
+            "heat": "pass"
+          },
+          {
+            "angleDegrees": 0,
+            "parentSocketMicropixels": { "x": 347280008, "y": 677100004 },
+            "childPivotMicropixels": { "x": 346990230, "y": 677177649 },
+            "gapMicropixels": 300000,
+            "heat": "pass"
+          },
+          {
+            "angleDegrees": 15,
+            "parentSocketMicropixels": { "x": 347280008, "y": 677100004 },
+            "childPivotMicropixels": { "x": 346980007, "y": 677100004 },
+            "gapMicropixels": 300000,
+            "heat": "pass"
+          }
+        ],
+        "diagnosticReceiptContentHash": "c0286c2f272488eb746e3ccd81de8053fd4f98102cfeb1d386f31a211a7d789d",
+        "diagnosticReceiptRelativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-front/c0286c2f272488eb746e3ccd81de8053fd4f98102cfeb1d386f31a211a7d789d.private-registration-diagnostic.json"
+      },
+      "correctionPatchContentHash": "5bb2a62285a65e08d6e1df845b23ff97c6d30246809242dcb053be5864435f4a",
+      "correctionPatchRelativeFile": "reports/evidence/KCAST-001/ollo-front-tail-socket-correction-v11.json",
+      "correctedProposalContentHash": "a75578e7b0718b8f129d9da040cb574dea57705d05234dfbc7f525fe6f8fe055",
+      "correctedProposalStatus": "complete-unapproved",
+      "correctedUnresolvedRequirementIds": [],
+      "residualVisualBlockers": [],
+      "correctedReviewArtifacts": [
+        {
+          "artifactKind": "rest",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-front/rest.png",
+          "sha256": "805ad6f3c26c61095a68ce5b3ee4ead1f29668c0515ed32e262cd942b697f631",
+          "byteLength": 1963560,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "zero",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-front/zero.png",
+          "sha256": "8ad7fadfaccef88942c19b39c4111c4e7f041097d0885403246b48006a7e695f",
+          "byteLength": 1958858,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "minus-15",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-front/minus-15.png",
+          "sha256": "bf8a6443d1d53ecf4d6c55d8f6d02e2254c3e949966fc7ffb66240258e34f65b",
+          "byteLength": 1407084,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "plus-15",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-front/plus-15.png",
+          "sha256": "1d9eb8573aa8748d5d6daf20b6fa98770c2ac228756ccc90d94d0336066297eb",
+          "byteLength": 1410366,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "gap-orbit",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-front/gap-orbit.png",
+          "sha256": "743aff58e9fa78aa24c3c1f4e5789332f1a3d34ed3ed1b6c57da395621c250fa",
+          "byteLength": 1413281,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "z-order-near-far",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-front/z-order-near-far.png",
+          "sha256": "28efef4770dfb6a4acca7383051443d770dc6f1646736b0202d7c811742bea3e",
+          "byteLength": 1379551,
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "patchAuthority": {
+        "providerAuthority": false,
+        "approvalAuthority": false,
+        "capabilityAuthority": false,
+        "productionBindable": false
+      }
+    },
+    {
+      "view": "profile-left",
+      "requirementId": "profile-left-pelvis-tail-base-distal",
+      "pointMicropixels": { "x": 272000000, "y": 172000000 },
+      "plausibilityRegionContentHash": "c7516471708e2b64674b9d1e31ddc63761f11110210f13514266ead4fb457eb6",
+      "sourceUnresolvedRequirementIds": [],
+      "recipeCorrection": {
+        "fieldsChanged": [
+          "parts[role=tail].childPivot.{x,y}",
+          "parts[role=tail].restTransform.{x,y}"
+        ],
+        "before": {
+          "childPivot": { "x": 193, "y": 284 },
+          "restTransform": { "x": 169, "y": 0 },
+          "recipeContentHash": "0a6dfdac04fbda808730e91b3f71a85c9965539aabc26a32d2d5bbfc70e4fb17"
+        },
+        "after": {
+          "childPivot": { "x": 156, "y": 266 },
+          "restTransform": { "x": 87, "y": 66 },
+          "recipeContentHash": "84b928561ed363fb910e37a3d0e68cf6fbd2d6e7e86712f47adc13cb8a1c4840"
+        },
+        "unchanged": {
+          "rotation": true,
+          "scaleX": true,
+          "scaleY": true,
+          "zIndex": true
+        }
+      },
+      "before": {
+        "maxGapMicropixels": 44534786,
+        "tailGapOrbit": [
+          {
+            "angleDegrees": -15,
+            "parentSocketMicropixels": { "x": 333760026, "y": 681840020 },
+            "childPivotMicropixels": { "x": 350661171, "y": 652940567 },
+            "gapMicropixels": 33478756,
+            "heat": "fail"
+          },
+          {
+            "angleDegrees": 0,
+            "parentSocketMicropixels": { "x": 333760026, "y": 681840020 },
+            "childPivotMicropixels": { "x": 350706775, "y": 647033035 },
+            "gapMicropixels": 38713285,
+            "heat": "fail"
+          },
+          {
+            "angleDegrees": 15,
+            "parentSocketMicropixels": { "x": 333760026, "y": 681840020 },
+            "childPivotMicropixels": { "x": 352279807, "y": 641338601 },
+            "gapMicropixels": 44534786,
+            "heat": "fail"
+          }
+        ],
+        "sourceReportContentHash": "63e0e3d66ed81d6fe506b6dc6d0eef3c8b198fe2fc1f084a7fa0b5804540839e",
+        "diagnosticReceiptContentHash": "83c46c121331f1c11056de7517d9b54d35b3415799ae70a71b0792a60954de66",
+        "diagnosticReceiptRelativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-corrected-profile-left/83c46c121331f1c11056de7517d9b54d35b3415799ae70a71b0792a60954de66.private-registration-diagnostic.json"
+      },
+      "after": {
+        "maxGapMicropixels": 0,
+        "tailGapOrbit": [
+          {
+            "angleDegrees": -15,
+            "parentSocketMicropixels": { "x": 333760026, "y": 681840020 },
+            "childPivotMicropixels": { "x": 333760026, "y": 681840020 },
+            "gapMicropixels": 0,
+            "heat": "pass"
+          },
+          {
+            "angleDegrees": 0,
+            "parentSocketMicropixels": { "x": 333760026, "y": 681840020 },
+            "childPivotMicropixels": { "x": 333760026, "y": 681840020 },
+            "gapMicropixels": 0,
+            "heat": "pass"
+          },
+          {
+            "angleDegrees": 15,
+            "parentSocketMicropixels": { "x": 333760026, "y": 681840020 },
+            "childPivotMicropixels": { "x": 333760026, "y": 681840020 },
+            "gapMicropixels": 0,
+            "heat": "pass"
+          }
+        ],
+        "diagnosticReceiptContentHash": "2fec634003d37e5b840cfea28645e3cff58e884086cb675852871d376bd6283a",
+        "diagnosticReceiptRelativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-profile-left/2fec634003d37e5b840cfea28645e3cff58e884086cb675852871d376bd6283a.private-registration-diagnostic.json"
+      },
+      "correctionPatchContentHash": "bf77a65657eb428c5b2f2603e2f8df9ac7212fe5585cf382a6984cd6214bc352",
+      "correctionPatchRelativeFile": "reports/evidence/KCAST-001/ollo-profile-left-tail-socket-correction-v11.json",
+      "correctedProposalContentHash": "5a8e1f8e1fd3b28d059022b2e36af3fc7943e87020db801f9fdae1ae77d0032f",
+      "correctedProposalStatus": "complete-unapproved",
+      "correctedUnresolvedRequirementIds": [],
+      "residualVisualBlockers": [],
+      "correctedReviewArtifacts": [
+        {
+          "artifactKind": "rest",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-profile-left/rest.png",
+          "sha256": "841443e6e796603af768aa2bcdb8bb10d3ef3e7f78571f01022010c0713eb011",
+          "byteLength": 1933164,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "zero",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-profile-left/zero.png",
+          "sha256": "87885d2d303ba58921efe3f46bbf40564c060267c21f654ea539b172fecd9282",
+          "byteLength": 1930224,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "minus-15",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-profile-left/minus-15.png",
+          "sha256": "a6a495c2828c4ac49eea8ee90ac802195cffc453a62f832f107405b58a29d840",
+          "byteLength": 1396064,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "plus-15",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-profile-left/plus-15.png",
+          "sha256": "18c14fa51b1c2166dac7db15139bd1c3f94b50ef4c12af98d6690975e927ec92",
+          "byteLength": 1398088,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "gap-orbit",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-profile-left/gap-orbit.png",
+          "sha256": "c58572dcabaa7bc69a99166db9dd3abf093e819bcbe50bdaa8819572b2186d39",
+          "byteLength": 1401078,
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "artifactKind": "z-order-near-far",
+          "relativeFile": "artifacts/KCAST-001/private-registration-diagnostic/v11-tail-recipe-corrected-profile-left/z-order-near-far.png",
+          "sha256": "44df199a7b7c0c45f7ad88551b401164d011c957fc9f18ebc253118081ed3c32",
+          "byteLength": 1374742,
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "patchAuthority": {
+        "providerAuthority": false,
+        "approvalAuthority": false,
+        "capabilityAuthority": false,
+        "productionBindable": false
+      }
+    }
+  ],
+  "correctionPatchesImmutable": true,
+  "proposalCoverageComplete": true,
+  "residualVisualBlockerCount": 0,
+  "humanAcceptanceRecorded": false,
+  "staticGateOneDecisionRecorded": false,
+  "futureMotionDiagnosticEligible": false,
+  "motionArtifactIncluded": false,
+  "ordinaryPlayerReachable": false,
+  "exportReachable": false,
+  "preparationAuthority": false,
+  "approvalAuthority": false,
+  "capabilityAuthority": false,
+  "productionBindable": false,
+  "contentHash": "81c5a9cd8beeccc55d63eae1f90389625c6a7b0f2bebe708430db5a13628217f"
+}

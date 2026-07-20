@@ -160,6 +160,19 @@ describe("Candidate I proposed registration guides", () => {
       scaleX: 1.1,
       scaleY: 1.1,
     });
+    expect(part("tail")).toMatchObject({
+      childPivot: { x: 141, y: 201 },
+      parentJoint: { x: 244, y: 134 },
+      restTransform: { x: 76, y: 35 },
+    });
+    const profileLeftTail = first[1]!.parts.find(
+      (candidate) => candidate.role === "tail",
+    );
+    expect(profileLeftTail).toMatchObject({
+      childPivot: { x: 156, y: 266 },
+      parentJoint: { x: 280, y: 180 },
+      restTransform: { x: 87, y: 66 },
+    });
 
     for (const plan of first) {
       const byRole = new Map(

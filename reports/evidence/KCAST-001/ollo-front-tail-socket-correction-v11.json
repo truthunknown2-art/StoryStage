@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "1.0",
+  "artifactKind": "candidate-rig-registration-correction-patch",
+  "authorityDomain": "private-source-review-registration",
+  "patchId": "ollo-front-tail-socket-correction-v11",
+  "reviewSessionId": "ollo-tail-socket-private-review-v11",
+  "baseProposalContentHash": "40eda0df7ea335f610e9bb63703ce3a966ded82eba7e75fe2fbc94682022707d",
+  "expectedTargetRevisionContentHash": "40eda0df7ea335f610e9bb63703ce3a966ded82eba7e75fe2fbc94682022707d",
+  "previousPatchContentHash": null,
+  "revision": 1,
+  "sourceDiagnosticReceiptContentHash": "dde357cbe4c070c19486fa222b1cab823ceebff6dd3a5f384f1429a3bf415a0c",
+  "reviewer": "preston",
+  "reason": "Place the evidence-led guide-proposed pelvis tail socket for private visual review; no static gate acceptance is recorded.",
+  "createdAt": "2026-07-19T22:22:00.000Z",
+  "operations": [
+    {
+      "op": "set-parent-socket",
+      "requirementId": "front-pelvis-tail-base-distal",
+      "parentRole": "pelvis",
+      "childRole": "tail",
+      "socketId": "tail-base",
+      "motionChannelId": "tail-tail-base",
+      "zIndex": 1,
+      "pointMicropixels": { "x": 236000000, "y": 126000000 },
+      "basis": "guide-proposed",
+      "sourceFeatureIds": [],
+      "plausibilityRegionContentHash": "9e0d51038258a1be4cf07c9dfe2cdaf58de46d09bd91e7c56b7c9c42945f1ab4"
+    }
+  ],
+  "immutablePatchOperations": true,
+  "providerAuthority": false,
+  "approvalAuthority": false,
+  "capabilityAuthority": false,
+  "productionBindable": false,
+  "contentHash": "5bb2a62285a65e08d6e1df845b23ff97c6d30246809242dcb053be5864435f4a"
+}

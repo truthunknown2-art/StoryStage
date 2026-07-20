@@ -63,6 +63,22 @@ const g = (x: number, y: number, scale: number, rotation = 0): Guide => ({
   rotation,
 });
 
+const tailRecipeCorrections: Partial<
+  Record<ReviewView, { childPivot: Point; guide: Guide }>
+> = {
+  // Private gap/orbit diagnostics found that the original guide-derived tail
+  // origins rotate around stale source pivots. These remain proposed recipe
+  // inputs: they align the fixed evidence-led sockets without granting review.
+  front: {
+    childPivot: { x: 141, y: 201 },
+    guide: g(347.28, 677.3, 0.6, -15),
+  },
+  "profile-left": {
+    childPivot: { x: 156, y: 266 },
+    guide: g(333.76, 681.68, 0.55, -18),
+  },
+};
+
 /**
  * Manually authored against the exact 576x832 Candidate-H turnaround views.
  * They are diagnostic targets, not accepted registration measurements.
@@ -86,7 +102,7 @@ const targetGuides: Record<ReviewView, Record<string, Guide>> = {
     "upper-leg-right": g(314, 662, 0.34, -3),
     "lower-leg-right": g(324, 718, 0.3, -1),
     "foot-right": g(328, 771, 0.38),
-    tail: g(375, 655, 0.6, -15),
+    tail: tailRecipeCorrections.front!.guide,
     "secondary-front": g(288, 468, 1.08),
     "secondary-back": g(360, 470, 0.68, -2),
     "eye-white-left": g(227, 359, 0.34),
@@ -117,7 +133,7 @@ const targetGuides: Record<ReviewView, Record<string, Guide>> = {
     "upper-leg-right": g(270, 658, 0.26),
     "lower-leg-right": g(260, 715, 0.23),
     "foot-right": g(250, 768, 0.37),
-    tail: g(373, 650, 0.55, -18),
+    tail: tailRecipeCorrections["profile-left"]!.guide,
     "secondary-front": g(255, 468, 0.82),
     "secondary-back": g(335, 468, 0.75),
     "eye-white-left": g(174, 359, 0.3),
@@ -294,7 +310,13 @@ const createPlan = (
       const component = componentByRole.get(rule.role);
       if (!component)
         throw new Error(`Candidate I ${view} is missing ${rule.role}.`);
-      return [rule.role, sourcePivot(rule.role, component)] as const;
+      const correctedTailPivot = tailRecipeCorrections[view]?.childPivot;
+      return [
+        rule.role,
+        rule.role === "tail" && correctedTailPivot
+          ? correctedTailPivot
+          : sourcePivot(rule.role, component),
+      ] as const;
     }),
   );
   const zOrder = view === "front" ? frontZOrder : profileZOrder;
