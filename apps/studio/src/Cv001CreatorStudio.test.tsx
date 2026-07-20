@@ -14,7 +14,7 @@ import {
   createCv002ArtDirectionSelection,
   createCv002Project,
 } from "@storystage/story-engine";
-import { App } from "./App";
+import { LegacyCreatorApp as App } from "./App";
 
 const playerHarness = vi.hoisted(() => ({
   addEventListener: vi.fn(),

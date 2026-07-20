@@ -745,6 +745,14 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 
 /* ── F1 product-v1: Projects → Create → local Studio handoff ───────────── */
 
+/* Required-information text in the pv1 surfaces uses this scoped token:
+   #8a9792 on --panel (#121718) ≈ 5.9:1 and on body (#0c1011) ≈ 6.2:1 —
+   above the 4.5:1 normal-text floor. (--faint stays for legacy surfaces.) */
+.pv1-page {
+  --pv1-faint: #8a9792;
+}
+
+
 .pv1-page {
   display: flex;
   flex-direction: column;
@@ -1012,7 +1020,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 
 .pv1-script-footer {
   align-items: center;
-  color: var(--faint);
+  color: var(--pv1-faint);
   display: flex;
   font-size: 12px;
   justify-content: space-between;
@@ -1072,7 +1080,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 }
 
 .pv1-muted {
-  color: var(--faint);
+  color: var(--pv1-faint);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -1110,7 +1118,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .pv1-choice-text-art {
   align-items: center;
   background: linear-gradient(135deg, #1a2422, #101716);
-  color: var(--faint);
+  color: var(--pv1-faint);
   display: flex;
   font-size: 26px;
   font-weight: 800;
@@ -1125,7 +1133,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 }
 
 .pv1-choice span:not(.pv1-choice-text-art) {
-  color: var(--faint);
+  color: var(--pv1-faint);
   font-size: 11px;
   line-height: 1.45;
   padding: 0 12px;
@@ -1139,6 +1147,13 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .pv1-selects {
   display: grid;
   gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1024px) {
+  .pv1-selects {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .pv1-selects label {
@@ -1147,7 +1162,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 }
 
 .pv1-selects label > span {
-  color: var(--faint);
+  color: var(--pv1-faint);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -1243,7 +1258,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 }
 
 .pv1-facts dt {
-  color: var(--faint);
+  color: var(--pv1-faint);
   font-size: 12px;
 }
 
@@ -1343,7 +1358,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 }
 
 .pv1-scene-meta {
-  color: var(--faint);
+  color: var(--pv1-faint);
   font-size: 11.5px;
   margin-left: auto;
 }
