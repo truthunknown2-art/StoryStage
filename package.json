@@ -27,6 +27,7 @@
     "verify:director-capability-assets": "node scripts/generate-director-capability-asset-catalog.mjs --check",
     "generate:candidate-rig-review-implementation-receipt": "tsx scripts/generate-candidate-rig-review-implementation-receipt.ts",
     "verify:candidate-rig-review-implementation-receipt": "tsx scripts/generate-candidate-rig-review-implementation-receipt.ts --check",
+    "proof:kcast001i-authored-decoration-masks-v10": "pnpm --filter @storystage/asset-pipeline proof:kcast001i-authored-decoration-masks-v10",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck",
     "verify:privacy": "node scripts/verify-privacy.mjs",

@@ -20,6 +20,8 @@ import {
 } from "@storystage/asset-pipeline";
 import {
   createCandidateRigExactAttachmentMeasurement,
+  createCandidateRigAuthoredDecorationMaskSourceInput,
+  createCandidateRigAuthoredIsolatedMaskMeasurement,
   createCandidateRigGapOrbitMeasurementReport,
   createCandidateRigPrivateRegistrationComponentImages,
   createCandidateRigUnapprovedRegistrationProposal,
@@ -240,6 +242,16 @@ const boundBehavioralSourceSpecs = [
     role: "exact-measurement" as const,
     workspaceRelativeFile:
       "packages/asset-pipeline/src/candidate-rig-exact-attachment-measurement.ts",
+  },
+  {
+    role: "authored-mask-source-input" as const,
+    workspaceRelativeFile:
+      "packages/asset-pipeline/src/candidate-rig-authored-decoration-mask-input.ts",
+  },
+  {
+    role: "authored-mask-compiler" as const,
+    workspaceRelativeFile:
+      "packages/asset-pipeline/src/candidate-rig-authored-isolated-mask-measurement.ts",
   },
   {
     role: "mask-derivation" as const,
@@ -727,6 +739,8 @@ export type RenderCandidateRigPrivateRegistrationDiagnosticOptions = {
   stagingRoot: string;
   evidence: OlloCandidateIReviewRecipeInput;
   sourceReviewPlan: OlloCandidateISourceReviewPlan;
+  authoredMaskManifest?: unknown;
+  authoredMaskManifestRoot?: string;
   correctionPatches?: CandidateRigRegistrationCorrectionPatch[];
   sourceDiagnosticReference?: {
     jobId: string;
@@ -754,6 +768,13 @@ export const renderCandidateRigPrivateRegistrationDiagnostic = async (
     );
   const correctionPatches = options.correctionPatches ?? [];
   if (
+    (options.authoredMaskManifest !== undefined) !==
+    (options.authoredMaskManifestRoot !== undefined)
+  )
+    throw new Error(
+      "Private authored-mask diagnostics require both the exact manifest and its fixed root.",
+    );
+  if (
     correctionPatches.length > 0 !==
     (options.sourceDiagnosticReference !== undefined)
   )
@@ -771,10 +792,30 @@ export const renderCandidateRigPrivateRegistrationDiagnostic = async (
     trustedStagingRoot: options.trustedStagingRoot,
     stagingRoot: options.stagingRoot,
   });
-  const measurement = await createCandidateRigExactAttachmentMeasurement({
+  const baseMeasurement = await createCandidateRigExactAttachmentMeasurement({
     review: runtime,
     recipe: view.recipe,
   });
+  const measurement = options.authoredMaskManifest
+    ? createCandidateRigAuthoredIsolatedMaskMeasurement({
+        review: runtime,
+        recipe: view.recipe,
+        baseMeasurement,
+        authoredMasks: (
+          await createCandidateRigAuthoredDecorationMaskSourceInput({
+            review: runtime,
+            recipe: view.recipe,
+            baseMeasurement,
+            sourceReviewInput: {
+              evidence: options.evidence,
+              sourceReviewPlan: options.sourceReviewPlan,
+            },
+            manifest: options.authoredMaskManifest,
+            manifestRoot: options.authoredMaskManifestRoot!,
+          })
+        ).authoredMasks,
+      })
+    : baseMeasurement;
   const baseProposal = createCandidateRigUnapprovedRegistrationProposal({
     measurement,
     registrationPlan: view.registrationPlan,
