@@ -1,0 +1,101 @@
+{
+  "harness": "browser-proof.mjs",
+  "protocol": "player-ref-exact-frame",
+  "pixelRules": {
+    "blackPixel": "max(r,g,b) <= 8",
+    "uniformBlankRejection": "stddev <= 4 AND uniqueColors16 <= 4",
+    "sampling": "all pixels (no sampling)"
+  },
+  "seek": {
+    "title": "Seek to reaction, frame 340",
+    "expectedFrame": 340,
+    "episodeHash": "cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966",
+    "exactFrame": 340,
+    "paused": true,
+    "shotId": "shot-5-main",
+    "beatId": "beat-a3f3e65ef08a"
+  },
+  "composition": {
+    "frame": 342,
+    "frameSource": {
+      "kind": "event",
+      "title": "Seek to anticipation, frame 342"
+    },
+    "artifact": "composition-viewport-frame-342.png",
+    "sha256": "be58b569707367a2c10a8c31fd957d67dee781d49f82800de39f5e1f12bf7a61",
+    "bounds": {
+      "x": 438,
+      "y": 141,
+      "width": 463,
+      "height": 185
+    },
+    "controlsBounds": {
+      "x": 359,
+      "y": 326,
+      "width": 44,
+      "height": 44
+    },
+    "chromeStrip": {
+      "x": 438,
+      "y": 326,
+      "width": 463,
+      "height": 75
+    },
+    "intersectsControls": false,
+    "buttonDescendantsInViewport": 0,
+    "totalPixels": 85655,
+    "nonblackPixels": 85655,
+    "nonblackRatio": 1,
+    "meanLuminance": 58.48,
+    "variance": 97.42,
+    "stddev": 9.87,
+    "uniqueColors16": 24,
+    "uniformBlank": false
+  },
+  "pausedPlayer": {
+    "episodeHash": "cc68cfd33d43013e660151524646106cc0ecc9d0e3cffea05f165100b0240966",
+    "exactFrame": 342,
+    "paused": true,
+    "shotId": "shot-5-main",
+    "beatId": "beat-a3f3e65ef08a"
+  },
+  "zoom": {
+    "at100": {
+      "gridWidth": 1440,
+      "laneWidth": 1326,
+      "scrollable": false,
+      "label": "Fit width",
+      "minusDisabled": true
+    },
+    "at160": {
+      "gridWidth": 2304,
+      "laneWidth": 2190,
+      "scrollable": true,
+      "label": "160%",
+      "minusDisabled": false
+    },
+    "backToFit": {
+      "gridWidth": 1440,
+      "laneWidth": 1326,
+      "scrollable": false,
+      "label": "Fit width",
+      "minusDisabled": true
+    }
+  },
+  "hierarchy1920": {
+    "frame": 342,
+    "beatId": "beat-a3f3e65ef08a",
+    "shotId": "shot-5-main",
+    "paused": true
+  },
+  "overflow820": {
+    "sw": 820,
+    "iw": 820
+  },
+  "topbar740": {
+    "sw": 740,
+    "iw": 740,
+    "columns": "106.469px 605.531px",
+    "distinctRowCount": 2
+  }
+}

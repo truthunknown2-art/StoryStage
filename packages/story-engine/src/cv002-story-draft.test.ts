@@ -1,5 +1,6 @@
 import {describe, expect, it} from "vitest";
 import {hashCanonical} from "./canonical-hash";
+import {createCv002ArtDirectionSelection} from "./cv002-art-direction";
 import {
   applyCv002GraphOperation,
   commitCv002Operation,
@@ -19,6 +20,8 @@ const SCRIPT = [
   "In 1894, the town finally built a signal tower on the black rocks. Its keeper raised colored flags by day and lit an oil lamp at night, because captains needed a warning they could recognize through rain. Then a winter storm shattered the upper window, and the keeper climbed outside to protect the flame.",
   "The tower survived, but its most famous rescue was almost ridiculous. A goat had wandered onto a supply boat, kicked over a crate, and accidentally rang the emergency bell. Villagers launched their boats expecting a wreck; instead, they found one embarrassed sailor, three floating cabbages, and the loudest goat in local history.",
 ].join("\n\n");
+const KIDS_ART_DIRECTION = createCv002ArtDirectionSelection("kids-adventure", "cut-paper-collage-mixed-media");
+const HISTORY_ART_DIRECTION = createCv002ArtDirectionSelection("weird-history", "weird-history-editorial-collage");
 
 const flatten = (graph: ReturnType<typeof createCv002StoryGraph>) => graph.scenes.flatMap((scene) => scene.beats);
 
@@ -114,7 +117,7 @@ describe("CV-002 editable story breakdown", () => {
   });
 
   it("undoes, redoes, and truncates a redo branch canonically", () => {
-    const project = createCv002Project("Harbor signals", SCRIPT, "weird-history");
+    const project = createCv002Project("Harbor signals", SCRIPT, "weird-history", HISTORY_ART_DIRECTION);
     const target = flatten(project.graph)[1]!;
     const first = commitCv002Operation(project, {type: "set-role", beatId: target.id, role: "reveal"});
     const undone = undoCv002Operation(first);
@@ -126,7 +129,7 @@ describe("CV-002 editable story breakdown", () => {
   });
 
   it("fails closed on a self-rehashed semantic history tamper", () => {
-    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure");
+    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure", KIDS_ART_DIRECTION);
     const target = flatten(project.graph)[1]!;
     const committed = commitCv002Operation(project, {type: "set-role", beatId: target.id, role: "reveal"});
     const transaction = committed.history[0]!;
@@ -142,7 +145,7 @@ describe("CV-002 editable story breakdown", () => {
   });
 
   it("rejects a self-rehashed final source span beyond the real source length", () => {
-    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure");
+    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure", KIDS_ART_DIRECTION);
     const graph = project.graph;
     const lastScene = graph.scenes.at(-1)!;
     const lastBeat = lastScene.beats.at(-1)!;
@@ -158,7 +161,7 @@ describe("CV-002 editable story breakdown", () => {
   });
 
   it("rejects a self-rehashed project whose edit history was erased", () => {
-    const project = createCv002Project("Harbor signals", SCRIPT, "weird-history");
+    const project = createCv002Project("Harbor signals", SCRIPT, "weird-history", HISTORY_ART_DIRECTION);
     const target = flatten(project.graph)[1]!;
     const changedGraph = applyCv002GraphOperation(project.graph, {type: "set-role", beatId: target.id, role: "reaction"});
     const forged = reseal({...project, graph: changedGraph, directionDraft: compileCv002DirectionDraft(changedGraph), history: [], historyCursor: 0});
@@ -167,7 +170,7 @@ describe("CV-002 editable story breakdown", () => {
   });
 
   it("rejects self-rehashed forged beat and scene IDs", () => {
-    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure");
+    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure", KIDS_ART_DIRECTION);
     const firstScene = project.graph.scenes[0]!;
     const forgedBeat = reseal({...firstScene.beats[0]!, id: "beat-forged"});
     const beatScene = reseal({...firstScene, beats: [forgedBeat, ...firstScene.beats.slice(1)], id: `scene-${hashCanonical({sourceRange: firstScene.sourceRange, beatIds: [forgedBeat, ...firstScene.beats.slice(1)].map((beat) => beat.id)}).slice(0, 12)}`});
@@ -180,7 +183,7 @@ describe("CV-002 editable story breakdown", () => {
   });
 
   it("rejects a self-rehashed no-op history transaction", () => {
-    const project = createCv002Project("Harbor signals", SCRIPT, "weird-history");
+    const project = createCv002Project("Harbor signals", SCRIPT, "weird-history", HISTORY_ART_DIRECTION);
     const existingBoundary = project.graph.scenes[1]!.beats[0]!;
     const transactionDraft = {
       schemaVersion: "1.0" as const,
@@ -199,7 +202,7 @@ describe("CV-002 editable story breakdown", () => {
   });
 
   it("keeps canonical project state free of clocks, UUIDs, paths, and random values", () => {
-    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure");
+    const project = createCv002Project("Harbor signals", SCRIPT, "kids-adventure", KIDS_ART_DIRECTION);
     expect(JSON.stringify(project)).not.toMatch(/timestamp|createdAt|updatedAt|uuid|filesystem|random|[A-Z]:\\/i);
   });
 });

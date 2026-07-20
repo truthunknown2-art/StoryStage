@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "requestItemId": "turnaround-sheet",
+  "candidateId": "ollo-turnaround-candidate-h-five-view-alpha",
+  "candidateContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+  "requiredViews": [
+    "front",
+    "three-quarter",
+    "profile-left",
+    "profile-right",
+    "rear"
+  ],
+  "views": [
+    {
+      "view": "front",
+      "sourceContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "sourceRect": {
+        "x": 0,
+        "y": 0,
+        "width": 576,
+        "height": 832
+      },
+      "derivedContentHash": "9179be1665aa88e86ddede71cce064c37714f00962317681f221291349f5fccd",
+      "byteLength": 537546,
+      "width": 576,
+      "height": 832,
+      "semanticDirection": "neutral-front",
+      "transform": "none"
+    },
+    {
+      "view": "three-quarter",
+      "sourceContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "sourceRect": {
+        "x": 576,
+        "y": 0,
+        "width": 576,
+        "height": 832
+      },
+      "derivedContentHash": "ccfaea3bc3d64f8d600ee0b0758a6149a604c9a520b34949d81ce07b8bea97b6",
+      "byteLength": 539390,
+      "width": 576,
+      "height": 832,
+      "semanticDirection": "three-quarter",
+      "transform": "none"
+    },
+    {
+      "view": "profile-left",
+      "sourceContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "sourceRect": {
+        "x": 1152,
+        "y": 0,
+        "width": 576,
+        "height": 832
+      },
+      "derivedContentHash": "02a728955134f6664487343974a90bb225b21903665d44fcc68d61ea7b57b139",
+      "byteLength": 434799,
+      "width": 576,
+      "height": 832,
+      "semanticDirection": "faces-screen-left",
+      "transform": "none"
+    },
+    {
+      "view": "profile-right",
+      "sourceContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "sourceRect": {
+        "x": 1728,
+        "y": 0,
+        "width": 576,
+        "height": 832
+      },
+      "derivedContentHash": "1e09db7a87799bc419935ee3d76bc5c58600acfb513065c182dc9dcfba4f61ce",
+      "byteLength": 419260,
+      "width": 576,
+      "height": 832,
+      "semanticDirection": "faces-screen-right",
+      "transform": "none"
+    },
+    {
+      "view": "rear",
+      "sourceContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+      "sourceRect": {
+        "x": 2304,
+        "y": 0,
+        "width": 576,
+        "height": 832
+      },
+      "derivedContentHash": "21f766af57ca2648f760a6e0a11efa9d10566e53addffb489994329211f2c5a8",
+      "byteLength": 539388,
+      "width": 576,
+      "height": 832,
+      "semanticDirection": "neutral-rear",
+      "transform": "none"
+    }
+  ],
+  "contentHash": "c9e70319de980a0045d04ef8a2897b88d55a974c89d9aa098bb7dc982449946c"
+}

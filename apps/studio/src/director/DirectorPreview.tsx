@@ -5,6 +5,7 @@ import {
   currentDirectorProject,
   canRedoDirectorWorkspace,
   canUndoDirectorWorkspace,
+  listDirectorReactionDelayCandidates,
   proposeDirectorPatch,
   recordDirectorWorkspaceRevision,
   redoDirectorWorkspace,
@@ -17,9 +18,8 @@ import {
   type DirectorWorkspaceState,
 } from "@storystage/story-engine/director-alpha";
 import {
-  AlertTriangle,
   Activity,
-  Check,
+  AlertTriangle,
   Clapperboard,
   Eye,
   Film,
@@ -35,7 +35,9 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import { DirectorBeatStrip, DirectorSceneRail } from "./DirectorSceneBeatRail";
 import { DirectorChangePreview } from "./DirectorChangePreview";
+import { DirectorCommandPanel } from "./DirectorCommandPanel";
 import { DirectorMotionPanel } from "./DirectorMotionPanel";
 import { DirectorTimelineDrawer } from "./DirectorTimelineDrawer";
 import { DirectorVisualPanel } from "./DirectorVisualPanel";
@@ -60,6 +62,12 @@ const beatRange = (director: DirectorProject, beatId: string) => {
     : null;
 };
 
+/**
+ * The post-create Studio shell: scene/beat rail on the left, the authoritative
+ * Director Player as the dominant center canvas, patch-backed Director
+ * controls on the right, and a compact genuine timeline along the bottom.
+ * Every visible frame and control is derived from the sealed episode plan.
+ */
 export function DirectorAnimaticPreview({
   capabilityRegistry,
   compileError,
@@ -81,12 +89,43 @@ export function DirectorAnimaticPreview({
     "visual",
   );
   const [frame, setFrame] = useState(0);
+  // Read-only Director proof surface: reflects the actual PlayerRef state via
+  // real Player events, independent of the optimistic timeline `frame` state
+  // used for styling. Exposed as stable data attributes so browser proofs can
+  // assert the Player's exact frame and paused state.
+  const [playerObservation, setPlayerObservation] = useState<{
+    frame: number | null;
+    playing: boolean;
+  }>({ frame: null, playing: false });
   const playerRef = useRef<PlayerRef>(null);
   const replayEndFrame = useRef<number | null>(null);
   const replayOnNextPlan = useRef(false);
 
   const director = workspace ? currentDirectorProject(workspace.history) : null;
   const selectedBeatId = workspace?.selectedBeatId ?? "";
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    const observe = () =>
+      setPlayerObservation({
+        frame: player.getCurrentFrame(),
+        playing: player.isPlaying(),
+      });
+    observe();
+    player.addEventListener("seeked", observe);
+    player.addEventListener("frameupdate", observe);
+    player.addEventListener("play", observe);
+    player.addEventListener("pause", observe);
+    player.addEventListener("ended", observe);
+    return () => {
+      player.removeEventListener("seeked", observe);
+      player.removeEventListener("frameupdate", observe);
+      player.removeEventListener("play", observe);
+      player.removeEventListener("pause", observe);
+      player.removeEventListener("ended", observe);
+    };
+  }, []);
 
   useEffect(() => {
     const player = playerRef.current;
@@ -136,6 +175,7 @@ export function DirectorAnimaticPreview({
   }, [director, onWorkspaceChange, selectedBeatId, workspace]);
 
   useEffect(() => {
+    setCommand("");
     setProposal(null);
     setCommandError(null);
     setFeedback(null);
@@ -182,6 +222,36 @@ export function DirectorAnimaticPreview({
     selectedBeat.text.length > 54
       ? `${selectedBeat.text.slice(0, 54).trimEnd()}…`
       : selectedBeat.text;
+  const selectedCapabilityItems = director.capabilityReport.items.filter(
+    (item) => item.beatId === selectedBeatId,
+  );
+  // Shared with the Alpha interpreter via
+  // listDirectorReactionDelayCandidates (packages/story-engine
+  // director-patch.ts): creator-facing command copy derives from the exact
+  // (reaction event, eligible shot) pair count — 0 (no editable target),
+  // 1 (real command available), 2+ (ambiguous; explicit target selection is
+  // not supported yet) — the exact cardinality the interpreter accepts.
+  const reactionCandidateCount = listDirectorReactionDelayCandidates(
+    director,
+    selectedBeatId,
+  ).length;
+  const selectedBeatRenderReady =
+    selectedCapabilityItems.length > 0 &&
+    selectedCapabilityItems.every((item) => item.resolution === "supported");
+  const selectedCapabilityMessage = selectedCapabilityItems.find(
+    (item) => item.resolution === "supported",
+  )?.creatorMessage;
+
+  const selectBeat = (beatId: string) => {
+    onWorkspaceChange((current) =>
+      current ? selectDirectorWorkspaceBeat(current, beatId) : current,
+    );
+  };
+
+  const seekTo = (nextFrame: number) => {
+    playerRef.current?.seekTo(nextFrame);
+    setFrame(nextFrame);
+  };
 
   const previewCommand = () => {
     try {
@@ -253,197 +323,236 @@ export function DirectorAnimaticPreview({
 
   return (
     <section
+      aria-label="Directed animatic draft"
       className="cv2-director-preview"
       data-episode-hash={episode.contentHash}
-      aria-label="Directed animatic draft"
     >
-      <header>
-        <div className="cv2-director-preview-title">
-          <span>
-            <Clapperboard size={20} />
-          </span>
-          <div>
-            <small>
-              Scene {selectedSceneIndex + 1} · Beat {selectedSceneBeatIndex + 1}
-            </small>
-            <h2>{selectedBeatTitle}</h2>
-          </div>
-        </div>
-        <div className="cv2-director-ready">
-          <Check size={15} />
-          <span>Ready to direct</span>
-        </div>
-      </header>
-      <div className="director-workbench-main">
-        <div className="cv2-director-stage">
-          <div className="cv2-director-player">
-            <Player
-              acknowledgeRemotionLicense
-              allowFullscreen
-              component={DirectorProductionComposition}
-              compositionHeight={episode.format.height}
-              compositionWidth={episode.format.width}
-              controls
-              durationInFrames={episode.format.durationInFrames}
-              fps={episode.format.fps}
-              inputProps={{ episodePlan: episode }}
-              loop
-              ref={playerRef}
-              style={{
-                aspectRatio: `${episode.format.width} / ${episode.format.height}`,
-                width: "100%",
-              }}
-            />
-          </div>
-          <div className="director-stage-caption">
-            <div>
-              <small>Now directing</small>
-              <strong>Beat {selectedBeatIndex + 1}</strong>
-            </div>
+      <DirectorSceneRail
+        director={director}
+        onSelectBeat={selectBeat}
+        project={project}
+        selectedBeatId={selectedBeatId}
+      />
+
+      <div className="cv2-director-stage">
+        <header className="cv2-stage-heading">
+          <div className="cv2-director-preview-title">
             <span>
-              Draft animatic · {shots} shots ·{" "}
-              {Math.ceil(episode.format.durationInFrames / episode.format.fps)}s
+              <Clapperboard size={20} />
+            </span>
+            <div>
+              <small>
+                Scene {selectedSceneIndex + 1} · Beat{" "}
+                {selectedSceneBeatIndex + 1}
+              </small>
+              <h2>{selectedBeatTitle}</h2>
+            </div>
+          </div>
+          <span className="cv2-stage-format">
+            <Film size={13} />
+            Draft animatic
+          </span>
+        </header>
+        <div
+          className="cv2-director-player"
+          data-proof-frame={playerObservation.frame ?? undefined}
+          data-proof-playing={playerObservation.playing}
+          data-testid="director-player-proof"
+        >
+          <Player
+            acknowledgeRemotionLicense
+            allowFullscreen
+            component={DirectorProductionComposition}
+            compositionHeight={episode.format.height}
+            compositionWidth={episode.format.width}
+            controls
+            durationInFrames={episode.format.durationInFrames}
+            fps={episode.format.fps}
+            inputProps={{ episodePlan: episode }}
+            loop
+            ref={playerRef}
+            style={{
+              aspectRatio: `${episode.format.width} / ${episode.format.height}`,
+              maxHeight: "100%",
+              width: "100%",
+            }}
+          />
+        </div>
+        <div className="director-stage-caption">
+          <div>
+            <small>Now directing</small>
+            <strong>Beat {selectedBeatIndex + 1}</strong>
+          </div>
+          <span>
+            Draft animatic · {shots} shots ·{" "}
+            {Math.ceil(episode.format.durationInFrames / episode.format.fps)}s
+          </span>
+        </div>
+      </div>
+
+      <aside aria-label="Director controls" className="director-control-panel">
+        <div className="director-revision-bar">
+          <div>
+            <small>Director</small>
+            <strong>Beat {selectedBeatIndex + 1}</strong>
+          </div>
+          <code title={director.contentHash}>
+            {director.contentHash.slice(0, 12)}
+          </code>
+          <div className="director-history-actions">
+            <button
+              aria-label="Undo direction"
+              disabled={!workspace || !canUndoDirectorWorkspace(workspace)}
+              onClick={() => moveHistory("undo")}
+              title="Undo direction"
+              type="button"
+            >
+              <Undo2 size={15} />
+            </button>
+            <button
+              aria-label="Redo direction"
+              disabled={!workspace || !canRedoDirectorWorkspace(workspace)}
+              onClick={() => moveHistory("redo")}
+              title="Redo direction"
+              type="button"
+            >
+              <Redo2 size={15} />
+            </button>
+          </div>
+        </div>
+        <p className="director-selected-beat-copy">{selectedBeat.text}</p>
+        {reactionCandidateCount === 1 ? (
+          <DirectorCommandPanel
+            beatLabel={`Beat ${selectedBeatIndex + 1}`}
+            beatText={selectedBeatTitle}
+            command={command}
+            error={commandError}
+            onCommandChange={setCommand}
+            onPreview={previewCommand}
+          />
+        ) : reactionCandidateCount === 0 ? (
+          <p className="director-command-unavailable">
+            <strong>Structured direction unavailable on this beat.</strong>
+            No editable reaction target exists here — shape the beat with the
+            Visual and Motion controls below.
+          </p>
+        ) : (
+          <p className="director-command-unavailable">
+            <strong>Multiple reaction targets on this beat.</strong>
+            More than one eligible reaction target — a reaction event and shot
+            pair — could be retimed, and explicit target selection is not
+            supported yet.
+          </p>
+        )}
+        <div
+          aria-label="Director departments"
+          className="director-department-tabs"
+          role="tablist"
+        >
+          <button
+            aria-selected={activeDepartment === "visual"}
+            className={activeDepartment === "visual" ? "is-active" : ""}
+            onClick={() => setActiveDepartment("visual")}
+            role="tab"
+            type="button"
+          >
+            <Eye size={15} /> Visual
+          </button>
+          <button
+            aria-selected={activeDepartment === "motion"}
+            className={activeDepartment === "motion" ? "is-active" : ""}
+            onClick={() => setActiveDepartment("motion")}
+            role="tab"
+            type="button"
+          >
+            <Activity size={15} /> Motion
+          </button>
+        </div>
+        {activeDepartment === "visual" ? (
+          <DirectorVisualPanel
+            beatId={selectedBeatId}
+            director={director}
+            onPreview={previewPatch}
+          />
+        ) : (
+          <DirectorMotionPanel beatId={selectedBeatId} director={director} />
+        )}
+        {proposal ? (
+          <DirectorChangePreview
+            onApply={applyProposal}
+            onCancel={() => setProposal(null)}
+            patch={proposal}
+          />
+        ) : null}
+        {feedback ? (
+          <p className="director-revision-feedback" role="status">
+            {feedback}
+          </p>
+        ) : null}
+        <footer>
+          <div className="cv2-director-metrics">
+            <span>
+              <Film size={15} />
+              <strong>{scenes}</strong> scenes
+            </span>
+            <span>
+              <strong>{beats}</strong> beats
+            </span>
+            <span>
+              <strong>{shots}</strong> shots
             </span>
           </div>
-        </div>
-
-        <aside
-          className="director-control-panel"
-          aria-label="Director controls"
-        >
-          <div className="director-revision-bar">
+          <div className="cv2-director-capability">
+            <ShieldCheck size={16} />
             <div>
-              <small>Director</small>
-              <strong>Beat {selectedBeatIndex + 1}</strong>
-            </div>
-            <code title={director.contentHash}>
-              {director.contentHash.slice(0, 12)}
-            </code>
-            <div className="director-history-actions">
-              <button
-                aria-label="Undo direction"
-                disabled={!workspace || !canUndoDirectorWorkspace(workspace)}
-                onClick={() => moveHistory("undo")}
-                title="Undo direction"
-                type="button"
-              >
-                <Undo2 size={15} />
-              </button>
-              <button
-                aria-label="Redo direction"
-                disabled={!workspace || !canRedoDirectorWorkspace(workspace)}
-                onClick={() => moveHistory("redo")}
-                title="Redo direction"
-                type="button"
-              >
-                <Redo2 size={15} />
-              </button>
+              <strong>
+                {selectedBeatRenderReady
+                  ? "Render-ready performance"
+                  : "Proxy performance"}
+              </strong>
+              <span>
+                {selectedBeatRenderReady
+                  ? (selectedCapabilityMessage ??
+                    "A final performance capability is assigned and render-ready.")
+                  : "Final character rig unavailable — this beat plays a proxy until a final rig is assigned."}
+              </span>
             </div>
           </div>
-          <p className="director-selected-beat-copy">{selectedBeat.text}</p>
-          <div
-            className="director-department-tabs"
-            role="tablist"
-            aria-label="Director departments"
-          >
-            <button
-              aria-selected={activeDepartment === "visual"}
-              className={activeDepartment === "visual" ? "is-active" : ""}
-              onClick={() => setActiveDepartment("visual")}
-              role="tab"
-              type="button"
-            >
-              <Eye size={15} /> Visual
-            </button>
-            <button
-              aria-selected={activeDepartment === "motion"}
-              className={activeDepartment === "motion" ? "is-active" : ""}
-              onClick={() => setActiveDepartment("motion")}
-              role="tab"
-              type="button"
-            >
-              <Activity size={15} /> Motion
-            </button>
-          </div>
-          {activeDepartment === "visual" ? (
-            <DirectorVisualPanel
-              beatId={selectedBeatId}
-              director={director}
-              onPreview={previewPatch}
-            />
-          ) : (
-            <DirectorMotionPanel
-              beatId={selectedBeatId}
-              command={command}
-              director={director}
-              error={commandError}
-              onCommandChange={setCommand}
-              onPreview={previewCommand}
-            />
-          )}
-          {proposal ? (
-            <DirectorChangePreview
-              patch={proposal}
-              onApply={applyProposal}
-              onCancel={() => setProposal(null)}
-            />
+        </footer>
+        <details className="cv2-plan-proof">
+          <summary>Advanced / Preflight</summary>
+          <span>Browser episode plan</span>
+          <code>{episode.contentHash}</code>
+          {director.revision ? (
+            <span>
+              Revision from{" "}
+              {director.revision.baseDirectorProjectContentHash.slice(0, 12)}
+            </span>
           ) : null}
-          {feedback ? (
-            <p className="director-revision-feedback" role="status">
-              {feedback}
-            </p>
-          ) : null}
-          <footer>
-            <div className="cv2-director-metrics">
-              <span>
-                <Film size={15} />
-                <strong>{scenes}</strong> scenes
-              </span>
-              <span>
-                <strong>{beats}</strong> beats
-              </span>
-              <span>
-                <strong>{shots}</strong> shots
-              </span>
-            </div>
-            <div className="cv2-director-capability">
-              <ShieldCheck size={16} />
-              <div>
-                <strong>
-                  {capabilities.supported} final-ready ·{" "}
-                  {capabilities.proxyOnly} proxy-only
-                </strong>
-                <span>
-                  {capabilities.supported
-                    ? `${capabilities.supported} approved performance ${capabilities.supported === 1 ? "is" : "are"} render-ready; ${capabilities.proxyOnly} still need final motion.`
-                    : "Final motion capability not assigned."}
-                </span>
-              </div>
-            </div>
-          </footer>
-          <details className="cv2-plan-proof">
-            <summary>Advanced / Preflight</summary>
-            <span>Browser episode plan</span>
-            <code>{episode.contentHash}</code>
-            {director.revision ? (
-              <span>
-                Revision from{" "}
-                {director.revision.baseDirectorProjectContentHash.slice(0, 12)}
-              </span>
-            ) : null}
-          </details>
-        </aside>
-      </div>
-      {timeline ? (
-        <DirectorTimelineDrawer
-          activeFrame={frame}
-          onSeek={(nextFrame) => {
-            playerRef.current?.seekTo(nextFrame);
-            setFrame(nextFrame);
-          }}
-          timeline={timeline}
+          <span>
+            {capabilities.supported} render-ready · {capabilities.proxyOnly}{" "}
+            proxy-only of {director.capabilityReport.items.length} performance
+            requirements
+          </span>
+        </details>
+      </aside>
+
+      <div className="cv2-shell-timeline">
+        <DirectorBeatStrip
+          director={director}
+          onSelectBeat={selectBeat}
+          project={project}
+          selectedBeatId={selectedBeatId}
         />
-      ) : null}
+        {timeline ? (
+          <DirectorTimelineDrawer
+            activeFrame={frame}
+            fps={episode.format.fps}
+            onSeek={seekTo}
+            timeline={timeline}
+          />
+        ) : null}
+      </div>
     </section>
   );
 }

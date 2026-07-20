@@ -31,8 +31,13 @@ export type {
   DirectorRevisionLineage,
 } from "./director-project";
 export {
+  assertPlanningArtifactMatchesDirectorPlan,
+  PLANNING_ARTIFACT_DIRECTOR_PLAN_LINEAGE_ERROR,
+} from "./planning-artifact-lineage";
+export {
   describeDirectorPatch,
   directorPatchSchema,
+  listDirectorReactionDelayCandidates,
   proposeDirectorPatch,
   proposeDirectorVisualPatch,
   sealDirectorPatch,
@@ -128,6 +133,7 @@ export type {
   VisualPerformanceRenderer,
 } from "./visual-performance-contract";
 export { createCv002Project, restoreCv002Project } from "../cv002-story-draft";
+export { createCv002ArtDirectionSelection } from "../cv002-art-direction";
 export type { Cv002Project, Cv002Grammar } from "../cv002-story-draft";
 export { hashCanonical } from "../canonical-hash";
 export { articulatedCharacterRigManifestSchema } from "../rig-manifests";

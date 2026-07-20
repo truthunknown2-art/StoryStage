@@ -1,0 +1,637 @@
+import { describe, expect, it } from "vitest";
+import {
+  characterRigCandidateBundleDraftSchema,
+  createCharacterRigAssetRequest,
+  createCharacterRigCandidateBundle,
+  createKidsBipedRigRequestItems,
+  createTurnaroundNormalizationReceipt,
+  createTurnaroundViewCoverageEvidence,
+  inspectCharacterRigCandidateBundle,
+  kidsBipedV1RequiredTurnaroundViews,
+  kidsBipedV1TopologyTemplate,
+  turnaroundNormalizationReceiptSchema,
+  validateCharacterRigCandidateBundle,
+  type CharacterRigAssetRequestDraft,
+  type CharacterRigCandidateBundleDraft,
+} from "./character-rig-acquisition";
+
+const hash = (value: string) => value.repeat(64);
+
+const requestDraft = (): CharacterRigAssetRequestDraft => ({
+  schemaVersion: "1.0",
+  requestId: "kcast-001-ollo-rig-request",
+  showPack: {
+    id: "ollo-and-friends-kids-v1",
+    version: "1.0.0",
+    contentHash: hash("a"),
+  },
+  character: { id: "ollo", displayName: "Ollo" },
+  identityLock: {
+    assetId: "ollo-friends-identity-board-v1",
+    contentHash:
+      "0950d7043347528a302de5d70f36736dcfbec1f9e0177296756e91b96fbc846f",
+  },
+  rigProfile: {
+    id: "kids-biped-v1",
+    version: "1.0.0",
+    templateContentHash: kidsBipedV1TopologyTemplate.contentHash,
+  },
+  acquisition: {
+    mode: "manual-file-import",
+    providerNeutral: true,
+    acceptedMediaTypes: ["image/png"],
+    credentialsRequired: false,
+    accountSessionRequired: false,
+  },
+  controlledMatte: "#00ff00",
+  items: createKidsBipedRigRequestItems(),
+  prohibitions: [
+    "Do not redesign Ollo or substitute a generic woodland character.",
+    "Do not combine upper and lower limbs into a whole-limb piece.",
+  ],
+  approvalRequired: true,
+});
+
+const bundleDraft = (
+  request = createCharacterRigAssetRequest(requestDraft()),
+): CharacterRigCandidateBundleDraft => ({
+  schemaVersion: "1.0",
+  acquisitionMode: "manual-file-import",
+  requestId: request.requestId,
+  requestContentHash: request.contentHash,
+  provenance: {
+    sourceType: "generated",
+    providerLabel: "user-chosen-image-tool",
+    sourceReference: null,
+    createdAt: "2026-07-18T20:00:00.000Z",
+    rightsStatement: "Original generated candidate supplied by the user.",
+  },
+  assets: request.items.map((item, index) => ({
+    candidateId: `candidate-${item.id}`,
+    requestItemId: item.id,
+    relativeFile: `candidates/${item.id}.png`,
+    contentHash: index.toString(16).padStart(64, "0"),
+    byteLength: 1024 + index,
+    mediaType: "image/png",
+    width: 2048,
+    height: 2048,
+  })),
+});
+
+const coverageEvidenceDraft = () => ({
+  schemaVersion: "1.0" as const,
+  requestId: "kcast-001-ollo-rig-request",
+  requestContentHash: hash("a"),
+  requestItemId: "turnaround-sheet" as const,
+  candidateId: "candidate-turnaround-sheet",
+  candidateContentHash: hash("b"),
+  requiredViews: [...kidsBipedV1RequiredTurnaroundViews] as [
+    "front",
+    "three-quarter",
+    "profile-left",
+    "profile-right",
+    "rear",
+  ],
+  views: [
+    {
+      view: "front" as const,
+      sourceContentHash: hash("b"),
+      sourceRect: { x: 0, y: 0, width: 10, height: 10 },
+      derivedContentHash: hash("1"),
+      byteLength: 100,
+      width: 10,
+      height: 10,
+      semanticDirection: "neutral-front" as const,
+      transform: "none" as const,
+    },
+    {
+      view: "profile-left" as const,
+      sourceContentHash: hash("b"),
+      sourceRect: { x: 20, y: 0, width: 10, height: 10 },
+      derivedContentHash: hash("2"),
+      byteLength: 101,
+      width: 10,
+      height: 10,
+      semanticDirection: "faces-screen-left" as const,
+      transform: "none" as const,
+    },
+    {
+      view: "profile-right" as const,
+      sourceContentHash: hash("b"),
+      sourceRect: { x: 40, y: 0, width: 10, height: 10 },
+      derivedContentHash: hash("3"),
+      byteLength: 102,
+      width: 10,
+      height: 10,
+      semanticDirection: "faces-screen-right" as const,
+      transform: "none" as const,
+    },
+  ],
+});
+
+const normalizationReceiptDraft = () => ({
+  schemaVersion: "1.0" as const,
+  requestId: "kcast-001-ollo-rig-request",
+  requestContentHash: hash("a"),
+  requestItemId: "turnaround-sheet" as const,
+  candidateId: "ollo-turnaround-candidate-h",
+  candidateContentHash: hash("b"),
+  views: kidsBipedV1RequiredTurnaroundViews.map((view, index) => ({
+    view,
+    sourceContentHash: hash(["1", "2", "3", "4", "5"][index]!),
+    sourceContentBounds: {
+      x: 100 + index,
+      y: 50 + index,
+      width: 400 + index,
+      height: 500 + index,
+    },
+    normalizedContentHash: hash(["6", "7", "8", "9", "c"][index]!),
+    targetCharacterHeight: 768,
+    scale: 768 / (500 + index),
+    translateX: index * 576 + 50,
+    translateY: 32,
+    baselineY: 800,
+    resampler: "lanczos3" as const,
+    processorVersion: "1.0.0" as const,
+    transform: "scale-and-translate" as const,
+  })),
+  review: {
+    identityConsistencyPassed: false as const,
+    semanticViewAuditPassed: false as const,
+    registrationReady: false as const,
+  },
+});
+
+describe("provider-neutral character rig acquisition", () => {
+  it("seals the Ollo identity lock and a true upper/lower-limb request", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    expect(request.identityLock.contentHash).toBe(
+      "0950d7043347528a302de5d70f36736dcfbec1f9e0177296756e91b96fbc846f",
+    );
+    expect(request.acquisition).toEqual({
+      mode: "manual-file-import",
+      providerNeutral: true,
+      acceptedMediaTypes: ["image/png"],
+      credentialsRequired: false,
+      accountSessionRequired: false,
+    });
+    expect(
+      request.items.find((item) => item.kind === "turnaround-sheet")
+        ?.instructions[0],
+    ).toMatch(/front, three-quarter, profile-left, profile-right, and rear/i);
+    for (const view of ["front", "profile-left", "profile-right"] as const) {
+      const parts = request.items.find(
+        (item) => item.kind === "parts-kit" && item.view === view,
+      );
+      expect(parts?.requiredComponents).toEqual(
+        expect.arrayContaining([
+          "upper-arm-left",
+          "lower-arm-left",
+          "upper-leg-left",
+          "lower-leg-left",
+          "ear-left",
+          "ear-right",
+          "tail",
+          "secondary-front",
+          "secondary-back",
+        ]),
+      );
+      const face = request.items.find(
+        (item) => item.kind === "face-kit" && item.view === view,
+      );
+      expect(face?.requiredComponents).toEqual(
+        expect.arrayContaining([
+          "eye-white-left",
+          "eye-white-right",
+          "pupil-left",
+          "pupil-right",
+          "lid-closed-left",
+          "lid-closed-right",
+          "brow-raised-left",
+          "brow-raised-right",
+        ]),
+      );
+    }
+  });
+
+  it("keeps an unverified turnaround response partial", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const draft = bundleDraft(request);
+    const partial = createCharacterRigCandidateBundle({
+      ...draft,
+      assets: [draft.assets[0]!],
+    });
+    const inspection = inspectCharacterRigCandidateBundle(request, partial);
+    expect(inspection.status).toBe("incomplete");
+    expect(inspection.returnedItems).toEqual([]);
+    expect(inspection.partialItems).toEqual(["turnaround-sheet"]);
+    expect(inspection.missingItems).toHaveLength(request.items.length - 1);
+    expect(inspection.missingSubitems).toEqual(
+      kidsBipedV1RequiredTurnaroundViews.map((view) => ({
+        requestItemId: "turnaround-sheet",
+        view,
+      })),
+    );
+    expect(inspection.providerAuthority).toBe(false);
+    expect(() => validateCharacterRigCandidateBundle(request, partial)).toThrow(
+      /missing request items/i,
+    );
+  });
+
+  it("does not let all profile kits substitute for verified turnaround evidence", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const draft = bundleDraft(request);
+    const bundle = createCharacterRigCandidateBundle(draft);
+    const inspection = inspectCharacterRigCandidateBundle(request, bundle);
+    expect(inspection.status).toBe("incomplete");
+    expect(inspection.missingItems).toEqual([]);
+    expect(inspection.partialItems).toEqual(["turnaround-sheet"]);
+    expect(inspection.returnedItems).toHaveLength(request.items.length - 1);
+    expect(
+      validateCharacterRigCandidateBundle(request, bundle).partialItems,
+    ).toBe(1);
+  });
+
+  it("seals per-view evidence and rejects reordered or mirrored assertions", () => {
+    const draft = coverageEvidenceDraft();
+    const evidence = createTurnaroundViewCoverageEvidence(draft);
+    expect(evidence.contentHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [draft.views[1]!, draft.views[0]!, draft.views[2]!],
+      }),
+    ).toThrow(/order-preserving/i);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [
+          draft.views[0]!,
+          draft.views[1]!,
+          { ...draft.views[2]!, transform: "mirror" },
+        ],
+      } as unknown as Parameters<
+        typeof createTurnaroundViewCoverageEvidence
+      >[0]),
+    ).toThrow();
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [draft.views[0]!, draft.views[0]!],
+      }),
+    ).toThrow(/duplicate|order-preserving/i);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [
+          draft.views[0]!,
+          {
+            ...draft.views[1]!,
+            sourceRect: { x: 5, y: 0, width: 10, height: 10 },
+          },
+        ],
+      }),
+    ).toThrow(/overlaps/i);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [
+          draft.views[0]!,
+          {
+            ...draft.views[1]!,
+            derivedContentHash: draft.views[0]!.derivedContentHash,
+          },
+        ],
+      }),
+    ).toThrow(/unique/i);
+    expect(() =>
+      createTurnaroundViewCoverageEvidence({
+        ...draft,
+        views: [
+          draft.views[0]!,
+          draft.views[1]!,
+          {
+            ...draft.views[2]!,
+            derivedContentHash: draft.views[1]!.derivedContentHash,
+          },
+        ],
+      }),
+    ).toThrow(/unique|identical/i);
+  });
+
+  it("seals a deterministic exact-five-view normalization receipt", () => {
+    const first = createTurnaroundNormalizationReceipt(
+      normalizationReceiptDraft(),
+    );
+    const second = createTurnaroundNormalizationReceipt(
+      normalizationReceiptDraft(),
+    );
+    expect(second).toEqual(first);
+    expect(first.contentHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(first.views.map((view) => view.view)).toEqual(
+      kidsBipedV1RequiredTurnaroundViews,
+    );
+    expect(first.review).toEqual({
+      identityConsistencyPassed: false,
+      semanticViewAuditPassed: false,
+      registrationReady: false,
+    });
+  });
+
+  it("rejects stale normalization receipt hashes and altered registration facts", () => {
+    const receipt = createTurnaroundNormalizationReceipt(
+      normalizationReceiptDraft(),
+    );
+    type MutableReceipt = {
+      contentHash: string;
+      views: Array<Record<string, unknown>>;
+      review: Record<string, unknown>;
+    };
+    const expectStaleHashRejection = (
+      mutate: (value: MutableReceipt) => void,
+    ) => {
+      const changed = structuredClone(receipt) as unknown as MutableReceipt;
+      mutate(changed);
+      expect(() => turnaroundNormalizationReceiptSchema.parse(changed)).toThrow(
+        /hash is invalid/i,
+      );
+    };
+
+    expectStaleHashRejection((changed) => {
+      changed.contentHash = hash("f");
+    });
+    expectStaleHashRejection((changed) => {
+      const bounds = changed.views[0]!.sourceContentBounds as Record<
+        string,
+        unknown
+      >;
+      bounds.x = 101;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.targetCharacterHeight = 769;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.scale = 1.25;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.translateX = 51;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.translateY = 33;
+    });
+    expectStaleHashRejection((changed) => {
+      changed.views[0]!.baselineY = 801;
+    });
+  });
+
+  it("rejects noncanonical or nonunique normalization views", () => {
+    const draft = normalizationReceiptDraft();
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.slice(0, 4),
+      }),
+    ).toThrow();
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: [draft.views[1]!, draft.views[0]!, ...draft.views.slice(2)],
+      }),
+    ).toThrow(/canonical five-view order/i);
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.map((view, index) =>
+          index === 1
+            ? {
+                ...view,
+                sourceContentHash: draft.views[0]!.sourceContentHash,
+              }
+            : view,
+        ),
+      }),
+    ).toThrow(/source hashes must be unique/i);
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.map((view, index) =>
+          index === 1
+            ? {
+                ...view,
+                normalizedContentHash: draft.views[0]!.normalizedContentHash,
+              }
+            : view,
+        ),
+      }),
+    ).toThrow(/normalized hashes must be unique/i);
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.map((view, index) =>
+          index === 1 ? { ...view, scale: 1.25 } : view,
+        ),
+      }),
+    ).toThrow(/scale must equal/i);
+    expect(() =>
+      createTurnaroundNormalizationReceipt({
+        ...draft,
+        views: draft.views.map((view, index) =>
+          index === 1 ? { ...view, baselineY: 801 } : view,
+        ),
+      }),
+    ).toThrow(/share one baseline|declared baseline/i);
+  });
+
+  it("rejects altered normalization method and review authority literals", () => {
+    const receipt = createTurnaroundNormalizationReceipt(
+      normalizationReceiptDraft(),
+    );
+    for (const [field, value] of [
+      ["resampler", "nearest"],
+      ["processorVersion", "1.0.1"],
+      ["transform", "mirror"],
+    ] as const)
+      expect(() =>
+        turnaroundNormalizationReceiptSchema.parse({
+          ...receipt,
+          views: receipt.views.map((view, index) =>
+            index === 0 ? { ...view, [field]: value } : view,
+          ),
+        }),
+      ).toThrow();
+
+    expect(() =>
+      turnaroundNormalizationReceiptSchema.parse({
+        ...receipt,
+        views: receipt.views.map((view, index) =>
+          index === 0 ? { ...view, scale: Number.POSITIVE_INFINITY } : view,
+        ),
+      }),
+    ).toThrow();
+    expect(() =>
+      turnaroundNormalizationReceiptSchema.parse({
+        ...receipt,
+        views: receipt.views.map((view, index) =>
+          index === 0 ? { ...view, translateX: Number.NaN } : view,
+        ),
+      }),
+    ).toThrow();
+
+    for (const field of [
+      "identityConsistencyPassed",
+      "semanticViewAuditPassed",
+      "registrationReady",
+    ] as const)
+      expect(() =>
+        turnaroundNormalizationReceiptSchema.parse({
+          ...receipt,
+          review: { ...receipt.review, [field]: true },
+        }),
+      ).toThrow();
+  });
+
+  it("rejects turnaround evidence references on non-turnaround assets", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const draft = bundleDraft(request);
+    const target = draft.assets.find(
+      (asset) => asset.requestItemId === "parts-front",
+    )!;
+    const bundle = createCharacterRigCandidateBundle({
+      ...draft,
+      assets: draft.assets.map((asset) =>
+        asset === target
+          ? {
+              ...asset,
+              turnaroundViewCoverageEvidence: {
+                schemaVersion: "1.0",
+                relativeFile: "evidence/forged.json",
+                contentHash: hash("e"),
+                fileContentHash: hash("f"),
+                byteLength: 100,
+              },
+            }
+          : asset,
+      ),
+    });
+    expect(() => inspectCharacterRigCandidateBundle(request, bundle)).toThrow(
+      /declares turnaround view coverage for parts-kit/i,
+    );
+  });
+
+  it("binds every returned file to the exact request without provider authority", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const bundle = createCharacterRigCandidateBundle(bundleDraft(request));
+    expect(validateCharacterRigCandidateBundle(request, bundle)).toEqual({
+      requestContentHash: request.contentHash,
+      bundleContentHash: bundle.contentHash,
+      returnedItems: request.items.length - 1,
+      partialItems: 1,
+      providerAuthority: false,
+      approvalRequired: true,
+    });
+  });
+
+  it("fails closed for a missing rig-ready sheet", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const draft = bundleDraft(request);
+    const bundle = createCharacterRigCandidateBundle({
+      ...draft,
+      assets: draft.assets.slice(1),
+    });
+    expect(() => validateCharacterRigCandidateBundle(request, bundle)).toThrow(
+      /missing request items/i,
+    );
+  });
+
+  it("rejects whole-limb substitutions at the request boundary", () => {
+    const draft = requestDraft();
+    const target = draft.items.find(
+      (item) => item.kind === "parts-kit" && item.view === "profile-right",
+    )!;
+    target.requiredComponents = target.requiredComponents.filter(
+      (role) => role !== "lower-arm-left",
+    );
+    expect(() => createCharacterRigAssetRequest(draft)).toThrow(
+      /missing lower-arm-left/i,
+    );
+  });
+
+  it("uses one exact role authority and rejects cross-kit roles", () => {
+    const draft = requestDraft();
+    const parts = draft.items.find(
+      (item) => item.kind === "parts-kit" && item.view === "front",
+    )!;
+    parts.requiredComponents.push("viseme-ai");
+    expect(() => createCharacterRigAssetRequest(draft)).toThrow(
+      /parts-kit front contains forbidden role viseme-ai/i,
+    );
+  });
+
+  it("rejects traversal and credential-shaped extra fields", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const draft = bundleDraft(request);
+    expect(() =>
+      createCharacterRigCandidateBundle({
+        ...draft,
+        assets: [
+          { ...draft.assets[0]!, relativeFile: "../outside.png" },
+          ...draft.assets.slice(1),
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      characterRigCandidateBundleDraftSchema.parse({
+        ...draft,
+        apiKey: "must-never-enter-the-contract",
+      }),
+    ).toThrow();
+  });
+
+  it("detects request and bundle hash tampering", () => {
+    const request = createCharacterRigAssetRequest(requestDraft());
+    const bundle = createCharacterRigCandidateBundle(bundleDraft(request));
+    expect(() =>
+      validateCharacterRigCandidateBundle(
+        { ...request, contentHash: hash("f") },
+        bundle,
+      ),
+    ).toThrow(/hash is invalid/i);
+    expect(() =>
+      validateCharacterRigCandidateBundle(request, {
+        ...bundle,
+        assets: [
+          { ...bundle.assets[0]!, byteLength: 9999 },
+          ...bundle.assets.slice(1),
+        ],
+      }),
+    ).toThrow(/hash is invalid/i);
+  });
+
+  it("binds kids-biped-v1 requests to the exact canonical topology hash", () => {
+    const draft = requestDraft();
+    expect(() =>
+      createCharacterRigAssetRequest({
+        ...draft,
+        rigProfile: {
+          ...draft.rigProfile,
+          templateContentHash: hash("d"),
+        },
+      } as unknown as CharacterRigAssetRequestDraft),
+    ).toThrow(/invalid literal|templateContentHash/i);
+  });
+
+  it("deep-freezes the canonical topology authority", () => {
+    const contentHash = kidsBipedV1TopologyTemplate.contentHash;
+    expect(Object.isFrozen(kidsBipedV1TopologyTemplate)).toBe(true);
+    expect(Object.isFrozen(kidsBipedV1TopologyTemplate.parts)).toBe(true);
+    expect(Object.isFrozen(kidsBipedV1TopologyTemplate.parts[1])).toBe(true);
+    expect(() => {
+      (
+        kidsBipedV1TopologyTemplate.parts[1] as {
+          parentRole: string | null;
+        }
+      ).parentRole = "upper-arm-right";
+    }).toThrow();
+    expect(kidsBipedV1TopologyTemplate.contentHash).toBe(contentHash);
+  });
+});

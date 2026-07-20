@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
+import { createCv002ArtDirectionSelection } from "../cv002-art-direction";
 import { compileContinuitySequencePlan } from "./continuity-compiler";
 import { compileDirectorProject } from "./director-compiler";
 import {
@@ -58,6 +59,10 @@ describe("canonical continuity frame evaluation", () => {
         "Frame evaluator",
         script,
         "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
       ),
     });
     const episode = project.executableEpisodePlan;
@@ -87,6 +92,10 @@ describe("canonical continuity frame evaluation", () => {
         "Deterministic frame",
         script,
         "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
       ),
     });
     const first = evaluateContinuityFrame(project.executableEpisodePlan, 12);
@@ -114,6 +123,10 @@ describe("canonical continuity frame evaluation", () => {
         "Frame bounds",
         script,
         "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
       ),
     });
     expect(() =>
@@ -161,6 +174,10 @@ describe("canonical continuity frame evaluation", () => {
         "Exact visemes",
         script,
         "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
       ),
     });
     const episode = project.executableEpisodePlan;
@@ -218,6 +235,10 @@ describe("canonical continuity frame evaluation", () => {
         "No lineage bleed",
         script,
         "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
       ),
     });
     const episode = project.executableEpisodePlan;

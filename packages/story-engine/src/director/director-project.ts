@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { hashCanonical } from "../canonical-hash";
+import { cv002ArtDirectionSelectionSchema } from "../cv002-art-direction";
 import { hashSchema, identifierSchema } from "../model";
 import { capabilityReportSchema } from "./capability-report";
 import { directorPlanSchema } from "./director-plan";
@@ -8,11 +9,16 @@ import { directorProposalSchema } from "./director-proposal";
 import { directorQualityReportSchema } from "./quality-report";
 import { sceneWorldPlanSchema } from "./scene-world";
 import { timingSolutionSchema } from "./timing-solution";
+import {
+  assertPlanningArtifactMatchesDirectorPlan,
+  PLANNING_ARTIFACT_DIRECTOR_PLAN_LINEAGE_ERROR,
+} from "./planning-artifact-lineage";
 
 const directorProjectFields = {
   schemaVersion: z.literal("1.0"),
   id: identifierSchema,
   storyProjectContentHash: hashSchema,
+  artDirectionSelection: cv002ArtDirectionSelectionSchema,
   planningArtifact: directorProposalSchema,
   sceneWorlds: z.array(sceneWorldPlanSchema).min(1),
   directorPlan: directorPlanSchema,
@@ -51,6 +57,15 @@ export const directorProjectSchema = z
         message: "Director plan is not bound to a story graph.",
       });
     if (
+      project.artDirectionSelection.grammar !== project.planningArtifact.grammar
+    )
+      context.addIssue({
+        code: "custom",
+        path: ["artDirectionSelection", "grammar"],
+        message:
+          "Director project art direction does not match its planning grammar.",
+      });
+    if (
       project.planningArtifact.storyGraphContentHash !==
         project.directorPlan.storyGraphContentHash ||
       project.planningArtifact.plannerId !==
@@ -66,6 +81,18 @@ export const directorProjectSchema = z
         message:
           "Director project planning artifact does not match the exact compiled plan authority and content.",
       });
+    try {
+      assertPlanningArtifactMatchesDirectorPlan(
+        project.planningArtifact,
+        project.directorPlan,
+      );
+    } catch {
+      context.addIssue({
+        code: "custom",
+        path: ["planningArtifact", "beatDirections"],
+        message: PLANNING_ARTIFACT_DIRECTOR_PLAN_LINEAGE_ERROR,
+      });
+    }
     if (
       project.timingSolution.directorPlanContentHash !==
       project.directorPlan.contentHash
@@ -150,6 +177,10 @@ export type DirectorRevisionLineage = NonNullable<DirectorProject["revision"]>;
 export function sealDirectorProject(
   raw: Omit<DirectorProject, "contentHash">,
 ): DirectorProject {
+  assertPlanningArtifactMatchesDirectorPlan(
+    raw.planningArtifact,
+    raw.directorPlan,
+  );
   return directorProjectSchema.parse({
     ...raw,
     contentHash: hashCanonical(raw),

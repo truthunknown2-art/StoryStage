@@ -12,7 +12,7 @@
     "render:proof": "tsx src/cli.ts proof",
     "render:determinism": "tsx src/cli.ts determinism",
     "render:audio": "tsx src/cli.ts audio",
-    "test": "vitest run src/worker-protocol.test.ts src/rook-pilot-motion-review-lineage.test.ts src/director-capability-assets.test.ts",
+    "test": "vitest run src/worker-protocol.test.ts src/rook-pilot-motion-review-lineage.test.ts src/director-capability-assets.test.ts src/candidate-rig-private-registration-diagnostic.test.ts src/editorial-guide-audio-proof.test.ts",
     "typecheck": "tsc --noEmit",
     "render:production-proof": "tsx src/production-proof.ts",
     "render:rook-preview": "tsx src/rook-pilot-visual-preview.ts",
@@ -26,7 +26,9 @@
     "render:director-alpha-proof": "tsx src/director-alpha-proof.ts",
     "render:director-camera-semantics-proof": "tsx src/director-camera-semantics-proof.ts",
     "render:director-performance-capability-proof": "tsx src/director-performance-capability-proof.ts",
-    "render:kvp001-proof": "tsx src/kvp001-proof.ts"
+    "render:kvp001-proof": "tsx src/kvp001-proof.ts",
+    "render:candidate-i-registration-diagnostic": "tsx src/candidate-rig-private-registration-diagnostic-cli.ts",
+    "render:editorial-guide-audio-proof": "tsx src/editorial-guide-audio-proof-cli.ts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.490",
@@ -37,10 +39,14 @@
     "@storystage/remotion-runtime": "workspace:*",
     "@storystage/story-engine": "workspace:*",
     "ffmpeg-static": "5.3.0",
-    "ffprobe-static": "3.1.0"
+    "ffprobe-static": "3.1.0",
+    "react": "19.2.3",
+    "remotion": "4.0.490",
+    "sharp": "0.34.5"
   },
   "devDependencies": {
     "@types/node": "24.10.1",
+    "@types/react": "19.2.7",
     "tsup": "8.5.1",
     "tsx": "4.21.0",
     "typescript": "5.9.3",

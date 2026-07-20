@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hashCanonical } from "./canonical-hash";
+import { createCv002ArtDirectionSelection } from "./cv002-art-direction";
 import {
   commitCv002Operation,
   createCv002Project,
@@ -20,6 +21,14 @@ const KIDS_SCRIPT = [
   "The handle is cold, so Mara tests it with one finger before reaching with both hands. She leans forward, lifts the lantern slowly, and steadies it against her chest. Tiny paper stars spill from the glass while the forest seems to hold its breath.",
   "Mara gasps, then turns the lantern toward her friends at the edge of the clearing. She raises it proudly as the stars circle her head and the group cheers. The lantern settles into a warm golden glow, and Mara grins because their next path has appeared.",
 ].join("\n\n");
+const KIDS_ART_DIRECTION = createCv002ArtDirectionSelection(
+  "kids-adventure",
+  "cut-paper-collage-mixed-media",
+);
+const HISTORY_ART_DIRECTION = createCv002ArtDirectionSelection(
+  "weird-history",
+  "weird-history-editorial-collage",
+);
 
 const CROSS_PARAGRAPH_SCRIPT = [
   "Mara followed the silver moth through ferny shadows while Milo counted every glowing wingbeat and tried not to stumble behind her. The light crossed a ruined doorway, circled a carved stone face, and waited where moonlight painted a bright path across the floor.",
@@ -51,6 +60,7 @@ describe("CV-002-B capability-gated template assignment", () => {
       "The blue lantern",
       KIDS_SCRIPT,
       "kids-adventure",
+      KIDS_ART_DIRECTION,
     );
     const assignment = makeAssignment(project);
     expect(assignment.template.id).toBe(CV002_OBJECT_DISCOVERY_TEMPLATE_ID);
@@ -67,11 +77,13 @@ describe("CV-002-B capability-gated template assignment", () => {
       "The blue lantern",
       KIDS_SCRIPT,
       "kids-adventure",
+      KIDS_ART_DIRECTION,
     );
     const history = createCv002Project(
       "The blue lantern",
       KIDS_SCRIPT,
       "weird-history",
+      HISTORY_ART_DIRECTION,
     );
     expect(() => makeAssignment(history)).toThrow(/Kids Adventure only/);
     const scene = kids.graph.scenes[0]!;
@@ -104,6 +116,7 @@ describe("CV-002-B capability-gated template assignment", () => {
       "The blue lantern",
       KIDS_SCRIPT,
       "kids-adventure",
+      KIDS_ART_DIRECTION,
     );
     const assignment = makeAssignment(project, 1);
     const preview = compileCv002AssignedScenePreview(project, assignment);
@@ -126,6 +139,7 @@ describe("CV-002-B capability-gated template assignment", () => {
       "The moon hall",
       CROSS_PARAGRAPH_SCRIPT,
       "kids-adventure",
+      KIDS_ART_DIRECTION,
     );
     const beats = initial.graph.scenes.flatMap((scene) => scene.beats);
     expect(beats).toHaveLength(4);
@@ -147,6 +161,7 @@ describe("CV-002-B capability-gated template assignment", () => {
       "The long beat",
       LONG_BEAT_SCRIPT,
       "kids-adventure",
+      KIDS_ART_DIRECTION,
     );
     expect(project.graph.scenes[0]!.beats[0]!.text.length).toBeGreaterThan(500);
     expect(() => makeAssignment(project)).toThrow(/500/);
@@ -157,6 +172,7 @@ describe("CV-002-B capability-gated template assignment", () => {
       "The blue lantern",
       KIDS_SCRIPT,
       "kids-adventure",
+      KIDS_ART_DIRECTION,
     );
     const assignment = makeAssignment(project);
     const target = project.graph.scenes[0]!.beats[0]!;
@@ -175,6 +191,7 @@ describe("CV-002-B capability-gated template assignment", () => {
       "The blue lantern",
       KIDS_SCRIPT,
       "kids-adventure",
+      KIDS_ART_DIRECTION,
     );
     const assignment = makeAssignment(project);
     const { contentHash: _hash, ...draft } = assignment;

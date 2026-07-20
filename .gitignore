@@ -5,6 +5,7 @@ coverage/
 out/
 artifacts/
 output/playwright/
+tmp/
 .storystage-local/
 private-assets/
 candidate-bundles/

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "1.0",
+  "reportId": "rig-staging-52b0395e9780183e8fc4",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "bundleContentHash": "52b0395e9780183e8fc4abb09213f3808914a5d774eeeeb92f4fbaf168ae54d4",
+  "identityLockContentHash": "0950d7043347528a302de5d70f36736dcfbec1f9e0177296756e91b96fbc846f",
+  "templateContentHash": "6ab97203293ff1736587a224b515d9ce5562825442d02e8cd31b98c4db588c83",
+  "status": "incomplete",
+  "returnedItems": [],
+  "partialItems": [
+    "turnaround-sheet"
+  ],
+  "missingItems": [
+    "face-front",
+    "face-profile-left",
+    "face-profile-right",
+    "parts-front",
+    "parts-profile-left",
+    "parts-profile-right"
+  ],
+  "missingSubitems": [
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "front"
+    },
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "three-quarter"
+    },
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "profile-left"
+    },
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "profile-right"
+    },
+    {
+      "requestItemId": "turnaround-sheet",
+      "view": "rear"
+    }
+  ],
+  "unknownItems": [],
+  "turnaroundViewCoverageEvidence": [],
+  "assets": [
+    {
+      "candidateId": "ollo-turnaround-candidate-a",
+      "requestItemId": "turnaround-sheet",
+      "sourceContentHash": "e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e",
+      "stagedContentHash": "e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e",
+      "immutableLocationId": "sha256:e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e",
+      "relativeFile": "character-rig/candidates/e608a47c8af86b2ca271bb22b7fc8c82454b8a8a5a6e11531d9f876e4f27158e.png",
+      "byteLength": 1713138,
+      "mediaType": "image/png",
+      "width": 1774,
+      "height": 887,
+      "alphaClass": "opaque",
+      "checks": {
+        "byteLength": true,
+        "contentHash": true,
+        "codec": true,
+        "dimensions": true,
+        "decodedSinglePage": true
+      }
+    }
+  ],
+  "providerAuthority": false,
+  "approvalRequired": true,
+  "stagedAt": "2026-07-19T06:00:00.000Z",
+  "contentHash": "a6ed5083424ff0d2b212a8c1b6209907a852f5f73e8ba9f45a71bba3a90a3989"
+}

@@ -1,0 +1,2363 @@
+{
+  "schemaVersion": "1.0",
+  "evidenceId": "kcast-001d-ollo-front-atlas-source-set-f",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "candidateBundleContentHash": "ad678eebdfc97a73aaaecacacd59f1f55009db0a27bed7ac39ffa3e7331758ad",
+  "stagingReportContentHash": "5922389b1e50ddf64bdea9cf58710ba66502c2df0034922993ac65c328f9f042",
+  "processor": {
+    "id": "kids-biped-v1-fixed-grid-front-atlas",
+    "version": "1.0.0",
+    "sourceSafetyInset": 4,
+    "atlasGutter": 24,
+    "extraction": "equal-grid-or-sealed-source-rects",
+    "expectedKey": "#ff00ff",
+    "maximumAllowedMeasuredKeyDistance": 32,
+    "imageLibrary": {
+      "id": "sharp",
+      "version": "0.34.5"
+    },
+    "png": {
+      "compressionLevel": 9,
+      "adaptiveFiltering": false,
+      "palette": false,
+      "effort": 10
+    }
+  },
+  "sourceSheets": [
+    {
+      "id": "core",
+      "atlas": "parts-front",
+      "sourceContentHash": "8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d",
+      "keyedSourceContentHash": "928d4b9306ad077e1592d54e79b21b195ec1f1b54dcbdaff48de24bdaba27581",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024
+      },
+      "extraction": {
+        "mode": "equal-grid",
+        "declaredGrid": {
+          "columns": 4,
+          "rows": 2
+        },
+        "sourceRects": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 384,
+            "height": 512
+          },
+          {
+            "x": 384,
+            "y": 0,
+            "width": 384,
+            "height": 512
+          },
+          {
+            "x": 768,
+            "y": 0,
+            "width": 384,
+            "height": 512
+          },
+          {
+            "x": 1152,
+            "y": 0,
+            "width": 384,
+            "height": 512
+          },
+          {
+            "x": 0,
+            "y": 512,
+            "width": 384,
+            "height": 512
+          },
+          {
+            "x": 384,
+            "y": 512,
+            "width": 384,
+            "height": 512
+          },
+          {
+            "x": 768,
+            "y": 512,
+            "width": 384,
+            "height": 512
+          },
+          {
+            "x": 1152,
+            "y": 512,
+            "width": 384,
+            "height": 512
+          }
+        ],
+        "manifestContentHash": "a06c31a9736111e743e2245f8497d60b44a116031db1300bf9ff8ca1853fd6c5",
+        "maximumMeasuredKeyDistance": 24
+      },
+      "measuredKey": {
+        "red": 247,
+        "green": 6,
+        "blue": 242,
+        "hex": "#f706f2"
+      },
+      "alphaPixels": {
+        "transparent": 1360146,
+        "partial": 44410,
+        "opaque": 168308
+      },
+      "components": [
+        "torso",
+        "pelvis",
+        "head",
+        "tail",
+        "ear-left",
+        "ear-right",
+        "secondary-front",
+        "secondary-back"
+      ]
+    },
+    {
+      "id": "limbs",
+      "atlas": "parts-front",
+      "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+      "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+      "dimensions": {
+        "width": 1672,
+        "height": 941
+      },
+      "extraction": {
+        "mode": "equal-grid",
+        "declaredGrid": {
+          "columns": 6,
+          "rows": 2
+        },
+        "sourceRects": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 278,
+            "height": 470
+          },
+          {
+            "x": 278,
+            "y": 0,
+            "width": 279,
+            "height": 470
+          },
+          {
+            "x": 557,
+            "y": 0,
+            "width": 279,
+            "height": 470
+          },
+          {
+            "x": 836,
+            "y": 0,
+            "width": 278,
+            "height": 470
+          },
+          {
+            "x": 1114,
+            "y": 0,
+            "width": 279,
+            "height": 470
+          },
+          {
+            "x": 1393,
+            "y": 0,
+            "width": 279,
+            "height": 470
+          },
+          {
+            "x": 0,
+            "y": 470,
+            "width": 278,
+            "height": 471
+          },
+          {
+            "x": 278,
+            "y": 470,
+            "width": 279,
+            "height": 471
+          },
+          {
+            "x": 557,
+            "y": 470,
+            "width": 279,
+            "height": 471
+          },
+          {
+            "x": 836,
+            "y": 470,
+            "width": 278,
+            "height": 471
+          },
+          {
+            "x": 1114,
+            "y": 470,
+            "width": 279,
+            "height": 471
+          },
+          {
+            "x": 1393,
+            "y": 470,
+            "width": 279,
+            "height": 471
+          }
+        ],
+        "manifestContentHash": "ab47813c67f63e22a82828fbbe2490ab16bb7f60749897758f40810eab1f512e",
+        "maximumMeasuredKeyDistance": 32
+      },
+      "measuredKey": {
+        "red": 242,
+        "green": 9,
+        "blue": 235,
+        "hex": "#f209eb"
+      },
+      "alphaPixels": {
+        "transparent": 1412475,
+        "partial": 18839,
+        "opaque": 142038
+      },
+      "components": [
+        "upper-arm-left",
+        "lower-arm-left",
+        "hand-left",
+        "upper-arm-right",
+        "lower-arm-right",
+        "hand-right",
+        "upper-leg-left",
+        "lower-leg-left",
+        "foot-left",
+        "upper-leg-right",
+        "lower-leg-right",
+        "foot-right"
+      ]
+    },
+    {
+      "id": "eyes",
+      "atlas": "face-front",
+      "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+      "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+      "dimensions": {
+        "width": 1774,
+        "height": 887
+      },
+      "extraction": {
+        "mode": "sealed-source-rects",
+        "declaredGrid": {
+          "columns": 7,
+          "rows": 2
+        },
+        "sourceRects": [
+          {
+            "x": 41,
+            "y": 125,
+            "width": 227,
+            "height": 251
+          },
+          {
+            "x": 295,
+            "y": 137,
+            "width": 201,
+            "height": 234
+          },
+          {
+            "x": 525,
+            "y": 177,
+            "width": 289,
+            "height": 148
+          },
+          {
+            "x": 825,
+            "y": 197,
+            "width": 266,
+            "height": 153
+          },
+          {
+            "x": 1125,
+            "y": 264,
+            "width": 208,
+            "height": 79
+          },
+          {
+            "x": 1362,
+            "y": 228,
+            "width": 185,
+            "height": 112
+          },
+          {
+            "x": 1574,
+            "y": 195,
+            "width": 179,
+            "height": 152
+          },
+          {
+            "x": 39,
+            "y": 511,
+            "width": 225,
+            "height": 253
+          },
+          {
+            "x": 290,
+            "y": 523,
+            "width": 201,
+            "height": 235
+          },
+          {
+            "x": 520,
+            "y": 549,
+            "width": 289,
+            "height": 156
+          },
+          {
+            "x": 825,
+            "y": 568,
+            "width": 267,
+            "height": 161
+          },
+          {
+            "x": 1125,
+            "y": 640,
+            "width": 208,
+            "height": 78
+          },
+          {
+            "x": 1359,
+            "y": 599,
+            "width": 185,
+            "height": 110
+          },
+          {
+            "x": 1563,
+            "y": 579,
+            "width": 166,
+            "height": 143
+          }
+        ],
+        "manifestContentHash": "88fd36bcf41bf8568830892046a0ad61944cc0042470deac14a24da44a0f0c9a",
+        "maximumMeasuredKeyDistance": 24
+      },
+      "measuredKey": {
+        "red": 248,
+        "green": 5,
+        "blue": 248,
+        "hex": "#f805f8"
+      },
+      "alphaPixels": {
+        "transparent": 1386994,
+        "partial": 7564,
+        "opaque": 178980
+      },
+      "components": [
+        "eye-white-left",
+        "pupil-left",
+        "lid-open-left",
+        "lid-half-left",
+        "lid-closed-left",
+        "brow-neutral-left",
+        "brow-raised-left",
+        "eye-white-right",
+        "pupil-right",
+        "lid-open-right",
+        "lid-half-right",
+        "lid-closed-right",
+        "brow-neutral-right",
+        "brow-raised-right"
+      ]
+    },
+    {
+      "id": "mouths",
+      "atlas": "face-front",
+      "sourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+      "keyedSourceContentHash": "121fe9347f6b4a167a5c2782ff48d0e1d6150bd7a1f722e6ebeea1f8a6906eec",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086
+      },
+      "extraction": {
+        "mode": "equal-grid",
+        "declaredGrid": {
+          "columns": 4,
+          "rows": 2
+        },
+        "sourceRects": [
+          {
+            "x": 0,
+            "y": 0,
+            "width": 362,
+            "height": 543
+          },
+          {
+            "x": 362,
+            "y": 0,
+            "width": 362,
+            "height": 543
+          },
+          {
+            "x": 724,
+            "y": 0,
+            "width": 362,
+            "height": 543
+          },
+          {
+            "x": 1086,
+            "y": 0,
+            "width": 362,
+            "height": 543
+          },
+          {
+            "x": 0,
+            "y": 543,
+            "width": 362,
+            "height": 543
+          },
+          {
+            "x": 362,
+            "y": 543,
+            "width": 362,
+            "height": 543
+          },
+          {
+            "x": 724,
+            "y": 543,
+            "width": 362,
+            "height": 543
+          },
+          {
+            "x": 1086,
+            "y": 543,
+            "width": 362,
+            "height": 543
+          }
+        ],
+        "manifestContentHash": "a7a32db6266a4851a222702b57b568000a2b3043bb20f5770eee54098d23be4c",
+        "maximumMeasuredKeyDistance": 24
+      },
+      "measuredKey": {
+        "red": 246,
+        "green": 7,
+        "blue": 235,
+        "hex": "#f607eb"
+      },
+      "alphaPixels": {
+        "transparent": 1500009,
+        "partial": 13631,
+        "opaque": 58888
+      },
+      "components": [
+        "mouth-rest",
+        "viseme-ai",
+        "viseme-e",
+        "viseme-mbp",
+        "viseme-oh",
+        "viseme-fv",
+        "viseme-l",
+        "viseme-wq"
+      ]
+    }
+  ],
+  "atlases": {
+    "partsFront": {
+      "relativeFile": "derived/ollo-parts-front-source-set-f-alpha.png",
+      "contentHash": "a8c74ff89094a4169be9b19f7d9c0e251f0059aa6d13a9075994d74ba11efe30",
+      "byteLength": 1077007,
+      "width": 1600,
+      "height": 1248,
+      "columns": 5,
+      "rows": 4,
+      "cellWidth": 320,
+      "cellHeight": 312,
+      "gutter": 24,
+      "alphaClass": "mixed-alpha",
+      "components": [
+        {
+          "id": "torso",
+          "sourceSheetId": "core",
+          "sourceContentHash": "8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d",
+          "keyedSourceContentHash": "928d4b9306ad077e1592d54e79b21b195ec1f1b54dcbdaff48de24bdaba27581",
+          "sourceCellIndex": 0,
+          "sourceCell": {
+            "x": 0,
+            "y": 0,
+            "width": 384,
+            "height": 512
+          },
+          "contentBoundsWithinCell": {
+            "x": 142,
+            "y": 172,
+            "width": 199,
+            "height": 233
+          },
+          "contentHash": "cf280396743e1515fe1429cef885880c6b1349ad117a5fe81099c61095483103",
+          "atlasCell": {
+            "x": 0,
+            "y": 0,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 60,
+            "y": 39,
+            "width": 199,
+            "height": 233
+          }
+        },
+        {
+          "id": "pelvis",
+          "sourceSheetId": "core",
+          "sourceContentHash": "8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d",
+          "keyedSourceContentHash": "928d4b9306ad077e1592d54e79b21b195ec1f1b54dcbdaff48de24bdaba27581",
+          "sourceCellIndex": 1,
+          "sourceCell": {
+            "x": 384,
+            "y": 0,
+            "width": 384,
+            "height": 512
+          },
+          "contentBoundsWithinCell": {
+            "x": 123,
+            "y": 215,
+            "width": 182,
+            "height": 154
+          },
+          "contentHash": "b728362dc910e0baed19eb22cab6193169d1a7f6f60d4a088709e67f9a26066e",
+          "atlasCell": {
+            "x": 320,
+            "y": 0,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 389,
+            "y": 79,
+            "width": 182,
+            "height": 154
+          }
+        },
+        {
+          "id": "head",
+          "sourceSheetId": "core",
+          "sourceContentHash": "8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d",
+          "keyedSourceContentHash": "928d4b9306ad077e1592d54e79b21b195ec1f1b54dcbdaff48de24bdaba27581",
+          "sourceCellIndex": 2,
+          "sourceCell": {
+            "x": 768,
+            "y": 0,
+            "width": 384,
+            "height": 512
+          },
+          "contentBoundsWithinCell": {
+            "x": 67,
+            "y": 139,
+            "width": 272,
+            "height": 264
+          },
+          "contentHash": "174ccce2766ca74c82e8fb094e19c82cc8ff8ff55baa2f5071350d3bae5b6c1b",
+          "atlasCell": {
+            "x": 640,
+            "y": 0,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 664,
+            "y": 24,
+            "width": 272,
+            "height": 264
+          }
+        },
+        {
+          "id": "ear-left",
+          "sourceSheetId": "core",
+          "sourceContentHash": "8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d",
+          "keyedSourceContentHash": "928d4b9306ad077e1592d54e79b21b195ec1f1b54dcbdaff48de24bdaba27581",
+          "sourceCellIndex": 4,
+          "sourceCell": {
+            "x": 0,
+            "y": 512,
+            "width": 384,
+            "height": 512
+          },
+          "contentBoundsWithinCell": {
+            "x": 188,
+            "y": 82,
+            "width": 111,
+            "height": 245
+          },
+          "contentHash": "cff364f3213483fb620df15de9222356be1ed1c983741ffb156977add5f43055",
+          "atlasCell": {
+            "x": 960,
+            "y": 0,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 1064,
+            "y": 33,
+            "width": 111,
+            "height": 245
+          }
+        },
+        {
+          "id": "ear-right",
+          "sourceSheetId": "core",
+          "sourceContentHash": "8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d",
+          "keyedSourceContentHash": "928d4b9306ad077e1592d54e79b21b195ec1f1b54dcbdaff48de24bdaba27581",
+          "sourceCellIndex": 5,
+          "sourceCell": {
+            "x": 384,
+            "y": 512,
+            "width": 384,
+            "height": 512
+          },
+          "contentBoundsWithinCell": {
+            "x": 147,
+            "y": 81,
+            "width": 112,
+            "height": 246
+          },
+          "contentHash": "c848c8c69aac57192f8bff63d00a34ef22f6251dc06f8fc486bcebefdad53672",
+          "atlasCell": {
+            "x": 1280,
+            "y": 0,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 1384,
+            "y": 33,
+            "width": 112,
+            "height": 246
+          }
+        },
+        {
+          "id": "upper-arm-left",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 0,
+          "sourceCell": {
+            "x": 0,
+            "y": 0,
+            "width": 278,
+            "height": 470
+          },
+          "contentBoundsWithinCell": {
+            "x": 137,
+            "y": 181,
+            "width": 94,
+            "height": 226
+          },
+          "contentHash": "01c45cffb8471c3f46a24fca79e626589b48eb9ac3da51b19017704cfef9e071",
+          "atlasCell": {
+            "x": 0,
+            "y": 312,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 113,
+            "y": 355,
+            "width": 94,
+            "height": 226
+          }
+        },
+        {
+          "id": "lower-arm-left",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 1,
+          "sourceCell": {
+            "x": 278,
+            "y": 0,
+            "width": 279,
+            "height": 470
+          },
+          "contentBoundsWithinCell": {
+            "x": 120,
+            "y": 180,
+            "width": 94,
+            "height": 224
+          },
+          "contentHash": "dc7c393cb21f6d1cbcdff0cbabb6a7ffa36a1ab453f8a904f9b7297c47808c73",
+          "atlasCell": {
+            "x": 320,
+            "y": 312,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 433,
+            "y": 356,
+            "width": 94,
+            "height": 224
+          }
+        },
+        {
+          "id": "hand-left",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 2,
+          "sourceCell": {
+            "x": 557,
+            "y": 0,
+            "width": 279,
+            "height": 470
+          },
+          "contentBoundsWithinCell": {
+            "x": 74,
+            "y": 224,
+            "width": 125,
+            "height": 147
+          },
+          "contentHash": "7fed16fea7edf7056163a4e1a7e56136e83f5a050a66807fc3fb05c6d521892f",
+          "atlasCell": {
+            "x": 640,
+            "y": 312,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 737,
+            "y": 394,
+            "width": 125,
+            "height": 147
+          }
+        },
+        {
+          "id": "upper-arm-right",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 3,
+          "sourceCell": {
+            "x": 836,
+            "y": 0,
+            "width": 278,
+            "height": 470
+          },
+          "contentBoundsWithinCell": {
+            "x": 78,
+            "y": 177,
+            "width": 94,
+            "height": 230
+          },
+          "contentHash": "e53792944834a0d17ee56b8690f0a33e18830e3e9fc7ad85335b1fe8101a9cb2",
+          "atlasCell": {
+            "x": 960,
+            "y": 312,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 1073,
+            "y": 353,
+            "width": 94,
+            "height": 230
+          }
+        },
+        {
+          "id": "lower-arm-right",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 4,
+          "sourceCell": {
+            "x": 1114,
+            "y": 0,
+            "width": 279,
+            "height": 470
+          },
+          "contentBoundsWithinCell": {
+            "x": 55,
+            "y": 182,
+            "width": 93,
+            "height": 223
+          },
+          "contentHash": "7fc813da78d4ac6c72a7182e5ad2b0ae5751059f93df8334c793cdfbaccff79e",
+          "atlasCell": {
+            "x": 1280,
+            "y": 312,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 1393,
+            "y": 356,
+            "width": 93,
+            "height": 223
+          }
+        },
+        {
+          "id": "hand-right",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 5,
+          "sourceCell": {
+            "x": 1393,
+            "y": 0,
+            "width": 279,
+            "height": 470
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 225,
+            "width": 123,
+            "height": 146
+          },
+          "contentHash": "632efc0bb42d1d803239d88ebf5f52f1d3a6b55de6d15c51cf474b43bcbf21f0",
+          "atlasCell": {
+            "x": 0,
+            "y": 624,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 98,
+            "y": 707,
+            "width": 123,
+            "height": 146
+          }
+        },
+        {
+          "id": "upper-leg-left",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 6,
+          "sourceCell": {
+            "x": 0,
+            "y": 470,
+            "width": 278,
+            "height": 471
+          },
+          "contentBoundsWithinCell": {
+            "x": 132,
+            "y": 73,
+            "width": 103,
+            "height": 225
+          },
+          "contentHash": "c2087d8c34c6d6622a8b34f46ba4e066a0500a62047426625e55e985fea00ae5",
+          "atlasCell": {
+            "x": 320,
+            "y": 624,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 428,
+            "y": 667,
+            "width": 103,
+            "height": 225
+          }
+        },
+        {
+          "id": "lower-leg-left",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 7,
+          "sourceCell": {
+            "x": 278,
+            "y": 470,
+            "width": 279,
+            "height": 471
+          },
+          "contentBoundsWithinCell": {
+            "x": 116,
+            "y": 95,
+            "width": 80,
+            "height": 204
+          },
+          "contentHash": "04b4df09a4c7dea5b80d1867b3378704d7c2eeb4025b05b7649d4697e4cb9382",
+          "atlasCell": {
+            "x": 640,
+            "y": 624,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 760,
+            "y": 678,
+            "width": 80,
+            "height": 204
+          }
+        },
+        {
+          "id": "foot-left",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 8,
+          "sourceCell": {
+            "x": 557,
+            "y": 470,
+            "width": 279,
+            "height": 471
+          },
+          "contentBoundsWithinCell": {
+            "x": 62,
+            "y": 165,
+            "width": 121,
+            "height": 114
+          },
+          "contentHash": "b1ac5083227a3d7e7d42d2511a38d61f3ee41a96d4499e0ce7fb9c2d7b64811e",
+          "atlasCell": {
+            "x": 960,
+            "y": 624,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 1059,
+            "y": 723,
+            "width": 121,
+            "height": 114
+          }
+        },
+        {
+          "id": "upper-leg-right",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 9,
+          "sourceCell": {
+            "x": 836,
+            "y": 470,
+            "width": 278,
+            "height": 471
+          },
+          "contentBoundsWithinCell": {
+            "x": 72,
+            "y": 77,
+            "width": 102,
+            "height": 226
+          },
+          "contentHash": "01669049fb6a8379b988742c813e502b10bd666ed97dacaa971e3b2ce1d20df5",
+          "atlasCell": {
+            "x": 1280,
+            "y": 624,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 1389,
+            "y": 667,
+            "width": 102,
+            "height": 226
+          }
+        },
+        {
+          "id": "lower-leg-right",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 10,
+          "sourceCell": {
+            "x": 1114,
+            "y": 470,
+            "width": 279,
+            "height": 471
+          },
+          "contentBoundsWithinCell": {
+            "x": 64,
+            "y": 98,
+            "width": 78,
+            "height": 204
+          },
+          "contentHash": "2cdc692f37d2ee8f2e962bc6434720cb7c6b4d2566592f2a6c549b7de8bfdd87",
+          "atlasCell": {
+            "x": 0,
+            "y": 936,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 121,
+            "y": 990,
+            "width": 78,
+            "height": 204
+          }
+        },
+        {
+          "id": "foot-right",
+          "sourceSheetId": "limbs",
+          "sourceContentHash": "1f1a6dca2775de25bd402ea250461dc824c157201f55c814053138383a187b21",
+          "keyedSourceContentHash": "ab5c8d094cf3ff512df7491ed8e7f975eb84b0bfca5009dc2a35ee9eb2b62eeb",
+          "sourceCellIndex": 11,
+          "sourceCell": {
+            "x": 1393,
+            "y": 470,
+            "width": 279,
+            "height": 471
+          },
+          "contentBoundsWithinCell": {
+            "x": 22,
+            "y": 167,
+            "width": 122,
+            "height": 112
+          },
+          "contentHash": "e3fd716f72a0da10533ff43d5f673aab6ba59498460706d5c288715a2bafa45a",
+          "atlasCell": {
+            "x": 320,
+            "y": 936,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 419,
+            "y": 1036,
+            "width": 122,
+            "height": 112
+          }
+        },
+        {
+          "id": "tail",
+          "sourceSheetId": "core",
+          "sourceContentHash": "8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d",
+          "keyedSourceContentHash": "928d4b9306ad077e1592d54e79b21b195ec1f1b54dcbdaff48de24bdaba27581",
+          "sourceCellIndex": 3,
+          "sourceCell": {
+            "x": 1152,
+            "y": 0,
+            "width": 384,
+            "height": 512
+          },
+          "contentBoundsWithinCell": {
+            "x": 106,
+            "y": 252,
+            "width": 105,
+            "height": 113
+          },
+          "contentHash": "b04e73d8d3ead475028593ef97cf05227d24d258186e7f16abc534d3ca175ab8",
+          "atlasCell": {
+            "x": 640,
+            "y": 936,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 747,
+            "y": 1035,
+            "width": 105,
+            "height": 113
+          }
+        },
+        {
+          "id": "secondary-front",
+          "sourceSheetId": "core",
+          "sourceContentHash": "8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d",
+          "keyedSourceContentHash": "928d4b9306ad077e1592d54e79b21b195ec1f1b54dcbdaff48de24bdaba27581",
+          "sourceCellIndex": 6,
+          "sourceCell": {
+            "x": 768,
+            "y": 512,
+            "width": 384,
+            "height": 512
+          },
+          "contentBoundsWithinCell": {
+            "x": 63,
+            "y": 100,
+            "width": 214,
+            "height": 242
+          },
+          "contentHash": "5fdd1e291da8317f8f03775c4c5d00a9f00d4116fafc207c3393d140dbe58ef6",
+          "atlasCell": {
+            "x": 960,
+            "y": 936,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 1013,
+            "y": 971,
+            "width": 214,
+            "height": 242
+          }
+        },
+        {
+          "id": "secondary-back",
+          "sourceSheetId": "core",
+          "sourceContentHash": "8678f1b4813bb02ff7d6eb2a3885dac7d5677cebd4555a9b3e1a31862793219d",
+          "keyedSourceContentHash": "928d4b9306ad077e1592d54e79b21b195ec1f1b54dcbdaff48de24bdaba27581",
+          "sourceCellIndex": 7,
+          "sourceCell": {
+            "x": 1152,
+            "y": 512,
+            "width": 384,
+            "height": 512
+          },
+          "contentBoundsWithinCell": {
+            "x": 35,
+            "y": 96,
+            "width": 233,
+            "height": 215
+          },
+          "contentHash": "a43dfac4a908dc2337c086a90c673dafa44f781835051a2cf5294c4e12ef7ddb",
+          "atlasCell": {
+            "x": 1280,
+            "y": 936,
+            "width": 320,
+            "height": 312
+          },
+          "atlasContentBounds": {
+            "x": 1323,
+            "y": 984,
+            "width": 233,
+            "height": 215
+          }
+        }
+      ]
+    },
+    "faceFront": {
+      "relativeFile": "derived/ollo-face-front-source-set-f-alpha.png",
+      "contentHash": "b9564f7fd1a30e470ea62e9d85d430dcb2d437f4b9e9a5ef01cc1507cb6925c7",
+      "byteLength": 1657956,
+      "width": 4896,
+      "height": 2112,
+      "columns": 6,
+      "rows": 4,
+      "cellWidth": 816,
+      "cellHeight": 528,
+      "gutter": 24,
+      "alphaClass": "mixed-alpha",
+      "components": [
+        {
+          "id": "eye-white-left",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 0,
+          "sourceCell": {
+            "x": 41,
+            "y": 125,
+            "width": 227,
+            "height": 251
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 179,
+            "height": 203
+          },
+          "contentHash": "1b06e337c6c43e58477d9d93efdb6f4b4b73ec0c38e6de01c044160b2888c56e",
+          "atlasCell": {
+            "x": 0,
+            "y": 0,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 318,
+            "y": 162,
+            "width": 179,
+            "height": 203
+          }
+        },
+        {
+          "id": "eye-white-right",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 7,
+          "sourceCell": {
+            "x": 39,
+            "y": 511,
+            "width": 225,
+            "height": 253
+          },
+          "contentBoundsWithinCell": {
+            "x": 23,
+            "y": 24,
+            "width": 178,
+            "height": 205
+          },
+          "contentHash": "5cbba67f64a4edd5373e357cfd25abfda28eabf5032a073a74c28b606dccdb24",
+          "atlasCell": {
+            "x": 816,
+            "y": 0,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 1135,
+            "y": 161,
+            "width": 178,
+            "height": 205
+          }
+        },
+        {
+          "id": "pupil-left",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 1,
+          "sourceCell": {
+            "x": 295,
+            "y": 137,
+            "width": 201,
+            "height": 234
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 153,
+            "height": 186
+          },
+          "contentHash": "ba0eaa900268b47922441e4b3a75942e178abc0e27d1c9d88b4c3b92f076a93e",
+          "atlasCell": {
+            "x": 1632,
+            "y": 0,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 1963,
+            "y": 171,
+            "width": 153,
+            "height": 186
+          }
+        },
+        {
+          "id": "pupil-right",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 8,
+          "sourceCell": {
+            "x": 290,
+            "y": 523,
+            "width": 201,
+            "height": 235
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 153,
+            "height": 187
+          },
+          "contentHash": "c0aa938dfd7063236584306b0e4d0fe0bd3e456972be06af2b6ef2a94a8f16f2",
+          "atlasCell": {
+            "x": 2448,
+            "y": 0,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 2779,
+            "y": 170,
+            "width": 153,
+            "height": 187
+          }
+        },
+        {
+          "id": "lid-open-left",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 2,
+          "sourceCell": {
+            "x": 525,
+            "y": 177,
+            "width": 289,
+            "height": 148
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 241,
+            "height": 100
+          },
+          "contentHash": "62a8277edd816902c0cdab1fb0e5def8022276eccc1ea72d1b78d5aa4cb55c1c",
+          "atlasCell": {
+            "x": 3264,
+            "y": 0,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 3551,
+            "y": 214,
+            "width": 241,
+            "height": 100
+          }
+        },
+        {
+          "id": "lid-open-right",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 9,
+          "sourceCell": {
+            "x": 520,
+            "y": 549,
+            "width": 289,
+            "height": 156
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 241,
+            "height": 108
+          },
+          "contentHash": "4de46f33a0af4362848f7b5f01af44cbac11e61c39691b46449c03c251e8e02e",
+          "atlasCell": {
+            "x": 4080,
+            "y": 0,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 4367,
+            "y": 210,
+            "width": 241,
+            "height": 108
+          }
+        },
+        {
+          "id": "lid-half-left",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 3,
+          "sourceCell": {
+            "x": 825,
+            "y": 197,
+            "width": 266,
+            "height": 153
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 218,
+            "height": 105
+          },
+          "contentHash": "d7c083ef632383b7884b6c79e736b2cf899d9b262eef50c9080b56e0566b470c",
+          "atlasCell": {
+            "x": 0,
+            "y": 528,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 299,
+            "y": 739,
+            "width": 218,
+            "height": 105
+          }
+        },
+        {
+          "id": "lid-half-right",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 10,
+          "sourceCell": {
+            "x": 825,
+            "y": 568,
+            "width": 267,
+            "height": 161
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 219,
+            "height": 113
+          },
+          "contentHash": "63000530e20bd9ae417a0a4850c5661845f0790b3ab92a9711aedc4e1f479611",
+          "atlasCell": {
+            "x": 816,
+            "y": 528,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 1114,
+            "y": 735,
+            "width": 219,
+            "height": 113
+          }
+        },
+        {
+          "id": "lid-closed-left",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 4,
+          "sourceCell": {
+            "x": 1125,
+            "y": 264,
+            "width": 208,
+            "height": 79
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 160,
+            "height": 31
+          },
+          "contentHash": "13181f26c18c4a17f9a9fefd6da1c46ba82871a3a35c61d6216f652f13b55d0e",
+          "atlasCell": {
+            "x": 1632,
+            "y": 528,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 1960,
+            "y": 776,
+            "width": 160,
+            "height": 31
+          }
+        },
+        {
+          "id": "lid-closed-right",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 11,
+          "sourceCell": {
+            "x": 1125,
+            "y": 640,
+            "width": 208,
+            "height": 78
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 160,
+            "height": 30
+          },
+          "contentHash": "7ac27cb3a0e9ba03affc8b0bc63cdf92e3fd42b445f39bcc815b267794968969",
+          "atlasCell": {
+            "x": 2448,
+            "y": 528,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 2776,
+            "y": 777,
+            "width": 160,
+            "height": 30
+          }
+        },
+        {
+          "id": "brow-neutral-left",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 5,
+          "sourceCell": {
+            "x": 1362,
+            "y": 228,
+            "width": 185,
+            "height": 112
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 137,
+            "height": 64
+          },
+          "contentHash": "912e83703268bf7302b083720b3dbe9a600d700f931a8ee2ce9d81302f396c66",
+          "atlasCell": {
+            "x": 3264,
+            "y": 528,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 3603,
+            "y": 760,
+            "width": 137,
+            "height": 64
+          }
+        },
+        {
+          "id": "brow-neutral-right",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 12,
+          "sourceCell": {
+            "x": 1359,
+            "y": 599,
+            "width": 185,
+            "height": 110
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 137,
+            "height": 62
+          },
+          "contentHash": "935a08367101a5ff19caf47f5bf171eedbde46786aa929e88146a7186915e0f4",
+          "atlasCell": {
+            "x": 4080,
+            "y": 528,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 4419,
+            "y": 761,
+            "width": 137,
+            "height": 62
+          }
+        },
+        {
+          "id": "brow-raised-left",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 6,
+          "sourceCell": {
+            "x": 1574,
+            "y": 195,
+            "width": 179,
+            "height": 152
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 131,
+            "height": 104
+          },
+          "contentHash": "a3458a5fcbe9935835a24bf4e7c0bda012d0524696efe2a3d978828aeb3f8e83",
+          "atlasCell": {
+            "x": 0,
+            "y": 1056,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 342,
+            "y": 1268,
+            "width": 131,
+            "height": 104
+          }
+        },
+        {
+          "id": "brow-raised-right",
+          "sourceSheetId": "eyes",
+          "sourceContentHash": "65c568d88c21e7c89f7d8cd9863e8da6119e568b1c06242389bca1c33ddcb875",
+          "keyedSourceContentHash": "2b49ca413e964f42972b3f2c4ee70b72f2a4021d4b8112f2049ce00c8acc85a3",
+          "sourceCellIndex": 13,
+          "sourceCell": {
+            "x": 1563,
+            "y": 579,
+            "width": 166,
+            "height": 143
+          },
+          "contentBoundsWithinCell": {
+            "x": 24,
+            "y": 24,
+            "width": 118,
+            "height": 95
+          },
+          "contentHash": "75f7fbb282dd11651f516a5b4c44df6af4b817d44b0e3eadd9d5cb60321a2d86",
+          "atlasCell": {
+            "x": 816,
+            "y": 1056,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 1165,
+            "y": 1272,
+            "width": 118,
+            "height": 95
+          }
+        },
+        {
+          "id": "mouth-rest",
+          "sourceSheetId": "mouths",
+          "sourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+          "keyedSourceContentHash": "121fe9347f6b4a167a5c2782ff48d0e1d6150bd7a1f722e6ebeea1f8a6906eec",
+          "sourceCellIndex": 0,
+          "sourceCell": {
+            "x": 0,
+            "y": 0,
+            "width": 362,
+            "height": 543
+          },
+          "contentBoundsWithinCell": {
+            "x": 137,
+            "y": 329,
+            "width": 142,
+            "height": 42
+          },
+          "contentHash": "29c0c5c632ce8334a8e9a5fb52d1b56da181537125413f81ca569e922a749c43",
+          "atlasCell": {
+            "x": 1632,
+            "y": 1056,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 1656,
+            "y": 1080,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-ai",
+          "sourceSheetId": "mouths",
+          "sourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+          "keyedSourceContentHash": "121fe9347f6b4a167a5c2782ff48d0e1d6150bd7a1f722e6ebeea1f8a6906eec",
+          "sourceCellIndex": 1,
+          "sourceCell": {
+            "x": 362,
+            "y": 0,
+            "width": 362,
+            "height": 543
+          },
+          "contentBoundsWithinCell": {
+            "x": 88,
+            "y": 272,
+            "width": 177,
+            "height": 154
+          },
+          "contentHash": "58e70ebde6dd6cbd75f55e52a29eb6c9f46a9f10c144a077cf065aad18cebbe3",
+          "atlasCell": {
+            "x": 2448,
+            "y": 1056,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 2472,
+            "y": 1080,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-e",
+          "sourceSheetId": "mouths",
+          "sourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+          "keyedSourceContentHash": "121fe9347f6b4a167a5c2782ff48d0e1d6150bd7a1f722e6ebeea1f8a6906eec",
+          "sourceCellIndex": 2,
+          "sourceCell": {
+            "x": 724,
+            "y": 0,
+            "width": 362,
+            "height": 543
+          },
+          "contentBoundsWithinCell": {
+            "x": 65,
+            "y": 317,
+            "width": 212,
+            "height": 83
+          },
+          "contentHash": "4d193f614114cf7d0430e22c9cc34b5ba69a61a9a3580be13181f1c2a91dae6a",
+          "atlasCell": {
+            "x": 3264,
+            "y": 1056,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 3288,
+            "y": 1080,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-mbp",
+          "sourceSheetId": "mouths",
+          "sourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+          "keyedSourceContentHash": "121fe9347f6b4a167a5c2782ff48d0e1d6150bd7a1f722e6ebeea1f8a6906eec",
+          "sourceCellIndex": 3,
+          "sourceCell": {
+            "x": 1086,
+            "y": 0,
+            "width": 362,
+            "height": 543
+          },
+          "contentBoundsWithinCell": {
+            "x": 57,
+            "y": 335,
+            "width": 183,
+            "height": 28
+          },
+          "contentHash": "1ef5b087879d002df4f3857a8950eb57b3ec35af7241d2266d6c737e0d3a57d4",
+          "atlasCell": {
+            "x": 4080,
+            "y": 1056,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 4104,
+            "y": 1080,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-oh",
+          "sourceSheetId": "mouths",
+          "sourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+          "keyedSourceContentHash": "121fe9347f6b4a167a5c2782ff48d0e1d6150bd7a1f722e6ebeea1f8a6906eec",
+          "sourceCellIndex": 4,
+          "sourceCell": {
+            "x": 0,
+            "y": 543,
+            "width": 362,
+            "height": 543
+          },
+          "contentBoundsWithinCell": {
+            "x": 154,
+            "y": 146,
+            "width": 98,
+            "height": 124
+          },
+          "contentHash": "50fdcb0fa13763bbb6b22220821887b87bce4e3a1097cd756703995fc44aebe8",
+          "atlasCell": {
+            "x": 0,
+            "y": 1584,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 24,
+            "y": 1608,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-fv",
+          "sourceSheetId": "mouths",
+          "sourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+          "keyedSourceContentHash": "121fe9347f6b4a167a5c2782ff48d0e1d6150bd7a1f722e6ebeea1f8a6906eec",
+          "sourceCellIndex": 5,
+          "sourceCell": {
+            "x": 362,
+            "y": 543,
+            "width": 362,
+            "height": 543
+          },
+          "contentBoundsWithinCell": {
+            "x": 81,
+            "y": 159,
+            "width": 189,
+            "height": 93
+          },
+          "contentHash": "c9b48d065e064f7a694ac7e359a2328d602dde284e6ae516fa04c1c57d8d0002",
+          "atlasCell": {
+            "x": 816,
+            "y": 1584,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 840,
+            "y": 1608,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-l",
+          "sourceSheetId": "mouths",
+          "sourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+          "keyedSourceContentHash": "121fe9347f6b4a167a5c2782ff48d0e1d6150bd7a1f722e6ebeea1f8a6906eec",
+          "sourceCellIndex": 6,
+          "sourceCell": {
+            "x": 724,
+            "y": 543,
+            "width": 362,
+            "height": 543
+          },
+          "contentBoundsWithinCell": {
+            "x": 76,
+            "y": 151,
+            "width": 183,
+            "height": 126
+          },
+          "contentHash": "f04c8613cf7195466377f10b0b25dc28d73df540dc0ab5d92dc355020cc37283",
+          "atlasCell": {
+            "x": 1632,
+            "y": 1584,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 1656,
+            "y": 1608,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-wq",
+          "sourceSheetId": "mouths",
+          "sourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+          "keyedSourceContentHash": "121fe9347f6b4a167a5c2782ff48d0e1d6150bd7a1f722e6ebeea1f8a6906eec",
+          "sourceCellIndex": 7,
+          "sourceCell": {
+            "x": 1086,
+            "y": 543,
+            "width": 362,
+            "height": 543
+          },
+          "contentBoundsWithinCell": {
+            "x": 122,
+            "y": 158,
+            "width": 51,
+            "height": 87
+          },
+          "contentHash": "7b93c1ae9b99ed27fb6c61897c9ff954b725049dcb5c1fbac804a9fbd5fabade",
+          "atlasCell": {
+            "x": 2448,
+            "y": 1584,
+            "width": 816,
+            "height": 528
+          },
+          "atlasContentBounds": {
+            "x": 2472,
+            "y": 1608,
+            "width": 768,
+            "height": 480
+          }
+        }
+      ]
+    }
+  },
+  "lowerFacePatches": {
+    "contract": {
+      "replacementMode": "exclusive",
+      "ownedFeatures": [
+        "nose",
+        "muzzle",
+        "mouth"
+      ],
+      "registrationGroup": "ollo-front-lower-face-v1",
+      "atomicReplacement": true,
+      "fixedZOrder": true,
+      "width": 768,
+      "height": 480,
+      "pivot": {
+        "x": 384,
+        "y": 120
+      },
+      "noseAnchor": {
+        "x": 384,
+        "y": 120
+      },
+      "mouthChangeBounds": {
+        "x": 220,
+        "y": 200,
+        "width": 328,
+        "height": 180
+      },
+      "pairwiseOutsideMouthChangeDelta": 0,
+      "commonAlphaPlane": true,
+      "headLowerFaceArtRequiredAbsent": true
+    },
+    "base": {
+      "sourceContentHash": "b20a8c344b74dcd9ee3e4b6c0ca93f305cb0e6e9f1bb75a170b8d13a53c0437c",
+      "keyedSourceContentHash": "753b9769cb30c943a49015c9b4b48ea556e572b6f66ab56d2d9f6e016467ea26",
+      "sourceRect": {
+        "x": 340,
+        "y": 290,
+        "width": 768,
+        "height": 480
+      },
+      "measuredKey": {
+        "red": 246,
+        "green": 7,
+        "blue": 242,
+        "hex": "#f607f2"
+      },
+      "manifestContentHash": "aac202a53ac54bd934e29f58c09d103b809e5365c94f9692ffd91153d456f5a9",
+      "alphaPlaneHash": "09186bf9294c388856bd84140907ecadd3a52f0b94205e44f700fa3ccb7c5b4e"
+    },
+    "patches": [
+      {
+        "id": "mouth-rest",
+        "contentHash": "29c0c5c632ce8334a8e9a5fb52d1b56da181537125413f81ca569e922a749c43",
+        "byteLength": 382612,
+        "width": 768,
+        "height": 480,
+        "pivot": {
+          "x": 384,
+          "y": 120
+        },
+        "noseAnchor": {
+          "x": 384,
+          "y": 120
+        },
+        "mouthChangeBounds": {
+          "x": 220,
+          "y": 200,
+          "width": 328,
+          "height": 180
+        },
+        "alphaPlaneHash": "09186bf9294c388856bd84140907ecadd3a52f0b94205e44f700fa3ccb7c5b4e",
+        "outsideMouthChangeDeltaFromBase": 0,
+        "changedPixelsInsideMouthChange": 2145,
+        "overlaySourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+        "overlaySourceCell": {
+          "x": 0,
+          "y": 0,
+          "width": 362,
+          "height": 543
+        },
+        "overlayContentBoundsWithinCell": {
+          "x": 137,
+          "y": 329,
+          "width": 142,
+          "height": 42
+        },
+        "overlayPlacement": {
+          "x": 313,
+          "y": 269,
+          "width": 142,
+          "height": 42
+        }
+      },
+      {
+        "id": "viseme-ai",
+        "contentHash": "58e70ebde6dd6cbd75f55e52a29eb6c9f46a9f10c144a077cf065aad18cebbe3",
+        "byteLength": 401222,
+        "width": 768,
+        "height": 480,
+        "pivot": {
+          "x": 384,
+          "y": 120
+        },
+        "noseAnchor": {
+          "x": 384,
+          "y": 120
+        },
+        "mouthChangeBounds": {
+          "x": 220,
+          "y": 200,
+          "width": 328,
+          "height": 180
+        },
+        "alphaPlaneHash": "09186bf9294c388856bd84140907ecadd3a52f0b94205e44f700fa3ccb7c5b4e",
+        "outsideMouthChangeDeltaFromBase": 0,
+        "changedPixelsInsideMouthChange": 16889,
+        "overlaySourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+        "overlaySourceCell": {
+          "x": 362,
+          "y": 0,
+          "width": 362,
+          "height": 543
+        },
+        "overlayContentBoundsWithinCell": {
+          "x": 88,
+          "y": 272,
+          "width": 177,
+          "height": 154
+        },
+        "overlayPlacement": {
+          "x": 295,
+          "y": 213,
+          "width": 177,
+          "height": 154
+        }
+      },
+      {
+        "id": "viseme-e",
+        "contentHash": "4d193f614114cf7d0430e22c9cc34b5ba69a61a9a3580be13181f1c2a91dae6a",
+        "byteLength": 396352,
+        "width": 768,
+        "height": 480,
+        "pivot": {
+          "x": 384,
+          "y": 120
+        },
+        "noseAnchor": {
+          "x": 384,
+          "y": 120
+        },
+        "mouthChangeBounds": {
+          "x": 220,
+          "y": 200,
+          "width": 328,
+          "height": 180
+        },
+        "alphaPlaneHash": "09186bf9294c388856bd84140907ecadd3a52f0b94205e44f700fa3ccb7c5b4e",
+        "outsideMouthChangeDeltaFromBase": 0,
+        "changedPixelsInsideMouthChange": 13568,
+        "overlaySourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+        "overlaySourceCell": {
+          "x": 724,
+          "y": 0,
+          "width": 362,
+          "height": 543
+        },
+        "overlayContentBoundsWithinCell": {
+          "x": 65,
+          "y": 317,
+          "width": 212,
+          "height": 83
+        },
+        "overlayPlacement": {
+          "x": 278,
+          "y": 248,
+          "width": 212,
+          "height": 83
+        }
+      },
+      {
+        "id": "viseme-mbp",
+        "contentHash": "1ef5b087879d002df4f3857a8950eb57b3ec35af7241d2266d6c737e0d3a57d4",
+        "byteLength": 382626,
+        "width": 768,
+        "height": 480,
+        "pivot": {
+          "x": 384,
+          "y": 120
+        },
+        "noseAnchor": {
+          "x": 384,
+          "y": 120
+        },
+        "mouthChangeBounds": {
+          "x": 220,
+          "y": 200,
+          "width": 328,
+          "height": 180
+        },
+        "alphaPlaneHash": "09186bf9294c388856bd84140907ecadd3a52f0b94205e44f700fa3ccb7c5b4e",
+        "outsideMouthChangeDeltaFromBase": 0,
+        "changedPixelsInsideMouthChange": 2439,
+        "overlaySourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+        "overlaySourceCell": {
+          "x": 1086,
+          "y": 0,
+          "width": 362,
+          "height": 543
+        },
+        "overlayContentBoundsWithinCell": {
+          "x": 57,
+          "y": 335,
+          "width": 183,
+          "height": 28
+        },
+        "overlayPlacement": {
+          "x": 292,
+          "y": 276,
+          "width": 183,
+          "height": 28
+        }
+      },
+      {
+        "id": "viseme-oh",
+        "contentHash": "50fdcb0fa13763bbb6b22220821887b87bce4e3a1097cd756703995fc44aebe8",
+        "byteLength": 393794,
+        "width": 768,
+        "height": 480,
+        "pivot": {
+          "x": 384,
+          "y": 120
+        },
+        "noseAnchor": {
+          "x": 384,
+          "y": 120
+        },
+        "mouthChangeBounds": {
+          "x": 220,
+          "y": 200,
+          "width": 328,
+          "height": 180
+        },
+        "alphaPlaneHash": "09186bf9294c388856bd84140907ecadd3a52f0b94205e44f700fa3ccb7c5b4e",
+        "outsideMouthChangeDeltaFromBase": 0,
+        "changedPixelsInsideMouthChange": 9456,
+        "overlaySourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+        "overlaySourceCell": {
+          "x": 0,
+          "y": 543,
+          "width": 362,
+          "height": 543
+        },
+        "overlayContentBoundsWithinCell": {
+          "x": 154,
+          "y": 146,
+          "width": 98,
+          "height": 124
+        },
+        "overlayPlacement": {
+          "x": 335,
+          "y": 228,
+          "width": 98,
+          "height": 124
+        }
+      },
+      {
+        "id": "viseme-fv",
+        "contentHash": "c9b48d065e064f7a694ac7e359a2328d602dde284e6ae516fa04c1c57d8d0002",
+        "byteLength": 395761,
+        "width": 768,
+        "height": 480,
+        "pivot": {
+          "x": 384,
+          "y": 120
+        },
+        "noseAnchor": {
+          "x": 384,
+          "y": 120
+        },
+        "mouthChangeBounds": {
+          "x": 220,
+          "y": 200,
+          "width": 328,
+          "height": 180
+        },
+        "alphaPlaneHash": "09186bf9294c388856bd84140907ecadd3a52f0b94205e44f700fa3ccb7c5b4e",
+        "outsideMouthChangeDeltaFromBase": 0,
+        "changedPixelsInsideMouthChange": 12550,
+        "overlaySourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+        "overlaySourceCell": {
+          "x": 362,
+          "y": 543,
+          "width": 362,
+          "height": 543
+        },
+        "overlayContentBoundsWithinCell": {
+          "x": 81,
+          "y": 159,
+          "width": 189,
+          "height": 93
+        },
+        "overlayPlacement": {
+          "x": 289,
+          "y": 243,
+          "width": 189,
+          "height": 93
+        }
+      },
+      {
+        "id": "viseme-l",
+        "contentHash": "f04c8613cf7195466377f10b0b25dc28d73df540dc0ab5d92dc355020cc37283",
+        "byteLength": 397644,
+        "width": 768,
+        "height": 480,
+        "pivot": {
+          "x": 384,
+          "y": 120
+        },
+        "noseAnchor": {
+          "x": 384,
+          "y": 120
+        },
+        "mouthChangeBounds": {
+          "x": 220,
+          "y": 200,
+          "width": 328,
+          "height": 180
+        },
+        "alphaPlaneHash": "09186bf9294c388856bd84140907ecadd3a52f0b94205e44f700fa3ccb7c5b4e",
+        "outsideMouthChangeDeltaFromBase": 0,
+        "changedPixelsInsideMouthChange": 13439,
+        "overlaySourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+        "overlaySourceCell": {
+          "x": 724,
+          "y": 543,
+          "width": 362,
+          "height": 543
+        },
+        "overlayContentBoundsWithinCell": {
+          "x": 76,
+          "y": 151,
+          "width": 183,
+          "height": 126
+        },
+        "overlayPlacement": {
+          "x": 292,
+          "y": 227,
+          "width": 183,
+          "height": 126
+        }
+      },
+      {
+        "id": "viseme-wq",
+        "contentHash": "7b93c1ae9b99ed27fb6c61897c9ff954b725049dcb5c1fbac804a9fbd5fabade",
+        "byteLength": 383062,
+        "width": 768,
+        "height": 480,
+        "pivot": {
+          "x": 384,
+          "y": 120
+        },
+        "noseAnchor": {
+          "x": 384,
+          "y": 120
+        },
+        "mouthChangeBounds": {
+          "x": 220,
+          "y": 200,
+          "width": 328,
+          "height": 180
+        },
+        "alphaPlaneHash": "09186bf9294c388856bd84140907ecadd3a52f0b94205e44f700fa3ccb7c5b4e",
+        "outsideMouthChangeDeltaFromBase": 0,
+        "changedPixelsInsideMouthChange": 2033,
+        "overlaySourceContentHash": "2fe8b26f892cf951e74a5a6c9ee75738efedef57481d2994828460b97d365437",
+        "overlaySourceCell": {
+          "x": 1086,
+          "y": 543,
+          "width": 362,
+          "height": 543
+        },
+        "overlayContentBoundsWithinCell": {
+          "x": 122,
+          "y": 158,
+          "width": 51,
+          "height": 87
+        },
+        "overlayPlacement": {
+          "x": 358,
+          "y": 246,
+          "width": 51,
+          "height": 87
+        }
+      }
+    ],
+    "diagnostic": {
+      "relativeFile": "derived/ollo-lower-face-source-candidate-diagnostic-f.png",
+      "classification": "source-candidate-diagnostic-only",
+      "framesPerPose": 3,
+      "contentHash": "6ba6452b349557580b3d2a33936eace2c8aecb34ddae282205b3c9f505b1e39b",
+      "byteLength": 546492,
+      "width": 4608,
+      "height": 480,
+      "sequence": [
+        "mouth-rest",
+        "viseme-ai",
+        "mouth-rest",
+        "viseme-mbp",
+        "mouth-rest",
+        "viseme-oh"
+      ],
+      "frames": [
+        {
+          "id": "mouth-rest",
+          "startFrame": 0,
+          "durationFrames": 3,
+          "contactSheetRect": {
+            "x": 0,
+            "y": 0,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-ai",
+          "startFrame": 3,
+          "durationFrames": 3,
+          "contactSheetRect": {
+            "x": 768,
+            "y": 0,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "mouth-rest",
+          "startFrame": 6,
+          "durationFrames": 3,
+          "contactSheetRect": {
+            "x": 1536,
+            "y": 0,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-mbp",
+          "startFrame": 9,
+          "durationFrames": 3,
+          "contactSheetRect": {
+            "x": 2304,
+            "y": 0,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "mouth-rest",
+          "startFrame": 12,
+          "durationFrames": 3,
+          "contactSheetRect": {
+            "x": 3072,
+            "y": 0,
+            "width": 768,
+            "height": 480
+          }
+        },
+        {
+          "id": "viseme-oh",
+          "startFrame": 15,
+          "durationFrames": 3,
+          "contactSheetRect": {
+            "x": 3840,
+            "y": 0,
+            "width": 768,
+            "height": 480
+          }
+        }
+      ]
+    }
+  },
+  "gate": {
+    "classification": "untrusted-source-candidate",
+    "declaredCanonicalFrontInventoryComplete": true,
+    "visualRoleAuditPassed": false,
+    "registrationReady": false,
+    "importReceiptCreated": false,
+    "preparedManifestCreated": false,
+    "providerAuthority": false,
+    "preparationAuthority": false,
+    "productionBindable": false,
+    "approvalRequired": true,
+    "bundleStatus": "incomplete",
+    "returnedItems": [
+      "face-front",
+      "parts-front"
+    ],
+    "partialItems": [
+      "turnaround-sheet"
+    ],
+    "missingItems": [
+      "face-profile-left",
+      "face-profile-right",
+      "parts-profile-left",
+      "parts-profile-right"
+    ],
+    "missingSubitems": [
+      {
+        "requestItemId": "turnaround-sheet",
+        "view": "three-quarter"
+      },
+      {
+        "requestItemId": "turnaround-sheet",
+        "view": "rear"
+      }
+    ],
+    "profileKitsMissing": true,
+    "turnaroundInstructionViewsMissing": [
+      "three-quarter",
+      "rear"
+    ],
+    "visualRoleAuditRequired": true,
+    "registrationAuditRequired": true,
+    "movingDiagnosticRequired": true,
+    "frontPreviewClassification": "source-candidate-diagnostic-only"
+  },
+  "stagedAt": "2026-07-19T10:30:00.000Z",
+  "contentHash": "35113c30ad22d1ea007015eb9119753f50cd6ffc2db662c1fb4f37d196b29162"
+}

@@ -285,6 +285,8 @@ describe("ContinuitySequencePlan", () => {
 
   it("binds bridge kind and event ID to the exact Director boundary", async () => {
     const { createCv002Project } = await import("../cv002-story-draft");
+    const { createCv002ArtDirectionSelection } =
+      await import("../cv002-art-direction");
     const { compileDirectorProject } = await import("./director-compiler");
     const { assertContinuitySequenceMatchesSources } =
       await import("./continuity-compiler");
@@ -299,6 +301,10 @@ describe("ContinuitySequencePlan", () => {
         "Bridge authority",
         script,
         "kids-adventure",
+        createCv002ArtDirectionSelection(
+          "kids-adventure",
+          "cut-paper-collage-mixed-media",
+        ),
       ),
     });
     const { contentHash, ...continuityDraft } = structuredClone(

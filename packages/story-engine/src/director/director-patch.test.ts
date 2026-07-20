@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { hashCanonical } from "../canonical-hash";
 import { createCv002Project } from "../cv002-story-draft";
+import { createCv002ArtDirectionSelection } from "../cv002-art-direction";
 import { applyDirectorPatch } from "./apply-director-patch";
 import { createCapabilityRegistry } from "./capability-report";
 import { compileDirectorProject } from "./director-compiler";
 import {
   describeDirectorPatch,
+  listDirectorReactionDelayCandidates,
   proposeDirectorPatch,
   proposeDirectorVisualPatch,
 } from "./director-patch";
@@ -28,6 +30,12 @@ const script = Array.from(
   { length: 9 },
   (_, index) => `${sentence.slice(0, -1)} ${index + 1}.`,
 ).join(" ");
+
+const reseal = <T extends { contentHash: string }>(value: T): T => {
+  const { contentHash: _contentHash, ...draft } = value;
+  void _contentHash;
+  return { ...draft, contentHash: hashCanonical(draft) } as T;
+};
 
 const reactionTarget = (base: ReturnType<typeof compileDirectorProject>) => {
   const beat = base.directorPlan.beats.find((candidate) =>
@@ -77,11 +85,57 @@ class CustomDirectorPlanner implements DirectorPlanner {
 }
 
 describe("Director patch", () => {
+  it("rejects a same-grammar art-direction substitution independently at patch application", () => {
+    const storybookStory = createCv002Project(
+      "Patch art authority",
+      script,
+      "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "storybook-watercolor-paper-cutout",
+      ),
+    );
+    const collageStory = createCv002Project(
+      "Patch art authority",
+      script,
+      "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
+    );
+    const originalBase = compileDirectorProject({
+      storyProject: storybookStory,
+    });
+    const forgedBase = reseal({
+      ...originalBase,
+      storyProjectContentHash: collageStory.contentHash,
+    });
+    const target = reactionTarget(forgedBase);
+    const patch = proposeDirectorPatch({
+      baseDirectorProject: forgedBase,
+      targetBeatId: target,
+      command: "Make the reaction 6 frames later",
+    });
+
+    expect(() =>
+      applyDirectorPatch({
+        storyProject: collageStory,
+        baseDirectorProject: forgedBase,
+        patch,
+      }),
+    ).toThrow(/art direction does not match/i);
+  });
+
   it("preserves exact capability authority and rejects silent registry migration", () => {
     const storyProject = createCv002Project(
       "Capability patch locality",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const probe = compileDirectorProject({ storyProject });
     const requirement =
@@ -181,6 +235,10 @@ describe("Director patch", () => {
       "Patch proof",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const base = compileDirectorProject({ storyProject });
     const targetBeatId = reactionTarget(base);
@@ -226,6 +284,10 @@ describe("Director patch", () => {
       "Locality proof",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const base = compileDirectorProject({ storyProject });
     const targetBeatId = reactionTarget(base);
@@ -323,6 +385,10 @@ describe("Director patch", () => {
       "Custom planner proof",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const base = compileDirectorProject({
       storyProject,
@@ -361,6 +427,10 @@ describe("Director patch", () => {
       "Visual patch proof",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const base = compileDirectorProject({ storyProject });
     const shot = base.directorPlan.shots[0]!;
@@ -435,6 +505,10 @@ describe("Director patch", () => {
       "Visual no-op proof",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const base = compileDirectorProject({ storyProject });
     const shot = base.directorPlan.shots[0]!;
@@ -455,6 +529,10 @@ describe("Director patch", () => {
       "Wrong visual target proof",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const base = compileDirectorProject({ storyProject });
     const shot = base.directorPlan.shots[0]!;
@@ -477,6 +555,10 @@ describe("Director patch", () => {
       "Artifact binding proof",
       script,
       "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
     );
     const base = compileDirectorProject({ storyProject });
     const forged = structuredClone(base);
@@ -512,6 +594,10 @@ describe("Director patch", () => {
       "Missing target proof",
       script,
       "weird-history",
+      createCv002ArtDirectionSelection(
+        "weird-history",
+        "weird-history-editorial-collage",
+      ),
     );
     const base = compileDirectorProject({ storyProject });
     const targetBeatId = base.directorPlan.beats.find(
@@ -528,5 +614,70 @@ describe("Director patch", () => {
         command: "Make the reaction 6 frames later",
       }),
     ).toThrow(/no concrete reaction event/i);
+  });
+
+  it("counts one reaction event linked by two eligible shots as ambiguous through the shared eligibility list", () => {
+    const storyProject = createCv002Project(
+      "Ambiguous reaction proof",
+      script,
+      "kids-adventure",
+      createCv002ArtDirectionSelection(
+        "kids-adventure",
+        "cut-paper-collage-mixed-media",
+      ),
+    );
+    const base = compileDirectorProject({ storyProject });
+    const targetBeatId = base.directorPlan.beats.find(
+      (beat) =>
+        listDirectorReactionDelayCandidates(base, beat.beatId).length === 1,
+    )!.beatId;
+    const sourceShot = listDirectorReactionDelayCandidates(
+      base,
+      targetBeatId,
+    )[0]!.shot;
+
+    // Forge a second shot linking the same reaction event, then reseal every
+    // hash the project schema binds, so the fixture stays schema-valid.
+    const forged = structuredClone(base);
+    const forgedShot = forged.directorPlan.shots.find(
+      (shot) => shot.id === sourceShot.id,
+    )!;
+    forged.directorPlan.shots.push({
+      ...structuredClone(forgedShot),
+      id: `${forgedShot.id}-twin`,
+    });
+    forged.directorPlan = reseal(forged.directorPlan);
+    forged.timingSolution = reseal({
+      ...forged.timingSolution,
+      directorPlanContentHash: forged.directorPlan.contentHash,
+    });
+    forged.executableEpisodePlan = reseal({
+      ...forged.executableEpisodePlan,
+      directorPlanContentHash: forged.directorPlan.contentHash,
+      timingSolutionContentHash: forged.timingSolution.contentHash,
+    });
+    forged.capabilityReport = reseal({
+      ...forged.capabilityReport,
+      directorPlanContentHash: forged.directorPlan.contentHash,
+    });
+    forged.qualityReport = reseal({
+      ...forged.qualityReport,
+      directorPlanContentHash: forged.directorPlan.contentHash,
+    });
+    forged.contentHash = reseal(forged).contentHash;
+    directorProjectSchema.parse(forged);
+
+    // The shared list and the interpreter now agree on pair cardinality:
+    // one event linked by two eligible shots is two candidates — ambiguous.
+    expect(
+      listDirectorReactionDelayCandidates(forged, targetBeatId),
+    ).toHaveLength(2);
+    expect(() =>
+      proposeDirectorPatch({
+        baseDirectorProject: forged,
+        targetBeatId,
+        command: "Make the reaction 6 frames later",
+      }),
+    ).toThrow(/more than one possible reaction event/i);
   });
 });

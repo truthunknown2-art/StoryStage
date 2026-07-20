@@ -23,3 +23,11 @@ export type {
 } from "./bundledKidsCapabilities";
 export { DirectorProductionComposition } from "./DirectorProductionComposition";
 export type { DirectorProductionCompositionProps } from "./DirectorProductionComposition";
+export {
+  DirectorGuideAudioLayer,
+  createDirectorGuideAudioRenderBinding,
+} from "./DirectorGuideAudioLayer";
+export type {
+  DirectorGuideAudioPlayback,
+  DirectorGuideAudioRenderBinding,
+} from "./DirectorGuideAudioLayer";

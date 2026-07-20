@@ -1,0 +1,320 @@
+{
+  "schemaVersion": "1.0",
+  "reportKind": "ollo-authored-decoration-mask-v10-hash-report",
+  "authorityDomain": "private-source-review-registration",
+  "acceptedUpstreamCommit": "275915204caefcad2f3b773ac6eb8a4f3b904b60",
+  "sourceReviewInputContentHash": "f1df00a73a4221dda74b23b679e517aecd35cffe3da259ec01a206c51c072b01",
+  "manifestContentHash": "74e5b22a48da03517c182a926dda3f66c528cc0d5f00e3875c1fd21f6d1adf1f",
+  "compilerId": "authored-isolated-decoration-mask-compiler",
+  "compilerVersion": "1.1.0",
+  "masks": [
+    {
+      "entryId": "ollo-front-secondary-back-guide-tabs-v10",
+      "view": "front",
+      "componentRole": "secondary-back",
+      "maskRelativeFile": "authored-decoration-masks-v10/front-secondary-back-guide-mask.png",
+      "maskPngContentHash": "2dcc39aa658303dd7b4bf459cf4b8799a2d8f8eec909f87eb1d9657cf9f54b96",
+      "width": 320,
+      "height": 312,
+      "bitsPerSample": 1,
+      "paletteBitDepth": 1,
+      "selectedPixelCount": 1168
+    },
+    {
+      "entryId": "ollo-front-secondary-front-guide-tabs-v10",
+      "view": "front",
+      "componentRole": "secondary-front",
+      "maskRelativeFile": "authored-decoration-masks-v10/front-secondary-front-guide-mask.png",
+      "maskPngContentHash": "c4345828fe8981c47823de61f435c461bb2be936a7a4e03ec96cfbd1daea690a",
+      "width": 320,
+      "height": 312,
+      "bitsPerSample": 1,
+      "paletteBitDepth": 1,
+      "selectedPixelCount": 1488
+    },
+    {
+      "entryId": "ollo-profile-left-secondary-back-guide-tabs-v10",
+      "view": "profile-left",
+      "componentRole": "secondary-back",
+      "maskRelativeFile": "authored-decoration-masks-v10/profile-left-secondary-back-guide-mask.png",
+      "maskPngContentHash": "3e9233d98bd95e181daf397ed9a06570d3164e16144667b5317627801f827fad",
+      "width": 369,
+      "height": 413,
+      "bitsPerSample": 1,
+      "paletteBitDepth": 1,
+      "selectedPixelCount": 2103
+    },
+    {
+      "entryId": "ollo-profile-left-secondary-front-guide-tabs-v10",
+      "view": "profile-left",
+      "componentRole": "secondary-front",
+      "maskRelativeFile": "authored-decoration-masks-v10/profile-left-secondary-front-guide-mask.png",
+      "maskPngContentHash": "ea7f2a87c32ed3ad6b65e705a984f43f1743aedf6a7108a0251b7463383852fe",
+      "width": 369,
+      "height": 413,
+      "bitsPerSample": 1,
+      "paletteBitDepth": 1,
+      "selectedPixelCount": 1999
+    },
+    {
+      "entryId": "ollo-profile-right-secondary-back-guide-tabs-v10",
+      "view": "profile-right",
+      "componentRole": "secondary-back",
+      "maskRelativeFile": "authored-decoration-masks-v10/profile-right-secondary-back-guide-mask.png",
+      "maskPngContentHash": "92de21cf556398a88a25695045fe5e4c3621038c9aa73e248babecbcf1376e29",
+      "width": 372,
+      "height": 405,
+      "bitsPerSample": 1,
+      "paletteBitDepth": 1,
+      "selectedPixelCount": 2069
+    },
+    {
+      "entryId": "ollo-profile-right-secondary-front-guide-tabs-v10",
+      "view": "profile-right",
+      "componentRole": "secondary-front",
+      "maskRelativeFile": "authored-decoration-masks-v10/profile-right-secondary-front-guide-mask.png",
+      "maskPngContentHash": "8b672586bc1e82317b28c8ad847f27f0beb26c9165355df19bc7b8546fc3fc87",
+      "width": 372,
+      "height": 405,
+      "bitsPerSample": 1,
+      "paletteBitDepth": 1,
+      "selectedPixelCount": 3458
+    }
+  ],
+  "views": [
+    {
+      "view": "front",
+      "baseMeasurementContentHash": "6f414199449e0497a0979648e57c62bbf2ba5bd3d5b0ddd4630e10bdaaaeb7ed",
+      "firstMeasurementContentHash": "4c59658e71b34800830d1052154db9720d06abde53d1b383b9553ba27ee124b5",
+      "secondMeasurementContentHash": "4c59658e71b34800830d1052154db9720d06abde53d1b383b9553ba27ee124b5",
+      "evidenceContentHashes": [
+        "087ab5565cbe1c848d295a24eadc2d5546e592c04ed19d1fd32869d1f827359f",
+        "45f97b7e7fa0fd3bbba75ec0bfc0ac60a834af81ceb7ef882048990d3f9dadd2"
+      ],
+      "maskPngContentHashes": [
+        "2dcc39aa658303dd7b4bf459cf4b8799a2d8f8eec909f87eb1d9657cf9f54b96",
+        "c4345828fe8981c47823de61f435c461bb2be936a7a4e03ec96cfbd1daea690a"
+      ],
+      "detectedMaskRequirementIds": [
+        "front-secondary-back-mask",
+        "front-secondary-front-mask"
+      ],
+      "measurementRemainingBlockerRequirementIds": [
+        "front-brow-neutral-left-rigid",
+        "front-brow-neutral-right-rigid",
+        "front-eye-white-left-rigid",
+        "front-eye-white-right-rigid",
+        "front-lid-open-left-rigid",
+        "front-lid-open-right-rigid",
+        "front-mouth-rest-rigid",
+        "front-pelvis-hip-left-distal",
+        "front-pelvis-hip-right-distal",
+        "front-pelvis-tail-base-distal",
+        "front-pupil-left-rigid",
+        "front-pupil-right-rigid",
+        "front-secondary-back-rigid",
+        "front-secondary-front-rigid",
+        "front-torso-neck-distal",
+        "front-torso-rigid-root"
+      ],
+      "unapprovedProposalContentHash": "e460a2b34b03d04a85f6f17822753de2e3d1cb4b140096682eef5f032d170950",
+      "proposalStatus": "unresolved-unapproved",
+      "proposalUnresolvedRequirementIds": ["front-pelvis-tail-base-distal"],
+      "proposalUnresolvedRequirementCount": 1,
+      "twoRunContentHashEquality": true,
+      "sourceMeasuredBeforeMasking": true,
+      "proposedRegistrationAuthority": false,
+      "approvalAuthority": false,
+      "capabilityAuthority": false,
+      "productionBindable": false
+    },
+    {
+      "view": "profile-left",
+      "baseMeasurementContentHash": "23fed70343ba54625728c31b41220c2cdb1ed4630a8dcd138a7b2d9b43bb74bf",
+      "firstMeasurementContentHash": "c6731c50823493a2e6a700be3c6cb326b6d3c93037422412334005d2f4de2f72",
+      "secondMeasurementContentHash": "c6731c50823493a2e6a700be3c6cb326b6d3c93037422412334005d2f4de2f72",
+      "evidenceContentHashes": [
+        "09f543ed5ae2bcef5de57050616063607f37ac7fbd9529cd51806adc58f706af",
+        "b8f6dbaddf7f0b32914ccf02c3d19316921d31055d28ed140f993c7e8fc5c166"
+      ],
+      "maskPngContentHashes": [
+        "3e9233d98bd95e181daf397ed9a06570d3164e16144667b5317627801f827fad",
+        "ea7f2a87c32ed3ad6b65e705a984f43f1743aedf6a7108a0251b7463383852fe"
+      ],
+      "detectedMaskRequirementIds": [
+        "profile-left-secondary-back-mask",
+        "profile-left-secondary-front-mask"
+      ],
+      "measurementRemainingBlockerRequirementIds": [
+        "profile-left-brow-neutral-left-rigid",
+        "profile-left-brow-neutral-right-rigid",
+        "profile-left-eye-white-left-rigid",
+        "profile-left-eye-white-right-rigid",
+        "profile-left-foot-left-proximal",
+        "profile-left-head-ear-left-distal",
+        "profile-left-head-ear-right-distal",
+        "profile-left-lid-open-left-rigid",
+        "profile-left-lid-open-right-rigid",
+        "profile-left-mouth-rest-rigid",
+        "profile-left-pelvis-hip-left-distal",
+        "profile-left-pelvis-hip-right-distal",
+        "profile-left-pelvis-tail-base-distal",
+        "profile-left-pupil-left-rigid",
+        "profile-left-pupil-right-rigid",
+        "profile-left-secondary-back-rigid",
+        "profile-left-secondary-front-rigid",
+        "profile-left-torso-rigid-root",
+        "profile-left-torso-shoulder-left-distal",
+        "profile-left-torso-shoulder-right-distal"
+      ],
+      "unapprovedProposalContentHash": "b7cb75ee2029880cce92c1857b4cd719e36df96f5365ff3341f57ec14b6170be",
+      "proposalStatus": "unresolved-unapproved",
+      "proposalUnresolvedRequirementIds": [
+        "profile-left-pelvis-tail-base-distal"
+      ],
+      "proposalUnresolvedRequirementCount": 1,
+      "twoRunContentHashEquality": true,
+      "sourceMeasuredBeforeMasking": true,
+      "proposedRegistrationAuthority": false,
+      "approvalAuthority": false,
+      "capabilityAuthority": false,
+      "productionBindable": false
+    },
+    {
+      "view": "profile-right",
+      "baseMeasurementContentHash": "c755e5d22674041281aac737ef75ce069455705d9af4c9bc9aa91df4c15efeab",
+      "firstMeasurementContentHash": "d5a773fe56346e975ec672a74957461290923952edd7046fb7c8d1ec041b9c47",
+      "secondMeasurementContentHash": "d5a773fe56346e975ec672a74957461290923952edd7046fb7c8d1ec041b9c47",
+      "evidenceContentHashes": [
+        "901666694f76074ce75a5331376d12061045d274d3615580b370a9cffa0c1c92",
+        "d11bdea80cd88874ec780fd4e9d18a5faabd20c0674e080d567f57c45b692da0"
+      ],
+      "maskPngContentHashes": [
+        "8b672586bc1e82317b28c8ad847f27f0beb26c9165355df19bc7b8546fc3fc87",
+        "92de21cf556398a88a25695045fe5e4c3621038c9aa73e248babecbcf1376e29"
+      ],
+      "detectedMaskRequirementIds": [
+        "profile-right-secondary-back-mask",
+        "profile-right-secondary-front-mask"
+      ],
+      "measurementRemainingBlockerRequirementIds": [
+        "profile-right-brow-neutral-left-rigid",
+        "profile-right-brow-neutral-right-rigid",
+        "profile-right-eye-white-left-rigid",
+        "profile-right-eye-white-right-rigid",
+        "profile-right-foot-left-proximal",
+        "profile-right-head-ear-left-distal",
+        "profile-right-head-ear-right-distal",
+        "profile-right-lid-open-left-rigid",
+        "profile-right-lid-open-right-rigid",
+        "profile-right-mouth-rest-rigid",
+        "profile-right-pelvis-hip-left-distal",
+        "profile-right-pelvis-hip-right-distal",
+        "profile-right-pupil-left-rigid",
+        "profile-right-pupil-right-rigid",
+        "profile-right-secondary-back-rigid",
+        "profile-right-secondary-front-rigid",
+        "profile-right-torso-neck-distal",
+        "profile-right-torso-rigid-root",
+        "profile-right-torso-shoulder-left-distal",
+        "profile-right-torso-shoulder-right-distal"
+      ],
+      "unapprovedProposalContentHash": "5ff5213b8336bd3f8e358e5c74f538437c06d008335f0799c856ee65a1454998",
+      "proposalStatus": "complete-unapproved",
+      "proposalUnresolvedRequirementIds": [],
+      "proposalUnresolvedRequirementCount": 0,
+      "twoRunContentHashEquality": true,
+      "sourceMeasuredBeforeMasking": true,
+      "proposedRegistrationAuthority": false,
+      "approvalAuthority": false,
+      "capabilityAuthority": false,
+      "productionBindable": false
+    }
+  ],
+  "visualEvidence": [
+    {
+      "view": "front",
+      "componentRole": "secondary-back",
+      "width": 320,
+      "height": 312,
+      "selectedPixelCount": 1168,
+      "changedOutsideMaskPixelCount": 0,
+      "originalPngSha256": "eedd836632a1580a564b0dacc1609d2f3988a72849bf4b4b60cc72c90a841ba3",
+      "maskedPngSha256": "8ac547034a089e312220d7b3fbc8fb5940926338d9dd38e5dfcaa0303b798a4a",
+      "originalRelativeFile": "front-secondary-back-original.png",
+      "maskedRelativeFile": "front-secondary-back-masked.png"
+    },
+    {
+      "view": "front",
+      "componentRole": "secondary-front",
+      "width": 320,
+      "height": 312,
+      "selectedPixelCount": 1488,
+      "changedOutsideMaskPixelCount": 0,
+      "originalPngSha256": "9b40cf4d18cdd462bac18e23c7fe42f96b8eb727805460936d1d000b2a13bd0a",
+      "maskedPngSha256": "6904cc913be7c64eef6166a66f0d71c02018c967cc8b861375e72e6e63a2d2c2",
+      "originalRelativeFile": "front-secondary-front-original.png",
+      "maskedRelativeFile": "front-secondary-front-masked.png"
+    },
+    {
+      "view": "profile-left",
+      "componentRole": "secondary-back",
+      "width": 369,
+      "height": 413,
+      "selectedPixelCount": 2103,
+      "changedOutsideMaskPixelCount": 0,
+      "originalPngSha256": "fe2d73e11112b0dd82be03590d2daf3f78522553df6a13dfc8e77efd02b44a86",
+      "maskedPngSha256": "9e886c5536e0644a6df93c65cc497ce6cee9aa02f31aa6116149ff4116e5c7c0",
+      "originalRelativeFile": "profile-left-secondary-back-original.png",
+      "maskedRelativeFile": "profile-left-secondary-back-masked.png"
+    },
+    {
+      "view": "profile-left",
+      "componentRole": "secondary-front",
+      "width": 369,
+      "height": 413,
+      "selectedPixelCount": 1999,
+      "changedOutsideMaskPixelCount": 0,
+      "originalPngSha256": "5549864ff2a5c5c1e825f38f7f6490145dab400a09d23571d610b3edae11d868",
+      "maskedPngSha256": "bd436656b2bddb1a05aa476bad7435c2cb8d8943e0470e24f5a0d7b5080350b5",
+      "originalRelativeFile": "profile-left-secondary-front-original.png",
+      "maskedRelativeFile": "profile-left-secondary-front-masked.png"
+    },
+    {
+      "view": "profile-right",
+      "componentRole": "secondary-back",
+      "width": 372,
+      "height": 405,
+      "selectedPixelCount": 2069,
+      "changedOutsideMaskPixelCount": 0,
+      "originalPngSha256": "4884258f023e0ed41051e6617e9e52d4cb25d24ab9a40e672e24af1c4a1af836",
+      "maskedPngSha256": "2da577607c260d1d79cc1fcf370ea07e55bcf38fa28ad64bfd6cbb3c19ccb658",
+      "originalRelativeFile": "profile-right-secondary-back-original.png",
+      "maskedRelativeFile": "profile-right-secondary-back-masked.png"
+    },
+    {
+      "view": "profile-right",
+      "componentRole": "secondary-front",
+      "width": 372,
+      "height": 405,
+      "selectedPixelCount": 3458,
+      "changedOutsideMaskPixelCount": 0,
+      "originalPngSha256": "afaea8637541a772d04a6d3debe67636e8954fe2d41e787f4964d29eac9fc909",
+      "maskedPngSha256": "b837c0bd2aa8a7b40737112f1e60f0f952bd7b333e417050cde21950d0fc5160",
+      "originalRelativeFile": "profile-right-secondary-front-original.png",
+      "maskedRelativeFile": "profile-right-secondary-front-masked.png"
+    }
+  ],
+  "allSixActualArtMasksVerified": true,
+  "deterministicTwoRunHashEquality": true,
+  "semanticRgbaOutsideMasksByteIdentical": true,
+  "nativeResolutionVisualEvidenceWrittenToIgnoredArtifacts": true,
+  "motionArtifactIncluded": false,
+  "ordinaryPlayerReachable": false,
+  "exportReachable": false,
+  "preparationAuthority": false,
+  "approvalAuthority": false,
+  "capabilityAuthority": false,
+  "productionBindable": false,
+  "contentHash": "4d4ce04c23bc6daa39da2c4263724f51774de23c2869ae6a217628d3a81569c1"
+}

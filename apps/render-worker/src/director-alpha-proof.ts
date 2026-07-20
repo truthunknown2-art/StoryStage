@@ -13,6 +13,7 @@ import { STORY_STAGE_PRODUCTION_COMPOSITION_ID } from "@storystage/remotion-runt
 import {
   applyDirectorPatch,
   compileDirectorProject,
+  createCv002ArtDirectionSelection,
   createCv002Project,
   proposeDirectorPatch,
   type Cv002Grammar,
@@ -54,6 +55,12 @@ async function renderFixture(serveUrl: string, fixture: Fixture) {
     fixture.title,
     fixture.script,
     fixture.grammar,
+    createCv002ArtDirectionSelection(
+      fixture.grammar,
+      fixture.grammar === "kids-adventure"
+        ? "cut-paper-collage-mixed-media"
+        : "weird-history-editorial-collage",
+    ),
   );
   const first = compileDirectorProject({ storyProject });
   const repeated = compileDirectorProject({ storyProject });

@@ -13,8 +13,8 @@ import {
   type PerformanceProgram,
   type ResolvedEntityFrame,
 } from "@storystage/story-engine/director-alpha";
-import { Img } from "remotion";
 import { maraLocalPartsVisualPerformanceRenderer } from "./maraLocalParts";
+import { VerifiedRasterImage } from "./VerifiedRasterImage";
 
 export type LocalPartsV1Execution = {
   kind: "articulated-rig";
@@ -307,7 +307,9 @@ const HeadFaceOverlay: React.FC<{
   };
   return (
     <div data-rig-face="head-local" style={{ position: "absolute" }}>
-      <Img
+      <VerifiedRasterImage
+        alternative={{ kind: "decorative" }}
+        assetId={eyeAsset.assetId}
         data-rig-eye-layer={eyeExposureId}
         src={eyeAsset.verifiedUrl}
         style={{
@@ -320,7 +322,9 @@ const HeadFaceOverlay: React.FC<{
         }}
       />
       {eyeExposureId !== "eyes-closed" ? (
-        <Img
+        <VerifiedRasterImage
+          alternative={{ kind: "decorative" }}
+          assetId={pupilAsset.assetId}
           data-rig-pupil-layer="quantized-local"
           src={pupilAsset.verifiedUrl}
           style={{
@@ -334,7 +338,9 @@ const HeadFaceOverlay: React.FC<{
         />
       ) : null}
       {geometry.mouth && mouthAsset ? (
-        <Img
+        <VerifiedRasterImage
+          alternative={{ kind: "decorative" }}
+          assetId={mouthAsset.assetId}
           data-rig-exposure={frame.face.mouthExposureId ?? undefined}
           src={mouthAsset.verifiedUrl}
           style={{
@@ -401,7 +407,9 @@ const RigPartTree: React.FC<{
         zIndex: partIndex - torsoIndex,
       }}
     >
-      <Img
+      <VerifiedRasterImage
+        alternative={{ kind: "decorative" }}
+        assetId={asset.assetId}
         src={asset.verifiedUrl}
         style={{
           height: asset.height,

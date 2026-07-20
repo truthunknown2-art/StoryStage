@@ -1,10 +1,15 @@
 import {
   compileDirectorProject,
   createCv002Project,
+  createCv002ArtDirectionSelection,
   evaluateContinuityFrame,
   hashCanonical,
   listArticulatedRigAssetReferences,
 } from "@storystage/story-engine/director-alpha";
+import {
+  candidateRigReviewVisualProgramSchema,
+  genericCandidateRigReviewRendererContract,
+} from "@storystage/story-engine";
 import { describe, expect, it } from "vitest";
 import { createBundledKidsCapabilityRegistry } from "./bundledKidsCapabilities";
 import {
@@ -25,6 +30,10 @@ const localPartsFixture = () => {
     "Local parts runtime",
     script,
     "kids-adventure",
+    createCv002ArtDirectionSelection(
+      "kids-adventure",
+      "cut-paper-collage-mixed-media",
+    ),
   );
   const proxy = compileDirectorProject({ storyProject });
   const requirement = proxy.directorPlan.beats
@@ -102,6 +111,75 @@ const localPartsFixture = () => {
 };
 
 describe("partsRigRuntime", () => {
+  it("rejects a source-review candidate program at every production rig boundary", () => {
+    const fixture = localPartsFixture();
+    const draft = {
+      schemaVersion: "1.0" as const,
+      programKind: "candidate-rig-review" as const,
+      authorityDomain: "source-review-only" as const,
+      id: "candidate-review-front-runtime-negative",
+      requestContentHash: hashCanonical("candidate-request"),
+      candidateBundleContentHash: hashCanonical("candidate-bundle"),
+      stagingReportContentHash: hashCanonical("candidate-report"),
+      importReceiptContentHash: hashCanonical("candidate-receipt"),
+      preparationRecipeContentHash: hashCanonical("candidate-recipe"),
+      identityLockContentHash: hashCanonical("candidate-identity"),
+      topologyTemplateContentHash: hashCanonical("candidate-template"),
+      rendererContract: genericCandidateRigReviewRendererContract,
+      rendererImplementationReceiptContentHash:
+        genericCandidateRigReviewRendererContract.implementationReceiptContentHash,
+      rendererEvaluatorSourceContentHash:
+        genericCandidateRigReviewRendererContract.evaluatorSourceContentHash,
+      rendererCanonicalBehaviorContentHash:
+        genericCandidateRigReviewRendererContract.canonicalBehaviorContentHash,
+      exerciseDefinitionContentHash:
+        genericCandidateRigReviewRendererContract.exerciseDefinitionContentHash,
+      view: "front" as const,
+      sourceBindings: [
+        {
+          candidateId: "candidate-front-atlas",
+          contentHash: hashCanonical("candidate-atlas"),
+        },
+      ],
+      semanticRoles: [
+        {
+          componentId: "part-torso",
+          semanticRole: "torso",
+          kind: "part" as const,
+        },
+        {
+          componentId: "part-head",
+          semanticRole: "head",
+          kind: "part" as const,
+        },
+      ],
+      partIds: ["part-torso", "part-head"],
+      socketIds: [],
+      exposureIds: [],
+      visemeIds: [],
+      productionBindable: false as const,
+    };
+    const candidate = candidateRigReviewVisualProgramSchema.parse({
+      ...draft,
+      contentHash: hashCanonical(draft),
+    });
+    expect(() => createPartsRigRenderTree(candidate)).toThrow();
+    expect(() =>
+      partsRigRuntime.createInput({
+        episodePlan: fixture.episodePlan,
+        execution: {
+          ...fixture.execution,
+          rigManifest: candidate,
+        } as unknown as typeof fixture.execution,
+        localFrame: fixture.input.localFrame,
+        performance: fixture.performance,
+        resolved: fixture.resolved,
+        shotId: fixture.input.shotId,
+        verifiedAssets: fixture.verifiedAssets,
+      }),
+    ).toThrow();
+  });
+
   it("binds continuity, performance, rig program, manifest, and asset identities", () => {
     const { input, performance } = localPartsFixture();
 

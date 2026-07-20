@@ -247,26 +247,40 @@ const paletteFor = (grammar: Cv002Project["grammar"], index: number) =>
       ][index % 3]!;
 
 function assertProposal(project: Cv002Project, proposal: DirectorProposal) {
-  const beatIds = project.graph.scenes.flatMap((scene) =>
-    scene.beats.map((beat) => beat.id),
-  );
+  const canonicalBeats = project.graph.scenes.flatMap((scene) => scene.beats);
+  const beatIds = canonicalBeats.map((beat) => beat.id);
   if (
     !proposal.plannerId.trim() ||
     !proposal.plannerVersion.trim() ||
     proposal.storyGraphContentHash !== project.graph.contentHash ||
-    proposal.grammar !== project.grammar
+    proposal.storyGraphContentHash !==
+      project.directionDraft.graphContentHash ||
+    proposal.grammar !== project.grammar ||
+    proposal.grammar !== project.graph.grammar ||
+    proposal.grammar !== project.directionDraft.grammar
   )
     throw new Error(
       "Director proposal is not bound to the current story graph.",
     );
   if (
     proposal.beatDirections.length !== beatIds.length ||
+    new Set(proposal.beatDirections.map((direction) => direction.beatId))
+      .size !== beatIds.length ||
     proposal.beatDirections.some(
       (direction, index) => direction.beatId !== beatIds[index],
     )
   )
     throw new Error(
       "Director proposal must cover every story beat exactly once in source order.",
+    );
+  if (
+    proposal.beatDirections.some(
+      (direction, index) =>
+        direction.beatContentHash !== canonicalBeats[index]!.contentHash,
+    )
+  )
+    throw new Error(
+      "Director proposal beat directions must reference the exact canonical beat content hashes.",
     );
   const adjustmentIds = proposal.eventTimingAdjustments.map(
     (adjustment) => `${adjustment.eventId}:${adjustment.sourceShotId}`,
@@ -1341,6 +1355,7 @@ export function compileDirectorProject(
     schemaVersion: "1.0" as const,
     id: `director-project-${storyProject.graph.contentHash.slice(0, 12)}`,
     storyProjectContentHash: storyProject.contentHash,
+    artDirectionSelection: storyProject.artDirectionSelection,
     planningArtifact: proposal,
     sceneWorlds: worlds,
     directorPlan,

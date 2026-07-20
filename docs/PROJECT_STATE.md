@@ -1,5 +1,31 @@
 # Project state
 
+## Current governing state — 2026-07-19
+
+The active creator-visible milestone is now the **Ollo registration diagnostic
+plus AI Editorial Director pilot**, not another engineering-character scene.
+The binding sequencing, ownership, acceptance gates, and stop rules live in
+[`PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md).
+
+- PR #18 is merged at `714d65ce80df2625b0b1ffc86ca52cc4cd8fe4e4`
+  and closes the compiler-entry planner-lineage exploit.
+- EDI-000b remains active: the same beat ID/content-hash invariant must be
+  enforced at DirectorProject sealing, workspace restore and revisions,
+  patching, and production-bundle parse/seal before any external planner is
+  authorized.
+- Ollo registration/performance, hierarchy-shaped Editorial Director contracts,
+  the shared guide timing basis, and Kimi's composition-only UI proof proceed
+  as parallel lanes. The guide clock is locked before the blind pilot; all lanes
+  converge on the first ordinary-path 20–30 second Ollo Storylight sequence.
+- Candidate Ollo evidence remains private and authority-false until Preston's
+  explicit registration and motion gates pass.
+- Scene Craft preferences remain planning knowledge or graded findings; only
+  evidence-bound lineage, timing, continuity, lifecycle, capability, action,
+  and honest-render invariants may block.
+
+Everything below this section is a historical implementation record. It remains
+useful evidence, but it does not define current sequencing.
+
 ## Accepted baseline
 
 SS-001 remains accepted workstation infrastructure: browser studio, secure Electron host, isolated render worker, deterministic regression fixture, real MP4 output, progress, file reveal, and retryable failure state. Its geometric sample is not a product-quality visual target.

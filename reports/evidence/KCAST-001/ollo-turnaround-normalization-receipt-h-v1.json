@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "1.0",
+  "requestId": "kcast-001-ollo-rig-request-v1",
+  "requestContentHash": "82844eac0b85b33c7fd1e6cf8654755fc27a17aedeb0e0f2acd5779407cc6310",
+  "requestItemId": "turnaround-sheet",
+  "candidateId": "ollo-turnaround-candidate-h-five-view-alpha",
+  "candidateContentHash": "732b3a7c41b33a9f8941714066ce60c86a7ff72aea6dd288db80176be263cfec",
+  "views": [
+    {
+      "view": "front",
+      "sourceContentHash": "43aa02a2951e46020269390c5ec8494d12719dff5eedd9d46ce10ffdaf26fc12",
+      "sourceContentBounds": {
+        "x": 665,
+        "y": 45,
+        "width": 444,
+        "height": 749
+      },
+      "normalizedContentHash": "28d41f35cda5e4758b50ac2a77f40217181bca12747d97c66b626b82d9adeefc",
+      "targetCharacterHeight": 768,
+      "scale": 1.0253671562082778,
+      "translateX": 60,
+      "translateY": 32,
+      "baselineY": 800,
+      "resampler": "lanczos3",
+      "processorVersion": "1.0.0",
+      "transform": "scale-and-translate"
+    },
+    {
+      "view": "three-quarter",
+      "sourceContentHash": "cc5c35b8251e0b9308a5868849a33bcbb9196e0fa606f7189b4d6e6778acb480",
+      "sourceContentBounds": {
+        "x": 657,
+        "y": 34,
+        "width": 435,
+        "height": 789
+      },
+      "normalizedContentHash": "302e6ab6ad4fd4f38b015007816409febe4fe775e15a3e65fd0f0fac91293a1f",
+      "targetCharacterHeight": 768,
+      "scale": 0.973384030418251,
+      "translateX": 652,
+      "translateY": 32,
+      "baselineY": 800,
+      "resampler": "lanczos3",
+      "processorVersion": "1.0.0",
+      "transform": "scale-and-translate"
+    },
+    {
+      "view": "profile-left",
+      "sourceContentHash": "9b1064bccf5c223b1e7d0b10085c565d24c085fc12ed5722eedd4966c854f214",
+      "sourceContentBounds": {
+        "x": 692,
+        "y": 55,
+        "width": 367,
+        "height": 776
+      },
+      "normalizedContentHash": "7121d5cde907e9e90898ca75768cbca75731a81e2f3995ff04de9d9c277bfbfe",
+      "targetCharacterHeight": 768,
+      "scale": 0.9896907216494846,
+      "translateX": 1258,
+      "translateY": 32,
+      "baselineY": 800,
+      "resampler": "lanczos3",
+      "processorVersion": "1.0.0",
+      "transform": "scale-and-translate"
+    },
+    {
+      "view": "profile-right",
+      "sourceContentHash": "a4103e0118c2099913e549f953414e674f798d099ed9c9f99b1555c9c2150905",
+      "sourceContentBounds": {
+        "x": 710,
+        "y": 34,
+        "width": 359,
+        "height": 794
+      },
+      "normalizedContentHash": "98fcd14d3db4082c864802a7a184c73ac3cab612c7d7e881ea47d1034b0a9b65",
+      "targetCharacterHeight": 768,
+      "scale": 0.9672544080604534,
+      "translateX": 1842,
+      "translateY": 32,
+      "baselineY": 800,
+      "resampler": "lanczos3",
+      "processorVersion": "1.0.0",
+      "transform": "scale-and-translate"
+    },
+    {
+      "view": "rear",
+      "sourceContentHash": "97e9137ce09215f5a52b2df9ef755d70eda0ddfe024fcf2f7dcea42e60ed3455",
+      "sourceContentBounds": {
+        "x": 627,
+        "y": 47,
+        "width": 500,
+        "height": 775
+      },
+      "normalizedContentHash": "e0eb39505fb6f329042475f380e2c22f2c5a331b11f7b083003e39991d820c13",
+      "targetCharacterHeight": 768,
+      "scale": 0.9909677419354839,
+      "translateX": 2344,
+      "translateY": 32,
+      "baselineY": 800,
+      "resampler": "lanczos3",
+      "processorVersion": "1.0.0",
+      "transform": "scale-and-translate"
+    }
+  ],
+  "review": {
+    "identityConsistencyPassed": false,
+    "semanticViewAuditPassed": false,
+    "registrationReady": false
+  },
+  "contentHash": "08ff2f61b6b1c4a65dea29f42935aee9050cfd743445b424affd70ef63c041fa"
+}
