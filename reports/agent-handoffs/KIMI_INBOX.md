@@ -1,28 +1,44 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `22`
+Inbox-Version: `23`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-SCENECRAFT-V11-EVIDENCE-LEDGER`
+Current-Task: `KIMI-OLLO-GATE1-REVIEW-UI-A`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`
-Required-Work-Branch: `agent/kimi-scenecraft-v11-evidence-ledger`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-scenecraft-v11-evidence-ledger-v22-corrections.md`
+Accepted-Root-Base: `c934021f9580fe200aef8e54573383e07eb24932`
+Required-Work-Branch: `agent/kimi-ollo-gate1-review-ui-a`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-ollo-gate1-review-ui-a-v23.md`
 
 ## Current instruction
 
-Independent exact-head audit of draft PR #22 at
-`a3a6491ed1cf85145c011c2db3048fe345fb7693` rejects only five residual
-mechanical truth defects. Apply only the Version 22 brief on the same branch:
-reclassify SC-027 and fix counts; remove ten remaining `hard-invariant` tokens;
-add `worked example` to the narrative union; replace seven CRLF-derived hashes
-and the repeated SC-007 hash with exact Git-object-byte SHA-256 values; and make
-the handback/PR body full-SHA, net-added, non-circular, and Version-22 truthful.
-Use the two-commit protocol, push the immutable successor, update PR #22, then
-wait. Do not change product code or broaden scope.
+Create the first real private Ollo registration-review frontend on a new branch
+from exact Gate 1 v8 head `c934021f9580fe200aef8e54573383e07eb24932`.
+This is implementation work, not a design memo: build the standalone read-only
+review application and tests described in the Version 23 brief. It must remain
+outside ordinary StoryStage Studio/Player, show only host-supplied or explicitly
+test-fixture evidence, expose the three real view states and eight unresolved
+requirements, and keep approval, motion, capability, export, and production
+authority visibly locked. Push a draft PR stacked on the Gate 1 branch, capture
+the required screenshots, leave the exact handback, then wait.
 
-Version 22 supersedes Version 21 as the active correction. Version 21 remains
-below as historical traceability.
+Version 23 supersedes Version 22 as the active task. Version 22 remains below
+as historical traceability.
+
+---
+
+Previous Version 22 instruction:
+
+Independent exact-head audit of draft PR #22 at
+`a3a6491ed1cf85145c011c2db3048fe345fb7693` rejected five residual mechanical
+truth defects. Kimi delivered successor
+`0985dbb8f139101a8f99bc403d9745c9691dc93f`; Codex expanded the final two
+abbreviated lineage tokens at
+`8e058f570dba251692af32ea1ba55fb832e0df93`. Hosted verification passed and PR
+#22 merged into the integration branch as
+`2a7193f922014c9427977afd4c083844852d5b63`.
+
+Version 22 superseded Version 21. Version 21 remains below as historical
+traceability.
 
 ---
 
