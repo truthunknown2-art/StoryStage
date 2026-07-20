@@ -1,15 +1,28 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `46`
+Inbox-Version: `47`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP4-PHASE-EVIDENCE-INTEGRATION-GATE`
-Status: `START-NOW`
+Current-Task: `F2-WP4-EXACT-HEAD-REVIEW-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `0a88945585865ffb9deb957fe145efd3f5b17742`
 Required-Work-Branch: `agent/kimi-f2-phase-evidence-wp4`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp4-phase-evidence-v46.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp4-review-wait-v47.md`
 
 ## Current instruction
+
+Version 47 records Kimi's completed immutable F2-WP4 handback at exact pushed
+head `372a5336525e0127f8c74e1a30fb8b498ef8c904` and moves Kimi to `WAIT` while
+Codex completes exact-head hosted verification, integration, and the F2
+milestone review sequence. Do not modify PR #46, begin F3, or start backend
+work. A higher inbox version is required for any new assignment.
+
+Version 47 supersedes Version 46. Version 46 remains below as historical
+traceability.
+
+---
+
+Previous Version 46 instruction:
 
 Version 46 starts only F2-WP4 from verified `product/v1` integration head
 `0a88945585865ffb9deb957fe145efd3f5b17742`. Claim issue #45, branch from that
