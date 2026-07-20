@@ -26,6 +26,10 @@ var hip_rest_position := Vector2.ZERO
 
 
 func _ready() -> void:
+	if not get_viewport() is SubViewport:
+		push_error("E0 requires capture from a transparent SubViewport")
+		get_tree().quit(2)
+		return
 	get_viewport().transparent_bg = true
 	RenderingServer.set_default_clear_color(Color(0.0, 0.0, 0.0, 0.0))
 	_register_bones()

@@ -10,12 +10,20 @@ Nothing here is imported by `apps/**` or `packages/**`.
 
 ## Result
 
+- **E0 verdict: `PASS`.** The transparent Godot-to-Remotion exchange passed on
+  the pinned host. This verdict is limited to the feasibility seam described
+  here.
+- Capture route: the articulated scene renders inside a transparent
+  1920×1080 `SubViewport`; GDScript captures the completed viewport texture
+  with `get_texture().get_image()` and saves each RGBA frame with `save_png()`.
+  Godot's built-in PNG MovieWriter is not used.
 - Godot pass: 120 frames, 1920×1080 RGBA PNG, 30 fps, four-second video stream.
 - Rig: one `Skeleton2D` with 18 hierarchical `Bone2D` nodes.
 - Performance arc: settle (0–27), articulated step (28–52), reach (53–78),
   react (79–101), and held final pose (107–119).
-- Determinism: two corresponding 120-frame renders matched byte-for-byte;
-  mismatch count `0`.
+- Determinism: two corresponding 120-frame renders matched as raw PNG bytes;
+  mismatch count `0`. Every matching file also decoded successfully as RGBA8,
+  so the decoded RGBA pixel buffers necessarily match exactly on this host.
 - Aggregate frame digest:
   `10cebaf5e036c5aa6c51ada66dc4a5e860ed1c4fe93f2a0f7f293722cea13d1f`.
 - Composite: H.264, 1920×1080, 30 fps, exactly 120 video frames and a 4.000000
@@ -48,7 +56,16 @@ Godot and labels its torso `ENGINE SPIKE`. This preserves the Ollo approval gate
   `https://github.com/godotengine/godot-builds/releases/download/4.7.1-stable/Godot_v4.7.1-stable_win64.exe.zip`
 - Published and locally verified archive SHA-256:
   `c7a289051eaefb460b0106b60e9cd5bee0ef55fd102dcb2bed1eb356cf3d90a1`.
+- Console executable SHA-256:
+  `35dab11e04ece16a2b93035e65204f4a944a3e00b020d43e54409193379d5eef`.
 - Local install used for this evidence: `C:\Tools\Godot\4.7.1`.
+- Host: Microsoft Windows 11 Pro `10.0.26200` (build `26200`).
+- Rendering method/driver: Godot `gl_compatibility`, native OpenGL 3.3,
+  NVIDIA OpenGL driver `610.74` on an NVIDIA GeForce RTX 3080. Windows reports
+  display-driver version `32.0.16.1074`.
+- Relevant project settings: 1920×1080 viewport and window override,
+  `window/per_pixel_transparency/allowed=true`, transparent clear color,
+  `transparent_background=true`, and `gl_compatibility` for desktop/mobile.
 - Remotion and `@remotion/cli` `4.0.490`, React `19.2.3`, Node `24.13.0`,
   pnpm `11.9.0`.
 
@@ -65,11 +82,16 @@ pnpm --dir .\remotion install --frozen-lockfile
 .\scripts\render-godot.ps1 -OutputDirectory "$PWD\artifacts\frame-run-a"
 .\scripts\render-godot.ps1 -OutputDirectory "$PWD\artifacts\frame-run-b"
 
-& 'C:\Tools\Godot\4.7.1\Godot_v4.7.1-stable_win64_console.exe' `
-  --headless --path .\godot --script .\godot\verify_frames.gd -- `
-  --run-a 'res://../artifacts/frame-run-a' `
-  --run-b 'res://../artifacts/frame-run-b' `
-  --output 'res://../evidence/frame-verification.json'
+Push-Location .\godot
+try {
+  & 'C:\Tools\Godot\4.7.1\Godot_v4.7.1-stable_win64_console.exe' `
+    --headless --path . --script .\verify_frames.gd -- `
+    --run-a 'res://../artifacts/frame-run-a' `
+    --run-b 'res://../artifacts/frame-run-b' `
+    --output 'res://../evidence/frame-verification.json'
+} finally {
+  Pop-Location
+}
 
 .\scripts\render-remotion.ps1 -FrameDirectory "$PWD\artifacts\frame-run-a"
 node .\scripts\verify-mp4.mjs `
@@ -80,8 +102,8 @@ node .\scripts\verify-mp4.mjs `
 
 The current workstation's retained full sequences are:
 
-- Run A: `C:\Projects\StoryStage-godot-spike\experiments\godot-remotion-e0\artifacts\frame-run-test`
-- Run B: `C:\Projects\StoryStage-godot-spike\experiments\godot-remotion-e0\artifacts\frame-run-b`
+- Run A: `C:\Projects\StoryStage-godot-spike\experiments\godot-remotion-e0\artifacts\frame-run-subviewport-a`
+- Run B: `C:\Projects\StoryStage-godot-spike\experiments\godot-remotion-e0\artifacts\frame-run-subviewport-b`
 
 They are intentionally ignored rather than committing 240 full-HD PNGs.
 `render-remotion.ps1` byte-checks its copied staging frames before rendering.
