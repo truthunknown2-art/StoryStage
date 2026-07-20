@@ -28,17 +28,38 @@ Read the five sources in that order:
 4. `AGENTS` - operating, ownership, evidence, and stop rules.
 5. `CODEX_START_HERE` - bootstrap and conflict handling.
 
-When `ROADMAP_STATUS` names Kimi as owner, also read:
+Always read the current Kimi header so a second active assignment cannot hide
+behind a Codex-owned package:
 
 ```powershell
 git show origin/agent/kimi-frontend:reports/agent-handoffs/KIMI_INBOX.md
 ```
 
-Then read the exact issue, approved brief, branch, PR, handback, and hosted
-checks named by `ROADMAP_STATUS` or the Kimi inbox. Do not search chat history to
-guess missing assignment details.
+If `ROADMAP_STATUS` names Kimi as owner, read the inbox's full brief and exact
+issue as well. Otherwise Kimi must be `WAIT` or `HOLD` with no implementation
+branch. Then read the exact issue, approved brief, branch, PR, handback, and
+hosted checks named by `ROADMAP_STATUS` or the Kimi inbox. Do not search chat
+history to guess missing assignment details.
 
-## 2. Verify the implementation base
+## 2. Resolve live review identity
+
+`ROADMAP_STATUS` records an immutable `candidateContentHead` and a mutable
+`candidateRef`; it cannot contain the SHA of the commit that contains the
+status file itself. After fetching, resolve the actual audit head and verify the
+content commit is its ancestor:
+
+```powershell
+git rev-parse origin/agent/codex-full-product-roadmap
+git merge-base --is-ancestor <candidateContentHead> origin/agent/codex-full-product-roadmap
+gh pr view <authorization.pr> --json headRefOid,baseRefName,state,statusCheckRollup,url
+```
+
+Use the branch and PR currently named by `ROADMAP_STATUS`; the literal branch
+above is the G0 example, not permanent authority. A review gate is coherent only
+when the remote head matches the PR head, the content commit is its ancestor,
+and the live hosted check for that head passes.
+
+## 3. Verify the implementation base
 
 Before creating or changing an implementation branch:
 
@@ -52,7 +73,7 @@ If the checkout is dirty, preserve the user's work and use the declared clean
 worktree/branch. Do not reset, rebase, cherry-pick, force-push, or switch merely
 to make the state convenient.
 
-## 3. Interpret authorization literally
+## 4. Interpret authorization literally
 
 - `WAIT` or `ACCEPTED_WAIT`: do not implement.
 - `START_NOW`: restate that one package and its exit before coding.
@@ -65,7 +86,7 @@ to make the state convenient.
 `KIMI_INBOX` may narrow Kimi's current package but cannot broaden or reorder the
 roadmap. Kimi's scheduler wakes only on a higher inbox version.
 
-## 4. Conflict protocol
+## 5. Conflict protocol
 
 If sources disagree:
 
@@ -84,7 +105,7 @@ Examples that require stopping:
 - a PR claims acceptance while status remains review-pending;
 - a chat asks for a later package during an active earlier package.
 
-## 5. Handoff and fresh-task prompt
+## 6. Handoff and fresh-task prompt
 
 Every handoff reports exact base, exact remote candidate SHA, changed files,
 commands/results, required visible/audio/render evidence, hashes, limitations,

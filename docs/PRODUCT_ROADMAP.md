@@ -129,13 +129,13 @@ explicit non-goals, targeted verification, completion evidence, and one owner.
 Package lifecycle:
 
 ```text
-WAIT → START-NOW → IMPLEMENTING → REVIEW → PRO-GATE → PRESTON-GATE
-     → ACCEPTED-WAIT
+WAIT → START_NOW → IMPLEMENTING → REVIEW → PRO_GATE → PRESTON_GATE
+     → ACCEPTED_WAIT
 
 Failed gate → IMPLEMENTING on the same package
 ```
 
-- Only one product package is `START-NOW` at a time.
+- Only one product package is `START_NOW` at a time.
 - Kimi and Codex may not infer the next package from this roadmap.
 - Each package uses a new issue, exact product base, named branch, allowed files,
   tests, screenshots/render/audio evidence, draft PR, and immutable handback.
@@ -148,18 +148,18 @@ Failed gate → IMPLEMENTING on the same package
 
 ## 5. Current progress and release train
 
-| Stage | State | Accepted evidence / next authority |
-| --- | --- | --- |
-| Product reset | Accepted | `9f3d6fa` established the current product-first plan |
-| E0 Godot/Remotion feasibility | Accepted | integrated at `81a0e64`; 120 deterministic RGBA frames and Remotion MP4 |
-| F1 Projects + Create | Accepted | integrated PR #33 at `7a46867` |
-| F2 Long-form Studio shell | Accepted | Pro + Preston accepted `product/v1@87c01f9` |
-| G0 roadmap/truth reconciliation | Active planning hold | this document and bootstrap must be reviewed and integrated |
-| F3–F6 frontend | Not started | begins only with accepted F3-WP1 ticket |
-| Frontend Gate | Blocked | requires accepted F1–F6 click-through |
-| B1–B8 backend/product | Blocked | B1 begins only after Frontend Gate |
-| Private launch | Blocked | requires F3–F6/FG, B1–B7, R1–R2, and L1 |
-| Specialist bridge | Conditional | B8 activates only for one approved shot need |
+| Stage                           | State                | Accepted evidence / next authority                                      |
+| ------------------------------- | -------------------- | ----------------------------------------------------------------------- |
+| Product reset                   | Accepted             | `9f3d6fa` established the current product-first plan                    |
+| E0 Godot/Remotion feasibility   | Accepted             | integrated at `81a0e64`; 120 deterministic RGBA frames and Remotion MP4 |
+| F1 Projects + Create            | Accepted             | integrated PR #33 at `7a46867`                                          |
+| F2 Long-form Studio shell       | Accepted             | Pro + Preston accepted `product/v1@87c01f9`                             |
+| G0 roadmap/truth reconciliation | Active planning hold | this document and bootstrap must be reviewed and integrated             |
+| F3–F6 frontend                  | Not started          | begins only with accepted F3-WP1 ticket                                 |
+| Frontend Gate                   | Blocked              | requires accepted F1–F6 click-through                                   |
+| B1–B8 backend/product           | Blocked              | B1 begins only after Frontend Gate                                      |
+| Private launch                  | Blocked              | requires F3–F6/FG, B1–B7, R1–R2, and L1                                 |
+| Specialist bridge               | Conditional          | B8 activates only for one approved shot need                            |
 
 Critical path:
 
@@ -175,9 +175,49 @@ No calendar promise is attached to a broad phase. Each package is sized to one
 reviewable delivery cycle; its actual duration is recorded when ticketed. If a
 package cannot produce reviewable evidence in one cycle, split it before work.
 
+### Dependency graph
+
+This table is the parseable milestone dependency authority used by the
+consistency checker. Comma-separated dependencies are all required unless the
+row says conditional.
+
+| Milestone | Depends on         | Condition                                            |
+| --------- | ------------------ | ---------------------------------------------------- |
+| P0        | none               | accepted product reset                               |
+| E0        | P0                 | historical feasibility exception                     |
+| F1        | P0                 | frontend sequence                                    |
+| F2        | F1                 | frontend sequence                                    |
+| G0        | F2                 | truth reconciliation                                 |
+| F3        | G0                 | G0 accepted and separately authorized                |
+| F4        | F3                 | frontend sequence                                    |
+| F5        | F4                 | frontend sequence                                    |
+| F6        | F5                 | frontend sequence and Frontend Gate                  |
+| B1        | F6                 | Frontend Gate accepted                               |
+| B2        | B1                 | durable project path                                 |
+| B3        | B2                 | renderable assets and capabilities                   |
+| B4        | B3                 | accepted timing and direction contracts              |
+| B5        | B2, B3, B4         | finished Kids pilot                                  |
+| R1        | B5                 | packaged-product foundation                          |
+| B6        | B5, R1             | long-form execution                                  |
+| B7        | B3, B4, B5, B6, R1 | second grammar pilot                                 |
+| B8        | B5, B7             | conditional; only when an approved shot activates it |
+| R2        | R1, B6, B7         | plus B8 only when activated                          |
+| L1        | R2                 | private launch                                       |
+| S1        | L1                 | stabilization                                        |
+
 ## 6. Completed ideation and feasibility phases
 
 ### P0 — Product ideation and creator-first reset — ACCEPTED
+
+**Objective:** define the creator-first product, production philosophy, initial
+grammar, proof ladder, and team boundaries before implementation.
+
+**Milestone invariant:** StoryStage is one directable asset-and-rig animation
+studio with a clear creator journey, not a generated-video wrapper or collection
+of disconnected proofs.
+
+**Dependencies/owners:** no prior product milestone; Preston owns the product
+decision, Pro advises, and Codex records the accepted charter.
 
 Retained decisions:
 
@@ -193,31 +233,192 @@ Retained decisions:
 - Kimi frontend ownership, Codex backend ownership, Pro milestone audit, Preston
   final acceptance.
 
+#### P0-WP1 — Product and creator journey
+
+- **Tasks:** define Projects → Create → Studio, Kids-first scope, editing model,
+  and the script-to-delivery journey.
+- **Non-goals:** implementation, provider selection, or speculative enterprise
+  features.
+- **Verify/complete:** Preston accepted the reset charter and three-screen
+  creator path at exact milestone SHA.
+
+#### P0-WP2 — Visual and production principles
+
+- **Tasks:** define cut-paper/watercolor art direction, layered environments,
+  grounded profile-aware motion, selective ambient motion, and truthful audio.
+- **Non-goals:** approving final Ollo art, rigs, shots, or reusable media.
+- **Verify/complete:** retained rules are represented in the stable product plan
+  and later roadmap gates.
+
+#### P0-WP3 — Proof ladder and team contract
+
+- **Tasks:** define 30-second, 2–3 minute, and 20-minute proofs plus Kimi,
+  Codex, Pro, and Preston ownership.
+- **Non-goals:** treating a technical proof as product completion.
+- **Verify/complete:** sequencing and acceptance ownership are durable in Git.
+
+**Required evidence:** accepted product charter, art-direction references,
+creator-journey definition, proof ladder, and exact accepted SHA.
+
+**Milestone gate:** Preston accepts the product reset as the sole basis for
+future execution.
+
 ### E0 — Godot/Remotion feasibility — ACCEPTED
+
+**Objective:** prove the minimum deterministic seam needed to keep Godot as the
+planned performance worker and Remotion as canonical compositor.
+
+**Milestone invariant:** the spike proves only an engine interchange contract;
+it grants no product, rig, art, or backend implementation authority.
+
+**Dependencies/owners:** after P0; Codex owns the isolated spike, Pro audits the
+evidence, and Preston accepts or rejects Godot eligibility.
 
 Evidence proved a pinned Godot `SubViewport` can render 120 deterministic
 1920×1080 RGBA articulated frames and Remotion can consume those exact frames
 into a four-second MP4. E0 did not approve Ollo art, a final rig, visual quality,
 or a production worker. Those remain B2 work.
 
+#### E0-WP1 — Pinned Godot performance pass
+
+- **Tasks:** pin the engine, render one articulated four-second 2D performance,
+  and record the execution environment.
+- **Non-goals:** final Ollo rig, production worker, or creator UI.
+- **Verify/complete:** exactly 120 transparent 1920×1080 frames are produced.
+
+#### E0-WP2 — Determinism and alpha evidence
+
+- **Tasks:** repeat the render, compare decoded RGBA buffers, and prove complete
+  frame numbering and useful alpha.
+- **Non-goals:** visual-quality acceptance or lossy comparison shortcuts.
+- **Verify/complete:** repeated decoded frames match exactly with no missing or
+  duplicate index.
+
+#### E0-WP3 — Canonical Remotion handoff
+
+- **Tasks:** composite the exact Godot frames in Remotion and render the proof
+  MP4 with hashes and limitations.
+- **Non-goals:** a second editor, separate final renderer, or product integration.
+- **Verify/complete:** the same 120 frames produce the accepted four-second MP4.
+
+**Required evidence:** engine/version receipt, 120 RGBA frames, repeat-render
+comparison, Remotion MP4, hashes, commands, and limitations.
+
+**Milestone gate:** the deterministic seam passes and Godot remains eligible
+for B2; failure would require a roadmap amendment.
+
 ### F1 — Projects + Create — ACCEPTED
+
+**Objective:** deliver the understandable product entry and script-to-demo
+handoff before the larger Studio surface.
+
+**Milestone invariant:** every visible Projects/Create action is real local
+state or clearly labelled demo behavior.
+
+**Dependencies/owners:** after P0; Kimi implements, Codex reviews, Pro audits,
+and Preston accepts the visible milestone.
 
 Delivered unified Product v1 entry, local Projects list, script input/import,
 grammar/art-style choices, bounded beat preview, truthful demo handoff, and
 responsive evidence.
 
+#### F1-WP1 — Projects entry
+
+- **Tasks:** unify product entry, project cards, continue/new-project flow, and
+  honest local status.
+- **Non-goals:** accounts, cloud sync, persistence services, or production media.
+- **Verify/complete:** project navigation and responsive screenshots pass.
+
+#### F1-WP2 — Script and project choices
+
+- **Tasks:** support script paste/import, grammar, art style, voice/format choices,
+  estimates, and validation states.
+- **Non-goals:** AI planning, image generation, narration recording, or rendering.
+- **Verify/complete:** inputs and choices behave across desktop/compact layouts.
+
+#### F1-WP3 — Beat preview and truthful handoff
+
+- **Tasks:** show bounded natural-beat preview and create a disclosed local Ollo
+  layout demo without discarding selected project choices.
+- **Non-goals:** claiming the demo is generated from the submitted screenplay.
+- **Verify/complete:** created-project truth and beat-preview tests pass.
+
+#### F1-WP4 — Responsive acceptance gate
+
+- **Tasks:** keyboard/focus/contrast/responsive corrections, evidence capture,
+  hosted verification, and milestone audit.
+- **Non-goals:** F2 shell or backend work.
+- **Verify/complete:** exact screenshots/checks and Pro/Preston acceptance pass.
+
+**Required evidence:** Projects/Create screenshots, interaction tests, responsive
+captures, accessibility evidence, hosted verification, and exact accepted SHA.
+
+**Milestone gate:** Preston can create and enter a disclosed demo project without
+dead success controls or false production claims.
+
 ### F2 — Long-form Studio shell — ACCEPTED
+
+**Objective:** prove the long-form Studio information architecture and
+navigation before adding authoring tools.
+
+**Milestone invariant:** a 20-minute hierarchy remains bounded, synchronized,
+responsive, and truthful without pretending preview/export works.
+
+**Dependencies/owners:** after F1; Kimi implements, Codex reviews, Pro audits,
+and Preston accepts the visible milestone.
 
 Delivered a bounded 20-minute Ollo demo hierarchy, synchronized scene selection,
 selected-scene-only beat rendering, collapse/Reveal, keyboard navigation,
 scene-relative local timing, responsive layout, and honest disabled preview and
 export states.
 
+#### F2-WP1 — Studio shell foundation
+
+- **Tasks:** establish scene rail, reference board, Director area, overview,
+  selection ownership, and disclosed demo state.
+- **Non-goals:** real editing, media, playback, persistence, or export.
+- **Verify/complete:** created projects preserve their choices and shell state.
+
+#### F2-WP2 — Bounded long-form navigation
+
+- **Tasks:** add 20-minute hierarchy, selected-scene-only beat rendering,
+  collapse/reveal, scene selection, and episode overview.
+- **Non-goals:** thousands of expanded beat rows or hidden duplicate controls.
+- **Verify/complete:** bounded-DOM and cross-surface selection tests pass.
+
+#### F2-WP3 — Timing, keyboard, and responsive behavior
+
+- **Tasks:** add scene-relative timing, keyboard navigation, focus handling,
+  compact layout, reduced motion, and readable hierarchy.
+- **Non-goals:** executable playback, authoring, or backend timing authority.
+- **Verify/complete:** interaction, responsive, and accessibility evidence passes.
+
+#### F2-WP4 — Evidence and milestone gate
+
+- **Tasks:** capture immutable screenshots/hashes, run local/hosted verification,
+  audit truthfulness, and integrate the accepted shell.
+- **Non-goals:** beginning F3 or connecting services.
+- **Verify/complete:** exact handback, hosted run, Pro audit, and Preston decision
+  are recorded.
+
+**Required evidence:** bounded hierarchy tests, responsive/keyboard captures,
+truthful unavailable states, screenshot hashes, hosted verification, and exact
+accepted SHA.
+
+**Milestone gate:** Preston can navigate the complete demo episode without lost
+selection, screen flooding, freezing, or false playback/export claims.
+
 ### G0 — Canonical roadmap and repository-truth reconciliation — CURRENT
+
+**Objective:** make Git sufficient to recover accepted product truth, the full
+execution sequence, and exactly one authorized next action after any cold start.
 
 **Milestone invariant:** a new chat, new Codex task, or compacted context
 reconstructs the same accepted state and one next authorized action from Git
 alone. Product implementation remains blocked throughout G0.
+
+**Dependencies/owners:** after accepted F2; Codex owns reconciliation, Pro owns
+the exact-SHA audit, Kimi remains waiting, and Preston accepts the roadmap.
 
 #### G0-WP1 — Canonical plan set
 
@@ -265,6 +466,10 @@ alone. Product implementation remains blocked throughout G0.
 **Required evidence:** exact diff, stale-reference report, consistency results,
 cold-start transcript, candidate SHA, Pro audit, and Preston decision.
 
+**Milestone gate:** a fresh task resumes coherently from the five sources,
+hosted drift checks pass, Pro accepts the exact remote head, Preston accepts the
+roadmap, and no implementation package starts implicitly.
+
 ## 7. Frontend-first phases — Kimi implementation, Codex review
 
 Frontend packages use local/demo state only. They define the accepted product
@@ -272,6 +477,9 @@ workflow before Codex connects persistence, workers, providers, media, or
 rendering.
 
 ### F3 — Director workspace
+
+**Objective:** provide understandable, scoped manual direction editing before
+AI or backend integration.
 
 **Milestone invariant:** Direct, Visual, and Motion edits have explicit
 scene/beat scope, every visible action is real local state, and committed edits
@@ -319,7 +527,17 @@ Codex reviews, Pro audits the milestone, and Preston accepts it.
   1440×900, and 1024×800 browser audit, zero console/page errors, Codex/Pro
   review, Preston acceptance.
 
+**Required evidence:** Direct/Visual/Motion screenshots, scoped edit and
+undo/redo tests across beats/scenes, keyboard/compact captures, exact handback,
+hosted verification, and Pro audit.
+
+**Milestone gate:** Preston can edit, undo, and review direction without state
+leakage or any false production claim.
+
 ### F4 — Assets and rigs workspace
+
+**Objective:** make every scene's character, set, prop, layer, and rig needs
+understandable and reviewable before real asset services exist.
 
 **Milestone invariant:** every selected scene exposes understandable asset needs,
 source/approval/readiness truth, and the next real preparation action without
@@ -376,7 +594,17 @@ terminology, Pro audits the milestone, and Preston accepts it.
 - **Verify/complete:** required viewports, no overflow/unreachable region,
   root verify, Codex/Pro audit, Preston acceptance.
 
+**Required evidence:** asset-workspace screenshots, multi-scene readiness tests,
+request/import error paths, layer/rig review states, rights/source fields,
+keyboard/compact captures, exact handback, and hosted verification.
+
+**Milestone gate:** Preston can identify what each scene needs, what is missing,
+and the next honest preparation step without being told an asset or rig exists.
+
 ### F5 — Narration and sound workspace
+
+**Objective:** complete the creator-facing narration, SFX, and music workflow
+states before connecting devices, files, analysis, or final mixing.
 
 **Milestone invariant:** recording, takes, cues, and mix controls expose complete
 success/error/cancel states without claiming access to a microphone or audio
@@ -429,7 +657,17 @@ feasibility, Pro audits the milestone, and Preston accepts it.
 - **Verify/complete:** required viewports, root verify, no console/page errors,
   Codex/Pro audit, Preston acceptance.
 
+**Required evidence:** recording/import/take-management states, permission and
+missing-device errors, audio placement/retime/ducking interactions, keyboard and
+responsive captures, exact handback, and hosted verification.
+
+**Milestone gate:** Preston can understand and complete the intended narration
+and sound journey, including failures, without any fake recorded or mixed media.
+
 ### F6 — Timeline, export, and product polish
+
+**Objective:** complete the frontend interaction model, edit visibility, export
+configuration, accessibility, and visual coherence before backend work begins.
 
 **Milestone invariant:** the complete local Product v1 journey is understandable,
 keyboard-operable, visually coherent, and every edit/export action is either a
@@ -483,6 +721,15 @@ mapping, Pro audits the complete journey, and Preston owns the Frontend Gate.
 - **Verify/complete:** Codex and Pro find no blocking defect and Preston accepts
   the complete visible product. Only then may B1 start.
 
+**Required evidence:** track/trim/drag/zoom interactions, history behavior,
+export-readiness blocking, full Projects → Create → Studio click-through,
+responsive/accessibility captures, exact handback, hosted verification, and Pro
+audit.
+
+**Milestone gate — Frontend Gate:** Preston can complete and understand the full
+creator journey; every visible control is functional local state or truthfully
+unavailable, and F1–F6 remain passing together.
+
 ## 8. Backend and production phases — Codex implementation
 
 Backend packages connect only the accepted frontend operations. Existing proof,
@@ -490,6 +737,9 @@ legacy, and provider-neutral code is evidence to audit, not assumed product
 completion.
 
 ### B1 — One durable project path
+
+**Objective:** connect the accepted creator workflow to one durable, recoverable
+project model and remove competing legacy authority.
 
 **Milestone invariant:** Projects, Create, and Studio operate on one versioned
 local project that survives close/reopen and never falls through to a hidden
@@ -555,7 +805,17 @@ Kimi reviews the integrated UX, Pro audits, and Preston accepts.
 - **Verify/complete:** Preston creates, edits, closes, reopens, backs up, and
   restores through ordinary Product v1; root/hosted checks pass on exact SHA.
 
+**Required evidence:** save/reopen/migrate/recover tests, project snapshots,
+crash and invalid-data cases, ordinary Studio click-through on the durable path,
+retired-path report, exact handback, and hosted verification.
+
+**Milestone gate:** a real project can be created, edited, closed, reopened, and
+recovered through the accepted UI without hidden legacy surfaces or data loss.
+
 ### B2 — Ollo visual engine: Godot performance + Remotion composition
+
+**Objective:** produce the first coherent Ollo scene with articulated character
+performance, layered living environments, and one canonical Remotion result.
 
 **Milestone invariant:** one canonical plan produces one coherent 25–30 second
 Ollo scene through pinned Godot character jobs and the ordinary Remotion
@@ -638,7 +898,18 @@ Kimi reviews rig/set/scene UX, Pro audits, and Preston owns the visual gates.
   mid-scene disappearance or teleport, downloadable MP4, Pro audit, Preston
   visual acceptance.
 
+**Required evidence:** approved Ollo registration and readiness, rig/pivot/profile
+proofs, action-library clips, layered-set/occlusion frames, deterministic Godot
+passes, canonical Remotion preview/final comparison, and coherent 25–30 second
+scene review.
+
+**Milestone gate:** Preston accepts the coherent scene with grounded articulated
+motion and no sliding, clipping, disappearing, ghosting, or nonsensical cuts.
+
 ### B3 — Director automation
+
+**Objective:** turn screenplay context, approved assets, timing, continuity, and
+the governed multi-shot framework into editable, validated direction proposals.
 
 **Milestone invariant:** two different scripts receive sensible, editable,
 capability-aware direction proposals while deterministic code retains identity,
@@ -726,7 +997,18 @@ and benchmark quality.
 - **Verify/complete:** outputs are distinct, coherent, editable, capability-valid,
   and not noun-substitution templates; Preston accepts the assisted workflow.
 
+**Required evidence:** typed proposal/schema tests, privacy and provider-offline
+states, rule/fallback explanations, deterministic compile results, edit/accept/
+reject/regenerate flows, and two materially different script benchmarks.
+
+**Milestone gate:** Pro and Preston accept sensible, materially different plans
+for two scripts; deterministic validation blocks unrenderable or incoherent
+direction and all proposals remain editable.
+
 ### B4 — Narration and sound engine
+
+**Objective:** implement durable narration recording/import, timing authority,
+editable lip sync, real SFX/music placement, and canonical final mixing.
 
 **Milestone invariant:** selected narration, visemes, SFX, music, and mix survive
 reopen and remain sample/frame synchronized in preview and exported MP4.
@@ -792,7 +1074,17 @@ Kimi reviews UX, Pro audits audio evidence, and Preston accepts.
 - **Verify/complete:** reopen then export; ffprobe/frame/audio checks; no drift;
   Preston accepts intelligibility, sync, and basic mix.
 
+**Required evidence:** microphone/file/error tests, durable WAV/take storage,
+audio-analysis and editable viseme results, licensed cue/media records, mix and
+ducking checks, reload/cancel/recovery cases, and synchronized MP4 probes.
+
+**Milestone gate:** narration, lip movement, SFX, and music survive reload and
+the canonical export contains synchronized, rights-traceable picture and sound.
+
 ### B5 — Finished 2–3 minute Kids pilot
+
+**Objective:** produce one finished Ollo episode through ordinary StoryStage to
+prove direction, visual performance, audio, correction, export, and backup.
 
 **Milestone invariant:** one ordinary StoryStage project produces a coherent,
 downloadable Ollo episode whose direction, animation, and sound Preston accepts.
@@ -844,7 +1136,17 @@ Codex produces and integrates, Kimi reviews UX/visuals, and Pro audits.
 - **Verify/complete:** Preston accepts direction, animation, sound, UI workflow,
   and MP4; clean rerender reproduces accepted output.
 
+**Required evidence:** approved script/board/assets, scene locks, final voice and
+mix, continuity/visual/audio review, corrected canonical MP4, full project
+backup, clean reopen, and Preston/Pro watch notes.
+
+**Milestone gate:** Preston accepts the 2–3 minute episode and confirms it was
+made, corrected, rendered, and backed up through the ordinary product path.
+
 ### R1 — Windows distribution foundation
+
+**Objective:** package the accepted product path as a reproducible Windows build
+before long-form reliability and release-candidate testing.
 
 **Milestone invariant:** a clean Windows profile can run the pinned application,
 Godot, ffmpeg, and Remotion path without the development repository, separate
@@ -898,7 +1200,17 @@ machine evidence, and Preston decides signing and update policy.
 - **Verify/complete:** injected Godot/ffmpeg/device/media failures are actionable;
   no token or personal media leaks without explicit inclusion.
 
+**Required evidence:** pinned dependency/tool manifest, installer/package hashes,
+clean-machine install and launch, worker/binary validation, project open/render,
+uninstall/reinstall, backup compatibility, and known signing limitations.
+
+**Milestone gate:** the supported Windows package works without a developer
+checkout or hidden machine state and preserves user projects across reinstall.
+
 ### B6 — Long-form 20-minute production
+
+**Objective:** make a 20-minute, 36,000-frame episode editable, previewable,
+cancelable, resumable, recoverable, and exactly exportable on the target PC.
 
 **Milestone invariant:** after B5 and R1, StoryStage reliably edits, previews, renders, resumes,
 and exports an exact 36,000-frame, 20-minute, 30 fps episode without exhausting
@@ -961,9 +1273,24 @@ Kimi reviews long-form UX, Pro audits endurance, and Preston accepts.
 - **Verify/complete:** 36,000-frame export passes technical gates, app remains
   usable, project reopens, Preston accepts long-form workflow/reliability.
 
+**Required evidence:** long-script hierarchy, selected-range cache/preview,
+chunk/stitch boundary tests, persisted progress/cancel/resume/recovery, resource
+measurements, exact 36,000-frame and sample-accurate audio probes, final MP4,
+and project reopen.
+
+**Milestone gate:** Preston accepts the 20-minute workflow and output; every
+chunk boundary, restart, cancellation, frame count, audio duration, and recovery
+gate passes on the supported target PC.
+
 ## 9. Second grammar, release hardening, launch, and stabilization
 
 ### B7 — Publishable Weird History pilot
+
+**Objective:** prove the second editorial grammar through the same project,
+Director, media, audio, and canonical render path without weakening Kids.
+
+**Dependencies/owners:** after B3-B6 and R1; Codex implements, Kimi reviews the
+workflow, Pro audits editorial/factual quality, and Preston accepts the pilot.
 
 **Milestone invariant:** after B3-B6 and R1, the same product and canonical
 render path produces a publishable Weird History pilot with an honest editorial
@@ -1021,7 +1348,26 @@ factual quality, and Preston accepts.
 - **Verify/complete:** Preston accepts the MP4 and workflow; source/rights ledger,
   captions, audio probe, project backup, and clean-machine playback pass.
 
+**Required evidence:** approved grammar/style bible, licensed media and citation
+ledger, kinetic-type/map primitives, two-script Director comparison, fact/rights/
+audio lock, clean packaged-app production, final MP4, and project backup.
+
+**Milestone gate:** Preston accepts one publishable Weird History pilot and Pro
+finds no blocking editorial, factual, rights, citation, readability, or pacing
+defect.
+
 ### B8 — Optional specialist-shot bridge
+
+**Objective:** support one explicitly approved specialist shot only when the
+normal 2D system cannot reasonably satisfy its documented need.
+
+**Milestone invariant:** the bridge remains bounded to the accepted shot class,
+preserves provenance and reproducibility, and never becomes a second animation
+or episode-rendering system.
+
+**Dependencies/owners:** conditional after an accepted B5 or B7 shot need;
+Codex owns interchange/integration, the approved specialist owns the external
+shot, and Preston activates and accepts the exact scope.
 
 **Activation rule:** begin only when an accepted B5/B7 shot has a documented
 need the normal 2D system cannot reasonably satisfy and Preston approves the
@@ -1058,7 +1404,19 @@ exact shot. Unactivated B8 is `NOT REQUIRED` and never blocks private launch.
 - **Verify/complete:** Preston accepts the shot and the project remains
   reproducible without undocumented machine state.
 
+**Required evidence:** approved activation decision, bounded interchange package,
+tool/version/provenance receipt, validated return media, fallback comparison,
+canonical preview/final integration, hashes, and accepted affected-range render.
+
+**Milestone gate:** when activated, Preston accepts the exact specialist shot
+and reproducible return path; when unactivated, B8 is recorded `NOT REQUIRED`
+and does not block launch.
+
 ### R2 — Release candidate quality gate
+
+**Objective:** freeze and audit one installable release candidate across the
+complete creator journey, production paths, recovery, privacy, rights, and
+rollback requirements.
 
 **Milestone invariant:** one frozen build, project format, and dependency set
 passes clean-install, creator-journey, render, recovery, accessibility, privacy,
@@ -1128,7 +1486,22 @@ Pro audits the release candidate, and Preston accepts the RC and known issues.
 - **Verify/complete:** hosted/local/package checks pass, installer and outputs
   hash, rollback works, P0/P1=0, accepted P2s documented, Preston approves RC.
 
+**Required evidence:** security/privacy packet, accessibility journey, resource
+budgets, license/provenance audit, migration/recovery/rollback matrix, full
+regression and clean-machine runs, frozen installer/output hashes, known issues,
+release notes, and exact RC SHA.
+
+**Milestone gate:** P0/P1 defects are zero, accepted P2s are documented, rollback
+works, all required milestone gates remain passing, and Preston approves the
+immutable release candidate.
+
 ### L1 — Private launch
+
+**Objective:** deliver the immutable release candidate to a bounded private
+cohort with backups, support, diagnostics, and a proven rollback path.
+
+**Dependencies/owners:** after R2; Preston owns cohort and launch decisions,
+Codex owns release operations, and Pro audits readiness.
 
 **Milestone invariant:** every named tester receives the same immutable R2
 release, can protect and recover projects, and can return to the prior release
@@ -1173,7 +1546,21 @@ owns release operations; Pro audits readiness.
 - **Verify/complete:** rollback succeeds, support is staffed, P0/P1=0, and
   `ROADMAP_STATUS.md` records the immutable private launch.
 
+**Required evidence:** immutable release packet, tester/hardware roster,
+onboarding and backup confirmation, representative clean installs, first real
+productions, support rehearsal, rollback result, defect state, and explicit
+cohort-open decision.
+
+**Milestone gate:** Preston opens the named cohort only when P0/P1=0, support is
+owned, backups and rollback pass, and the exact tag/build is recorded.
+
 ### S1 — Post-launch stabilization
+
+**Objective:** protect projects and stabilize the private release through
+bounded measured fixes before considering broader use or new features.
+
+**Dependencies/owners:** after L1; Codex owns product fixes, Kimi owns bounded
+UX fixes, Pro audits significant changes, and Preston owns scope and exit.
 
 **Milestone invariant:** stabilization protects project data and fixes bounded
 defects against the exact private release without smuggling in unreviewed
@@ -1211,6 +1598,15 @@ changes, and Preston owns scope and exit.
 - **Verify/complete:** one maintenance release installs/upgrades/rolls back
   cleanly, P0/P1=0, and Preston records the next-release disposition.
 
+**Required evidence:** cohort defect ledger, regressions for every fix,
+performance/cache before-and-after measurements, migration/backup/rollback
+results for each patch, maintenance installer hashes, release notes, and cohort
+feedback.
+
+**Milestone gate:** one maintenance release installs, upgrades, recovers, and
+rolls back cleanly; P0/P1=0; repeated blockers are gone; Preston records the
+next-release disposition.
+
 ## 10. Cross-phase quality gates
 
 The following never wait until launch:
@@ -1236,42 +1632,62 @@ The following never wait until launch:
 - **Evidence:** exact remote SHA, tests, actual UI/render/audio, limitations, and
   hosted checks are recorded before acceptance.
 
-## 11. Risk register and decisions that must not drift
+## 11. Launch stop conditions
 
-| Risk | Current decision / mitigation | Gate |
-| --- | --- | --- |
-| Plan forgotten after chat compaction/new task | Git bootstrap documents + status ledger; goals/chat are non-authoritative | roadmap acceptance |
-| Old proofs mistaken for product | B1 reuse-versus-retire audit; no proof counts as phase completion | B1-WP1 |
-| Ollo source/rig inconsistency | exact readiness audit and Preston registration/motion gates | B2-WP1–3 |
-| Godot/Remotion mismatch | pinned Godot RGBA passes; one Remotion preview/final composition | B2-WP5–6 |
-| AI produces incoherent/random direction | structured proposal, deterministic validation, human edits, two-script benchmark | B3 |
-| ChatGPT subscription treated as API | no website/session automation; prompt packs/manual import; optional real API later | F4/B3 |
-| Audio underestimated | F5 UI then B4 engine before finished pilot | F5/B4 |
-| 20-minute memory/render failure | selected-range caches, chunks, resume, exact 36,000-frame soak | B6 |
-| Unlicensed Google/stock/SFX/media | source/license metadata and hard delivery readiness rules | F4/B4/B7/R2 |
-| UI and roadmap dashboard drift | `ROADMAP_STATUS.md` is authority; dashboard must read generated/exported status | roadmap tooling ticket |
-| Overengineering | one package, visible result, explicit non-goals, split before work if too large | every ticket |
+Do not proceed to private launch when any of the following is true:
 
-## 12. Preston decisions and recommended defaults
+- preview and final render do not consume the same canonical composition;
+- Godot produces non-deterministic accepted output;
+- a shipped or episode asset lacks required provenance or license disposition;
+- a project cannot recover after crash, restart, or interrupted durable write;
+- the 20-minute render cannot cancel, resume, recover, and produce exactly
+  36,000 video frames with sample-accurate audio;
+- any visible control falsely claims generation, recording, rendering, export,
+  upload, approval, or production success;
+- any P0 or P1 defect remains open;
+- install, migration, backup, restore, or rollback has not been validated on the
+  supported Windows configuration;
+- the packaged app requires developer tools, a repository checkout, hidden
+  credentials, or undocumented machine state;
+- required provider privacy, media rights, citation, accessibility, or support
+  ownership remains unresolved.
 
-| Decision | Recommended default | Deadline |
-| --- | --- | --- |
-| Private-launch grammar scope | Kids 20-minute workflow and one Weird History pilot are both required | G0 gate |
-| AI provider | One provider-neutral cloud API adapter with explicit consent, user key in Windows Credential Manager, visible estimate, and deterministic local planner | B3-WP1 |
-| Screenplay privacy | No transmission until explicitly enabled and disclosed; no cookies/session automation | B3-WP1 |
-| TTS | Not required; user recording/import first | F5 gate |
-| Stock/archive/audio | Approved sources and license policy; no unlicensed scraping | B7-WP2 |
-| Windows signing | Obtain a certificate if practical; otherwise explicitly accept unsigned private-beta friction | R1-WP2 |
-| Updates | Manual installer upgrades for private launch | R1-WP2 |
-| Telemetry | None; user-triggered redacted diagnostics only | R2-WP1 |
-| Supported hardware | Set from measured R1/B6 results, not guesses | R2-WP3 |
-| Private cohort | Named bounded testers with backup instructions and an explicit support owner | L1-WP2 |
-| B8 | Inactive and non-blocking unless one specific approved shot requires it | B5/B7 shot lock |
+## 12. Risk register and decisions that must not drift
+
+| Risk                                          | Current decision / mitigation                                                      | Gate                   |
+| --------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------- |
+| Plan forgotten after chat compaction/new task | Git bootstrap documents + status ledger; goals/chat are non-authoritative          | roadmap acceptance     |
+| Old proofs mistaken for product               | B1 reuse-versus-retire audit; no proof counts as phase completion                  | B1-WP1                 |
+| Ollo source/rig inconsistency                 | exact readiness audit and Preston registration/motion gates                        | B2-WP1–3               |
+| Godot/Remotion mismatch                       | pinned Godot RGBA passes; one Remotion preview/final composition                   | B2-WP5–6               |
+| AI produces incoherent/random direction       | structured proposal, deterministic validation, human edits, two-script benchmark   | B3                     |
+| ChatGPT subscription treated as API           | no website/session automation; prompt packs/manual import; optional real API later | F4/B3                  |
+| Audio underestimated                          | F5 UI then B4 engine before finished pilot                                         | F5/B4                  |
+| 20-minute memory/render failure               | selected-range caches, chunks, resume, exact 36,000-frame soak                     | B6                     |
+| Unlicensed Google/stock/SFX/media             | source/license metadata and hard delivery readiness rules                          | F4/B4/B7/R2            |
+| UI and roadmap dashboard drift                | `ROADMAP_STATUS.md` is authority; dashboard must read generated/exported status    | roadmap tooling ticket |
+| Overengineering                               | one package, visible result, explicit non-goals, split before work if too large    | every ticket           |
+
+## 13. Preston decisions and recommended defaults
+
+| Decision                     | Recommended default                                                                                                                                     | Deadline        |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Private-launch grammar scope | Kids 20-minute workflow and one Weird History pilot are both required                                                                                   | G0 gate         |
+| AI provider                  | One provider-neutral cloud API adapter with explicit consent, user key in Windows Credential Manager, visible estimate, and deterministic local planner | B3-WP1          |
+| Screenplay privacy           | No transmission until explicitly enabled and disclosed; no cookies/session automation                                                                   | B3-WP1          |
+| TTS                          | Not required; user recording/import first                                                                                                               | F5 gate         |
+| Stock/archive/audio          | Approved sources and license policy; no unlicensed scraping                                                                                             | B7-WP2          |
+| Windows signing              | Obtain a certificate if practical; otherwise explicitly accept unsigned private-beta friction                                                           | R1-WP2          |
+| Updates                      | Manual installer upgrades for private launch                                                                                                            | R1-WP2          |
+| Telemetry                    | None; user-triggered redacted diagnostics only                                                                                                          | R2-WP1          |
+| Supported hardware           | Set from measured R1/B6 results, not guesses                                                                                                            | R2-WP3          |
+| Private cohort               | Named bounded testers with backup instructions and an explicit support owner                                                                            | L1-WP2          |
+| B8                           | Inactive and non-blocking unless one specific approved shot requires it                                                                                 | B5/B7 shot lock |
 
 The roadmap candidate uses these defaults for sequencing. Preston's G0 decision
 either accepts them or records an exact amendment before implementation begins.
 
-## 13. Definition of complete
+## 14. Definition of complete
 
 StoryStage is not complete because a shell, schema, rig proof, render demo, or
 pilot exists. The private-launch product is complete only after B7, R2, and L1

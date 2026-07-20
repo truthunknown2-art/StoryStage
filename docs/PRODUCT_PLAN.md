@@ -4,7 +4,7 @@
 > [`PRODUCT_ROADMAP.md`](PRODUCT_ROADMAP.md) and the only live phase/package state
 > in [`ROADMAP_STATUS.md`](ROADMAP_STATUS.md).
 
-**Status:** Binding execution plan
+**Status:** Binding product and architecture charter
 
 **Product owner:** Preston
 
@@ -150,16 +150,16 @@ episode composition used for preview and final output, layering Godot character
 passes with multiplane environments, camera direction, narration, SFX, music,
 captions, and editorial timing.
 
-| Phase                               | Real delivery                                                                                    | Acceptance gate                                                                              |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| **B1 — One durable project path**   | Approved UI connected to real save/load and long-form project state                              | Create, edit, close, and reopen without using hidden Legacy surfaces                         |
+| Phase                               | Real delivery                                                                                                                                      | Acceptance gate                                                                                                              |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **B1 — One durable project path**   | Approved UI connected to real save/load and long-form project state                                                                                | Create, edit, close, and reopen without using hidden Legacy surfaces                                                         |
 | **B2 — Ollo visual engine**         | Godot-driven real Ollo rig and action graph; Remotion-driven layered Little Wood set, foreground occlusion, ambient motion, and canonical playback | One coherent 25–30 second scene with grounded articulated motion and no sliding, clipping, disappearing, or nonsensical cuts |
-| **B3 — Director automation**        | Natural scene/beat/shot planning, continuity, camera, action, props, and editable AI proposals   | Two different scripts create sensible, editable plans rather than fixture output             |
-| **B4 — Narration and sound engine** | Microphone recording, WAV storage, take editing, approximate lip sync, SFX, music, and final mix | Audio survives reload and exported MP4 contains synchronized picture and sound               |
-| **B5 — Finished Kids pilot**        | Complete 2–3 minute Ollo episode through ordinary Studio                                         | Preston accepts direction, animation, sound, and downloadable MP4                            |
-| **B6 — Long-form production**       | Long-script ingest, caching, selected-range preview, chunked/stitch rendering                    | Reliable exact 36,000-frame, 20-minute, 30 fps export without memory failure                 |
-| **B7 — Weird History grammar**      | Archival/stock media, kinetic type, evidence cards, and faster editorial pacing                  | One publishable Weird History pilot through the same product                                 |
-| **B8 — Specialist shot bridge**     | Blender/After Effects job package and pre-render import                                          | Added only when an approved shot has a need the 2D system cannot reasonably satisfy          |
+| **B3 — Director automation**        | Natural scene/beat/shot planning, continuity, camera, action, props, and editable AI proposals                                                     | Two different scripts create sensible, editable plans rather than fixture output                                             |
+| **B4 — Narration and sound engine** | Microphone recording, WAV storage, take editing, approximate lip sync, SFX, music, and final mix                                                   | Audio survives reload and exported MP4 contains synchronized picture and sound                                               |
+| **B5 — Finished Kids pilot**        | Complete 2–3 minute Ollo episode through ordinary Studio                                                                                           | Preston accepts direction, animation, sound, and downloadable MP4                                                            |
+| **B6 — Long-form production**       | Long-script ingest, caching, selected-range preview, chunked/stitch rendering                                                                      | Reliable exact 36,000-frame, 20-minute, 30 fps export without memory failure                                                 |
+| **B7 — Weird History grammar**      | Archival/stock media, kinetic type, evidence cards, and faster editorial pacing                                                                    | One publishable Weird History pilot through the same product                                                                 |
+| **B8 — Specialist shot bridge**     | Blender/After Effects job package and pre-render import                                                                                            | Added only when an approved shot has a need the 2D system cannot reasonably satisfy                                          |
 
 ### B3 multi-shot directing adaptation
 
@@ -180,8 +180,8 @@ validated and compiled into bounded Godot performance jobs plus the canonical
 Remotion camera, layer, edit, caption, and audio plan. The detailed retained B3
 reference is
 [`editorial/multi-shot-director-adaptation.md`](editorial/multi-shot-director-adaptation.md).
-This plan addition preserves future Director knowledge; it does not authorize
-B3 implementation during the F2 frontend phase.
+This retained knowledge grants no implementation authority before the accepted
+Frontend Gate and a separately authorized B3 package.
 
 ## 5. Animation production rules
 
@@ -229,7 +229,8 @@ The Director proposes concrete cues such as “two light footsteps,” “soft l
 - Integration branch: `product/v1`.
 - Existing proof branches are read-only references unless an active ticket names one.
 - Kimi coordination branch: `agent/kimi-frontend`.
-- Kimi implementation branch for the frontend program: `agent/kimi-ui-v2`, unless a later inbox version explicitly changes it.
+- Implementation branches are defined only by `ROADMAP_STATUS.md` and the
+  current `KIMI_INBOX.md` assignment.
 
 ### Roles
 

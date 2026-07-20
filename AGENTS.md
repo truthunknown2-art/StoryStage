@@ -34,9 +34,9 @@ workstream.
 
 ## Required work loop
 
-1. Fetch Git and read this file, `CODEX_START_HERE.md`,
-   `docs/PRODUCT_PLAN.md`, `docs/PRODUCT_ROADMAP.md`, the live remote status,
-   and the active ticket.
+1. Fetch Git and execute the mandatory read order in `CODEX_START_HERE.md`;
+   then read the exact active issue, brief, branch, PR, handback, and checks
+   named by the live status.
 2. State the active phase, owner, visible deliverable, exact base, allowed files,
    and non-goals.
 3. Make the smallest change that satisfies that ticket.
