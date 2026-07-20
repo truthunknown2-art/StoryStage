@@ -1,15 +1,27 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `43`
+Inbox-Version: `44`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP2-LONG-FORM-NAVIGATION-ACCEPTED`
-Status: `WAIT`
+Current-Task: `F2-WP3-RESPONSIVE-KEYBOARD-VISUAL-QUALITY`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `ee900201d40aca2e38e559e19b40e9ec2b6282f0`
-Required-Work-Branch: `agent/kimi-f2-longform-navigation-wp2`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-accepted-v43.md`
+Accepted-Root-Base: `4218da84437aa4e202a4d48d79899cf270e7cdde`
+Required-Work-Branch: `agent/kimi-f2-responsive-keyboard-wp3`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp3-responsive-quality-v44.md`
 
 ## Current instruction
+
+Version 44 starts only F2-WP3 from verified `product/v1` integration head
+`4218da84437aa4e202a4d48d79899cf270e7cdde`. Claim issue #43, branch from that
+exact base, implement the responsive, keyboard, and visual-quality brief,
+publish one immutable handback, and stop. Do not begin WP4, F3, or backend work.
+
+Version 44 supersedes Version 43. Version 43 remains below as historical
+traceability.
+
+---
+
+Previous Version 43 instruction:
 
 Version 43 accepts exact F2-WP2 head
 `ee900201d40aca2e38e559e19b40e9ec2b6282f0`. The v42 bounded beat-row defect is

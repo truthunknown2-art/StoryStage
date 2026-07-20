@@ -1,6 +1,6 @@
 # StoryStage — current Codex execution state
 
-Updated: 2026-07-20 10:52 America/Vancouver
+Updated: 2026-07-20 11:15 America/Vancouver
 
 This file is a restart pointer, not a product specification. GitHub branches,
 pull requests, issues, hosted checks, and exact remote SHAs remain authoritative.
@@ -44,7 +44,7 @@ merged into `product/v1` as `7a468673`.
 - Local root `pnpm verify`: passed at exact combined product head
 - Hosted integration run: `29761209150` passed at exact combined product head
 
-## Accepted F2-WP2 package — integration pending
+## Completed F2-WP2 package
 
 - Package: **F2-WP2 — Long-form navigation and bounded rendering**
 - Owner: Kimi CLI
@@ -54,17 +54,32 @@ merged into `product/v1` as `7a468673`.
 - Rejected predecessor: `5eb684ebcbf62886a5371311cf8226a48220df0a`
 - Accepted correction: `420b4bd6c180e17c6e4c9bd371528e6792eb3ffd`
 - Accepted exact head: `ee900201d40aca2e38e559e19b40e9ec2b6282f0`
-- Draft PR: `https://github.com/truthunknown2-art/StoryStage/pull/42`
-- Canonical inbox: version `43` (`WAIT`)
-- Full brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-accepted-v43.md`
+- Merged PR: `https://github.com/truthunknown2-art/StoryStage/pull/42`
+- Product merge: `4218da84437aa4e202a4d48d79899cf270e7cdde`
+- Local root `pnpm verify`: passed at the exact product merge
+- Hosted integration run: `29766340698` passed at the exact product merge
+- Closed issue: `https://github.com/truthunknown2-art/StoryStage/issues/41`
 
 Codex accepted the hierarchy collapse/reveal, scene/playhead synchronization,
 truthful controls, scope, recaptured screenshots, 69/69 Studio tests,
 typecheck, build, and hosted run `29764722843`. The v42 blocker is resolved:
 each two-beat scene now renders exactly two beat rows, only in the hierarchy
-rail, and every row belongs to the selected scene. PR #42 remains draft and
-unmerged. Kimi is on `WAIT`; WP3, F3, and backend work remain blocked.
+rail, and every row belongs to the selected scene. The accepted head was merged,
+and both local and hosted checks passed on the exact integration commit.
+
+## Active F2 work package
+
+- Package: **F2-WP3 — Responsive, keyboard, and visual-quality pass**
+- Owner: Kimi CLI
+- Required branch: `agent/kimi-f2-responsive-keyboard-wp3`
+- Exact base: `4218da84437aa4e202a4d48d79899cf270e7cdde`
+- Issue: `https://github.com/truthunknown2-art/StoryStage/issues/43`
+- Canonical inbox: version `44` (`START-NOW`)
+- Full brief:
+  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp3-responsive-quality-v44.md`
+
+Only WP3 responsive, keyboard, and visual-quality work is authorized. WP4,
+F3, and backend work remain blocked.
 
 ## Pro audit
 

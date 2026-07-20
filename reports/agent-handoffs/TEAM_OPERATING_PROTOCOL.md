@@ -71,6 +71,20 @@ Kimi's recurring poll reads only the canonical scheduler inbox above. Creating o
 editing a GitHub issue alone does not wake Kimi. Every new task or material status
 change therefore requires a higher `Inbox-Version` and a pushed inbox commit.
 
+## Standing package-integration authority
+
+On 2026-07-20, Preston authorized Codex to integrate review-clean StoryStage
+package pull requests without requesting approval for each merge. Codex may use
+that standing authority only when the exact remote head was reviewed, the
+package acceptance criteria pass, hosted checks are green, the integration base
+has not moved incompatibly, and the merge does not cross a product phase or
+Preston acceptance gate. After every merge, Codex verifies the exact resulting
+product head before issuing the next bounded ticket.
+
+This standing authority removes repetitive merge prompts. It does not let Codex
+waive a failed check, self-accept a Preston product gate, merge unreviewed work,
+or start an unauthorized phase.
+
 ## Completion rule
 
 The StoryStage product goal remains active until the user accepts a genuinely
