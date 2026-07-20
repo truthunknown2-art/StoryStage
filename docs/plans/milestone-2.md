@@ -41,7 +41,7 @@ scene-board, transport readout, and episode overview.
 **Deliverable:** add a bounded local hierarchy (two acts, four sequences, eight
 scenes, and concise beat metadata) and replace both the created-project handoff
 and seeded-demo detail with one visible Studio shell. Include the top bar,
-collapsible hierarchy rail, center scene-board preview, scene-level previous /
+grouped hierarchy rail, center scene-board preview, scene-level previous /
 next transport, a right-side "Director arrives in F3" explanation, and a
 scene-level episode overview. Use only existing approved local reference art
 and label it as reference art—not animation or a rendered frame.
