@@ -1,6 +1,6 @@
 # StoryStage — current Codex execution state
 
-Updated: 2026-07-20 02:15 America/Vancouver
+Updated: 2026-07-20 03:05 America/Vancouver
 
 This file is a restart pointer, not a product specification. GitHub branches,
 pull requests, issues, hosted checks, and exact remote SHAs remain authoritative.
@@ -20,26 +20,28 @@ pull requests, issues, hosted checks, and exact remote SHAs remain authoritative
 - Owner: Kimi CLI
 - Required branch: `agent/kimi-ui-v2`
 - Audited Kimi handback: `1a90a0b2dee5f18fd36e51a1bab6424cffd6382a`
-- Exact integrated gate head: `60ea6fbb50f9fbc159f2a08d1d4c8cdc39dfba64`
+- Exact combined gate head: `7517d8e93af12938b3095da915614e15f3bece9c`
 - Draft PR: `https://github.com/truthunknown2-art/StoryStage/pull/33`
 - Task/claim issue: `https://github.com/truthunknown2-art/StoryStage/issues/34`
-- Canonical inbox version: `35` (`WAIT`)
+- Canonical inbox version: `37` (`WAIT`)
 - Gate-wait brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-f1-integrated-gate-wait-v35.md`
+  `reports/agent-handoffs/2026-07-20-codex-kimi-f1-preston-gate-wait-v37.md`
 
 Kimi's bounded v33 correction is complete. Codex independently verified all 58
 Studio tests, root `pnpm verify`, screenshot hashes, five captures, contrast,
 and exact 1024×800 responsive behavior. The unchanged hosted rerun passed. Codex
-then merged only the accepted roadmap lineage into the candidate; root
-`pnpm verify` passed at exact head `60ea6fbb`. Hosted exact-head verification
-and Pro's F1 gate audit remain. Do not advance F2 until Preston accepts F1.
+then merged the current accepted `product/v1` lineage into the candidate. Root
+`pnpm verify` and hosted run `29731549778` passed at exact head `7517d8e9`.
+Pro accepted F1 with no blocking defects. Do not advance F2 until Preston
+explicitly accepts F1.
 
 ## Pro audit
 
 ChatGPT Pro accepted the governing roadmap at exact SHA
 `9f6cef48a031fb09f1a0539652fbed4274f5ff9b`, with F1 active under Kimi and
 B1/B2 unauthorized. Pro subsequently audited E0 exact head `b8507504` and
-recorded **E0 PASS** with no blocking defects. The F1 exact-head audit is next.
+recorded **E0 PASS** with no blocking defects. Pro accepted F1 and authorized
+presenting it to Preston; Pro's verdict does not authorize F2.
 
 ## E0 engine feasibility proof
 

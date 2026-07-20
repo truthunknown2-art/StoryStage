@@ -1,15 +1,28 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `36`
+Inbox-Version: `37`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F1-PROJECTS-CREATE-GATE-REVIEW`
 Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `7517d8e93af12938b3095da915614e15f3bece9c`
 Required-Work-Branch: `agent/kimi-ui-v2`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-final-combined-wait-v36.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f1-preston-gate-wait-v37.md`
 
 ## Current instruction
+
+Version 37 records Pro's completed F1 acceptance audit and the green live PR
+head `7517d8e93af12938b3095da915614e15f3bece9c`. All named correction blockers
+are resolved and Pro found no blocking F1 defects. The next authority is
+Preston's explicit F1 phase decision. Continue to wait. Do not change PR #33,
+begin F2, or start backend work.
+
+Version 37 supersedes Version 36. Version 36 remains below as historical
+traceability.
+
+---
+
+Previous Version 36 instruction:
 
 Version 36 updates the exact F1 gate head to
 `7517d8e93af12938b3095da915614e15f3bece9c`. After E0 passed Pro audit and
