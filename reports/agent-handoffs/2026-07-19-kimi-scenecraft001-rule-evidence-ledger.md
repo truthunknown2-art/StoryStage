@@ -72,4 +72,4 @@ Documentation and evidence classification only: no TypeScript, schema, validator
 
 ## Integration instructions
 
-Base `c7618f06c96bd52a866e87dadaaea7a4cf991e4c` → prior A/B (`799546f…`, `a3a6491…`) → implementation C `b2fd05799f767c989ae0ba6392f40e4a7e420db5` → handback head D (recorded in the PR #22 body). Draft PR #22 targets `agent/kcast001-provider-neutral-rig`. Do not merge — Codex and Pro review the immutable head.
+Base `c7618f06c96bd52a866e87dadaaea7a4cf991e4c` → prior A/B (`799546f6838dd997e51b2e33f0a0a996b9efaa20`, `a3a6491ed1cf85145c011c2db3048fe345fb7693`) → implementation C `b2fd05799f767c989ae0ba6392f40e4a7e420db5` → handback head D (recorded in the PR #22 body). Draft PR #22 targets `agent/kcast001-provider-neutral-rig`. Do not merge — Codex and Pro review the immutable head.
