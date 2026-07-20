@@ -105,6 +105,22 @@ screenplay + grammar + art direction
 - **Specialist tools:** Blender/After Effects receive bounded job packages and
   return pre-rendered media only after B8 is explicitly activated.
 
+### Governed multi-shot directing input
+
+The user-supplied multi-shot animation framework is preserved as a source
+receipt, a rule-by-rule StoryStage crosswalk, and a durable Director adaptation:
+
+- [`multi-shot framework receipt`](research/source-frameworks/multi-shot-prompt-framework-animation.receipt.md)
+- [`multi-shot framework crosswalk`](editorial/multi-shot-prompt-framework-crosswalk.md)
+- [`multi-shot Director adaptation`](editorial/multi-shot-director-adaptation.md)
+
+Its useful shot-purpose, composition, camera, dialogue-placement, and
+energy-aware pacing ideas flow through G0, F3, F4/B2, B3, and B4. Its generated-
+video constraints do not: StoryStage has no universal 15-second duration,
+3-7-shot quota, forced camera variation, 1,500-character ceiling, or
+diegetic-only audio rule. The canonical proposal remains structured and
+editable; prose is derived output only.
+
 ## 4. Package operating system
 
 Every work package has one primary invariant, one visible or audible result,
@@ -206,7 +222,8 @@ alone. Product implementation remains blocked throughout G0.
 #### G0-WP1 — Canonical plan set
 
 - **Tasks:** remove live phase state from `PRODUCT_PLAN`; replace the roadmap
-  redirect with this complete plan; create the exact live `ROADMAP_STATUS`.
+  redirect with this complete plan; create the exact live `ROADMAP_STATUS`;
+  govern the multi-shot source receipt, crosswalk, and Director adaptation.
 - **Non-goals:** F3 code, backend code, UI changes, media work, or feature cleanup.
 - **Verify/complete:** source links, milestone/package IDs, dependencies, and
   the accepted F2 lineage agree across all three documents.
@@ -647,7 +664,10 @@ and benchmark quality.
 - **Tasks:** implement the retained multi-shot framework as structured episode →
   sequence → scene → beat → shot intent; purpose, duration bounds, composition,
   camera, blocking, performance, props/layers, continuity in/out, narration/SFX/
-  music cues, capability requests, confidence, fallback, rationale.
+  music cues, capability requests, confidence, fallback, rationale; follow the
+  governed
+  [`crosswalk`](editorial/multi-shot-prompt-framework-crosswalk.md) rather than
+  the generator-oriented source rules.
 - **Non-goals:** fixed 15-second quota, camera variation for its own sake, final
   frame numbers, canonical hashes from AI, or generated-video prompts.
 - **Verify/complete:** schema/semantic tests and human-readable examples for a

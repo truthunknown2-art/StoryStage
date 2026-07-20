@@ -18,7 +18,7 @@ the same accepted state and one next authorized action from Git alone.
 ## Dependency-ordered packages
 
 1. **G0-WP1 Canonical plan set** - stable Product Plan, full Product Roadmap,
-   and live Roadmap Status agree.
+   live Roadmap Status, and governed multi-shot source receipt/crosswalk agree.
 2. **G0-WP2 Cold-start contract** - phase-neutral AGENTS plus root
    CODEX_START_HERE reconstruct state without chat.
 3. **G0-WP3 Stale-authority/history repair** - README/current-state/history and

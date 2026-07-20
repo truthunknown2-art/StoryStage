@@ -2,9 +2,10 @@
 
 - **Status:** Durable B3 planning reference; non-normative until an approved
   B3 work package turns the required fields into contracts and validators.
-- **Source context:** Adapted from a user-supplied, generator-oriented
+- **Source context:** Adapted from an exact user-supplied, generator-oriented
   multi-shot animation prompt framework and its linked workflow demonstration.
-  The source file is not copied into the repository.
+  Its governed receipt and rule decisions are recorded in
+  [`multi-shot-prompt-framework-crosswalk.md`](./multi-shot-prompt-framework-crosswalk.md).
 - **Companion knowledge:**
   [`scene-craft-v1.1.md`](./scene-craft-v1.1.md) owns the broader editorial
   vocabulary and classification of hard invariants, priors, hypotheses, and
@@ -155,3 +156,18 @@ When B3 is authorized, this reference is successful only if:
 
 Until B3 begins, this file is retained so the directing approach is not lost;
 it does not authorize implementation during the frontend gate.
+
+## Roadmap adoption boundary
+
+- **G0** governs the source receipt, crosswalk, adaptation, and canonical links.
+- **F3** exposes the retained purpose, composition, camera, and action vocabulary
+  as honest manual creator controls.
+- **F4/B2** make approved assets, views, rigs, layers, props, and supported
+  performance/camera behavior the capability boundary.
+- **B3** implements typed proposals, deterministic validation, review, and the
+  two-script benchmark without importing generator quotas.
+- **B4** binds dialogue, narration, captions, visemes, SFX, music, and silence
+  to the same canonical timing authority.
+
+The exact classifications and rejected generator rules are normative planning
+input in the companion crosswalk. Neither file starts any of those phases.
