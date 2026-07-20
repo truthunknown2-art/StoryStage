@@ -1,23 +1,27 @@
 # [KIMI] SCENECRAFT-001 — Scene Craft v1.1 rule & evidence ledger handback
 
-Task: `KIMI-SCENECRAFT-V11-EVIDENCE-LEDGER` (active instruction: **inbox Version 21**)
+Task: `KIMI-SCENECRAFT-V11-EVIDENCE-LEDGER` (active instruction: **inbox Version 22**)
 Work branch: `agent/kimi-scenecraft-v11-evidence-ledger`
-Exact base SHA: `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`
-Exact implementation commit A SHA: `799546f`
 Milestone: `SCENECRAFT-001` (documentation/evidence layer only)
 
-This handback is commit B of the two-commit protocol: commit A (`799546f`) carries the corrected canonical editorial documents; this commit records the recomputed audit and exact metadata. The non-circular record of handback head B is the updated PR #22 body.
+## Exact lineage (full SHAs)
 
-## Canonical deliverables
+- Exact base: `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`
+- Prior accepted line: implementation A `799546f6838dd997e51b2e33f0a0a996b9efaa20`, handback B `a3a6491ed1cf85145c011c2db3048fe345fb7693`
+- Exact implementation commit C: `b2fd05799f767c989ae0ba6392f40e4a7e420db5`
+- Handback head D: recorded only in the updated PR #22 body (the non-circular record of D; this file intentionally names no D SHA and says "this commit" nowhere)
 
-1. `docs/editorial/scene-craft-rule-ledger-v1.md` — canonical numbered Markdown ledger: **43 rules**, stable contiguous classification-free IDs `SC-001`–`SC-043`, every rule stating all **17** required fields directly (rule ID, plain-language principle, domain, grammar scope, enforcement class, evaluation window, minimum sample requirement, semantic exception codes, evidence source path, exact Git blob and/or 64-character file-content SHA-256, evidence kind, measured sample size, confidence, current calibration status, future consumer, implementation owner, notes/rationale), plus a 12-artifact source & evidence registry as additional context.
-2. `docs/editorial/scene-craft-v1.1.md` — narrative at the exact draft status (_Draft editorial knowledge base; non-normative until rule classification, evidence mapping, and pilot calibration are accepted_), canonical ledger link, explicit no-authority statement, and the exact binding spaced vocabulary in its type block, prose, and ledger-rule lines (zero hyphenated variants).
-3. This handback at the required path.
+## Canonical deliverables (all net **added** from the exact base)
+
+1. `docs/editorial/scene-craft-rule-ledger-v1.md` — **added**. Canonical numbered Markdown ledger: **43 rules**, stable contiguous classification-free IDs `SC-001`–`SC-043`, every rule stating all **17** required fields directly (rule ID, plain-language principle, domain, grammar scope, enforcement class, evaluation window, minimum sample requirement, semantic exception codes, evidence source path, exact Git blob and/or 64-character file-content SHA-256, evidence kind, measured sample size, confidence, current calibration status, future consumer, implementation owner, notes/rationale), plus a 12-artifact source & evidence registry as additional context.
+2. `docs/editorial/scene-craft-v1.1.md` — **added**. Narrative at the exact draft status (_Draft editorial knowledge base; non-normative until rule classification, evidence mapping, and pilot calibration are accepted_), canonical ledger link, explicit no-authority statement, the exact spaced vocabulary throughout, the `Hard invariant classes` heading, and the `worked example` value present in the illustrative `evidenceKind` union.
+3. `reports/agent-handoffs/2026-07-19-kimi-scenecraft001-rule-evidence-ledger.md` — **added**. This handback.
 
 ## Exact counts (mechanically derived from the final ledger)
 
 - Enforcement classes: **15 hard invariant, 14 planner prior, 12 hypothesis, 2 example only** (`warning` and `information` appear zero times).
-- Evidence kinds: **25 established editorial practice, 3 project regression, 13 unvalidated hypothesis, 2 worked example** (SC-039 treatment, SC-040 rubric).
+- Evidence kinds: **25 established editorial practice, 2 project regression, 14 unvalidated hypothesis, 2 worked example** (SC-039 treatment, SC-040 rubric).
+- SC-027 is `unvalidated hypothesis`: the single observed project repetition does not validate its universal six-second/six-gesture numeric claim.
 - **Zero rules claim measured-reference support for an exact StoryStage number.**
 - Low confidence / uncalibrated (15): SC-024, SC-025, SC-026, SC-027, SC-028, SC-029, SC-030, SC-031, SC-032, SC-033, SC-034, SC-035, SC-036, SC-037, SC-039.
 
@@ -28,21 +32,16 @@ This handback is commit B of the two-commit protocol: commit A (`799546f`) carri
 - **Retained with evidence (measured):** none; no evidence was invented or upgraded.
 - **Removed outright:** none — every claim is classified live, recorded as superseded (SC-034), or demoted.
 
-## Mechanical audit (recomputed at commit A `799546f`)
+## Mechanical audit (recomputed at commit C `b2fd05799f767c989ae0ba6392f40e4a7e420db5`)
 
+- **Net diff from base:** exactly the three **added** canonical files (verified `A`-status for both editorial documents and the handback).
 - **IDs:** 43 unique, contiguous `SC-001`–`SC-043` (no gaps, no extras).
 - **Fields:** 43 × 17 required fields — 0 missing.
-- **Per-rule evidence:** every row carries exact repository path plus full Git blob and/or full 64-character SHA-256; both unique SHA-256 citations recompute exactly from the referenced bytes (including the amendment bytes recomputed from provenance commit `3f07a61`); all cited paths verified present (coordination-branch sources verified from `0a4f25d` / `3f07a61`).
-- **Vocabulary:** only exact allowed values — enforcement `hard invariant / planner prior / hypothesis / example only`; evidence kinds `established editorial practice / project regression / unvalidated hypothesis / worked example`; zero hyphenated variants in either canonical document.
-- **Blocking tokens:** zero hits across all soft rows (`never`, `prohibited`, `rejected`, `fails`, `banned`, `must reject`).
-- **Handback counts equal ledger counts** (this file's numbers are the audit's numbers).
-- **Files changed from base:** exactly the three canonical documentation files (the v18-era JSON and nested handback were added and removed within branch history and net to absent).
-
-## Changed files (since base `c7618f0`)
-
-- `docs/editorial/scene-craft-rule-ledger-v1.md` (created)
-- `docs/editorial/scene-craft-v1.1.md` (modified)
-- `reports/agent-handoffs/2026-07-19-kimi-scenecraft001-rule-evidence-ledger.md` (created)
+- **Per-rule evidence:** every row carries exact repository path plus full Git blob and/or full 64-character SHA-256; **all cited Git blobs exist** (`git cat-file -e`), and every cited SHA-256 **recomputes from exact Git object bytes** (`git cat-file blob`) — including the seven registry values corrected from the CRLF-checkout mistake and the SC-007 audit hash.
+- **Vocabulary:** zero `hard-invariant`, `planner-prior`, `example-only`, `measured-reference`, `project-regression`, `established-practice`, or `unvalidated-hypothesis` tokens in either canonical document; `worked example` present in the narrative union.
+- **Blocking tokens:** zero hits across all soft rows.
+- **Counts:** handback equals ledger (15/14/12/2 and 25/2/14/2); SC-027 verified `unvalidated hypothesis`.
+- **Handback hygiene:** no `this commit`, no abbreviated exact SHA, no stale Version 21 label, no false modified-file claim.
 
 ## Unresolved questions
 
@@ -73,4 +72,4 @@ Documentation and evidence classification only: no TypeScript, schema, validator
 
 ## Integration instructions
 
-Base `c7618f0` → implementation commit A `799546f` → handback commit B (this commit). Draft PR #22 targets `agent/kcast001-provider-neutral-rig`; its body names implementation A, handback head B, the three canonical files, exact counts, and current tests. Do not merge — Codex and Pro review the immutable head.
+Base `c7618f06c96bd52a866e87dadaaea7a4cf991e4c` → prior A/B (`799546f…`, `a3a6491…`) → implementation C `b2fd05799f767c989ae0ba6392f40e4a7e420db5` → handback head D (recorded in the PR #22 body). Draft PR #22 targets `agent/kcast001-provider-neutral-rig`. Do not merge — Codex and Pro review the immutable head.
