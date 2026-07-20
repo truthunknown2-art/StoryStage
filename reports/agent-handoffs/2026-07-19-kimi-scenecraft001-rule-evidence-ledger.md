@@ -9,7 +9,7 @@ Milestone: `SCENECRAFT-001` (documentation/evidence layer only)
 - Exact base: `c7618f06c96bd52a866e87dadaaea7a4cf991e4c`
 - Prior accepted line: implementation A `799546f6838dd997e51b2e33f0a0a996b9efaa20`, handback B `a3a6491ed1cf85145c011c2db3048fe345fb7693`
 - Exact implementation commit C: `b2fd05799f767c989ae0ba6392f40e4a7e420db5`
-- Handback head D: recorded only in the updated PR #22 body (the non-circular record of D; this file intentionally names no D SHA and says "this commit" nowhere)
+- Handback head D: recorded only in the updated PR #22 body (the non-circular record of D; this file intentionally names no D SHA and avoids any self-referential commit label)
 
 ## Canonical deliverables (all net **added** from the exact base)
 
@@ -41,7 +41,7 @@ Milestone: `SCENECRAFT-001` (documentation/evidence layer only)
 - **Vocabulary:** zero `hard-invariant`, `planner-prior`, `example-only`, `measured-reference`, `project-regression`, `established-practice`, or `unvalidated-hypothesis` tokens in either canonical document; `worked example` present in the narrative union.
 - **Blocking tokens:** zero hits across all soft rows.
 - **Counts:** handback equals ledger (15/14/12/2 and 25/2/14/2); SC-027 verified `unvalidated hypothesis`.
-- **Handback hygiene:** no `this commit`, no abbreviated exact SHA, no stale Version 21 label, no false modified-file claim.
+- **Handback hygiene:** no self-referential commit label, no abbreviated exact SHA, no stale Version 21 label, no false modified-file claim.
 
 ## Unresolved questions
 
