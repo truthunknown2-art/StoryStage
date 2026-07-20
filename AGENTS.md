@@ -63,6 +63,11 @@ Always use the lowest effort that reliably completes the bounded task. Never ass
 - No engineering hashes, evidence ledgers, or approval jargon in the normal creator UI.
 - No visible control may pretend generation, recording, upload, rendering, or export succeeded.
 
+**Authorized exception:** E0 in `docs/PRODUCT_PLAN.md` is the sole permitted
+non-shipping framework and proof-composition experiment during F1. It does not
+authorize B1, B2, creator-UI integration, production contracts, or continued
+engine development after the evidence handback.
+
 ## Definition of done
 
 A ticket is done only when its user-visible result works, scoped checks pass, evidence is captured, and the exact commit is pushed. A phase is done only when its acceptance gate in `docs/PRODUCT_PLAN.md` passes. Technical groundwork without a visible result is not phase completion.

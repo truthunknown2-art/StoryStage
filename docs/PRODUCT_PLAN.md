@@ -10,7 +10,7 @@
 
 **Active phase:** F1 — Projects + Create
 
-**Updated:** 2026-07-19
+**Updated:** 2026-07-20
 
 ## 1. Product definition
 
@@ -113,17 +113,30 @@ The spike must:
 - use approved existing Ollo parts only if their public provenance and rig
   readiness are already valid; otherwise use an original visibly labelled
   engine-test puppet rather than weakening an asset gate;
-- render a transparent PNG sequence at fixed frame rate from an unattended
-  command, then composite those exact frames in a small Remotion composition;
-- render a downloadable MP4 and representative stills, with commands, versions,
-  file hashes, frame count, and known limitations recorded in Git;
-- repeat the Godot render and prove whether corresponding frame bytes are
-  deterministic; any mismatch must be reported rather than hidden;
+- render the puppet into a transparent `SubViewport`, capture each completed
+  frame with `get_texture().get_image()`, and save RGBA PNGs from GDScript under
+  an unattended fixed-frame-rate command. Godot's built-in PNG MovieWriter is
+  not valid evidence because it does not preserve the required transparency;
+- record the exact Godot version and executable hash, operating system,
+  rendering method and driver, GPU/driver identity, relevant project settings,
+  and command line;
+- produce exactly 120 consecutively numbered 1920×1080 RGBA frames with no
+  missing or duplicate indices and prove nontrivial alpha in representative
+  frames;
+- repeat the Godot render on that pinned host. Decoded RGBA pixel buffers must
+  match exactly; raw PNG byte equality is reported separately. Any mismatch is
+  a failure and must not be hidden;
+- composite those exact 120 frames in Remotion and render a 120-frame
+  downloadable MP4 plus representative stills, with commands, hashes, frame
+  count, and known limitations recorded in Git;
 - remain outside the creator UI, desktop persistence, Director contracts, and
   production render path, and stop after the evidence handback.
 
-Passing E0 permits Godot to remain the planned B2 engine. It does not accept a
-final rig, final character art, visual quality, the frontend gate, or B2.
+E0 closes before F1 acceptance with an explicit `PASS` or `FAIL`. Failure does
+not fail the F1 UI, but it suspends Godot as the selected B2 engine and requires
+a roadmap amendment before further engine work. Passing E0 permits Godot to
+remain the planned B2 engine. It does not accept a final rig, final character
+art, visual quality, the frontend gate, or B2.
 
 ## 4. Backend delivery — Codex
 
