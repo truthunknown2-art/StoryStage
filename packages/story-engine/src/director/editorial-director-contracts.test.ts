@@ -64,6 +64,7 @@ import {
   type EditorialPlanningAttemptReceipt,
   type EditorialExternalRawResponse,
   type EditorialDirectorProposalV1,
+  type EditorialOutputFormat,
   type ExternalEditorialIntentDraft,
   type GuideBoundEditorialPlanningRequestSources,
 } from "./editorial-director-contracts";
@@ -1033,6 +1034,37 @@ describe("guide-bound Editorial planning", () => {
       "guideBindingExpectation",
       "clauseOwnership",
     ].forEach((field) => expect(reads.get(field)).toBe(1));
+  });
+
+  it("snapshots nested common sources once so request and frame-grid FPS cannot diverge", () => {
+    const current = guideFixture();
+    let fpsReads = 0;
+    const changingOutput = {
+      width: current.output.width,
+      height: current.output.height,
+      get fps() {
+        fpsReads += 1;
+        return fpsReads === 1 ? current.output.fps : current.output.fps * 2;
+      },
+    } as EditorialOutputFormat;
+    const input = {
+      ...current,
+      output: changingOutput,
+    } satisfies GuideBoundEditorialPlanningRequestSources;
+
+    const rebuilt = createGuideBoundEditorialPlanningArtifacts(input);
+    expect(fpsReads).toBe(1);
+    expect(rebuilt.request.output.fps).toBe(current.output.fps);
+    expect(rebuilt.frameGrid.fps).toBe(current.output.fps);
+
+    fpsReads = 0;
+    expect(
+      restoreGuideBoundEditorialPlanningRequest(
+        JSON.stringify(current.request),
+        input,
+      ),
+    ).toEqual(current.request);
+    expect(fpsReads).toBe(1);
   });
 });
 

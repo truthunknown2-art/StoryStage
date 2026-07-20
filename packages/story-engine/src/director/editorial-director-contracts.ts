@@ -1325,15 +1325,20 @@ const editorialGuideBindingExpectationSchema = z
 const snapshotGuideBoundPlanningSources = (
   input: GuideBoundEditorialPlanningRequestSources,
 ): GuideBoundEditorialPlanningRequestSources => {
-  const pilotId = input.pilotId;
-  const storyProject = input.storyProject;
-  const showPack = input.showPack;
-  const grammarProfile = input.grammarProfile;
-  const sceneWorlds = [...input.sceneWorlds];
-  const capabilityRegistry = input.capabilityRegistry;
-  const editorialTargets = input.editorialTargets;
-  const timingBudget = input.timingBudget;
-  const output = input.output;
+  const pilotId = identifierSchema.parse(input.pilotId);
+  const storyProject = cv002ProjectSchema.parse(input.storyProject);
+  const showPack = showPackSchema.parse(input.showPack);
+  const grammarProfile = grammarProfileSchema.parse(input.grammarProfile);
+  const sceneWorldSources = input.sceneWorlds;
+  const sceneWorlds = sceneWorldSources.map((world) =>
+    sceneWorldPlanSchema.parse(world),
+  );
+  const capabilityRegistry = capabilityRegistrySchema.parse(
+    input.capabilityRegistry,
+  );
+  const editorialTargets = editorialTargetsSchema.parse(input.editorialTargets);
+  const timingBudget = editorialTimingBudgetSchema.parse(input.timingBudget);
+  const output = outputFormatSchema.parse(input.output);
   const guideVoiceClock = guideVoiceClockSchema.parse(input.guideVoiceClock);
   const guideVoiceTimingBasis = guideVoiceTimingBasisSchema.parse(
     input.guideVoiceTimingBasis,
@@ -1513,6 +1518,8 @@ function deriveGuideBoundEditorialPlanningArtifacts(
     timingBinding,
     clauseRegistry,
   });
+  if (request.output.fps !== basis.fps)
+    throw new Error("Guide-bound request FPS must match TimingBasis FPS.");
   return { request, timingBinding, clauseRegistry, frameGrid };
 }
 
