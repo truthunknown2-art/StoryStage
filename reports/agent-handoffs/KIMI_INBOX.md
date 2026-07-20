@@ -1,15 +1,29 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `41`
+Inbox-Version: `42`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F2-WP2-LONG-FORM-NAVIGATION`
+Current-Task: `F2-WP2-BOUNDED-BEAT-COUNT-CORRECTION`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `1982407c201d68ce78c98a5f530cda348a15c8ed`
+Accepted-Root-Base: `5eb684ebcbf62886a5371311cf8226a48220df0a`
 Required-Work-Branch: `agent/kimi-f2-longform-navigation-wp2`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-navigation-v41.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-bounded-beat-count-v42.md`
 
 ## Current instruction
+
+Version 42 rejects exact F2-WP2 head
+`5eb684ebcbf62886a5371311cf8226a48220df0a` for one bounded-DOM defect: each
+two-beat scene renders four tagged/visible beat rows because the rail and board
+duplicate the same beats, and the test incorrectly requires four. Apply only
+the v42 correction on the existing branch, push one immutable successor, and
+stop. Do not begin WP3, F3, or backend work.
+
+Version 42 supersedes Version 41. Version 41 remains below as historical
+traceability.
+
+---
+
+Previous Version 41 instruction:
 
 Version 41 starts only F2-WP2 from verified `product/v1` integration head
 `1982407c201d68ce78c98a5f530cda348a15c8ed`. Claim issue #41, branch from that

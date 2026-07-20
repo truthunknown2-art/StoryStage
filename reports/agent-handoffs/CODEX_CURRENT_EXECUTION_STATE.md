@@ -1,6 +1,6 @@
 # StoryStage — current Codex execution state
 
-Updated: 2026-07-20 09:57 America/Vancouver
+Updated: 2026-07-20 10:31 America/Vancouver
 
 This file is a restart pointer, not a product specification. GitHub branches,
 pull requests, issues, hosted checks, and exact remote SHAs remain authoritative.
@@ -51,13 +51,18 @@ merged into `product/v1` as `7a468673`.
 - Required branch: `agent/kimi-f2-longform-navigation-wp2`
 - Exact base: `1982407c201d68ce78c98a5f530cda348a15c8ed`
 - Issue: `https://github.com/truthunknown2-art/StoryStage/issues/41`
-- Pull request: not opened yet
-- Canonical inbox: version `41` (`START-NOW`)
+- Rejected exact head: `5eb684ebcbf62886a5371311cf8226a48220df0a`
+- Draft PR: `https://github.com/truthunknown2-art/StoryStage/pull/42`
+- Canonical inbox: version `42` (`START-NOW` correction)
 - Full brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-navigation-v41.md`
+  `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-bounded-beat-count-v42.md`
 
-WP2 is frontend-only. Kimi owns implementation; Codex reviews and integrates.
-WP3, F3, and backend product work remain blocked.
+Codex accepted the hierarchy collapse/reveal, scene/playhead synchronization,
+truthful controls, scope, screenshots, 69/69 Studio tests, typecheck, build,
+and hosted verification. One blocker remains: the candidate renders the same
+two selected-scene beats twice (four tagged rows), while the brief requires the
+rendered beat-row count not to exceed the selected scene's beat count. Only the
+v42 correction is authorized. WP3, F3, and backend work remain blocked.
 
 ## Pro audit
 
