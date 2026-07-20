@@ -9,29 +9,29 @@ completedMilestones:
   F1: 7a468673c0a33a37b96b94d965b5d2a857150fac
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
 authorization:
-  state: PRESTON_GATE
+  state: PRO_GATE
   milestone: G0
-  package: G0-WP5
-  owner: Preston
-  exactBase: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
-  branch: agent/codex-full-product-roadmap
+  package: G0-WP6
+  owner: Pro
+  exactBase: b648ff0c6224d25461aea648fd6337bec96334d2
+  branch: agent/codex-g0-ai-native-bridge
   issue: null
-  pr: 48
-  candidateContentHead: febc42ad94d716abf3893c59ce31389685ef87ae
-  candidateRef: agent/codex-full-product-roadmap
+  pr: 50
+  candidateContentHead: 6df8b2deb91795b787e9f50f1a8b08ee6f42f860
+  candidateRef: agent/codex-g0-ai-native-bridge
 checks:
   local: roadmap-consistency+root-verify-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: review-complete-at-febc42ad94d716abf3893c59ce31389685ef87ae
-  pro: accepted-at-febc42ad94d716abf3893c59ce31389685ef87ae
+  codex: review-complete-at-6df8b2deb91795b787e9f50f1a8b08ee6f42f860
+  pro: amendment-review-pending
   preston: null
 blockers:
-  - G0 awaits Preston's phase decision before any F3 or backend package is assigned
+  - AI-native amendment requires hosted verification, Pro exact-SHA audit, and Preston acceptance
 nextAuthorizedAction:
-  type: PHASE_DECISION_ONLY
-  text: Preston decides G0; do not start F3 or backend implementation without a separate START_NOW assignment.
+  type: PRO_AUDIT_ONLY
+  text: After hosted verification passes, Pro audits exact PR 50 head; do not start E1, F3, or backend implementation.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -56,15 +56,19 @@ verification from the live PR checks.
 
 ## Current state
 
-- Accepted product state ends at F2 on exact `87c01f9b...`.
-- G0 is planning/documentation only. No F3 or backend product work is authorized.
-- ChatGPT Pro accepted the corrected full launch roadmap, cold-start contract,
-  and multi-shot governance at exact audit head `febc42ad...`; corrections
-  remaining: none. PR #48 is merged into `product/v1` at `ebbbcbb3...`.
+- Accepted product implementation state ends at F2 on exact `87c01f9b...`;
+  later `product/v1` commits through `b648ff0c...` contain only the accepted G0
+  roadmap/status lineage.
+- G0 is planning/documentation only. The user requested an AI-native amendment
+  before accepting the gate. No E1, F3, or backend product work is authorized.
+- ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
+  + read-only StoryStage MCP feasibility before F3, then a native AI Director
+  and deterministic proposal/application path. The content candidate is
+  `6df8b2de...` in draft PR #50; exact-head verification and audit are pending.
 - Kimi must remain `WAIT`; resolve its exact live inbox version and coordination
   head from `origin/agent/kimi-frontend` on every cold start and consistency run.
-- Kimi inbox v56 records the merged Pro acceptance and waits for Preston's G0
-  decision; it does not authorize an implementation branch.
+- Kimi inbox v56 remains a valid WAIT/no-branch hold while Codex reviews the G0
+  amendment; a higher inbox version is not required merely to keep Kimi waiting.
 - PR #47 is closed, unmerged, and superseded; it grants no F3 authority.
 
 ## Allowed transitions
