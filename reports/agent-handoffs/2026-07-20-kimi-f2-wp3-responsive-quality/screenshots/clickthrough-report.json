@@ -1,0 +1,170 @@
+{
+  "checks": [
+    {
+      "name": "1920: keyboard drove selection to Scene 5 across act boundary",
+      "ok": true
+    },
+    {
+      "name": "1920: rail and overview agree",
+      "ok": true
+    },
+    {
+      "name": "1920: keyboard focus is visible on the rail",
+      "ok": true
+    },
+    {
+      "name": "1920x1080: no horizontal page overflow",
+      "ok": true
+    },
+    {
+      "name": "1920x1080: permanent banner visible",
+      "ok": true
+    },
+    {
+      "name": "1920x1080: reference-art truth label visible",
+      "ok": true
+    },
+    {
+      "name": "1920x1080: playhead local-timing disclosure visible",
+      "ok": true
+    },
+    {
+      "name": "1920x1080: back to projects reachable",
+      "ok": true
+    },
+    {
+      "name": "1920x1080: zero console warnings/errors",
+      "ok": true
+    },
+    {
+      "name": "1920x1080: zero page errors",
+      "ok": true
+    },
+    {
+      "name": "1440: overview selection drives board",
+      "ok": true
+    },
+    {
+      "name": "1440: transport readout correct",
+      "ok": true
+    },
+    {
+      "name": "1440x900: no horizontal page overflow",
+      "ok": true
+    },
+    {
+      "name": "1440x900: permanent banner visible",
+      "ok": true
+    },
+    {
+      "name": "1440x900: reference-art truth label visible",
+      "ok": true
+    },
+    {
+      "name": "1440x900: playhead local-timing disclosure visible",
+      "ok": true
+    },
+    {
+      "name": "1440x900: back to projects reachable",
+      "ok": true
+    },
+    {
+      "name": "1440x900: zero console warnings/errors",
+      "ok": true
+    },
+    {
+      "name": "1440x900: zero page errors",
+      "ok": true
+    },
+    {
+      "name": "1024: layout stacks (flex column)",
+      "ok": true
+    },
+    {
+      "name": "1024: rail reachable",
+      "ok": true
+    },
+    {
+      "name": "1024: inspector reachable",
+      "ok": true
+    },
+    {
+      "name": "1024: transport reachable",
+      "ok": true
+    },
+    {
+      "name": "1024: overview reachable",
+      "ok": true
+    },
+    {
+      "name": "1024: selection still drives board",
+      "ok": true
+    },
+    {
+      "name": "1024x800: no horizontal page overflow",
+      "ok": true
+    },
+    {
+      "name": "1024x800: permanent banner visible",
+      "ok": true
+    },
+    {
+      "name": "1024x800: reference-art truth label visible",
+      "ok": true
+    },
+    {
+      "name": "1024x800: playhead local-timing disclosure visible",
+      "ok": true
+    },
+    {
+      "name": "1024x800: back to projects reachable",
+      "ok": true
+    },
+    {
+      "name": "1024x800: zero console warnings/errors",
+      "ok": true
+    },
+    {
+      "name": "1024x800: zero page errors",
+      "ok": true
+    },
+    {
+      "name": "reduced motion: selection transition disabled",
+      "ok": true
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp3-responsive-quality\\screenshots\\wp3-1920x1080-keyboard-selected.png",
+      "viewport": "1920x1080",
+      "sha256": "1b3c699ae450bcde6c056aa0fe7d52aa03d7d5d2f51c9329081c3b18fe59b900"
+    },
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp3-responsive-quality\\screenshots\\wp3-1440x900-scene-6-selected.png",
+      "viewport": "1440x900",
+      "sha256": "8f4b297e0b90ab4744c73c3d9dddd047a9747f54223ae048614e3f4330e5d12a"
+    },
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp3-responsive-quality\\screenshots\\wp3-1024x800-compact.png",
+      "viewport": "1024x800",
+      "sha256": "ebf3b04e2f6230765db7c4210c45945842276b01d7f210d6f1ffc37cf9cb0c14"
+    }
+  ],
+  "consoles": {
+    "1920x1080": {
+      "consoleMessages": [],
+      "pageErrors": []
+    },
+    "1440x900": {
+      "consoleMessages": [],
+      "pageErrors": []
+    },
+    "1024x800": {
+      "consoleMessages": [],
+      "pageErrors": []
+    }
+  },
+  "reducedMotion": {
+    "railSceneTransitionDuration": "1e-05s"
+  }
+}
