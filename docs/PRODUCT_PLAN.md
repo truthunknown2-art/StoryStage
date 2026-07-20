@@ -8,7 +8,7 @@
 
 **Integration branch:** `product/v1`
 
-**Active phase:** F1 — Projects + Create
+**Active phase:** F2 — Long-form Studio shell
 
 **Updated:** 2026-07-20
 

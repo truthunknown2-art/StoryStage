@@ -4,7 +4,7 @@ Read [`docs/PRODUCT_PLAN.md`](docs/PRODUCT_PLAN.md) before changing this reposit
 
 ## Current phase
 
-- Active product phase: **F1 — Projects + Create**.
+- Active product phase: **F2 — Long-form Studio shell**.
 - Phase owner: **Kimi** (frontend/UI/UX).
 - Codex is review-and-integration only during the frontend phases. Backend product work remains on hold until Preston accepts the Frontend Gate after F6.
 - The live Kimi assignment is the highest-version `reports/agent-handoffs/KIMI_INBOX.md` on `origin/agent/kimi-frontend`.
