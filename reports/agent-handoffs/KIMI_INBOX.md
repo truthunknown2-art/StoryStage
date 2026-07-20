@@ -1,15 +1,30 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `28`
+Inbox-Version: `29`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `KIMI-GUIDE-AUDIO-STUDIO-REVIEW`
+Current-Task: `KIMI-GUIDE-AUDIO-STUDIO-CORRECTIONS`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `4e4cff3ba88427c90f7db0cfec016b42945eee2e`
+Accepted-Root-Base: `f712e41914715e46434684f257ca48eeaeb4e5e8`
 Required-Work-Branch: `agent/kimi-guide-audio-studio-review`
-Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-guide-audio-studio-v28.md`
+Full-Brief: `reports/agent-handoffs/2026-07-19-codex-kimi-guide-audio-studio-corrections-v29.md`
 
 ## Current instruction
+
+Version 29 requests three narrow correctness fixes on PR #31 exact head
+`f712e41914715e46434684f257ca48eeaeb4e5e8`: detach/mark stale guide playback
+when a Director timing edit makes it incompatible, preserve host-supplied mute
+state across guide identity changes, and require the documented exact dev flag
+value. Add the specified regressions, push an immutable successor on the same
+branch, update the handback/PR body, then wait. Do not redesign the strip or
+broaden into authoring, providers, waveform work, persistence, or new schemas.
+
+Version 29 supersedes Version 28. Version 28 remains below as historical
+traceability.
+
+---
+
+Previous Version 28 instruction:
 
 Version 28 starts the real Director Studio guide-audio review UX against exact
 runtime commit `4e4cff3ba88427c90f7db0cfec016b42945eee2e`. Create the required branch,
