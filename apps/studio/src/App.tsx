@@ -79,6 +79,7 @@ import {
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {createHostAdapter, type HostAdapter} from "./host";
 import {Cv001CreatorApp} from "./Cv001CreatorApp";
+import {ProductV1App} from "./product-v1/ProductV1App";
 import type {CandidateSetReviewSummary, DesktopCapabilities, GenerationExchangeSummary, ImportLooseCandidateFilesResult, PreparationReview, ProductionBundleSummary, ProductionRenderScope, PublicShowPackCandidateSummary, RenderJobEvent, ReviewPublicShowPackCandidateResult, StagedCandidateSummary, VerifiedDeliverySummary} from "@storystage/contracts";
 
 type LooseMappingState = Extract<ImportLooseCandidateFilesResult, {status: "mapping-required"}>;
@@ -1678,9 +1679,19 @@ export function LegacyApp({onOpenCreator = () => undefined}: {onOpenCreator?: ()
   return <HomeScreen guidance={recentGuidance} onNew={() => setScreen("new-production")} onOpenCreator={onOpenCreator} recentProductions={recentProductions} onResume={(production) => void resumeProduction(production)} />;
 }
 
-export function App() {
+/**
+ * The pre-F1 creator journey, preserved byte-for-byte for its existing proof
+ * harnesses. No longer the default route.
+ */
+export function LegacyCreatorApp() {
   const [legacyOpen, setLegacyOpen] = useState(false);
   return legacyOpen
     ? <LegacyApp onOpenCreator={() => setLegacyOpen(false)} />
     : <Cv001CreatorApp onOpenLegacy={() => setLegacyOpen(true)} />;
+}
+
+export function App() {
+  // F1: the Product v1 journey (Projects → Create → local Studio handoff) is
+  // the default creator entry.
+  return <ProductV1App />;
 }
