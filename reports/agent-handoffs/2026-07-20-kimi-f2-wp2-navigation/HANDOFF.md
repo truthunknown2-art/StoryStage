@@ -132,3 +132,48 @@ contains accepted F2-WP1) and touches only the files listed above.
 
 Stopping here: no WP3, F3, or backend work. Continuing the 15-minute
 read-only inbox poll.
+
+---
+
+## v42 correction — bounded beat-row count
+
+Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-f2-wp2-bounded-beat-count-v42.md`
+Rejected head: `5eb684ebcbf62886a5371311cf8226a48220df0a`
+
+### Correction applied
+
+The selected scene's beat rows now render exactly once — beneath the
+selected scene in the hierarchy rail. The duplicate center-board beat list
+is removed (not merely unmarked or hidden), along with its dead CSS. The
+regression test now asserts exactly the selected scene's two beat rows and
+that every row's `data-beat-for` belongs to the selected scene, before and
+after selection changes.
+
+### v42 changed files
+
+- `apps/studio/src/product-v1/StudioShell.tsx` — board beat list removed.
+- `apps/studio/src/styles.css` — dead `.pv1-board-beats` rules removed.
+- `apps/studio/src/App.test.tsx` — beat-row count assertions corrected to 2.
+- `reports/agent-handoffs/2026-07-20-kimi-f2-wp2-navigation/**` — this note
+  + recaptured screenshots + click-through report.
+
+### v42 verification
+
+1. `pnpm --filter @storystage/studio test` — **69/69 pass**.
+2. `pnpm --filter @storystage/studio typecheck` — clean.
+3. `pnpm --filter @storystage/studio build` — clean.
+4. `pnpm verify` — **exit 0**.
+5. Click-through re-run at 1440×900: all checks pass, zero console
+   warnings/errors, zero page errors.
+
+### v42 screenshots (recaptured, 1440×900)
+
+| File | State | SHA-256 |
+| --- | --- | --- |
+| `screenshots/wp2-expanded-selected-scene-1440x900.png` | expanded Scene 3; beats only in the rail | `add899d1e742d9ce6e53dd94c8dad9738fd241343d9a10cc22292bf468b3d05c` |
+| `screenshots/wp2-collapsed-selection-summary-1440x900.png` | Scene 3 hidden behind collapsed Sequence 2, summary + Reveal | `311ad101e3209e5c6af5b69e6e9c7dee6a9a47918c07d339890afcc71d2934c0` |
+| `screenshots/wp2-act2-scene-playhead-1440x900.png` | Scene 5 from overview, playhead at 0:45 | `cbc37055a229926453958cd58ce550ddf63615118c76163ce6baec4b6e4c7312` |
+
+All accepted v41 behavior is preserved: collapse, hidden-selection summary
+and Reveal, selection synchronization, playhead move/reset, disclosure
+labels, and disabled-control honesty.
