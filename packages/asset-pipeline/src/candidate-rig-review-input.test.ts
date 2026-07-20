@@ -278,7 +278,7 @@ describe("Candidate I source-review-only foundation", () => {
       ...fixture,
       registrationPlans,
     });
-    expect(plan.status).toBe("blocked-awaiting-verified-artifact-route");
+    expect(plan.status).toBe("ready-for-private-source-review-render");
     expect(plan.views.map((view) => view.view)).toEqual([
       "front",
       "profile-left",
@@ -405,7 +405,7 @@ describe("Candidate I source-review-only foundation", () => {
   });
 
   it("reopens exact atlases only in memory and publishes no prepared output", async () => {
-    const { fixture, recipes } = await buildRecipes();
+    const { fixture, registrationPlans, recipes } = await buildRecipes();
     const staging = await createStaging(fixture);
     for (const recipe of recipes) {
       const program = compileCandidateRigReviewVisualProgram(
@@ -419,6 +419,9 @@ describe("Candidate I source-review-only foundation", () => {
         ...fixture,
         recipe,
         reviewProgram: program,
+        registrationPlan: registrationPlans.find(
+          (plan) => plan.view === recipe.view,
+        ),
         ...staging,
       });
       expect(review.view).toBe(recipe.view);
@@ -444,7 +447,7 @@ describe("Candidate I source-review-only foundation", () => {
   });
 
   it("rejects mirrored/tampered bytes and a forged review-program view", async () => {
-    const { fixture, recipes } = await buildRecipes();
+    const { fixture, registrationPlans, recipes } = await buildRecipes();
     const staging = await createStaging(fixture);
     const recipe = recipes[1]!;
     const program = compileCandidateRigReviewVisualProgram(
@@ -465,6 +468,9 @@ describe("Candidate I source-review-only foundation", () => {
         ...fixture,
         recipe,
         reviewProgram: forgedProgram,
+        registrationPlan: registrationPlans.find(
+          (plan) => plan.view === recipe.view,
+        ),
         ...staging,
       }),
     ).rejects.toThrow(/exact compiler output/i);
@@ -491,6 +497,9 @@ describe("Candidate I source-review-only foundation", () => {
         ...fixture,
         recipe,
         reviewProgram: program,
+        registrationPlan: registrationPlans.find(
+          (plan) => plan.view === recipe.view,
+        ),
         ...staging,
       }),
     ).rejects.toThrow(/byte length|changed after import/i);
