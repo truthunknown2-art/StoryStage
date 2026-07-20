@@ -9,29 +9,29 @@ completedMilestones:
   F1: 7a468673c0a33a37b96b94d965b5d2a857150fac
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
 authorization:
-  state: PRO_GATE
+  state: PRESTON_GATE
   milestone: G0
   package: G0-WP5
-  owner: Codex
+  owner: Preston
   exactBase: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   branch: agent/codex-full-product-roadmap
   issue: null
   pr: 48
-  candidateContentHead: 539154524f1804c12a30abaf32fccec4e5d29fef
+  candidateContentHead: febc42ad94d716abf3893c59ce31389685ef87ae
   candidateRef: agent/codex-full-product-roadmap
 checks:
-  local: roadmap-consistency+links+package-count+diff-check-pass
+  local: roadmap-consistency+root-verify-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: applying-exact-g0-audit-corrections
-  pro: corrections-required-at-fdc4c155001f53716177908fc868960df3517f2f
+  codex: review-complete-at-febc42ad94d716abf3893c59ce31389685ef87ae
+  pro: accepted-at-febc42ad94d716abf3893c59ce31389685ef87ae
   preston: null
 blockers:
-  - canonical roadmap candidate awaits corrected exact-SHA Pro audit and Preston acceptance
+  - G0 awaits Preston's phase decision before any F3 or backend package is assigned
 nextAuthorizedAction:
-  type: PLANNING_ONLY
-  text: Audit PR 48 exact remote head; do not start F3 or backend implementation.
+  type: PHASE_DECISION_ONLY
+  text: Preston decides G0; do not start F3 or backend implementation without a separate START_NOW assignment.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -58,11 +58,13 @@ verification from the live PR checks.
 
 - Accepted product state ends at F2 on exact `87c01f9b...`.
 - G0 is planning/documentation only. No F3 or backend product work is authorized.
-- ChatGPT Pro authored the full launch roadmap and multi-shot governance
-  requirements, then requested bounded G0 corrections at exact audit head
-  `fdc4c155...`. Corrected exact-SHA acceptance remains pending.
+- ChatGPT Pro accepted the corrected full launch roadmap, cold-start contract,
+  and multi-shot governance at exact audit head `febc42ad...`; corrections
+  remaining: none. PR #48 is merged into `product/v1` at `ebbbcbb3...`.
 - Kimi must remain `WAIT`; resolve its exact live inbox version and coordination
   head from `origin/agent/kimi-frontend` on every cold start and consistency run.
+- Kimi inbox v56 records the merged Pro acceptance and waits for Preston's G0
+  decision; it does not authorize an implementation branch.
 - PR #47 is closed, unmerged, and superseded; it grants no F3 authority.
 
 ## Allowed transitions
