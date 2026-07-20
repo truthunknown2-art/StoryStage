@@ -1,8 +1,8 @@
 # StoryStage live roadmap status
 
 Schema-Version: `1`
-Status-Version: `2`
-Updated-At: `2026-07-20T15:16:00-07:00`
+Status-Version: `3`
+Updated-At: `2026-07-20T15:54:51-07:00`
 Updated-By: `Codex`
 
 ## Repository truth
@@ -49,9 +49,9 @@ Updated-By: `Codex`
 - Exact-Base-SHA: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
 - Active-Roadmap-Branch: `agent/codex-full-product-roadmap`
 - Active-Roadmap-PR: `https://github.com/truthunknown2-art/StoryStage/pull/48`
-- Active-Roadmap-Head: `fdc4c155001f53716177908fc868960df3517f2f`
-- Active-Roadmap-Check-State: `local PASS; hosted exact-head run pending`
-- Pro-R0-Verdict: `PENDING`
+- Active-Roadmap-Head: `44bd2385fa3a744b034dddc571858a7f46ab90df`
+- Active-Roadmap-Check-State: `local corrected G0 checks PASS; hosted exact-head run 29785438661 pending`
+- Pro-R0-Verdict: `CORRECTIONS REQUIRED on fdc4c155; corrected 44bd238 pending final audit`
 - Preston-R0-Verdict: `PENDING`
 
 ## Superseded work
@@ -64,19 +64,19 @@ Updated-By: `Codex`
 
 ## Kimi coordination
 
-- Kimi-Inbox-Version: `52`
+- Kimi-Inbox-Version: `53`
 - Kimi-Inbox-Status: `WAIT`
-- Kimi-Current-Task: `G0-FULL-ROADMAP-EXACT-SHA-AUDIT-WAIT`
+- Kimi-Current-Task: `G0-ROADMAP-CORRECTIONS-FINAL-AUDIT-WAIT`
 - Kimi-Full-Brief:
-  `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-exact-sha-audit-wait-v52.md`
+  `reports/agent-handoffs/2026-07-20-codex-kimi-g0-roadmap-corrections-final-audit-wait-v53.md`
 - Kimi-Implementation-Authority: `none`
 
 ## Next and forbidden actions
 
-- Next-Authorized-Action: `Pro audits PR #48 exact remote head; Codex records the verdict; Preston accepts or returns G0 corrections`
+- Next-Authorized-Action: `hosted verification and Pro final audit of PR #48 exact correction head; Preston then accepts or returns G0`
 - Next-Product-Package-After-R0-Acceptance: `F3-WP1 only`
 - Forbidden: `F3 implementation, later frontend phases, backend B1+, F4, roadmap inference from chat, PR #47 integration`
-- Blocker: `G0 exact candidate awaits hosted verification, Pro audit, and Preston acceptance`
+- Blocker: `G0 corrected candidate awaits hosted verification, Pro final audit, and Preston acceptance`
 
 ## Private launch scope under planning
 
