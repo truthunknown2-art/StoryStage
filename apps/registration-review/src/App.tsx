@@ -88,8 +88,15 @@ export function RegistrationReviewApp({
         <div className="rr-stage-column">
           <DiagnosticStage view={view!} />
           <IssueStrip
-            onSelectRequirement={setSelectedRequirementId}
+            onSelectIssue={(viewId, requirementId) => {
+              // Atomic cross-view selection: the issue's view and requirement
+              // change in the same update, so the stale-selection guard never
+              // sees a requirement that is foreign to the active view.
+              setSelectedView(viewId);
+              setSelectedRequirementId(requirementId);
+            }}
             selectedRequirementId={selectedRequirementId}
+            selectedView={selectedView}
             views={presentation.views}
           />
         </div>

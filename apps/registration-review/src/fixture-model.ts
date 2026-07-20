@@ -13,10 +13,11 @@ import type {
  * explicit fixture host entry point.
  *
  * Every value here mirrors the real measured artifact state (counts, hashes,
- * requirement IDs and reasons, gap/orbit samples, mask summaries). The four
- * joint/orbit rows per view are a real subset of the view's full sample set;
- * `counts.joints` carries the exact full totals (proposal sockets plus
- * attachments) so displayed counts stay model-derived.
+ * requirement IDs and reasons, gap/orbit samples, mask summaries).
+ * `counts.joints` carries the exact number of `packet/joint-evidence/` sets
+ * recorded for the view (front 32, profile-left 29, profile-right 29) — never
+ * a sockets-plus-attachments sum. The joint/orbit rows are the view's
+ * complete `gap-orbit-measurements.json` sample set (16/16/17 attachments).
  */
 
 const v8AggregateHash =
@@ -94,8 +95,8 @@ const imageSha256: Record<
   },
   "profile-right": {
     original: "a06186a2ec5c11d324c051302ffabb4e0ce7f26a2bfdb0a6634690c54574dc9f",
-    seams: "e8b6d83e672b7612281eea1287773e65341197b6126b03e57e95df8eacdc6244",
-    rest: "5f5d72e0a9e3034ec39ba69f16b28252cb99a931f4daf903f67dd2b8e75e46be",
+    seams: "3d28b985a696572d0e61db1c068ccf0a450005bf93c4571d9f9a3659f4041329",
+    rest: "e8b6d83e672b7612281eea1287773e65341197b6126b03e57e95df8eacdc6244",
     "minus-15": "5f5d72e0a9e3034ec39ba69f16b28252cb99a931f4daf903f67dd2b8e75e46be",
     zero: "fdb1435acb94b80d54bf040bb27a30f5a75f1a8e4655cbc2ff3a9745e32ad7db",
     "plus-15": "4dd7fcf4066799abf3b2df714e0e8ba53c2b3dad8926fc71270776aa70e628bb",
@@ -185,6 +186,28 @@ const frontJoints: JointOrbitSample[] = [
     ],
   },
   {
+    attachmentId: "front-lower-arm-right-hand-right",
+    parentRole: "lower-arm-right",
+    childRole: "hand-right",
+    socketId: "wrist-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 12910097, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 11969627, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 11696728, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "front-lower-leg-left-foot-left",
+    parentRole: "lower-leg-left",
+    childRole: "foot-left",
+    socketId: "ankle-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 9939724, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 10873279, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 11642662, heat: "fail" },
+    ],
+  },
+  {
     attachmentId: "front-lower-leg-right-foot-right",
     parentRole: "lower-leg-right",
     childRole: "foot-right",
@@ -193,6 +216,116 @@ const frontJoints: JointOrbitSample[] = [
       { angleDegrees: -15, gapMicropixels: 11484794, heat: "fail" },
       { angleDegrees: 0, gapMicropixels: 10723633, heat: "fail" },
       { angleDegrees: 15, gapMicropixels: 9803445, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "front-pelvis-upper-leg-left",
+    parentRole: "pelvis",
+    childRole: "upper-leg-left",
+    socketId: "hip-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 2741165, heat: "review" },
+      { angleDegrees: 0, gapMicropixels: 2741165, heat: "review" },
+      { angleDegrees: 15, gapMicropixels: 2741165, heat: "review" },
+    ],
+  },
+  {
+    attachmentId: "front-pelvis-upper-leg-right",
+    parentRole: "pelvis",
+    childRole: "upper-leg-right",
+    socketId: "hip-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 2849717, heat: "review" },
+      { angleDegrees: 0, gapMicropixels: 2849717, heat: "review" },
+      { angleDegrees: 15, gapMicropixels: 2849717, heat: "review" },
+    ],
+  },
+  {
+    attachmentId: "front-torso-head",
+    parentRole: "torso",
+    childRole: "head",
+    socketId: "neck",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 12434020, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 12434020, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 12434020, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "front-torso-pelvis",
+    parentRole: "torso",
+    childRole: "pelvis",
+    socketId: "pelvis",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 26456360, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 25760211, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 25577201, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "front-torso-upper-arm-left",
+    parentRole: "torso",
+    childRole: "upper-arm-left",
+    socketId: "shoulder-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 92452443, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 93156355, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 94042110, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "front-torso-upper-arm-right",
+    parentRole: "torso",
+    childRole: "upper-arm-right",
+    socketId: "shoulder-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 93837536, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 93298096, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 93005615, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "front-upper-arm-left-lower-arm-left",
+    parentRole: "upper-arm-left",
+    childRole: "lower-arm-left",
+    socketId: "elbow-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 6980649, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 8944480, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 11024526, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "front-upper-arm-right-lower-arm-right",
+    parentRole: "upper-arm-right",
+    childRole: "lower-arm-right",
+    socketId: "elbow-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 12776240, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 11005262, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 9381708, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "front-upper-leg-left-lower-leg-left",
+    parentRole: "upper-leg-left",
+    childRole: "lower-leg-left",
+    socketId: "knee-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 7972195, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 8495537, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 9137604, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "front-upper-leg-right-lower-leg-right",
+    parentRole: "upper-leg-right",
+    childRole: "lower-leg-right",
+    socketId: "knee-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 9713624, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 9151118, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 8696410, heat: "fail" },
     ],
   },
 ];
@@ -207,6 +340,28 @@ const leftJoints: JointOrbitSample[] = [
       { angleDegrees: -15, gapMicropixels: 20060716, heat: "fail" },
       { angleDegrees: 0, gapMicropixels: 20060716, heat: "fail" },
       { angleDegrees: 15, gapMicropixels: 20060716, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-head-ear-right",
+    parentRole: "head",
+    childRole: "ear-right",
+    socketId: "ear-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 20958640, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 20958640, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 20958640, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-lower-arm-left-hand-left",
+    parentRole: "lower-arm-left",
+    childRole: "hand-left",
+    socketId: "wrist-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 11536641, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 10119709, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 8954924, heat: "fail" },
     ],
   },
   {
@@ -242,6 +397,116 @@ const leftJoints: JointOrbitSample[] = [
       { angleDegrees: 15, gapMicropixels: 21262789, heat: "fail" },
     ],
   },
+  {
+    attachmentId: "profile-left-pelvis-upper-leg-left",
+    parentRole: "pelvis",
+    childRole: "upper-leg-left",
+    socketId: "hip-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 2855451, heat: "review" },
+      { angleDegrees: 0, gapMicropixels: 2855451, heat: "review" },
+      { angleDegrees: 15, gapMicropixels: 2855451, heat: "review" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-pelvis-upper-leg-right",
+    parentRole: "pelvis",
+    childRole: "upper-leg-right",
+    socketId: "hip-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 2096190, heat: "review" },
+      { angleDegrees: 0, gapMicropixels: 2096190, heat: "review" },
+      { angleDegrees: 15, gapMicropixels: 2096190, heat: "review" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-torso-head",
+    parentRole: "torso",
+    childRole: "head",
+    socketId: "neck",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 15710705, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 14667759, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 13378900, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-torso-pelvis",
+    parentRole: "torso",
+    childRole: "pelvis",
+    socketId: "pelvis",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 63547445, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 65289490, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 67199779, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-torso-upper-arm-left",
+    parentRole: "torso",
+    childRole: "upper-arm-left",
+    socketId: "shoulder-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 5860370, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 5860370, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 5860370, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-torso-upper-arm-right",
+    parentRole: "torso",
+    childRole: "upper-arm-right",
+    socketId: "shoulder-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 4226063, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 4226063, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 4226063, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-upper-arm-left-lower-arm-left",
+    parentRole: "upper-arm-left",
+    childRole: "lower-arm-left",
+    socketId: "elbow-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 19976717, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 19112949, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 18366595, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-upper-arm-right-lower-arm-right",
+    parentRole: "upper-arm-right",
+    childRole: "lower-arm-right",
+    socketId: "elbow-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 15405040, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 14860648, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 14504994, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-upper-leg-left-lower-leg-left",
+    parentRole: "upper-leg-left",
+    childRole: "lower-leg-left",
+    socketId: "knee-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 11364114, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 11108555, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 11045909, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-left-upper-leg-right-lower-leg-right",
+    parentRole: "upper-leg-right",
+    childRole: "lower-leg-right",
+    socketId: "knee-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 12688584, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 13100499, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 13620440, heat: "fail" },
+    ],
+  },
 ];
 
 const rightJoints: JointOrbitSample[] = [
@@ -254,6 +519,28 @@ const rightJoints: JointOrbitSample[] = [
       { angleDegrees: -15, gapMicropixels: 16868108, heat: "fail" },
       { angleDegrees: 0, gapMicropixels: 16868108, heat: "fail" },
       { angleDegrees: 15, gapMicropixels: 16868108, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-head-ear-right",
+    parentRole: "head",
+    childRole: "ear-right",
+    socketId: "ear-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 22339201, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 22339201, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 22339201, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-lower-arm-left-hand-left",
+    parentRole: "lower-arm-left",
+    childRole: "hand-left",
+    socketId: "wrist-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 13574359, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 16476830, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 19347483, heat: "fail" },
     ],
   },
   {
@@ -287,6 +574,127 @@ const rightJoints: JointOrbitSample[] = [
       { angleDegrees: -15, gapMicropixels: 5827573, heat: "fail" },
       { angleDegrees: 0, gapMicropixels: 3442011, heat: "review" },
       { angleDegrees: 15, gapMicropixels: 3448335, heat: "review" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-pelvis-tail",
+    parentRole: "pelvis",
+    childRole: "tail",
+    socketId: "tail-base",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 39110206, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 33503141, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 28538740, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-pelvis-upper-leg-left",
+    parentRole: "pelvis",
+    childRole: "upper-leg-left",
+    socketId: "hip-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 4076862, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 4076862, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 4076862, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-pelvis-upper-leg-right",
+    parentRole: "pelvis",
+    childRole: "upper-leg-right",
+    socketId: "hip-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 4153907, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 4153907, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 4153907, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-torso-head",
+    parentRole: "torso",
+    childRole: "head",
+    socketId: "neck",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 13416405, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 13416405, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 13416405, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-torso-pelvis",
+    parentRole: "torso",
+    childRole: "pelvis",
+    socketId: "pelvis",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 42677666, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 42067223, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 42818209, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-torso-upper-arm-left",
+    parentRole: "torso",
+    childRole: "upper-arm-left",
+    socketId: "shoulder-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 6248354, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 6248354, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 6248354, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-torso-upper-arm-right",
+    parentRole: "torso",
+    childRole: "upper-arm-right",
+    socketId: "shoulder-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 5699073, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 5699073, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 5699073, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-upper-arm-left-lower-arm-left",
+    parentRole: "upper-arm-left",
+    childRole: "lower-arm-left",
+    socketId: "elbow-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 22918599, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 23285960, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 23953469, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-upper-arm-right-lower-arm-right",
+    parentRole: "upper-arm-right",
+    childRole: "lower-arm-right",
+    socketId: "elbow-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 20205870, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 20285065, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 20669761, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-upper-leg-left-lower-leg-left",
+    parentRole: "upper-leg-left",
+    childRole: "lower-leg-left",
+    socketId: "knee-left",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 10789124, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 11254102, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 11897687, heat: "fail" },
+    ],
+  },
+  {
+    attachmentId: "profile-right-upper-leg-right-lower-leg-right",
+    parentRole: "upper-leg-right",
+    childRole: "lower-leg-right",
+    socketId: "knee-right",
+    angles: [
+      { angleDegrees: -15, gapMicropixels: 12840019, heat: "fail" },
+      { angleDegrees: 0, gapMicropixels: 12283327, heat: "fail" },
+      { angleDegrees: 15, gapMicropixels: 11928957, heat: "fail" },
     ],
   },
 ];
@@ -358,7 +766,7 @@ export const registrationReviewFixture: RegistrationReviewPresentation = {
     viewModel(
       "profile-left",
       3,
-      32,
+      29,
       leftJoints,
       {
         componentId: "part-torso",
@@ -379,7 +787,7 @@ export const registrationReviewFixture: RegistrationReviewPresentation = {
     viewModel(
       "profile-right",
       2,
-      34,
+      29,
       rightJoints,
       {
         componentId: "part-torso",

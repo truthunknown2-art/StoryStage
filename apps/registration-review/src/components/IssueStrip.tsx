@@ -17,12 +17,14 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export function IssueStrip({
-  onSelectRequirement,
+  onSelectIssue,
   selectedRequirementId,
+  selectedView,
   views,
 }: {
-  onSelectRequirement: (requirementId: string) => void;
+  onSelectIssue: (view: RegistrationViewId, requirementId: string) => void;
   selectedRequirementId: string | null;
+  selectedView: RegistrationViewId;
   views: RegistrationViewModel[];
 }) {
   const groups = views.map((view) => ({
@@ -30,6 +32,8 @@ export function IssueStrip({
     items: view.unresolvedRequirements,
   }));
   const total = groups.reduce((sum, group) => sum + group.items.length, 0);
+  const isSelected = (view: RegistrationViewId, requirementId: string) =>
+    view === selectedView && requirementId === selectedRequirementId;
 
   return (
     <section aria-label="Unresolved requirements" className="rr-issue-strip">
@@ -43,17 +47,18 @@ export function IssueStrip({
             <small>{VIEW_LABELS[group.view]}</small>
             {group.items.map((requirement) => (
               <button
-                aria-pressed={
-                  requirement.requirementId === selectedRequirementId
-                }
+                aria-pressed={isSelected(
+                  group.view,
+                  requirement.requirementId,
+                )}
                 className={
-                  requirement.requirementId === selectedRequirementId
+                  isSelected(group.view, requirement.requirementId)
                     ? "is-selected"
                     : ""
                 }
                 key={requirement.requirementId}
                 onClick={() =>
-                  onSelectRequirement(requirement.requirementId)
+                  onSelectIssue(group.view, requirement.requirementId)
                 }
                 type="button"
               >

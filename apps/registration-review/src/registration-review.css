@@ -20,6 +20,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  /* Reserve space for the fixed authority footer so it never covers content. */
+  padding-bottom: 40px;
 }
 
 .rr-topbar {
@@ -296,7 +298,7 @@ body {
   color: #9fb3a9;
   font-size: 11px;
   font-weight: 700;
-  min-height: 30px;
+  min-height: 44px;
   min-width: 44px;
   padding: 0 12px;
 }
@@ -324,7 +326,7 @@ body {
   font-size: 11px;
   font-weight: 700;
   gap: 6px;
-  min-height: 34px;
+  min-height: 44px;
   padding: 0 11px;
 }
 
@@ -386,6 +388,31 @@ body {
 .rr-stage-unavailable span {
   font-size: 11px;
   max-width: 420px;
+}
+
+.rr-stage-binding {
+  align-items: baseline;
+  border-top: 1px solid #223029;
+  color: #72827a;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 9.5px;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 8px 14px 10px;
+}
+
+.rr-stage-binding code {
+  font-family: ui-monospace, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+
+.rr-stage-binding-url {
+  color: #9fb3a9;
+}
+
+.rr-stage-binding-hash {
+  color: #8fa59b;
 }
 
 .rr-inspector {
@@ -514,6 +541,12 @@ body {
   padding: 10px 12px;
 }
 
+.rr-joints-scroll {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
 .rr-joints table {
   border-collapse: collapse;
   font-size: 10px;
@@ -523,7 +556,7 @@ body {
 .rr-joints th,
 .rr-joints td {
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 6px 5px;
+  padding: 6px 4px;
   text-align: left;
 }
 
@@ -538,6 +571,14 @@ body {
 .rr-joints tbody th {
   color: #dce8e0;
   font-weight: 600;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.rr-joint-socket {
+  color: #72827a;
+  display: block;
+  font-weight: 500;
 }
 
 .rr-joints td {
@@ -556,6 +597,27 @@ body {
 
 .rr-joints td[data-heat="pass"] {
   color: #93e2b6;
+}
+
+.rr-bindings {
+  border-top: 1px solid #223029;
+  margin-top: 14px;
+  padding-top: 12px;
+}
+
+.rr-bindings h3 {
+  color: #8fa59b;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.rr-hash-full {
+  font-size: 9.5px;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 .rr-issue-strip {
@@ -648,13 +710,18 @@ body {
 }
 
 .rr-authority-footer {
+  background: rgba(8, 13, 12, 0.97);
   border-top: 1px solid #223029;
+  bottom: 0;
   color: #72827a;
   font-size: 10.5px;
+  left: 0;
   letter-spacing: 0.04em;
-  margin-top: auto;
-  padding: 12px 22px 16px;
+  padding: 10px 22px;
+  position: fixed;
+  right: 0;
   text-align: center;
+  z-index: 30;
 }
 
 .rr-empty {

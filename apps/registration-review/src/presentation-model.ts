@@ -86,7 +86,10 @@ export interface RegistrationViewModel {
   counts: {
     /** Measured components in the view's measurement report. */
     components: number;
-    /** Proposal joint records (sockets plus attachments). */
+    /**
+     * Exact joint-evidence sets recorded in the view's diagnostic packet
+     * (`packet/joint-evidence/`). Never a sockets-plus-attachments sum.
+     */
     joints: number;
     /** Unresolved requirements in the view's proposal. */
     unresolved: number;

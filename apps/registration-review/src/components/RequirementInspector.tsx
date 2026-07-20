@@ -6,6 +6,38 @@ import type {
 
 const humanize = (value: string) => value.replaceAll("-", " ");
 
+function ViewBindings({ view }: { view: RegistrationViewModel }) {
+  return (
+    <section aria-label="View evidence bindings" className="rr-bindings">
+      <h3>View evidence bindings</h3>
+      <dl className="rr-facts">
+        <div>
+          <dt>Measurement report</dt>
+          <dd>
+            <code className="rr-hash-full">
+              {view.measurementReportContentHash}
+            </code>
+          </dd>
+        </div>
+        <div>
+          <dt>Effective proposal</dt>
+          <dd>
+            <code className="rr-hash-full">
+              {view.effectiveProposalContentHash}
+            </code>
+          </dd>
+        </div>
+        <div>
+          <dt>Static gate one</dt>
+          <dd>
+            <code className="rr-hash-full">{view.gateContentHash}</code>
+          </dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
 export function RequirementInspector({
   requirement,
   view,
@@ -20,6 +52,7 @@ export function RequirementInspector({
           <FileQuestion size={18} />
           <p>No unresolved requirement selected in the {view.view} view.</p>
         </div>
+        <ViewBindings view={view} />
       </aside>
     );
   }
@@ -94,13 +127,17 @@ export function RequirementInspector({
                 <div>
                   <dt>Original PNG hash</dt>
                   <dd>
-                    <code>{mask.originalPngContentHash.slice(0, 16)}…</code>
+                    <code className="rr-hash-full">
+                      {mask.originalPngContentHash}
+                    </code>
                   </dd>
                 </div>
                 <div>
                   <dt>Masked PNG hash</dt>
                   <dd>
-                    <code>{mask.maskedPngContentHash.slice(0, 16)}…</code>
+                    <code className="rr-hash-full">
+                      {mask.maskedPngContentHash}
+                    </code>
                   </dd>
                 </div>
                 <div>
@@ -128,34 +165,44 @@ export function RequirementInspector({
 
       {view.joints.length > 0 ? (
         <section aria-label="Joint orbit samples" className="rr-joints">
-          <h3>Joint/orbit samples (supplied)</h3>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Joint</th>
-                <th scope="col">−15°</th>
-                <th scope="col">0°</th>
-                <th scope="col">+15°</th>
-              </tr>
-            </thead>
-            <tbody>
-              {view.joints.map((joint) => (
-                <tr key={joint.attachmentId}>
-                  <th scope="row">
-                    {joint.parentRole}:{joint.socketId}
-                  </th>
-                  {joint.angles.map((angle) => (
-                    <td data-heat={angle.heat} key={angle.angleDegrees}>
-                      {(angle.gapMicropixels / 1_000_000).toFixed(1)}px ·{" "}
-                      {angle.heat}
-                    </td>
-                  ))}
+          <h3>Joint/orbit samples ({view.joints.length} supplied)</h3>
+          <div
+            aria-label="Joint/orbit table — scroll horizontally to reach every angle column"
+            className="rr-joints-scroll"
+            role="region"
+            tabIndex={0}
+          >
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Joint</th>
+                  <th scope="col">−15°</th>
+                  <th scope="col">0°</th>
+                  <th scope="col">+15°</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {view.joints.map((joint) => (
+                  <tr key={joint.attachmentId}>
+                    <th scope="row">
+                      {joint.parentRole}:
+                      <span className="rr-joint-socket">{joint.socketId}</span>
+                    </th>
+                    {joint.angles.map((angle) => (
+                      <td data-heat={angle.heat} key={angle.angleDegrees}>
+                        {(angle.gapMicropixels / 1_000_000).toFixed(1)}px ·{" "}
+                        {angle.heat}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       ) : null}
+
+      <ViewBindings view={view} />
     </aside>
   );
 }
