@@ -159,6 +159,28 @@ captions, and editorial timing.
 | **B7 — Weird History grammar**      | Archival/stock media, kinetic type, evidence cards, and faster editorial pacing                  | One publishable Weird History pilot through the same product                                 |
 | **B8 — Specialist shot bridge**     | Blender/After Effects job package and pre-render import                                          | Added only when an approved shot has a need the 2D system cannot reasonably satisfy          |
 
+### B3 multi-shot directing adaptation
+
+The Director will adapt cinematic multi-shot prompt practice into an editable,
+structured production proposal rather than send compressed prose to a
+generated-video service. Its inputs combine the screenplay scene, project
+grammar and art direction, approved assets and rig capabilities, location
+layers and props, selected audio timing, and incoming continuity state. Its
+output describes motivated shots with purpose, duration constraints, cut
+motivation, composition, camera intent, character blocking and performance,
+prop and layer behavior, continuity in/out, audio cues, capability requests,
+and honest fallbacks.
+
+There is no fixed 15-second duration, shot-count quota, 1,500-character limit,
+forced camera variation, or diegetic-only audio rule. Timing follows dialogue,
+narration, readable action, reactions, and dramatic purpose. Accepted intent is
+validated and compiled into bounded Godot performance jobs plus the canonical
+Remotion camera, layer, edit, caption, and audio plan. The detailed retained B3
+reference is
+[`editorial/multi-shot-director-adaptation.md`](editorial/multi-shot-director-adaptation.md).
+This plan addition preserves future Director knowledge; it does not authorize
+B3 implementation during the F2 frontend phase.
+
 ## 5. Animation production rules
 
 ### Character tiers
