@@ -104,6 +104,9 @@ files.
    chunk warning only).
    Codex reran commands 1–3 after the tab-semantics correction at
    `e89a2d6b8b2a2070405e133b0c10f4da4a016c61`; all retained the same result.
+   Codex also reran repository-root `pnpm verify` on the corrected branch;
+   every workspace suite passed in 205.9 seconds with only the two unchanged
+   Remotion lint warnings.
 4. `pnpm verify` — **fails only at `verify:roadmap`**; see the conflict
    disclosure below. Every other component passes:
    - `verify:director-capability-assets` — PASS (19 assets).
