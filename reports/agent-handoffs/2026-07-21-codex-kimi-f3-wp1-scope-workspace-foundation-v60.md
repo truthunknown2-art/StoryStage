@@ -3,7 +3,7 @@
 ## Assignment identity
 
 - Inbox-Version: `60`
-- Status: `START_NOW`
+- Status: `START-NOW`
 - Current-Task: `F3-WP1-SCOPE-WORKSPACE-FOUNDATION`
 - Exact accepted base: `38969c4400e2a9c84a59346c28f7a72d5f9492bf`
 - Required work branch: `agent/kimi-f3-wp1-scope-workspace-foundation`

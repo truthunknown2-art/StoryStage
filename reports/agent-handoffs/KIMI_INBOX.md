@@ -3,7 +3,7 @@
 Inbox-Version: `60`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F3-WP1-SCOPE-WORKSPACE-FOUNDATION`
-Status: `START_NOW`
+Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `38969c4400e2a9c84a59346c28f7a72d5f9492bf`
 Required-Work-Branch: `agent/kimi-f3-wp1-scope-workspace-foundation`
