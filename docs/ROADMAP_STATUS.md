@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: dcf9b7e600a11d7cd6fef4c20368c807c6f3b0be
+lastAcceptedProductHead: 24c7a95b3bc90e33b77113a4af4b76df2fd1cd42
 lastAcceptedMilestone: E1
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -11,30 +11,31 @@ completedMilestones:
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F3
   package: F3-WP3
-  owner: Kimi
+  owner: Codex
   exactBase: fe004232e4650dfceaa4360d98f9627595c0cc8c
   branch: agent/kimi-f3-wp3-visual-motion-scoped-history
   issue: 85
-  pr: null
-  candidateContentHead: fe004232e4650dfceaa4360d98f9627595c0cc8c
+  pr: 87
+  candidateContentHead: 1579ee1ff1c078ae1f7849546cd9c87a21880620
   candidateRef: product/v1
 checks:
-  local: roadmap-consistency+format-check
+  local: studio-100+typecheck+build+recursive-workspace+synthetic-merge+exact-head-code-and-visual-audits
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-f3-wp2-exact-53d0d6a5c8485ca628c4c1581598072b613ffe0a-hosted-29872261103-pass
+  codex: accept-f3-wp3-exact-1579ee1ff1c078ae1f7849546cd9c87a21880620-hosted-29877591185-pass
   pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
   preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
 blockers:
-  - F3-WP4 through F3-WP5 remain blocked by dependency order
+  - F3-WP4 requires a separate bounded START_NOW ticket and higher Kimi inbox version
+  - F3-WP5 remains blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F3_WP3_ONLY
-  text: Implement only issue #85 from exact base fe004232e4650dfceaa4360d98f9627595c0cc8c on agent/kimi-f3-wp3-visual-motion-scoped-history, publish the exact handback, and stop before F3-WP4.
+  type: WAIT_FOR_F3_WP4_TICKET
+  text: F3-WP3 is accepted and integrated. Do not begin F3-WP4 until a separate bounded ticket and higher Kimi inbox version are published.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -85,20 +86,21 @@ verification from the live PR checks.
   Direct drafts with atomic per-beat Apply and isolated Undo/Redo history. It
   does not provide AI interpretation, persistence, Visual/Motion editing,
   production schemas, media, rendering, or export.
-- Under Preston's standing dependency-ordered continuation authority, separate
-  issue #85 and this `START_NOW` transition authorize only F3-WP3 from exact
-  base `product/v1@fe00423...` on
-  `agent/kimi-f3-wp3-visual-motion-scoped-history`. The package adds bounded
-  session-local Visual and Motion intent controls to the same accepted atomic
-  per-beat history and exposes committed direction through an honest planning
-  summary on the reference board. It does not authorize animation, executable
-  camera moves, timing, media, AI proposals, persistence, F3-WP4, backend work,
-  Godot, Remotion, rendering, or export. Kimi may start only after this status
-  transition is integrated and a higher canonical inbox version publishes the
-  matching validated assignment.
+- F3-WP3 is accepted and integrated at exact `product/v1@24c7a95...`. Kimi
+  completed issue #85 from exact base `fe00423...`; exact PR #87 handback tip
+  `1579ee1...` passed Studio 100/100, typecheck, production build, the complete
+  recursive workspace suite, the clean synthetic merge, independent Sol
+  code/history and Terra visual/evidence audits, three hash-matched 1440x900
+  screenshots with 30/30 browser checks and zero console/page errors, and
+  hosted Verify run `29877591185`. The package adds bounded session-local
+  Visual and Motion intent controls to the same atomic per-beat history as
+  Direct and exposes only committed direction through an honest planning
+  summary. It does not provide AI interpretation, persistence, production
+  schemas, media, animation, executable camera moves, Godot, Remotion,
+  rendering, or export.
 
-- Accepted creator-facing product implementation now reaches F3-WP2 on exact
-  `dcf9b7e...`; the complete F3 milestone is not yet accepted. G0 is the
+- Accepted creator-facing product implementation now reaches F3-WP3 on exact
+  `24c7a95...`; the complete F3 milestone is not yet accepted. G0 is the
   accepted planning/governance milestone integrated at `ddddcf1...` and does
   not itself implement product capability.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
