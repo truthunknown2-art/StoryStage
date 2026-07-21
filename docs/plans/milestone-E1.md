@@ -9,17 +9,14 @@
 - Product acceptance: Preston
 - Decomposition approval: Preston accepted G0 and the dependency-ordered
   E1-WP1 through E1-WP4 plan on 2026-07-20
-- Current authorization: E1-WP3 is accepted at exact PR #64 head
-  `681eeb4d7c28405ead53cb8afc16a048c749c53d` and integrated at
-  `ac2357d2e1419124d832fe26b67e26875f3821e8`. Status-only PR #70 is
-  integrated at `01e377579b76a1e7286dbd9ecba86a3888681112`; issue #69 and that
-  transition authorize only E1-WP4 from exact base
-  `8d9a47a4898df81db7630e2f0b7d4eecc88f7157` on
-  `agent/codex-e1-wp4-failure-security-gate`. Standing continuation authority
-  does not waive exact-SHA review, hosted checks, Pro review, or Preston's final
-  E1 `PASS`/`FAIL` decision. The complete E1 milestone, F3, backend product
-  work, and Kimi implementation remain blocked.
-- Kimi state: WAIT; no `apps/studio` implementation during E1
+- Accepted milestone: PR #71 exact head
+  `357737d2c695098ac47db3efdab4470e1cb0a202`, hosted run `29854783518`,
+  three independent audits, and ChatGPT Pro all passed. Preston recorded E1
+  `PASS` against that exact head on 2026-07-21. PR #71 merged into
+  `product/v1` at `38969c4400e2a9c84a59346c28f7a72d5f9492bf`.
+- Current authorization: only the separate F3-WP1 transition and issue #72.
+  Backend product work remains blocked until the accepted F6 Frontend Gate.
+- Kimi state: WAIT until a higher validated inbox version assigns F3-WP1
 - Implementation class: isolated, non-shipping feasibility lab
 
 ## Evidence sources and fixed interpretation
@@ -319,13 +316,15 @@ fallback.
 - completion only when Pro finds the evidence truthful and Preston records
   `PASS` or `FAIL` against the exact pushed SHA.
 
-**Authorized package status (2026-07-21):** issue #69 authorizes only E1-WP4
-on `agent/codex-e1-wp4-failure-security-gate` from exact base
-`8d9a47a4898df81db7630e2f0b7d4eecc88f7157`, after the separate status-only
-transition is integrated. The package must close the required negative-state
-matrix and security/feasibility evidence without credential exposure, project
-mutation, hidden fallback, or production-security claims. F3, backend product
-work, and Kimi implementation remain blocked.
+**Accepted package and milestone status (2026-07-21):** PR #71 exact head
+`357737d2c695098ac47db3efdab4470e1cb0a202` closes the 14-state negative
+matrix, protocol and credential boundary, full-tree no-mutation proof, cleanup
+evidence, and truthful 1440x900 failure surface. Local verification, hosted run
+`29854783518`, three independent audits, and ChatGPT Pro passed. Preston
+recorded E1 `PASS` against the same exact head; the package merged into
+`product/v1` at `38969c4400e2a9c84a59346c28f7a72d5f9492bf`. This accepts the
+bounded E1 feasibility milestone only. It does not claim production security,
+wire AI into the Product v1 Studio, or authorize backend work.
 
 ## Milestone non-goals
 
