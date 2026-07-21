@@ -178,7 +178,10 @@ describe("F1 — Projects + Create", () => {
     expect(
       within(studio).getByRole("button", { name: /Back to projects/ }),
     ).toBeEnabled();
-    expect(studio).not.toHaveTextContent(/rendered|exported/i);
+    // No generation claims anywhere. The one permitted "rendered" is the
+    // mandated F3-WP3 planning disclaimer ("not animation or rendered
+    // output."); every other rendered/exported claim stays forbidden.
+    expect(studio).not.toHaveTextContent(/rendered(?! output)|exported/i);
   });
 
   it("opens the bounded long-form Ollo demo in the same Studio shell, visibly labelled", async () => {
@@ -343,9 +346,10 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     const user = userEvent.setup();
     const studio = await openDemoStudio(user);
 
-    // F3-WP2 Director tabs: Direct exposes the real bounded session-local
-    // drafts with honest initial history states; Visual and Motion stay
-    // truthful, non-editable later-package surfaces.
+    // F3-WP3 Director tabs: Direct exposes the three accepted bounded
+    // session-local drafts with honest initial history states; Visual and
+    // Motion expose exactly the five bounded planning-intent controls
+    // (hidden on their tabs while Direct is selected).
     expect(
       within(studio).getByRole("tablist", { name: "Director workspace" }),
     ).toBeInTheDocument();
@@ -370,10 +374,17 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     expect(
       within(studio).getByRole("button", { name: "Redo" }),
     ).toBeDisabled();
-    // No shot/action/camera control fields exist in this slice.
+    // The only Director comboboxes are the four bounded Visual/Motion
+    // intent selects on their hidden tabs; no shot or action control
+    // fields exist in this slice.
+    expect(within(studio).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(
+      within(studio).getAllByRole("combobox", { hidden: true }),
+    ).toHaveLength(4);
     expect(
       within(studio).queryByRole("combobox", {
-        name: /shot|action|camera/i,
+        hidden: true,
+        name: /shot|action/i,
       }),
     ).not.toBeInTheDocument();
     expect(
@@ -384,7 +395,7 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     ).toBeDisabled();
     expect(
       studio.textContent?.includes(
-        "Preview stays disabled in F3-WP2 — Direct edits are session-local direction only; there is still no media to preview.",
+        "Preview stays disabled in F3-WP3 — direction intent is session-local planning only; there is still no media to preview.",
       ),
     ).toBe(true);
     expect(
@@ -864,8 +875,16 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
     expect(visual).toHaveAttribute("tabindex", "0");
     expect(direct).toHaveAttribute("aria-selected", "false");
     expect(direct).toHaveAttribute("tabindex", "-1");
+    // F3-WP3: Visual exposes the bounded Framing and Composition focus
+    // intent drafts sharing the same session-local boundary and scope.
+    expect(
+      within(studio).getByRole("combobox", { name: "Framing" }),
+    ).toHaveValue("Unspecified");
+    expect(
+      within(studio).getByRole("textbox", { name: "Composition focus" }),
+    ).toHaveValue("");
     expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
-      "Visual direction (art, camera, lighting) is not editable in this package.",
+      "Session-local only — this direction and its undo history stay in this Studio session.",
     );
     // The tab still reflects the same shared beat scope.
     expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
@@ -880,9 +899,16 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
     await user.keyboard("{ArrowRight}");
     expect(motion).toHaveAttribute("aria-selected", "true");
     expect(motion).toHaveFocus();
-    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
-      "Motion controls arrive later. The performance note in Direct is session-local text only; it does not animate or render this beat.",
-    );
+    // F3-WP3: Motion exposes the three bounded intent selects.
+    expect(
+      within(studio).getByRole("combobox", { name: "Camera intent" }),
+    ).toHaveValue("Unspecified");
+    expect(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+    ).toHaveValue("Unspecified");
+    expect(
+      within(studio).getByRole("combobox", { name: "End hold" }),
+    ).toHaveValue("Unspecified");
     await user.keyboard("{Home}");
     expect(direct).toHaveAttribute("aria-selected", "true");
     expect(direct).toHaveFocus();
@@ -893,26 +919,34 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
     expect(direct).toHaveAttribute("aria-selected", "true");
     expect(direct).toHaveFocus();
 
-    // The Direct tab now exposes exactly the three bounded session-local
-    // drafts plus real Apply/Undo/Redo with honest initial disabled
-    // states; Visual and Motion expose no editing or false capability.
+    // F3-WP3: every Director tab edits the same per-beat session draft
+    // through the shared Apply/Undo/Redo. Visual exposes exactly Framing
+    // and Composition focus; Motion exposes exactly Camera intent,
+    // Performance pace, and End hold; Direct keeps its three drafts.
     const inspector = within(studio).getByRole("complementary", {
       name: "Studio inspector",
     });
     await user.click(visual);
-    expect(within(inspector).queryByRole("textbox")).not.toBeInTheDocument();
-    expect(within(inspector).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(within(inspector).getAllByRole("combobox")).toHaveLength(1);
+    expect(within(inspector).getAllByRole("textbox")).toHaveLength(1);
     expect(
-      within(inspector).queryByRole("button", { name: /Apply|Undo|Redo/i }),
-    ).not.toBeInTheDocument();
+      within(inspector).getByRole("button", { name: "Apply" }),
+    ).toBeEnabled();
+    expect(
+      within(inspector).getByRole("button", { name: "Undo" }),
+    ).toBeDisabled();
+    expect(
+      within(inspector).getByRole("button", { name: "Redo" }),
+    ).toBeDisabled();
     await user.click(motion);
+    expect(within(inspector).getAllByRole("combobox")).toHaveLength(3);
     expect(within(inspector).queryByRole("textbox")).not.toBeInTheDocument();
-    expect(within(inspector).queryByRole("combobox")).not.toBeInTheDocument();
     expect(
-      within(inspector).queryByRole("button", { name: /Apply|Undo|Redo/i }),
-    ).not.toBeInTheDocument();
+      within(inspector).getByRole("button", { name: "Apply" }),
+    ).toBeEnabled();
     await user.click(direct);
     expect(within(inspector).getAllByRole("textbox")).toHaveLength(3);
+    expect(within(inspector).queryByRole("combobox")).not.toBeInTheDocument();
     expect(
       within(inspector).getByRole("button", { name: "Apply" }),
     ).toBeEnabled();
@@ -1235,5 +1269,511 @@ describe("F3-WP2 — Direct drafts and scoped per-beat history", () => {
     expect(fields.purpose).toHaveValue("Scene 2 beat 1 purpose");
     expect(undoButton(studio)).toBeEnabled();
     expect(redoButton(studio)).toBeDisabled();
+  });
+});
+
+describe("F3-WP3 — Visual and Motion scoped history", () => {
+  async function openDemoStudio(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: /Open local demo project The Storylight in the Little Wood/,
+      }),
+    );
+    return screen.findByTestId("pv1-studio");
+  }
+
+  const EMPTY_SUMMARY =
+    "No Visual or Motion direction committed for this beat";
+  const PLANNING_NOTE = "Planning overlay — not animation or rendered output.";
+
+  const rail = (studio: HTMLElement) =>
+    within(studio).getByRole("navigation", { name: "Episode hierarchy" });
+  const tab = (studio: HTMLElement, name: "Direct" | "Visual" | "Motion") =>
+    within(studio).getByRole("tab", { name });
+  const applyButton = (studio: HTMLElement) =>
+    within(studio).getByRole("button", { name: "Apply" });
+  const undoButton = (studio: HTMLElement) =>
+    within(studio).getByRole("button", { name: "Undo" });
+  const redoButton = (studio: HTMLElement) =>
+    within(studio).getByRole("button", { name: "Redo" });
+  const summary = (studio: HTMLElement) =>
+    within(studio).getByRole("region", {
+      name: "Selected direction summary",
+    });
+
+  it("keeps each of the five Visual/Motion controls draft-only until Apply and scoped to the selected beat", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    // Initial committed state: honest empty summary, planning-only note,
+    // and the untouched reference image.
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(summary(studio)).toHaveTextContent(PLANNING_NOTE);
+    expect(
+      within(studio).getByAltText("Ollo & Friends cast reference art"),
+    ).toBeInTheDocument();
+
+    // Visual tab: draft Framing and Composition focus. The committed
+    // summary must not move.
+    await user.click(tab(studio, "Visual"));
+    const framing = within(studio).getByRole("combobox", {
+      name: "Framing",
+    });
+    const composition = within(studio).getByRole("textbox", {
+      name: "Composition focus",
+    });
+    await user.selectOptions(framing, "Wide");
+    await user.type(composition, "Window light on the shelf");
+    expect(framing).toHaveValue("Wide");
+    expect(composition).toHaveValue("Window light on the shelf");
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(summary(studio)).not.toHaveTextContent(
+      "Window light on the shelf",
+    );
+    expect(studio).toHaveTextContent("Unapplied draft changes");
+
+    // Motion tab: draft Camera intent, Performance pace, and End hold.
+    // Still nothing committed; the unapplied status follows the tab.
+    await user.click(tab(studio, "Motion"));
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "Camera intent" }),
+      "Gentle push",
+    );
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+      "Measured",
+    );
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "End hold" }),
+      "Brief hold",
+    );
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(studio).toHaveTextContent("Unapplied draft changes");
+
+    // The drafts belong to this beat only: Beat 2 starts clean on the
+    // same tabs, and Beat 1's unapplied drafts survive leave-and-return.
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 A shelf of unfinished stories/,
+      }),
+    );
+    expect(
+      within(studio).getByRole("combobox", { name: "Camera intent" }),
+    ).toHaveValue("Unspecified");
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(undoButton(studio)).toBeDisabled();
+
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 1 Morning light through the round window/,
+      }),
+    );
+    expect(
+      within(studio).getByRole("combobox", { name: "Camera intent" }),
+    ).toHaveValue("Gentle push");
+    expect(studio).toHaveTextContent("Unapplied draft changes");
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+
+    // One Apply from the Motion tab commits the complete cross-tab draft.
+    await user.click(applyButton(studio));
+    expect(studio).toHaveTextContent(
+      "Draft matches this beat's committed session direction.",
+    );
+    expect(summary(studio)).not.toHaveTextContent(EMPTY_SUMMARY);
+    expect(summary(studio)).toHaveTextContent("Wide");
+    expect(summary(studio)).toHaveTextContent("Window light on the shelf");
+    expect(summary(studio)).toHaveTextContent("Gentle push");
+    expect(summary(studio)).toHaveTextContent("Measured");
+    expect(summary(studio)).toHaveTextContent("Brief hold");
+    expect(summary(studio)).toHaveTextContent(PLANNING_NOTE);
+    expect(undoButton(studio)).toBeEnabled();
+    expect(redoButton(studio)).toBeDisabled();
+  });
+
+  it("commits edits across Direct, Visual, and Motion as one atomic history step", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    await user.type(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+      "Open the nook in morning calm",
+    );
+    await user.type(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+      "Slow blink, then a smile",
+    );
+    await user.type(
+      within(studio).getByRole("textbox", { name: "Continuity note" }),
+      "Shelf props stay put",
+    );
+
+    await user.click(tab(studio, "Visual"));
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "Framing" }),
+      "Medium",
+    );
+    await user.type(
+      within(studio).getByRole("textbox", { name: "Composition focus" }),
+      "The round window behind Ollo",
+    );
+
+    await user.click(tab(studio, "Motion"));
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "Camera intent" }),
+      "Locked-off",
+    );
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+      "Gentle",
+    );
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "End hold" }),
+      "No hold",
+    );
+
+    // A single Apply from the Motion tab commits all eight fields at once.
+    await user.click(applyButton(studio));
+    expect(undoButton(studio)).toBeEnabled();
+    expect(summary(studio)).toHaveTextContent("Medium");
+    expect(summary(studio)).toHaveTextContent(
+      "The round window behind Ollo",
+    );
+    expect(summary(studio)).toHaveTextContent("Locked-off");
+    expect(summary(studio)).toHaveTextContent("Gentle");
+    expect(summary(studio)).toHaveTextContent("No hold");
+
+    // Exactly one history step exists: a single Undo from the Visual tab
+    // returns every field on every tab to the initial empty snapshot.
+    await user.click(tab(studio, "Visual"));
+    await user.click(undoButton(studio));
+    expect(undoButton(studio)).toBeDisabled();
+    expect(redoButton(studio)).toBeEnabled();
+    expect(
+      within(studio).getByRole("combobox", { name: "Framing" }),
+    ).toHaveValue("Unspecified");
+    expect(
+      within(studio).getByRole("textbox", { name: "Composition focus" }),
+    ).toHaveValue("");
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    await user.click(tab(studio, "Motion"));
+    expect(
+      within(studio).getByRole("combobox", { name: "Camera intent" }),
+    ).toHaveValue("Unspecified");
+    expect(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+    ).toHaveValue("Unspecified");
+    expect(
+      within(studio).getByRole("combobox", { name: "End hold" }),
+    ).toHaveValue("Unspecified");
+    await user.click(tab(studio, "Direct"));
+    expect(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    ).toHaveValue("");
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("");
+    expect(
+      within(studio).getByRole("textbox", { name: "Continuity note" }),
+    ).toHaveValue("");
+
+    // Redo from the Direct tab restores the exact complete snapshot.
+    await user.click(redoButton(studio));
+    expect(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    ).toHaveValue("Open the nook in morning calm");
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("Slow blink, then a smile");
+    expect(
+      within(studio).getByRole("textbox", { name: "Continuity note" }),
+    ).toHaveValue("Shelf props stay put");
+    expect(summary(studio)).toHaveTextContent("Medium");
+    expect(summary(studio)).toHaveTextContent("Locked-off");
+    expect(redoButton(studio)).toBeDisabled();
+  });
+
+  it("restores every field and the committed summary through Undo/Redo from different tabs", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    const commitComplete = async (
+      framing: string,
+      composition: string,
+      camera: string,
+      pace: string,
+      hold: string,
+      purpose: string,
+    ) => {
+      await user.click(tab(studio, "Direct"));
+      const purposeField = within(studio).getByRole("textbox", {
+        name: "Beat purpose",
+      });
+      await user.clear(purposeField);
+      await user.type(purposeField, purpose);
+      await user.click(tab(studio, "Visual"));
+      await user.selectOptions(
+        within(studio).getByRole("combobox", { name: "Framing" }),
+        framing,
+      );
+      const compositionField = within(studio).getByRole("textbox", {
+        name: "Composition focus",
+      });
+      await user.clear(compositionField);
+      await user.type(compositionField, composition);
+      await user.click(tab(studio, "Motion"));
+      await user.selectOptions(
+        within(studio).getByRole("combobox", { name: "Camera intent" }),
+        camera,
+      );
+      await user.selectOptions(
+        within(studio).getByRole("combobox", { name: "Performance pace" }),
+        pace,
+      );
+      await user.selectOptions(
+        within(studio).getByRole("combobox", { name: "End hold" }),
+        hold,
+      );
+      await user.click(applyButton(studio));
+    };
+
+    await commitComplete(
+      "Wide",
+      "Doorway centered",
+      "Gentle push",
+      "Measured",
+      "Brief hold",
+      "Purpose A",
+    );
+    await commitComplete(
+      "Close-up",
+      "The glow on Tix's face",
+      "Follow action",
+      "Energetic",
+      "Full hold",
+      "Purpose B",
+    );
+    expect(summary(studio)).toHaveTextContent("Close-up");
+    expect(summary(studio)).toHaveTextContent("Follow action");
+
+    // Undo from the Direct tab: every tab's fields and the board summary
+    // return to the exact first committed snapshot.
+    await user.click(tab(studio, "Direct"));
+    expect(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    ).toHaveValue("Purpose B");
+    await user.click(undoButton(studio));
+    expect(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    ).toHaveValue("Purpose A");
+    expect(summary(studio)).toHaveTextContent("Wide");
+    expect(summary(studio)).toHaveTextContent("Doorway centered");
+    expect(summary(studio)).toHaveTextContent("Gentle push");
+    expect(summary(studio)).toHaveTextContent("Measured");
+    expect(summary(studio)).toHaveTextContent("Brief hold");
+    expect(summary(studio)).not.toHaveTextContent("Close-up");
+
+    await user.click(tab(studio, "Visual"));
+    expect(
+      within(studio).getByRole("combobox", { name: "Framing" }),
+    ).toHaveValue("Wide");
+    expect(
+      within(studio).getByRole("textbox", { name: "Composition focus" }),
+    ).toHaveValue("Doorway centered");
+
+    // Redo from the Motion tab restores the exact second snapshot.
+    await user.click(tab(studio, "Motion"));
+    await user.click(redoButton(studio));
+    expect(
+      within(studio).getByRole("combobox", { name: "Camera intent" }),
+    ).toHaveValue("Follow action");
+    expect(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+    ).toHaveValue("Energetic");
+    expect(
+      within(studio).getByRole("combobox", { name: "End hold" }),
+    ).toHaveValue("Full hold");
+    expect(summary(studio)).toHaveTextContent("Close-up");
+    expect(summary(studio)).toHaveTextContent("The glow on Tix's face");
+    expect(redoButton(studio)).toBeDisabled();
+  });
+
+  it("keeps drafts, commits, histories, and summaries independent across two beats in one scene", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    // Commit a complete direction on Scene 1 · Beat 1 from the Visual tab.
+    await user.click(tab(studio, "Visual"));
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "Framing" }),
+      "Wide",
+    );
+    await user.click(applyButton(studio));
+    expect(summary(studio)).toHaveTextContent("Wide");
+
+    // Beat 2 starts clean: empty controls, empty summary, no history.
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 A shelf of unfinished stories/,
+      }),
+    );
+    expect(
+      within(studio).getByRole("combobox", { name: "Framing" }),
+    ).toHaveValue("Unspecified");
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(undoButton(studio)).toBeDisabled();
+
+    // An unapplied Beat 2 Motion draft survives leave-and-return and
+    // never moves Beat 1's committed summary.
+    await user.click(tab(studio, "Motion"));
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "End hold" }),
+      "Full hold",
+    );
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 1 Morning light through the round window/,
+      }),
+    );
+    expect(summary(studio)).toHaveTextContent("Wide");
+    expect(summary(studio)).not.toHaveTextContent("Full hold");
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 A shelf of unfinished stories/,
+      }),
+    );
+    expect(
+      within(studio).getByRole("combobox", { name: "End hold" }),
+    ).toHaveValue("Full hold");
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(studio).toHaveTextContent("Unapplied draft changes");
+
+    // Committing Beat 2 leaves Beat 1's commit and history untouched.
+    await user.click(applyButton(studio));
+    expect(summary(studio)).toHaveTextContent("Full hold");
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 1 Morning light through the round window/,
+      }),
+    );
+    expect(summary(studio)).toHaveTextContent("Wide");
+    expect(undoButton(studio)).toBeEnabled();
+    await user.click(undoButton(studio));
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(undoButton(studio)).toBeDisabled();
+
+    // Beat 2's committed snapshot is unaffected by Beat 1's Undo.
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 A shelf of unfinished stories/,
+      }),
+    );
+    expect(summary(studio)).toHaveTextContent("Full hold");
+    expect(undoButton(studio)).toBeEnabled();
+  });
+
+  it("keeps first beats in two scenes independent and selects the first beat without leaking state", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    // Commit on Scene 1 · Beat 1 from the Motion tab.
+    await user.click(tab(studio, "Motion"));
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+      "Energetic",
+    );
+    await user.click(applyButton(studio));
+    expect(summary(studio)).toHaveTextContent("Energetic");
+
+    // Changing scenes selects the new scene's first beat: clean draft,
+    // clean history, empty summary.
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Scene 2 Forest Path/,
+      }),
+    );
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Scope: Scene 2 · Beat 1 — Ollo bounces ahead of Tix",
+    );
+    expect(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+    ).toHaveValue("Unspecified");
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(undoButton(studio)).toBeDisabled();
+    expect(redoButton(studio)).toBeDisabled();
+
+    // Commit a different value on Scene 2 · Beat 1.
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+      "Gentle",
+    );
+    await user.click(applyButton(studio));
+    expect(summary(studio)).toHaveTextContent("Gentle");
+    expect(summary(studio)).not.toHaveTextContent("Energetic");
+
+    // Leave and return: each scene's first beat keeps its own commit and
+    // summary.
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Scene 1 The Home Nook/,
+      }),
+    );
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Scope: Scene 1 · Beat 1 — Morning light through the round window",
+    );
+    expect(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+    ).toHaveValue("Energetic");
+    expect(summary(studio)).toHaveTextContent("Energetic");
+    expect(undoButton(studio)).toBeEnabled();
+
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Scene 2 Forest Path/,
+      }),
+    );
+    expect(
+      within(studio).getByRole("combobox", { name: "Performance pace" }),
+    ).toHaveValue("Gentle");
+    expect(summary(studio)).toHaveTextContent("Gentle");
+  });
+
+  it("shows only committed values in the board summary and never alters the reference image", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    const referenceImage = () =>
+      within(studio).getByAltText("Ollo & Friends cast reference art");
+    const srcBefore = referenceImage().getAttribute("src");
+
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(summary(studio)).toHaveTextContent(PLANNING_NOTE);
+
+    // Draft values never appear in the summary.
+    await user.click(tab(studio, "Visual"));
+    await user.selectOptions(
+      within(studio).getByRole("combobox", { name: "Framing" }),
+      "Close-up",
+    );
+    await user.type(
+      within(studio).getByRole("textbox", { name: "Composition focus" }),
+      "Tix peeking over the shelf edge",
+    );
+    expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
+    expect(summary(studio)).not.toHaveTextContent("Close-up");
+    expect(summary(studio)).not.toHaveTextContent(
+      "Tix peeking over the shelf edge",
+    );
+    expect(referenceImage().getAttribute("src")).toBe(srcBefore);
+
+    // After Apply the committed values appear; the reference image and
+    // the planning-only note are unchanged.
+    await user.click(applyButton(studio));
+    expect(summary(studio)).toHaveTextContent("Close-up");
+    expect(summary(studio)).toHaveTextContent(
+      "Tix peeking over the shelf edge",
+    );
+    expect(summary(studio)).toHaveTextContent(PLANNING_NOTE);
+    expect(referenceImage().getAttribute("src")).toBe(srcBefore);
   });
 });

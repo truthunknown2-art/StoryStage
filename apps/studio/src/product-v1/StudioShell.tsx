@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import {
   ArrowLeft,
   ChevronDown,
@@ -21,11 +21,18 @@ import {
 } from "./demo-project";
 import {
   applyDirectDraft,
+  CAMERA_INTENT_OPTIONS,
   canRedoDirect,
   canUndoDirect,
+  committedDirectDraft,
+  COMPOSITION_FOCUS_MAX_LENGTH,
   directBeatKey,
+  END_HOLD_OPTIONS,
+  FRAMING_OPTIONS,
+  hasCommittedVisualMotionDirection,
   hasUnappliedDirectChanges,
   initialBeatDirectState,
+  PERFORMANCE_PACE_OPTIONS,
   redoDirect,
   undoDirect,
   updateDirectDraft,
@@ -63,21 +70,17 @@ const DIRECTOR_TABS = [
   {
     id: "visual",
     label: "Visual",
-    truth:
-      "Visual direction (art, camera, lighting) is not editable in this package. The scope above is the same beat shown in the rail and on the board.",
   },
   {
     id: "motion",
     label: "Motion",
-    truth:
-      "Motion controls arrive later. The performance note in Direct is session-local text only; it does not animate or render this beat.",
   },
 ] as const;
 
 type DirectorTabId = (typeof DIRECTOR_TABS)[number]["id"];
 
 const DIRECT_FIELDS: Array<{
-  id: keyof DirectDraft;
+  id: "beatPurpose" | "performanceDirection" | "continuityNote";
   label: string;
   placeholder: string;
 }> = [
@@ -98,6 +101,39 @@ const DIRECT_FIELDS: Array<{
   },
 ];
 
+/* F3-WP3 Visual and Motion planning-intent fields. Every value is
+ * direction intent only: no keyframes, no executable camera move, no
+ * retiming, no rig animation, no imagery change, no rendered media. */
+const INTENT_SELECT_FIELDS = {
+  framing: {
+    id: "framing",
+    label: "Framing",
+    options: FRAMING_OPTIONS,
+  },
+  cameraIntent: {
+    id: "cameraIntent",
+    label: "Camera intent",
+    options: CAMERA_INTENT_OPTIONS,
+  },
+  performancePace: {
+    id: "performancePace",
+    label: "Performance pace",
+    options: PERFORMANCE_PACE_OPTIONS,
+  },
+  endHold: {
+    id: "endHold",
+    label: "End hold",
+    options: END_HOLD_OPTIONS,
+  },
+} as const satisfies Record<
+  string,
+  {
+    id: "framing" | "cameraIntent" | "performancePace" | "endHold";
+    label: string;
+    options: readonly string[];
+  }
+>;
+
 /**
  * F2/F3 Studio shell: one selected scene identity drives the hierarchy
  * rail, center scene-board, transport, episode overview, and the
@@ -113,9 +149,16 @@ const DIRECT_FIELDS: Array<{
  *
  * F3-WP2 makes the Direct tab real: each beat owns an independent
  * session-local three-field draft with atomic Apply and per-beat
- * Undo/Redo history (see `direct-history.ts`). Visual and Motion stay
- * truthful, non-editable later-package surfaces. No direction is saved,
- * interpreted by AI, animated, rendered, or exported in this package.
+ * Undo/Redo history (see `direct-history.ts`).
+ *
+ * F3-WP3 widens that same per-beat snapshot to eight fields: Visual adds
+ * Framing and Composition focus; Motion adds Camera intent, Performance
+ * pace, and End hold. Apply from any tab commits the complete eight-field
+ * draft as one history step; Undo/Redo from any tab restores the exact
+ * complete snapshot and synchronizes every draft. A committed-only
+ * Selected direction summary on the reference board lists the selected
+ * beat's five Visual/Motion values. All values are planning intent only —
+ * nothing is saved, interpreted by AI, animated, rendered, or exported.
  */
 export function StudioShell({
   artStyleLabel,
@@ -155,10 +198,11 @@ export function StudioShell({
   const [selectedDirectorTab, setSelectedDirectorTab] =
     useState<DirectorTabId>("direct");
 
-  /* F3-WP2: session-local Direct state keyed by deterministic UI-local
-   * beat identity (scene ID + beat index). Each beat keeps its own draft,
-   * committed history, and redo branch; switching beats or scenes never
-   * shows another beat's state, and leaving/returning preserves it. */
+  /* F3-WP2/F3-WP3: session-local direction state keyed by deterministic
+   * UI-local beat identity (scene ID + beat index). Each beat keeps its
+   * own eight-field draft, committed history, and redo branch; switching
+   * beats or scenes never shows another beat's state, and
+   * leaving/returning preserves it. */
   const [directByBeat, setDirectByBeat] = useState<
     Record<string, BeatDirectState>
   >({});
@@ -213,6 +257,84 @@ export function StudioShell({
       return { ...current, [selectedBeatDirectKey]: next };
     });
   };
+
+  /* F3-WP3: the committed snapshot drives the board's Selected direction
+   * summary. Draft values never appear there — only Apply commits them. */
+  const committedSelectedBeat = committedDirectDraft(selectedBeatDirect);
+
+  /** One bounded Visual/Motion intent select bound to the shared draft. */
+  const intentSelect = (
+    field: (typeof INTENT_SELECT_FIELDS)[keyof typeof INTENT_SELECT_FIELDS],
+  ) => (
+    <label className="pv1-direct-field" key={field.id}>
+      <span>{field.label}</span>
+      <select
+        onChange={(event) =>
+          updateSelectedBeatDirect((state) =>
+            updateDirectDraft(state, {
+              [field.id]: event.target.value,
+            } as Partial<DirectDraft>),
+          )
+        }
+        value={selectedBeatDirect.draft[field.id]}
+      >
+        {field.options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
+  /* One shared direction form rendered inside every Director tab: the
+   * session-local boundary note, that tab's fields, and the same atomic
+   * Apply/Undo/Redo for the complete eight-field draft. Tab switches
+   * never commit; the status line keeps unapplied drafts visibly
+   * distinguishable from the committed snapshot on every tab. */
+  const renderDirectionForm = (fields: ReactNode) => (
+    <form
+      className="pv1-direct-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        updateSelectedBeatDirect(applyDirectDraft);
+      }}
+    >
+      <p className="pv1-direct-note" role="note">
+        Session-local only — this direction and its undo history stay in
+        this Studio session. They are not saved to the project, are not
+        interpreted by AI, and are not used for animation, rendering, or
+        export.
+      </p>
+      {fields}
+      <div className="pv1-direct-actions">
+        <button className="pv1-primary" type="submit">
+          Apply
+        </button>
+        <button
+          className="pv1-secondary"
+          disabled={!canUndoDirect(selectedBeatDirect)}
+          onClick={() => updateSelectedBeatDirect(undoDirect)}
+          type="button"
+        >
+          <Undo2 size={14} aria-hidden /> Undo
+        </button>
+        <button
+          className="pv1-secondary"
+          disabled={!canRedoDirect(selectedBeatDirect)}
+          onClick={() => updateSelectedBeatDirect(redoDirect)}
+          type="button"
+        >
+          <Redo2 size={14} aria-hidden /> Redo
+        </button>
+      </div>
+      <p aria-live="polite" className="pv1-direct-status">
+        {hasUnappliedDirectChanges(selectedBeatDirect)
+          ? "Unapplied draft changes — Apply commits them as one step in this beat's session history."
+          : "Draft matches this beat's committed session direction."}
+      </p>
+    </form>
+  );
 
   const revealScene = (sceneId: string) => {
     for (const act of OLLO_DEMO_PROJECT.acts)
@@ -527,6 +649,46 @@ export function StudioShell({
               for this beat.
             </p>
           </section>
+          {/* F3-WP3: committed-only direction summary for the selected
+           * beat. It never shows unapplied draft values and never alters,
+           * filters, or effects the reference image below. */}
+          <section
+            aria-label="Selected direction summary"
+            className="pv1-direction-summary"
+          >
+            <h2>Selected direction summary</h2>
+            {hasCommittedVisualMotionDirection(selectedBeatDirect) ? (
+              <dl>
+                <div>
+                  <dt>Framing</dt>
+                  <dd>{committedSelectedBeat.framing}</dd>
+                </div>
+                <div>
+                  <dt>Composition focus</dt>
+                  <dd>{committedSelectedBeat.compositionFocus}</dd>
+                </div>
+                <div>
+                  <dt>Camera intent</dt>
+                  <dd>{committedSelectedBeat.cameraIntent}</dd>
+                </div>
+                <div>
+                  <dt>Performance pace</dt>
+                  <dd>{committedSelectedBeat.performancePace}</dd>
+                </div>
+                <div>
+                  <dt>End hold</dt>
+                  <dd>{committedSelectedBeat.endHold}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="pv1-direction-summary-empty">
+                No Visual or Motion direction committed for this beat
+              </p>
+            )}
+            <p className="pv1-direction-summary-note">
+              Planning overlay — not animation or rendered output.
+            </p>
+          </section>
           <div className="pv1-board-canvas">
             {/* Reference art is ordinary browser UI, not a Remotion composition. */}
             {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
@@ -635,68 +797,56 @@ export function StudioShell({
                   Scope: Scene {selectedIndex + 1} · Beat{" "}
                   {selectedBeatIndex + 1} — {selectedBeat.title}
                 </p>
-                {tab.id === "direct" ? (
-                  <form
-                    className="pv1-direct-form"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      updateSelectedBeatDirect(applyDirectDraft);
-                    }}
-                  >
-                    <p className="pv1-direct-note" role="note">
-                      Session-local only — this direction and its undo history
-                      stay in this Studio session. They are not saved to the
-                      project, are not interpreted by AI, and are not used
-                      for animation, rendering, or export.
-                    </p>
-                    {DIRECT_FIELDS.map((field) => (
-                      <label className="pv1-direct-field" key={field.id}>
-                        <span>{field.label}</span>
-                        <textarea
-                          maxLength={500}
-                          onChange={(event) =>
-                            updateSelectedBeatDirect((state) =>
-                              updateDirectDraft(state, {
-                                [field.id]: event.target.value,
-                              }),
-                            )
-                          }
-                          placeholder={field.placeholder}
-                          rows={2}
-                          value={selectedBeatDirect.draft[field.id]}
-                        />
-                      </label>
-                    ))}
-                    <div className="pv1-direct-actions">
-                      <button className="pv1-primary" type="submit">
-                        Apply
-                      </button>
-                      <button
-                        className="pv1-secondary"
-                        disabled={!canUndoDirect(selectedBeatDirect)}
-                        onClick={() => updateSelectedBeatDirect(undoDirect)}
-                        type="button"
-                      >
-                        <Undo2 size={14} aria-hidden /> Undo
-                      </button>
-                      <button
-                        className="pv1-secondary"
-                        disabled={!canRedoDirect(selectedBeatDirect)}
-                        onClick={() => updateSelectedBeatDirect(redoDirect)}
-                        type="button"
-                      >
-                        <Redo2 size={14} aria-hidden /> Redo
-                      </button>
-                    </div>
-                    <p aria-live="polite" className="pv1-direct-status">
-                      {hasUnappliedDirectChanges(selectedBeatDirect)
-                        ? "Unapplied draft changes — Apply commits them as one step in this beat's session history."
-                        : "Draft matches this beat's committed session direction."}
-                    </p>
-                  </form>
-                ) : (
-                  <p>{tab.truth}</p>
-                )}
+                {tab.id === "direct"
+                  ? renderDirectionForm(
+                      DIRECT_FIELDS.map((field) => (
+                        <label className="pv1-direct-field" key={field.id}>
+                          <span>{field.label}</span>
+                          <textarea
+                            maxLength={500}
+                            onChange={(event) =>
+                              updateSelectedBeatDirect((state) =>
+                                updateDirectDraft(state, {
+                                  [field.id]: event.target.value,
+                                } as Partial<DirectDraft>),
+                              )
+                            }
+                            placeholder={field.placeholder}
+                            rows={2}
+                            value={selectedBeatDirect.draft[field.id]}
+                          />
+                        </label>
+                      )),
+                    )
+                  : tab.id === "visual"
+                    ? renderDirectionForm(
+                        <>
+                          {intentSelect(INTENT_SELECT_FIELDS.framing)}
+                          <label className="pv1-direct-field">
+                            <span>Composition focus</span>
+                            <textarea
+                              maxLength={COMPOSITION_FOCUS_MAX_LENGTH}
+                              onChange={(event) =>
+                                updateSelectedBeatDirect((state) =>
+                                  updateDirectDraft(state, {
+                                    compositionFocus: event.target.value,
+                                  }),
+                                )
+                              }
+                              placeholder="What the viewer's eye should land on first"
+                              rows={2}
+                              value={selectedBeatDirect.draft.compositionFocus}
+                            />
+                          </label>
+                        </>,
+                      )
+                    : renderDirectionForm(
+                        <>
+                          {intentSelect(INTENT_SELECT_FIELDS.cameraIntent)}
+                          {intentSelect(INTENT_SELECT_FIELDS.performancePace)}
+                          {intentSelect(INTENT_SELECT_FIELDS.endHold)}
+                        </>,
+                      )}
               </div>
             ))}
           </div>
@@ -708,8 +858,8 @@ export function StudioShell({
               Preview
             </button>
             <small>
-              Preview stays disabled in F3-WP2 — Direct edits are
-              session-local direction only; there is still no media to
+              Preview stays disabled in F3-WP3 — direction intent is
+              session-local planning only; there is still no media to
               preview.
             </small>
             <button className="pv1-primary" disabled type="button">
