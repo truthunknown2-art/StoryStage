@@ -1,5 +1,5 @@
 const sensitiveKey =
-  /(?:account.*id|auth(?:cache|data|path|token)|codexhome|cwd|email|input|localpath|prompt|token|thread.*id|turn.*id)/i;
+  /(?:account.*id|authorization|auth(?:cache|data|path|token)|codexhome|cookie|credential|cwd|email|input|localpath|password|prompt|query.*token|secret|session|token|thread.*id|turn.*id)/i;
 const email = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
 const secret =
   /\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{20,}|Bearer\s+[A-Za-z0-9._~+/-]{24,}={0,2})\b/gi;
@@ -24,9 +24,7 @@ export function redactForReceipt(value: unknown): unknown {
     return Object.fromEntries(
       Object.entries(value).map(([key, entry]) => [
         key,
-        sensitiveKey.test(key) && typeof entry === "string"
-          ? "[REDACTED]"
-          : redactForReceipt(entry),
+        sensitiveKey.test(key) ? "[REDACTED]" : redactForReceipt(entry),
       ]),
     );
   }

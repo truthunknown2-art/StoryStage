@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "package": "E1-WP4",
+  "result": "PASS",
+  "commands": [
+    {
+      "command": "pnpm verify:e1-wp4-failure-matrix",
+      "result": "PASS",
+      "coverage": "generated failure matrix, nine executable round-trip mutation tripwires, full decoy-tree change detection, process cleanup receipt, capture hashes, 1440x900 PNG dimensions, and disabled authority"
+    },
+    {
+      "command": "pnpm --filter @storystage/codex-lab typecheck",
+      "result": "PASS"
+    },
+    {
+      "command": "pnpm --filter @storystage/codex-lab test",
+      "result": "PASS",
+      "testFiles": 15,
+      "tests": 104
+    },
+    {
+      "command": "pnpm --filter @storystage/e1-director-lab typecheck",
+      "result": "PASS"
+    },
+    {
+      "command": "pnpm --filter @storystage/e1-director-lab test",
+      "result": "PASS",
+      "testFiles": 1,
+      "tests": 4
+    },
+    {
+      "command": "pnpm --filter @storystage/e1-director-lab build",
+      "result": "PASS",
+      "viteModules": 19
+    },
+    {
+      "command": "pnpm verify",
+      "result": "PASS",
+      "durationSeconds": 199.3,
+      "privacyFiles": 967,
+      "warnings": [
+        "Two pre-existing Remotion non-pure-animation warnings remain in apps/render-worker/src/kvp001-proof.ts; there were zero lint errors."
+      ]
+    }
+  ],
+  "visualEvidence": {
+    "viewport": "1440x900",
+    "selectedFixture": "prompt-injection-blocked",
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "captureReceipt": "reports/evidence/E1-WP4/capture-receipt.json"
+  },
+  "limitations": [
+    "This is an isolated feasibility package, not a production-security or private-launch claim.",
+    "The App Server remains experimental in Codex CLI 0.144.1.",
+    "Runtime distribution, packaging, production Windows process-tree containment, and installed-build security remain R1/R2 work."
+  ]
+}

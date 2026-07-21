@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 3,
+  "package": "E1-WP4",
+  "evidenceClass": "deterministic-roundtrip-decoy-project-tripwire",
+  "scope": "actual-roundtrip-failure-seams-with-sibling-decoy-project",
+  "decoyEntryCount": 8,
+  "decoyDirectoryCount": 4,
+  "decoyFileCount": 4,
+  "decoyEntries": [
+    ".git/",
+    ".git/HEAD",
+    ".git/refs/",
+    ".git/refs/heads/",
+    ".git/refs/heads/private-launch",
+    "project.json",
+    "scenes/",
+    "scenes/scene.json"
+  ],
+  "beforeSha256": "071fd9b35bcda593038f44466d09d1956a65fd00c7d237fb198445311e8867d1",
+  "afterSha256": "071fd9b35bcda593038f44466d09d1956a65fd00c7d237fb198445311e8867d1",
+  "unchanged": true,
+  "unexpectedFileDetection": true,
+  "failurePathCount": 9,
+  "failureExercises": [
+    {
+      "id": "runtime-not-installed",
+      "expectedCode": "RUNTIME_NOT_INSTALLED",
+      "observedCode": "RUNTIME_NOT_INSTALLED",
+      "clientClosed": null
+    },
+    {
+      "id": "operation-cancelled",
+      "expectedCode": "OPERATION_CANCELLED",
+      "observedCode": "OPERATION_CANCELLED",
+      "clientClosed": null
+    },
+    {
+      "id": "signed-out",
+      "expectedCode": "AUTH_REQUIRED",
+      "observedCode": "AUTH_REQUIRED",
+      "clientClosed": true
+    },
+    {
+      "id": "auth-revoked",
+      "expectedCode": "AUTH_REVOKED",
+      "observedCode": "AUTH_REVOKED",
+      "clientClosed": true
+    },
+    {
+      "id": "offline",
+      "expectedCode": "OFFLINE",
+      "observedCode": "OFFLINE",
+      "clientClosed": true
+    },
+    {
+      "id": "usage-limited",
+      "expectedCode": "USAGE_LIMITED",
+      "observedCode": "USAGE_LIMITED",
+      "clientClosed": true
+    },
+    {
+      "id": "protocol-incompatible",
+      "expectedCode": "PROTOCOL_INCOMPATIBLE",
+      "observedCode": "PROTOCOL_INCOMPATIBLE",
+      "clientClosed": true
+    },
+    {
+      "id": "mcp-startup-failed",
+      "expectedCode": "MCP_STARTUP_FAILED",
+      "observedCode": "MCP_STARTUP_FAILED",
+      "clientClosed": true
+    },
+    {
+      "id": "turn-start-failed",
+      "expectedCode": "PROTOCOL_REQUEST_FAILED",
+      "observedCode": "PROTOCOL_REQUEST_FAILED",
+      "clientClosed": true
+    }
+  ],
+  "projectMutationAllowed": false,
+  "persistedPath": false,
+  "executableTest": "packages/codex-lab/src/no-project-mutation.test.ts :: runs real proposal-roundtrip failure seams beside a byte-identical decoy project",
+  "limitation": "This proves isolated E1 failure seams against a sibling decoy tree; durable production project integration remains outside E1."
+}

@@ -310,7 +310,7 @@ describe.sequential("E1-WP2 bounded synthetic-scene MCP server", () => {
     });
     expect(unknownId.isError).toBe(true);
     expect(unknownId.structuredContent).toMatchObject({
-      error: { code: "UNKNOWN_ID" },
+      error: { code: "AUTHORITY_DENIED" },
     });
 
     const unknownCapability = await connection.client.callTool({

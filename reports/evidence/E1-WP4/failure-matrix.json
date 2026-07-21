@@ -1,0 +1,372 @@
+{
+  "schemaVersion": 1,
+  "package": "E1-WP4",
+  "evidenceClass": "deterministic-negative-state-and-boundary-index",
+  "runtime": {
+    "platform": "windows-x64",
+    "packageVersion": "0.144.1",
+    "cliVersion": "codex-cli 0.144.1",
+    "nativeBinarySha256": "cbacbb9726262ef558b4af0438a1b2a5bba9076132401d947b5b4d2bf92ab0e4",
+    "protocolSha256": "c1ae051f1469ebbfd681208383edadee7d3ef29a7973988473f34e87d78f2f17",
+    "appServerExperimental": true
+  },
+  "boundedMcp": {
+    "resource": "storystage-e1://synthetic/scene-context/v1",
+    "fixtureSha256": "c2867cadbf69f69a332e97fe243d15f78adb772263373c332ea7579b291af58a",
+    "tools": [
+      "get_scene_context",
+      "submit_direction_proposal"
+    ]
+  },
+  "authority": {
+    "credentialAccess": false,
+    "projectMutation": false,
+    "rendererAccess": false,
+    "assetApproval": false,
+    "hiddenFallback": false,
+    "automaticRetry": false,
+    "applyEnabled": false
+  },
+  "cases": [
+    {
+      "id": "runtime-not-installed",
+      "title": "Pinned runtime not installed",
+      "state": "not-installed",
+      "code": "RUNTIME_NOT_INSTALLED",
+      "creatorMessage": "The pinned Codex runtime is not installed on this computer.",
+      "recoveryAction": "Install or repair the pinned runtime, then run Runtime check again.",
+      "recoveryOutcome": "Prompting remains blocked until the pinned runtime check passes.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/runtime.test.ts",
+          "test": "reports a missing installation without probing credential storage"
+        }
+      ]
+    },
+    {
+      "id": "signed-out",
+      "title": "Signed out",
+      "state": "signed-out",
+      "code": "AUTH_REQUIRED",
+      "creatorMessage": "The AI Director is signed out of ChatGPT.",
+      "recoveryAction": "Use the official Sign in with ChatGPT flow, then retry.",
+      "recoveryOutcome": "Prompting remains blocked until official sign-in completes.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "blocks signed-out state before a thread when no official sign-in opener is available"
+        }
+      ]
+    },
+    {
+      "id": "auth-revoked-or-expired",
+      "title": "Session expired or revoked",
+      "state": "revoked-or-expired",
+      "code": "AUTH_REVOKED",
+      "creatorMessage": "The ChatGPT session is no longer valid.",
+      "recoveryAction": "Reconnect with the official sign-in flow; StoryStage will not reuse or copy credentials.",
+      "recoveryOutcome": "The failed request stops before thread creation and requires fresh official sign-in.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "blocks account availability failures before any thread or turn starts"
+        }
+      ]
+    },
+    {
+      "id": "offline",
+      "title": "Offline",
+      "state": "offline",
+      "code": "OFFLINE",
+      "creatorMessage": "The AI Director cannot reach the service.",
+      "recoveryAction": "Restore connectivity and retry the same bounded request.",
+      "recoveryOutcome": "The request stops before thread creation and can be retried explicitly after connectivity returns.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "blocks account availability failures before any thread or turn starts"
+        }
+      ]
+    },
+    {
+      "id": "usage-limited",
+      "title": "Usage limit reached",
+      "state": "usage-limited",
+      "code": "USAGE_LIMITED",
+      "creatorMessage": "The ChatGPT account has reached its current usage limit.",
+      "recoveryAction": "Wait for access to resume, then retry; no API-key fallback is available.",
+      "recoveryOutcome": "The request stops before thread creation with no alternate provider or API-key fallback.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "blocks a reached usage limit before creating a thread or starting a turn"
+        }
+      ]
+    },
+    {
+      "id": "protocol-incompatible",
+      "title": "Runtime update required",
+      "state": "incompatible",
+      "code": "PROTOCOL_INCOMPATIBLE",
+      "creatorMessage": "The Codex App Server protocol or bounded MCP schema does not match this StoryStage build.",
+      "recoveryAction": "Install the supported runtime or update StoryStage; prompting remains blocked.",
+      "recoveryOutcome": "Prompting remains blocked until the pinned protocol and schemas match.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "accepts transport key reordering but rejects semantic schema drift"
+        }
+      ]
+    },
+    {
+      "id": "mcp-startup-failed",
+      "title": "StoryStage context failed to start",
+      "state": "failed",
+      "code": "MCP_STARTUP_FAILED",
+      "creatorMessage": "The bounded StoryStage context server could not start safely.",
+      "recoveryAction": "Review redacted diagnostics, repair the fixed lab files, and retry.",
+      "recoveryOutcome": "The bounded context server never registers and the proposal turn never starts.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/mcp-scene-context.test.ts",
+          "test": "fails closed before registration when fixture startup validation fails"
+        }
+      ]
+    },
+    {
+      "id": "malformed-proposal",
+      "title": "Malformed proposal",
+      "state": "failed",
+      "code": "PROPOSAL_REJECTED",
+      "creatorMessage": "The AI Director returned a proposal that does not match the pinned schema.",
+      "recoveryAction": "Reject the response and retry from the same unchanged scene scope.",
+      "recoveryOutcome": "The malformed output is discarded and the selected scene remains unchanged.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "correlates exact MCP arguments, context output, and proposal receipt"
+        }
+      ]
+    },
+    {
+      "id": "adversarial-proposal",
+      "title": "Proposal exceeds authority",
+      "state": "failed",
+      "code": "AUTHORITY_DENIED",
+      "creatorMessage": "The proposal requested an unknown ID, capability, item, or authority field.",
+      "recoveryAction": "Reject the proposal; the project remains unchanged.",
+      "recoveryOutcome": "The out-of-scope proposal is denied without project mutation.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/mcp-scene-context.test.ts",
+          "test": "denies unknown IDs, capabilities, authority fields, bytes, and items"
+        }
+      ]
+    },
+    {
+      "id": "prompt-injection-blocked",
+      "title": "Prompt injection blocked",
+      "state": "failed",
+      "code": "UNAPPROVED_ACTIVITY",
+      "creatorMessage": "The turn attempted work outside the two-tool proposal-only contract.",
+      "recoveryAction": "Stop the turn, discard its output, and keep Apply disabled.",
+      "recoveryOutcome": "The turn is interrupted once and all untrusted output is discarded.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "fails closed on malformed output, forbidden work, and approval requests"
+        },
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "interrupts a late forbidden event exactly once and fails visibly"
+        }
+      ]
+    },
+    {
+      "id": "operation-timeout",
+      "title": "Request timed out",
+      "state": "failed",
+      "code": "APP_SERVER_TIMEOUT",
+      "creatorMessage": "The bounded AI Director request did not finish before its deadline.",
+      "recoveryAction": "Stop the child process cleanly and retry from unchanged state.",
+      "recoveryOutcome": "The timed-out child is closed before an explicit clean retry.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/app-server.test.ts",
+          "test": "fails a silent server on a bounded request timeout"
+        }
+      ]
+    },
+    {
+      "id": "operation-cancelled",
+      "title": "Cancelled",
+      "state": "cancelled",
+      "code": "OPERATION_CANCELLED",
+      "creatorMessage": "The creator cancelled the proposal request.",
+      "recoveryAction": "Return to the unchanged scene and start a new bounded request when ready.",
+      "recoveryOutcome": "Cancellation stops the current request and retains no proposal.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "represents cancellation before any tool starts"
+        }
+      ]
+    },
+    {
+      "id": "child-crashed",
+      "title": "AI Director crashed",
+      "state": "crashed",
+      "code": "APP_SERVER_CRASHED",
+      "creatorMessage": "The Codex App Server stopped before the bounded request completed.",
+      "recoveryAction": "Close the failed child, preserve the original error, and offer a clean restart.",
+      "recoveryOutcome": "The crashed session is discarded before any new child starts.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/app-server.test.ts",
+          "test": "turns premature child exit into a visible crashed state"
+        }
+      ]
+    },
+    {
+      "id": "restart-clean",
+      "title": "Clean restart",
+      "state": "recovered",
+      "code": "RESTART_CLEAN",
+      "creatorMessage": "A new bounded session started without reusing the failed turn.",
+      "recoveryAction": "Review the new proposal independently; prior output remains discarded.",
+      "recoveryOutcome": "A new client starts at event sequence one with no prior turn or proposal state.",
+      "evidenceClass": "deterministic-executable-fixture",
+      "automaticRetry": false,
+      "hiddenFallback": false,
+      "credentialAccessAllowed": false,
+      "projectMutationAllowed": false,
+      "evidence": [
+        {
+          "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+          "test": "discards a crashed session before a clean new-client restart"
+        }
+      ]
+    }
+  ],
+  "securityChecks": [
+    {
+      "id": "spawn-arguments-environment",
+      "evidence": {
+        "path": "packages/codex-lab/src/app-server.test.ts",
+        "test": "replaces inherited Codex state and never forwards credential variables"
+      }
+    },
+    {
+      "id": "stdio-parsing",
+      "evidence": {
+        "path": "packages/codex-lab/src/mcp-stdio-transport.test.ts",
+        "test": "fails once on oversized, invalid UTF-8, malformed, or batched input"
+      }
+    },
+    {
+      "id": "lab-root-containment",
+      "evidence": {
+        "path": "packages/codex-lab/src/lab-workspace.test.ts",
+        "test": "rejects a junction component before creating a workspace through it"
+      }
+    },
+    {
+      "id": "tool-allowlist-approval-routing",
+      "evidence": {
+        "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+        "test": "fails closed on malformed output, forbidden work, and approval requests"
+      }
+    },
+    {
+      "id": "receipt-redaction",
+      "evidence": {
+        "path": "packages/codex-lab/src/redaction.test.ts",
+        "test": "removes account, prompt, token, identifier, and local-state shapes before persistence"
+      }
+    },
+    {
+      "id": "process-workspace-cleanup",
+      "evidence": {
+        "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
+        "test": "preserves both the primary failure and a cleanup failure"
+      }
+    },
+    {
+      "id": "no-project-mutation-surface",
+      "evidence": {
+        "path": "packages/codex-lab/src/no-project-mutation.test.ts",
+        "test": "runs real round-trip failures beside a byte-identical decoy project"
+      }
+    }
+  ],
+  "knownLimitations": [
+    "This is isolated feasibility evidence, not a production-security claim.",
+    "Codex CLI 0.144.1 labels app-server experimental.",
+    "Distribution, packaging, support, and update policy remain release-gate work."
+  ]
+}

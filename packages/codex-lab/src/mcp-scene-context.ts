@@ -148,6 +148,10 @@ export const e1SceneContextSchema = z
 
 export type E1SceneContext = z.infer<typeof e1SceneContextSchema>;
 
+export const e1GetSceneContextInputSchema = z
+  .object({ schemaVersion: z.literal(1) })
+  .strict();
+
 const proposalChangeSchema = z.discriminatedUnion("kind", [
   z
     .object({
@@ -208,8 +212,7 @@ type E1McpFailureCode =
   | "BYTE_LIMIT_EXCEEDED"
   | "MCP_STARTUP_FAILED"
   | "REQUEST_CANCELLED"
-  | "REQUEST_TIMEOUT"
-  | "UNKNOWN_ID";
+  | "REQUEST_TIMEOUT";
 
 export class E1McpSceneContextError extends Error {
   public constructor(
@@ -297,7 +300,9 @@ async function loadFixture(
   }
 }
 
-function toContext(fixture: E1SyntheticSceneFixture): E1SceneContext {
+export function createE1SceneContext(
+  fixture: E1SyntheticSceneFixture,
+): E1SceneContext {
   return deepFreeze(
     e1SceneContextSchema.parse({
       schemaVersion: 1,
@@ -388,7 +393,7 @@ function validateProposal(
     proposal.beatId !== fixture.beat.id
   ) {
     throw new E1McpSceneContextError(
-      "UNKNOWN_ID",
+      "AUTHORITY_DENIED",
       "The proposal scope contains an ID outside the synthetic scene.",
     );
   }
@@ -471,7 +476,7 @@ async function createE1McpSceneContextServerWithTestDependencies(
   dependencies: E1McpSceneContextTestDependencies,
 ): Promise<McpServer> {
   const fixture = await loadFixture(dependencies.readFixture);
-  const context = toContext(fixture);
+  const context = createE1SceneContext(fixture);
   const contextText = assertOutputLimit(context);
   const server = new McpServer(
     { name: "storystage-e1-synthetic-scene", version: "1.0.0" },
@@ -530,7 +535,7 @@ async function createE1McpSceneContextServerWithTestDependencies(
       title: "Get synthetic scene context",
       description:
         "Read the complete fixed E1 synthetic scene context and proposal vocabulary.",
-      inputSchema: z.object({ schemaVersion: z.literal(1) }).strict(),
+      inputSchema: e1GetSceneContextInputSchema,
       outputSchema: e1SceneContextSchema,
       annotations: readOnlyAnnotations,
     },

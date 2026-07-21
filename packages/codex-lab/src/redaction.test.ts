@@ -37,4 +37,25 @@ describe("E1 receipt redaction", () => {
       ),
     ).toThrow(/sensitive data shape/i);
   });
+
+  it("redacts sensitive-key values regardless of their runtime type", () => {
+    const source = {
+      authorization: { bearer: "arbitrary-sentinel" },
+      cookies: ["arbitrary-sentinel"],
+      password: 123_456,
+      credentialState: true,
+      queryToken: null,
+      safeCount: 4,
+    };
+    const redacted = redactForReceipt(source) as Record<string, unknown>;
+    expect(redacted).toEqual({
+      authorization: "[REDACTED]",
+      cookies: "[REDACTED]",
+      password: "[REDACTED]",
+      credentialState: "[REDACTED]",
+      queryToken: "[REDACTED]",
+      safeCount: 4,
+    });
+    expect(JSON.stringify(redacted)).not.toContain("arbitrary-sentinel");
+  });
 });

@@ -119,6 +119,8 @@ export class AppServerClient {
   private readonly exitPromise: Promise<ExitResult>;
   private nextId = 1;
   private stdoutBuffer = Buffer.alloc(0);
+  private stdoutBytes = 0;
+  private notificationCount = 0;
   private fatalError: CodexLabError | null = null;
   private exitResult: ExitResult | null = null;
   private stderrObserved = false;
@@ -127,6 +129,9 @@ export class AppServerClient {
     private readonly child: ChildProcessWithoutNullStreams,
     private readonly options: {
       maxLineBytes?: number;
+      maxNotificationCount?: number;
+      maxNotificationTextBytes?: number;
+      maxStreamBytes?: number;
       requestTimeoutMs?: number;
     } = {},
   ) {
@@ -329,6 +334,17 @@ export class AppServerClient {
 
   private consumeStdout(chunk: Buffer): void {
     if (this.fatalError) return;
+    this.stdoutBytes += chunk.length;
+    if (this.stdoutBytes > (this.options.maxStreamBytes ?? 16_000_000)) {
+      this.failProtocol(
+        new CodexLabError(
+          "OUTPUT_LIMIT_EXCEEDED",
+          "The Codex App Server exceeded the bounded stdout budget.",
+          "incompatible",
+        ),
+      );
+      return;
+    }
     this.stdoutBuffer = Buffer.concat([this.stdoutBuffer, chunk]);
     const limit = this.options.maxLineBytes ?? 2_000_000;
     while (true) {
@@ -358,7 +374,20 @@ export class AppServerClient {
         return;
       }
       if (line.length === 0) continue;
-      this.consumeLine(line.toString("utf8"));
+      let decoded: string;
+      try {
+        decoded = new TextDecoder("utf-8", { fatal: true }).decode(line);
+      } catch {
+        this.failProtocol(
+          new CodexLabError(
+            "MALFORMED_JSON",
+            "The Codex App Server emitted invalid UTF-8.",
+            "incompatible",
+          ),
+        );
+        return;
+      }
+      this.consumeLine(decoded);
       if (this.fatalError) return;
     }
   }
@@ -382,12 +411,42 @@ export class AppServerClient {
       return;
     }
 
+    if (message.jsonrpc !== "2.0") {
+      this.failProtocol(
+        new CodexLabError(
+          "PROTOCOL_INCOMPATIBLE",
+          "The Codex App Server emitted an invalid JSON-RPC version.",
+          "incompatible",
+        ),
+      );
+      return;
+    }
+
     if (
       (typeof message.id === "number" || typeof message.id === "string") &&
       ("result" in message || "error" in message)
     ) {
+      if ("result" in message === "error" in message) {
+        this.failProtocol(
+          new CodexLabError(
+            "PROTOCOL_INCOMPATIBLE",
+            "The Codex App Server emitted an ambiguous JSON-RPC response.",
+            "incompatible",
+          ),
+        );
+        return;
+      }
       const pending = this.pending.get(message.id);
-      if (!pending) return;
+      if (!pending) {
+        this.failProtocol(
+          new CodexLabError(
+            "PROTOCOL_INCOMPATIBLE",
+            "The Codex App Server emitted an unknown or duplicate response ID.",
+            "incompatible",
+          ),
+        );
+        return;
+      }
       clearTimeout(pending.timeout);
       this.pending.delete(message.id);
       if ("error" in message) {
@@ -396,18 +455,31 @@ export class AppServerClient {
           method: pending.method,
           outcome: "error",
         });
+        const stateHint = classifyRpcFailure(pending.method, message.error);
+        const rpcCode =
+          message.error &&
+          typeof message.error === "object" &&
+          "code" in message.error &&
+          typeof (message.error as { code?: unknown }).code === "number"
+            ? (message.error as { code: number }).code
+            : undefined;
+        const code =
+          stateHint === "revoked-or-expired"
+            ? "AUTH_REVOKED"
+            : stateHint === "offline"
+              ? "OFFLINE"
+              : stateHint === "usage-limited"
+                ? "USAGE_LIMITED"
+                : rpcCode === -32601 || rpcCode === -32602
+                  ? "PROTOCOL_INCOMPATIBLE"
+                  : "PROTOCOL_REQUEST_FAILED";
         pending.reject(
           new CodexLabError(
-            "PROTOCOL_REQUEST_FAILED",
+            code,
             `The Codex App Server rejected ${pending.method}.`,
-            classifyRpcFailure(pending.method, message.error),
+            stateHint,
             classifyRpcReason(message.error),
-            message.error &&
-              typeof message.error === "object" &&
-              "code" in message.error &&
-              typeof (message.error as { code?: unknown }).code === "number"
-              ? (message.error as { code: number }).code
-              : undefined,
+            rpcCode,
           ),
         );
       } else {
@@ -435,6 +507,44 @@ export class AppServerClient {
           error: { code: -32601, message: "Client request is not supported." },
         });
       } else {
+        this.notificationCount += 1;
+        if (
+          this.notificationCount > (this.options.maxNotificationCount ?? 10_000)
+        ) {
+          this.failProtocol(
+            new CodexLabError(
+              "OUTPUT_LIMIT_EXCEEDED",
+              "The Codex App Server exceeded the bounded notification count.",
+              "incompatible",
+            ),
+          );
+          return;
+        }
+        const text =
+          message.params && typeof message.params === "object"
+            ? "delta" in message.params &&
+              typeof (message.params as { delta?: unknown }).delta === "string"
+              ? (message.params as { delta: string }).delta
+              : "message" in message.params &&
+                  typeof (message.params as { message?: unknown }).message ===
+                    "string"
+                ? (message.params as { message: string }).message
+                : null
+            : null;
+        if (
+          text !== null &&
+          Buffer.byteLength(text, "utf8") >
+            (this.options.maxNotificationTextBytes ?? 64_000)
+        ) {
+          this.failProtocol(
+            new CodexLabError(
+              "OUTPUT_LIMIT_EXCEEDED",
+              "The Codex App Server emitted oversized streamed text.",
+              "incompatible",
+            ),
+          );
+          return;
+        }
         this.publishInbound({
           kind: "notification",
           method: message.method,
@@ -454,6 +564,17 @@ export class AppServerClient {
           }
         }
       }
+      return;
+    }
+
+    if (typeof message.id === "number" || typeof message.id === "string") {
+      this.failProtocol(
+        new CodexLabError(
+          "PROTOCOL_INCOMPATIBLE",
+          "The Codex App Server emitted an incomplete JSON-RPC response.",
+          "incompatible",
+        ),
+      );
       return;
     }
 

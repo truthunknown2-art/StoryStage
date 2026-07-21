@@ -1,4 +1,5 @@
 import liveEvidence from "../../../reports/evidence/E1-WP3/live-roundtrip.json";
+import failureGateEvidence from "../../../reports/evidence/E1-WP4/failure-matrix.json";
 
 export type ProposalChange =
   | { kind: "camera-intent"; intent: string }
@@ -28,6 +29,29 @@ export type ProposalLabModel = {
     status?: string;
   }>;
   applyReason: string;
+  failureGate: FailureGateModel;
+};
+
+export type FailureGateCase = {
+  id: string;
+  title: string;
+  state: string;
+  code: string;
+  creatorMessage: string;
+  recoveryAction: string;
+  recoveryOutcome: string;
+  evidenceClass: "deterministic-executable-fixture";
+  automaticRetry: false;
+  hiddenFallback: false;
+  credentialAccessAllowed: false;
+  projectMutationAllowed: false;
+};
+
+export type FailureGateModel = {
+  evidenceClass: string;
+  cases: FailureGateCase[];
+  securityChecks: Array<{ id: string }>;
+  knownLimitations: string[];
 };
 
 export const liveProposalLabModel: ProposalLabModel = {
@@ -43,4 +67,10 @@ export const liveProposalLabModel: ProposalLabModel = {
     (event) => event.kind !== "agent-delta",
   ),
   applyReason: liveEvidence.reviewAuthority.applyReason,
+  failureGate: {
+    evidenceClass: failureGateEvidence.evidenceClass,
+    cases: failureGateEvidence.cases as FailureGateCase[],
+    securityChecks: failureGateEvidence.securityChecks,
+    knownLimitations: failureGateEvidence.knownLimitations,
+  },
 };
