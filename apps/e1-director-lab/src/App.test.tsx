@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import captureReceipt from "../../../reports/evidence/E1-WP3/capture-receipt.json";
 import { E1DirectorLabApp } from "./App";
 import { liveProposalLabModel } from "./model";
 
@@ -22,5 +23,10 @@ describe("E1 Director proposal lab", () => {
     ).toBeDisabled();
     expect(screen.getByText(/credential boundary blocker/i)).toBeVisible();
     expect(screen.getByRole("region", { name: "Security blocker" })).toBeVisible();
+    expect(captureReceipt.authority).toEqual({
+      previewAvailable: false,
+      rejectAvailable: false,
+      applyEnabled: false,
+    });
   });
 });

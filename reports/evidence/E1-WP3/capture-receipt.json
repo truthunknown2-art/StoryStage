@@ -19,8 +19,8 @@
     "warnings": 0
   },
   "authority": {
-    "previewAvailable": true,
-    "rejectAvailable": true,
+    "previewAvailable": false,
+    "rejectAvailable": false,
     "applyEnabled": false
   },
   "mcpIsolation": {
