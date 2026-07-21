@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: ec050cce094fd5adc1a50a132f76795b4543ac73
+lastAcceptedProductHead: ac2357d2e1419124d832fe26b67e26875f3821e8
 lastAcceptedMilestone: G0
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -10,7 +10,7 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: IMPLEMENTING
+  state: ACCEPTED_WAIT
   milestone: E1
   package: E1-WP3
   owner: Codex
@@ -18,23 +18,22 @@ authorization:
   branch: agent/codex-e1-wp3-streamed-proposal-roundtrip
   issue: 62
   pr: 64
-  candidateContentHead: b134cc62bda0055a857cf82b5a48ba57dd2ebc14
-  candidateRef: agent/codex-e1-wp3-streamed-proposal-roundtrip
+  candidateContentHead: 681eeb4d7c28405ead53cb8afc16a048c749c53d
+  candidateRef: product/v1
 checks:
-  local: architecture-doc-correction+roadmap+diff-check+hosted-run-29811567145-pass-exact-1c43708f15afb8bb237352e47d6c418d5293378e
+  local: full-pnpm-verify-pass+privacy-944-files+codex-lab-84-tests+e1-director-lab-tests-build-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp3-select-dedicated-codex-state-root-and-official-app-server-chatgpt-login-after-redacted-table-rejected
-  pro: e1-wp3-dedicated-codex-state-and-official-login-architecture-accepted-exact-07d2ccf735edc11b6a8de129bd478a986551aa9a-conditional-on-doc-fix-and-hosted-pass
+  codex: e1-wp3-exact-head-681eeb4d7c28405ead53cb8afc16a048c749c53d-review-clean-and-integrated-at-ac2357d2e1419124d832fe26b67e26875f3821e8
+  pro: accept-complete-e1-wp3-exact-681eeb4d7c28405ead53cb8afc16a048c749c53d-no-blockers-safe-to-integrate
   preston: authorize-e1-wp3-redacted-mcp-name-compatibility-adapter-fail-closed-no-credential-access-and-standing-dependency-ordered-continuation-2026-07-21
 blockers:
-  - The dedicated state root will require one official interactive Sign in with ChatGPT before the live authenticated round trip can be accepted
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
-  - E1-WP4 remains dependency-blocked until E1-WP3 is accepted; F3, backend, and Kimi implementation remain blocked by their roadmap dependencies
+  - E1-WP4 requires a separate bounded issue and START_NOW status transition; F3, backend, and Kimi implementation remain blocked by their roadmap dependencies
 nextAuthorizedAction:
-  type: IMPLEMENT_E1_WP3_DEDICATED_CODEX_STATE_AND_TYPED_LOGIN
-  text: Implement only the Pro-accepted dedicated-state-root, typed ChatGPT login, and exact-one MCP proof successor; do not read, copy, link, or enumerate global Codex config or credentials.
+  type: PUBLISH_E1_WP4_START_TICKET
+  text: Create the separate dependency-ordered E1-WP4 issue and START_NOW transition from the accepted product head; do not implement E1-WP4 until that transition is integrated.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -127,18 +126,17 @@ verification from the live PR checks.
   the lab capture with the truthful blocked state. E1-WP3 remains unaccepted
   while Pro reviews the dedicated-state-root successor and until that successor
   passes official login, live isolation, and exact-SHA review.
-- The dedicated-state successor later passed official ChatGPT authentication
-  and the real bounded proposal round trip on 2026-07-21. A first authenticated
-  inventory check correctly failed closed on raw JSON object-order-sensitive
-  schema fingerprints; the surgical successor canonicalizes object key order
-  before hashing while retaining every schema value and array order. Focused
-  regression coverage accepts deep key reordering and still rejects semantic
-  schema drift. The replacement sanitized receipt proves exactly one fixed MCP,
-  zero inherited servers, the two expected tool calls, one validated ephemeral
-  proposal, and Apply disabled; the 1440x900 live review capture has zero browser
-  warnings/errors. E1-WP3 remains unaccepted until the corrected exact head is
-  pushed, hosted verification passes, independent audit is clean, and Pro gives
-  the final exact-head package verdict. E1-WP4 and Kimi remain blocked.
+- E1-WP3 is accepted and integrated at exact `product/v1@ac2357d...`.
+  ChatGPT Pro accepted exact PR #64 head `681eeb4...`, hosted Verify StoryStage
+  run `29839630770` passed, and independent security and protocol audits found
+  no P1/P2 blocker. The official authenticated round trip proved exactly one
+  fixed StoryStage MCP globally and thread-scoped before prompting, exactly one
+  `get_scene_context` call followed by exactly one
+  `submit_direction_proposal` call, one validated ephemeral proposal, no
+  inherited server, and no project/render/saved-state mutation. The 1440x900
+  review surface truthfully keeps Apply disabled. This accepts only E1-WP3;
+  the complete E1 milestone remains incomplete, E1-WP4 requires its own
+  `START_NOW` transition, and Kimi remains `WAIT`.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
     and deterministic proposal/application path. Pro also required complete visual
