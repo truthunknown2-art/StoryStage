@@ -16,7 +16,12 @@ import {
   assertOfficialChatGptAuthUrl,
   runE1ProposalRoundTrip,
 } from "./proposal-roundtrip";
-import { FakeChild, answerRequests, asChild } from "./test-helpers";
+import {
+  FakeChild,
+  FakeRpcError,
+  answerRequests,
+  asChild,
+} from "./test-helpers";
 
 const proposal = {
   schemaVersion: 1 as const,
@@ -246,7 +251,13 @@ function createSuccessfulClient(
 }
 
 function createInterruptibleClient(
-  mode: "before-tool" | "during-stream" | "forbidden" | "late-after-terminal",
+  mode:
+    | "before-tool"
+    | "during-stream"
+    | "forbidden"
+    | "late-after-terminal"
+    | "interrupt-reject"
+    | "forbidden-interrupt-reject",
 ): { client: AppServerClient; getInterruptCount: () => number } {
   const child = new FakeChild();
   let interruptCount = 0;
@@ -291,6 +302,15 @@ function createInterruptibleClient(
             resolveTurn = resolve;
             queueMicrotask(() => {
               emit("turn/started", startedTurn());
+              if (mode === "interrupt-reject") return;
+              if (mode === "forbidden-interrupt-reject") {
+                emit("item/started", {
+                  threadId,
+                  turnId,
+                  item: { id: "command-1", type: "commandExecution" },
+                });
+                return;
+              }
               if (mode === "late-after-terminal") {
                 finish("interrupted");
                 emit("item/agentMessage/delta", {
@@ -319,6 +339,15 @@ function createInterruptibleClient(
         );
       case "turn/interrupt":
         interruptCount += 1;
+        if (
+          mode === "interrupt-reject" ||
+          mode === "forbidden-interrupt-reject"
+        ) {
+          return new FakeRpcError({
+            code: -32603,
+            message: "interrupt failed",
+          });
+        }
         finish("interrupted");
         return {};
       default:
@@ -329,6 +358,66 @@ function createInterruptibleClient(
     client: new AppServerClient(asChild(child)),
     getInterruptCount: () => interruptCount,
   };
+}
+
+function createEarlyLifecycleFailureClient(
+  mode: "turn-start-reject" | "child-exit",
+): AppServerClient {
+  const child = new FakeChild();
+  child.stdin.once("finish", () => child.emit("exit", 0, null));
+  const emit = (method: string, params: unknown) =>
+    child.stdout.write(
+      `${JSON.stringify({ jsonrpc: "2.0", method, params })}\n`,
+    );
+
+  answerRequests(child, (method) => {
+    switch (method) {
+      case "initialize":
+        return {
+          userAgent: "test",
+          codexHome: dedicatedCodexHome,
+          platformFamily: "windows",
+          platformOs: "windows",
+        };
+      case "account/read":
+        return {
+          account: { type: "chatgpt", email: null, planType: "pro" },
+          requiresOpenaiAuth: false,
+        };
+      case "thread/start":
+        return { thread: { id: threadId } };
+      case "mcpServerStatus/list":
+        return exactMcpStatus;
+      case "turn/start":
+        if (mode === "turn-start-reject") {
+          return new FakeRpcError({ code: -32603, message: "start failed" });
+        }
+        return new Promise(() => {
+          queueMicrotask(() => {
+            emit("turn/started", startedTurn());
+            child.emit("exit", 2, null);
+          });
+        });
+      default:
+        throw new Error(`Unexpected test request ${method}`);
+    }
+  });
+  return new AppServerClient(asChild(child));
+}
+
+async function withoutUnhandledRejections(
+  operation: () => Promise<unknown>,
+): Promise<unknown[]> {
+  const unhandled: unknown[] = [];
+  const onUnhandled = (error: unknown) => unhandled.push(error);
+  process.on("unhandledRejection", onUnhandled);
+  try {
+    await operation();
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    return unhandled;
+  } finally {
+    process.off("unhandledRejection", onUnhandled);
+  }
 }
 
 const verifiedRuntime = {
@@ -797,6 +886,78 @@ describe("E1 streamed proposal round trip", () => {
     ).rejects.toThrow("unsafe dedicated state root");
 
     expect(launched).toBe(false);
+  });
+
+  it.each([
+    ["turn-start-reject", "PROTOCOL_REQUEST_FAILED"],
+    ["child-exit", "APP_SERVER_CRASHED"],
+  ] as const)(
+    "settles every active lifecycle operation when %s happens early",
+    async (mode, expectedCode) => {
+      const events: Array<{ kind: string }> = [];
+      let failure: unknown = null;
+      const unhandled = await withoutUnhandledRejections(async () => {
+        try {
+          await runE1ProposalRoundTrip({
+            ...isolatedTestOptions,
+            onEvent: (event) => events.push(event),
+            launch: () => createEarlyLifecycleFailureClient(mode),
+          });
+        } catch (error) {
+          failure = error;
+        }
+      });
+
+      expect(failure).toMatchObject({ code: expectedCode });
+      expect(events.filter((event) => event.kind === "error")).toHaveLength(1);
+      expect(unhandled).toEqual([]);
+    },
+  );
+
+  it("preserves a rejected cancellation without an unhandled rejection", async () => {
+    const fixture = createInterruptibleClient("interrupt-reject");
+    const controller = new AbortController();
+    let failure: unknown = null;
+    const unhandled = await withoutUnhandledRejections(async () => {
+      try {
+        await runE1ProposalRoundTrip({
+          ...isolatedTestOptions,
+          signal: controller.signal,
+          onEvent: (event) => {
+            if (event.kind === "turn-started") controller.abort();
+          },
+          launch: () => fixture.client,
+        });
+      } catch (error) {
+        failure = error;
+      }
+    });
+
+    expect(failure).toMatchObject({ code: "PROTOCOL_REQUEST_FAILED" });
+    expect(fixture.getInterruptCount()).toBe(1);
+    expect(unhandled).toEqual([]);
+  });
+
+  it("keeps a forbidden stream failure primary when interruption also rejects", async () => {
+    const fixture = createInterruptibleClient("forbidden-interrupt-reject");
+    let failure: unknown = null;
+    const unhandled = await withoutUnhandledRejections(async () => {
+      try {
+        await runE1ProposalRoundTrip({
+          ...isolatedTestOptions,
+          launch: () => fixture.client,
+        });
+      } catch (error) {
+        failure = error;
+      }
+    });
+
+    expect(failure).toBeInstanceOf(Error);
+    expect((failure as Error).message).toContain(
+      "forbidden item type commandExecution",
+    );
+    expect(fixture.getInterruptCount()).toBe(1);
+    expect(unhandled).toEqual([]);
   });
 
   it.each([

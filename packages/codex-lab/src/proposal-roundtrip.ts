@@ -130,6 +130,29 @@ function parseResponse<T>(
   return parsed.data;
 }
 
+type Settled<T> = { ok: true; value: T } | { ok: false; error: unknown };
+
+function settle<T>(promise: Promise<T>): Promise<Settled<T>> {
+  return promise.then(
+    (value) => ({ ok: true, value }),
+    (error: unknown) => ({ ok: false, error }),
+  );
+}
+
+function unwrap<T>(outcome: Settled<T>): T {
+  if (!outcome.ok) throw outcome.error;
+  return outcome.value;
+}
+
+function throwCleanupFailure(
+  primaryFailure: unknown,
+  cleanupFailure: unknown,
+): void {
+  if (primaryFailure === null && cleanupFailure !== null) {
+    throw cleanupFailure;
+  }
+}
+
 function protocolError(message: string): CodexLabError {
   return new CodexLabError("PROTOCOL_INCOMPATIBLE", message, "incompatible");
 }
@@ -728,7 +751,24 @@ export async function runE1ProposalRoundTrip(
   let client: AppServerClient | null = null;
   let workspace: string | null = null;
   let streamFailure: unknown = null;
-  let interruptPromise: Promise<unknown> | null = null;
+  let resolveFirstFailure: (outcome: Settled<never>) => void = () => undefined;
+  const firstFailure = new Promise<Settled<never>>((resolve) => {
+    resolveFirstFailure = resolve;
+  });
+  let primaryFailure: unknown = null;
+  const lifecycleOperations: Promise<Settled<unknown>>[] = [];
+  const trackLifecycle = <T>(promise: Promise<T>): Promise<Settled<T>> => {
+    const operation = settle(promise);
+    lifecycleOperations.push(operation as Promise<Settled<unknown>>);
+    void operation.then((outcome) => {
+      if (!outcome.ok) resolveFirstFailure(outcome);
+    });
+    return operation;
+  };
+  const awaitLifecycle = async <T>(
+    operation: Promise<Settled<T>>,
+  ): Promise<T> => unwrap(await Promise.race([operation, firstFailure]));
+  let interruptPromise: Promise<Settled<unknown>> | null = null;
 
   try {
     const runtime = await (options.verifyRuntime ?? verifyPinnedRuntime)();
@@ -801,10 +841,12 @@ export async function runE1ProposalRoundTrip(
       )
         return;
       adapter.requestCancellation();
-      interruptPromise = client.request("turn/interrupt", {
-        threadId,
-        turnId: adapter.getTurnId(),
-      });
+      interruptPromise = trackLifecycle(
+        client.request("turn/interrupt", {
+          threadId,
+          turnId: adapter.getTurnId(),
+        }),
+      );
     };
     const unsubscribe = client.subscribeInbound((message) => {
       if (streamFailure) return;
@@ -813,38 +855,39 @@ export async function runE1ProposalRoundTrip(
         if (options.signal?.aborted) requestInterrupt();
       } catch (error) {
         streamFailure = error;
+        resolveFirstFailure({ ok: false, error });
         adapter.reportError(error);
         requestInterrupt();
       }
     });
     const abortListener = () => requestInterrupt();
     options.signal?.addEventListener("abort", abortListener);
-    const startedNotification = client.waitForNotification(
-      "turn/started",
-      E1_PROPOSAL_TURN_TIMEOUT_MS,
+    const startedNotification = trackLifecycle(
+      client.waitForNotification("turn/started", E1_PROPOSAL_TURN_TIMEOUT_MS),
     );
-    const completedNotification = client.waitForNotification(
-      "turn/completed",
-      E1_PROPOSAL_TURN_TIMEOUT_MS,
+    const completedNotification = trackLifecycle(
+      client.waitForNotification("turn/completed", E1_PROPOSAL_TURN_TIMEOUT_MS),
     );
-    const turnRequest = client.request(
-      "turn/start",
-      {
-        threadId,
-        input: [{ type: "text", text: proposalPrompt, text_elements: [] }],
-        cwd: workspace,
-        approvalPolicy: "never",
-        effort: "medium",
-        model: "gpt-5.6-terra",
-        sandboxPolicy: { type: "readOnly", networkAccess: false },
-      },
-      E1_PROPOSAL_TURN_TIMEOUT_MS,
+    const turnRequest = trackLifecycle(
+      client.request(
+        "turn/start",
+        {
+          threadId,
+          input: [{ type: "text", text: proposalPrompt, text_elements: [] }],
+          cwd: workspace,
+          approvalPolicy: "never",
+          effort: "medium",
+          model: "gpt-5.6-terra",
+          sandboxPolicy: { type: "readOnly", networkAccess: false },
+        },
+        E1_PROPOSAL_TURN_TIMEOUT_MS,
+      ),
     );
 
     try {
       const started = parseResponse(
         turnStartedNotificationSchema,
-        await startedNotification,
+        await awaitLifecycle(startedNotification),
         "turn/started",
       );
       if (
@@ -859,12 +902,12 @@ export async function runE1ProposalRoundTrip(
 
       const turn = parseResponse(
         turnStartResponseSchema,
-        await turnRequest,
+        await awaitLifecycle(turnRequest),
         "turn/start",
       );
       const completed = parseResponse(
         turnCompletedNotificationSchema,
-        await completedNotification,
+        await awaitLifecycle(completedNotification),
         "turn/completed",
       );
       if (
@@ -876,7 +919,7 @@ export async function runE1ProposalRoundTrip(
           "The completed proposal turn identities did not match.",
         );
       }
-      if (interruptPromise) await interruptPromise;
+      if (interruptPromise) await awaitLifecycle(interruptPromise);
       if (streamFailure) throw streamFailure;
 
       const cancelled = completed.turn.status === "interrupted";
@@ -909,20 +952,34 @@ export async function runE1ProposalRoundTrip(
           inheritedServerCount: 0,
         },
       };
+    } catch (error) {
+      requestInterrupt();
+      throw error;
     } finally {
       options.signal?.removeEventListener("abort", abortListener);
       unsubscribe();
     }
   } catch (error) {
+    primaryFailure = error;
     if (!adapter.getEvents().some((event) => event.kind === "error")) {
       adapter.reportError(error);
     }
     throw error;
   } finally {
+    let cleanupFailure: unknown = null;
+    let clientClosed = false;
     try {
       if (client) await client.close();
-    } finally {
-      if (workspace) await rm(workspace, { recursive: true, force: true });
+      clientClosed = true;
+    } catch (error) {
+      cleanupFailure = error;
     }
+    if (clientClosed) await Promise.all(lifecycleOperations);
+    try {
+      if (workspace) await rm(workspace, { recursive: true, force: true });
+    } catch (error) {
+      cleanupFailure ??= error;
+    }
+    throwCleanupFailure(primaryFailure, cleanupFailure);
   }
 }
