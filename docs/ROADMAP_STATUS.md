@@ -9,29 +9,29 @@ completedMilestones:
   F1: 7a468673c0a33a37b96b94d965b5d2a857150fac
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
 authorization:
-  state: PRESTON_GATE
+  state: PRO_GATE
   milestone: G0
-  package: G0-WP5
-  owner: Preston
-  exactBase: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
-  branch: agent/codex-full-product-roadmap
+  package: G0-WP7
+  owner: Pro
+  exactBase: b648ff0c6224d25461aea648fd6337bec96334d2
+  branch: agent/codex-g0-ai-native-bridge
   issue: null
-  pr: 48
-  candidateContentHead: febc42ad94d716abf3893c59ce31389685ef87ae
-  candidateRef: agent/codex-full-product-roadmap
+  pr: 50
+  candidateContentHead: 79e108831887daeae319b779276e4bbcafee250e
+  candidateRef: agent/codex-g0-ai-native-bridge
 checks:
   local: roadmap-consistency+root-verify-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: review-complete-at-febc42ad94d716abf3893c59ce31389685ef87ae
-  pro: accepted-at-febc42ad94d716abf3893c59ce31389685ef87ae
+  codex: final-pro-corrections-complete-at-79e108831887daeae319b779276e4bbcafee250e
+  pro: corrections-required-on-ce839780-successor-awaiting-exact-head-reaudit
   preston: null
 blockers:
-  - G0 awaits Preston's phase decision before any F3 or backend package is assigned
+  - AI-native, one-template launch-scope, and complete-shot engine amendments require hosted verification, Pro exact-SHA audit, and Preston acceptance
 nextAuthorizedAction:
-  type: PHASE_DECISION_ONLY
-  text: Preston decides G0; do not start F3 or backend implementation without a separate START_NOW assignment.
+  type: PRO_AUDIT_ONLY
+  text: After hosted verification passes, Pro audits exact PR 50 head; do not start E1, F3, or backend implementation.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -56,15 +56,22 @@ verification from the live PR checks.
 
 ## Current state
 
-- Accepted product state ends at F2 on exact `87c01f9b...`.
-- G0 is planning/documentation only. No F3 or backend product work is authorized.
-- ChatGPT Pro accepted the corrected full launch roadmap, cold-start contract,
-  and multi-shot governance at exact audit head `febc42ad...`; corrections
-  remaining: none. PR #48 is merged into `product/v1` at `ebbbcbb3...`.
+- Accepted product implementation state ends at F2 on exact `87c01f9b...`;
+  later `product/v1` commits through `b648ff0c...` contain only the accepted G0
+  roadmap/status lineage.
+- G0 is planning/documentation only. The user requested an AI-native amendment
+  before accepting the gate. No E1, F3, or backend product work is authorized.
+- ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
+  + read-only StoryStage MCP feasibility before F3, then a native AI Director
+  and deterministic proposal/application path. Pro also required complete visual
+  Godot shots plus Remotion episode assembly and a retained UI reference packet.
+  Preston further fixed the private-launch UI to one **Ollo & Friends — Kids
+  Story** template with **Paste a script** and **What's your idea?** entry paths.
+  Pro's audit of `ce839780...` found four bounded cross-document contradictions.
+  Their docs-only correction candidate is `79e1088...` in draft PR #50;
+  exact-head verification and re-audit are pending.
 - Kimi must remain `WAIT`; resolve its exact live inbox version and coordination
   head from `origin/agent/kimi-frontend` on every cold start and consistency run.
-- Kimi inbox v56 records the merged Pro acceptance and waits for Preston's G0
-  decision; it does not authorize an implementation branch.
 - PR #47 is closed, unmerged, and superseded; it grants no F3 authority.
 
 ## Allowed transitions

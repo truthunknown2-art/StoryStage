@@ -6,21 +6,30 @@ StoryStage uses a creator-first information hierarchy. The default product asks,
 
 ### Home
 
-Show recent projects with large visual thumbnails, project grammar, art style, duration, simple status, and one clear `Create video` action. Do not show revision numbers, hashes, blocker counts, or production confidence.
+Show recent projects with large visual thumbnails, project template, art style,
+duration, simple status, and one clear `New project` action. Do not show revision
+numbers, hashes, blocker counts, or production confidence.
 
 ### Create
 
-Use one calm setup screen:
+Use one calm setup screen with two starting paths:
 
-1. Paste a script.
-2. Choose a project grammar such as Kids Adventure or Weird History Explainer.
-3. Choose an art style such as Storybook Cutout, Paper Collage, or Ink & Wash.
-4. Choose guide voice, format, and language.
-5. Preview the natural beats and create the first cut.
+1. **Paste a script** for manual screenplay input.
+2. **What's your idea?** for a native AI Director conversation that proposes the
+   screenplay and hierarchy.
+
+Both paths use the single private-launch template, **Ollo & Friends — Kids
+Story**, then choose art direction, target duration, cast, guide-voice state,
+format, and language before the same editable proposal review.
+
+When AI is disconnected, **What's your idea?** shows **Connect AI Director** and
+a small **Sign in with ChatGPT** connection sheet. The creator never configures
+MCP, pastes a key, or opens a terminal. The chat header shows a compact truthful
+connection state, with reconnect/sign-out/runtime check in Settings.
 
 Keep generation quality, candidate counts, rig requirements, provider routing, and licensed-media preferences under `More options`.
 
-Reference mock: [Creator-first Create screen](design/creator-first-reset/story-stage-create-v1.png).
+Reference packet: [AI-native Create and Studio visual direction](design/ai-copilot-studio/README.md).
 
 ### Studio
 
@@ -33,7 +42,7 @@ The preview is the center of gravity.
 
 The selected beat is the default editing unit. Expanding a beat reveals its internal shots. Internal IDs, frame numbers, hashes, and blocker codes never lead the card.
 
-Reference mock: [Creator-first Studio](design/creator-first-reset/story-stage-studio-v1.png).
+Reference packet: [AI-native Create and Studio visual direction](design/ai-copilot-studio/README.md).
 
 ### Export
 

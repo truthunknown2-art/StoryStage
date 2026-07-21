@@ -18,12 +18,12 @@
 StoryStage should preserve the useful directing behavior of a cinematic
 multi-shot prompt while replacing generated-video prose with an editable,
 machine-valid production plan. The AI Director proposes the cut. Deterministic
-systems verify it and compile accepted intent into Godot performance jobs and
-the canonical Remotion episode composition.
+systems verify it and compile accepted intent into complete Godot visual-shot
+jobs and the canonical Remotion episode edit/audio/overlay composition.
 
 ```text
 screenplay scene
-+ project grammar and art direction
++ project-template rules and art direction
 + approved assets, rigs, and capabilities
 + location layers and prop inventory
 + incoming world and continuity state
@@ -32,8 +32,8 @@ screenplay scene
         v
 editable multi-shot SceneDirectionPlan proposal
         |
-        +--> Godot performance jobs
-        +--> Remotion camera, layer, edit, caption, and audio plan
+        +--> Godot complete-visual-shot jobs
+        +--> Remotion episode edit, transition, caption, and audio plan
         |
         v
 continuity, timing, capability, and renderability validation
@@ -78,7 +78,7 @@ fake physical-camera claim.
 Before proposing shots, the Director needs:
 
 - screenplay hierarchy and the exact scene or beat envelope;
-- project grammar, art direction, aspect ratio, frame rate, and output target;
+- project-template rules, art direction, aspect ratio, frame rate, and output target;
 - approved characters, visible views, costumes, rigs, expressions, visemes,
   and action capabilities;
 - location depth planes, foreground occluders, ambient elements, lighting or
@@ -124,15 +124,16 @@ render authority.
 
 ### Godot
 
-Godot owns articulated character and prop performance passes requested by an
-accepted plan: view-correct rigs, action phases, grounded travel, expressions,
-visemes, contact, holds, and transparent shot-scoped output.
+Godot owns the complete bounded visual shot: layered set, articulated
+characters, props, occlusion, parallax, particles, lights/shaders, shot-local
+camera, and any explicitly requested auxiliary passes.
 
 ### Remotion
 
-Remotion remains the canonical episode clock and owns shot sequencing, camera
-and multiplane composition, foreground occlusion, ambient layers, transitions,
-captions, narration, dialogue, SFX, music, mixing, and final rendering.
+Remotion owns episode order, trims, handles, transitions, global
+narration/dialogue/SFX/music, captions, titles, evidence cards,
+selected-range/full-episode preview, stitching, encoding, and delivery. It must
+not rebuild the Godot shot's camera or visual layer graph.
 
 The Director may request these behaviors but may not bypass capability,
 continuity, timing, asset, or renderability validation.

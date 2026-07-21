@@ -72,13 +72,27 @@ needs one deliverable, explicit non-goals, and a return condition.
 - Creator-facing product surfaces are only **Projects → Create → Studio**.
 - `packages/contracts` is shared vocabulary, not fixtures.
 - `packages/remotion-runtime` remains deterministic and browser-safe.
-- Godot is the pinned articulated 2D performance worker; Remotion remains the
-  single canonical episode compositor.
+- Godot is the pinned complete-visual-shot renderer: it owns the shot-local
+  character performance, set layers, props, occlusion, parallax, particles,
+  lights/shaders, and camera. Remotion remains the canonical episode editor,
+  audio/overlay authority, preview surface, and delivery renderer.
+- Do not implement the same shot camera, scene layer, or foreground occlusion in
+  both engines. Godot owns visual truth inside a shot; Remotion owns shot order,
+  trims, handles, transitions, narration/dialogue/SFX/music, captions/titles,
+  selected-range playback, stitching, encoding, and delivery.
+- Codex is the first supported in-product AI Director. StoryStage launches a
+  pinned/verified local Codex App Server, Codex owns official ChatGPT sign-in
+  and token state, and StoryStage exposes only a least-privilege MCP/typed-command
+  surface. Do not add API-key UI, cookie/session reuse, chatgpt.com automation,
+  silent fallback, arbitrary project/file mutation, or a generic agent framework.
 - `apps/render-worker` owns rendering and output creation.
 - `apps/desktop` owns privileged orchestration and local persistence.
 - `apps/studio` remains an unprivileged frontend using typed host adapters.
 - AI may propose bounded creative intent. Deterministic code owns timing,
   continuity, assets, capabilities, rendering, and saved project state.
+- A model proposal becomes canonical only after visible scope/impact review,
+  deterministic validation, and explicit apply through the same command layer
+  used by manual controls. Unrelated ranges must remain unchanged.
 
 ## Anti-overengineering rules
 
@@ -98,6 +112,12 @@ needs one deliverable, explicit non-goals, and a return condition.
 **Accepted historical exception:** E0 in `docs/PRODUCT_PLAN.md` proved the
 Godot/Remotion seam. It does not authorize B1/B2, Product v1 integration, or a
 second engine experiment.
+
+**Authorized future exception:** E1 in `docs/PRODUCT_PLAN.md` and
+`docs/PRODUCT_ROADMAP.md` is the sole permitted pre-F3 Codex App Server/MCP
+feasibility lab. It may create only the bounded synthetic, read-only lab named
+by E1 and grants no Product v1 UI, live-project mutation, rendering, asset/audio
+work, B1/B3 authority, or later-package authority.
 
 ## Definition of done
 
