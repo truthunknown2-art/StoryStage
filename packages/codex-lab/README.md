@@ -1,4 +1,19 @@
-# E1-WP1 Codex App Server preflight
+# E1 Codex feasibility lab
+
+## E1-WP2 bounded synthetic-scene MCP server
+
+`pnpm --filter @storystage/codex-lab mcp:e1-scene-context` starts the local
+JSONL stdio server. Startup reads exactly one hash-pinned synthetic fixture
+under the fixed lab root. The server exposes one immutable scene-context
+resource, one read-only `get_scene_context` tool for Codex, and one read-only
+`submit_direction_proposal` tool that validates and echoes an ephemeral
+proposal. It has no apply, persistence, approval, renderer, asset-generation,
+filesystem, shell, or network authority.
+
+This is isolated E1 feasibility code. App Server configuration and a real Codex
+round trip belong to E1-WP3 and are deliberately absent.
+
+## E1-WP1 Codex App Server preflight
 
 This removable, non-shipping lab verifies the exact local runtime pattern that
 StoryStage may later use for its AI Director. It does not implement the
