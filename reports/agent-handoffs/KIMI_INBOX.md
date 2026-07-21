@@ -1,15 +1,33 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `58`
+Inbox-Version: `59`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `E1-WP1-CODEX-RUNTIME-PREFLIGHT-WAIT`
+Current-Task: `E1-WP1-ACCEPTED-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `4ec99ebb33f274625e8e1fe0f1b401d9c0169fad`
-Required-Work-Branch: `none-e1-codex-hold`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-e1-wp1-runtime-preflight-wait-v58.md`
+Accepted-Root-Base: `a246987fb678712af022b46f3b23ad22f4d22b2a`
+Required-Work-Branch: `none-e1-accepted-wait`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-e1-wp1-accepted-wait-v59.md`
 
 ## Current instruction
+
+Version 59 records ChatGPT Pro's final `ACCEPT` for exact PR #55 head
+`8b74d6486fe46a891d1217bfcd9e98da6e1f932f`, hosted run `29798603209`
+PASS, E1-WP1 integration at
+`ed457eada98dfeecfacb9e081a9803ecf97906ca`, and status-only PR #56
+integration at `a246987fb678712af022b46f3b23ad22f4d22b2a`. The live product
+ledger is `E1 / E1-WP1 / ACCEPTED_WAIT`. Kimi remains `WAIT` with no
+implementation branch. The complete E1 milestone is not accepted. Do not
+begin frontend/UI work, E1-WP2, E1-WP3, E1-WP4, F3, backend, or any later
+package. A future task requires a higher inbox version with a separate bounded
+`START_NOW` assignment.
+
+Version 59 supersedes Version 58. Version 58 remains below as historical
+traceability.
+
+---
+
+Previous Version 58 instruction:
 
 Version 58 records Preston's G0 acceptance and authorization of only E1-WP1,
 the bounded issue #53 at exact base
