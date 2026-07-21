@@ -1,0 +1,145 @@
+{
+  "viewport": "1440x900",
+  "url": "http://127.0.0.1:5193/",
+  "checks": [
+    {
+      "name": "scope header opens at Scene 1 · Beat 1 · Morning light through the round window",
+      "ok": true
+    },
+    {
+      "name": "Direct tab selected initially",
+      "ok": true
+    },
+    {
+      "name": "session-local boundary wording is visible in the Direct panel",
+      "ok": true
+    },
+    {
+      "name": "board summary opens with the honest empty state",
+      "ok": true
+    },
+    {
+      "name": "board summary always carries the planning-only note",
+      "ok": true
+    },
+    {
+      "name": "Undo disabled before any commit",
+      "ok": true
+    },
+    {
+      "name": "Redo disabled before any commit",
+      "ok": true
+    },
+    {
+      "name": "unapplied status appears while drafting on Direct",
+      "ok": true
+    },
+    {
+      "name": "unapplied status follows the tab switch to Visual",
+      "ok": true
+    },
+    {
+      "name": "board summary still shows the empty state with only Visual drafts",
+      "ok": true
+    },
+    {
+      "name": "board summary still empty with drafts across all three tabs",
+      "ok": true
+    },
+    {
+      "name": "after one cross-tab Apply the status reads committed",
+      "ok": true
+    },
+    {
+      "name": "Undo enabled after the commit",
+      "ok": true
+    },
+    {
+      "name": "Redo still disabled after the commit",
+      "ok": true
+    },
+    {
+      "name": "committed summary shows Wide",
+      "ok": true
+    },
+    {
+      "name": "committed summary shows The round window behind Ollo",
+      "ok": true
+    },
+    {
+      "name": "committed summary shows Gentle push",
+      "ok": true
+    },
+    {
+      "name": "committed summary shows Measured",
+      "ok": true
+    },
+    {
+      "name": "committed summary shows Brief hold",
+      "ok": true
+    },
+    {
+      "name": "planning-only note still visible after the commit",
+      "ok": true
+    },
+    {
+      "name": "screenshot captured: wp3-scene1-beat1-motion-committed-1440x900.png",
+      "ok": true
+    },
+    {
+      "name": "Visual tab shows the committed Framing after Apply",
+      "ok": true
+    },
+    {
+      "name": "Visual tab shows the committed Composition focus after Apply",
+      "ok": true
+    },
+    {
+      "name": "screenshot captured: wp3-scene1-beat1-visual-committed-1440x900.png",
+      "ok": true
+    },
+    {
+      "name": "Direct tab shows the committed Beat purpose after Apply",
+      "ok": true
+    },
+    {
+      "name": "Direct tab shows the committed Performance direction after Apply",
+      "ok": true
+    },
+    {
+      "name": "Direct tab shows the committed Continuity note after Apply",
+      "ok": true
+    },
+    {
+      "name": "screenshot captured: wp3-scene1-beat1-direct-committed-1440x900.png",
+      "ok": true
+    },
+    {
+      "name": "zero console warnings/errors",
+      "ok": true
+    },
+    {
+      "name": "zero page errors",
+      "ok": true
+    }
+  ],
+  "consoleIssues": [],
+  "pageErrors": [],
+  "screenshots": [
+    {
+      "file": "wp3-scene1-beat1-motion-committed-1440x900.png",
+      "sha256": "4096f7cad1b5712ef3b01124158c2084689744a0c451256ffa30da90e77d6408",
+      "state": "Same committed Scene 1 · Beat 1 on Motion: three intent selects committed (Gentle push / Measured / Brief hold), Undo enabled, Redo disabled, scope header, session-local boundary note, and committed board summary visible"
+    },
+    {
+      "file": "wp3-scene1-beat1-visual-committed-1440x900.png",
+      "sha256": "a06940004e23d0faa4a68e320419f7abe0481d78a5ed88516b5cf20e2bd6d5b7",
+      "state": "Same committed Scene 1 · Beat 1 on Visual: Framing Wide and Composition focus committed, shared Undo enabled / Redo disabled, scope header, boundary note, and committed board summary visible"
+    },
+    {
+      "file": "wp3-scene1-beat1-direct-committed-1440x900.png",
+      "sha256": "b95ee110ab4bbd4c88c6dab83c8f7f101a555524fb787fd89d5be38ce7e58a09",
+      "state": "Same committed Scene 1 · Beat 1 on Direct: three committed drafts, Undo enabled / Redo disabled, scope header, boundary note, and committed board summary visible"
+    }
+  ]
+}

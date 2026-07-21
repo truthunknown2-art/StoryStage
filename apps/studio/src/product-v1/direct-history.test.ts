@@ -6,6 +6,7 @@ import {
   committedDirectDraft,
   directBeatKey,
   directDraftsEqual,
+  hasCommittedVisualMotionDirection,
   hasUnappliedDirectChanges,
   initialBeatDirectState,
   redoDirect,
@@ -18,7 +19,18 @@ const draft = (
   beatPurpose: string,
   performanceDirection = "",
   continuityNote = "",
-): DirectDraft => ({ beatPurpose, performanceDirection, continuityNote });
+  visualMotion: Partial<DirectDraft> = {},
+): DirectDraft => ({
+  beatPurpose,
+  performanceDirection,
+  continuityNote,
+  framing: "Unspecified",
+  compositionFocus: "",
+  cameraIntent: "Unspecified",
+  performancePace: "Unspecified",
+  endHold: "Unspecified",
+  ...visualMotion,
+});
 
 describe("direct-history — immutable per-beat session history", () => {
   it("starts as one committed empty snapshot with no undo/redo and no unapplied changes", () => {
@@ -31,6 +43,7 @@ describe("direct-history — immutable per-beat session history", () => {
     expect(canUndoDirect(state)).toBe(false);
     expect(canRedoDirect(state)).toBe(false);
     expect(hasUnappliedDirectChanges(state)).toBe(false);
+    expect(hasCommittedVisualMotionDirection(state)).toBe(false);
   });
 
   it("commits the complete three-field draft atomically, empty fields included", () => {
@@ -128,5 +141,147 @@ describe("direct-history — immutable per-beat session history", () => {
     expect(directBeatKey("scene-1", 0)).toBe(directBeatKey("scene-1", 0));
     expect(directBeatKey("scene-1", 0)).not.toBe(directBeatKey("scene-1", 1));
     expect(directBeatKey("scene-1", 0)).not.toBe(directBeatKey("scene-2", 0));
+  });
+
+  it("commits the complete eight-field draft atomically from mixed Direct/Visual/Motion edits", () => {
+    const complete: DirectDraft = draft(
+      "Hold the doorway reveal",
+      "Hushed, then a shared gasp",
+      "Glow color matches Beat 1",
+      {
+        framing: "Wide",
+        compositionFocus: "Doorway centered, characters flanking",
+        cameraIntent: "Gentle push",
+        performancePace: "Measured",
+        endHold: "Brief hold",
+      },
+    );
+    let state = initialBeatDirectState();
+    // Edits across all three tabs still create no history on their own.
+    state = updateDirectDraft(state, {
+      beatPurpose: complete.beatPurpose,
+      performanceDirection: complete.performanceDirection,
+      continuityNote: complete.continuityNote,
+    });
+    state = updateDirectDraft(state, {
+      framing: complete.framing,
+      compositionFocus: complete.compositionFocus,
+    });
+    state = updateDirectDraft(state, {
+      cameraIntent: complete.cameraIntent,
+      performancePace: complete.performancePace,
+      endHold: complete.endHold,
+    });
+    expect(state.history).toHaveLength(1);
+    expect(hasUnappliedDirectChanges(state)).toBe(true);
+
+    // One Apply commits all eight fields as one atomic step.
+    const committed = applyDirectDraft(state);
+    expect(committed.history).toHaveLength(2);
+    expect(committed.cursor).toBe(1);
+    expect(committedDirectDraft(committed)).toEqual(complete);
+    expect(hasCommittedVisualMotionDirection(committed)).toBe(true);
+    // Applying the identical complete snapshot again stays a no-op.
+    expect(applyDirectDraft(committed)).toBe(committed);
+  });
+
+  it("treats a Visual- or Motion-only edit as a real change and restores all eight fields through Undo/Redo", () => {
+    const snapshotA: DirectDraft = draft("A1", "A2", "A3", {
+      framing: "Medium",
+      compositionFocus: "Lantern in the left third",
+      cameraIntent: "Locked-off",
+      performancePace: "Gentle",
+      endHold: "No hold",
+    });
+    const snapshotB: DirectDraft = draft("B1", "B2", "B3", {
+      framing: "Close-up",
+      compositionFocus: "The glow on Tix's face",
+      cameraIntent: "Follow action",
+      performancePace: "Energetic",
+      endHold: "Full hold",
+    });
+    const withA = applyDirectDraft(
+      updateDirectDraft(initialBeatDirectState(), snapshotA),
+    );
+
+    // Changing only a Motion field differs from the committed snapshot.
+    const motionOnlyEdit = updateDirectDraft(withA, {
+      performancePace: "Energetic",
+    });
+    expect(hasUnappliedDirectChanges(motionOnlyEdit)).toBe(true);
+
+    const withB = applyDirectDraft(
+      updateDirectDraft(withA, snapshotB),
+    );
+    expect(committedDirectDraft(withB)).toEqual(snapshotB);
+
+    // Undo/Redo restore the exact complete committed snapshots.
+    const undone = undoDirect(withB);
+    expect(committedDirectDraft(undone)).toEqual(snapshotA);
+    expect(undone.draft).toEqual(snapshotA);
+    const redone = redoDirect(undone);
+    expect(committedDirectDraft(redone)).toEqual(snapshotB);
+    expect(redone.draft).toEqual(snapshotB);
+  });
+
+  it("invalidates the redo branch when a distinct eight-field Apply follows Undo", () => {
+    const withA = applyDirectDraft(
+      updateDirectDraft(
+        initialBeatDirectState(),
+        draft("A", "", "", { framing: "Wide" }),
+      ),
+    );
+    const withB = applyDirectDraft(
+      updateDirectDraft(withA, draft("B", "", "", { framing: "Medium" })),
+    );
+    const undone = undoDirect(withB);
+
+    // A distinct Apply after Undo — here only Visual/Motion values differ —
+    // truncates only this beat's redo branch.
+    const withC = applyDirectDraft(
+      updateDirectDraft(
+        undone,
+        draft("A", "", "", { framing: "Wide", endHold: "Brief hold" }),
+      ),
+    );
+    expect(canRedoDirect(withC)).toBe(false);
+    expect(withC.history.map((entry) => entry.beatPurpose)).toEqual([
+      "",
+      "A",
+      "A",
+    ]);
+    const forwardAgain = redoDirect(undoDirect(withC));
+    expect(committedDirectDraft(forwardAgain)).toEqual(
+      draft("A", "", "", { framing: "Wide", endHold: "Brief hold" }),
+    );
+  });
+
+  it("reports committed Visual/Motion direction only for real committed values", () => {
+    // Direct-only commits keep the empty state.
+    const directOnly = applyDirectDraft(
+      updateDirectDraft(initialBeatDirectState(), draft("Purpose only")),
+    );
+    expect(hasCommittedVisualMotionDirection(directOnly)).toBe(false);
+
+    // Each single Visual/Motion value — including text-only focus — is
+    // enough to list the committed values.
+    for (const patch of [
+      { framing: "Close-up" },
+      { compositionFocus: "Window light on the shelf" },
+      { cameraIntent: "Gentle pull" },
+      { performancePace: "Measured" },
+      { endHold: "Full hold" },
+    ] satisfies Array<Partial<DirectDraft>>) {
+      const committed = applyDirectDraft(
+        updateDirectDraft(initialBeatDirectState(), patch),
+      );
+      expect(hasCommittedVisualMotionDirection(committed)).toBe(true);
+    }
+
+    // Draft values alone never count — only the committed snapshot.
+    const drafting = updateDirectDraft(initialBeatDirectState(), {
+      framing: "Wide",
+    });
+    expect(hasCommittedVisualMotionDirection(drafting)).toBe(false);
   });
 });
