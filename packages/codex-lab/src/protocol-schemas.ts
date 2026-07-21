@@ -28,6 +28,26 @@ export const accountResponseSchema = z
   })
   .strict();
 
+export const accountLoginStartResponseSchema = z
+  .object({
+    type: z.literal("chatgpt"),
+    loginId: z.string().min(1).max(256),
+    authUrl: z.string().min(1).max(2048),
+  })
+  .strict();
+
+export const accountLoginCompletedNotificationSchema = z
+  .object({
+    success: z.boolean(),
+    loginId: z.string().min(1).max(256).nullable().optional(),
+    error: z.string().nullable().optional(),
+  })
+  .strict();
+
+export const accountLoginCancelResponseSchema = z
+  .object({ status: z.enum(["canceled", "notFound"]) })
+  .strict();
+
 export const modelListResponseSchema = z
   .object({
     data: z.array(z.object({ id: z.string() }).passthrough()),
@@ -95,11 +115,33 @@ export const mcpServerStatusListResponseSchema = z
       z
         .object({
           name: z.string(),
-          tools: z.record(z.string(), z.unknown()),
+          authStatus: z.enum([
+            "unsupported",
+            "notLoggedIn",
+            "bearerToken",
+            "oAuth",
+          ]),
+          serverInfo: z
+            .object({ name: z.string(), version: z.string() })
+            .passthrough()
+            .nullable()
+            .optional(),
+          tools: z.record(
+            z.string(),
+            z
+              .object({
+                name: z.string(),
+                inputSchema: z.unknown(),
+                outputSchema: z.unknown().optional(),
+              })
+              .passthrough(),
+          ),
+          resources: z.array(z.object({ uri: z.string() }).passthrough()),
+          resourceTemplates: z.array(z.unknown()),
         })
         .passthrough(),
     ),
-    nextCursor: z.string().nullable().optional(),
+    nextCursor: z.null(),
   })
   .strict();
 

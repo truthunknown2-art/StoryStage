@@ -1,11 +1,19 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AppServerClient } from "./app-server";
-import { E1_MCP_SERVER_NAME } from "./mcp-scene-context";
+import {
+  E1_MCP_RESOURCE_URI,
+  E1_MCP_SERVER_NAME,
+  createE1McpSceneContextServer,
+} from "./mcp-scene-context";
 import {
   E1_PROPOSAL_SCOPE,
   E1ProposalEventAdapter,
+  assertExactE1McpInventory,
+  assertOfficialChatGptAuthUrl,
   runE1ProposalRoundTrip,
 } from "./proposal-roundtrip";
 import { FakeChild, answerRequests, asChild } from "./test-helpers";
@@ -38,6 +46,7 @@ const receipt = {
 
 const threadId = "thread-e1";
 const turnId = "turn-e1";
+const dedicatedCodexHome = "C:\\local-app-data\\StoryStage\\codex\\0.144.1";
 
 function notification(method: string, params: unknown) {
   return { kind: "notification" as const, method, params };
@@ -129,18 +138,50 @@ function driveSuccessfulAdapter(adapter: E1ProposalEventAdapter): void {
   adapter.consume(notification("turn/completed", completedTurn()));
 }
 
-function createSuccessfulClient(closeCode = 0): AppServerClient {
+function createSuccessfulClient(
+  closeCode = 0,
+  login?: { authUrl: string; onCancel?: () => void },
+): AppServerClient {
   const child = new FakeChild();
+  let accountReads = 0;
   child.stdin.once("finish", () => child.emit("exit", closeCode, null));
   answerRequests(child, (method) => {
     switch (method) {
       case "initialize":
         return {
           userAgent: "test",
-          codexHome: "private-test-home",
+          codexHome: dedicatedCodexHome,
           platformFamily: "windows",
           platformOs: "windows",
         };
+      case "account/read":
+        accountReads += 1;
+        if (login && accountReads === 1) {
+          return { account: null, requiresOpenaiAuth: true };
+        }
+        return {
+          account: { type: "chatgpt", email: null, planType: "pro" },
+          requiresOpenaiAuth: false,
+        };
+      case "account/login/start":
+        if (!login) throw new Error("Unexpected sign-in request");
+        queueMicrotask(() =>
+          child.stdout.write(
+            `${JSON.stringify({
+              jsonrpc: "2.0",
+              method: "account/login/completed",
+              params: { success: true, loginId: "login-e1", error: null },
+            })}\n`,
+          ),
+        );
+        return {
+          type: "chatgpt",
+          loginId: "login-e1",
+          authUrl: login.authUrl,
+        };
+      case "account/login/cancel":
+        login?.onCancel?.();
+        return { status: "canceled" };
       case "thread/start":
         return { thread: { id: threadId } };
       case "mcpServerStatus/list":
@@ -233,9 +274,14 @@ function createInterruptibleClient(
       case "initialize":
         return {
           userAgent: "test",
-          codexHome: "private-test-home",
+          codexHome: dedicatedCodexHome,
           platformFamily: "windows",
           platformOs: "windows",
+        };
+      case "account/read":
+        return {
+          account: { type: "chatgpt", email: null, planType: "pro" },
+          requiresOpenaiAuth: false,
         };
       case "thread/start":
         return { thread: { id: threadId } };
@@ -308,7 +354,117 @@ const verifiedRuntime = {
   protocolSha256: "protocol-sha",
 };
 
+const isolatedTestOptions = {
+  verifyRuntime: async () => verifiedRuntime,
+  prepareCodexHome: async () => dedicatedCodexHome,
+  verifyMcpInventory: async () => undefined,
+};
+
+async function createExactInventoryClient(): Promise<AppServerClient> {
+  const server = await createE1McpSceneContextServer();
+  const mcpClient = new Client(
+    { name: "storystage-e1-inventory-test", version: "1.0.0" },
+    { capabilities: {} },
+  );
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
+  await server.connect(serverTransport);
+  await mcpClient.connect(clientTransport);
+  const [{ tools }, { resources }, { resourceTemplates }] = await Promise.all([
+    mcpClient.listTools(),
+    mcpClient.listResources(),
+    mcpClient.listResourceTemplates(),
+  ]);
+  await mcpClient.close();
+  await server.close();
+
+  const child = new FakeChild();
+  answerRequests(child, (method) => {
+    if (method !== "mcpServerStatus/list") {
+      throw new Error(`Unexpected test request ${method}`);
+    }
+    return {
+      data: [
+        {
+          name: E1_MCP_SERVER_NAME,
+          authStatus: "unsupported",
+          serverInfo: {
+            name: "storystage-e1-synthetic-scene",
+            version: "1.0.0",
+          },
+          tools: Object.fromEntries(tools.map((tool) => [tool.name, tool])),
+          resources,
+          resourceTemplates,
+        },
+      ],
+      nextCursor: null,
+    };
+  });
+  return new AppServerClient(asChild(child));
+}
+
 describe("E1 streamed proposal round trip", () => {
+  it("accepts only exact-origin official ChatGPT sign-in URLs", () => {
+    expect(() =>
+      assertOfficialChatGptAuthUrl(
+        "https://chatgpt.com/auth/login?state=opaque",
+      ),
+    ).not.toThrow();
+    for (const hostile of [
+      "http://chatgpt.com/auth/login",
+      "https://chatgpt.com.evil.example/auth/login",
+      "https://user@chatgpt.com/auth/login",
+      "https://chatgpt.com:444/auth/login",
+      "https://chatgpt.com/auth/login\nhttps://evil.example",
+    ]) {
+      expect(() => assertOfficialChatGptAuthUrl(hostile)).toThrow(
+        "official ChatGPT sign-in URL was invalid",
+      );
+    }
+  });
+
+  it("accepts the exact live MCP server schemas and fixed resource only", async () => {
+    const client = await createExactInventoryClient();
+    await expect(
+      assertExactE1McpInventory(client, null),
+    ).resolves.toBeUndefined();
+    expect(E1_MCP_RESOURCE_URI).toBe(
+      "storystage-e1://synthetic/scene-context/v1",
+    );
+  });
+
+  it("uses the typed official ChatGPT login lifecycle without persisting its URL", async () => {
+    const authUrl = "https://chatgpt.com/auth/login?state=opaque-e1";
+    const openAuthUrl = vi.fn(async () => undefined);
+    const result = await runE1ProposalRoundTrip({
+      ...isolatedTestOptions,
+      openAuthUrl,
+      launch: () => createSuccessfulClient(0, { authUrl }),
+    });
+
+    expect(result.state).toBe("completed");
+    expect(openAuthUrl).toHaveBeenCalledOnce();
+    expect(openAuthUrl).toHaveBeenCalledWith(authUrl);
+  });
+
+  it("rejects a hostile login URL before opening it and cancels the attempt", async () => {
+    const openAuthUrl = vi.fn(async () => undefined);
+    const onCancel = vi.fn();
+    await expect(
+      runE1ProposalRoundTrip({
+        ...isolatedTestOptions,
+        openAuthUrl,
+        launch: () =>
+          createSuccessfulClient(0, {
+            authUrl: "https://chatgpt.com.evil.example/auth/login",
+            onCancel,
+          }),
+      }),
+    ).rejects.toThrow("official ChatGPT sign-in URL was invalid");
+    expect(openAuthUrl).not.toHaveBeenCalled();
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
   it("emits deterministic creator events and validates the ephemeral proposal", () => {
     const adapter = new E1ProposalEventAdapter();
     driveSuccessfulAdapter(adapter);
@@ -541,9 +697,7 @@ describe("E1 streamed proposal round trip", () => {
     const launch = () => createSuccessfulClient();
     const run = () =>
       runE1ProposalRoundTrip({
-        verifyRuntime: async () => verifiedRuntime,
-        listConfiguredMcpServers: async () => [],
-        verifyMcpIsolation: async () => undefined,
+        ...isolatedTestOptions,
         launch,
       });
 
@@ -568,21 +722,21 @@ describe("E1 streamed proposal round trip", () => {
     expect(restarted.proposal).toEqual(proposal);
   });
 
-  it("fails before launch when the pinned runtime cannot isolate MCPs without credentials", async () => {
+  it("fails before launch when the dedicated Codex state root is unsafe", async () => {
     let launched = false;
 
     await expect(
       runE1ProposalRoundTrip({
         verifyRuntime: async () => verifiedRuntime,
+        prepareCodexHome: async () => {
+          throw new Error("unsafe dedicated state root");
+        },
         launch: () => {
           launched = true;
           return createSuccessfulClient();
         },
       }),
-    ).rejects.toMatchObject({
-      code: "PROTOCOL_INCOMPATIBLE",
-      stateHint: "incompatible",
-    });
+    ).rejects.toThrow("unsafe dedicated state root");
 
     expect(launched).toBe(false);
   });
@@ -596,13 +750,11 @@ describe("E1 streamed proposal round trip", () => {
       const fixture = createInterruptibleClient(mode);
       const controller = new AbortController();
       const result = await runE1ProposalRoundTrip({
+        ...isolatedTestOptions,
         signal: controller.signal,
         onEvent: (event) => {
           if (event.kind === abortKind) controller.abort();
         },
-        verifyRuntime: async () => verifiedRuntime,
-        listConfiguredMcpServers: async () => [],
-        verifyMcpIsolation: async () => undefined,
         launch: () => fixture.client,
       });
 
@@ -618,9 +770,7 @@ describe("E1 streamed proposal round trip", () => {
     const fixture = createInterruptibleClient("forbidden");
     await expect(
       runE1ProposalRoundTrip({
-        verifyRuntime: async () => verifiedRuntime,
-        listConfiguredMcpServers: async () => [],
-        verifyMcpIsolation: async () => undefined,
+        ...isolatedTestOptions,
         launch: () => fixture.client,
       }),
     ).rejects.toThrow("forbidden item type commandExecution");
@@ -631,9 +781,7 @@ describe("E1 streamed proposal round trip", () => {
     const fixture = createInterruptibleClient("late-after-terminal");
     await expect(
       runE1ProposalRoundTrip({
-        verifyRuntime: async () => verifiedRuntime,
-        listConfiguredMcpServers: async () => [],
-        verifyMcpIsolation: async () => undefined,
+        ...isolatedTestOptions,
         launch: () => fixture.client,
       }),
     ).rejects.toThrow("after terminal completion");
@@ -649,9 +797,7 @@ describe("E1 streamed proposal round trip", () => {
 
     await expect(
       runE1ProposalRoundTrip({
-        verifyRuntime: async () => verifiedRuntime,
-        listConfiguredMcpServers: async () => [],
-        verifyMcpIsolation: async () => undefined,
+        ...isolatedTestOptions,
         launch: () => createSuccessfulClient(1),
       }),
     ).rejects.toMatchObject({ code: "APP_SERVER_CRASHED" });

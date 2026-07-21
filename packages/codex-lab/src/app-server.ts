@@ -47,7 +47,9 @@ export type TranscriptEntry = {
 
 type ExitResult = { code: number | null; signal: NodeJS.Signals | null };
 
-function allowlistedEnvironment(): NodeJS.ProcessEnv {
+function allowlistedEnvironment(
+  source: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
   const allowed = new Set([
     "appdata",
     "codex_home",
@@ -66,10 +68,20 @@ function allowlistedEnvironment(): NodeJS.ProcessEnv {
     "windir",
   ]);
   return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) =>
-      allowed.has(key.toLowerCase()),
-    ),
+    Object.entries(source).filter(([key]) => allowed.has(key.toLowerCase())),
   );
+}
+
+export function getE1ProposalEnvironment(
+  codexHome: string,
+  source: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+  const environment = allowlistedEnvironment(source);
+  for (const key of Object.keys(environment)) {
+    if (key.toLowerCase() === "codex_home") delete environment[key];
+  }
+  environment.CODEX_HOME = codexHome;
+  return environment;
 }
 
 function classifyRpcReason(rawError: unknown) {
@@ -473,31 +485,16 @@ function tomlString(value: string): string {
   return JSON.stringify(value.replaceAll("\\", "/"));
 }
 
-function tomlBareKey(value: string): string {
-  if (!value || value.length > 128 || !/^[A-Za-z0-9_-]+$/.test(value)) {
-    throw new CodexLabError(
-      "PROTOCOL_INCOMPATIBLE",
-      "The configured MCP inventory contained an invalid server name.",
-      "incompatible",
-    );
-  }
-  return value;
-}
-
-export function getE1ProposalAppServerArgs(
-  configuredServerNames: readonly string[] = [],
-): readonly string[] {
+export function getE1ProposalAppServerArgs(): readonly string[] {
   return [
     "app-server",
     ...getE1DisabledCapabilityArgs(),
-    ...getE1McpConfigArgs(configuredServerNames),
+    ...getE1McpConfigArgs(),
     "--stdio",
   ];
 }
 
-function getE1McpConfigArgs(
-  configuredServerNames: readonly string[],
-): readonly string[] {
+function getE1McpConfigArgs(): readonly string[] {
   const tsxCli = join(repositoryRoot, "node_modules", "tsx", "dist", "cli.mjs");
   const mcpCli = join(
     repositoryRoot,
@@ -515,14 +512,10 @@ function getE1McpConfigArgs(
     `mcp_servers.storystage_e1.cwd=${tomlString(repositoryRoot)}`,
     "-c",
     "mcp_servers.storystage_e1.enabled=true",
+    "-c",
+    'cli_auth_credentials_store="file"',
   ];
-  const disabledInherited = configuredServerNames
-    .filter((name) => name !== "storystage_e1")
-    .flatMap((name) => [
-      "-c",
-      `mcp_servers.${tomlBareKey(name)}.enabled=false`,
-    ]);
-  return [...fixedStoryStage, ...disabledInherited];
+  return fixedStoryStage;
 }
 
 function getE1DisabledCapabilityArgs(): readonly string[] {
@@ -531,6 +524,7 @@ function getE1DisabledCapabilityArgs(): readonly string[] {
     "browser_use",
     "computer_use",
     "goals",
+    "hooks",
     "image_generation",
     "memories",
     "multi_agent",
@@ -539,43 +533,15 @@ function getE1DisabledCapabilityArgs(): readonly string[] {
   ].flatMap((feature) => ["--disable", feature]);
 }
 
-export async function listConfiguredMcpServerNames(
-  executablePath: string,
-): Promise<readonly string[]> {
-  void executablePath;
-  throw new CodexLabError(
-    "PROTOCOL_INCOMPATIBLE",
-    "Codex 0.144.1 has no credential-safe structured MCP inventory for per-launch isolation.",
-    "incompatible",
-  );
-}
-
-export async function verifyE1McpIsolation(
-  executablePath: string,
-  configuredServerNames: readonly string[],
-): Promise<void> {
-  void executablePath;
-  void configuredServerNames;
-  throw new CodexLabError(
-    "PROTOCOL_INCOMPATIBLE",
-    "Codex 0.144.1 cannot prove per-launch MCP isolation without receiving unrelated MCP configuration.",
-    "incompatible",
-  );
-}
-
-/** Launches the pinned App Server with one replacement MCP inventory. */
+/** Launches the pinned App Server with one dedicated Codex state root. */
 export function launchE1ProposalAppServer(
   executablePath: string,
-  configuredServerNames: readonly string[] = [],
+  codexHome: string,
 ): AppServerClient {
-  const child = spawn(
-    executablePath,
-    getE1ProposalAppServerArgs(configuredServerNames),
-    {
-      env: allowlistedEnvironment(),
-      stdio: "pipe",
-      windowsHide: true,
-    },
-  );
+  const child = spawn(executablePath, getE1ProposalAppServerArgs(), {
+    env: getE1ProposalEnvironment(codexHome),
+    stdio: "pipe",
+    windowsHide: true,
+  });
   return new AppServerClient(child);
 }

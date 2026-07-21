@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { openOfficialChatGptAuthUrl } from "./browser-auth";
 import { runE1ProposalRoundTrip } from "./proposal-roundtrip";
 import { verifyPinnedRuntime } from "./runtime";
 
@@ -17,6 +18,7 @@ async function main(): Promise<void> {
   const runtime = await verifyPinnedRuntime();
   const result = await runE1ProposalRoundTrip({
     verifyRuntime: async () => runtime,
+    openAuthUrl: openOfficialChatGptAuthUrl,
   });
   const receipt = {
     schemaVersion: 1,

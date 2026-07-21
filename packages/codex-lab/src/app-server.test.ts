@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   AppServerClient,
   getE1ProposalAppServerArgs,
-  listConfiguredMcpServerNames,
-  verifyE1McpIsolation,
+  getE1ProposalEnvironment,
 } from "./app-server";
 import { FakeChild, answerRequests, asChild } from "./test-helpers";
 
@@ -99,52 +98,36 @@ describe("E1 JSONL App Server client", () => {
     child.emit("exit", 0, null);
   });
 
-  it("replaces inherited MCP configuration with the fixed StoryStage server", () => {
-    const args = getE1ProposalAppServerArgs([
-      "inherited_one",
-      "inherited-two",
-      "storystage_e1",
-    ]);
+  it("launches only the fixed StoryStage MCP from dedicated Codex state", () => {
+    const args = getE1ProposalAppServerArgs();
     expect(args[0]).toBe("app-server");
     expect(args).toContain("apps");
+    expect(args).toContain("hooks");
     expect(args).toContain("shell_tool");
     const fixedIndex = args.findIndex((arg) =>
       arg.startsWith("mcp_servers.storystage_e1.command="),
     );
-    const disabledIndex = args.indexOf(
-      "mcp_servers.inherited_one.enabled=false",
-    );
-    const secondDisabledIndex = args.indexOf(
-      "mcp_servers.inherited-two.enabled=false",
-    );
     expect(fixedIndex).toBeGreaterThan(0);
     expect(args.join(" ")).toContain("mcp-cli.ts");
-    expect(disabledIndex).toBeGreaterThan(fixedIndex);
-    expect(secondDisabledIndex).toBeGreaterThan(fixedIndex);
-    expect(args).not.toContain("mcp_servers.storystage_e1.enabled=false");
+    expect(args).toContain('cli_auth_credentials_store="file"');
     expect(args.at(-1)).toBe("--stdio");
     expect(args.join(" ")).not.toContain("http://");
     expect(args.join(" ")).not.toContain("https://");
   });
 
-  it("fails closed when an inherited MCP name cannot be addressed safely", () => {
-    expect(() => getE1ProposalAppServerArgs(["unsafe.name"])).toThrow(
-      "invalid server name",
-    );
-  });
-
-  it("refuses secret-bearing structured MCP discovery on the pinned runtime", async () => {
-    await expect(listConfiguredMcpServerNames("codex.exe")).rejects.toMatchObject(
-      {
-        code: "PROTOCOL_INCOMPATIBLE",
-        stateHint: "incompatible",
-      },
-    );
-    await expect(
-      verifyE1McpIsolation("codex.exe", []),
-    ).rejects.toMatchObject({
-      code: "PROTOCOL_INCOMPATIBLE",
-      stateHint: "incompatible",
+  it("replaces inherited Codex state and never forwards credential variables", () => {
+    const environment = getE1ProposalEnvironment("C:\\dedicated-codex", {
+      CODEX_HOME: "C:\\global-codex",
+      codex_home: "C:\\lowercase-global-codex",
+      CODEX_ACCESS_TOKEN: "must-not-pass",
+      OPENAI_API_KEY: "must-not-pass",
+      PATH: "C:\\Windows",
     });
+
+    expect(environment.CODEX_HOME).toBe("C:\\dedicated-codex");
+    expect(environment.codex_home).toBeUndefined();
+    expect(environment.CODEX_ACCESS_TOKEN).toBeUndefined();
+    expect(environment.OPENAI_API_KEY).toBeUndefined();
+    expect(environment.PATH).toBe("C:\\Windows");
   });
 });

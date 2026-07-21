@@ -1,21 +1,26 @@
+import { createHash } from "node:crypto";
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { ZodType } from "zod";
 import {
   launchE1ProposalAppServer,
-  listConfiguredMcpServerNames,
-  verifyE1McpIsolation,
   type AppServerClient,
   type AppServerInboundMessage,
 } from "./app-server";
+import { prepareE1CodexHome } from "./e1-codex-state";
 import { CodexLabError } from "./errors";
 import {
+  E1_MCP_RESOURCE_URI,
   E1_MCP_SERVER_NAME,
   e1ProposalReceiptSchema,
   type E1DirectionProposal,
 } from "./mcp-scene-context";
 import {
+  accountLoginCancelResponseSchema,
+  accountLoginCompletedNotificationSchema,
+  accountLoginStartResponseSchema,
+  accountResponseSchema,
   appServerAgentDeltaNotificationSchema,
   appServerErrorNotificationSchema,
   appServerItemLifecycleNotificationSchema,
@@ -45,6 +50,18 @@ const proposalPrompt = `You are the StoryStage AI Director inside the E1 synthet
 Use only the ${E1_MCP_SERVER_NAME} MCP server. First call get_scene_context with schemaVersion 1. Then create exactly one bounded direction revision for the selected beat and call submit_direction_proposal exactly once. Use only IDs, capabilities, and proposal vocabulary returned by get_scene_context. Do not run commands, read files, browse, create images, delegate, persist, apply, approve, render, or call any other tool. After the validated receipt, briefly summarize the proposal and stop.`;
 
 const E1_PROPOSAL_TURN_TIMEOUT_MS = 120_000;
+const E1_LOGIN_TIMEOUT_MS = 5 * 60_000;
+
+const E1_TOOL_SCHEMA_FINGERPRINTS = {
+  get_scene_context: {
+    input: "fa7c9bcba1bbdffbf5527bf5fca720f8000b301c77e413639477eb72a0edcba6",
+    output: "47b8f893044d6ce79377ca62f1d103638e26d1c396f4f547ae67b622304b8a3e",
+  },
+  submit_direction_proposal: {
+    input: "2b9f6257d09acab1b8ec32ddad8fd1cf7436ea98a86c4f7a3c3e69faca9d7f75",
+    output: "702769437e2701277c6597e79c63c5f037ecc59b100830217ec5ad6a19f443b4",
+  },
+} as const;
 
 type Sequenced<T> = T & { sequence: number };
 type WithoutSequence<T> = T extends unknown ? Omit<T, "sequence"> : never;
@@ -115,6 +132,206 @@ function parseResponse<T>(
 
 function protocolError(message: string): CodexLabError {
   return new CodexLabError("PROTOCOL_INCOMPATIBLE", message, "incompatible");
+}
+
+function normalizedPath(value: string): string {
+  return resolve(value).replaceAll("/", "\\").toLowerCase();
+}
+
+function jsonFingerprint(value: unknown): string {
+  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+}
+
+export function assertOfficialChatGptAuthUrl(value: string): void {
+  if (/[^\x20-\x7e]/.test(value)) {
+    throw protocolError("The official ChatGPT sign-in URL was invalid.");
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw protocolError("The official ChatGPT sign-in URL was invalid.");
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    parsed.hostname !== "chatgpt.com" ||
+    parsed.port !== "" ||
+    parsed.username !== "" ||
+    parsed.password !== ""
+  ) {
+    throw protocolError("The official ChatGPT sign-in URL was invalid.");
+  }
+}
+
+function waitForLoginCompletion(
+  client: AppServerClient,
+  timeoutMs: number,
+): { promise: Promise<unknown>; cancel: () => void } {
+  let settled = false;
+  let unsubscribe: () => void = () => undefined;
+  let rejectWait: (error: Error) => void = () => undefined;
+  let timeout: NodeJS.Timeout;
+  const cleanup = () => {
+    clearTimeout(timeout);
+    unsubscribe();
+  };
+  const promise = new Promise<unknown>((resolve, reject) => {
+    rejectWait = reject;
+    unsubscribe = client.subscribeInbound((message) => {
+      if (
+        settled ||
+        message.kind !== "notification" ||
+        message.method !== "account/login/completed"
+      ) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolve(message.params);
+    });
+    timeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(
+        new CodexLabError(
+          "APP_SERVER_TIMEOUT",
+          "Official Sign in with ChatGPT did not complete in time.",
+          "signed-out",
+        ),
+      );
+    }, timeoutMs);
+  });
+  return {
+    promise,
+    cancel: () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      rejectWait(protocolError("Official Sign in with ChatGPT was cancelled."));
+    },
+  };
+}
+
+async function requireChatGptAccount(
+  client: AppServerClient,
+  openAuthUrl: ((url: string) => Promise<void>) | undefined,
+  loginTimeoutMs: number,
+): Promise<void> {
+  const readAccount = async () =>
+    parseResponse(
+      accountResponseSchema,
+      await client.request("account/read", { refreshToken: false }),
+      "account/read",
+    );
+  const initial = await readAccount();
+  if (initial.account?.type === "chatgpt") return;
+  if (initial.account) {
+    throw protocolError(
+      "The dedicated Codex state used an unsupported account type.",
+    );
+  }
+  if (!openAuthUrl) {
+    throw new CodexLabError(
+      "AUTH_REQUIRED",
+      "Official Sign in with ChatGPT is required for the dedicated AI Director state.",
+      "signed-out",
+    );
+  }
+
+  const completion = waitForLoginCompletion(client, loginTimeoutMs);
+  let loginId: string | undefined;
+  try {
+    const login = parseResponse(
+      accountLoginStartResponseSchema,
+      await client.request("account/login/start", { type: "chatgpt" }),
+      "account/login/start",
+    );
+    loginId = login.loginId;
+    assertOfficialChatGptAuthUrl(login.authUrl);
+    await openAuthUrl(login.authUrl);
+    const notification = parseResponse(
+      accountLoginCompletedNotificationSchema,
+      await completion.promise,
+      "account/login/completed",
+    );
+    if (
+      !notification.success ||
+      notification.loginId !== login.loginId ||
+      (notification.error ?? null) !== null
+    ) {
+      throw protocolError("Official Sign in with ChatGPT did not complete.");
+    }
+  } catch (error) {
+    completion.cancel();
+    void completion.promise.catch(() => undefined);
+    if (loginId) {
+      try {
+        parseResponse(
+          accountLoginCancelResponseSchema,
+          await client.request("account/login/cancel", { loginId }),
+          "account/login/cancel",
+        );
+      } catch {
+        // Preserve the original generic sign-in failure.
+      }
+    }
+    throw error;
+  }
+
+  const authenticated = await readAccount();
+  if (authenticated.account?.type !== "chatgpt") {
+    throw protocolError(
+      "Official Sign in with ChatGPT did not authenticate Codex.",
+    );
+  }
+}
+
+export async function assertExactE1McpInventory(
+  client: AppServerClient,
+  threadId: string | null,
+): Promise<void> {
+  const response = parseResponse(
+    mcpServerStatusListResponseSchema,
+    await client.request("mcpServerStatus/list", {
+      threadId,
+      limit: 10,
+      detail: "full",
+    }),
+    "mcpServerStatus/list",
+  );
+  const server = response.data[0];
+  const toolNames = server ? Object.keys(server.tools).sort() : [];
+  if (
+    response.data.length !== 1 ||
+    !server ||
+    server.name !== E1_MCP_SERVER_NAME ||
+    server.authStatus !== "unsupported" ||
+    server.serverInfo?.name !== "storystage-e1-synthetic-scene" ||
+    server.serverInfo.version !== "1.0.0" ||
+    server.resourceTemplates.length !== 0 ||
+    server.resources.length !== 1 ||
+    server.resources[0]?.uri !== E1_MCP_RESOURCE_URI ||
+    JSON.stringify(toolNames) !== JSON.stringify([...E1_PROPOSAL_TOOLS].sort())
+  ) {
+    throw protocolError(
+      "The App Server did not expose exactly the bounded StoryStage MCP inventory.",
+    );
+  }
+  for (const toolName of E1_PROPOSAL_TOOLS) {
+    const tool = server.tools[toolName];
+    const expected = E1_TOOL_SCHEMA_FINGERPRINTS[toolName];
+    if (
+      !tool ||
+      tool.name !== toolName ||
+      jsonFingerprint(tool.inputSchema) !== expected.input ||
+      jsonFingerprint(tool.outputSchema) !== expected.output
+    ) {
+      throw protocolError(
+        "The StoryStage MCP tool schemas did not match the accepted boundary.",
+      );
+    }
+  }
 }
 
 export class E1ProposalEventAdapter {
@@ -427,17 +644,14 @@ export async function runE1ProposalRoundTrip(
     signal?: AbortSignal;
     onEvent?: (event: E1ProposalEvent) => void;
     verifyRuntime?: () => Promise<VerifiedRuntime>;
-    listConfiguredMcpServers?: (
-      executablePath: string,
-    ) => Promise<readonly string[]>;
-    verifyMcpIsolation?: (
-      executablePath: string,
-      configuredServerNames: readonly string[],
+    prepareCodexHome?: () => Promise<string>;
+    openAuthUrl?: (url: string) => Promise<void>;
+    loginTimeoutMs?: number;
+    verifyMcpInventory?: (
+      client: AppServerClient,
+      threadId: string | null,
     ) => Promise<void>;
-    launch?: (
-      executablePath: string,
-      configuredServerNames: readonly string[],
-    ) => AppServerClient;
+    launch?: (executablePath: string, codexHome: string) => AppServerClient;
   } = {},
 ): Promise<E1ProposalRoundTripResult> {
   const adapter = new E1ProposalEventAdapter(options.onEvent);
@@ -448,18 +662,12 @@ export async function runE1ProposalRoundTrip(
 
   try {
     const runtime = await (options.verifyRuntime ?? verifyPinnedRuntime)();
-    const configuredServerNames = await (
-      options.listConfiguredMcpServers ?? listConfiguredMcpServerNames
-    )(runtime.executablePath);
-    await (options.verifyMcpIsolation ?? verifyE1McpIsolation)(
-      runtime.executablePath,
-      configuredServerNames,
-    );
+    const codexHome = await (options.prepareCodexHome ?? prepareE1CodexHome)();
     client = (options.launch ?? launchE1ProposalAppServer)(
       runtime.executablePath,
-      configuredServerNames,
+      codexHome,
     );
-    parseResponse(
+    const initialized = parseResponse(
       initializeResponseSchema,
       await client.request("initialize", {
         clientInfo: {
@@ -476,7 +684,22 @@ export async function runE1ProposalRoundTrip(
       }),
       "initialize",
     );
+    if (normalizedPath(initialized.codexHome) !== normalizedPath(codexHome)) {
+      throw protocolError(
+        "The App Server did not use the dedicated Codex state root.",
+      );
+    }
     client.notify("initialized", {});
+
+    await requireChatGptAccount(
+      client,
+      options.openAuthUrl,
+      options.loginTimeoutMs ?? E1_LOGIN_TIMEOUT_MS,
+    );
+    await (options.verifyMcpInventory ?? assertExactE1McpInventory)(
+      client,
+      null,
+    );
 
     workspace = await mkdtemp(join(tmpdir(), "storystage-e1-wp3-workspace-"));
     const thread = parseResponse(
@@ -494,35 +717,10 @@ export async function runE1ProposalRoundTrip(
     );
     const threadId = thread.thread.id;
     adapter.startSession(threadId);
-
-    const mcpStatus = parseResponse(
-      mcpServerStatusListResponseSchema,
-      await client.request("mcpServerStatus/list", {
-        threadId,
-        limit: 10,
-        detail: "toolsAndAuthOnly",
-      }),
-      "mcpServerStatus/list",
+    await (options.verifyMcpInventory ?? assertExactE1McpInventory)(
+      client,
+      threadId,
     );
-    const inventory = mcpStatus.data;
-    const storyStageInventory = inventory.find(
-      (entry) => entry.name === E1_MCP_SERVER_NAME,
-    );
-    const unexpectedInventory = inventory.filter(
-      (entry) =>
-        entry.name !== E1_MCP_SERVER_NAME &&
-        !configuredServerNames.includes(entry.name),
-    );
-    if (
-      !storyStageInventory ||
-      unexpectedInventory.length > 0 ||
-      JSON.stringify(Object.keys(storyStageInventory.tools).sort()) !==
-        JSON.stringify([...E1_PROPOSAL_TOOLS].sort())
-    ) {
-      throw protocolError(
-        "The App Server did not expose exactly the bounded StoryStage MCP inventory.",
-      );
-    }
 
     const requestInterrupt = () => {
       if (
@@ -638,9 +836,7 @@ export async function runE1ProposalRoundTrip(
         },
         isolation: {
           onlyStoryStageMcpEnabled: true,
-          inheritedServerCount: configuredServerNames.filter(
-            (name) => name !== E1_MCP_SERVER_NAME,
-          ).length,
+          inheritedServerCount: 0,
         },
       };
     } finally {
