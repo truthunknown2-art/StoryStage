@@ -6,7 +6,7 @@
 - Issue: `#69`
 - Required branch: `agent/codex-e1-wp4-failure-security-gate`
 - Authorized implementation base: `8d9a47a4898df81db7630e2f0b7d4eecc88f7157`
-- Immutable implementation and evidence content: `b43cee1cd8a4db78865988764d48eb8fdbfac9cf`
+- Immutable implementation and evidence content: `627045f98913ae9653dbcacaa25eb68ef1c3a3cd`
 - Integration target: `product/v1`
 - Package recommendation: `PASS`, subject to exact-pushed-SHA independent review, hosted verification, ChatGPT Pro verdict, and Preston's recorded final decision
 
@@ -53,7 +53,7 @@ Entry points:
 SHA-256:
 
 - failure matrix: `5ffda253d4c115d656f0576904d2dc68fdb7d73fe2e6cdd2b201f00e3da3e9dc`
-- no-project-mutation receipt: `100a1c3cab0c7bfdf94b85505cefa19e53aaf446a3da61dd986ccc16ca2d91f1`
+- no-project-mutation receipt: `41645be72aa10fc6be2167bbcba5541f761acc356c8f9e0ee8b0fabcc8a6171f`
 - process-cleanup receipt: `e30d178830e3f220ea8868e550f96f27c43d85152d42fa0047de2f7f60be083f`
 - 1440x900 capture: `f7c52f1ecbf18050ef1ca286da075edbf410d63c66b4835623622cedf9d9e810`
 
@@ -65,7 +65,7 @@ horizontal or vertical overflow and zero console warnings or errors.
 
 - `pnpm verify:e1-wp4-failure-matrix` — PASS
 - `pnpm --filter @storystage/codex-lab typecheck` — PASS
-- `pnpm --filter @storystage/codex-lab test` — PASS, 15 files / 103 tests
+- `pnpm --filter @storystage/codex-lab test` — PASS, 15 files / 104 tests
 - `pnpm --filter @storystage/e1-director-lab typecheck` — PASS
 - `pnpm --filter @storystage/e1-director-lab test` — PASS, 1 file / 4 tests
 - `pnpm --filter @storystage/e1-director-lab build` — PASS, 19 modules
@@ -86,6 +86,9 @@ The first immutable content candidate `3abfd354...` was rejected. This successor
   fixture, rejecting schema-valid semantic drift;
 - normalizes unknown synthetic-scene IDs to `AUTHORITY_DENIED` and failed MCP
   tool status to `PROPOSAL_REJECTED`; and
+- detects changed, added, removed, empty-directory, and junction/non-file decoy
+  entries, and canonicalizes the clean-runner fixture path without weakening
+  production containment; and
 - merges the live `product/v1` authorization ledger without rebase or history
   rewriting, preserving `E1 / E1-WP4 / START_NOW`.
 
