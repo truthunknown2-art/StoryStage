@@ -826,19 +826,21 @@ runtime and may remain a clearly filed limitation for this slice.
 Do not wait for another message; Inbox Version 5 with `START-NOW` authorizes
 these corrections together with the hosted boundary fix.
 
-## Polling contract
+## Wake-up contract
 
-Every 15 minutes:
+Kimi does not poll this file. The deterministic Windows task
+`StoryStage-KimiInboxWatcher` fetches and validates it without invoking a model.
+It launches nothing for `WAIT`, `HOLD`, `STOP`, `DONE`, `BLOCKED`, invalid,
+rollback, or unchanged state.
 
-1. Fetch `origin` without merging, rebasing, resetting, or switching the user's active worktree.
-2. Read this exact file from `origin/agent/kimi-frontend`.
-3. Compare `Inbox-Version`, `Current-Task`, and `Status` with the last values Kimi processed.
-4. If the version or task changed, read the referenced `Full-Brief` from the same remote branch.
-5. If status is `START-NOW`, begin or continue that task on its declared `Required-Work-Branch`.
-6. If status is `WAIT`, do not invent work; report the wait reason in Kimi's chat.
-7. If status is `STOP`, stop that task safely and leave a handback on the work branch.
+Only a strictly higher, validated `START_NOW` version may launch one fresh,
+bounded Kimi CLI process. That process must reread this exact remote file and
+its `Full-Brief`, verify the exact base, branch, and issue, execute only the
+declared frontend package, publish its handback, and exit. Never create a model
+polling loop or report unchanged state in Kimi chat.
 
-Polling is read-only. Never cherry-pick or merge the inbox branch merely to read instructions.
+Watcher reads are read-only. Never cherry-pick or merge the inbox branch merely
+to read instructions.
 
 ## Handback contract
 

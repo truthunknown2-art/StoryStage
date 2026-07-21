@@ -65,11 +65,18 @@ Codex must explicitly send every review candidate. A valid Pro request includes:
 Codex must not say Pro has reviewed local work. Only a response tied to an exact
 pushed SHA counts, and the verdict must be recorded on GitHub.
 
-## Kimi polling rule
+## Kimi wake-up rule
 
-Kimi's recurring poll reads only the canonical scheduler inbox above. Creating or
-editing a GitHub issue alone does not wake Kimi. Every new task or material status
-change therefore requires a higher `Inbox-Version` and a pushed inbox commit.
+Kimi never remains open to poll Git or report unchanged state. The deterministic
+Windows task `StoryStage-KimiInboxWatcher`, documented on `product/v1` in
+`docs/operations/kimi-inbox-watcher.md`, reads only the canonical scheduler inbox
+above without invoking a model. `WAIT`, `HOLD`, invalid, rollback, or unchanged
+state launches nothing. Only a strictly higher, validated `START_NOW` assignment
+may launch one fresh bounded Kimi CLI process.
+
+Creating or editing a GitHub issue alone does not wake Kimi. Every new task or
+material status change requires a higher `Inbox-Version`, exact accepted base,
+required work branch, full brief, explicit issue, and pushed inbox commit.
 
 ## Standing package-integration authority
 
