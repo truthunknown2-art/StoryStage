@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -47,6 +47,7 @@ const receipt = {
 const threadId = "thread-e1";
 const turnId = "turn-e1";
 const dedicatedCodexHome = "C:\\local-app-data\\StoryStage\\codex\\0.144.1";
+let exactMcpStatus: unknown;
 
 function notification(method: string, params: unknown) {
   return { kind: "notification" as const, method, params };
@@ -140,7 +141,12 @@ function driveSuccessfulAdapter(adapter: E1ProposalEventAdapter): void {
 
 function createSuccessfulClient(
   closeCode = 0,
-  login?: { authUrl: string; onCancel?: () => void },
+  login?: {
+    authUrl: string;
+    complete?: boolean;
+    crashAfterStart?: boolean;
+    onCancel?: () => void;
+  },
 ): AppServerClient {
   const child = new FakeChild();
   let accountReads = 0;
@@ -165,15 +171,19 @@ function createSuccessfulClient(
         };
       case "account/login/start":
         if (!login) throw new Error("Unexpected sign-in request");
-        queueMicrotask(() =>
-          child.stdout.write(
-            `${JSON.stringify({
-              jsonrpc: "2.0",
-              method: "account/login/completed",
-              params: { success: true, loginId: "login-e1", error: null },
-            })}\n`,
-          ),
-        );
+        if (login.crashAfterStart) {
+          setTimeout(() => child.emit("exit", 2, null), 0);
+        } else if (login.complete !== false) {
+          queueMicrotask(() =>
+            child.stdout.write(
+              `${JSON.stringify({
+                jsonrpc: "2.0",
+                method: "account/login/completed",
+                params: { success: true, loginId: "login-e1", error: null },
+              })}\n`,
+            ),
+          );
+        }
         return {
           type: "chatgpt",
           loginId: "login-e1",
@@ -185,21 +195,7 @@ function createSuccessfulClient(
       case "thread/start":
         return { thread: { id: threadId } };
       case "mcpServerStatus/list":
-        return {
-          data: [
-            {
-              name: E1_MCP_SERVER_NAME,
-              authStatus: "notRequired",
-              resourceTemplates: [],
-              resources: [],
-              tools: {
-                get_scene_context: {},
-                submit_direction_proposal: {},
-              },
-            },
-          ],
-          nextCursor: null,
-        };
+        return exactMcpStatus;
       case "turn/start": {
         const emit = (methodName: string, params: unknown) =>
           child.stdout.write(
@@ -286,20 +282,7 @@ function createInterruptibleClient(
       case "thread/start":
         return { thread: { id: threadId } };
       case "mcpServerStatus/list":
-        return {
-          data: [
-            {
-              name: E1_MCP_SERVER_NAME,
-              authStatus: "notRequired",
-              resourceTemplates: [],
-              resources: [],
-              tools: {
-                get_scene_context: {},
-                submit_direction_proposal: {},
-              },
-            },
-          ],
-        };
+        return exactMcpStatus;
       case "turn/start":
         return new Promise<{ turn: ReturnType<typeof completedTurn>["turn"] }>(
           (resolve) => {
@@ -357,10 +340,9 @@ const verifiedRuntime = {
 const isolatedTestOptions = {
   verifyRuntime: async () => verifiedRuntime,
   prepareCodexHome: async () => dedicatedCodexHome,
-  verifyMcpInventory: async () => undefined,
 };
 
-async function createExactInventoryClient(): Promise<AppServerClient> {
+async function loadExactMcpStatus(): Promise<unknown> {
   const server = await createE1McpSceneContextServer();
   const mcpClient = new Client(
     { name: "storystage-e1-inventory-test", version: "1.0.0" },
@@ -378,30 +360,27 @@ async function createExactInventoryClient(): Promise<AppServerClient> {
   await mcpClient.close();
   await server.close();
 
-  const child = new FakeChild();
-  answerRequests(child, (method) => {
-    if (method !== "mcpServerStatus/list") {
-      throw new Error(`Unexpected test request ${method}`);
-    }
-    return {
-      data: [
-        {
-          name: E1_MCP_SERVER_NAME,
-          authStatus: "unsupported",
-          serverInfo: {
-            name: "storystage-e1-synthetic-scene",
-            version: "1.0.0",
-          },
-          tools: Object.fromEntries(tools.map((tool) => [tool.name, tool])),
-          resources,
-          resourceTemplates,
+  return {
+    data: [
+      {
+        name: E1_MCP_SERVER_NAME,
+        authStatus: "unsupported",
+        serverInfo: {
+          name: "storystage-e1-synthetic-scene",
+          version: "1.0.0",
         },
-      ],
-      nextCursor: null,
-    };
-  });
-  return new AppServerClient(asChild(child));
+        tools: Object.fromEntries(tools.map((tool) => [tool.name, tool])),
+        resources,
+        resourceTemplates,
+      },
+    ],
+    nextCursor: null,
+  };
 }
+
+beforeAll(async () => {
+  exactMcpStatus = await loadExactMcpStatus();
+});
 
 describe("E1 streamed proposal round trip", () => {
   it("accepts only exact-origin official ChatGPT sign-in URLs", () => {
@@ -424,7 +403,9 @@ describe("E1 streamed proposal round trip", () => {
   });
 
   it("accepts the exact live MCP server schemas and fixed resource only", async () => {
-    const client = await createExactInventoryClient();
+    const child = new FakeChild();
+    answerRequests(child, () => exactMcpStatus);
+    const client = new AppServerClient(asChild(child));
     await expect(
       assertExactE1McpInventory(client, null),
     ).resolves.toBeUndefined();
@@ -463,6 +444,54 @@ describe("E1 streamed proposal round trip", () => {
     ).rejects.toThrow("official ChatGPT sign-in URL was invalid");
     expect(openAuthUrl).not.toHaveBeenCalled();
     expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it("does not launch or prompt when already cancelled", async () => {
+    const controller = new AbortController();
+    const launch = vi.fn(() => createSuccessfulClient());
+    controller.abort();
+    await expect(
+      runE1ProposalRoundTrip({
+        ...isolatedTestOptions,
+        signal: controller.signal,
+        launch,
+      }),
+    ).rejects.toMatchObject({ code: "OPERATION_CANCELLED" });
+    expect(launch).not.toHaveBeenCalled();
+  });
+
+  it("cancels the correlated login when aborted during sign-in", async () => {
+    const controller = new AbortController();
+    const onCancel = vi.fn();
+    await expect(
+      runE1ProposalRoundTrip({
+        ...isolatedTestOptions,
+        signal: controller.signal,
+        openAuthUrl: async () => controller.abort(),
+        launch: () =>
+          createSuccessfulClient(0, {
+            authUrl: "https://chatgpt.com/auth/login?state=abort-e1",
+            complete: false,
+            onCancel,
+          }),
+      }),
+    ).rejects.toMatchObject({ code: "OPERATION_CANCELLED" });
+    expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it("reports an App Server crash during login without waiting for timeout", async () => {
+    await expect(
+      runE1ProposalRoundTrip({
+        ...isolatedTestOptions,
+        loginTimeoutMs: 10_000,
+        openAuthUrl: async () => undefined,
+        launch: () =>
+          createSuccessfulClient(0, {
+            authUrl: "https://chatgpt.com/auth/login?state=crash-e1",
+            crashAfterStart: true,
+          }),
+      }),
+    ).rejects.toMatchObject({ code: "APP_SERVER_CRASHED" });
   });
 
   it("emits deterministic creator events and validates the ephemeral proposal", () => {

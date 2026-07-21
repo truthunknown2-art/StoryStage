@@ -69,6 +69,17 @@ describe("E1 JSONL App Server client", () => {
     await expect(client.close()).resolves.toBeUndefined();
   });
 
+  it("waits for child termination after a shutdown timeout", async () => {
+    const child = new FakeChild();
+    const client = new AppServerClient(asChild(child));
+
+    await expect(client.close(5)).rejects.toMatchObject({
+      code: "APP_SERVER_TIMEOUT",
+      stateHint: "crashed",
+    });
+    expect(child.kill).toHaveBeenCalledOnce();
+  });
+
   it("delivers notifications and blocked server requests in arrival order", async () => {
     const child = new FakeChild();
     const client = new AppServerClient(asChild(child));
@@ -110,6 +121,7 @@ describe("E1 JSONL App Server client", () => {
     expect(fixedIndex).toBeGreaterThan(0);
     expect(args.join(" ")).toContain("mcp-cli.ts");
     expect(args).toContain('cli_auth_credentials_store="file"');
+    expect(args).toContain('web_search="disabled"');
     expect(args.at(-1)).toBe("--stdio");
     expect(args.join(" ")).not.toContain("http://");
     expect(args.join(" ")).not.toContain("https://");

@@ -1,6 +1,7 @@
 import { lstat, mkdir, realpath } from "node:fs/promises";
 import { win32 } from "node:path";
 import { CodexLabError } from "./errors";
+import { resolveLocalAppDataKnownFolder } from "./windows-system";
 
 const STATE_COMPONENTS = ["StoryStage", "codex", "0.144.1"] as const;
 const STATE_ERROR = "The dedicated Codex state root is unavailable.";
@@ -89,6 +90,12 @@ async function canonicalPath(path: string): Promise<string> {
  */
 export async function prepareE1CodexHome(): Promise<string> {
   const localAppData = validateLocalAppData(process.env.LOCALAPPDATA);
+  const knownLocalAppData = validateLocalAppData(
+    await resolveLocalAppDataKnownFolder(),
+  );
+  if (!sameWindowsPath(localAppData, knownLocalAppData)) {
+    throw protocolError();
+  }
   requireRealDirectory(await metadata(localAppData));
   if (!sameWindowsPath(await canonicalPath(localAppData), localAppData)) {
     throw protocolError();

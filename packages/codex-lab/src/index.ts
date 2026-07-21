@@ -32,3 +32,4 @@ export * from "./proposal-roundtrip";
 export * from "./redaction";
 export * from "./runtime";
 export * from "./runtime-manifest";
+export * from "./windows-system";

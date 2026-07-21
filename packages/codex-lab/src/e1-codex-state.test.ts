@@ -20,6 +20,10 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   };
 });
 
+vi.mock("./windows-system", () => ({
+  resolveLocalAppDataKnownFolder: async () => process.env.LOCALAPPDATA,
+}));
+
 const cleanupPaths: string[] = [];
 const realLocalAppData = process.env.LOCALAPPDATA;
 

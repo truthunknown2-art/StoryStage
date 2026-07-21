@@ -134,6 +134,15 @@ function protocolError(message: string): CodexLabError {
   return new CodexLabError("PROTOCOL_INCOMPATIBLE", message, "incompatible");
 }
 
+function throwIfAborted(signal: AbortSignal | undefined): void {
+  if (signal?.aborted) {
+    throw new CodexLabError(
+      "OPERATION_CANCELLED",
+      "The E1 proposal request was cancelled before prompting.",
+    );
+  }
+}
+
 function normalizedPath(value: string): string {
   return resolve(value).replaceAll("/", "\\").toLowerCase();
 }
@@ -166,14 +175,27 @@ export function assertOfficialChatGptAuthUrl(value: string): void {
 function waitForLoginCompletion(
   client: AppServerClient,
   timeoutMs: number,
+  signal: AbortSignal | undefined,
 ): { promise: Promise<unknown>; cancel: () => void } {
   let settled = false;
   let unsubscribe: () => void = () => undefined;
   let rejectWait: (error: Error) => void = () => undefined;
   let timeout: NodeJS.Timeout;
+  const abort = () => {
+    if (settled) return;
+    settled = true;
+    cleanup();
+    rejectWait(
+      new CodexLabError(
+        "OPERATION_CANCELLED",
+        "Official Sign in with ChatGPT was cancelled.",
+      ),
+    );
+  };
   const cleanup = () => {
     clearTimeout(timeout);
     unsubscribe();
+    signal?.removeEventListener("abort", abort);
   };
   const promise = new Promise<unknown>((resolve, reject) => {
     rejectWait = reject;
@@ -201,6 +223,19 @@ function waitForLoginCompletion(
         ),
       );
     }, timeoutMs);
+    signal?.addEventListener("abort", abort, { once: true });
+    void client.waitForExit().then(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(
+        new CodexLabError(
+          "APP_SERVER_CRASHED",
+          "The Codex App Server exited during official ChatGPT sign-in.",
+          "crashed",
+        ),
+      );
+    });
   });
   return {
     promise,
@@ -217,7 +252,9 @@ async function requireChatGptAccount(
   client: AppServerClient,
   openAuthUrl: ((url: string) => Promise<void>) | undefined,
   loginTimeoutMs: number,
+  signal: AbortSignal | undefined,
 ): Promise<void> {
+  throwIfAborted(signal);
   const readAccount = async () =>
     parseResponse(
       accountResponseSchema,
@@ -225,6 +262,7 @@ async function requireChatGptAccount(
       "account/read",
     );
   const initial = await readAccount();
+  throwIfAborted(signal);
   if (initial.account?.type === "chatgpt") return;
   if (initial.account) {
     throw protocolError(
@@ -239,7 +277,7 @@ async function requireChatGptAccount(
     );
   }
 
-  const completion = waitForLoginCompletion(client, loginTimeoutMs);
+  const completion = waitForLoginCompletion(client, loginTimeoutMs, signal);
   let loginId: string | undefined;
   try {
     const login = parseResponse(
@@ -647,10 +685,6 @@ export async function runE1ProposalRoundTrip(
     prepareCodexHome?: () => Promise<string>;
     openAuthUrl?: (url: string) => Promise<void>;
     loginTimeoutMs?: number;
-    verifyMcpInventory?: (
-      client: AppServerClient,
-      threadId: string | null,
-    ) => Promise<void>;
     launch?: (executablePath: string, codexHome: string) => AppServerClient;
   } = {},
 ): Promise<E1ProposalRoundTripResult> {
@@ -662,7 +696,9 @@ export async function runE1ProposalRoundTrip(
 
   try {
     const runtime = await (options.verifyRuntime ?? verifyPinnedRuntime)();
+    throwIfAborted(options.signal);
     const codexHome = await (options.prepareCodexHome ?? prepareE1CodexHome)();
+    throwIfAborted(options.signal);
     client = (options.launch ?? launchE1ProposalAppServer)(
       runtime.executablePath,
       codexHome,
@@ -695,11 +731,10 @@ export async function runE1ProposalRoundTrip(
       client,
       options.openAuthUrl,
       options.loginTimeoutMs ?? E1_LOGIN_TIMEOUT_MS,
+      options.signal,
     );
-    await (options.verifyMcpInventory ?? assertExactE1McpInventory)(
-      client,
-      null,
-    );
+    await assertExactE1McpInventory(client, null);
+    throwIfAborted(options.signal);
 
     workspace = await mkdtemp(join(tmpdir(), "storystage-e1-wp3-workspace-"));
     const thread = parseResponse(
@@ -717,10 +752,9 @@ export async function runE1ProposalRoundTrip(
     );
     const threadId = thread.thread.id;
     adapter.startSession(threadId);
-    await (options.verifyMcpInventory ?? assertExactE1McpInventory)(
-      client,
-      threadId,
-    );
+    throwIfAborted(options.signal);
+    await assertExactE1McpInventory(client, threadId);
+    throwIfAborted(options.signal);
 
     const requestInterrupt = () => {
       if (

@@ -172,6 +172,13 @@ export class AppServerClient {
     return this.stderrObserved;
   }
 
+  public waitForExit(): Promise<{
+    code: number | null;
+    signal: NodeJS.Signals | null;
+  }> {
+    return this.exitPromise;
+  }
+
   /**
    * Observes inbound messages in JSONL arrival order. The listener is registered
    * synchronously so callers can subscribe before starting a turn and cannot
@@ -281,6 +288,19 @@ export class AppServerClient {
     ]);
     if (result === timedOut) {
       this.child.kill();
+      const terminated = await Promise.race([
+        this.exitPromise,
+        new Promise<typeof timedOut>((resolve) =>
+          setTimeout(() => resolve(timedOut), timeoutMs),
+        ),
+      ]);
+      if (terminated === timedOut) {
+        throw new CodexLabError(
+          "APP_SERVER_CRASHED",
+          "The Codex App Server could not be terminated after shutdown timed out.",
+          "crashed",
+        );
+      }
       throw new CodexLabError(
         "APP_SERVER_TIMEOUT",
         "The Codex App Server did not shut down cleanly.",
@@ -504,6 +524,8 @@ function getE1McpConfigArgs(): readonly string[] {
     "mcp-cli.ts",
   );
   const fixedStoryStage = [
+    "-c",
+    'web_search="disabled"',
     "-c",
     `mcp_servers.storystage_e1.command=${tomlString(process.execPath)}`,
     "-c",

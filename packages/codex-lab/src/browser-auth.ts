@@ -1,30 +1,38 @@
 import { spawn } from "node:child_process";
+import { win32 } from "node:path";
 import { CodexLabError } from "./errors";
 import { assertOfficialChatGptAuthUrl } from "./proposal-roundtrip";
+import { getTrustedWindowsPowerShell } from "./windows-system";
 
-export function getOfficialChatGptBrowserLaunch(url: string): {
-  executable: "rundll32.exe";
-  args: ["url.dll,FileProtocolHandler", string];
+const openCommand =
+  "$url=[Console]::In.ReadLine(); if ($null -eq $url) { exit 2 }; Start-Process -FilePath $url";
+
+export function getOfficialChatGptBrowserLaunch(
+  url: string,
+  executable: string,
+): {
+  executable: string;
+  args: readonly string[];
+  input: string;
 } {
   assertOfficialChatGptAuthUrl(url);
   return {
-    executable: "rundll32.exe",
-    args: ["url.dll,FileProtocolHandler", url],
+    executable,
+    args: ["-NoLogo", "-NoProfile", "-NonInteractive", "-Command", openCommand],
+    input: `${url}\n`,
   };
 }
 
-/** Opens the already-validated official sign-in capability without a shell. */
+/** Sends the transient sign-in capability over stdin to trusted System32 code. */
 export async function openOfficialChatGptAuthUrl(url: string): Promise<void> {
-  const launch = getOfficialChatGptBrowserLaunch(url);
+  const system = await getTrustedWindowsPowerShell();
+  const launch = getOfficialChatGptBrowserLaunch(url, system.executable);
   await new Promise<void>((resolve, reject) => {
     const child = spawn(launch.executable, launch.args, {
-      detached: true,
-      stdio: "ignore",
+      cwd: win32.dirname(launch.executable),
+      env: system.environment,
+      stdio: ["pipe", "ignore", "ignore"],
       windowsHide: true,
-    });
-    child.once("spawn", () => {
-      child.unref();
-      resolve();
     });
     child.once("error", () => {
       reject(
@@ -35,5 +43,17 @@ export async function openOfficialChatGptAuthUrl(url: string): Promise<void> {
         ),
       );
     });
+    child.once("exit", (code) => {
+      if (code === 0) resolve();
+      else
+        reject(
+          new CodexLabError(
+            "WRITE_FAILED",
+            "The official ChatGPT sign-in page could not be opened.",
+            "signed-out",
+          ),
+        );
+    });
+    child.stdin.end(launch.input);
   });
 }
