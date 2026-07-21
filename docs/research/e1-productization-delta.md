@@ -1,6 +1,7 @@
 # E1 to productization delta
 
-**Status:** retained work after the E1 feasibility milestone  
+**Status:** retained work after the E1 feasibility milestone
+
 **Scope:** exact boundary between E1-WP4 evidence and later roadmap packages
 
 ## F3 - creator-facing AI Director UX

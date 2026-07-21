@@ -212,8 +212,7 @@ type E1McpFailureCode =
   | "BYTE_LIMIT_EXCEEDED"
   | "MCP_STARTUP_FAILED"
   | "REQUEST_CANCELLED"
-  | "REQUEST_TIMEOUT"
-  | "UNKNOWN_ID";
+  | "REQUEST_TIMEOUT";
 
 export class E1McpSceneContextError extends Error {
   public constructor(
@@ -394,7 +393,7 @@ function validateProposal(
     proposal.beatId !== fixture.beat.id
   ) {
     throw new E1McpSceneContextError(
-      "UNKNOWN_ID",
+      "AUTHORITY_DENIED",
       "The proposal scope contains an ID outside the synthetic scene.",
     );
   }

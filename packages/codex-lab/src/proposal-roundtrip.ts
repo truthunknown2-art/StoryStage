@@ -3,6 +3,7 @@ import { readdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import type { ZodType } from "zod";
+import syntheticFixture from "../fixtures/e1-wp2-synthetic-scene.json";
 import {
   launchE1ProposalAppServer,
   type AppServerClient,
@@ -14,10 +15,12 @@ import { prepareE1LabWorkspace } from "./lab-workspace";
 import {
   E1_MCP_RESOURCE_URI,
   E1_MCP_SERVER_NAME,
+  createE1SceneContext,
   e1DirectionProposalSchema,
   e1GetSceneContextInputSchema,
   e1ProposalReceiptSchema,
   e1SceneContextSchema,
+  e1SyntheticSceneFixtureSchema,
   type E1DirectionProposal,
 } from "./mcp-scene-context";
 import {
@@ -50,6 +53,10 @@ export const E1_PROPOSAL_TOOLS = [
   "get_scene_context",
   "submit_direction_proposal",
 ] as const;
+
+const E1_EXPECTED_SCENE_CONTEXT = createE1SceneContext(
+  e1SyntheticSceneFixtureSchema.parse(syntheticFixture),
+);
 
 const proposalPrompt = `You are the StoryStage AI Director inside the E1 synthetic proposal-only lab.
 Use only the ${E1_MCP_SERVER_NAME} MCP server. First call get_scene_context with schemaVersion 1. Then create exactly one bounded direction revision for the selected beat and call submit_direction_proposal exactly once. Use only IDs, capabilities, and proposal vocabulary returned by get_scene_context. Do not run commands, read files, browse, create images, delegate, persist, apply, approve, render, or call any other tool. After the validated receipt, briefly summarize the proposal and stop.`;
@@ -179,7 +186,11 @@ function protocolError(
     | "PROPOSAL_REJECTED"
     | "UNAPPROVED_ACTIVITY" = "PROTOCOL_INCOMPATIBLE",
 ): CodexLabError {
-  return new CodexLabError(code, message, "incompatible");
+  return new CodexLabError(
+    code,
+    message,
+    code === "PROTOCOL_INCOMPATIBLE" ? "incompatible" : undefined,
+  );
 }
 
 function throwIfAborted(signal: AbortSignal | undefined): void {
@@ -780,6 +791,7 @@ export class E1ProposalEventAdapter {
     if (toolCall.status !== "completed") {
       throw protocolError(
         `The ${tool} MCP call did not complete successfully.`,
+        "PROPOSAL_REJECTED",
       );
     }
     if (tool === "get_scene_context") {
@@ -788,12 +800,10 @@ export class E1ProposalEventAdapter {
       );
       if (
         !context.success ||
-        context.data.projectSummary.id !== E1_PROPOSAL_SCOPE.projectId ||
-        context.data.selectedScene.id !== E1_PROPOSAL_SCOPE.sceneId ||
-        context.data.selectedBeat.id !== E1_PROPOSAL_SCOPE.beatId
+        !isDeepStrictEqual(context.data, E1_EXPECTED_SCENE_CONTEXT)
       ) {
         throw protocolError(
-          "The scene-context MCP call returned malformed or out-of-scope output.",
+          "The scene-context MCP call returned malformed, drifted, or out-of-scope output.",
           "PROPOSAL_REJECTED",
         );
       }

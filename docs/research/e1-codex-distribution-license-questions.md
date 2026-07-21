@@ -1,7 +1,9 @@
 # E1 Codex distribution and license questions
 
-**Status:** open questions for R1; no bundling or distribution decision  
-**Observed feasibility runtime:** `@openai/codex` / Codex CLI `0.144.1`, Windows x64  
+**Status:** open questions for R1; no bundling or distribution decision
+
+**Observed feasibility runtime:** `@openai/codex` / Codex CLI `0.144.1`, Windows x64
+
 **Scope:** E1-WP4 evidence only
 
 E1 proves that StoryStage can launch a pinned local Codex App Server and use the

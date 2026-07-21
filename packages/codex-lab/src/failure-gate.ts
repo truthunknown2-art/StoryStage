@@ -232,7 +232,7 @@ export const E1_WP4_FAILURE_CASES: readonly E1Wp4FailureCase[] = [
     evidence: [
       ref(
         "packages/codex-lab/src/proposal-roundtrip.test.ts",
-        "blocks prompt-injection activity without widening tools or approval authority",
+        "correlates exact MCP arguments, context output, and proposal receipt",
       ),
     ],
   },
@@ -425,7 +425,7 @@ export const E1_WP4_SECURITY_CHECKS = [
     id: "no-project-mutation-surface",
     evidence: ref(
       "packages/codex-lab/src/no-project-mutation.test.ts",
-      "leaves the decoy project byte-identical across the failure gate",
+      "runs real round-trip failures beside a byte-identical decoy project",
     ),
   },
 ] as const;

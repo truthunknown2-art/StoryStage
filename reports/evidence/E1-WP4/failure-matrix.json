@@ -184,7 +184,7 @@
       "evidence": [
         {
           "path": "packages/codex-lab/src/proposal-roundtrip.test.ts",
-          "test": "blocks prompt-injection activity without widening tools or approval authority"
+          "test": "correlates exact MCP arguments, context output, and proposal receipt"
         }
       ]
     },
@@ -360,7 +360,7 @@
       "id": "no-project-mutation-surface",
       "evidence": {
         "path": "packages/codex-lab/src/no-project-mutation.test.ts",
-        "test": "leaves the decoy project byte-identical across the failure gate"
+        "test": "runs real round-trip failures beside a byte-identical decoy project"
       }
     }
   ],

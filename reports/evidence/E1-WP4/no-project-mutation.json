@@ -1,14 +1,78 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "package": "E1-WP4",
-  "evidenceClass": "deterministic-decoy-project-tripwire",
-  "scope": "temporary-decoy-files-only",
-  "decoyFileCount": 2,
-  "beforeSha256": "c678d8f15e74f5d70e16ceced02555b0d58cbc3c3c5c999e31d2239419cfd794",
-  "afterSha256": "c678d8f15e74f5d70e16ceced02555b0d58cbc3c3c5c999e31d2239419cfd794",
+  "evidenceClass": "deterministic-roundtrip-decoy-project-tripwire",
+  "scope": "actual-roundtrip-failure-seams-with-sibling-decoy-project",
+  "decoyFileCount": 4,
+  "decoyFiles": [
+    ".git/HEAD",
+    ".git/refs/heads/private-launch",
+    "project.json",
+    "scenes/scene.json"
+  ],
+  "beforeSha256": "abc9692cf670fe8ba338af29040755c6d3f06776675f1f05310a8b1e5634fd1b",
+  "afterSha256": "abc9692cf670fe8ba338af29040755c6d3f06776675f1f05310a8b1e5634fd1b",
   "unchanged": true,
+  "unexpectedFileDetection": true,
+  "failurePathCount": 9,
+  "failureExercises": [
+    {
+      "id": "runtime-not-installed",
+      "expectedCode": "RUNTIME_NOT_INSTALLED",
+      "observedCode": "RUNTIME_NOT_INSTALLED",
+      "clientClosed": null
+    },
+    {
+      "id": "operation-cancelled",
+      "expectedCode": "OPERATION_CANCELLED",
+      "observedCode": "OPERATION_CANCELLED",
+      "clientClosed": null
+    },
+    {
+      "id": "signed-out",
+      "expectedCode": "AUTH_REQUIRED",
+      "observedCode": "AUTH_REQUIRED",
+      "clientClosed": true
+    },
+    {
+      "id": "auth-revoked",
+      "expectedCode": "AUTH_REVOKED",
+      "observedCode": "AUTH_REVOKED",
+      "clientClosed": true
+    },
+    {
+      "id": "offline",
+      "expectedCode": "OFFLINE",
+      "observedCode": "OFFLINE",
+      "clientClosed": true
+    },
+    {
+      "id": "usage-limited",
+      "expectedCode": "USAGE_LIMITED",
+      "observedCode": "USAGE_LIMITED",
+      "clientClosed": true
+    },
+    {
+      "id": "protocol-incompatible",
+      "expectedCode": "PROTOCOL_INCOMPATIBLE",
+      "observedCode": "PROTOCOL_INCOMPATIBLE",
+      "clientClosed": true
+    },
+    {
+      "id": "mcp-startup-failed",
+      "expectedCode": "MCP_STARTUP_FAILED",
+      "observedCode": "MCP_STARTUP_FAILED",
+      "clientClosed": true
+    },
+    {
+      "id": "turn-start-failed",
+      "expectedCode": "PROTOCOL_REQUEST_FAILED",
+      "observedCode": "PROTOCOL_REQUEST_FAILED",
+      "clientClosed": true
+    }
+  ],
   "projectMutationAllowed": false,
   "persistedPath": false,
-  "executableTest": "packages/codex-lab/src/no-project-mutation.test.ts :: leaves the decoy project byte-identical across the failure gate",
-  "limitation": "This proves the isolated WP4 evidence path against a decoy project; production project integration remains outside E1."
+  "executableTest": "packages/codex-lab/src/no-project-mutation.test.ts :: runs real proposal-roundtrip failure seams beside a byte-identical decoy project",
+  "limitation": "This proves isolated E1 failure seams against a sibling decoy tree; durable production project integration remains outside E1."
 }

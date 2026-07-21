@@ -6,7 +6,7 @@
     {
       "command": "pnpm verify:e1-wp4-failure-matrix",
       "result": "PASS",
-      "coverage": "generated failure matrix, process cleanup receipt, no-project-mutation receipt, capture hashes, 1440x900 PNG dimensions, and disabled authority"
+      "coverage": "generated failure matrix, nine executable round-trip mutation tripwires, full decoy-tree change detection, process cleanup receipt, capture hashes, 1440x900 PNG dimensions, and disabled authority"
     },
     {
       "command": "pnpm --filter @storystage/codex-lab typecheck",
@@ -36,8 +36,8 @@
     {
       "command": "pnpm verify",
       "result": "PASS",
-      "durationSeconds": 200.9,
-      "privacyFiles": 965,
+      "durationSeconds": 199.3,
+      "privacyFiles": 967,
       "warnings": [
         "Two pre-existing Remotion non-pure-animation warnings remain in apps/render-worker/src/kvp001-proof.ts; there were zero lint errors."
       ]

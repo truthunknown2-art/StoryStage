@@ -2,6 +2,9 @@
   "schemaVersion": 1,
   "package": "E1-WP4",
   "evidenceClass": "actual-local-lab-capture",
+  "capturedAtUtc": "2026-07-21T17:09:11Z",
+  "sourceRevision": "3abfd354a5fb5c73ff54615ef538ae56365d01ff",
+  "captureMethod": "Playwright CLI against the local Vite E1 Director Lab",
   "surface": "E1 Director Lab — Failure & recovery",
   "selectedFixture": "prompt-injection-blocked",
   "selectedCode": "UNAPPROVED_ACTIVITY",
@@ -38,13 +41,13 @@
     },
     "failureMatrix": {
       "path": "reports/evidence/E1-WP4/failure-matrix.json",
-      "sha256": "2efd378c211fad6ccba27b4a0e0fd71c2a83bfdcb1ebb89b6fc544d9e8f19415",
-      "bytes": 14730
+      "sha256": "5ffda253d4c115d656f0576904d2dc68fdb7d73fe2e6cdd2b201f00e3da3e9dc",
+      "bytes": 14725
     },
     "noProjectMutation": {
       "path": "reports/evidence/E1-WP4/no-project-mutation.json",
-      "sha256": "449d0b7e0634f309008d008707e776bf7efee6a1b9cb59f7e6368547d07e89c8",
-      "bytes": 703
+      "sha256": "100a1c3cab0c7bfdf94b85505cefa19e53aaf446a3da61dd986ccc16ca2d91f1",
+      "bytes": 2383
     },
     "processCleanup": {
       "path": "reports/evidence/E1-WP4/process-cleanup.json",
