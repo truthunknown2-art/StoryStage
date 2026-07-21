@@ -1,16 +1,31 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `60`
+Inbox-Version: `61`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F3-WP1-SCOPE-WORKSPACE-FOUNDATION`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `38969c4400e2a9c84a59346c28f7a72d5f9492bf`
 Required-Work-Branch: `agent/kimi-f3-wp1-scope-workspace-foundation`
-Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp1-scope-workspace-foundation-v60.md`
+Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp1-scope-workspace-foundation-v61.md`
 Issue: `#72`
 
 ## Current instruction
+
+Version 61 retries the same bounded F3-WP1 assignment after Version 60 failed
+before prompt/model work because installed Kimi 0.27.0 rejected the watcher's
+obsolete `--auto --prompt` combination. PR #75 exact head `2859dcbe...` fixes
+the supported prompt-mode invocation and null-exit receipt, passed local/hosted
+verification and two audits, merged at `product/v1@c5089f69...`, and is
+installed byte-for-byte. Execute only the Version 61 brief, publish the exact
+handback/draft PR, then exit. Do not begin F3-WP2 or backend work.
+
+Version 61 supersedes Version 60. Version 60 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 60 instruction:
 
 Version 60 records Preston's E1 `PASS`, E1-WP4 integration into `product/v1`
 at `38969c4400e2a9c84a59346c28f7a72d5f9492bf`, and authorizes only F3-WP1
