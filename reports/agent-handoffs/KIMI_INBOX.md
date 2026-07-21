@@ -1,15 +1,31 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `56`
+Inbox-Version: `57`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `G0-MERGED-PRESTON-DECISION-WAIT`
+Current-Task: `G0-AI-NATIVE-PRESTON-DECISION-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
 Required-Work-Branch: `none-planning-hold`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-merged-preston-decision-wait-v56.md`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-ai-native-preston-decision-wait-v57.md`
 
 ## Current instruction
+
+Version 57 records ChatGPT Pro's final `ACCEPT` for exact PR #50 head
+`2e1fbb0791a9e205d71f7bfaf00d55894dab5475`, its integration into
+`product/v1` at `ddddcf1e9281da808c925a06bf25fd52ee43fa66`, and the
+status-only PR #51 integration at `4e58151044c0e72149075786e720857f8af32db5`.
+The live product ledger is now `G0 / G0-WP7 / PRESTON_GATE`. Kimi remains
+`WAIT` with no implementation branch. Do not begin E1, F3, backend, or later
+frontend work. A higher inbox version and a separate bounded `START_NOW` task
+are required for any implementation.
+
+Version 57 supersedes Version 56. Version 56 remains below as historical
+traceability.
+
+---
+
+Previous Version 56 instruction:
 
 Version 56 records ChatGPT Pro's final `ACCEPT` verdict for exact PR #48 head
 `febc42ad94d716abf3893c59ce31389685ef87ae`, hosted Verify run `29785772872`
