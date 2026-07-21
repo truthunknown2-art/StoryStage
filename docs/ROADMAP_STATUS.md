@@ -11,30 +11,31 @@ completedMilestones:
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
 authorization:
-  state: START_NOW
+  state: REVIEW
   milestone: F3
   package: F3-WP1
-  owner: Kimi
+  owner: Codex
   exactBase: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
   branch: agent/kimi-f3-wp1-scope-workspace-foundation
   issue: 72
-  pr: null
-  candidateContentHead: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
-  candidateRef: product/v1
+  pr: 78
+  candidateContentHead: 55add2b625d1170d2435bababd6a5ea31a8b685e
+  candidateRef: agent/kimi-f3-wp1-scope-workspace-foundation
 checks:
-  local: roadmap-consistency+studio-f2-baseline
+  local: studio-76+typecheck+build+exact-successor-audit
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: issued-f3-wp1-only-at-exact-base-38969c4400e2a9c84a59346c28f7a72d5f9492bf-through-issue-72
+  codex: accept-f3-wp1-code-at-exact-55add2b625d1170d2435bababd6a5ea31a8b685e-hosted-pending
   pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
   preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
 blockers:
+  - exact-head hosted verification must pass before F3-WP1 integration
   - F3-WP2 through F3-WP5 remain blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F3_WP1_ONLY
-  text: After this status transition and Kimi Inbox Version 60 are integrated, Kimi executes only issue 72 from the exact base and stops before F3-WP2.
+  type: REVIEW_F3_WP1_EXACT_HEAD
+  text: Review PR 78 exact head 55add2b625d1170d2435bababd6a5ea31a8b685e, require hosted PASS, and integrate only F3-WP1 when all gates pass. Do not begin F3-WP2.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -66,11 +67,15 @@ verification from the live PR checks.
   ChatGPT sign-in, least-privilege StoryStage MCP, structured proposal, and
   fail-closed/no-mutation feasibility boundary; it is not production Studio
   integration.
-- Issue #72 and this transition authorize only F3-WP1 from exact base
-  `product/v1@38969c4...` on
-  `agent/kimi-f3-wp1-scope-workspace-foundation`. Kimi may change only the
-  declared `apps/studio` frontend scope and evidence/handback files. F3-WP2,
-  later frontend work, and all backend product work remain blocked.
+- Kimi completed issue #72 on
+  `agent/kimi-f3-wp1-scope-workspace-foundation`. Codex rejected exact head
+  `8bd3ed8...` for bounded tab semantics and evidence-count defects, then
+  applied only those review corrections under the operating contract and
+  pushed exact successor `55add2b...`. Studio tests 76/76, typecheck, build,
+  screenshots/hashes, scope, and an independent successor audit pass. PR #78
+  is now in Codex `REVIEW` awaiting exact-head hosted verification. Kimi is
+  `WAIT`; F3-WP2, later frontend work, and all backend product work remain
+  blocked.
 
 - Accepted creator-facing product implementation still ends at F2 on exact
   `87c01f9b...`; G0 is the accepted planning/governance milestone integrated at
