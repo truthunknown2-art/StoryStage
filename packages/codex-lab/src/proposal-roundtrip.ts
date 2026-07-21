@@ -118,6 +118,14 @@ export class E1ProposalEventAdapter {
   private threadId: string | null = null;
   private turnId: string | null = null;
   private proposal: E1DirectionProposal | null = null;
+  private turnCompleted = false;
+  private readonly toolCalls = new Map<
+    string,
+    {
+      tool: (typeof E1_PROPOSAL_TOOLS)[number];
+      completed: boolean;
+    }
+  >();
 
   public constructor(
     private readonly onEvent?: (event: E1ProposalEvent) => void,
@@ -163,6 +171,11 @@ export class E1ProposalEventAdapter {
         if (this.turnId && this.turnId !== started.turn.id) {
           throw protocolError("The proposal stream changed turn identity.");
         }
+        if (this.turnId) {
+          throw protocolError(
+            "The proposal stream started the same turn twice.",
+          );
+        }
         this.turnId = started.turn.id;
         this.emit({ kind: "turn-started" });
         return;
@@ -184,6 +197,11 @@ export class E1ProposalEventAdapter {
           message.method,
         );
         this.assertTurn(progress.threadId, progress.turnId);
+        if (!this.toolCalls.has(progress.itemId)) {
+          throw protocolError(
+            "The proposal stream reported progress for an unknown tool call.",
+          );
+        }
         this.emit({
           kind: "tool-progress",
           toolCallId: progress.itemId,
@@ -206,6 +224,21 @@ export class E1ProposalEventAdapter {
         if (completed.turn.status === "inProgress") {
           throw protocolError(
             "The completed proposal turn remained in progress.",
+          );
+        }
+        if (this.turnCompleted) {
+          throw protocolError(
+            "The proposal stream completed the same turn twice.",
+          );
+        }
+        this.turnCompleted = true;
+        if (
+          completed.turn.status === "completed" &&
+          (this.completedToolCount("get_scene_context") !== 1 ||
+            this.completedToolCount("submit_direction_proposal") !== 1)
+        ) {
+          throw protocolError(
+            "The proposal turn did not complete exactly one bounded tool sequence.",
           );
         }
         this.emit({ kind: "turn-completed", status: completed.turn.status });
@@ -280,12 +313,33 @@ export class E1ProposalEventAdapter {
     }
     const tool = toolCall.tool as (typeof E1_PROPOSAL_TOOLS)[number];
     if (method === "item/started") {
+      if (this.toolCalls.has(toolCall.id)) {
+        throw protocolError(
+          "The proposal stream repeated a tool-call identity.",
+        );
+      }
+      if (
+        (tool === "get_scene_context" && this.toolCalls.size !== 0) ||
+        (tool === "submit_direction_proposal" &&
+          this.completedToolCount("get_scene_context") !== 1)
+      ) {
+        throw protocolError(
+          "The proposal turn used tools out of bounded order.",
+        );
+      }
+      this.toolCalls.set(toolCall.id, { tool, completed: false });
       this.emit({
         kind: "tool-started",
         toolCallId: toolCall.id,
         tool,
       });
       return;
+    }
+    const startedTool = this.toolCalls.get(toolCall.id);
+    if (!startedTool || startedTool.tool !== tool || startedTool.completed) {
+      throw protocolError(
+        "The proposal stream completed an unknown or repeated tool call.",
+      );
     }
     if (toolCall.status !== "completed") {
       throw protocolError(
@@ -303,6 +357,7 @@ export class E1ProposalEventAdapter {
       }
       this.proposal = receipt.data.proposal;
     }
+    startedTool.completed = true;
     this.emit({
       kind: "tool-completed",
       toolCallId: toolCall.id,
@@ -321,6 +376,12 @@ export class E1ProposalEventAdapter {
     if (!this.turnId || turnId !== this.turnId) {
       throw protocolError("The proposal stream used an unexpected turn.");
     }
+  }
+
+  private completedToolCount(tool: (typeof E1_PROPOSAL_TOOLS)[number]): number {
+    return [...this.toolCalls.values()].filter(
+      (entry) => entry.tool === tool && entry.completed,
+    ).length;
   }
 
   private emit(event: WithoutSequence<E1ProposalEvent>): void {
@@ -543,7 +604,7 @@ export async function runE1ProposalRoundTrip(
     }
     throw error;
   } finally {
-    if (client) await client.close().catch(() => undefined);
+    if (client) await client.close();
     if (workspace) await rm(workspace, { recursive: true, force: true });
   }
 }

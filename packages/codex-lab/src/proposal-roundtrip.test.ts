@@ -282,6 +282,26 @@ describe("E1 streamed proposal round trip", () => {
     const malformed = new E1ProposalEventAdapter();
     malformed.startSession(threadId);
     malformed.consume(notification("turn/started", startedTurn()));
+    malformed.consume(
+      lifecycle(
+        "item/started",
+        toolItem("tool-context", "get_scene_context", "inProgress"),
+      ),
+    );
+    malformed.consume(
+      lifecycle(
+        "item/completed",
+        toolItem("tool-context", "get_scene_context", "completed", {
+          content: [],
+        }),
+      ),
+    );
+    malformed.consume(
+      lifecycle(
+        "item/started",
+        toolItem("tool-proposal", "submit_direction_proposal", "inProgress"),
+      ),
+    );
     expect(() =>
       malformed.consume(
         lifecycle(
@@ -320,6 +340,46 @@ describe("E1 streamed proposal round trip", () => {
       { kind: "session-started" },
       { kind: "approval-blocked", method: "item/requestApproval" },
     ]);
+  });
+
+  it("rejects duplicate, out-of-order, and unknown-progress tool events", () => {
+    const outOfOrder = new E1ProposalEventAdapter();
+    outOfOrder.startSession(threadId);
+    outOfOrder.consume(notification("turn/started", startedTurn()));
+    expect(() =>
+      outOfOrder.consume(
+        lifecycle(
+          "item/started",
+          toolItem("tool-proposal", "submit_direction_proposal", "inProgress"),
+        ),
+      ),
+    ).toThrow("out of bounded order");
+
+    const unknownProgress = new E1ProposalEventAdapter();
+    unknownProgress.startSession(threadId);
+    unknownProgress.consume(notification("turn/started", startedTurn()));
+    expect(() =>
+      unknownProgress.consume(
+        notification("item/mcpToolCall/progress", {
+          threadId,
+          turnId,
+          itemId: "missing-tool",
+          message: "Not allowed",
+        }),
+      ),
+    ).toThrow("unknown tool call");
+
+    const duplicate = new E1ProposalEventAdapter();
+    duplicate.startSession(threadId);
+    duplicate.consume(notification("turn/started", startedTurn()));
+    const started = lifecycle(
+      "item/started",
+      toolItem("tool-context", "get_scene_context", "inProgress"),
+    );
+    duplicate.consume(started);
+    expect(() => duplicate.consume(started)).toThrow(
+      "repeated a tool-call identity",
+    );
   });
 
   it("runs the complete bounded lifecycle and starts cleanly again", async () => {
