@@ -18,14 +18,14 @@ authorization:
   branch: agent/codex-e1-wp3-streamed-proposal-roundtrip
   issue: 62
   pr: 64
-  candidateContentHead: 500131eeef904796fd66bbf82c1b19a35fc4ee37
+  candidateContentHead: d9d83d48f8653193ffc340d74293283eb1c66f20
   candidateRef: agent/codex-e1-wp3-streamed-proposal-roundtrip
 checks:
-  local: live-mcp-isolation+codex-lab-53-tests+director-lab-2-tests-and-build+schema+privacy+roadmap+scoped-eslint+diff-check-pass
+  local: live-mcp-isolation+codex-lab-55-tests+director-lab-2-tests-and-build+schema+privacy+roadmap+scoped-eslint+diff-check-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp3-candidate-500131eeef904796fd66bbf82c1b19a35fc4ee37-awaiting-exact-head-review
+  codex: e1-wp3-candidate-d9d83d48f8653193ffc340d74293283eb1c66f20-awaiting-exact-head-review
   pro: accept-e1-wp2-exact-e8fcaa7e550f82e073dbbec7a7f8cca78a6b8f21
   preston: authorize-e1-wp3-only-at-exact-base-4319967eac13dd628eb863dfb29f7bff3c83ffeb-2026-07-20
 blockers:
@@ -83,7 +83,7 @@ verification from the live PR checks.
   `START_NOW` transition authorize the streamed structured-proposal round trip
   and isolated read-only review surface. E1-WP4, F3, backend product work, and
   Kimi implementation remain unauthorized.
-- E1-WP3 implementation candidate `500131eeef904796fd66bbf82c1b19a35fc4ee37`
+- E1-WP3 implementation candidate `d9d83d48f8653193ffc340d74293283eb1c66f20`
   is now in review on PR #64. The pinned live run completed through both fixed
   StoryStage MCP tools, returned one schema-valid ephemeral proposal, preserved
   the isolated workspace, and produced a sanitized receipt plus a 1440x900

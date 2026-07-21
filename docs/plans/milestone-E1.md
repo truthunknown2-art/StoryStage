@@ -195,8 +195,8 @@ read-only review surface. E1-WP4, F3, backend product work, and Kimi
 implementation remain blocked.
 
 **Candidate review status (2026-07-20):** PR #64 carries implementation
-candidate `500131eeef904796fd66bbf82c1b19a35fc4ee37`. Focused verification passes
-53 Codex-lab tests, 2 isolated review-lab tests and its production build, the
+candidate `d9d83d48f8653193ffc340d74293283eb1c66f20`. Focused verification passes
+55 Codex-lab tests, 2 isolated review-lab tests and its production build, the
 pinned schema check, privacy check, roadmap consistency, scoped lint, and diff
 check. A real pinned-runtime round trip exercised both fixed StoryStage MCP
 tools and recorded one schema-valid unapplied proposal; the committed 1440x900
