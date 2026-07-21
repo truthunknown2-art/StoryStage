@@ -9,12 +9,12 @@
 - Product acceptance: Preston
 - Decomposition approval: Preston accepted G0 and the dependency-ordered
   E1-WP1 through E1-WP4 plan on 2026-07-20
-- Current authorization: E1-WP3 through issue #62 at exact base
-  `4319967eac13dd628eb863dfb29f7bff3c83ffeb`. The redacted-table adapter was
-  rejected before implementation; ChatGPT Pro accepted the dedicated Codex
-  state/login successor at exact `07d2ccf735edc11b6a8de129bd478a986551aa9a`.
-  Standing continuation authority applies only after each dependency-ordered
-  package passes its existing gates.
+- Current authorization: E1-WP3 is accepted at exact PR #64 head
+  `681eeb4d7c28405ead53cb8afc16a048c749c53d` and integrated at
+  `ac2357d2e1419124d832fe26b67e26875f3821e8`. E1-WP4 has not started; it
+  requires its own bounded issue and `START_NOW` status transition. Standing
+  continuation authority applies only after each dependency-ordered package
+  passes its existing gates.
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 
@@ -271,6 +271,18 @@ ephemeral proposal, persisted no raw protocol/account/thread/turn/token data,
 and kept Apply disabled. The sanitized live receipt and replacement 1440x900
 capture are committed with their hashes. This is candidate evidence for final
 exact-head review; it does not accept E1-WP3 or start E1-WP4.
+
+**Accepted package status (2026-07-21):** PR #64 implements and proves only
+E1-WP3 at exact head `681eeb4d7c28405ead53cb8afc16a048c749c53d`.
+The object-key-canonical schema fingerprint retains array order and every value;
+the completed lifecycle permits exactly one `get_scene_context` followed by
+exactly one `submit_direction_proposal` and rejects a second proposal call at
+start. The official authenticated live receipt, exact 1440x900 capture, 84
+Codex-lab tests, Director-lab tests/build, root verification, two independent
+audits, and hosted run `29839630770` passed. ChatGPT Pro accepted the complete
+package with no blocker, and it merged into `product/v1` at
+`ac2357d2e1419124d832fe26b67e26875f3821e8`. This does not accept the complete
+E1 milestone or start E1-WP4, F3, backend product work, or Kimi implementation.
 
 ### E1-WP4 - Failure, security, and feasibility gate
 
