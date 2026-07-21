@@ -3,7 +3,7 @@
 Inbox-Version: `66`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F3-WP2-DIRECT-EDITS-SCOPED-HISTORY`
-Status: `START_NOW`
+Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `d7b46d891a981a13431b6272be39809142e727f6`
 Required-Work-Branch: `agent/kimi-f3-wp2-direct-edits-scoped-history`
