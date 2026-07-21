@@ -1,28 +1,40 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `63`
+Inbox-Version: `64`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP1-SCOPE-WORKSPACE-FOUNDATION`
-Status: `START-NOW`
+Current-Task: `F3-WP1-CODEX-REVIEW-CORRECTION`
+Status: `WAIT`
 Issued-By: `Codex`
 Accepted-Root-Base: `38969c4400e2a9c84a59346c28f7a72d5f9492bf`
-Required-Work-Branch: `agent/kimi-f3-wp1-scope-workspace-foundation`
-Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp1-tab-semantics-correction-v63.md`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#72`
 
 ## Current instruction
 
-Version 63 rejects PR #78 exact head
+Version 64 cancels the Version 63 model wake before launch. The installed
+clean-workspace watcher correctly requires a new assignment branch to be absent
+locally and remotely, while this review correction must continue PR #78's
+existing branch. Codex will apply only the two already-published exact-head
+review corrections under the operating contract's frontend review-correction
+authority. Kimi remains `WAIT`; do not launch a model, begin F3-WP2, or start
+backend work.
+
+Version 64 supersedes Version 63 before model launch. Version 63 remains below
+as historical traceability and must not relaunch.
+
+---
+
+Previous Version 63 instruction:
+
+Version 63 rejected PR #78 exact head
 `8bd3ed8e6caabc7b23ea453280740f91d531e952` for two bounded review defects:
 the Director tabs do not provide valid single-tab-stop semantics, and the
 handback/PR evidence count says 12/12 while the committed report contains 14
-checks. Continue only on the existing F3-WP1 work branch, apply the exact
-Version 63 correction brief, add focused regressions, correct the evidence
-claim, push one immutable successor, update the PR/handback, and exit. Do not
-begin F3-WP2 or backend work.
-
-Version 63 supersedes Version 62 as the active correction. Version 62 remains
-below as historical traceability and must not relaunch.
+checks. It requested a correction on the existing F3-WP1 work branch, but the
+installed watcher correctly cannot launch a fresh assignment against an
+already-existing remote branch. Version 64 cancels this wake without launching
+Kimi.
 
 ---
 
