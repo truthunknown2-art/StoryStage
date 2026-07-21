@@ -1,0 +1,90 @@
+import { z } from "zod";
+
+export const initializeResponseSchema = z
+  .object({
+    userAgent: z.string(),
+    codexHome: z.string(),
+    platformFamily: z.string(),
+    platformOs: z.string(),
+  })
+  .strict();
+
+const accountSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("apiKey") }).strict(),
+  z
+    .object({
+      type: z.literal("chatgpt"),
+      email: z.string().nullable(),
+      planType: z.string(),
+    })
+    .strict(),
+  z.object({ type: z.literal("amazonBedrock") }).passthrough(),
+]);
+
+export const accountResponseSchema = z
+  .object({
+    account: accountSchema.nullable().optional(),
+    requiresOpenaiAuth: z.boolean(),
+  })
+  .strict();
+
+export const modelListResponseSchema = z
+  .object({
+    data: z.array(z.object({ id: z.string() }).passthrough()),
+    nextCursor: z.string().nullable().optional(),
+  })
+  .strict();
+
+export const rateLimitsResponseSchema = z
+  .object({
+    rateLimits: z
+      .object({ rateLimitReachedType: z.string().nullable().optional() })
+      .passthrough(),
+    rateLimitsByLimitId: z
+      .record(z.string(), z.unknown())
+      .nullable()
+      .optional(),
+    rateLimitResetCredits: z.unknown().nullable().optional(),
+  })
+  .strict();
+
+export const usageResponseSchema = z
+  .object({
+    summary: z.record(z.string(), z.unknown()),
+    dailyUsageBuckets: z.array(z.unknown()).nullable().optional(),
+  })
+  .strict();
+
+export const threadStartResponseSchema = z
+  .object({
+    thread: z.object({ id: z.string() }).passthrough(),
+  })
+  .passthrough();
+
+const turnSchema = z
+  .object({
+    id: z.string(),
+    items: z.array(z.unknown()),
+    status: z.enum(["completed", "interrupted", "failed", "inProgress"]),
+  })
+  .passthrough();
+
+export const turnStartResponseSchema = z
+  .object({
+    turn: turnSchema,
+  })
+  .strict();
+
+export const turnStartedNotificationSchema = z
+  .object({
+    threadId: z.string(),
+    turn: turnSchema,
+  })
+  .strict();
+
+export const turnCompletedNotificationSchema = z
+  .object({
+    threadId: z.string(),
+    turn: turnSchema,
+  })
+  .strict();

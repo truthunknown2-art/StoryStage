@@ -10,29 +10,31 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: START_NOW
+  state: REVIEW
   milestone: E1
   package: E1-WP1
   owner: Codex
   exactBase: 4ec99ebb33f274625e8e1fe0f1b401d9c0169fad
   branch: agent/codex-e1-wp1-runtime-preflight
   issue: 53
-  pr: null
-  candidateContentHead: 4ec99ebb33f274625e8e1fe0f1b401d9c0169fad
-  candidateRef: product/v1
+  pr: 55
+  candidateContentHead: dcd75cf1affb8547c74bdbd66a4d7614761c2cc9
+  candidateRef: agent/codex-e1-wp1-runtime-preflight
 checks:
-  local: roadmap-consistency+root-verify-pass
+  local: root-verify+installed-schema+live-preflight-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: issued-e1-wp1-only-at-exact-base-4ec99ebb33f274625e8e1fe0f1b401d9c0169fad
+  codex: e1-wp1-audit-corrected-exact-dcd75cf1affb8547c74bdbd66a4d7614761c2cc9
   pro: accept-exact-2e1fbb0791a9e205d71f7bfaf00d55894dab5475
   preston: accept-g0-authorize-e1-wp1-only-2026-07-20
 blockers:
+  - E1-WP1 corrected exact PR head still requires hosted verification and ChatGPT Pro review
+  - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
   - E1-WP2, E1-WP3, E1-WP4, F3, backend, and Kimi implementation remain unauthorized
 nextAuthorizedAction:
-  type: IMPLEMENT_E1_WP1_ONLY
-  text: Execute only issue 53 from the exact base and stop before E1-WP2.
+  type: REVIEW_E1_WP1_EXACT_HEAD
+  text: Review only PR #55 and its immutable E1-WP1 evidence; do not begin E1-WP2.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -61,19 +63,24 @@ verification from the live PR checks.
   `87c01f9b...`; G0 is the accepted planning/governance milestone integrated at
   `ddddcf1...` and does not itself implement product capability.
 - On 2026-07-20 Preston explicitly accepted G0 and authorized only the
-  dependency-ordered E1-WP1 feasibility package. Issue #53 now bounds that
-  package at exact base `4ec99eb...`; `START_NOW` authorizes Codex to implement
-  only the isolated runtime/protocol/auth preflight. E1-WP2, F3, backend product
-  work, and Kimi implementation remain unauthorized.
+  dependency-ordered E1-WP1 feasibility package. Issue #53 is implemented in
+  draft PR #55 from exact base `4ec99eb...`; the pinned runtime, canonical
+  stable schema, redacted authenticated lifecycle receipt, focused checks, and
+  root verification pass at candidate content `dcd75cf...`. The corrected
+  candidate fails closed on successful usage-limit snapshots, early turn RPC
+  rejection, missing or mismatched completion, and non-interrupted terminal
+  states; the real Windows run confirms the matching `turn/completed` event.
+  The exact PR head still requires hosted verification and ChatGPT Pro review.
+  E1-WP2, F3, backend product work, and Kimi implementation remain unauthorized.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
-  + read-only StoryStage MCP feasibility before F3, then a native AI Director
-  and deterministic proposal/application path. Pro also required complete visual
-  Godot shots plus Remotion episode assembly and a retained UI reference packet.
-  Preston further fixed the private-launch UI to one **Ollo & Friends — Kids
-  Story** template with **Paste a script** and **What's your idea?** entry paths.
-  Pro accepted exact PR #50 head `2e1fbb0...` after four bounded corrections;
-  it was integrated at `product/v1@ddddcf1...`, the exact merge passed hosted
-  verification, and Preston has now accepted the G0 gate.
+  - read-only StoryStage MCP feasibility before F3, then a native AI Director
+    and deterministic proposal/application path. Pro also required complete visual
+    Godot shots plus Remotion episode assembly and a retained UI reference packet.
+    Preston further fixed the private-launch UI to one **Ollo & Friends — Kids
+    Story** template with **Paste a script** and **What's your idea?** entry paths.
+    Pro accepted exact PR #50 head `2e1fbb0...` after four bounded corrections;
+    it was integrated at `product/v1@ddddcf1...`, the exact merge passed hosted
+    verification, and Preston has now accepted the G0 gate.
 - Kimi must remain `WAIT`; resolve its exact live inbox version and coordination
   head from `origin/agent/kimi-frontend` on every cold start and consistency run.
 - PR #47 is closed, unmerged, and superseded; it grants no F3 authority.

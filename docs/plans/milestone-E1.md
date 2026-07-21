@@ -85,6 +85,19 @@ and observe Codex-owned account state without owning authentication material.
 - completion only when the exact runtime/schema can be reproduced from a clean
   lab checkout or the package fails with a documented blocker.
 
+**Candidate status (2026-07-20):** draft PR #55 implements only E1-WP1 at
+content commit `dcd75cf1affb8547c74bdbd66a4d7614761c2cc9`. The pinned
+Windows runtime/hash, canonical stable schema, authenticated account/model/
+usage observation, ephemeral thread/turn interrupt, matching interrupted
+completion, clean shutdown, unchanged isolated workspace, redacted receipt, 26
+focused tests, installed-schema check, privacy check, and root verification pass
+locally. The exact-head audit corrections make usage-limit snapshots,
+early-reject promise orderings, missing/mismatched completion, unsupported
+optional-field assumptions, and account-method incompatibility fail closed.
+ChatGPT Pro review and hosted checks are pending. The App Server command's
+experimental label remains a production-packaging risk, and E1-WP2 remains
+blocked.
+
 ### E1-WP2 - Read-only StoryStage MCP scene context
 
 **Primary invariant:** Codex can see only the bounded synthetic context and
