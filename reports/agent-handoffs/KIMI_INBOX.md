@@ -1,26 +1,40 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `67`
+Inbox-Version: `68`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP2-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F3-WP3-VISUAL-MOTION-SCOPED-HISTORY`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `dcf9b7e600a11d7cd6fef4c20368c807c6f3b0be`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#81`
+Accepted-Root-Base: `fe004232e4650dfceaa4360d98f9627595c0cc8c`
+Required-Work-Branch: `agent/kimi-f3-wp3-visual-motion-scoped-history`
+Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp3-visual-motion-scoped-history-v68.md`
+Issue: `#85`
 
 ## Current instruction
 
-Version 67 records F3-WP2 acceptance and integration. PR #83 exact successor
+Version 68 starts only F3-WP3 through issue #85 from exact accepted base
+`fe004232e4650dfceaa4360d98f9627595c0cc8c` on the new required branch
+`agent/kimi-f3-wp3-visual-motion-scoped-history`. Execute the complete Version
+68 brief: add the bounded Visual and Motion intent controls to the same atomic
+per-beat history as Direct, expose only committed values through the honest
+planning summary, preserve accepted F1/F2/F3-WP1/F3-WP2 behavior, publish the
+exact evidence, handback, and draft PR, then exit. Do not begin F3-WP4, AI
+behavior, persistence, backend, Godot, Remotion, rendering, or export work.
+
+Version 68 supersedes Version 67. Version 67 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 67 instruction:
+
+Version 67 recorded F3-WP2 acceptance and integration. PR #83 exact successor
 head `53d0d6a5c8485ca628c4c1581598072b613ffe0a` passed Studio 90/90,
 typecheck, production build, the exact-head code and visual/evidence audits,
 the clean synthetic merge and roadmap check, and hosted Verify run
 `29872261103`. It merged into `product/v1` at
-`dcf9b7e600a11d7cd6fef4c20368c807c6f3b0be`. Kimi remains `WAIT`; do not
-launch a model, modify the accepted PR, begin F3-WP3, or start backend work. A
-future frontend package requires a higher inbox version and separate bounded
-ticket.
+`dcf9b7e600a11d7cd6fef4c20368c807c6f3b0be`. Kimi remained `WAIT`; no
+later package or backend work was authorized.
 
 Version 67 supersedes Version 66. Version 66 remains below as historical
 traceability and must not relaunch.
