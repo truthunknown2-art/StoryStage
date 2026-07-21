@@ -86,7 +86,7 @@ and observe Codex-owned account state without owning authentication material.
   lab checkout or the package fails with a documented blocker.
 
 **Candidate status (2026-07-20):** draft PR #55 implements only E1-WP1 at
-content commit `fe2909fa3f26e82026a261172fe00ad98245e612`. The pinned
+content commit `fbad61aebda80188f1eb70bb9d08663224c4e23e`. The pinned
 Windows runtime/hash, canonical stable schema, authenticated account/model/
 usage observation, ephemeral thread/turn interrupt, clean shutdown, unchanged
 isolated workspace, redacted receipt, 15 focused tests, installed-schema check,

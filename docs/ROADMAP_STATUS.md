@@ -18,14 +18,14 @@ authorization:
   branch: agent/codex-e1-wp1-runtime-preflight
   issue: 53
   pr: 55
-  candidateContentHead: fe2909fa3f26e82026a261172fe00ad98245e612
+  candidateContentHead: fbad61aebda80188f1eb70bb9d08663224c4e23e
   candidateRef: agent/codex-e1-wp1-runtime-preflight
 checks:
   local: root-verify+installed-schema+live-preflight-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp1-candidate-exact-fe2909fa3f26e82026a261172fe00ad98245e612
+  codex: e1-wp1-candidate-exact-fbad61aebda80188f1eb70bb9d08663224c4e23e
   pro: accept-exact-2e1fbb0791a9e205d71f7bfaf00d55894dab5475
   preston: accept-g0-authorize-e1-wp1-only-2026-07-20
 blockers:
@@ -66,7 +66,7 @@ verification from the live PR checks.
   dependency-ordered E1-WP1 feasibility package. Issue #53 is implemented in
   draft PR #55 from exact base `4ec99eb...`; the pinned runtime, canonical
   stable schema, redacted authenticated lifecycle receipt, focused checks, and
-  root verification pass at candidate content `fe2909f...`. The exact PR head
+  root verification pass at candidate content `fbad61a...`. The exact PR head
   still requires hosted verification and review. E1-WP2, F3, backend product
   work, and Kimi implementation remain unauthorized.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
