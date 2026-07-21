@@ -15,9 +15,11 @@
 - Completed packages: F3-WP1 and F3-WP2 are accepted. F3-WP2 exact PR #83
   successor head `53d0d6a5c8485ca628c4c1581598072b613ffe0a` is integrated at
   `product/v1@dcf9b7e600a11d7cd6fef4c20368c807c6f3b0be`.
-- Current authorization: `ACCEPTED_WAIT`. F3-WP3 requires a separate bounded
-  ticket, status transition, and higher Kimi inbox version. F3-WP4 and F3-WP5
-  remain blocked by dependency order.
+- Current authorization: only F3-WP3 through issue #85, after its separate
+  status transition and matching higher Kimi inbox version are integrated.
+- Exact implementation base: `fe004232e4650dfceaa4360d98f9627595c0cc8c`
+- Required F3-WP3 branch: `agent/kimi-f3-wp3-visual-motion-scoped-history`
+- F3-WP4 and F3-WP5 remain blocked by dependency order.
 - Backend product work remains blocked until the complete F6 Frontend Gate is
   accepted.
 
