@@ -46,7 +46,7 @@ function canonicalJson(path) {
 }
 
 function verifyArtifact(path) {
-  const text = readFileSync(path, "utf8");
+  const text = readFileSync(path, "utf8").replaceAll("\r\n", "\n");
   const canonical = canonicalJson(path);
   if (text !== canonical) {
     throw new Error("Pinned protocol artifact is not canonical JSON.");
