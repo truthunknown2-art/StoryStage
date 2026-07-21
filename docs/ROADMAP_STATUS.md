@@ -21,9 +21,9 @@ authorization:
   candidateContentHead: b134cc62bda0055a857cf82b5a48ba57dd2ebc14
   candidateRef: agent/codex-e1-wp3-streamed-proposal-roundtrip
 checks:
-  local: architecture-doc-correction+roadmap+diff-check-pass
+  local: architecture-doc-correction+roadmap+diff-check+hosted-run-29811567145-pass-exact-1c43708f15afb8bb237352e47d6c418d5293378e
   hostedSource: github-pr-checks
-  hostedTarget: run-29811567145-pass-exact-1c43708f15afb8bb237352e47d6c418d5293378e
+  hostedTarget: live-pr-head
 verdicts:
   codex: e1-wp3-select-dedicated-codex-state-root-and-official-app-server-chatgpt-login-after-redacted-table-rejected
   pro: e1-wp3-dedicated-codex-state-and-official-login-architecture-accepted-exact-07d2ccf735edc11b6a8de129bd478a986551aa9a-conditional-on-doc-fix-and-hosted-pass
