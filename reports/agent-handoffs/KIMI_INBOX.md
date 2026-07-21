@@ -1,25 +1,43 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `66`
+Inbox-Version: `67`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP2-DIRECT-EDITS-SCOPED-HISTORY`
-Status: `START-NOW`
+Current-Task: `F3-WP2-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `d7b46d891a981a13431b6272be39809142e727f6`
-Required-Work-Branch: `agent/kimi-f3-wp2-direct-edits-scoped-history`
-Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp2-direct-edits-scoped-history-v66.md`
+Accepted-Root-Base: `dcf9b7e600a11d7cd6fef4c20368c807c6f3b0be`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#81`
 
 ## Current instruction
 
-Version 66 starts only F3-WP2 through issue #81 from exact accepted base
-`d7b46d891a981a13431b6272be39809142e727f6` on the new required branch
-`agent/kimi-f3-wp2-direct-edits-scoped-history`. Execute the complete Version
-66 brief: add the bounded session-local Direct drafts, atomic per-beat Apply,
-and independent Undo/Redo histories with redo invalidation; preserve the
-accepted F1/F2/F3-WP1 behavior; publish the exact evidence, handback, and draft
-PR; then exit. Do not begin F3-WP3, AI behavior, persistence, backend, Godot,
-Remotion, rendering, or export work.
+Version 67 records F3-WP2 acceptance and integration. PR #83 exact successor
+head `53d0d6a5c8485ca628c4c1581598072b613ffe0a` passed Studio 90/90,
+typecheck, production build, the exact-head code and visual/evidence audits,
+the clean synthetic merge and roadmap check, and hosted Verify run
+`29872261103`. It merged into `product/v1` at
+`dcf9b7e600a11d7cd6fef4c20368c807c6f3b0be`. Kimi remains `WAIT`; do not
+launch a model, modify the accepted PR, begin F3-WP3, or start backend work. A
+future frontend package requires a higher inbox version and separate bounded
+ticket.
+
+Version 67 supersedes Version 66. Version 66 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 66 instruction:
+
+Version 66 started only F3-WP2 through issue #81 from exact accepted base
+`d7b46d891a981a13431b6272be39809142e727f6` on the required branch
+`agent/kimi-f3-wp2-direct-edits-scoped-history`. Kimi delivered immutable
+handback tip `a4568a8d2241b198c7d1ab131b4d2b636eb1bb83`; exact-head review found
+one contradictory Motion-tab sentence, so Codex applied only the published
+two-line truth-copy/test correction on successor
+`53d0d6a5c8485ca628c4c1581598072b613ffe0a` under the established review
+correction authority. No F3-WP3, AI behavior, persistence, backend, Godot,
+Remotion, rendering, or export work was started.
 
 Version 66 supersedes Version 65. Version 65 remains below as historical
 traceability and must not relaunch.
