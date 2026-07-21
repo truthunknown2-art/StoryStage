@@ -1,39 +1,40 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: ac2357d2e1419124d832fe26b67e26875f3821e8
-lastAcceptedMilestone: G0
+lastAcceptedProductHead: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
+lastAcceptedMilestone: E1
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
   E0: 81a0e64dedad5bab9e4f2f285c40341e1343412f
   F1: 7a468673c0a33a37b96b94d965b5d2a857150fac
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
+  E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
 authorization:
   state: START_NOW
-  milestone: E1
-  package: E1-WP4
-  owner: Codex
-  exactBase: 8d9a47a4898df81db7630e2f0b7d4eecc88f7157
-  branch: agent/codex-e1-wp4-failure-security-gate
-  issue: 69
+  milestone: F3
+  package: F3-WP1
+  owner: Kimi
+  exactBase: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
+  branch: agent/kimi-f3-wp1-scope-workspace-foundation
+  issue: 72
   pr: null
-  candidateContentHead: 8d9a47a4898df81db7630e2f0b7d4eecc88f7157
+  candidateContentHead: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
   candidateRef: product/v1
 checks:
-  local: roadmap-consistency+codex-lab-wp3-baseline-pass
+  local: roadmap-consistency+studio-f2-baseline
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: issued-e1-wp4-only-at-exact-base-8d9a47a4898df81db7630e2f0b7d4eecc88f7157-through-issue-69
-  pro: accept-complete-e1-wp3-exact-681eeb4d7c28405ead53cb8afc16a048c749c53d-no-blockers-safe-to-integrate
-  preston: standing-dependency-ordered-continuation-after-e1-wp3-acceptance-2026-07-21
+  codex: issued-f3-wp1-only-at-exact-base-38969c4400e2a9c84a59346c28f7a72d5f9492bf-through-issue-72
+  pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
+  preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
 blockers:
-  - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
-  - F3, backend product work, and Kimi implementation remain blocked by their roadmap dependencies and the E1 milestone gate
+  - F3-WP2 through F3-WP5 remain blocked by dependency order
+  - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_E1_WP4_ONLY
-  text: After this status transition is integrated, execute only issue 69 from the exact base and stop before F3 or any backend or Kimi implementation.
+  type: IMPLEMENT_F3_WP1_ONLY
+  text: After this status transition and Kimi Inbox Version 60 are integrated, Kimi executes only issue 72 from the exact base and stops before F3-WP2.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -57,6 +58,19 @@ PR, verify that `candidateContentHead` is its ancestor, and resolve hosted
 verification from the live PR checks.
 
 ## Current state
+
+- E1 is accepted. PR #71 exact head `357737d...`, hosted run `29854783518`,
+  three independent audits, and ChatGPT Pro passed. Preston recorded `PASS`
+  against that exact head, and PR #71 merged into `product/v1` at
+  `38969c4...`. E1 proves only the bounded local Codex App Server, official
+  ChatGPT sign-in, least-privilege StoryStage MCP, structured proposal, and
+  fail-closed/no-mutation feasibility boundary; it is not production Studio
+  integration.
+- Issue #72 and this transition authorize only F3-WP1 from exact base
+  `product/v1@38969c4...` on
+  `agent/kimi-f3-wp1-scope-workspace-foundation`. Kimi may change only the
+  declared `apps/studio` frontend scope and evidence/handback files. F3-WP2,
+  later frontend work, and all backend product work remain blocked.
 
 - Accepted creator-facing product implementation still ends at F2 on exact
   `87c01f9b...`; G0 is the accepted planning/governance milestone integrated at
