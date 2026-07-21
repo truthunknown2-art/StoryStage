@@ -1819,7 +1819,9 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .pv1-rail-scene,
 .pv1-overview-scene,
 .pv1-group-toggle,
-.pv1-hidden-selection button {
+.pv1-hidden-selection button,
+.pv1-rail-beat,
+.pv1-director-tab {
   transition:
     border-color 120ms ease,
     box-shadow 120ms ease,
@@ -1835,7 +1837,9 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   .pv1-overview-scene,
   .pv1-group-toggle,
   .pv1-hidden-selection button,
-  .pv1-playhead input[type="range"] {
+  .pv1-playhead input[type="range"],
+  .pv1-rail-beat,
+  .pv1-director-tab {
     transition-duration: 0.01ms !important;
   }
 }
@@ -1879,4 +1883,136 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
     grid-template-columns: repeat(4, minmax(0, 1fr));
     order: 4;
   }
+}
+
+/* F3-WP1: shared beat scope — scope header, rail beat buttons, board beat
+   card, and Director Direct/Visual/Motion tabs */
+
+.pv1-scope-header {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 24px;
+}
+
+.pv1-scope-header ol {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-scope-header li {
+  color: var(--pv1-faint);
+  font-size: 11.5px;
+}
+
+.pv1-scope-header .pv1-scope-separator {
+  color: var(--line-strong);
+}
+
+.pv1-scope-header .pv1-scope-current {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.pv1-rail-beats li {
+  display: block;
+}
+
+.pv1-rail-beat {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  min-height: 30px;
+  padding: 3px 7px;
+  text-align: left;
+  width: 100%;
+}
+
+.pv1-rail-beat:hover {
+  border-color: var(--line-strong);
+}
+
+.pv1-rail-beat.is-selected {
+  background: rgba(145, 228, 179, 0.08);
+  border-color: rgba(145, 228, 179, 0.5);
+}
+
+.pv1-rail-beat.is-selected span {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.pv1-beat-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 4px;
+  padding: 12px 16px;
+}
+
+.pv1-beat-card small {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pv1-beat-card h2 {
+  color: #f4f7f5;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.pv1-beat-card p {
+  color: var(--pv1-faint);
+  font-size: 11px;
+}
+
+.pv1-director-tabs {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+}
+
+.pv1-director-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--pv1-faint);
+  font-size: 11.5px;
+  font-weight: 700;
+  min-height: 32px;
+  padding: 0 12px;
+}
+
+.pv1-director-tab:hover {
+  color: #dfe7e3;
+}
+
+.pv1-director-tab.is-selected {
+  background: rgba(145, 228, 179, 0.1);
+  border-color: rgba(145, 228, 179, 0.45);
+  color: var(--green);
+}
+
+.pv1-director-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.pv1-director-panel .pv1-director-scope {
+  color: #dfe7e3;
+  font-size: 11.5px;
+  font-weight: 700;
 }

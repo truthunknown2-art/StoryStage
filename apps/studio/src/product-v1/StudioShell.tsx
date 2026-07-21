@@ -40,13 +40,42 @@ const toggle = (set: Set<string>, id: string) => {
   return next;
 };
 
+const DIRECTOR_TABS = [
+  {
+    id: "direct",
+    label: "Direct",
+    truth:
+      "Story direction for the selected beat will be edited here in a later F3 package. This tab shows the shared scope only — nothing here changes the plan yet.",
+  },
+  {
+    id: "visual",
+    label: "Visual",
+    truth:
+      "Visual direction (art, camera, lighting) is not editable in this package. The scope above is the same beat shown in the rail and on the board.",
+  },
+  {
+    id: "motion",
+    label: "Motion",
+    truth:
+      "Motion and performance direction arrive later. No animation or rendering exists in this package, and this tab changes nothing.",
+  },
+] as const;
+
+type DirectorTabId = (typeof DIRECTOR_TABS)[number]["id"];
+
 /**
- * F2 Studio shell (WP1 + WP2): one selected scene identity drives the
- * hierarchy rail, center scene-board, transport, episode overview, and the
- * scene-relative playhead. Act/sequence groups expand and collapse; beat
- * rows render only for the selected scene; a collapsed selected scene keeps
- * an explicit reachable summary. The playhead is local UI timing — never
- * media playback. Director controls arrive in F3.
+ * F2/F3 Studio shell: one selected scene identity drives the hierarchy
+ * rail, center scene-board, transport, episode overview, and the
+ * scene-relative playhead. Act/sequence groups expand and collapse; a
+ * collapsed selected scene keeps an explicit reachable summary. The
+ * playhead is local UI timing — never media playback.
+ *
+ * F3-WP1 adds the shared beat scope: the selected beat is one real Studio
+ * state reflected by the rail beat buttons, the board beat card, the
+ * permanent scope header, and the Direct/Visual/Motion Director tabs.
+ * Changing scenes deterministically selects that scene's first beat
+ * (render-time adjustment, no effect races). Director tabs are real local
+ * UI state only — no editing, apply, or production claims in this package.
  */
 export function StudioShell({
   artStyleLabel,
@@ -71,13 +100,20 @@ export function StudioShell({
     new Set(),
   );
   // Scene-relative playhead resets deterministically to zero on every scene
-  // change (render-time adjustment, no effect races).
+  // change (render-time adjustment, no effect races). The selected beat is
+  // one shared Studio scope: it resets deterministically to the new scene's
+  // first beat in the same adjustment, so no stale beat state can leak
+  // across scenes.
   const [playheadSeconds, setPlayheadSeconds] = useState(0);
+  const [selectedBeatIndex, setSelectedBeatIndex] = useState(0);
   const [lastSceneId, setLastSceneId] = useState(selectedSceneId);
   if (lastSceneId !== selectedSceneId) {
     setLastSceneId(selectedSceneId);
     setPlayheadSeconds(0);
+    setSelectedBeatIndex(0);
   }
+  const [selectedDirectorTab, setSelectedDirectorTab] =
+    useState<DirectorTabId>("direct");
 
   const selectedIndex = useMemo(
     () => OLLO_DEMO_SCENES.findIndex((scene) => scene.id === selectedSceneId),
@@ -97,6 +133,24 @@ export function StudioShell({
           return { actId: act.id, sequenceId: sequence.id };
     return null;
   }, [selectedSceneId]);
+
+  const selectedSequence = useMemo(() => {
+    for (const act of OLLO_DEMO_PROJECT.acts)
+      for (const sequence of act.sequences)
+        if (sequence.id === sceneLocation?.sequenceId) return sequence;
+    return null;
+  }, [sceneLocation]);
+
+  const selectedBeat = selectedScene.beats[selectedBeatIndex]!;
+  const activeDirectorTab = DIRECTOR_TABS.find(
+    (tab) => tab.id === selectedDirectorTab,
+  )!;
+
+  /** One authoritative beat selection path. Rail beat buttons render only
+   * for the selected scene, so selecting a beat never changes the scene. */
+  const selectBeat = (beatIndex: number) => {
+    setSelectedBeatIndex(beatIndex);
+  };
 
   const revealScene = (sceneId: string) => {
     for (const act of OLLO_DEMO_PROJECT.acts)
@@ -161,6 +215,25 @@ export function StudioShell({
     selectScene(OLLO_DEMO_SCENES[target]!.id, true);
   };
 
+  /* Director tab keyboard contract: ArrowRight/ArrowLeft move between the
+   * Direct/Visual/Motion tabs (wrapping), Home/End jump to first/last, and
+   * focus follows the selection — the same pattern as the rail contract. */
+  const onDirectorTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const ids = DIRECTOR_TABS.map((tab) => tab.id);
+    const current = ids.indexOf(selectedDirectorTab);
+    let target: number | null = null;
+    if (event.key === "ArrowRight") target = (current + 1) % ids.length;
+    else if (event.key === "ArrowLeft")
+      target = (current - 1 + ids.length) % ids.length;
+    else if (event.key === "Home") target = 0;
+    else if (event.key === "End") target = ids.length - 1;
+    if (target === null) return;
+    event.preventDefault();
+    const nextId = ids[target]!;
+    setSelectedDirectorTab(nextId);
+    document.getElementById(`pv1-director-tab-${nextId}`)?.focus();
+  };
+
   return (
     <main className="pv1-page" data-testid="pv1-studio">
       <header className="pv1-topbar">
@@ -181,6 +254,30 @@ export function StudioShell({
           <ArrowLeft size={15} aria-hidden /> Back to projects
         </button>
       </header>
+
+      {/* Permanent scope header: the one shared episode/sequence/scene/beat
+       * scope every surface (rail, board, Director tabs) agrees on. */}
+      <nav aria-label="Current scope" className="pv1-scope-header">
+        <ol>
+          <li>{projectTitle}</li>
+          <li aria-hidden className="pv1-scope-separator">
+            /
+          </li>
+          <li>{selectedSequence?.title ?? "Sequence not placed"}</li>
+          <li aria-hidden className="pv1-scope-separator">
+            /
+          </li>
+          <li>
+            Scene {selectedIndex + 1} · {selectedScene.title}
+          </li>
+          <li aria-hidden className="pv1-scope-separator">
+            /
+          </li>
+          <li aria-current="true" className="pv1-scope-current">
+            Beat {selectedBeatIndex + 1} · {selectedBeat.title}
+          </li>
+        </ol>
+      </nav>
 
       <div className="pv1-studio-layout">
         {usesLayoutDemo ? (
@@ -301,15 +398,33 @@ export function StudioShell({
                                         aria-label={`Beats in ${scene.title}`}
                                         className="pv1-rail-beats"
                                       >
-                                        {scene.beats.map((beat) => (
-                                          <li
-                                            data-beat-for={scene.id}
-                                            key={beat.title}
-                                          >
-                                            <span>{beat.title}</span>
-                                            <small>{beat.seconds}s</small>
-                                          </li>
-                                        ))}
+                                        {scene.beats.map((beat, beatIndex) => {
+                                          const isBeatSelected =
+                                            beatIndex === selectedBeatIndex;
+                                          return (
+                                            <li
+                                              data-beat-for={scene.id}
+                                              key={beat.title}
+                                            >
+                                              <button
+                                                aria-current={
+                                                  isBeatSelected
+                                                    ? "true"
+                                                    : undefined
+                                                }
+                                                aria-label={`Beat ${beatIndex + 1} ${beat.title} — ${beat.seconds} seconds`}
+                                                className={`pv1-rail-beat ${isBeatSelected ? "is-selected" : ""}`}
+                                                onClick={() =>
+                                                  selectBeat(beatIndex)
+                                                }
+                                                type="button"
+                                              >
+                                                <span>{beat.title}</span>
+                                                <small>{beat.seconds}s</small>
+                                              </button>
+                                            </li>
+                                          );
+                                        })}
                                       </ol>
                                     ) : null}
                                   </div>
@@ -335,6 +450,17 @@ export function StudioShell({
             </div>
             <span className="pv1-badge">Reference board — not animation</span>
           </header>
+          <section aria-label="Selected beat" className="pv1-beat-card">
+            <small>
+              Beat {selectedBeatIndex + 1} of {selectedScene.beats.length} ·{" "}
+              {selectedBeat.seconds}s
+            </small>
+            <h2>{selectedBeat.title}</h2>
+            <p>
+              Planning metadata only — no imagery, animation, or audio exists
+              for this beat.
+            </p>
+          </section>
           <div className="pv1-board-canvas">
             {/* Reference art is ordinary browser UI, not a Remotion composition. */}
             {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
@@ -407,11 +533,39 @@ export function StudioShell({
             <h2>
               <Clapperboard size={15} aria-hidden /> Director
             </h2>
-            <p>
-              Director controls arrive in F3. This shell is a local scene
-              review: you can move through the episode plan, but shot,
-              action, camera, and audio editing are not here yet.
-            </p>
+            <div
+              aria-label="Director workspace"
+              className="pv1-director-tabs"
+              role="tablist"
+            >
+              {DIRECTOR_TABS.map((tab) => (
+                <button
+                  aria-controls={`pv1-director-panel-${tab.id}`}
+                  aria-selected={selectedDirectorTab === tab.id}
+                  className={`pv1-director-tab ${selectedDirectorTab === tab.id ? "is-selected" : ""}`}
+                  id={`pv1-director-tab-${tab.id}`}
+                  key={tab.id}
+                  onClick={() => setSelectedDirectorTab(tab.id)}
+                  onKeyDown={onDirectorTabKeyDown}
+                  role="tab"
+                  type="button"
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <div
+              aria-labelledby={`pv1-director-tab-${activeDirectorTab.id}`}
+              className="pv1-director-panel"
+              id={`pv1-director-panel-${activeDirectorTab.id}`}
+              role="tabpanel"
+            >
+              <p className="pv1-director-scope">
+                Scope: Scene {selectedIndex + 1} · Beat{" "}
+                {selectedBeatIndex + 1} — {selectedBeat.title}
+              </p>
+              <p>{activeDirectorTab.truth}</p>
+            </div>
           </div>
           <div className="pv1-inspector-block">
             <h2>
@@ -421,7 +575,8 @@ export function StudioShell({
               Preview
             </button>
             <small>
-              A real preview arrives after the WP2 Studio playhead work.
+              Preview stays disabled in F3-WP1 — this package is scope and
+              workspace foundation only; there is no media to preview.
             </small>
             <button className="pv1-primary" disabled type="button">
               Export
