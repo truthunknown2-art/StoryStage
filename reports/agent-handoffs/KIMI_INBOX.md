@@ -1,15 +1,29 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `59`
+Inbox-Version: `60`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `E1-WP1-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F3-WP1-SCOPE-WORKSPACE-FOUNDATION`
+Status: `START_NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `a246987fb678712af022b46f3b23ad22f4d22b2a`
-Required-Work-Branch: `none-e1-accepted-wait`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-e1-wp1-accepted-wait-v59.md`
+Accepted-Root-Base: `38969c4400e2a9c84a59346c28f7a72d5f9492bf`
+Required-Work-Branch: `agent/kimi-f3-wp1-scope-workspace-foundation`
+Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp1-scope-workspace-foundation-v60.md`
+Issue: `#72`
 
 ## Current instruction
+
+Version 60 records Preston's E1 `PASS`, E1-WP4 integration into `product/v1`
+at `38969c4400e2a9c84a59346c28f7a72d5f9492bf`, and authorizes only F3-WP1
+through issue #72 on the required branch from that exact base. Execute the full
+Version 60 brief, publish the exact handback and draft PR, then exit. Do not
+begin F3-WP2, later frontend work, or backend product work.
+
+Version 60 supersedes Version 59. Version 59 remains below as historical
+traceability.
+
+---
+
+Previous Version 59 instruction:
 
 Version 59 records ChatGPT Pro's final `ACCEPT` for exact PR #55 head
 `8b74d6486fe46a891d1217bfcd9e98da6e1f932f`, hosted run `29798603209`
