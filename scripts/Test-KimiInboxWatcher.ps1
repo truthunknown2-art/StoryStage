@@ -152,8 +152,10 @@ Issue: ``#66``
     return $false
   }
   $script:stoppedProcessId = 0
+  $script:capturedKimiArguments = $null
   $timeoutOutcome = Invoke-BoundedKimiProcess -Executable 'kimi.exe' -Prompt 'bounded fixture prompt' -Directory $source -StandardOutputPath (Join-Path $fixtureRoot 'stdout.log') -StandardErrorPath (Join-Path $fixtureRoot 'stderr.log') -TimeoutSeconds 1 -ProcessStarter {
     param($Arguments)
+    $script:capturedKimiArguments = @($Arguments)
     $fakeProcess
   } -ProcessTreeStopper {
     param($ProcessId)
@@ -164,6 +166,28 @@ Issue: ``#66``
   Assert-Equal 124 $timeoutOutcome.ExitCode 'A timed-out Kimi process must use exit code 124.'
   Assert-Equal 7070 $script:stoppedProcessId 'Timeout must terminate the launched process tree.'
   Assert-Equal $true $timeoutOutcome.TerminationSucceeded 'Successful process-tree termination must be recorded.'
+  Assert-Equal 4 $script:capturedKimiArguments.Count 'Kimi prompt launch argument count changed unexpectedly.'
+  Assert-Equal '--prompt' $script:capturedKimiArguments[0] 'Kimi prompt mode flag is missing.'
+  Assert-Equal '"bounded fixture prompt"' $script:capturedKimiArguments[1] 'Kimi prompt argument changed unexpectedly.'
+  Assert-Equal '--output-format' $script:capturedKimiArguments[2] 'Kimi structured-output flag is missing.'
+  Assert-Equal 'stream-json' $script:capturedKimiArguments[3] 'Kimi structured-output value changed unexpectedly.'
+  Assert-Equal $false ($script:capturedKimiArguments -contains '--auto') 'Prompt mode must not pass incompatible --auto.'
+  Assert-Equal $false ($script:capturedKimiArguments -contains '--yolo') 'Watcher must never pass --yolo.'
+  Assert-Equal $false ($script:capturedKimiArguments -contains '--plan') 'Prompt mode must not pause for plan approval.'
+  Assert-Equal $false ($script:capturedKimiArguments -contains 'acp') 'Watcher must not start Kimi ACP mode.'
+  Assert-Equal $false ($script:capturedKimiArguments -contains 'web') 'Watcher must not start Kimi web mode.'
+
+  $completedWithoutExitCode = [pscustomobject]@{ Id = 8080; ExitCode = $null }
+  $completedWithoutExitCode | Add-Member -MemberType ScriptMethod -Name WaitForExit -Value {
+    param($Milliseconds)
+    if ($PSBoundParameters.ContainsKey('Milliseconds')) { return $true }
+  }
+  $missingExitOutcome = Invoke-BoundedKimiProcess -Executable 'kimi.exe' -Prompt 'completed without exit code' -Directory $source -StandardOutputPath (Join-Path $fixtureRoot 'stdout-null-exit.log') -StandardErrorPath (Join-Path $fixtureRoot 'stderr-null-exit.log') -TimeoutSeconds 1 -ProcessStarter {
+    param($Arguments)
+    $completedWithoutExitCode
+  }
+  Assert-Equal 1 $missingExitOutcome.ExitCode 'A completed process without an exit code must fail closed.'
+  Assert-Equal $false $missingExitOutcome.TimedOut 'Missing exit code is a startup/completion failure, not a timeout.'
 
   $failedStopOutcome = Invoke-BoundedKimiProcess -Executable 'kimi.exe' -Prompt 'bounded failed-stop fixture' -Directory $source -StandardOutputPath (Join-Path $fixtureRoot 'stdout-2.log') -StandardErrorPath (Join-Path $fixtureRoot 'stderr-2.log') -TimeoutSeconds 1 -ProcessStarter {
     param($Arguments)
