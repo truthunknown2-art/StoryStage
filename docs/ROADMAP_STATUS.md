@@ -10,30 +10,30 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: START_NOW
+  state: REVIEW
   milestone: E1
   package: E1-WP3
   owner: Codex
   exactBase: 4319967eac13dd628eb863dfb29f7bff3c83ffeb
   branch: agent/codex-e1-wp3-streamed-proposal-roundtrip
   issue: 62
-  pr: null
-  candidateContentHead: 4319967eac13dd628eb863dfb29f7bff3c83ffeb
-  candidateRef: product/v1
+  pr: 64
+  candidateContentHead: e554f3dc5bb0ae2ac050df03da069dbb18b1242a
+  candidateRef: agent/codex-e1-wp3-streamed-proposal-roundtrip
 checks:
-  local: roadmap-consistency+codex-lab-wp2-baseline-pass
+  local: codex-lab-47-tests+director-lab-2-tests-and-build+schema+privacy+roadmap+scoped-eslint+diff-check-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: issued-e1-wp3-only-at-exact-base-4319967eac13dd628eb863dfb29f7bff3c83ffeb
+  codex: e1-wp3-candidate-e554f3dc5bb0ae2ac050df03da069dbb18b1242a-awaiting-exact-head-review
   pro: accept-e1-wp2-exact-e8fcaa7e550f82e073dbbec7a7f8cca78a6b8f21
   preston: authorize-e1-wp3-only-at-exact-base-4319967eac13dd628eb863dfb29f7bff3c83ffeb-2026-07-20
 blockers:
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
   - E1-WP4, F3, backend, and Kimi implementation remain unauthorized
 nextAuthorizedAction:
-  type: IMPLEMENT_E1_WP3_ONLY
-  text: Execute only issue 62 from the exact base and stop before E1-WP4.
+  type: REVIEW_E1_WP3_ONLY
+  text: Review exact PR 64 head, resolve findings, obtain Pro acceptance, and stop before E1-WP4.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -83,6 +83,12 @@ verification from the live PR checks.
   `START_NOW` transition authorize the streamed structured-proposal round trip
   and isolated read-only review surface. E1-WP4, F3, backend product work, and
   Kimi implementation remain unauthorized.
+- E1-WP3 implementation candidate `e554f3dc5bb0ae2ac050df03da069dbb18b1242a`
+  is now in review on PR #64. The pinned live run completed through both fixed
+  StoryStage MCP tools, returned one schema-valid ephemeral proposal, preserved
+  the isolated workspace, and produced a sanitized receipt plus a 1440x900
+  zero-console-error review-lab capture. This is not acceptance of E1-WP3 or
+  authorization for E1-WP4.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
     and deterministic proposal/application path. Pro also required complete visual

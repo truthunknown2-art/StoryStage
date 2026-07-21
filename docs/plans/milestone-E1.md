@@ -194,6 +194,15 @@ App Server-to-MCP proposal round trip, typed host event model, and isolated
 read-only review surface. E1-WP4, F3, backend product work, and Kimi
 implementation remain blocked.
 
+**Candidate review status (2026-07-20):** PR #64 carries implementation
+candidate `e554f3dc5bb0ae2ac050df03da069dbb18b1242a`. Focused verification passes
+47 Codex-lab tests, 2 isolated review-lab tests and its production build, the
+pinned schema check, privacy check, roadmap consistency, scoped lint, and diff
+check. A real pinned-runtime round trip exercised both fixed StoryStage MCP
+tools and recorded one schema-valid unapplied proposal; the committed 1440x900
+capture has zero browser console errors or warnings. The package remains in
+review and does not authorize E1-WP4.
+
 ### E1-WP4 - Failure, security, and feasibility gate
 
 **Primary invariant:** every unsupported, hostile, unavailable, or interrupted
