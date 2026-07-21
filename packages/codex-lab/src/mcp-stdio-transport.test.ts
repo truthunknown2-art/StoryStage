@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { PassThrough } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -91,5 +92,36 @@ describe("E1-WP2 bounded MCP stdio transport", () => {
       ],
     });
     await client.close();
+  });
+
+  it("terminates nonzero on malformed JSONL even when the parent keeps stdin open", async () => {
+    const child = spawn(
+      process.execPath,
+      [
+        fileURLToPath(import.meta.resolve("tsx/cli")),
+        fileURLToPath(new URL("./mcp-cli.ts", import.meta.url)),
+      ],
+      { stdio: "pipe", windowsHide: true },
+    );
+    let stderr = "";
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString("utf8");
+    });
+    const exited = new Promise<number | null>((resolve, reject) => {
+      child.once("error", reject);
+      child.once("exit", (code) => resolve(code));
+    });
+    child.stdin.write("not-json\n");
+    const timeout = new Promise<"timeout">((resolve) =>
+      setTimeout(() => resolve("timeout"), 3_000),
+    );
+    const result = await Promise.race([exited, timeout]);
+    if (result === "timeout") {
+      child.kill();
+      await exited;
+      throw new Error("Malformed MCP stdio did not terminate the child.");
+    }
+    expect(result).toBe(1);
+    expect(stderr).toBe("MCP_PROTOCOL_FAILED: bounded stdio rejected input.\n");
   });
 });

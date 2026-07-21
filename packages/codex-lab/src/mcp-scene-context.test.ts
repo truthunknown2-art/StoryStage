@@ -12,6 +12,7 @@ import {
   E1_MCP_REQUEST_TIMEOUT_MS,
   E1_MCP_RESOURCE_URI,
   createE1McpSceneContextServer,
+  createE1McpSceneContextServerForTest,
   e1ProposalReceiptSchema,
   e1SceneContextSchema,
 } from "./mcp-scene-context";
@@ -51,9 +52,9 @@ async function fixtureHash(): Promise<string> {
 }
 
 async function connect(
-  dependencies: Parameters<typeof createE1McpSceneContextServer>[0] = {},
+  dependencies: Parameters<typeof createE1McpSceneContextServerForTest>[0] = {},
 ) {
-  const server = await createE1McpSceneContextServer(dependencies);
+  const server = await createE1McpSceneContextServerForTest(dependencies);
   const client = new Client(
     { name: "storystage-e1-wp2-tests", version: "1.0.0" },
     { capabilities: {} },
@@ -168,6 +169,34 @@ describe.sequential("E1-WP2 bounded synthetic-scene MCP server", () => {
       },
     ]);
     expect(tools.tools).toHaveLength(2);
+    // Full-schema fingerprints make any authority or receipt broadening fail
+    // even when names, required keys, and annotations stay unchanged.
+    expect(
+      tools.tools.map(({ name, inputSchema, outputSchema }) => ({
+        name,
+        inputSchemaSha256: createHash("sha256")
+          .update(JSON.stringify(inputSchema))
+          .digest("hex"),
+        outputSchemaSha256: createHash("sha256")
+          .update(JSON.stringify(outputSchema))
+          .digest("hex"),
+      })),
+    ).toEqual([
+      {
+        name: "get_scene_context",
+        inputSchemaSha256:
+          "fa7c9bcba1bbdffbf5527bf5fca720f8000b301c77e413639477eb72a0edcba6",
+        outputSchemaSha256:
+          "47b8f893044d6ce79377ca62f1d103638e26d1c396f4f547ae67b622304b8a3e",
+      },
+      {
+        name: "submit_direction_proposal",
+        inputSchemaSha256:
+          "2b9f6257d09acab1b8ec32ddad8fd1cf7436ea98a86c4f7a3c3e69faca9d7f75",
+        outputSchemaSha256:
+          "702769437e2701277c6597e79c63c5f037ecc59b100830217ec5ad6a19f443b4",
+      },
+    ]);
     expect(tools.tools[0]?.inputSchema).toMatchObject({
       type: "object",
       additionalProperties: false,
@@ -185,6 +214,16 @@ describe.sequential("E1-WP2 bounded synthetic-scene MCP server", () => {
         "rationale",
         "changes",
       ],
+    });
+    expect(tools.tools[1]?.outputSchema).toMatchObject({
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        status: { type: "string", const: "validated-ephemeral" },
+        applied: { type: "boolean", const: false },
+        persisted: { type: "boolean", const: false },
+        canonical: { type: "boolean", const: false },
+      },
     });
     await connection.close();
   });
@@ -353,15 +392,8 @@ describe.sequential("E1-WP2 bounded synthetic-scene MCP server", () => {
 
   it("cancels in-flight work and enforces the fixed handler deadline", async () => {
     const before = await fixtureHash();
-    let observedSignal: AbortSignal | undefined;
     const cancelledConnection = await connect({
-      beforeRequest: async (method, signal) => {
-        if (method !== "get_scene_context") return;
-        observedSignal = signal;
-        await new Promise<void>((resolve) => {
-          signal.addEventListener("abort", () => resolve(), { once: true });
-        });
-      },
+      requestDelayMs: 10_000,
     });
     const controller = new AbortController();
     const cancelled = cancelledConnection.client.callTool(
@@ -372,17 +404,14 @@ describe.sequential("E1-WP2 bounded synthetic-scene MCP server", () => {
       undefined,
       { signal: controller.signal, timeout: 10_000 },
     );
-    await vi.waitFor(() => expect(observedSignal).toBeDefined());
+    await new Promise((resolve) => setTimeout(resolve, 25));
     controller.abort();
     await expect(cancelled).rejects.toMatchObject({ code: -32_001 });
-    await vi.waitFor(() => expect(observedSignal?.aborted).toBe(true));
     await cancelledConnection.close();
 
     vi.useFakeTimers();
     const timeoutConnection = await connect({
-      beforeRequest: async (method) => {
-        if (method === "get_scene_context") await new Promise(() => undefined);
-      },
+      requestDelayMs: 10_000,
     });
     const timedOut = timeoutConnection.client.callTool(
       {
@@ -405,23 +434,23 @@ describe.sequential("E1-WP2 bounded synthetic-scene MCP server", () => {
   it("fails closed before registration when fixture startup validation fails", async () => {
     const fixture = await readFile(fixtureUrl);
     await expect(
-      createE1McpSceneContextServer({
+      createE1McpSceneContextServerForTest({
         readFixture: async () => Buffer.from("not-json"),
       }),
     ).rejects.toMatchObject({ code: "MCP_STARTUP_FAILED" });
     await expect(
-      createE1McpSceneContextServer({
+      createE1McpSceneContextServerForTest({
         readFixture: async () => Buffer.concat([fixture, Buffer.from(" ")]),
       }),
     ).rejects.toMatchObject({ code: "MCP_STARTUP_FAILED" });
     await expect(
-      createE1McpSceneContextServer({
+      createE1McpSceneContextServerForTest({
         readFixture: async () =>
           Buffer.alloc(E1_MCP_MAX_FIXTURE_BYTES + 1, 0x20),
       }),
     ).rejects.toMatchObject({ code: "MCP_STARTUP_FAILED" });
     await expect(
-      createE1McpSceneContextServer({
+      createE1McpSceneContextServerForTest({
         readFixture: async () => {
           throw new Error("host path must not escape");
         },
@@ -441,5 +470,15 @@ describe.sequential("E1-WP2 bounded synthetic-scene MCP server", () => {
     expect(source).not.toMatch(
       /from\s+["'](?:node:child_process|.*render-worker|.*story-engine|.*apps\/studio)["']|\b(?:writeFile|appendFile|rename|mkdir|rm|fetch)\s*\(/,
     );
+    const packageSurface = await import("./index");
+    const cliSource = await readFile(
+      new URL("./mcp-cli.ts", import.meta.url),
+      "utf8",
+    );
+    expect(createE1McpSceneContextServer).toHaveLength(0);
+    expect(packageSurface).not.toHaveProperty(
+      "createE1McpSceneContextServerForTest",
+    );
+    expect(cliSource).not.toMatch(/ForTest|requestDelayMs|readFixture/);
   });
 });

@@ -50,6 +50,7 @@ export class E1McpBoundedStdioTransport implements Transport {
     this.input.off("error", this.onInputError);
     this.input.off("end", this.onEnd);
     this.buffer = Buffer.alloc(0);
+    if (!this.input.destroyed) this.input.destroy();
     this.onclose?.();
   }
 

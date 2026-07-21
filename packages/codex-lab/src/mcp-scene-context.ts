@@ -220,9 +220,9 @@ export class E1McpSceneContextError extends Error {
   }
 }
 
-export type E1McpSceneContextDependencies = {
+type E1McpSceneContextTestDependencies = {
   readFixture?: () => Promise<Buffer>;
-  beforeRequest?: (method: string, signal: AbortSignal) => Promise<void>;
+  requestDelayMs?: number;
 };
 
 const fixedFixtureUrl = new URL(
@@ -328,9 +328,8 @@ function assertOutputLimit(value: unknown): string {
 }
 
 async function waitForRequestBounds(
-  method: string,
   signal: AbortSignal,
-  beforeRequest?: E1McpSceneContextDependencies["beforeRequest"],
+  requestDelayMs = 0,
 ): Promise<void> {
   if (signal.aborted) {
     throw new E1McpSceneContextError(
@@ -339,8 +338,15 @@ async function waitForRequestBounds(
     );
   }
   let timeout: NodeJS.Timeout | undefined;
+  let requestDelay: NodeJS.Timeout | undefined;
   let abortListener: (() => void) | undefined;
   try {
+    const boundedWork =
+      requestDelayMs > 0
+        ? new Promise<void>((resolve) => {
+            requestDelay = setTimeout(resolve, requestDelayMs);
+          })
+        : Promise.resolve();
     const deadline = new Promise<never>((_, reject) => {
       timeout = setTimeout(
         () =>
@@ -363,13 +369,10 @@ async function waitForRequestBounds(
         );
       signal.addEventListener("abort", abortListener, { once: true });
     });
-    await Promise.race([
-      beforeRequest?.(method, signal) ?? Promise.resolve(),
-      deadline,
-      cancelled,
-    ]);
+    await Promise.race([boundedWork, deadline, cancelled]);
   } finally {
     if (timeout) clearTimeout(timeout);
+    if (requestDelay) clearTimeout(requestDelay);
     if (abortListener) signal.removeEventListener("abort", abortListener);
   }
 }
@@ -463,8 +466,8 @@ const readOnlyAnnotations = {
   openWorldHint: false,
 } as const;
 
-export async function createE1McpSceneContextServer(
-  dependencies: E1McpSceneContextDependencies = {},
+async function createE1McpSceneContextServerWithTestDependencies(
+  dependencies: E1McpSceneContextTestDependencies,
 ): Promise<McpServer> {
   const fixture = await loadFixture(dependencies.readFixture);
   const context = toContext(fixture);
@@ -507,11 +510,7 @@ export async function createE1McpSceneContextServer(
           code: "RESOURCE_NOT_FOUND",
         });
       }
-      await waitForRequestBounds(
-        "resources/read",
-        extra.signal,
-        dependencies.beforeRequest,
-      );
+      await waitForRequestBounds(extra.signal, dependencies.requestDelayMs);
       return {
         contents: [
           {
@@ -536,11 +535,7 @@ export async function createE1McpSceneContextServer(
     },
     async (_arguments, extra) => {
       try {
-        await waitForRequestBounds(
-          "get_scene_context",
-          extra.signal,
-          dependencies.beforeRequest,
-        );
+        await waitForRequestBounds(extra.signal, dependencies.requestDelayMs);
         return {
           structuredContent: context,
           content: [{ type: "text", text: contextText }],
@@ -563,11 +558,7 @@ export async function createE1McpSceneContextServer(
     },
     async (proposal, extra) => {
       try {
-        await waitForRequestBounds(
-          "submit_direction_proposal",
-          extra.signal,
-          dependencies.beforeRequest,
-        );
+        await waitForRequestBounds(extra.signal, dependencies.requestDelayMs);
         validateProposal(proposal, fixture);
         const structuredContent = e1ProposalReceiptSchema.parse({
           schemaVersion: 1,
@@ -604,4 +595,16 @@ export async function createE1McpSceneContextServer(
   });
 
   return server;
+}
+
+export async function createE1McpSceneContextServer(): Promise<McpServer> {
+  return createE1McpSceneContextServerWithTestDependencies({});
+}
+
+// Test-only seam. It is deliberately absent from the package export surface and
+// the CLI path; production handlers accept no caller-supplied executable code.
+export async function createE1McpSceneContextServerForTest(
+  dependencies: E1McpSceneContextTestDependencies = {},
+): Promise<McpServer> {
+  return createE1McpSceneContextServerWithTestDependencies(dependencies);
 }
