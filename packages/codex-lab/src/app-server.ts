@@ -1,8 +1,12 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { join } from "node:path";
 import type { Writable } from "node:stream";
+import { fileURLToPath } from "node:url";
 import { classifyRpcFailure } from "./account-state";
 import { CodexLabError } from "./errors";
 import { runtimeManifest } from "./runtime-manifest";
+
+const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
 type JsonRpcId = number | string;
 type PendingRequest = {
@@ -18,6 +22,23 @@ type NotificationWaiter = {
   timeout: NodeJS.Timeout;
 };
 
+export type AppServerInboundMessage =
+  | {
+      kind: "notification";
+      method: string;
+      params: unknown;
+    }
+  | {
+      kind: "blocked-request";
+      id: JsonRpcId;
+      method: string;
+      params: unknown;
+    };
+
+export type AppServerInboundListener = (
+  message: AppServerInboundMessage,
+) => void;
+
 export type TranscriptEntry = {
   direction: "client-notification" | "client-request" | "server-notification";
   method: string;
@@ -26,7 +47,9 @@ export type TranscriptEntry = {
 
 type ExitResult = { code: number | null; signal: NodeJS.Signals | null };
 
-function allowlistedEnvironment(): NodeJS.ProcessEnv {
+function allowlistedEnvironment(
+  source: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
   const allowed = new Set([
     "appdata",
     "codex_home",
@@ -45,10 +68,20 @@ function allowlistedEnvironment(): NodeJS.ProcessEnv {
     "windir",
   ]);
   return Object.fromEntries(
-    Object.entries(process.env).filter(([key]) =>
-      allowed.has(key.toLowerCase()),
-    ),
+    Object.entries(source).filter(([key]) => allowed.has(key.toLowerCase())),
   );
+}
+
+export function getE1ProposalEnvironment(
+  codexHome: string,
+  source: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+  const environment = allowlistedEnvironment(source);
+  for (const key of Object.keys(environment)) {
+    if (key.toLowerCase() === "codex_home") delete environment[key];
+  }
+  environment.CODEX_HOME = codexHome;
+  return environment;
 }
 
 function classifyRpcReason(rawError: unknown) {
@@ -82,6 +115,7 @@ export class AppServerClient {
     NotificationWaiter[]
   >();
   private readonly transcript: TranscriptEntry[] = [];
+  private readonly inboundListeners = new Set<AppServerInboundListener>();
   private readonly exitPromise: Promise<ExitResult>;
   private nextId = 1;
   private stdoutBuffer = Buffer.alloc(0);
@@ -136,6 +170,23 @@ export class AppServerClient {
 
   public didObserveStderr(): boolean {
     return this.stderrObserved;
+  }
+
+  public waitForExit(): Promise<{
+    code: number | null;
+    signal: NodeJS.Signals | null;
+  }> {
+    return this.exitPromise;
+  }
+
+  /**
+   * Observes inbound messages in JSONL arrival order. The listener is registered
+   * synchronously so callers can subscribe before starting a turn and cannot
+   * miss early streaming notifications.
+   */
+  public subscribeInbound(listener: AppServerInboundListener): () => void {
+    this.inboundListeners.add(listener);
+    return () => this.inboundListeners.delete(listener);
   }
 
   public async request<T>(
@@ -237,6 +288,19 @@ export class AppServerClient {
     ]);
     if (result === timedOut) {
       this.child.kill();
+      const terminated = await Promise.race([
+        this.exitPromise,
+        new Promise<typeof timedOut>((resolve) =>
+          setTimeout(() => resolve(timedOut), timeoutMs),
+        ),
+      ]);
+      if (terminated === timedOut) {
+        throw new CodexLabError(
+          "APP_SERVER_CRASHED",
+          "The Codex App Server could not be terminated after shutdown timed out.",
+          "crashed",
+        );
+      }
       throw new CodexLabError(
         "APP_SERVER_TIMEOUT",
         "The Codex App Server did not shut down cleanly.",
@@ -359,12 +423,23 @@ export class AppServerClient {
 
     if (typeof message.method === "string") {
       if (typeof message.id === "number" || typeof message.id === "string") {
+        this.publishInbound({
+          kind: "blocked-request",
+          id: message.id,
+          method: message.method,
+          params: message.params,
+        });
         this.write({
           jsonrpc: "2.0",
           id: message.id,
           error: { code: -32601, message: "Client request is not supported." },
         });
       } else {
+        this.publishInbound({
+          kind: "notification",
+          method: message.method,
+          params: message.params,
+        });
         this.transcript.push({
           direction: "server-notification",
           method: message.method,
@@ -389,6 +464,10 @@ export class AppServerClient {
         "incompatible",
       ),
     );
+  }
+
+  private publishInbound(message: AppServerInboundMessage): void {
+    for (const listener of this.inboundListeners) listener(message);
   }
 
   private failProtocol(error: CodexLabError): void {
@@ -416,6 +495,73 @@ export class AppServerClient {
 export function launchAppServer(executablePath: string): AppServerClient {
   const child = spawn(executablePath, runtimeManifest.serverArgs, {
     env: allowlistedEnvironment(),
+    stdio: "pipe",
+    windowsHide: true,
+  });
+  return new AppServerClient(child);
+}
+
+function tomlString(value: string): string {
+  return JSON.stringify(value.replaceAll("\\", "/"));
+}
+
+export function getE1ProposalAppServerArgs(): readonly string[] {
+  return [
+    "app-server",
+    ...getE1DisabledCapabilityArgs(),
+    ...getE1McpConfigArgs(),
+    "--stdio",
+  ];
+}
+
+function getE1McpConfigArgs(): readonly string[] {
+  const tsxCli = join(repositoryRoot, "node_modules", "tsx", "dist", "cli.mjs");
+  const mcpCli = join(
+    repositoryRoot,
+    "packages",
+    "codex-lab",
+    "src",
+    "mcp-cli.ts",
+  );
+  const fixedStoryStage = [
+    "-c",
+    'web_search="disabled"',
+    "-c",
+    `mcp_servers.storystage_e1.command=${tomlString(process.execPath)}`,
+    "-c",
+    `mcp_servers.storystage_e1.args=[${tomlString(tsxCli)},${tomlString(mcpCli)}]`,
+    "-c",
+    `mcp_servers.storystage_e1.cwd=${tomlString(repositoryRoot)}`,
+    "-c",
+    "mcp_servers.storystage_e1.enabled=true",
+    "-c",
+    'cli_auth_credentials_store="file"',
+  ];
+  return fixedStoryStage;
+}
+
+function getE1DisabledCapabilityArgs(): readonly string[] {
+  return [
+    "apps",
+    "browser_use",
+    "computer_use",
+    "goals",
+    "hooks",
+    "image_generation",
+    "memories",
+    "multi_agent",
+    "plugins",
+    "shell_tool",
+  ].flatMap((feature) => ["--disable", feature]);
+}
+
+/** Launches the pinned App Server with one dedicated Codex state root. */
+export function launchE1ProposalAppServer(
+  executablePath: string,
+  codexHome: string,
+): AppServerClient {
+  const child = spawn(executablePath, getE1ProposalAppServerArgs(), {
+    env: getE1ProposalEnvironment(codexHome),
     stdio: "pipe",
     windowsHide: true,
   });

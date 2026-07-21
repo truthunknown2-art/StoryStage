@@ -8,6 +8,7 @@
   },
   "scripts": {
     "mcp:e1-scene-context": "tsx src/mcp-cli.ts",
+    "proposal:e1-live": "tsx src/proposal-cli.ts",
     "preflight": "tsx src/cli.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"

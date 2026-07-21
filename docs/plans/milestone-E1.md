@@ -9,9 +9,12 @@
 - Product acceptance: Preston
 - Decomposition approval: Preston accepted G0 and the dependency-ordered
   E1-WP1 through E1-WP4 plan on 2026-07-20
-- Current authorization: E1-WP3 only through issue #62 at exact base
-  `4319967eac13dd628eb863dfb29f7bff3c83ffeb`; E1-WP4 and later work remain
-  blocked
+- Current authorization: E1-WP3 through issue #62 at exact base
+  `4319967eac13dd628eb863dfb29f7bff3c83ffeb`. The redacted-table adapter was
+  rejected before implementation; ChatGPT Pro accepted the dedicated Codex
+  state/login successor at exact `07d2ccf735edc11b6a8de129bd478a986551aa9a`.
+  Standing continuation authority applies only after each dependency-ordered
+  package passes its existing gates.
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 
@@ -158,7 +161,10 @@ E1-WP3 through issue #62 and a separate exact-base `START_NOW` update.
 ### E1-WP3 - Streamed structured-proposal round trip
 
 **Primary invariant:** the host can turn App Server events into an understandable
-proposal/approval experience without interpreting terminal text or applying it.
+proposal/approval experience without interpreting conversation/agent terminal
+text or applying it. No compatibility exception exists: all terminal-based MCP
+discovery is prohibited. Isolation must come from the dedicated Codex-owned
+state root and be proven through typed App Server APIs before any prompt.
 
 **Tasks**
 
@@ -193,6 +199,78 @@ proposal/approval experience without interpreting terminal text or applying it.
 App Server-to-MCP proposal round trip, typed host event model, and isolated
 read-only review surface. E1-WP4, F3, backend product work, and Kimi
 implementation remain blocked.
+
+**Superseded blocked feasibility status (2026-07-20):** PR #64 content
+`b134cc62bda0055a857cf82b5a48ba57dd2ebc14` removes the unsafe structured MCP
+inventory path and fails before App Server launch. Final Sol-high audit and
+ChatGPT Pro confirmed that pinned Codex 0.144.1 emits raw configured MCP
+environment/header values from `mcp list --json`; receiving that payload, even
+only to retain names, violates E1's credential boundary. Empty-table/profile
+overrides do not replace inherited MCPs, isolated `CODEX_HOME` loses ChatGPT
+authentication, and credential aliasing or terminal-table parsing violate the
+accepted constraints. Focused verification passes 57 Codex-lab tests, 1
+blocked-state lab test and its production build, privacy, scoped lint, and diff
+check. The prior live round trip, only-StoryStage isolation claim, and accepted
+proposal-review evidence are invalidated. The replacement 1440x900 capture
+shows the truthful fail-closed state with zero console errors or warnings.
+That state awaited Preston's platform or architecture decision.
+
+**Superseded compatibility amendment (2026-07-21):** Preston explicitly permitted
+a tested internal adapter over only the redacted human `codex mcp list` name
+table, with fail-closed verification and no credential access. The adapter may
+extract only server name and enabled/disabled state, must reject unknown headers,
+columns, row shapes, control characters, duplicates, redaction-marker drift, or
+nonzero exits, and must never execute or parse `mcp list --json`. A live receipt
+may restore the isolation claim only after pre-launch configuration and the
+pinned runtime both prove that StoryStage is the sole enabled MCP. Preston also
+granted standing authority to continue through dependency-ordered packages
+while away; that authority does not waive hosted checks, exact-SHA Pro review,
+milestone gates, or the rule that E1-WP4 cannot start before E1-WP3 is accepted.
+
+**Credential-boundary result:** adversarial testing rejected that adapter before
+implementation. Pinned Codex 0.144.1 prints stdio Command and Args and HTTP
+URL/query columns verbatim. Synthetic sentinels proved that those fields can
+contain credential material, while `mcp list --help` offers no supported
+names/status-only projection. Capturing, streaming, proxying, or partially
+parsing the table would expose those bytes to a StoryStage-owned process before
+discard, so the adapter cannot satisfy its own no-credential-access condition.
+
+**Dedicated-state successor for Pro review:** under Preston's standing
+dependency-ordered continuation authority, Codex selects a dedicated Codex-owned
+state root with no inherited user `config.toml`. StoryStage supplies only the
+fixed `storystage_e1` MCP on the App Server command line. When signed out, the
+host uses the pinned typed `account/login/start` ChatGPT flow and opens only its
+returned official auth URL; Codex owns credential creation, storage, refresh,
+and logout inside its dedicated state root. StoryStage must never read, copy,
+link, log, back up, export, or migrate those credential files. Acceptance still
+requires exact-one MCP proof before prompting, a successful official interactive
+login, the live schema-valid proposal round trip, hosted verification, and an
+exact-SHA Pro verdict. This architecture candidate does not start E1-WP4.
+
+**Pro architecture verdict (2026-07-21):** ACCEPTED at exact
+`07d2ccf735edc11b6a8de129bd478a986551aa9a`, conditional on this removal of the
+obsolete human-table exception and hosted PASS on the corrected exact head.
+Implementation must remove inherited `CODEX_HOME`, set only the canonical
+dedicated root, and require `initialize.codexHome` to match. StoryStage may
+create/select/pass the root but must treat all child state as opaque. The host
+must use only typed ChatGPT account/login events, retain auth URL/login ID only
+in memory, validate and correlate them exactly, prove one fixed MCP globally
+and thread-scoped, and prohibit every `turn/start` until both proofs pass.
+
+**Live successor result (2026-07-21):** official ChatGPT authentication
+completed inside the dedicated Codex-owned state root. The first authenticated
+inventory proof failed closed because the direct MCP client and App Server
+serialized identical JSON Schema object keys in different orders. The
+successor now hashes a recursive canonical JSON representation: object keys are
+sorted, array order and every schema value remain exact, and semantic drift is
+still rejected. A regression proves deep key reordering passes while a changed
+schema literal fails. The corrected live run proved exactly one fixed
+StoryStage MCP globally and thread-scoped before prompting, called only
+`get_scene_context` and `submit_direction_proposal`, returned one validated
+ephemeral proposal, persisted no raw protocol/account/thread/turn/token data,
+and kept Apply disabled. The sanitized live receipt and replacement 1440x900
+capture are committed with their hashes. This is candidate evidence for final
+exact-head review; it does not accept E1-WP3 or start E1-WP4.
 
 ### E1-WP4 - Failure, security, and feasibility gate
 

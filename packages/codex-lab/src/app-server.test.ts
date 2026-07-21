@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
-import { AppServerClient } from "./app-server";
+import { describe, expect, it, vi } from "vitest";
+import {
+  AppServerClient,
+  getE1ProposalAppServerArgs,
+  getE1ProposalEnvironment,
+} from "./app-server";
 import { FakeChild, answerRequests, asChild } from "./test-helpers";
 
 describe("E1 JSONL App Server client", () => {
@@ -63,5 +67,97 @@ describe("E1 JSONL App Server client", () => {
     const client = new AppServerClient(asChild(child));
     child.stdin.once("finish", () => child.emit("exit", 0, null));
     await expect(client.close()).resolves.toBeUndefined();
+  });
+
+  it("waits for child termination after a shutdown timeout", async () => {
+    vi.useFakeTimers();
+    const child = new FakeChild();
+    child.kill.mockImplementation(() => true);
+    const client = new AppServerClient(asChild(child));
+    try {
+      const closing = client.close(5);
+      let settled = false;
+      void closing.then(
+        () => {
+          settled = true;
+        },
+        () => {
+          settled = true;
+        },
+      );
+      await vi.advanceTimersByTimeAsync(5);
+      expect(child.kill).toHaveBeenCalledOnce();
+      expect(settled).toBe(false);
+      child.emit("exit", 1, "SIGTERM");
+      await expect(closing).rejects.toMatchObject({
+        code: "APP_SERVER_TIMEOUT",
+        stateHint: "crashed",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("delivers notifications and blocked server requests in arrival order", async () => {
+    const child = new FakeChild();
+    const client = new AppServerClient(asChild(child));
+    const observed: Array<{ kind: string; method: string }> = [];
+    const unsubscribe = client.subscribeInbound((message) => {
+      observed.push({ kind: message.kind, method: message.method });
+    });
+
+    child.stdout.write(
+      `${JSON.stringify({ jsonrpc: "2.0", method: "turn/started", params: {} })}\n`,
+    );
+    child.stdout.write(
+      `${JSON.stringify({ jsonrpc: "2.0", id: "approval-1", method: "item/requestApproval", params: {} })}\n`,
+    );
+
+    expect(observed).toEqual([
+      { kind: "notification", method: "turn/started" },
+      { kind: "blocked-request", method: "item/requestApproval" },
+    ]);
+    expect(child.stdin.read()?.toString()).toContain('"code":-32601');
+
+    unsubscribe();
+    child.stdout.write(
+      `${JSON.stringify({ jsonrpc: "2.0", method: "turn/completed", params: {} })}\n`,
+    );
+    expect(observed).toHaveLength(2);
+    child.emit("exit", 0, null);
+  });
+
+  it("launches only the fixed StoryStage MCP from dedicated Codex state", () => {
+    const args = getE1ProposalAppServerArgs();
+    expect(args[0]).toBe("app-server");
+    expect(args).toContain("apps");
+    expect(args).toContain("hooks");
+    expect(args).toContain("shell_tool");
+    const fixedIndex = args.findIndex((arg) =>
+      arg.startsWith("mcp_servers.storystage_e1.command="),
+    );
+    expect(fixedIndex).toBeGreaterThan(0);
+    expect(args.join(" ")).toContain("mcp-cli.ts");
+    expect(args).toContain('cli_auth_credentials_store="file"');
+    expect(args).toContain('web_search="disabled"');
+    expect(args.at(-1)).toBe("--stdio");
+    expect(args.join(" ")).not.toContain("http://");
+    expect(args.join(" ")).not.toContain("https://");
+  });
+
+  it("replaces inherited Codex state and never forwards credential variables", () => {
+    const environment = getE1ProposalEnvironment("C:\\dedicated-codex", {
+      CODEX_HOME: "C:\\global-codex",
+      codex_home: "C:\\lowercase-global-codex",
+      CODEX_ACCESS_TOKEN: "must-not-pass",
+      OPENAI_API_KEY: "must-not-pass",
+      PATH: "C:\\Windows",
+    });
+
+    expect(environment.CODEX_HOME).toBe("C:\\dedicated-codex");
+    expect(environment.codex_home).toBeUndefined();
+    expect(environment.CODEX_ACCESS_TOKEN).toBeUndefined();
+    expect(environment.OPENAI_API_KEY).toBeUndefined();
+    expect(environment.PATH).toBe("C:\\Windows");
   });
 });

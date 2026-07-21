@@ -14,6 +14,7 @@ import {
 import { z } from "zod";
 
 export const E1_MCP_PROTOCOL_VERSION = "2025-06-18";
+export const E1_MCP_SERVER_NAME = "storystage_e1";
 export const E1_MCP_RESOURCE_URI = "storystage-e1://synthetic/scene-context/v1";
 export const E1_MCP_FIXTURE_SHA256 =
   "c2867cadbf69f69a332e97fe243d15f78adb772263373c332ea7579b291af58a";

@@ -1,0 +1,1002 @@
+import { createHash } from "node:crypto";
+import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import type { ZodType } from "zod";
+import {
+  launchE1ProposalAppServer,
+  type AppServerClient,
+  type AppServerInboundMessage,
+} from "./app-server";
+import { prepareE1CodexHome } from "./e1-codex-state";
+import { CodexLabError } from "./errors";
+import {
+  E1_MCP_RESOURCE_URI,
+  E1_MCP_SERVER_NAME,
+  e1ProposalReceiptSchema,
+  type E1DirectionProposal,
+} from "./mcp-scene-context";
+import {
+  accountLoginCancelResponseSchema,
+  accountLoginCompletedNotificationSchema,
+  accountLoginStartResponseSchema,
+  accountResponseSchema,
+  appServerAgentDeltaNotificationSchema,
+  appServerErrorNotificationSchema,
+  appServerItemLifecycleNotificationSchema,
+  appServerMcpProgressNotificationSchema,
+  appServerMcpToolCallItemSchema,
+  initializeResponseSchema,
+  mcpServerStatusListResponseSchema,
+  threadStartResponseSchema,
+  turnCompletedNotificationSchema,
+  turnStartResponseSchema,
+  turnStartedNotificationSchema,
+} from "./protocol-schemas";
+import { verifyPinnedRuntime, type VerifiedRuntime } from "./runtime";
+
+export const E1_PROPOSAL_SCOPE = {
+  projectId: "project-ollo-cloud-parade-lab",
+  sceneId: "scene-cloud-garden",
+  beatId: "beat-windbell-discovery",
+} as const;
+
+export const E1_PROPOSAL_TOOLS = [
+  "get_scene_context",
+  "submit_direction_proposal",
+] as const;
+
+const proposalPrompt = `You are the StoryStage AI Director inside the E1 synthetic proposal-only lab.
+Use only the ${E1_MCP_SERVER_NAME} MCP server. First call get_scene_context with schemaVersion 1. Then create exactly one bounded direction revision for the selected beat and call submit_direction_proposal exactly once. Use only IDs, capabilities, and proposal vocabulary returned by get_scene_context. Do not run commands, read files, browse, create images, delegate, persist, apply, approve, render, or call any other tool. After the validated receipt, briefly summarize the proposal and stop.`;
+
+const E1_PROPOSAL_TURN_TIMEOUT_MS = 120_000;
+const E1_LOGIN_TIMEOUT_MS = 5 * 60_000;
+
+const E1_TOOL_SCHEMA_FINGERPRINTS = {
+  get_scene_context: {
+    input: "d33ddf8bb22395fb38379d4e821a1b81fea8c8caf12514fc9aea8aec6f1bec0f",
+    output: "f78a80b9ed25cbbced69996672fa1ab8966406028cd85997b18183cf8c1f9ae8",
+  },
+  submit_direction_proposal: {
+    input: "90789225f01d51b85646698fa6899c1b4bca90162211c54bfab021c81bcb4e02",
+    output: "b28567422bfbe0f5342084cf832e5bdf39b9a9eaa3591ce0df8c696d6b849641",
+  },
+} as const;
+
+type Sequenced<T> = T & { sequence: number };
+type WithoutSequence<T> = T extends unknown ? Omit<T, "sequence"> : never;
+
+export type E1ProposalEvent =
+  | Sequenced<{
+      kind: "session-started";
+      scope: typeof E1_PROPOSAL_SCOPE;
+    }>
+  | Sequenced<{ kind: "turn-started" }>
+  | Sequenced<{ kind: "agent-delta"; text: string }>
+  | Sequenced<{
+      kind: "tool-started";
+      toolCallId: string;
+      tool: (typeof E1_PROPOSAL_TOOLS)[number];
+    }>
+  | Sequenced<{
+      kind: "tool-progress";
+      toolCallId: string;
+      message: string;
+    }>
+  | Sequenced<{
+      kind: "tool-completed";
+      toolCallId: string;
+      tool: (typeof E1_PROPOSAL_TOOLS)[number];
+    }>
+  | Sequenced<{ kind: "approval-blocked"; method: string }>
+  | Sequenced<{ kind: "cancellation-requested" }>
+  | Sequenced<{
+      kind: "turn-completed";
+      status: "completed" | "interrupted" | "failed";
+    }>
+  | Sequenced<{ kind: "error"; code: string; message: string }>;
+
+export type E1ProposalRoundTripResult = {
+  schemaVersion: 1;
+  state: "completed" | "cancelled";
+  scope: typeof E1_PROPOSAL_SCOPE;
+  proposal: E1DirectionProposal | null;
+  events: readonly E1ProposalEvent[];
+  reviewAuthority: {
+    previewAvailable: boolean;
+    rejectAvailable: boolean;
+    applyEnabled: false;
+    applyReason: string;
+  };
+  isolation: {
+    onlyStoryStageMcpEnabled: true;
+    inheritedServerCount: number;
+  };
+};
+
+function parseResponse<T>(
+  schema: ZodType<T>,
+  value: unknown,
+  label: string,
+): T {
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) {
+    throw new CodexLabError(
+      "PROTOCOL_INCOMPATIBLE",
+      `The Codex App Server returned incompatible ${label} data.`,
+      "incompatible",
+    );
+  }
+  return parsed.data;
+}
+
+type Settled<T> = { ok: true; value: T } | { ok: false; error: unknown };
+
+function settle<T>(promise: Promise<T>): Promise<Settled<T>> {
+  return promise.then(
+    (value) => ({ ok: true, value }),
+    (error: unknown) => ({ ok: false, error }),
+  );
+}
+
+function unwrap<T>(outcome: Settled<T>): T {
+  if (!outcome.ok) throw outcome.error;
+  return outcome.value;
+}
+
+function throwCleanupFailure(
+  primaryFailure: unknown,
+  cleanupFailure: unknown,
+): void {
+  if (primaryFailure === null && cleanupFailure !== null) {
+    throw cleanupFailure;
+  }
+}
+
+function protocolError(message: string): CodexLabError {
+  return new CodexLabError("PROTOCOL_INCOMPATIBLE", message, "incompatible");
+}
+
+function throwIfAborted(signal: AbortSignal | undefined): void {
+  if (signal?.aborted) {
+    throw new CodexLabError(
+      "OPERATION_CANCELLED",
+      "The E1 proposal request was cancelled before prompting.",
+    );
+  }
+}
+
+function normalizedPath(value: string): string {
+  return resolve(value).replaceAll("/", "\\").toLowerCase();
+}
+
+function canonicalJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalJson);
+  if (value !== null && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.keys(record)
+        .sort()
+        .map((key) => [key, canonicalJson(record[key])]),
+    );
+  }
+  return value;
+}
+
+function jsonFingerprint(value: unknown): string {
+  return createHash("sha256")
+    .update(JSON.stringify(canonicalJson(value)))
+    .digest("hex");
+}
+
+export function assertOfficialChatGptAuthUrl(value: string): void {
+  if (/[^\x20-\x7e]/.test(value)) {
+    throw protocolError("The official ChatGPT sign-in URL was invalid.");
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw protocolError("The official ChatGPT sign-in URL was invalid.");
+  }
+  const officialHosts = new Set(["auth.openai.com", "chatgpt.com"]);
+  if (
+    parsed.protocol !== "https:" ||
+    !officialHosts.has(parsed.hostname) ||
+    parsed.port !== "" ||
+    parsed.username !== "" ||
+    parsed.password !== ""
+  ) {
+    throw protocolError("The official ChatGPT sign-in URL was invalid.");
+  }
+}
+
+function waitForLoginCompletion(
+  client: AppServerClient,
+  timeoutMs: number,
+  signal: AbortSignal | undefined,
+): { promise: Promise<unknown>; cancel: () => void } {
+  let settled = false;
+  let unsubscribe: () => void = () => undefined;
+  let rejectWait: (error: Error) => void = () => undefined;
+  let timeout: NodeJS.Timeout;
+  const abort = () => {
+    if (settled) return;
+    settled = true;
+    cleanup();
+    rejectWait(
+      new CodexLabError(
+        "OPERATION_CANCELLED",
+        "Official Sign in with ChatGPT was cancelled.",
+      ),
+    );
+  };
+  const cleanup = () => {
+    clearTimeout(timeout);
+    unsubscribe();
+    signal?.removeEventListener("abort", abort);
+  };
+  const promise = new Promise<unknown>((resolve, reject) => {
+    rejectWait = reject;
+    unsubscribe = client.subscribeInbound((message) => {
+      if (
+        settled ||
+        message.kind !== "notification" ||
+        message.method !== "account/login/completed"
+      ) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolve(message.params);
+    });
+    timeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(
+        new CodexLabError(
+          "APP_SERVER_TIMEOUT",
+          "Official Sign in with ChatGPT did not complete in time.",
+          "signed-out",
+        ),
+      );
+    }, timeoutMs);
+    signal?.addEventListener("abort", abort, { once: true });
+    void client.waitForExit().then(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(
+        new CodexLabError(
+          "APP_SERVER_CRASHED",
+          "The Codex App Server exited during official ChatGPT sign-in.",
+          "crashed",
+        ),
+      );
+    });
+  });
+  return {
+    promise,
+    cancel: () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      rejectWait(protocolError("Official Sign in with ChatGPT was cancelled."));
+    },
+  };
+}
+
+async function startChatGptLogin(
+  client: AppServerClient,
+  signal: AbortSignal | undefined,
+): Promise<unknown> {
+  let rejectAbort: (error: Error) => void = () => undefined;
+  const abort = new Promise<never>((_resolve, reject) => {
+    rejectAbort = reject;
+  });
+  const onAbort = () =>
+    rejectAbort(
+      new CodexLabError(
+        "OPERATION_CANCELLED",
+        "Official Sign in with ChatGPT was cancelled.",
+      ),
+    );
+  signal?.addEventListener("abort", onAbort, { once: true });
+  try {
+    return await Promise.race([
+      client.request("account/login/start", { type: "chatgpt" }),
+      abort,
+      client.waitForExit().then(() => {
+        throw new CodexLabError(
+          "APP_SERVER_CRASHED",
+          "The Codex App Server exited while starting official ChatGPT sign-in.",
+          "crashed",
+        );
+      }),
+    ]);
+  } finally {
+    signal?.removeEventListener("abort", onAbort);
+  }
+}
+
+async function requireChatGptAccount(
+  client: AppServerClient,
+  openAuthUrl: ((url: string) => Promise<void>) | undefined,
+  loginTimeoutMs: number,
+  signal: AbortSignal | undefined,
+): Promise<void> {
+  throwIfAborted(signal);
+  const readAccount = async () =>
+    parseResponse(
+      accountResponseSchema,
+      await client.request("account/read", { refreshToken: false }),
+      "account/read",
+    );
+  const initial = await readAccount();
+  throwIfAborted(signal);
+  if (initial.account?.type === "chatgpt") return;
+  if (initial.account) {
+    throw protocolError(
+      "The dedicated Codex state used an unsupported account type.",
+    );
+  }
+  if (!openAuthUrl) {
+    throw new CodexLabError(
+      "AUTH_REQUIRED",
+      "Official Sign in with ChatGPT is required for the dedicated AI Director state.",
+      "signed-out",
+    );
+  }
+
+  const completion = waitForLoginCompletion(client, loginTimeoutMs, signal);
+  void completion.promise.catch(() => undefined);
+  let loginId: string | undefined;
+  try {
+    const login = parseResponse(
+      accountLoginStartResponseSchema,
+      await startChatGptLogin(client, signal),
+      "account/login/start",
+    );
+    loginId = login.loginId;
+    assertOfficialChatGptAuthUrl(login.authUrl);
+    throwIfAborted(signal);
+    await openAuthUrl(login.authUrl);
+    const notification = parseResponse(
+      accountLoginCompletedNotificationSchema,
+      await completion.promise,
+      "account/login/completed",
+    );
+    if (
+      !notification.success ||
+      notification.loginId !== login.loginId ||
+      (notification.error ?? null) !== null
+    ) {
+      throw protocolError("Official Sign in with ChatGPT did not complete.");
+    }
+  } catch (error) {
+    completion.cancel();
+    void completion.promise.catch(() => undefined);
+    if (loginId) {
+      try {
+        parseResponse(
+          accountLoginCancelResponseSchema,
+          await client.request("account/login/cancel", { loginId }),
+          "account/login/cancel",
+        );
+      } catch {
+        // Preserve the original generic sign-in failure.
+      }
+    }
+    throw error;
+  }
+
+  const authenticated = await readAccount();
+  if (authenticated.account?.type !== "chatgpt") {
+    throw protocolError(
+      "Official Sign in with ChatGPT did not authenticate Codex.",
+    );
+  }
+}
+
+export async function assertExactE1McpInventory(
+  client: AppServerClient,
+  threadId: string | null,
+): Promise<void> {
+  const response = parseResponse(
+    mcpServerStatusListResponseSchema,
+    await client.request("mcpServerStatus/list", {
+      threadId,
+      limit: 10,
+      detail: "full",
+    }),
+    "mcpServerStatus/list",
+  );
+  const server = response.data[0];
+  const toolNames = server ? Object.keys(server.tools).sort() : [];
+  if (
+    response.data.length !== 1 ||
+    !server ||
+    server.name !== E1_MCP_SERVER_NAME ||
+    server.authStatus !== "unsupported" ||
+    server.serverInfo?.name !== "storystage-e1-synthetic-scene" ||
+    server.serverInfo.version !== "1.0.0" ||
+    server.resourceTemplates.length !== 0 ||
+    server.resources.length !== 1 ||
+    server.resources[0]?.uri !== E1_MCP_RESOURCE_URI ||
+    JSON.stringify(toolNames) !== JSON.stringify([...E1_PROPOSAL_TOOLS].sort())
+  ) {
+    throw protocolError(
+      "The App Server did not expose exactly the bounded StoryStage MCP inventory.",
+    );
+  }
+  for (const toolName of E1_PROPOSAL_TOOLS) {
+    const tool = server.tools[toolName];
+    const expected = E1_TOOL_SCHEMA_FINGERPRINTS[toolName];
+    if (
+      !tool ||
+      tool.name !== toolName ||
+      jsonFingerprint(tool.inputSchema) !== expected.input ||
+      jsonFingerprint(tool.outputSchema) !== expected.output
+    ) {
+      throw protocolError(
+        "The StoryStage MCP tool schemas did not match the accepted boundary.",
+      );
+    }
+  }
+}
+
+export class E1ProposalEventAdapter {
+  private readonly observed: E1ProposalEvent[] = [];
+  private sequence = 0;
+  private threadId: string | null = null;
+  private turnId: string | null = null;
+  private proposal: E1DirectionProposal | null = null;
+  private turnCompleted = false;
+  private readonly toolCalls = new Map<
+    string,
+    {
+      tool: (typeof E1_PROPOSAL_TOOLS)[number];
+      completed: boolean;
+    }
+  >();
+
+  public constructor(
+    private readonly onEvent?: (event: E1ProposalEvent) => void,
+  ) {}
+
+  public startSession(threadId: string): void {
+    if (this.threadId)
+      throw protocolError("The proposal session started twice.");
+    this.threadId = threadId;
+    this.emit({ kind: "session-started", scope: E1_PROPOSAL_SCOPE });
+  }
+
+  public requestCancellation(): void {
+    if (this.observed.some((event) => event.kind === "cancellation-requested"))
+      return;
+    this.emit({ kind: "cancellation-requested" });
+  }
+
+  public reportError(error: unknown): void {
+    const failure =
+      error instanceof CodexLabError
+        ? error
+        : protocolError("The proposal stream failed closed.");
+    this.emit({ kind: "error", code: failure.code, message: failure.message });
+  }
+
+  public consume(message: AppServerInboundMessage): void {
+    const terminalSensitiveMethods = new Set([
+      "turn/started",
+      "turn/completed",
+      "item/agentMessage/delta",
+      "item/mcpToolCall/progress",
+      "item/started",
+      "item/completed",
+      "error",
+    ]);
+    if (
+      this.turnCompleted &&
+      (message.kind === "blocked-request" ||
+        terminalSensitiveMethods.has(message.method))
+    ) {
+      throw protocolError(
+        "The proposal stream emitted typed activity after terminal completion.",
+      );
+    }
+    if (message.kind === "blocked-request") {
+      this.emit({ kind: "approval-blocked", method: message.method });
+      throw protocolError(
+        "The proposal turn requested unsupported approval or client input.",
+      );
+    }
+
+    switch (message.method) {
+      case "turn/started": {
+        const started = parseResponse(
+          turnStartedNotificationSchema,
+          message.params,
+          "turn/started",
+        );
+        this.assertThread(started.threadId);
+        if (this.turnId && this.turnId !== started.turn.id) {
+          throw protocolError("The proposal stream changed turn identity.");
+        }
+        if (this.turnId) {
+          throw protocolError(
+            "The proposal stream started the same turn twice.",
+          );
+        }
+        this.turnId = started.turn.id;
+        this.emit({ kind: "turn-started" });
+        return;
+      }
+      case "item/agentMessage/delta": {
+        const delta = parseResponse(
+          appServerAgentDeltaNotificationSchema,
+          message.params,
+          message.method,
+        );
+        this.assertTurn(delta.threadId, delta.turnId);
+        this.emit({ kind: "agent-delta", text: delta.delta });
+        return;
+      }
+      case "item/mcpToolCall/progress": {
+        const progress = parseResponse(
+          appServerMcpProgressNotificationSchema,
+          message.params,
+          message.method,
+        );
+        this.assertTurn(progress.threadId, progress.turnId);
+        const progressingTool = this.toolCalls.get(progress.itemId);
+        if (!progressingTool || progressingTool.completed) {
+          throw protocolError(
+            "The proposal stream reported progress for an unknown or completed tool call.",
+          );
+        }
+        this.emit({
+          kind: "tool-progress",
+          toolCallId: progress.itemId,
+          message: progress.message,
+        });
+        return;
+      }
+      case "item/started":
+      case "item/completed": {
+        this.consumeItem(message.method, message.params);
+        return;
+      }
+      case "turn/completed": {
+        const completed = parseResponse(
+          turnCompletedNotificationSchema,
+          message.params,
+          message.method,
+        );
+        this.assertTurn(completed.threadId, completed.turn.id);
+        if (completed.turn.status === "inProgress") {
+          throw protocolError(
+            "The completed proposal turn remained in progress.",
+          );
+        }
+        if (this.turnCompleted) {
+          throw protocolError(
+            "The proposal stream completed the same turn twice.",
+          );
+        }
+        this.turnCompleted = true;
+        if (
+          completed.turn.status === "completed" &&
+          (this.toolCalls.size !== 2 ||
+            this.completedToolCount("get_scene_context") !== 1 ||
+            this.completedToolCount("submit_direction_proposal") !== 1)
+        ) {
+          throw protocolError(
+            "The proposal turn did not complete exactly one bounded tool sequence.",
+          );
+        }
+        this.emit({ kind: "turn-completed", status: completed.turn.status });
+        return;
+      }
+      case "error": {
+        const failure = parseResponse(
+          appServerErrorNotificationSchema,
+          message.params,
+          message.method,
+        );
+        this.assertTurn(failure.threadId, failure.turnId);
+        if (!failure.willRetry) {
+          throw protocolError(
+            `The proposal turn failed: ${failure.error.message}`,
+          );
+        }
+        return;
+      }
+      default:
+        return;
+    }
+  }
+
+  public getEvents(): readonly E1ProposalEvent[] {
+    return this.observed;
+  }
+
+  public getProposal(): E1DirectionProposal | null {
+    return this.proposal;
+  }
+
+  public getTurnId(): string | null {
+    return this.turnId;
+  }
+
+  public hasTurnCompleted(): boolean {
+    return this.turnCompleted;
+  }
+
+  private consumeItem(
+    method: "item/started" | "item/completed",
+    value: unknown,
+  ) {
+    const lifecycle = parseResponse(
+      appServerItemLifecycleNotificationSchema,
+      value,
+      method,
+    );
+    this.assertTurn(lifecycle.threadId, lifecycle.turnId);
+    const item = lifecycle.item;
+    if (
+      ["userMessage", "reasoning", "plan", "agentMessage"].includes(item.type)
+    )
+      return;
+    if (item.type !== "mcpToolCall") {
+      throw protocolError(
+        `The bounded proposal turn attempted forbidden item type ${item.type}.`,
+      );
+    }
+
+    const toolCall = parseResponse(
+      appServerMcpToolCallItemSchema,
+      item,
+      `${method} MCP tool call`,
+    );
+    if (
+      toolCall.server !== E1_MCP_SERVER_NAME ||
+      !E1_PROPOSAL_TOOLS.includes(
+        toolCall.tool as (typeof E1_PROPOSAL_TOOLS)[number],
+      )
+    ) {
+      throw protocolError(
+        "The proposal turn attempted an unapproved MCP tool.",
+      );
+    }
+    const tool = toolCall.tool as (typeof E1_PROPOSAL_TOOLS)[number];
+    if (method === "item/started") {
+      if (this.toolCalls.has(toolCall.id)) {
+        throw protocolError(
+          "The proposal stream repeated a tool-call identity.",
+        );
+      }
+      if (
+        (tool === "get_scene_context" && this.toolCalls.size !== 0) ||
+        (tool === "submit_direction_proposal" &&
+          (this.completedToolCount("get_scene_context") !== 1 ||
+            this.toolCalls.size !== 1))
+      ) {
+        throw protocolError(
+          "The proposal turn used tools out of bounded order.",
+        );
+      }
+      this.toolCalls.set(toolCall.id, { tool, completed: false });
+      this.emit({
+        kind: "tool-started",
+        toolCallId: toolCall.id,
+        tool,
+      });
+      return;
+    }
+    const startedTool = this.toolCalls.get(toolCall.id);
+    if (!startedTool || startedTool.tool !== tool || startedTool.completed) {
+      throw protocolError(
+        "The proposal stream completed an unknown or repeated tool call.",
+      );
+    }
+    if (toolCall.status !== "completed") {
+      throw protocolError(
+        `The ${tool} MCP call did not complete successfully.`,
+      );
+    }
+    if (tool === "submit_direction_proposal") {
+      const receipt = e1ProposalReceiptSchema.safeParse(
+        toolCall.result?.structuredContent,
+      );
+      if (!receipt.success) {
+        throw protocolError(
+          "The submitted direction proposal returned malformed output.",
+        );
+      }
+      this.proposal = receipt.data.proposal;
+    }
+    startedTool.completed = true;
+    this.emit({
+      kind: "tool-completed",
+      toolCallId: toolCall.id,
+      tool,
+    });
+  }
+
+  private assertThread(threadId: string): void {
+    if (!this.threadId || threadId !== this.threadId) {
+      throw protocolError("The proposal stream used an unexpected thread.");
+    }
+  }
+
+  private assertTurn(threadId: string, turnId: string): void {
+    this.assertThread(threadId);
+    if (!this.turnId || turnId !== this.turnId) {
+      throw protocolError("The proposal stream used an unexpected turn.");
+    }
+  }
+
+  private completedToolCount(tool: (typeof E1_PROPOSAL_TOOLS)[number]): number {
+    return [...this.toolCalls.values()].filter(
+      (entry) => entry.tool === tool && entry.completed,
+    ).length;
+  }
+
+  private emit(event: WithoutSequence<E1ProposalEvent>): void {
+    const sequenced = {
+      ...event,
+      sequence: ++this.sequence,
+    } as E1ProposalEvent;
+    this.observed.push(sequenced);
+    this.onEvent?.(sequenced);
+  }
+}
+
+export async function runE1ProposalRoundTrip(
+  options: {
+    signal?: AbortSignal;
+    onEvent?: (event: E1ProposalEvent) => void;
+    verifyRuntime?: () => Promise<VerifiedRuntime>;
+    prepareCodexHome?: () => Promise<string>;
+    openAuthUrl?: (url: string) => Promise<void>;
+    loginTimeoutMs?: number;
+    launch?: (executablePath: string, codexHome: string) => AppServerClient;
+  } = {},
+): Promise<E1ProposalRoundTripResult> {
+  const adapter = new E1ProposalEventAdapter(options.onEvent);
+  let client: AppServerClient | null = null;
+  let workspace: string | null = null;
+  let streamFailure: unknown = null;
+  let resolveFirstFailure: (outcome: Settled<never>) => void = () => undefined;
+  const firstFailure = new Promise<Settled<never>>((resolve) => {
+    resolveFirstFailure = resolve;
+  });
+  let primaryFailure: unknown = null;
+  const lifecycleOperations: Promise<Settled<unknown>>[] = [];
+  const trackLifecycle = <T>(promise: Promise<T>): Promise<Settled<T>> => {
+    const operation = settle(promise);
+    lifecycleOperations.push(operation as Promise<Settled<unknown>>);
+    void operation.then((outcome) => {
+      if (!outcome.ok) resolveFirstFailure(outcome);
+    });
+    return operation;
+  };
+  const awaitLifecycle = async <T>(
+    operation: Promise<Settled<T>>,
+  ): Promise<T> => unwrap(await Promise.race([operation, firstFailure]));
+  let interruptPromise: Promise<Settled<unknown>> | null = null;
+
+  try {
+    const runtime = await (options.verifyRuntime ?? verifyPinnedRuntime)();
+    throwIfAborted(options.signal);
+    const codexHome = await (options.prepareCodexHome ?? prepareE1CodexHome)();
+    throwIfAborted(options.signal);
+    client = (options.launch ?? launchE1ProposalAppServer)(
+      runtime.executablePath,
+      codexHome,
+    );
+    const initialized = parseResponse(
+      initializeResponseSchema,
+      await client.request("initialize", {
+        clientInfo: {
+          name: "storystage-e1-wp3",
+          title: "StoryStage E1 proposal round trip",
+          version: "0.1.0",
+        },
+        capabilities: {
+          experimentalApi: false,
+          requestAttestation: false,
+          mcpServerOpenaiFormElicitation: false,
+          optOutNotificationMethods: [],
+        },
+      }),
+      "initialize",
+    );
+    if (normalizedPath(initialized.codexHome) !== normalizedPath(codexHome)) {
+      throw protocolError(
+        "The App Server did not use the dedicated Codex state root.",
+      );
+    }
+    client.notify("initialized", {});
+
+    await requireChatGptAccount(
+      client,
+      options.openAuthUrl,
+      options.loginTimeoutMs ?? E1_LOGIN_TIMEOUT_MS,
+      options.signal,
+    );
+    await assertExactE1McpInventory(client, null);
+    throwIfAborted(options.signal);
+
+    workspace = await mkdtemp(join(tmpdir(), "storystage-e1-wp3-workspace-"));
+    const thread = parseResponse(
+      threadStartResponseSchema,
+      await client.request("thread/start", {
+        cwd: workspace,
+        approvalPolicy: "never",
+        sandbox: "read-only",
+        ephemeral: true,
+        model: "gpt-5.6-terra",
+        developerInstructions:
+          "This is a proposal-only synthetic lab. Use only the configured StoryStage MCP tools. Never use commands, file changes, network, images, delegation, persistence, approval, or rendering.",
+      }),
+      "thread/start",
+    );
+    const threadId = thread.thread.id;
+    adapter.startSession(threadId);
+    throwIfAborted(options.signal);
+    await assertExactE1McpInventory(client, threadId);
+    throwIfAborted(options.signal);
+
+    const requestInterrupt = () => {
+      if (
+        interruptPromise ||
+        !client ||
+        !adapter.getTurnId() ||
+        adapter.hasTurnCompleted()
+      )
+        return;
+      adapter.requestCancellation();
+      interruptPromise = trackLifecycle(
+        client.request("turn/interrupt", {
+          threadId,
+          turnId: adapter.getTurnId(),
+        }),
+      );
+    };
+    const unsubscribe = client.subscribeInbound((message) => {
+      if (streamFailure) return;
+      try {
+        adapter.consume(message);
+        if (options.signal?.aborted) requestInterrupt();
+      } catch (error) {
+        streamFailure = error;
+        resolveFirstFailure({ ok: false, error });
+        adapter.reportError(error);
+        requestInterrupt();
+      }
+    });
+    const abortListener = () => requestInterrupt();
+    options.signal?.addEventListener("abort", abortListener);
+    const startedNotification = trackLifecycle(
+      client.waitForNotification("turn/started", E1_PROPOSAL_TURN_TIMEOUT_MS),
+    );
+    const completedNotification = trackLifecycle(
+      client.waitForNotification("turn/completed", E1_PROPOSAL_TURN_TIMEOUT_MS),
+    );
+    const turnRequest = trackLifecycle(
+      client.request(
+        "turn/start",
+        {
+          threadId,
+          input: [{ type: "text", text: proposalPrompt, text_elements: [] }],
+          cwd: workspace,
+          approvalPolicy: "never",
+          effort: "medium",
+          model: "gpt-5.6-terra",
+          sandboxPolicy: { type: "readOnly", networkAccess: false },
+        },
+        E1_PROPOSAL_TURN_TIMEOUT_MS,
+      ),
+    );
+
+    try {
+      const started = parseResponse(
+        turnStartedNotificationSchema,
+        await awaitLifecycle(startedNotification),
+        "turn/started",
+      );
+      if (
+        started.threadId !== threadId ||
+        started.turn.id !== adapter.getTurnId()
+      ) {
+        throw protocolError(
+          "The proposal turn start identities did not match.",
+        );
+      }
+      if (options.signal?.aborted || streamFailure) requestInterrupt();
+
+      const turn = parseResponse(
+        turnStartResponseSchema,
+        await awaitLifecycle(turnRequest),
+        "turn/start",
+      );
+      const completed = parseResponse(
+        turnCompletedNotificationSchema,
+        await awaitLifecycle(completedNotification),
+        "turn/completed",
+      );
+      if (
+        turn.turn.id !== adapter.getTurnId() ||
+        completed.threadId !== threadId ||
+        completed.turn.id !== adapter.getTurnId()
+      ) {
+        throw protocolError(
+          "The completed proposal turn identities did not match.",
+        );
+      }
+      if (interruptPromise) await awaitLifecycle(interruptPromise);
+      if (streamFailure) throw streamFailure;
+
+      const cancelled = completed.turn.status === "interrupted";
+      const proposal = adapter.getProposal();
+      if (!cancelled && (completed.turn.status !== "completed" || !proposal)) {
+        throw protocolError(
+          "The proposal turn completed without one validated direction proposal.",
+        );
+      }
+      if ((await readdir(workspace)).length !== 0) {
+        throw protocolError(
+          "The proposal turn changed its isolated workspace.",
+        );
+      }
+      return {
+        schemaVersion: 1,
+        state: cancelled ? "cancelled" : "completed",
+        scope: E1_PROPOSAL_SCOPE,
+        proposal: cancelled ? null : proposal,
+        events: [...adapter.getEvents()],
+        reviewAuthority: {
+          previewAvailable: !cancelled,
+          rejectAvailable: !cancelled,
+          applyEnabled: false,
+          applyReason:
+            "E1-WP3 validates an ephemeral proposal only; apply and persistence are outside this package.",
+        },
+        isolation: {
+          onlyStoryStageMcpEnabled: true,
+          inheritedServerCount: 0,
+        },
+      };
+    } catch (error) {
+      requestInterrupt();
+      throw error;
+    } finally {
+      options.signal?.removeEventListener("abort", abortListener);
+      unsubscribe();
+    }
+  } catch (error) {
+    primaryFailure = error;
+    if (!adapter.getEvents().some((event) => event.kind === "error")) {
+      adapter.reportError(error);
+    }
+    throw error;
+  } finally {
+    let cleanupFailure: unknown = null;
+    let clientClosed = false;
+    try {
+      if (client) await client.close();
+      clientClosed = true;
+    } catch (error) {
+      cleanupFailure = error;
+    }
+    if (clientClosed) await Promise.all(lifecycleOperations);
+    try {
+      if (workspace) await rm(workspace, { recursive: true, force: true });
+    } catch (error) {
+      cleanupFailure ??= error;
+    }
+    throwCleanupFailure(primaryFailure, cleanupFailure);
+  }
+}

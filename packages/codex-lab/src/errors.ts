@@ -9,9 +9,11 @@ export type PreflightState =
   | "crashed";
 
 export type CodexLabErrorCode =
+  | "AUTH_REQUIRED"
   | "APP_SERVER_CRASHED"
   | "APP_SERVER_TIMEOUT"
   | "MALFORMED_JSON"
+  | "OPERATION_CANCELLED"
   | "OUTPUT_LIMIT_EXCEEDED"
   | "PROTOCOL_INCOMPATIBLE"
   | "PROTOCOL_REQUEST_FAILED"
