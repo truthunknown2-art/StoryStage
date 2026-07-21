@@ -60,8 +60,10 @@ issue. Validation failures are logged and require a corrected higher inbox
 version.
 
 One validated version starts one fresh hidden
-`kimi --auto --prompt ... --output-format stream-json` session in the dedicated
-coordination checkout. The fixed prompt makes Kimi reread GitHub truth, claim
+`kimi --prompt ... --output-format stream-json` session in the dedicated
+coordination checkout. Kimi prompt mode is non-interactive and applies its auto
+permission policy by default; the watcher must not add the incompatible
+`--auto`, the broader `--yolo`, or `--plan`. The fixed prompt makes Kimi reread GitHub truth, claim
 the issue, execute only the brief, publish its handback, and exit. Repeated
 polls cannot relaunch the same version. The watcher atomically reserves the
 version before starting the external process, so a watcher crash cannot create
@@ -73,6 +75,8 @@ If Windows cannot confirm process-tree termination, the receipt records
 mistakes parent-only cleanup for a complete stop.
 The watcher never uses `--yolo`, never
 opens Kimi ACP/server ports, and never reads Kimi credentials or session data.
+If a completed Kimi process does not expose a usable exit code, the runner
+records exit `1` rather than treating the launch as successful.
 
 `STOP` records an idle state; it does not kill a running implementation. Codex
 and Preston handle an active-task stop explicitly so unsaved work is not lost.

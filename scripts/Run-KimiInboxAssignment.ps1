@@ -26,7 +26,9 @@ function Invoke-BoundedKimiProcess {
   if ([string]::IsNullOrWhiteSpace($singleLinePrompt) -or $singleLinePrompt.Contains('"')) {
     throw 'Kimi assignment prompt is empty or contains an unsafe quote.'
   }
-  $arguments = @('--auto', '--prompt', ('"{0}"' -f $singleLinePrompt), '--output-format', 'stream-json')
+  # Prompt mode is already non-interactive and uses Kimi's auto permission
+  # policy. Kimi 0.27+ rejects an explicit --auto combined with --prompt.
+  $arguments = @('--prompt', ('"{0}"' -f $singleLinePrompt), '--output-format', 'stream-json')
   $process = if ($null -ne $ProcessStarter) {
     & $ProcessStarter $arguments
   } else {
@@ -37,8 +39,9 @@ function Invoke-BoundedKimiProcess {
   $completed = $process.WaitForExit($TimeoutSeconds * 1000)
   if ($completed) {
     $process.WaitForExit()
+    $exitCode = if ($null -eq $process.ExitCode) { 1 } else { [int]$process.ExitCode }
     return [pscustomobject]@{
-      ExitCode = $process.ExitCode
+      ExitCode = $exitCode
       TimedOut = $false
       ProcessId = $process.Id
       TerminationSucceeded = $null
