@@ -1,25 +1,39 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `65`
+Inbox-Version: `66`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP1-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F3-WP2-DIRECT-EDITS-SCOPED-HISTORY`
+Status: `START_NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `a4486ce4433d06a9567a0d177b8c95bb427fd147`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#72`
+Accepted-Root-Base: `d7b46d891a981a13431b6272be39809142e727f6`
+Required-Work-Branch: `agent/kimi-f3-wp2-direct-edits-scoped-history`
+Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp2-direct-edits-scoped-history-v66.md`
+Issue: `#81`
 
 ## Current instruction
 
-Version 65 records F3-WP1 acceptance and integration. PR #78 exact head
+Version 66 starts only F3-WP2 through issue #81 from exact accepted base
+`d7b46d891a981a13431b6272be39809142e727f6` on the new required branch
+`agent/kimi-f3-wp2-direct-edits-scoped-history`. Execute the complete Version
+66 brief: add the bounded session-local Direct drafts, atomic per-beat Apply,
+and independent Undo/Redo histories with redo invalidation; preserve the
+accepted F1/F2/F3-WP1 behavior; publish the exact evidence, handback, and draft
+PR; then exit. Do not begin F3-WP3, AI behavior, persistence, backend, Godot,
+Remotion, rendering, or export work.
+
+Version 66 supersedes Version 65. Version 65 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 65 instruction:
+
+Version 65 recorded F3-WP1 acceptance and integration. PR #78 exact head
 `208ceca502c4c20178dbf303c16f85d6facbbaeb` passed Studio 76/76, typecheck,
 build, repository-root verification, exact-head/delta audits, and hosted run
 29866064607 attempt 2, then merged into `product/v1` at
-`a4486ce4433d06a9567a0d177b8c95bb427fd147`. Kimi remains `WAIT`; do not
-launch a model, modify the accepted PR, begin F3-WP2, or start backend work. A
-future frontend package requires a higher inbox version and separate bounded
-ticket.
+`a4486ce4433d06a9567a0d177b8c95bb427fd147`. Kimi remained `WAIT`; no later
+package or backend work was authorized.
 
 Version 65 supersedes Version 64. Version 64 remains below as historical
 traceability and must not relaunch.
