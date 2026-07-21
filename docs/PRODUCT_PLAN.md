@@ -363,19 +363,24 @@ Every ticket names:
 
 At completion the owner commits, pushes, reports the exact SHA/files/tests/evidence/limitations, and stops. A ticket never silently rolls into another.
 
-### Kimi polling
+### Kimi wake-up
 
-Every 15 minutes Kimi fetches and reads, without switching branches:
+A deterministic Windows watcher fetches and reads every five minutes, without
+switching branches or invoking a model:
 
 ```text
 origin/agent/kimi-frontend:reports/agent-handoffs/KIMI_INBOX.md
 ```
 
-- `HOLD` / `WAIT`: do not code.
-- `START-NOW`: execute only the referenced brief on its declared branch.
-- `DONE`: push the handback and wait for a higher inbox version.
+- `HOLD` / `WAIT`: exit without launching Kimi.
+- `START_NOW`: after strict identity/base/brief validation, launch one fresh
+  bounded Kimi CLI session for that higher inbox version.
+- `DONE`: preserve the handback state and wait for a higher inbox version.
 
-Polling is read-only: no merge, rebase, reset, cherry-pick, or force-push.
+The watcher is read-only: no merge, rebase, reset, cherry-pick, or force-push.
+An unchanged inbox never launches Kimi or consumes a Kimi model turn. The
+durable install/status contract is
+[`operations/kimi-inbox-watcher.md`](operations/kimi-inbox-watcher.md).
 
 Codex separately monitors the remote inbox and declared work branch. A new Kimi commit or handback authorizes review, not automatic merge or the next phase. Codex records a verdict, advances the inbox to WAIT/corrections/next ticket as appropriate, and stops at Preston's phase gates.
 

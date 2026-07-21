@@ -86,6 +86,17 @@ to make the state convenient.
 `KIMI_INBOX` may narrow Kimi's current package but cannot broaden or reorder the
 roadmap. Kimi's scheduler wakes only on a higher inbox version.
 
+Kimi is event-driven, not model-polled. On every cold start, verify the local
+watcher described in
+[`docs/operations/kimi-inbox-watcher.md`](docs/operations/kimi-inbox-watcher.md):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Install-KimiInboxWatcher.ps1 -Status
+```
+
+Do not instruct Kimi to poll or report unchanged state. A missing watcher is a
+coordination warning, not permission to keep a Kimi model session open.
+
 ## 5. Conflict protocol
 
 If sources disagree:
