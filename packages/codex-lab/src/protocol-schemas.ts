@@ -88,3 +88,79 @@ export const turnCompletedNotificationSchema = z
     turn: turnSchema,
   })
   .strict();
+
+export const mcpServerStatusListResponseSchema = z
+  .object({
+    data: z.array(
+      z
+        .object({
+          name: z.string(),
+          tools: z.record(z.string(), z.unknown()),
+        })
+        .passthrough(),
+    ),
+    nextCursor: z.string().nullable().optional(),
+  })
+  .strict();
+
+export const appServerItemEnvelopeSchema = z
+  .object({
+    id: z.string(),
+    type: z.string(),
+  })
+  .passthrough();
+
+export const appServerItemLifecycleNotificationSchema = z
+  .object({
+    threadId: z.string(),
+    turnId: z.string(),
+    item: appServerItemEnvelopeSchema,
+  })
+  .passthrough();
+
+export const appServerAgentDeltaNotificationSchema = z
+  .object({
+    threadId: z.string(),
+    turnId: z.string(),
+    itemId: z.string(),
+    delta: z.string(),
+  })
+  .strict();
+
+export const appServerMcpProgressNotificationSchema = z
+  .object({
+    threadId: z.string(),
+    turnId: z.string(),
+    itemId: z.string(),
+    message: z.string(),
+  })
+  .strict();
+
+export const appServerMcpToolCallItemSchema = z
+  .object({
+    id: z.string(),
+    type: z.literal("mcpToolCall"),
+    server: z.string(),
+    tool: z.string(),
+    arguments: z.unknown(),
+    status: z.enum(["inProgress", "completed", "failed"]),
+    result: z
+      .object({
+        content: z.array(z.unknown()),
+        structuredContent: z.unknown().optional(),
+      })
+      .passthrough()
+      .nullable()
+      .optional(),
+    error: z.unknown().nullable().optional(),
+  })
+  .passthrough();
+
+export const appServerErrorNotificationSchema = z
+  .object({
+    threadId: z.string(),
+    turnId: z.string(),
+    error: z.object({ message: z.string() }).passthrough(),
+    willRetry: z.boolean(),
+  })
+  .strict();

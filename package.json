@@ -29,6 +29,7 @@
     "verify:e1-app-server-schema": "node scripts/generate-e1-app-server-schema.mjs --check-artifact",
     "verify:e1-app-server-schema-installed": "node scripts/generate-e1-app-server-schema.mjs --check-installed",
     "preflight:e1-app-server": "pnpm --filter @storystage/codex-lab preflight",
+    "proposal:e1-live": "pnpm --filter @storystage/codex-lab proposal:e1-live",
     "generate:candidate-rig-review-implementation-receipt": "tsx scripts/generate-candidate-rig-review-implementation-receipt.ts",
     "verify:candidate-rig-review-implementation-receipt": "tsx scripts/generate-candidate-rig-review-implementation-receipt.ts --check",
     "verify:roadmap": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-roadmap-consistency.ps1",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AppServerClient } from "./app-server";
+import { AppServerClient, getE1ProposalAppServerArgs } from "./app-server";
 import { FakeChild, answerRequests, asChild } from "./test-helpers";
 
 describe("E1 JSONL App Server client", () => {
@@ -63,5 +63,47 @@ describe("E1 JSONL App Server client", () => {
     const client = new AppServerClient(asChild(child));
     child.stdin.once("finish", () => child.emit("exit", 0, null));
     await expect(client.close()).resolves.toBeUndefined();
+  });
+
+  it("delivers notifications and blocked server requests in arrival order", async () => {
+    const child = new FakeChild();
+    const client = new AppServerClient(asChild(child));
+    const observed: Array<{ kind: string; method: string }> = [];
+    const unsubscribe = client.subscribeInbound((message) => {
+      observed.push({ kind: message.kind, method: message.method });
+    });
+
+    child.stdout.write(
+      `${JSON.stringify({ jsonrpc: "2.0", method: "turn/started", params: {} })}\n`,
+    );
+    child.stdout.write(
+      `${JSON.stringify({ jsonrpc: "2.0", id: "approval-1", method: "item/requestApproval", params: {} })}\n`,
+    );
+
+    expect(observed).toEqual([
+      { kind: "notification", method: "turn/started" },
+      { kind: "blocked-request", method: "item/requestApproval" },
+    ]);
+    expect(child.stdin.read()?.toString()).toContain('"code":-32601');
+
+    unsubscribe();
+    child.stdout.write(
+      `${JSON.stringify({ jsonrpc: "2.0", method: "turn/completed", params: {} })}\n`,
+    );
+    expect(observed).toHaveLength(2);
+    child.emit("exit", 0, null);
+  });
+
+  it("replaces inherited MCP configuration with the fixed StoryStage server", () => {
+    const args = getE1ProposalAppServerArgs(["inherited.one"]);
+    expect(args[0]).toBe("app-server");
+    expect(args).toContain("apps");
+    expect(args).toContain("shell_tool");
+    expect(args).toContain('mcp_servers."inherited.one".enabled=false');
+    expect(args.at(-2)).toContain("mcp_servers={storystage_e1=");
+    expect(args.at(-2)).toContain("mcp-cli.ts");
+    expect(args.at(-1)).toBe("--stdio");
+    expect(args.join(" ")).not.toContain("http://");
+    expect(args.join(" ")).not.toContain("https://");
   });
 });

@@ -11,6 +11,7 @@ export {
   E1_MCP_PROTOCOL_VERSION,
   E1_MCP_REQUEST_TIMEOUT_MS,
   E1_MCP_RESOURCE_URI,
+  E1_MCP_SERVER_NAME,
   E1McpSceneContextError,
   createE1McpSceneContextServer,
   e1DirectionProposalSchema,
@@ -25,6 +26,7 @@ export type {
 } from "./mcp-scene-context";
 export * from "./mcp-stdio-transport";
 export * from "./preflight";
+export * from "./proposal-roundtrip";
 export * from "./redaction";
 export * from "./runtime";
 export * from "./runtime-manifest";

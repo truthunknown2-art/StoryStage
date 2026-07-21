@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "package": "E1-WP3",
+  "surface": "isolated-e1-director-lab",
+  "source": "live-roundtrip-receipt",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "deviceScale": "css"
+  },
+  "artifact": {
+    "path": "reports/evidence/E1-WP3/director-lab-1440x900.png",
+    "sha256": "1b67a42622936d320d854089e18ae42ce75c72994df24dcaa7291cb9e6d56871"
+  },
+  "browserConsole": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "authority": {
+    "previewAvailable": true,
+    "rejectAvailable": true,
+    "applyEnabled": false
+  }
+}

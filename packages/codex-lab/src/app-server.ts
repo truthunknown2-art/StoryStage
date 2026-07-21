@@ -1,8 +1,18 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import {
+  execFile,
+  spawn,
+  type ChildProcessWithoutNullStreams,
+} from "node:child_process";
+import { join } from "node:path";
 import type { Writable } from "node:stream";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { classifyRpcFailure } from "./account-state";
 import { CodexLabError } from "./errors";
 import { runtimeManifest } from "./runtime-manifest";
+
+const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
+const execFileAsync = promisify(execFile);
 
 type JsonRpcId = number | string;
 type PendingRequest = {
@@ -17,6 +27,23 @@ type NotificationWaiter = {
   reject: (error: Error) => void;
   timeout: NodeJS.Timeout;
 };
+
+export type AppServerInboundMessage =
+  | {
+      kind: "notification";
+      method: string;
+      params: unknown;
+    }
+  | {
+      kind: "blocked-request";
+      id: JsonRpcId;
+      method: string;
+      params: unknown;
+    };
+
+export type AppServerInboundListener = (
+  message: AppServerInboundMessage,
+) => void;
 
 export type TranscriptEntry = {
   direction: "client-notification" | "client-request" | "server-notification";
@@ -82,6 +109,7 @@ export class AppServerClient {
     NotificationWaiter[]
   >();
   private readonly transcript: TranscriptEntry[] = [];
+  private readonly inboundListeners = new Set<AppServerInboundListener>();
   private readonly exitPromise: Promise<ExitResult>;
   private nextId = 1;
   private stdoutBuffer = Buffer.alloc(0);
@@ -136,6 +164,16 @@ export class AppServerClient {
 
   public didObserveStderr(): boolean {
     return this.stderrObserved;
+  }
+
+  /**
+   * Observes inbound messages in JSONL arrival order. The listener is registered
+   * synchronously so callers can subscribe before starting a turn and cannot
+   * miss early streaming notifications.
+   */
+  public subscribeInbound(listener: AppServerInboundListener): () => void {
+    this.inboundListeners.add(listener);
+    return () => this.inboundListeners.delete(listener);
   }
 
   public async request<T>(
@@ -359,12 +397,23 @@ export class AppServerClient {
 
     if (typeof message.method === "string") {
       if (typeof message.id === "number" || typeof message.id === "string") {
+        this.publishInbound({
+          kind: "blocked-request",
+          id: message.id,
+          method: message.method,
+          params: message.params,
+        });
         this.write({
           jsonrpc: "2.0",
           id: message.id,
           error: { code: -32601, message: "Client request is not supported." },
         });
       } else {
+        this.publishInbound({
+          kind: "notification",
+          method: message.method,
+          params: message.params,
+        });
         this.transcript.push({
           direction: "server-notification",
           method: message.method,
@@ -389,6 +438,10 @@ export class AppServerClient {
         "incompatible",
       ),
     );
+  }
+
+  private publishInbound(message: AppServerInboundMessage): void {
+    for (const listener of this.inboundListeners) listener(message);
   }
 
   private failProtocol(error: CodexLabError): void {
@@ -419,5 +472,135 @@ export function launchAppServer(executablePath: string): AppServerClient {
     stdio: "pipe",
     windowsHide: true,
   });
+  return new AppServerClient(child);
+}
+
+function tomlString(value: string): string {
+  return JSON.stringify(value.replaceAll("\\", "/"));
+}
+
+function quotedTomlKey(value: string): string {
+  if (
+    !value ||
+    value.length > 128 ||
+    [...value].some((character) => character.charCodeAt(0) < 32)
+  ) {
+    throw new CodexLabError(
+      "PROTOCOL_INCOMPATIBLE",
+      "The configured MCP inventory contained an invalid server name.",
+      "incompatible",
+    );
+  }
+  return JSON.stringify(value);
+}
+
+export function getE1ProposalAppServerArgs(
+  configuredServerNames: readonly string[] = [],
+): readonly string[] {
+  const tsxCli = join(repositoryRoot, "node_modules", "tsx", "dist", "cli.mjs");
+  const mcpCli = join(
+    repositoryRoot,
+    "packages",
+    "codex-lab",
+    "src",
+    "mcp-cli.ts",
+  );
+  const mcpConfig =
+    "mcp_servers={storystage_e1={" +
+    `command=${tomlString(process.execPath)},` +
+    `args=[${tomlString(tsxCli)},${tomlString(mcpCli)}],` +
+    `cwd=${tomlString(repositoryRoot)},enabled=true}}`;
+  const disabledInherited = configuredServerNames.flatMap((name) => [
+    "-c",
+    `mcp_servers.${quotedTomlKey(name)}.enabled=false`,
+  ]);
+  const disabledCapabilities = [
+    "apps",
+    "browser_use",
+    "computer_use",
+    "goals",
+    "image_generation",
+    "memories",
+    "multi_agent",
+    "plugins",
+    "shell_tool",
+  ].flatMap((feature) => ["--disable", feature]);
+  return [
+    "app-server",
+    ...disabledCapabilities,
+    ...disabledInherited,
+    "-c",
+    mcpConfig,
+    "--stdio",
+  ];
+}
+
+export async function listConfiguredMcpServerNames(
+  executablePath: string,
+): Promise<readonly string[]> {
+  let stdout: string;
+  try {
+    const result = await execFileAsync(
+      executablePath,
+      ["mcp", "list", "--json"],
+      {
+        encoding: "utf8",
+        env: allowlistedEnvironment(),
+        maxBuffer: 256 * 1024,
+        timeout: 10_000,
+        windowsHide: true,
+      },
+    );
+    stdout = result.stdout;
+  } catch {
+    throw new CodexLabError(
+      "PROTOCOL_INCOMPATIBLE",
+      "The pinned Codex runtime could not enumerate MCP isolation inputs.",
+      "incompatible",
+    );
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch {
+    throw new CodexLabError(
+      "PROTOCOL_INCOMPATIBLE",
+      "The pinned Codex runtime returned an invalid MCP inventory.",
+      "incompatible",
+    );
+  }
+  if (
+    !Array.isArray(parsed) ||
+    !parsed.every(
+      (entry) =>
+        entry &&
+        typeof entry === "object" &&
+        "name" in entry &&
+        typeof entry.name === "string",
+    )
+  ) {
+    throw new CodexLabError(
+      "PROTOCOL_INCOMPATIBLE",
+      "The pinned Codex runtime returned an incompatible MCP inventory.",
+      "incompatible",
+    );
+  }
+  return parsed.map((entry) => entry.name);
+}
+
+/** Launches the pinned App Server with one replacement MCP inventory. */
+export function launchE1ProposalAppServer(
+  executablePath: string,
+  configuredServerNames: readonly string[] = [],
+): AppServerClient {
+  const child = spawn(
+    executablePath,
+    getE1ProposalAppServerArgs(configuredServerNames),
+    {
+      env: allowlistedEnvironment(),
+      stdio: "pipe",
+      windowsHide: true,
+    },
+  );
   return new AppServerClient(child);
 }

@@ -1,0 +1,383 @@
+{
+  "schemaVersion": 1,
+  "package": "E1-WP3",
+  "source": "live-pinned-runtime",
+  "observedAt": "2026-07-21T06:24:20.703Z",
+  "runtime": {
+    "packageVersion": "0.144.1",
+    "cliVersion": "codex-cli 0.144.1",
+    "nativeExecutableSha256": "cbacbb9726262ef558b4af0438a1b2a5bba9076132401d947b5b4d2bf92ab0e4",
+    "protocolSha256": "c1ae051f1469ebbfd681208383edadee7d3ef29a7973988473f34e87d78f2f17"
+  },
+  "state": "completed",
+  "scope": {
+    "projectId": "project-ollo-cloud-parade-lab",
+    "sceneId": "scene-cloud-garden",
+    "beatId": "beat-windbell-discovery"
+  },
+  "proposal": {
+    "schemaVersion": 1,
+    "projectId": "project-ollo-cloud-parade-lab",
+    "sceneId": "scene-cloud-garden",
+    "beatId": "beat-windbell-discovery",
+    "summary": "Hold a gentle connection, then favor the wind bell’s first tiny chime.",
+    "rationale": "This keeps Ollo’s invitation calm and readable while preserving the silver fern’s foreground depth until the bell makes its first sound.",
+    "changes": [
+      {
+        "kind": "camera-intent",
+        "intent": "medium-connection"
+      },
+      {
+        "kind": "performance-cue",
+        "entityId": "character-ollo",
+        "capability": "head-turn",
+        "cue": "listen-to-windbell"
+      },
+      {
+        "kind": "performance-cue",
+        "entityId": "character-windbell",
+        "capability": "tiny-chime",
+        "cue": "first-tiny-chime"
+      },
+      {
+        "kind": "layer-emphasis",
+        "layerId": "layer-silver-fern",
+        "emphasis": "foreground-soften"
+      }
+    ]
+  },
+  "eventTimeline": [
+    {
+      "sequence": 1,
+      "kind": "session-started"
+    },
+    {
+      "sequence": 2,
+      "kind": "turn-started"
+    },
+    {
+      "sequence": 3,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 4,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 5,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 6,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 7,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 8,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 9,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 10,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 11,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 12,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 13,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 14,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 15,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 16,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 17,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 18,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 19,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 20,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 21,
+      "kind": "tool-started",
+      "tool": "get_scene_context"
+    },
+    {
+      "sequence": 22,
+      "kind": "tool-completed",
+      "tool": "get_scene_context"
+    },
+    {
+      "sequence": 23,
+      "kind": "tool-started",
+      "tool": "submit_direction_proposal"
+    },
+    {
+      "sequence": 24,
+      "kind": "tool-completed",
+      "tool": "submit_direction_proposal"
+    },
+    {
+      "sequence": 25,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 26,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 27,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 28,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 29,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 30,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 31,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 32,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 33,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 34,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 35,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 36,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 37,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 38,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 39,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 40,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 41,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 42,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 43,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 44,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 45,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 46,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 47,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 48,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 49,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 50,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 51,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 52,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 53,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 54,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 55,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 56,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 57,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 58,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 59,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 60,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 61,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 62,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 63,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 64,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 65,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 66,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 67,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 68,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 69,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 70,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 71,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 72,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 73,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 74,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 75,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 76,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 77,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 78,
+      "kind": "turn-completed",
+      "status": "completed"
+    }
+  ],
+  "reviewAuthority": {
+    "previewAvailable": true,
+    "rejectAvailable": true,
+    "applyEnabled": false,
+    "applyReason": "E1-WP3 validates an ephemeral proposal only; apply and persistence are outside this package."
+  },
+  "privacy": {
+    "rawJsonRpcPersisted": false,
+    "promptPersisted": false,
+    "agentTextPersisted": false,
+    "accountIdentifiersPersisted": false,
+    "threadIdentifiersPersisted": false,
+    "turnIdentifiersPersisted": false,
+    "tokensPersisted": false
+  }
+}
