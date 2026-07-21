@@ -113,6 +113,12 @@ needs one deliverable, explicit non-goals, and a return condition.
 Godot/Remotion seam. It does not authorize B1/B2, Product v1 integration, or a
 second engine experiment.
 
+**Authorized future exception:** E1 in `docs/PRODUCT_PLAN.md` and
+`docs/PRODUCT_ROADMAP.md` is the sole permitted pre-F3 Codex App Server/MCP
+feasibility lab. It may create only the bounded synthetic, read-only lab named
+by E1 and grants no Product v1 UI, live-project mutation, rendering, asset/audio
+work, B1/B3 authority, or later-package authority.
+
 ## Definition of done
 
 A ticket is done only when its user-visible result works, scoped checks pass,

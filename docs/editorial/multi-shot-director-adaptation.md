@@ -124,15 +124,16 @@ render authority.
 
 ### Godot
 
-Godot owns articulated character and prop performance passes requested by an
-accepted plan: view-correct rigs, action phases, grounded travel, expressions,
-visemes, contact, holds, and transparent shot-scoped output.
+Godot owns the complete bounded visual shot: layered set, articulated
+characters, props, occlusion, parallax, particles, lights/shaders, shot-local
+camera, and any explicitly requested auxiliary passes.
 
 ### Remotion
 
-Remotion remains the canonical episode clock and owns shot sequencing, camera
-and multiplane composition, foreground occlusion, ambient layers, transitions,
-captions, narration, dialogue, SFX, music, mixing, and final rendering.
+Remotion owns episode order, trims, handles, transitions, global
+narration/dialogue/SFX/music, captions, titles, evidence cards,
+selected-range/full-episode preview, stitching, encoding, and delivery. It must
+not rebuild the Godot shot's camera or visual layer graph.
 
 The Director may request these behaviors but may not bypass capability,
 continuity, timing, asset, or renderability validation.

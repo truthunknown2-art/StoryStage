@@ -1731,7 +1731,8 @@ owns release operations; Pro audits readiness.
 #### L1-WP1 — Release assembly
 
 - **Tasks:** freeze installer, version, checksum, release notes, known issues,
-  license notices, sample Kids/History projects, backup and recovery instructions.
+  license notices, one Ollo & Friends sample project, backup and recovery
+  instructions.
 - **Non-goals:** developer-mode fallback or rebuilding after release freeze.
 - **Verify/complete:** independent checksum/install and immutable release packet.
 

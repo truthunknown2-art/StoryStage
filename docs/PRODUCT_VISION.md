@@ -80,4 +80,6 @@ StoryStage never receives an API key, cookie, token, or password.
 
 ## Current milestone honesty
 
-SS-001 is workstation infrastructure. SS-002 is building the real script-to-directed-plan and generated-asset seam. Until original assets are approved and rigged, audio is timed and mixed, the production render plan drives Remotion, and both profiles produce polished MP4s, StoryStage is a major foundation of the requested product—not yet the finished product.
+Current execution authority lives only in `docs/ROADMAP_STATUS.md`. Private
+launch requires the accepted Ollo & Friends template; Frankly Weird History
+remains a separately authorized post-launch expansion.
