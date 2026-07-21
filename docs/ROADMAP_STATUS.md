@@ -11,18 +11,18 @@ completedMilestones:
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
 authorization:
-  state: ACCEPTED_WAIT
+  state: START_NOW
   milestone: F3
-  package: F3-WP1
-  owner: Codex
-  exactBase: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
-  branch: agent/kimi-f3-wp1-scope-workspace-foundation
-  issue: 72
-  pr: 78
-  candidateContentHead: 208ceca502c4c20178dbf303c16f85d6facbbaeb
+  package: F3-WP2
+  owner: Kimi
+  exactBase: d7b46d891a981a13431b6272be39809142e727f6
+  branch: agent/kimi-f3-wp2-direct-edits-scoped-history
+  issue: 81
+  pr: null
+  candidateContentHead: d7b46d891a981a13431b6272be39809142e727f6
   candidateRef: product/v1
 checks:
-  local: studio-76+typecheck+build+root-verify+exact-successor-audits
+  local: roadmap-consistency+format-check
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
@@ -30,12 +30,11 @@ verdicts:
   pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
   preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
 blockers:
-  - F3-WP2 requires a separate bounded START_NOW ticket and higher Kimi inbox version
   - F3-WP3 through F3-WP5 remain blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: WAIT_FOR_F3_WP2_TICKET
-  text: F3-WP1 is accepted and integrated. Do not begin F3-WP2 until a separate bounded ticket and higher Kimi inbox version are published.
+  type: IMPLEMENT_F3_WP2_ONLY
+  text: Implement only issue #81 from exact base d7b46d891a981a13431b6272be39809142e727f6 on agent/kimi-f3-wp2-direct-edits-scoped-history, publish the exact handback, and stop before F3-WP3.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -75,9 +74,17 @@ verification from the live PR checks.
   `29866064607` attempt 2. The package provides one shared beat scope across
   the rail, board, permanent scope header, and accessible Direct/Visual/Motion
   workspace tabs. It does not provide direction editing, AI proposals,
-  persistence, media, rendering, or export. Kimi is `WAIT`; F3-WP2, later
-  frontend work, and all backend product work remain blocked pending separate
-  authorization.
+  persistence, media, rendering, or export.
+- Under Preston's standing dependency-ordered continuation authority, separate
+  issue #81 and this `START_NOW` transition authorize only F3-WP2 from exact
+  base `product/v1@d7b46d8...` on
+  `agent/kimi-f3-wp2-direct-edits-scoped-history`. The package adds bounded
+  session-local Direct drafts, atomic per-beat Apply, and independently scoped
+  Undo/Redo with redo invalidation. It does not authorize AI interpretation,
+  persistence, timing, Visual/Motion editing, production schemas, F3-WP3,
+  backend work, Godot, Remotion, rendering, or export. Kimi may start only
+  after this status transition is integrated and a higher canonical inbox
+  version publishes the matching validated assignment.
 
 - Accepted creator-facing product implementation still ends at F2 on exact
   `87c01f9b...`; G0 is the accepted planning/governance milestone integrated at
