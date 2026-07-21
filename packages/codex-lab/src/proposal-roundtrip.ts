@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
-import { mkdtemp, readdir, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { readdir, rm } from "node:fs/promises";
+import { resolve } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import type { ZodType } from "zod";
 import {
   launchE1ProposalAppServer,
@@ -10,10 +10,14 @@ import {
 } from "./app-server";
 import { prepareE1CodexHome } from "./e1-codex-state";
 import { CodexLabError } from "./errors";
+import { prepareE1LabWorkspace } from "./lab-workspace";
 import {
   E1_MCP_RESOURCE_URI,
   E1_MCP_SERVER_NAME,
+  e1DirectionProposalSchema,
+  e1GetSceneContextInputSchema,
   e1ProposalReceiptSchema,
+  e1SceneContextSchema,
   type E1DirectionProposal,
 } from "./mcp-scene-context";
 import {
@@ -28,6 +32,7 @@ import {
   appServerMcpToolCallItemSchema,
   initializeResponseSchema,
   mcpServerStatusListResponseSchema,
+  rateLimitsResponseSchema,
   threadStartResponseSchema,
   turnCompletedNotificationSchema,
   turnStartResponseSchema,
@@ -148,13 +153,33 @@ function throwCleanupFailure(
   primaryFailure: unknown,
   cleanupFailure: unknown,
 ): void {
+  if (
+    primaryFailure instanceof CodexLabError &&
+    cleanupFailure instanceof CodexLabError &&
+    primaryFailure.code === "APP_SERVER_CRASHED" &&
+    cleanupFailure.code === "APP_SERVER_CRASHED"
+  ) {
+    return;
+  }
+  if (primaryFailure !== null && cleanupFailure !== null) {
+    throw new AggregateError(
+      [primaryFailure, cleanupFailure],
+      "The E1 proposal failed and cleanup also failed.",
+    );
+  }
   if (primaryFailure === null && cleanupFailure !== null) {
     throw cleanupFailure;
   }
 }
 
-function protocolError(message: string): CodexLabError {
-  return new CodexLabError("PROTOCOL_INCOMPATIBLE", message, "incompatible");
+function protocolError(
+  message: string,
+  code:
+    | "PROTOCOL_INCOMPATIBLE"
+    | "PROPOSAL_REJECTED"
+    | "UNAPPROVED_ACTIVITY" = "PROTOCOL_INCOMPATIBLE",
+): CodexLabError {
+  return new CodexLabError(code, message, "incompatible");
 }
 
 function throwIfAborted(signal: AbortSignal | undefined): void {
@@ -399,6 +424,23 @@ async function requireChatGptAccount(
   }
 }
 
+async function requireAvailableChatGptAccount(
+  client: AppServerClient,
+): Promise<void> {
+  const response = parseResponse(
+    rateLimitsResponseSchema,
+    await client.request("account/rateLimits/read", {}),
+    "account/rateLimits/read",
+  );
+  if (response.rateLimits.rateLimitReachedType) {
+    throw new CodexLabError(
+      "USAGE_LIMITED",
+      "The ChatGPT account has reached its current usage limit.",
+      "usage-limited",
+    );
+  }
+}
+
 export async function assertExactE1McpInventory(
   client: AppServerClient,
   threadId: string | null,
@@ -458,6 +500,7 @@ export class E1ProposalEventAdapter {
     {
       tool: (typeof E1_PROPOSAL_TOOLS)[number];
       completed: boolean;
+      arguments: unknown;
     }
   >();
 
@@ -509,6 +552,7 @@ export class E1ProposalEventAdapter {
       this.emit({ kind: "approval-blocked", method: message.method });
       throw protocolError(
         "The proposal turn requested unsupported approval or client input.",
+        "UNAPPROVED_ACTIVITY",
       );
     }
 
@@ -605,15 +649,26 @@ export class E1ProposalEventAdapter {
           message.method,
         );
         this.assertTurn(failure.threadId, failure.turnId);
-        if (!failure.willRetry) {
+        throw protocolError(
+          failure.willRetry
+            ? "The proposal turn requested an automatic retry; E1 fails closed instead."
+            : "The proposal turn reported a failure.",
+          "UNAPPROVED_ACTIVITY",
+        );
+      }
+      default: {
+        if (
+          message.method.startsWith("turn/") ||
+          message.method.startsWith("item/") ||
+          message.method.startsWith("mcp/")
+        ) {
           throw protocolError(
-            `The proposal turn failed: ${failure.error.message}`,
+            "The proposal stream emitted unknown bounded-turn activity.",
+            "UNAPPROVED_ACTIVITY",
           );
         }
         return;
       }
-      default:
-        return;
     }
   }
 
@@ -651,6 +706,7 @@ export class E1ProposalEventAdapter {
     if (item.type !== "mcpToolCall") {
       throw protocolError(
         `The bounded proposal turn attempted forbidden item type ${item.type}.`,
+        "UNAPPROVED_ACTIVITY",
       );
     }
 
@@ -667,9 +723,20 @@ export class E1ProposalEventAdapter {
     ) {
       throw protocolError(
         "The proposal turn attempted an unapproved MCP tool.",
+        "UNAPPROVED_ACTIVITY",
       );
     }
     const tool = toolCall.tool as (typeof E1_PROPOSAL_TOOLS)[number];
+    const parsedArguments =
+      tool === "get_scene_context"
+        ? e1GetSceneContextInputSchema.safeParse(toolCall.arguments)
+        : e1DirectionProposalSchema.safeParse(toolCall.arguments);
+    if (!parsedArguments.success) {
+      throw protocolError(
+        `The ${tool} MCP call used malformed arguments.`,
+        "PROPOSAL_REJECTED",
+      );
+    }
     if (method === "item/started") {
       if (this.toolCalls.has(toolCall.id)) {
         throw protocolError(
@@ -686,7 +753,11 @@ export class E1ProposalEventAdapter {
           "The proposal turn used tools out of bounded order.",
         );
       }
-      this.toolCalls.set(toolCall.id, { tool, completed: false });
+      this.toolCalls.set(toolCall.id, {
+        tool,
+        completed: false,
+        arguments: parsedArguments.data,
+      });
       this.emit({
         kind: "tool-started",
         toolCallId: toolCall.id,
@@ -700,18 +771,43 @@ export class E1ProposalEventAdapter {
         "The proposal stream completed an unknown or repeated tool call.",
       );
     }
+    if (!isDeepStrictEqual(startedTool.arguments, parsedArguments.data)) {
+      throw protocolError(
+        `The ${tool} MCP call changed arguments after it started.`,
+        "PROPOSAL_REJECTED",
+      );
+    }
     if (toolCall.status !== "completed") {
       throw protocolError(
         `The ${tool} MCP call did not complete successfully.`,
       );
     }
-    if (tool === "submit_direction_proposal") {
+    if (tool === "get_scene_context") {
+      const context = e1SceneContextSchema.safeParse(
+        toolCall.result?.structuredContent,
+      );
+      if (
+        !context.success ||
+        context.data.projectSummary.id !== E1_PROPOSAL_SCOPE.projectId ||
+        context.data.selectedScene.id !== E1_PROPOSAL_SCOPE.sceneId ||
+        context.data.selectedBeat.id !== E1_PROPOSAL_SCOPE.beatId
+      ) {
+        throw protocolError(
+          "The scene-context MCP call returned malformed or out-of-scope output.",
+          "PROPOSAL_REJECTED",
+        );
+      }
+    } else {
       const receipt = e1ProposalReceiptSchema.safeParse(
         toolCall.result?.structuredContent,
       );
-      if (!receipt.success) {
+      if (
+        !receipt.success ||
+        !isDeepStrictEqual(parsedArguments.data, receipt.data.proposal)
+      ) {
         throw protocolError(
-          "The submitted direction proposal returned malformed output.",
+          "The submitted direction proposal returned malformed output or mismatched proposal identity.",
+          "PROPOSAL_REJECTED",
         );
       }
       this.proposal = receipt.data.proposal;
@@ -759,6 +855,7 @@ export async function runE1ProposalRoundTrip(
     onEvent?: (event: E1ProposalEvent) => void;
     verifyRuntime?: () => Promise<VerifiedRuntime>;
     prepareCodexHome?: () => Promise<string>;
+    createWorkspace?: (codexHome: string) => Promise<string>;
     openAuthUrl?: (url: string) => Promise<void>;
     loginTimeoutMs?: number;
     launch?: (executablePath: string, codexHome: string) => AppServerClient;
@@ -826,10 +923,13 @@ export async function runE1ProposalRoundTrip(
       options.loginTimeoutMs ?? E1_LOGIN_TIMEOUT_MS,
       options.signal,
     );
+    await requireAvailableChatGptAccount(client);
     await assertExactE1McpInventory(client, null);
     throwIfAborted(options.signal);
 
-    workspace = await mkdtemp(join(tmpdir(), "storystage-e1-wp3-workspace-"));
+    workspace = await (options.createWorkspace ?? prepareE1LabWorkspace)(
+      codexHome,
+    );
     const thread = parseResponse(
       threadStartResponseSchema,
       await client.request("thread/start", {

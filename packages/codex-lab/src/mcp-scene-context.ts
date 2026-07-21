@@ -148,6 +148,10 @@ export const e1SceneContextSchema = z
 
 export type E1SceneContext = z.infer<typeof e1SceneContextSchema>;
 
+export const e1GetSceneContextInputSchema = z
+  .object({ schemaVersion: z.literal(1) })
+  .strict();
+
 const proposalChangeSchema = z.discriminatedUnion("kind", [
   z
     .object({
@@ -297,7 +301,9 @@ async function loadFixture(
   }
 }
 
-function toContext(fixture: E1SyntheticSceneFixture): E1SceneContext {
+export function createE1SceneContext(
+  fixture: E1SyntheticSceneFixture,
+): E1SceneContext {
   return deepFreeze(
     e1SceneContextSchema.parse({
       schemaVersion: 1,
@@ -471,7 +477,7 @@ async function createE1McpSceneContextServerWithTestDependencies(
   dependencies: E1McpSceneContextTestDependencies,
 ): Promise<McpServer> {
   const fixture = await loadFixture(dependencies.readFixture);
-  const context = toContext(fixture);
+  const context = createE1SceneContext(fixture);
   const contextText = assertOutputLimit(context);
   const server = new McpServer(
     { name: "storystage-e1-synthetic-scene", version: "1.0.0" },
@@ -530,7 +536,7 @@ async function createE1McpSceneContextServerWithTestDependencies(
       title: "Get synthetic scene context",
       description:
         "Read the complete fixed E1 synthetic scene context and proposal vocabulary.",
-      inputSchema: z.object({ schemaVersion: z.literal(1) }).strict(),
+      inputSchema: e1GetSceneContextInputSchema,
       outputSchema: e1SceneContextSchema,
       annotations: readOnlyAnnotations,
     },

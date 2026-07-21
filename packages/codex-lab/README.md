@@ -1,5 +1,25 @@
 # E1 Codex feasibility lab
 
+## E1-WP4 failure, security, and feasibility gate
+
+`pnpm generate:e1-wp4-failure-matrix` writes the deterministic negative-state
+and security-boundary index. `pnpm verify:e1-wp4-failure-matrix` fails if that
+committed evidence is absent or stale. Every row names a stable code, truthful
+creator message, recovery action, executable test anchor, and explicit denial
+of automatic retry, hidden fallback, credential access, and project mutation.
+
+The E1 Director lab exposes these records as selectable deterministic fixtures.
+They are not live production failures and do not establish production security,
+packaging, distribution, or private-launch readiness.
+
+## E1-WP3 streamed proposal round trip
+
+The lab launches the pinned Codex App Server in an isolated Codex-owned state
+root, verifies the exact bounded StoryStage MCP inventory, and records one
+officially authenticated proposal-only round trip. The creator can preview or
+reject the validated ephemeral proposal; Apply is permanently disabled. No
+project, asset, renderer, or saved state is mutated.
+
 ## E1-WP2 bounded synthetic-scene MCP server
 
 `pnpm --filter @storystage/codex-lab mcp:e1-scene-context` starts the local
@@ -10,8 +30,9 @@ resource, one read-only `get_scene_context` tool for Codex, and one read-only
 proposal. It has no apply, persistence, approval, renderer, asset-generation,
 filesystem, shell, or network authority.
 
-This is isolated E1 feasibility code. App Server configuration and a real Codex
-round trip belong to E1-WP3 and are deliberately absent.
+This remains isolated E1 feasibility code. The real E1-WP3 round trip consumes
+this server through the pinned App Server, but production integration remains
+outside E1.
 
 ## E1-WP1 Codex App Server preflight
 

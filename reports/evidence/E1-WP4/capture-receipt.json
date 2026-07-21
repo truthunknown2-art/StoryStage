@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "package": "E1-WP4",
+  "evidenceClass": "actual-local-lab-capture",
+  "surface": "E1 Director Lab — Failure & recovery",
+  "selectedFixture": "prompt-injection-blocked",
+  "selectedCode": "UNAPPROVED_ACTIVITY",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 900,
+    "scrollX": 0,
+    "scrollY": 0
+  },
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "totalObservedMessages": 3
+  },
+  "authority": {
+    "automaticRetry": false,
+    "hiddenFallback": false,
+    "credentialAccess": false,
+    "projectMutation": false,
+    "applyEnabled": false
+  },
+  "truthLabels": {
+    "deterministicFixtures": true,
+    "productionServicesConnected": false,
+    "productionSecurityClaim": false
+  },
+  "artifacts": {
+    "screenshot": {
+      "path": "reports/evidence/E1-WP4/failure-gate-1440x900.png",
+      "sha256": "f7c52f1ecbf18050ef1ca286da075edbf410d63c66b4835623622cedf9d9e810",
+      "bytes": 370159
+    },
+    "failureMatrix": {
+      "path": "reports/evidence/E1-WP4/failure-matrix.json",
+      "sha256": "2efd378c211fad6ccba27b4a0e0fd71c2a83bfdcb1ebb89b6fc544d9e8f19415",
+      "bytes": 14730
+    },
+    "noProjectMutation": {
+      "path": "reports/evidence/E1-WP4/no-project-mutation.json",
+      "sha256": "449d0b7e0634f309008d008707e776bf7efee6a1b9cb59f7e6368547d07e89c8",
+      "bytes": 703
+    },
+    "processCleanup": {
+      "path": "reports/evidence/E1-WP4/process-cleanup.json",
+      "sha256": "e30d178830e3f220ea8868e550f96f27c43d85152d42fa0047de2f7f60be083f",
+      "bytes": 1183
+    }
+  },
+  "knownLimitations": [
+    "The captured states are deterministic E1 fixtures, not live production failures.",
+    "Codex CLI 0.144.1 labels app-server experimental.",
+    "Distribution, packaging, installed-build process containment, and private-launch security remain R1/R2 work."
+  ]
+}

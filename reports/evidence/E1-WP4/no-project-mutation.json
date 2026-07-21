@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "package": "E1-WP4",
+  "evidenceClass": "deterministic-decoy-project-tripwire",
+  "scope": "temporary-decoy-files-only",
+  "decoyFileCount": 2,
+  "beforeSha256": "c678d8f15e74f5d70e16ceced02555b0d58cbc3c3c5c999e31d2239419cfd794",
+  "afterSha256": "c678d8f15e74f5d70e16ceced02555b0d58cbc3c3c5c999e31d2239419cfd794",
+  "unchanged": true,
+  "projectMutationAllowed": false,
+  "persistedPath": false,
+  "executableTest": "packages/codex-lab/src/no-project-mutation.test.ts :: leaves the decoy project byte-identical across the failure gate",
+  "limitation": "This proves the isolated WP4 evidence path against a decoy project; production project integration remains outside E1."
+}

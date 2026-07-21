@@ -3,6 +3,8 @@ export * from "./app-server";
 export * from "./browser-auth";
 export * from "./e1-codex-state";
 export * from "./errors";
+export * from "./failure-gate";
+export * from "./lab-workspace";
 export {
   E1_MCP_FIXTURE_SHA256,
   E1_MCP_INSTRUCTIONS,

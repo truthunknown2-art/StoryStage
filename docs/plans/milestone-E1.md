@@ -11,10 +11,12 @@
   E1-WP1 through E1-WP4 plan on 2026-07-20
 - Current authorization: E1-WP3 is accepted at exact PR #64 head
   `681eeb4d7c28405ead53cb8afc16a048c749c53d` and integrated at
-  `ac2357d2e1419124d832fe26b67e26875f3821e8`. E1-WP4 has not started; it
-  requires its own bounded issue and `START_NOW` status transition. Standing
-  continuation authority applies only after each dependency-ordered package
-  passes its existing gates.
+  `ac2357d2e1419124d832fe26b67e26875f3821e8`. Issue #69 and the merged
+  status transition authorize only E1-WP4 from exact base
+  `8d9a47a4898df81db7630e2f0b7d4eecc88f7157` on
+  `agent/codex-e1-wp4-failure-security-gate`. Standing continuation authority
+  does not waive exact-SHA review, hosted checks, Pro review, or Preston's final
+  E1 `PASS`/`FAIL` decision.
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 

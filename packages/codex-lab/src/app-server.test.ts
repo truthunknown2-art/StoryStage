@@ -41,6 +41,100 @@ describe("E1 JSONL App Server client", () => {
     });
   });
 
+  it("rejects invalid UTF-8 and malformed JSON-RPC envelopes", async () => {
+    const invalidUtfChild = new FakeChild();
+    const invalidUtfClient = new AppServerClient(asChild(invalidUtfChild));
+    const invalidUtfRequest = invalidUtfClient.request("initialize", {});
+    invalidUtfChild.stdout.write(Buffer.from([0xff, 0x0a]));
+    await expect(invalidUtfRequest).rejects.toMatchObject({
+      code: "MALFORMED_JSON",
+    });
+
+    for (const envelope of [
+      { id: 1, result: {} },
+      { jsonrpc: "1.0", id: 1, result: {} },
+      { jsonrpc: "2.0", id: 1, result: {}, error: {} },
+      { jsonrpc: "2.0", id: 1 },
+    ]) {
+      const child = new FakeChild();
+      const client = new AppServerClient(asChild(child));
+      const pending = client.request("initialize", {});
+      child.stdout.write(`${JSON.stringify(envelope)}\n`);
+      await expect(pending).rejects.toMatchObject({
+        code: "PROTOCOL_INCOMPATIBLE",
+      });
+    }
+  });
+
+  it("rejects unknown and duplicate response IDs", async () => {
+    const unknownChild = new FakeChild();
+    const unknownClient = new AppServerClient(asChild(unknownChild));
+    const pending = unknownClient.request("initialize", {});
+    unknownChild.stdout.write(
+      `${JSON.stringify({ jsonrpc: "2.0", id: 99, result: {} })}\n`,
+    );
+    await expect(pending).rejects.toMatchObject({
+      code: "PROTOCOL_INCOMPATIBLE",
+    });
+
+    const duplicateChild = new FakeChild();
+    const duplicateClient = new AppServerClient(asChild(duplicateChild));
+    const first = duplicateClient.request("initialize", {});
+    const response = `${JSON.stringify({ jsonrpc: "2.0", id: 1, result: {} })}\n`;
+    duplicateChild.stdout.write(response);
+    await expect(first).resolves.toEqual({});
+    duplicateChild.stdout.write(response);
+    await expect(
+      duplicateClient.request("model/list", {}),
+    ).rejects.toMatchObject({
+      code: "PROTOCOL_INCOMPATIBLE",
+    });
+  });
+
+  it("bounds cumulative stdout, notification count, and streamed text", async () => {
+    const streamChild = new FakeChild();
+    const streamClient = new AppServerClient(asChild(streamChild), {
+      maxStreamBytes: 12,
+    });
+    const streamRequest = streamClient.request("initialize", {});
+    streamChild.stdout.write("1234567890123");
+    await expect(streamRequest).rejects.toMatchObject({
+      code: "OUTPUT_LIMIT_EXCEEDED",
+    });
+
+    const countChild = new FakeChild();
+    const countClient = new AppServerClient(asChild(countChild), {
+      maxNotificationCount: 1,
+    });
+    const countRequest = countClient.request("initialize", {});
+    const notification = `${JSON.stringify({
+      jsonrpc: "2.0",
+      method: "thread/status/changed",
+      params: {},
+    })}\n`;
+    countChild.stdout.write(notification);
+    countChild.stdout.write(notification);
+    await expect(countRequest).rejects.toMatchObject({
+      code: "OUTPUT_LIMIT_EXCEEDED",
+    });
+
+    const textChild = new FakeChild();
+    const textClient = new AppServerClient(asChild(textChild), {
+      maxNotificationTextBytes: 4,
+    });
+    const textRequest = textClient.request("initialize", {});
+    textChild.stdout.write(
+      `${JSON.stringify({
+        jsonrpc: "2.0",
+        method: "item/agentMessage/delta",
+        params: { delta: "12345" },
+      })}\n`,
+    );
+    await expect(textRequest).rejects.toMatchObject({
+      code: "OUTPUT_LIMIT_EXCEEDED",
+    });
+  });
+
   it("turns premature child exit into a visible crashed state", async () => {
     const child = new FakeChild();
     const client = new AppServerClient(asChild(child));
