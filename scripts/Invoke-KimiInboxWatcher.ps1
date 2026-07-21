@@ -240,6 +240,64 @@ function Assert-StartNowAssignment {
   $brief
 }
 
+function Get-AssignmentWorkspacePath {
+  param(
+    [Parameter(Mandatory)] [string]$Root,
+    [Parameter(Mandatory)] [int]$Version
+  )
+
+  $resolvedRoot = [System.IO.Path]::GetFullPath($Root).TrimEnd('\', '/')
+  $workspace = [System.IO.Path]::GetFullPath((Join-Path $resolvedRoot ("workspaces\v{0}" -f $Version)))
+  $requiredPrefix = $resolvedRoot + [System.IO.Path]::DirectorySeparatorChar
+  if (-not $workspace.StartsWith($requiredPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'Assignment workspace resolves outside the watcher state root.'
+  }
+  $workspace
+}
+
+function Assert-CleanAssignmentWorkspace {
+  param(
+    [Parameter(Mandatory)] [string]$Workspace,
+    [Parameter(Mandatory)] [string]$Url,
+    [Parameter(Mandatory)] [string]$AcceptedBase
+  )
+
+  if (-not (Test-Path -LiteralPath (Join-Path $Workspace '.git'))) {
+    throw 'Assignment workspace is not a Git checkout.'
+  }
+  $remote = (Invoke-CheckedGit -Arguments @('-C', $Workspace, 'remote', 'get-url', 'origin')).Output
+  if ($remote -ne $Url) { throw 'Assignment workspace origin does not match the configured StoryStage repository.' }
+  $head = (Invoke-CheckedGit -Arguments @('-C', $Workspace, 'rev-parse', 'HEAD')).Output
+  if ($head -ne $AcceptedBase) { throw 'Assignment workspace HEAD does not equal the exact accepted base.' }
+  $symbolicHead = Invoke-CheckedGit -Arguments @('-C', $Workspace, 'symbolic-ref', '--quiet', 'HEAD') -AllowFailure
+  if ($symbolicHead.ExitCode -eq 0) { throw 'Assignment workspace must begin on a detached exact-base HEAD.' }
+  if ($symbolicHead.ExitCode -ne 1) { throw 'Unable to verify detached assignment workspace HEAD.' }
+  $status = (Invoke-CheckedGit -Arguments @('-C', $Workspace, 'status', '--porcelain=v1', '--untracked-files=all')).Output
+  if (-not [string]::IsNullOrWhiteSpace($status)) { throw 'Assignment workspace is not clean.' }
+}
+
+function New-AssignmentWorkspace {
+  param(
+    [Parameter(Mandatory)] [string]$Root,
+    [Parameter(Mandatory)] [string]$Url,
+    [Parameter(Mandatory)] [object]$Inbox
+  )
+
+  $workspace = Get-AssignmentWorkspacePath -Root $Root -Version $Inbox.Version
+  if (Test-Path -LiteralPath $workspace) {
+    throw "Assignment workspace already exists for inbox v$($Inbox.Version); refusing to reuse or delete it."
+  }
+  $remoteBranch = Invoke-CheckedGit -Arguments @('ls-remote', '--exit-code', '--heads', $Url, "refs/heads/$($Inbox.RequiredBranch)") -AllowFailure
+  if ($remoteBranch.ExitCode -eq 0) { throw 'The required work branch already exists on origin.' }
+  if ($remoteBranch.ExitCode -ne 2) { throw 'Unable to verify that the required work branch is absent on origin.' }
+
+  New-Item -ItemType Directory -Path (Split-Path -Parent $workspace) -Force | Out-Null
+  Invoke-CheckedGit -Arguments @('clone', '--no-checkout', '--origin', 'origin', $Url, $workspace) | Out-Null
+  Invoke-CheckedGit -Arguments @('-C', $workspace, 'checkout', '--detach', $Inbox.AcceptedBase) | Out-Null
+  Assert-CleanAssignmentWorkspace -Workspace $workspace -Url $Url -AcceptedBase $Inbox.AcceptedBase
+  $workspace
+}
+
 function New-AssignmentPrompt {
   param([Parameter(Mandatory)] [object]$Inbox)
   $issue = $Inbox.Issue.TrimStart('#')
@@ -321,6 +379,7 @@ function Invoke-KimiWatcherPoll {
         fullBrief = $inbox.FullBrief
         issue = $inbox.Issue
         repositoryUrl = $Url
+        workingDirectory = $null
         prompt = $prompt
         createdAt = [DateTimeOffset]::UtcNow.ToString('o')
       }
@@ -342,12 +401,15 @@ function Invoke-KimiWatcherPoll {
       $resolvedKimi = (Get-Command $Executable -CommandType Application -ErrorAction Stop).Source
       $runner = Join-Path $PSScriptRoot 'Run-KimiInboxAssignment.ps1'
       if (-not (Test-Path -LiteralPath $runner)) { throw 'Installed Kimi assignment runner is missing.' }
+      $workspace = New-AssignmentWorkspace -Root $Root -Url $Url -Inbox $inbox
+      $launch.workingDirectory = $workspace
+      Write-AtomicJson -Path $launchPath -Value $launch
       $arguments = @(
         '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
         '-File', ('"{0}"' -f $runner),
         '-LaunchFile', ('"{0}"' -f $launchPath),
         '-KimiPath', ('"{0}"' -f $resolvedKimi),
-        '-WorkingDirectory', ('"{0}"' -f $repo)
+        '-WorkingDirectory', ('"{0}"' -f $workspace)
       )
 
       # Reserve the inbox version before crossing the process boundary. If this
@@ -359,6 +421,7 @@ function Invoke-KimiWatcherPoll {
       $state.lastLaunchState = 'reserved'
       $state.pendingLaunchVersion = $null
       $state.lastLaunchAt = [DateTimeOffset]::UtcNow.ToString('o')
+      $state.lastLaunchWorkspace = $workspace
       Write-AtomicJson -Path $statePath -Value $state
       $process = if ($null -ne $ProcessStarter) {
         & $ProcessStarter $arguments
