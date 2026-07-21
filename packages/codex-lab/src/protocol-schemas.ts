@@ -23,7 +23,7 @@ const accountSchema = z.discriminatedUnion("type", [
 
 export const accountResponseSchema = z
   .object({
-    account: accountSchema.nullable(),
+    account: accountSchema.nullable().optional(),
     requiresOpenaiAuth: z.boolean(),
   })
   .strict();
@@ -31,24 +31,27 @@ export const accountResponseSchema = z
 export const modelListResponseSchema = z
   .object({
     data: z.array(z.object({ id: z.string() }).passthrough()),
-    nextCursor: z.string().nullable(),
+    nextCursor: z.string().nullable().optional(),
   })
   .strict();
 
 export const rateLimitsResponseSchema = z
   .object({
     rateLimits: z
-      .object({ rateLimitReachedType: z.string().nullable() })
+      .object({ rateLimitReachedType: z.string().nullable().optional() })
       .passthrough(),
-    rateLimitsByLimitId: z.record(z.string(), z.unknown()).nullable(),
-    rateLimitResetCredits: z.unknown().nullable(),
+    rateLimitsByLimitId: z
+      .record(z.string(), z.unknown())
+      .nullable()
+      .optional(),
+    rateLimitResetCredits: z.unknown().nullable().optional(),
   })
   .strict();
 
 export const usageResponseSchema = z
   .object({
     summary: z.record(z.string(), z.unknown()),
-    dailyUsageBuckets: z.array(z.unknown()).nullable(),
+    dailyUsageBuckets: z.array(z.unknown()).nullable().optional(),
   })
   .strict();
 
@@ -58,15 +61,30 @@ export const threadStartResponseSchema = z
   })
   .passthrough();
 
+const turnSchema = z
+  .object({
+    id: z.string(),
+    items: z.array(z.unknown()),
+    status: z.enum(["completed", "interrupted", "failed", "inProgress"]),
+  })
+  .passthrough();
+
 export const turnStartResponseSchema = z
   .object({
-    turn: z.object({ id: z.string() }).passthrough(),
+    turn: turnSchema,
   })
   .strict();
 
 export const turnStartedNotificationSchema = z
   .object({
     threadId: z.string(),
-    turn: z.object({ id: z.string() }).passthrough(),
+    turn: turnSchema,
+  })
+  .strict();
+
+export const turnCompletedNotificationSchema = z
+  .object({
+    threadId: z.string(),
+    turn: turnSchema,
   })
   .strict();

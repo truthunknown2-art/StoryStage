@@ -12,6 +12,7 @@ import {
   modelListResponseSchema,
   rateLimitsResponseSchema,
   threadStartResponseSchema,
+  turnCompletedNotificationSchema,
   turnStartResponseSchema,
   turnStartedNotificationSchema,
   usageResponseSchema,
@@ -52,6 +53,7 @@ export type PreflightReceipt = {
     ephemeralThreadStarted: boolean;
     turnStarted: boolean;
     turnInterruptAccepted: boolean;
+    turnCompletedInterrupted: boolean;
     cleanShutdown: boolean;
     isolatedWorkspaceUnchanged: boolean;
     stderrObserved: boolean;
@@ -108,6 +110,7 @@ function emptyObservations(): ObservationState {
     ephemeralThreadStarted: false,
     turnStarted: false,
     turnInterruptAccepted: false,
+    turnCompletedInterrupted: false,
     cleanShutdown: false,
     isolatedWorkspaceUnchanged: false,
     stderrObserved: false,
@@ -128,6 +131,20 @@ function parseResponse<T>(
     );
   }
   return parsed.data;
+}
+
+type Settled<T> = { ok: true; value: T } | { ok: false; error: unknown };
+
+function settle<T>(promise: Promise<T>): Promise<Settled<T>> {
+  return promise.then(
+    (value) => ({ ok: true, value }),
+    (error: unknown) => ({ ok: false, error }),
+  );
+}
+
+function unwrap<T>(outcome: Settled<T>): T {
+  if (!outcome.ok) throw outcome.error;
+  return outcome.value;
 }
 
 function resolveReceiptPath(input?: string): string {
@@ -165,10 +182,15 @@ function makeReceipt(input: {
     input.observations.ephemeralThreadStarted &&
     input.observations.turnStarted &&
     input.observations.turnInterruptAccepted &&
+    input.observations.turnCompletedInterrupted &&
     input.observations.cleanShutdown &&
     input.observations.isolatedWorkspaceUnchanged &&
+    input.observations.usageLimited === false &&
     !input.failure;
-  const actionRequired = input.accountState === "signed-out" && !input.failure;
+  const actionRequired =
+    (input.accountState === "signed-out" ||
+      input.accountState === "usage-limited") &&
+    !input.failure;
   return {
     schemaVersion: 1,
     package: "E1-WP1",
@@ -296,7 +318,7 @@ export async function runPreflight(
       );
       observations.rateLimitsReadable = true;
       observations.usageLimited =
-        rateLimits.rateLimits.rateLimitReachedType !== null;
+        rateLimits.rateLimits.rateLimitReachedType != null;
 
       parseResponse(
         usageResponseSchema,
@@ -305,56 +327,97 @@ export async function runPreflight(
       );
       observations.usageReadable = true;
 
-      isolatedWorkspace = await mkdtemp(
-        join(tmpdir(), "storystage-e1-wp1-workspace-"),
-      );
-      sensitiveFragments.push(isolatedWorkspace);
-      const thread = parseResponse(
-        threadStartResponseSchema,
-        await client.request("thread/start", {
-          cwd: isolatedWorkspace,
-          approvalPolicy: "never",
-          sandbox: "read-only",
-          ephemeral: true,
-        }),
-        "thread/start",
-      );
-      const threadId = thread.thread.id;
-      sensitiveFragments.push(threadId);
-      observations.ephemeralThreadStarted = true;
+      if (observations.usageLimited) {
+        accountState = "usage-limited";
+      }
 
-      const turnStartedNotification =
-        client.waitForNotification("turn/started");
-      const turnStartRequest = client.request("turn/start", {
-        threadId,
-        input: [{ type: "text", text: probePrompt, text_elements: [] }],
-        cwd: isolatedWorkspace,
-        approvalPolicy: "never",
-        sandboxPolicy: { type: "readOnly", networkAccess: false },
-      });
-      const startedTurn = parseResponse(
-        turnStartedNotificationSchema,
-        await turnStartedNotification,
-        "turn/started",
-      );
-      const turnId = startedTurn.turn.id;
-      sensitiveFragments.push(turnId);
-      observations.turnStarted = true;
+      if (!observations.usageLimited) {
+        isolatedWorkspace = await mkdtemp(
+          join(tmpdir(), "storystage-e1-wp1-workspace-"),
+        );
+        sensitiveFragments.push(isolatedWorkspace);
+        const thread = parseResponse(
+          threadStartResponseSchema,
+          await client.request("thread/start", {
+            cwd: isolatedWorkspace,
+            approvalPolicy: "never",
+            sandbox: "read-only",
+            ephemeral: true,
+          }),
+          "thread/start",
+        );
+        const threadId = thread.thread.id;
+        sensitiveFragments.push(threadId);
+        observations.ephemeralThreadStarted = true;
 
-      const turnInterrupt = client.request("turn/interrupt", {
-        threadId,
-        turnId,
-      });
-      const turn = parseResponse(
-        turnStartResponseSchema,
-        await turnStartRequest,
-        "turn/start",
-      );
-      sensitiveFragments.push(turn.turn.id);
-      await turnInterrupt;
-      observations.turnInterruptAccepted = true;
-      observations.isolatedWorkspaceUnchanged =
-        (await readdir(isolatedWorkspace)).length === 0;
+        const turnStartedNotification = settle(
+          client.waitForNotification("turn/started"),
+        );
+        const turnCompletedNotification = settle(
+          client.waitForNotification("turn/completed"),
+        );
+        const turnStartRequest = settle(
+          client.request("turn/start", {
+            threadId,
+            input: [{ type: "text", text: probePrompt, text_elements: [] }],
+            cwd: isolatedWorkspace,
+            approvalPolicy: "never",
+            sandboxPolicy: { type: "readOnly", networkAccess: false },
+          }),
+        );
+        unwrap(await Promise.race([turnStartedNotification, turnStartRequest]));
+        const startedTurn = parseResponse(
+          turnStartedNotificationSchema,
+          unwrap(await turnStartedNotification),
+          "turn/started",
+        );
+        if (startedTurn.threadId !== threadId) {
+          throw new CodexLabError(
+            "PROTOCOL_INCOMPATIBLE",
+            "The Codex App Server started a turn on an unexpected thread.",
+            "incompatible",
+          );
+        }
+        const turnId = startedTurn.turn.id;
+        sensitiveFragments.push(turnId);
+        observations.turnStarted = true;
+
+        const turnInterrupt = settle(
+          client.request("turn/interrupt", {
+            threadId,
+            turnId,
+          }),
+        );
+        unwrap(await turnInterrupt);
+        observations.turnInterruptAccepted = true;
+
+        const turn = parseResponse(
+          turnStartResponseSchema,
+          unwrap(await turnStartRequest),
+          "turn/start",
+        );
+        sensitiveFragments.push(turn.turn.id);
+        const completedTurn = parseResponse(
+          turnCompletedNotificationSchema,
+          unwrap(await turnCompletedNotification),
+          "turn/completed",
+        );
+        if (
+          turn.turn.id !== turnId ||
+          completedTurn.threadId !== threadId ||
+          completedTurn.turn.id !== turnId ||
+          completedTurn.turn.status !== "interrupted"
+        ) {
+          throw new CodexLabError(
+            "PROTOCOL_INCOMPATIBLE",
+            "The Codex App Server did not confirm interruption of the expected turn.",
+            "incompatible",
+          );
+        }
+        observations.turnCompletedInterrupted = true;
+        observations.isolatedWorkspaceUnchanged =
+          (await readdir(isolatedWorkspace)).length === 0;
+      }
     }
   } catch (error) {
     failure =

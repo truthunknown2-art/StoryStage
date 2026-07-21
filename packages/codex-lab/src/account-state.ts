@@ -1,7 +1,7 @@
 import { CodexLabError, type PreflightState } from "./errors";
 
 export type AccountObservation = {
-  account: { type: "apiKey" | "chatgpt" | "amazonBedrock" } | null;
+  account?: { type: "apiKey" | "chatgpt" | "amazonBedrock" } | null;
   requiresOpenaiAuth: boolean;
 };
 
@@ -9,7 +9,7 @@ export function classifyAccountState(
   observation: AccountObservation,
 ): PreflightState {
   if (observation.account?.type === "chatgpt") return "authenticated";
-  if (observation.account === null && observation.requiresOpenaiAuth) {
+  if (observation.account == null && observation.requiresOpenaiAuth) {
     return "signed-out";
   }
   return "incompatible";
@@ -25,6 +25,17 @@ export function classifyRpcFailure(
   rawError: unknown,
 ): PreflightState {
   const text = JSON.stringify(rawError).toLowerCase();
+  const code =
+    rawError && typeof rawError === "object" && "code" in rawError
+      ? (rawError as { code?: unknown }).code
+      : null;
+  if (
+    code === -32601 ||
+    code === -32602 ||
+    /method not found|unknown method|invalid params|invalid request/.test(text)
+  ) {
+    return "incompatible";
+  }
   if (/rate.?limit|usage.?limit|quota|too many requests|\b429\b/.test(text)) {
     return "usage-limited";
   }

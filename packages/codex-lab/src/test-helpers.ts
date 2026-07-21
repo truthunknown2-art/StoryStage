@@ -17,9 +17,13 @@ export function asChild(child: FakeChild): ChildProcessWithoutNullStreams {
   return child as unknown as ChildProcessWithoutNullStreams;
 }
 
+export class FakeRpcError {
+  public constructor(public readonly error: unknown) {}
+}
+
 export function answerRequests(
   child: FakeChild,
-  answer: (method: string, params: unknown) => unknown,
+  answer: (method: string, params: unknown) => unknown | Promise<unknown>,
 ): void {
   let buffered = "";
   child.stdin.on("data", (chunk: Buffer) => {
@@ -35,13 +39,18 @@ export function answerRequests(
         params: unknown;
       };
       if (message.id === undefined) continue;
-      child.stdout.write(
-        `${JSON.stringify({
-          jsonrpc: "2.0",
-          id: message.id,
-          result: answer(message.method, message.params),
-        })}\n`,
-      );
+      const response = answer(message.method, message.params);
+      void Promise.resolve(response).then((settledResponse) => {
+        child.stdout.write(
+          `${JSON.stringify({
+            jsonrpc: "2.0",
+            id: message.id,
+            ...(settledResponse instanceof FakeRpcError
+              ? { error: settledResponse.error }
+              : { result: settledResponse }),
+          })}\n`,
+        );
+      });
     }
   });
 }

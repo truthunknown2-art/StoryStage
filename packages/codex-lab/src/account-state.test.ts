@@ -17,6 +17,9 @@ describe("E1 account-state truth", () => {
     expect(
       classifyAccountState({ account: null, requiresOpenaiAuth: true }),
     ).toBe("signed-out");
+    expect(classifyAccountState({ requiresOpenaiAuth: true })).toBe(
+      "signed-out",
+    );
     expect(
       classifyAccountState({
         account: { type: "apiKey" },
@@ -35,6 +38,12 @@ describe("E1 account-state truth", () => {
     expect(classifyRpcFailure("account/rateLimits/read", { code: 429 })).toBe(
       "usage-limited",
     );
+    expect(
+      classifyRpcFailure("account/read", {
+        code: -32601,
+        message: "Method not found",
+      }),
+    ).toBe("incompatible");
     expect(
       classifyFailure(
         new CodexLabError("RUNTIME_NOT_INSTALLED", "missing", "not-installed"),
