@@ -2011,8 +2011,79 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   gap: 8px;
 }
 
+/* Inactive tab panels must stay hidden even where the UA [hidden] rule is
+ * no longer !important (current Chromium): the class display above would
+ * otherwise win and reveal every panel. */
+.pv1-director-panel[hidden] {
+  display: none;
+}
+
 .pv1-director-panel .pv1-director-scope {
   color: #dfe7e3;
   font-size: 11.5px;
   font-weight: 700;
+}
+
+/* F3-WP2 Direct drafts + scoped history */
+
+.pv1-direct-form {
+  display: grid;
+  gap: 10px;
+}
+
+.pv1-direct-note {
+  background: rgba(145, 228, 179, 0.06);
+  border: 1px solid rgba(145, 228, 179, 0.28);
+  border-radius: 8px;
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  line-height: 1.5;
+  padding: 8px 10px;
+}
+
+.pv1-direct-field {
+  display: grid;
+  gap: 4px;
+}
+
+.pv1-direct-field span {
+  color: #dfe7e3;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pv1-direct-field textarea {
+  background: #0d1213;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: #dbe3df;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  resize: vertical;
+  width: 100%;
+}
+
+.pv1-direct-field textarea::placeholder {
+  color: var(--pv1-faint);
+}
+
+.pv1-direct-field textarea:focus {
+  border-color: var(--green);
+}
+
+.pv1-direct-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pv1-direct-actions .pv1-primary,
+.pv1-direct-actions .pv1-secondary {
+  min-height: 36px;
+}
+
+.pv1-direct-status {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  line-height: 1.5;
 }

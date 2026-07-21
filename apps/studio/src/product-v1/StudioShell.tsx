@@ -8,6 +8,8 @@ import {
   Clapperboard,
   Film,
   LocateFixed,
+  Redo2,
+  Undo2,
 } from "lucide-react";
 import olloCastArt from "../assets/ollo-friends-cast-v1.jpg";
 import {
@@ -17,6 +19,19 @@ import {
   OLLO_DEMO_TOTAL_SECONDS,
   type DemoScene,
 } from "./demo-project";
+import {
+  applyDirectDraft,
+  canRedoDirect,
+  canUndoDirect,
+  directBeatKey,
+  hasUnappliedDirectChanges,
+  initialBeatDirectState,
+  redoDirect,
+  undoDirect,
+  updateDirectDraft,
+  type BeatDirectState,
+  type DirectDraft,
+} from "./direct-history";
 
 const formatClock = (totalSeconds: number) => {
   const minutes = Math.floor(totalSeconds / 60);
@@ -44,8 +59,6 @@ const DIRECTOR_TABS = [
   {
     id: "direct",
     label: "Direct",
-    truth:
-      "Story direction for the selected beat will be edited here in a later F3 package. This tab shows the shared scope only — nothing here changes the plan yet.",
   },
   {
     id: "visual",
@@ -57,11 +70,33 @@ const DIRECTOR_TABS = [
     id: "motion",
     label: "Motion",
     truth:
-      "Motion and performance direction arrive later. No animation or rendering exists in this package, and this tab changes nothing.",
+      "Motion controls arrive later. The performance note in Direct is session-local text only; it does not animate or render this beat.",
   },
 ] as const;
 
 type DirectorTabId = (typeof DIRECTOR_TABS)[number]["id"];
+
+const DIRECT_FIELDS: Array<{
+  id: keyof DirectDraft;
+  label: string;
+  placeholder: string;
+}> = [
+  {
+    id: "beatPurpose",
+    label: "Beat purpose",
+    placeholder: "What this beat must do for the story",
+  },
+  {
+    id: "performanceDirection",
+    label: "Performance direction",
+    placeholder: "How the moment should be played",
+  },
+  {
+    id: "continuityNote",
+    label: "Continuity note",
+    placeholder: "What must stay consistent with neighboring beats",
+  },
+];
 
 /**
  * F2/F3 Studio shell: one selected scene identity drives the hierarchy
@@ -74,8 +109,13 @@ type DirectorTabId = (typeof DIRECTOR_TABS)[number]["id"];
  * state reflected by the rail beat buttons, the board beat card, the
  * permanent scope header, and the Direct/Visual/Motion Director tabs.
  * Changing scenes deterministically selects that scene's first beat
- * (render-time adjustment, no effect races). Director tabs are real local
- * UI state only — no editing, apply, or production claims in this package.
+ * (render-time adjustment, no effect races).
+ *
+ * F3-WP2 makes the Direct tab real: each beat owns an independent
+ * session-local three-field draft with atomic Apply and per-beat
+ * Undo/Redo history (see `direct-history.ts`). Visual and Motion stay
+ * truthful, non-editable later-package surfaces. No direction is saved,
+ * interpreted by AI, animated, rendered, or exported in this package.
  */
 export function StudioShell({
   artStyleLabel,
@@ -115,6 +155,14 @@ export function StudioShell({
   const [selectedDirectorTab, setSelectedDirectorTab] =
     useState<DirectorTabId>("direct");
 
+  /* F3-WP2: session-local Direct state keyed by deterministic UI-local
+   * beat identity (scene ID + beat index). Each beat keeps its own draft,
+   * committed history, and redo branch; switching beats or scenes never
+   * shows another beat's state, and leaving/returning preserves it. */
+  const [directByBeat, setDirectByBeat] = useState<
+    Record<string, BeatDirectState>
+  >({});
+
   const selectedIndex = useMemo(
     () => OLLO_DEMO_SCENES.findIndex((scene) => scene.id === selectedSceneId),
     [selectedSceneId],
@@ -146,6 +194,24 @@ export function StudioShell({
    * for the selected scene, so selecting a beat never changes the scene. */
   const selectBeat = (beatIndex: number) => {
     setSelectedBeatIndex(beatIndex);
+  };
+
+  /* Direct state for the currently selected beat only. Every mutation
+   * goes through one updater that reads and writes only this beat's key,
+   * so no edit, apply, undo, or redo can touch another beat or scene. */
+  const selectedBeatDirectKey = directBeatKey(selectedSceneId, selectedBeatIndex);
+  const selectedBeatDirect =
+    directByBeat[selectedBeatDirectKey] ?? initialBeatDirectState();
+  const updateSelectedBeatDirect = (
+    step: (state: BeatDirectState) => BeatDirectState,
+  ) => {
+    setDirectByBeat((current) => {
+      const previous =
+        current[selectedBeatDirectKey] ?? initialBeatDirectState();
+      const next = step(previous);
+      if (next === previous) return current;
+      return { ...current, [selectedBeatDirectKey]: next };
+    });
   };
 
   const revealScene = (sceneId: string) => {
@@ -569,7 +635,68 @@ export function StudioShell({
                   Scope: Scene {selectedIndex + 1} · Beat{" "}
                   {selectedBeatIndex + 1} — {selectedBeat.title}
                 </p>
-                <p>{tab.truth}</p>
+                {tab.id === "direct" ? (
+                  <form
+                    className="pv1-direct-form"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      updateSelectedBeatDirect(applyDirectDraft);
+                    }}
+                  >
+                    <p className="pv1-direct-note" role="note">
+                      Session-local only — this direction and its undo history
+                      stay in this Studio session. They are not saved to the
+                      project, are not interpreted by AI, and are not used
+                      for animation, rendering, or export.
+                    </p>
+                    {DIRECT_FIELDS.map((field) => (
+                      <label className="pv1-direct-field" key={field.id}>
+                        <span>{field.label}</span>
+                        <textarea
+                          maxLength={500}
+                          onChange={(event) =>
+                            updateSelectedBeatDirect((state) =>
+                              updateDirectDraft(state, {
+                                [field.id]: event.target.value,
+                              }),
+                            )
+                          }
+                          placeholder={field.placeholder}
+                          rows={2}
+                          value={selectedBeatDirect.draft[field.id]}
+                        />
+                      </label>
+                    ))}
+                    <div className="pv1-direct-actions">
+                      <button className="pv1-primary" type="submit">
+                        Apply
+                      </button>
+                      <button
+                        className="pv1-secondary"
+                        disabled={!canUndoDirect(selectedBeatDirect)}
+                        onClick={() => updateSelectedBeatDirect(undoDirect)}
+                        type="button"
+                      >
+                        <Undo2 size={14} aria-hidden /> Undo
+                      </button>
+                      <button
+                        className="pv1-secondary"
+                        disabled={!canRedoDirect(selectedBeatDirect)}
+                        onClick={() => updateSelectedBeatDirect(redoDirect)}
+                        type="button"
+                      >
+                        <Redo2 size={14} aria-hidden /> Redo
+                      </button>
+                    </div>
+                    <p aria-live="polite" className="pv1-direct-status">
+                      {hasUnappliedDirectChanges(selectedBeatDirect)
+                        ? "Unapplied draft changes — Apply commits them as one step in this beat's session history."
+                        : "Draft matches this beat's committed session direction."}
+                    </p>
+                  </form>
+                ) : (
+                  <p>{tab.truth}</p>
+                )}
               </div>
             ))}
           </div>
@@ -581,8 +708,9 @@ export function StudioShell({
               Preview
             </button>
             <small>
-              Preview stays disabled in F3-WP1 — this package is scope and
-              workspace foundation only; there is no media to preview.
+              Preview stays disabled in F3-WP2 — Direct edits are
+              session-local direction only; there is still no media to
+              preview.
             </small>
             <button className="pv1-primary" disabled type="button">
               Export
