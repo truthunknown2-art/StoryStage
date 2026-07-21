@@ -17,15 +17,15 @@ authorization:
   branch: agent/codex-g0-ai-native-bridge
   issue: null
   pr: 50
-  candidateContentHead: 6df8b2deb91795b787e9f50f1a8b08ee6f42f860
+  candidateContentHead: e3614365c1a0745ba4bd55db6411e373cf4b1fb1
   candidateRef: agent/codex-g0-ai-native-bridge
 checks:
   local: roadmap-consistency+root-verify-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: review-complete-at-6df8b2deb91795b787e9f50f1a8b08ee6f42f860
-  pro: amendment-review-pending
+  codex: corrections-complete-at-e3614365c1a0745ba4bd55db6411e373cf4b1fb1
+  pro: corrections-applied-awaiting-exact-head-reaudit
   preston: null
 blockers:
   - AI-native, one-template launch-scope, and complete-shot engine amendments require hosted verification, Pro exact-SHA audit, and Preston acceptance
@@ -67,7 +67,7 @@ verification from the live PR checks.
   Godot shots plus Remotion episode assembly and a retained UI reference packet.
   Preston further fixed the private-launch UI to one **Ollo & Friends — Kids
   Story** template with **Paste a script** and **What's your idea?** entry paths.
-  The content candidate is `6df8b2de...` in draft PR #50; exact-head verification
+  The content candidate is `e3614365...` in draft PR #50; exact-head verification
   and audit are pending.
 - Kimi must remain `WAIT`; resolve its exact live inbox version and coordination
   head from `origin/agent/kimi-frontend` on every cold start and consistency run.
