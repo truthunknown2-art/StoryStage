@@ -164,6 +164,15 @@ Issue: ``#66``
   Assert-Equal 124 $timeoutOutcome.ExitCode 'A timed-out Kimi process must use exit code 124.'
   Assert-Equal 7070 $script:stoppedProcessId 'Timeout must terminate the launched process tree.'
   Assert-Equal $true $timeoutOutcome.TerminationSucceeded 'Successful process-tree termination must be recorded.'
+
+  $failedStopOutcome = Invoke-BoundedKimiProcess -Executable 'kimi.exe' -Prompt 'bounded failed-stop fixture' -Directory $source -StandardOutputPath (Join-Path $fixtureRoot 'stdout-2.log') -StandardErrorPath (Join-Path $fixtureRoot 'stderr-2.log') -TimeoutSeconds 1 -ProcessStarter {
+    param($Arguments)
+    $fakeProcess
+  } -ProcessTreeStopper {
+    param($ProcessId)
+    return $false
+  }
+  Assert-Equal $false $failedStopOutcome.TerminationSucceeded 'Failed process-tree termination must remain visible.'
 } finally {
   $resolvedTemp = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
   $resolvedFixture = [System.IO.Path]::GetFullPath($fixtureRoot)

@@ -55,9 +55,11 @@ function Invoke-BoundedKimiProcess {
       & taskkill.exe /PID $process.Id /T /F 2>&1 | Out-Null
       $terminationSucceeded = $LASTEXITCODE -eq 0
       if (-not $terminationSucceeded) {
+        # Parent-only cleanup cannot prove that every descendant stopped.
         Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+      } else {
+        try { $process.WaitForExit(5000) | Out-Null } catch { }
       }
-      try { $terminationSucceeded = $process.WaitForExit(5000) } catch { $terminationSucceeded = $false }
     } finally {
       $ErrorActionPreference = $priorPreference
     }

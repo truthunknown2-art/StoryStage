@@ -68,6 +68,9 @@ version before starting the external process, so a watcher crash cannot create
 a duplicate launch; a reserved launch that fails requires a corrected higher
 inbox version. Every Kimi assignment has a fixed three-hour maximum; timeout
 forces termination of the launched Kimi process tree and records exit `124`.
+If Windows cannot confirm process-tree termination, the receipt records
+`terminationSucceeded: false` for immediate manual investigation and never
+mistakes parent-only cleanup for a complete stop.
 The watcher never uses `--yolo`, never
 opens Kimi ACP/server ports, and never reads Kimi credentials or session data.
 
