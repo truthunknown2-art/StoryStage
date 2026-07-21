@@ -142,10 +142,6 @@ export function StudioShell({
   }, [sceneLocation]);
 
   const selectedBeat = selectedScene.beats[selectedBeatIndex]!;
-  const activeDirectorTab = DIRECTOR_TABS.find(
-    (tab) => tab.id === selectedDirectorTab,
-  )!;
-
   /** One authoritative beat selection path. Rail beat buttons render only
    * for the selected scene, so selecting a beat never changes the scene. */
   const selectBeat = (beatIndex: number) => {
@@ -220,7 +216,11 @@ export function StudioShell({
    * focus follows the selection — the same pattern as the rail contract. */
   const onDirectorTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     const ids = DIRECTOR_TABS.map((tab) => tab.id);
-    const current = ids.indexOf(selectedDirectorTab);
+    const focusedTab = event.currentTarget.dataset.directorTab as
+      | DirectorTabId
+      | undefined;
+    const current = focusedTab ? ids.indexOf(focusedTab) : -1;
+    if (current < 0) return;
     let target: number | null = null;
     if (event.key === "ArrowRight") target = (current + 1) % ids.length;
     else if (event.key === "ArrowLeft")
@@ -543,29 +543,35 @@ export function StudioShell({
                   aria-controls={`pv1-director-panel-${tab.id}`}
                   aria-selected={selectedDirectorTab === tab.id}
                   className={`pv1-director-tab ${selectedDirectorTab === tab.id ? "is-selected" : ""}`}
+                  data-director-tab={tab.id}
                   id={`pv1-director-tab-${tab.id}`}
                   key={tab.id}
                   onClick={() => setSelectedDirectorTab(tab.id)}
                   onKeyDown={onDirectorTabKeyDown}
                   role="tab"
+                  tabIndex={selectedDirectorTab === tab.id ? 0 : -1}
                   type="button"
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
-            <div
-              aria-labelledby={`pv1-director-tab-${activeDirectorTab.id}`}
-              className="pv1-director-panel"
-              id={`pv1-director-panel-${activeDirectorTab.id}`}
-              role="tabpanel"
-            >
-              <p className="pv1-director-scope">
-                Scope: Scene {selectedIndex + 1} · Beat{" "}
-                {selectedBeatIndex + 1} — {selectedBeat.title}
-              </p>
-              <p>{activeDirectorTab.truth}</p>
-            </div>
+            {DIRECTOR_TABS.map((tab) => (
+              <div
+                aria-labelledby={`pv1-director-tab-${tab.id}`}
+                className="pv1-director-panel"
+                hidden={selectedDirectorTab !== tab.id}
+                id={`pv1-director-panel-${tab.id}`}
+                key={tab.id}
+                role="tabpanel"
+              >
+                <p className="pv1-director-scope">
+                  Scope: Scene {selectedIndex + 1} · Beat{" "}
+                  {selectedBeatIndex + 1} — {selectedBeat.title}
+                </p>
+                <p>{tab.truth}</p>
+              </div>
+            ))}
           </div>
           <div className="pv1-inspector-block">
             <h2>

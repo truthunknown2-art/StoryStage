@@ -830,13 +830,29 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
     expect(direct).toHaveAttribute("aria-selected", "true");
     expect(visual).toHaveAttribute("aria-selected", "false");
     expect(motion).toHaveAttribute("aria-selected", "false");
+    expect(direct).toHaveAttribute("tabindex", "0");
+    expect(visual).toHaveAttribute("tabindex", "-1");
+    expect(motion).toHaveAttribute("tabindex", "-1");
+    for (const tab of [direct, visual, motion]) {
+      const panelId = tab.getAttribute("aria-controls");
+      expect(panelId).toBeTruthy();
+      expect(document.getElementById(panelId!)).toHaveAttribute(
+        "aria-labelledby",
+        tab.id,
+      );
+    }
+    expect(
+      within(studio).getAllByRole("tabpanel", { hidden: true }),
+    ).toHaveLength(3);
     expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
       "nothing here changes the plan yet",
     );
 
     await user.click(visual);
     expect(visual).toHaveAttribute("aria-selected", "true");
+    expect(visual).toHaveAttribute("tabindex", "0");
     expect(direct).toHaveAttribute("aria-selected", "false");
+    expect(direct).toHaveAttribute("tabindex", "-1");
     expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
       "Visual direction (art, camera, lighting) is not editable in this package.",
     );
@@ -845,8 +861,11 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
       "Scope: Scene 1 · Beat 1 — Morning light through the round window",
     );
 
-    // Arrow keys move between tabs with focus follow; Home jumps to Direct.
-    visual.focus();
+    // Movement derives from the focused tab, even when it is not selected.
+    direct.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(visual).toHaveAttribute("aria-selected", "true");
+    expect(visual).toHaveFocus();
     await user.keyboard("{ArrowRight}");
     expect(motion).toHaveAttribute("aria-selected", "true");
     expect(motion).toHaveFocus();
@@ -854,6 +873,12 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
       "Motion and performance direction arrive later.",
     );
     await user.keyboard("{Home}");
+    expect(direct).toHaveAttribute("aria-selected", "true");
+    expect(direct).toHaveFocus();
+    await user.keyboard("{End}");
+    expect(motion).toHaveAttribute("aria-selected", "true");
+    expect(motion).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
     expect(direct).toHaveAttribute("aria-selected", "true");
     expect(direct).toHaveFocus();
 
