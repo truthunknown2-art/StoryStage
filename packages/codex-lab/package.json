@@ -7,11 +7,13 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "mcp:e1-scene-context": "tsx src/mcp-cli.ts",
     "preflight": "tsx src/cli.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
     "zod": "4.4.3"
   },
   "devDependencies": {

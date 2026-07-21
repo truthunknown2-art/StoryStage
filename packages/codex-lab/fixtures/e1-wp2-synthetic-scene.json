@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "label": "E1-WP2 SYNTHETIC LAB SCENE — NOT A REAL PROJECT",
+  "project": {
+    "id": "project-ollo-cloud-parade-lab",
+    "title": "Ollo & Friends — The Cloud Parade (Synthetic Lab)",
+    "audience": "Ages 4–7",
+    "summary": "Ollo helps a shy wind bell find the courage to join a gentle cloud-garden parade.",
+    "selectedSceneId": "scene-cloud-garden"
+  },
+  "scene": {
+    "id": "scene-cloud-garden",
+    "title": "The Cloud Garden Wakes",
+    "summary": "Ollo follows a tiny chime into a layered garden of sleepy clouds and discovers the wind bell hiding behind a silver fern.",
+    "locationId": "location-cloud-garden",
+    "selectedBeatId": "beat-windbell-discovery",
+    "characters": ["character-ollo", "character-windbell"],
+    "props": ["prop-silver-fern"]
+  },
+  "beat": {
+    "id": "beat-windbell-discovery",
+    "role": "discovery",
+    "storyIntent": "Ollo notices the wind bell is scared, lowers his energy, and invites it to make one quiet sound.",
+    "dialogue": [
+      "OLLO: We can start with the tiniest ting.",
+      "WINDBELL: Ting?"
+    ],
+    "visualIntent": "Begin with the bell partly hidden, then make the first tiny chime feel warm and safe."
+  },
+  "directionState": {
+    "moodArc": "curious-to-reassuring",
+    "pacing": "gentle",
+    "cameraIntent": "medium-connection",
+    "performanceFocus": "Ollo listens before he encourages the wind bell.",
+    "notes": [
+      "Keep Ollo calm and readable.",
+      "Let the silver fern preserve foreground depth without hiding faces."
+    ]
+  },
+  "demoAssets": [
+    {
+      "id": "asset-ollo-rig-demo",
+      "entityId": "character-ollo",
+      "kind": "character-rig",
+      "label": "Ollo synthetic lab rig",
+      "availability": "synthetic-demo-only",
+      "rigCapabilities": ["head-turn", "blink", "smile", "mouth-shape-small"]
+    },
+    {
+      "id": "asset-windbell-rig-demo",
+      "entityId": "character-windbell",
+      "kind": "prop-rig",
+      "label": "Wind bell synthetic lab rig",
+      "availability": "synthetic-demo-only",
+      "rigCapabilities": ["sway", "tiny-chime", "warm-glow"]
+    }
+  ],
+  "locationLayers": [
+    {
+      "id": "layer-sky",
+      "role": "background",
+      "label": "Lavender morning sky"
+    },
+    {
+      "id": "layer-cloud-garden",
+      "role": "set",
+      "label": "Sleepy cloud garden"
+    },
+    {
+      "id": "layer-silver-fern",
+      "role": "foreground-occluder",
+      "label": "Silver fern"
+    }
+  ],
+  "continuityState": {
+    "enteringCharacters": ["character-ollo", "character-windbell"],
+    "enteringProps": ["prop-silver-fern"],
+    "mustPreserve": [
+      "Ollo stands camera-left of the wind bell.",
+      "The wind bell remains behind the silver fern until its first chime.",
+      "The morning light stays lavender and warm."
+    ]
+  },
+  "proposalVocabulary": {
+    "cameraIntents": ["wide-gentle", "medium-connection", "close-reaction"],
+    "layerEmphasis": ["background-glow", "focus-clear", "foreground-soften"],
+    "performanceCues": [
+      {
+        "entityId": "character-ollo",
+        "capability": "head-turn",
+        "cues": ["notice-windbell", "listen-to-windbell"]
+      },
+      {
+        "entityId": "character-ollo",
+        "capability": "smile",
+        "cues": ["small-reassuring-smile"]
+      },
+      {
+        "entityId": "character-windbell",
+        "capability": "sway",
+        "cues": ["hesitant-sway", "brave-sway"]
+      },
+      {
+        "entityId": "character-windbell",
+        "capability": "tiny-chime",
+        "cues": ["first-tiny-chime"]
+      }
+    ]
+  }
+}
