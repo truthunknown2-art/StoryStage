@@ -1,30 +1,42 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `69`
+Inbox-Version: `70`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP3-VISUAL-MOTION-SCOPED-HISTORY`
-Status: `START-NOW`
+Current-Task: `F3-WP3-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `fe004232e4650dfceaa4360d98f9627595c0cc8c`
-Required-Work-Branch: `agent/kimi-f3-wp3-visual-motion-scoped-history`
-Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp3-visual-motion-scoped-history-v68.md`
+Accepted-Root-Base: `24c7a95b3bc90e33b77113a4af4b76df2fd1cd42`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#85`
 
 ## Current instruction
 
-Version 69 retries the unchanged F3-WP3 assignment through issue #85 after the
+Version 70 records F3-WP3 acceptance and integration. PR #87 exact handback
+tip `1579ee1ff1c078ae1f7849546cd9c87a21880620` passed Studio 100/100,
+typecheck, production build, the complete recursive workspace suite, the
+exact-head Sol code/history audit, the Terra visual/evidence/integration audit,
+the clean synthetic merge, and hosted Verify run `29877591185`. It merged into
+`product/v1` at `24c7a95b3bc90e33b77113a4af4b76df2fd1cd42`. Kimi is now
+`WAIT`; no later package or backend work is authorized by this inbox.
+
+Version 70 supersedes Version 69. Version 69 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 69 instruction:
+
+Version 69 retried the unchanged F3-WP3 assignment through issue #85 after the
 local watcher correctly failed closed on a transient pending-brief fingerprint
 mismatch. The same immutable Version 68 full brief, exact accepted base
-`fe004232e4650dfceaa4360d98f9627595c0cc8c` on the new required branch
-`agent/kimi-f3-wp3-visual-motion-scoped-history`, and package scope remain
-unchanged. Execute the complete Version 68 brief: add the bounded Visual and
-Motion intent controls to the same atomic
-per-beat history as Direct, expose only committed values through the honest
-planning summary, preserve accepted F1/F2/F3-WP1/F3-WP2 behavior, publish the
-exact evidence, handback, and draft PR, then exit. Do not begin F3-WP4, AI
-behavior, persistence, backend, Godot, Remotion, rendering, or export work.
+`fe004232e4650dfceaa4360d98f9627595c0cc8c` on the required branch
+`agent/kimi-f3-wp3-visual-motion-scoped-history`, and package scope remained
+unchanged. Kimi delivered implementation head
+`b9fe761fb031015631db737202d6fea5eb75d3a3` and exact handback tip
+`1579ee1ff1c078ae1f7849546cd9c87a21880620`, then exited.
 
-Version 69 supersedes Version 68 for launch identity only. Version 68 remains
+Version 69 superseded Version 68 for launch identity only. Version 68 remains
 below as the unchanged full-brief identity and must not relaunch.
 
 ---
