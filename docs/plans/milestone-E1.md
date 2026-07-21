@@ -195,13 +195,15 @@ read-only review surface. E1-WP4, F3, backend product work, and Kimi
 implementation remain blocked.
 
 **Candidate review status (2026-07-20):** PR #64 carries implementation
-candidate `b2245d25babd43e9baecc3f2a8aa32402bdefbf2`. Focused verification passes
-48 Codex-lab tests, 2 isolated review-lab tests and its production build, the
+candidate `500131eeef904796fd66bbf82c1b19a35fc4ee37`. Focused verification passes
+53 Codex-lab tests, 2 isolated review-lab tests and its production build, the
 pinned schema check, privacy check, roadmap consistency, scoped lint, and diff
 check. A real pinned-runtime round trip exercised both fixed StoryStage MCP
 tools and recorded one schema-valid unapplied proposal; the committed 1440x900
-capture has zero browser console errors or warnings. The package remains in
-review and does not authorize E1-WP4.
+capture has zero browser console errors or warnings. The live preflight also
+proves only StoryStage enabled while two inherited MCP servers are disabled,
+without persisting their names or configuration. The package remains in review
+and does not authorize E1-WP4.
 
 ### E1-WP4 - Failure, security, and feasibility gate
 
