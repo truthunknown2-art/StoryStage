@@ -194,16 +194,21 @@ App Server-to-MCP proposal round trip, typed host event model, and isolated
 read-only review surface. E1-WP4, F3, backend product work, and Kimi
 implementation remain blocked.
 
-**Candidate review status (2026-07-20):** PR #64 carries implementation
-candidate `d9d83d48f8653193ffc340d74293283eb1c66f20`. Focused verification passes
-55 Codex-lab tests, 2 isolated review-lab tests and its production build, the
-pinned schema check, privacy check, roadmap consistency, scoped lint, and diff
-check. A real pinned-runtime round trip exercised both fixed StoryStage MCP
-tools and recorded one schema-valid unapplied proposal; the committed 1440x900
-capture has zero browser console errors or warnings. The live preflight also
-proves only StoryStage enabled while two inherited MCP servers are disabled,
-without persisting their names or configuration. The package remains in review
-and does not authorize E1-WP4.
+**Blocked feasibility status (2026-07-20):** PR #64 content
+`b134cc62bda0055a857cf82b5a48ba57dd2ebc14` removes the unsafe structured MCP
+inventory path and fails before App Server launch. Final Sol-high audit and
+ChatGPT Pro confirmed that pinned Codex 0.144.1 emits raw configured MCP
+environment/header values from `mcp list --json`; receiving that payload, even
+only to retain names, violates E1's credential boundary. Empty-table/profile
+overrides do not replace inherited MCPs, isolated `CODEX_HOME` loses ChatGPT
+authentication, and credential aliasing or terminal-table parsing violate the
+accepted constraints. Focused verification passes 57 Codex-lab tests, 1
+blocked-state lab test and its production build, privacy, scoped lint, and diff
+check. The prior live round trip, only-StoryStage isolation claim, and accepted
+proposal-review evidence are invalidated. The replacement 1440x900 capture
+shows the truthful fail-closed state with zero console errors or warnings.
+E1-WP3 waits for Preston's platform or
+architecture decision; E1-WP4 and every downstream phase remain blocked.
 
 ### E1-WP4 - Failure, security, and feasibility gate
 

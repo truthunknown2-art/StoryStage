@@ -10,7 +10,7 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: REVIEW
+  state: WAIT
   milestone: E1
   package: E1-WP3
   owner: Codex
@@ -18,22 +18,24 @@ authorization:
   branch: agent/codex-e1-wp3-streamed-proposal-roundtrip
   issue: 62
   pr: 64
-  candidateContentHead: d9d83d48f8653193ffc340d74293283eb1c66f20
+  candidateContentHead: b134cc62bda0055a857cf82b5a48ba57dd2ebc14
   candidateRef: agent/codex-e1-wp3-streamed-proposal-roundtrip
 checks:
-  local: live-mcp-isolation+codex-lab-55-tests+director-lab-2-tests-and-build+schema+privacy+roadmap+scoped-eslint+diff-check-pass
+  local: fail-closed-mcp-isolation+codex-lab-57-tests+director-lab-1-test-and-build+privacy+scoped-eslint+diff-check-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp3-candidate-d9d83d48f8653193ffc340d74293283eb1c66f20-awaiting-exact-head-review
-  pro: accept-e1-wp2-exact-e8fcaa7e550f82e073dbbec7a7f8cca78a6b8f21
+  codex: e1-wp3-fail-closed-content-b134cc62bda0055a857cf82b5a48ba57dd2ebc14
+  pro: e1-wp3-genuine-credential-boundary-blocker-exact-04d9fdfa40574bbcc89f6364623245ec5e784949
   preston: authorize-e1-wp3-only-at-exact-base-4319967eac13dd628eb863dfb29f7bff3c83ffeb-2026-07-20
 blockers:
+  - Codex 0.144.1 has no credential-safe structured MCP name inventory or per-launch replacement allowlist while retaining existing ChatGPT authentication
+  - The prior live round-trip and only-StoryStage isolation claim are invalidated because mcp list --json exposed unrelated configured MCP credential values to the StoryStage process
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
   - E1-WP4, F3, backend, and Kimi implementation remain unauthorized
 nextAuthorizedAction:
-  type: REVIEW_E1_WP3_ONLY
-  text: Review exact PR 64 head, resolve findings, obtain Pro acceptance, and stop before E1-WP4.
+  type: AWAIT_PRESTON_E1_WP3_PLATFORM_DECISION
+  text: Keep E1-WP3 fail closed until Preston authorizes a supported runtime change or an explicit architecture amendment; do not begin E1-WP4.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -83,14 +85,17 @@ verification from the live PR checks.
   `START_NOW` transition authorize the streamed structured-proposal round trip
   and isolated read-only review surface. E1-WP4, F3, backend product work, and
   Kimi implementation remain unauthorized.
-- E1-WP3 implementation candidate `d9d83d48f8653193ffc340d74293283eb1c66f20`
-  is now in review on PR #64. The pinned live run completed through both fixed
-  StoryStage MCP tools, returned one schema-valid ephemeral proposal, preserved
-  the isolated workspace, and produced a sanitized receipt plus a 1440x900
-  zero-console-error review-lab capture. The corrected live isolation proof
-  reports only StoryStage enabled while two inherited MCP servers are disabled;
-  no server names or configuration payloads are persisted. This is not
-  acceptance of E1-WP3 or authorization for E1-WP4.
+- E1-WP3 is blocked on PR #64. Final Sol-high audit and ChatGPT Pro found that
+  pinned Codex 0.144.1 `mcp list --json` returns raw configured MCP environment
+  and header values. StoryStage used that structured output only to discover
+  inherited server names, but receiving the full payload still crossed E1's
+  credential boundary. Empty-table/profile overrides merge instead of replace;
+  an isolated `CODEX_HOME` loses ChatGPT auth; credential copying/linking and
+  redacted terminal-table parsing violate accepted constraints. Content
+  `b134cc62bda0055a857cf82b5a48ba57dd2ebc14` removes the unsafe path, fails
+  before App Server launch, invalidates the prior isolation claim, and replaces
+  the lab capture with the truthful blocked state. E1-WP3 is not accepted and
+  E1-WP4 remains unauthorized.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
     and deterministic proposal/application path. Pro also required complete visual
