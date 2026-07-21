@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: ed457eada98dfeecfacb9e081a9803ecf97906ca
+lastAcceptedProductHead: ec050cce094fd5adc1a50a132f76795b4543ac73
 lastAcceptedMilestone: G0
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -10,30 +10,30 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: E1
   package: E1-WP2
   owner: Codex
   exactBase: a246987fb678712af022b46f3b23ad22f4d22b2a
   branch: agent/codex-e1-wp2-mcp-scene-context
   issue: 57
-  pr: null
-  candidateContentHead: a246987fb678712af022b46f3b23ad22f4d22b2a
-  candidateRef: product/v1
+  pr: 59
+  candidateContentHead: e8fcaa7e550f82e073dbbec7a7f8cca78a6b8f21
+  candidateRef: agent/codex-e1-wp2-mcp-scene-context
 checks:
-  local: roadmap-consistency+codex-lab-baseline-pass
+  local: root-verify+codex-lab-40-tests+fixture-hash-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: issued-e1-wp2-only-at-exact-base-a246987fb678712af022b46f3b23ad22f4d22b2a
-  pro: accept-e1-wp1-exact-8b74d6486fe46a891d1217bfcd9e98da6e1f932f
+  codex: e1-wp2-accepted-integrated-exact-ec050cce094fd5adc1a50a132f76795b4543ac73
+  pro: accept-e1-wp2-exact-e8fcaa7e550f82e073dbbec7a7f8cca78a6b8f21
   preston: continue-next-dependency-ordered-package-e1-wp2-only-2026-07-20
 blockers:
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
   - E1-WP3, E1-WP4, F3, backend, and Kimi implementation remain unauthorized
 nextAuthorizedAction:
-  type: IMPLEMENT_E1_WP2_ONLY
-  text: Execute only issue 57 from the exact base and stop before E1-WP3.
+  type: WAIT_FOR_SEPARATE_E1_WP3_AUTHORIZATION
+  text: E1-WP2 is accepted and integrated; wait for an explicit exact-base E1-WP3 ticket and START_NOW update.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -69,11 +69,17 @@ verification from the live PR checks.
   read-only ephemeral turn, verify matching interrupted completion, preserve
   the workspace, redact private state, and shut down cleanly. This accepts only
   E1-WP1, not the complete E1 milestone.
-- On 2026-07-20 Preston directed Codex to continue the dependency-ordered
-  StoryStage work. Issue #57 and this `START_NOW` transition authorize only
-  E1-WP2 from exact base `product/v1@a246987...`: one bounded synthetic-scene
-  StoryStage MCP context server with ephemeral proposal validation. E1-WP3,
-  F3, backend product work, and Kimi implementation remain unauthorized.
+- E1-WP2 is accepted and integrated at exact `product/v1@ec050cc...`. ChatGPT
+  Pro accepted exact PR #59 head `e8fcaa7...`, hosted Verify StoryStage run
+  `29803474883` passed, and independent exact-head scope and security audits
+  accepted the package. The fixed synthetic Ollo scene is raw-byte hash-pinned,
+  path-contained, and read only; the MCP surface exposes one immutable resource
+  plus exactly two bounded read-only tools, and every proposal receipt remains
+  explicitly unapplied, unpersisted, and non-canonical. The fail-closed JSONL
+  transport, strict schemas, cancellation/deadline behavior, and 40 focused
+  tests accept only E1-WP2, not the complete E1 milestone. Authorization has
+  returned to WAIT; E1-WP3, F3, backend product work, and Kimi implementation
+  remain unauthorized.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
     and deterministic proposal/application path. Pro also required complete visual
