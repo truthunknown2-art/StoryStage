@@ -9,9 +9,9 @@
 - Product acceptance: Preston
 - Decomposition approval: Preston accepted G0 and the dependency-ordered
   E1-WP1 through E1-WP4 plan on 2026-07-20
-- Current authorization: E1-WP2 is accepted and integrated; authorization has
-  returned to WAIT, and E1-WP3 and later work remain blocked pending a separate
-  exact-base ticket and `START_NOW` update
+- Current authorization: E1-WP3 only through issue #62 at exact base
+  `4319967eac13dd628eb863dfb29f7bff3c83ffeb`; E1-WP4 and later work remain
+  blocked
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 
@@ -150,9 +150,10 @@ process tests keep the lab proposal-only by construction. Local root verificatio
 scope and security audits passed. ChatGPT Pro accepted exact head `e8fcaa7...`,
 and the package merged into `product/v1` at
 `ec050cce094fd5adc1a50a132f76795b4543ac73`. This accepts only E1-WP2,
-not the complete E1 milestone. App Server configuration, prompting, streamed
-round trip, a proposal-review surface, E1-WP3, and Kimi implementation remain
-blocked pending a separate exact-base ticket and `START_NOW` update.
+not the complete E1 milestone. The WP2 acceptance did not itself authorize App
+Server configuration, prompting, a streamed round trip, a proposal-review
+surface, E1-WP3, or Kimi implementation. Preston subsequently authorized only
+E1-WP3 through issue #62 and a separate exact-base `START_NOW` update.
 
 ### E1-WP3 - Streamed structured-proposal round trip
 
@@ -185,6 +186,13 @@ proposal/approval experience without interpreting terminal text or applying it.
   truth; and
 - completion only when the creator-facing event model can be stated precisely
   enough for F3 to design without guessing.
+
+**Authorized package status (2026-07-20):** issue #62 authorizes only E1-WP3 on
+`agent/codex-e1-wp3-streamed-proposal-roundtrip` from exact base
+`4319967eac13dd628eb863dfb29f7bff3c83ffeb`. The deliverable is the bounded
+App Server-to-MCP proposal round trip, typed host event model, and isolated
+read-only review surface. E1-WP4, F3, backend product work, and Kimi
+implementation remain blocked.
 
 ### E1-WP4 - Failure, security, and feasibility gate
 
