@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
+lastAcceptedProductHead: a4486ce4433d06a9567a0d177b8c95bb427fd147
 lastAcceptedMilestone: E1
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -11,7 +11,7 @@ completedMilestones:
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
 authorization:
-  state: REVIEW
+  state: ACCEPTED_WAIT
   milestone: F3
   package: F3-WP1
   owner: Codex
@@ -19,23 +19,23 @@ authorization:
   branch: agent/kimi-f3-wp1-scope-workspace-foundation
   issue: 72
   pr: 78
-  candidateContentHead: 55add2b625d1170d2435bababd6a5ea31a8b685e
-  candidateRef: agent/kimi-f3-wp1-scope-workspace-foundation
+  candidateContentHead: 208ceca502c4c20178dbf303c16f85d6facbbaeb
+  candidateRef: product/v1
 checks:
-  local: studio-76+typecheck+build+exact-successor-audit
+  local: studio-76+typecheck+build+root-verify+exact-successor-audits
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-f3-wp1-code-at-exact-55add2b625d1170d2435bababd6a5ea31a8b685e-hosted-pending
+  codex: accept-f3-wp1-exact-208ceca502c4c20178dbf303c16f85d6facbbaeb-hosted-29866064607-attempt-2-pass
   pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
   preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
 blockers:
-  - exact-head hosted verification must pass before F3-WP1 integration
-  - F3-WP2 through F3-WP5 remain blocked by dependency order
+  - F3-WP2 requires a separate bounded START_NOW ticket and higher Kimi inbox version
+  - F3-WP3 through F3-WP5 remain blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: REVIEW_F3_WP1_EXACT_HEAD
-  text: Review PR 78 exact head 55add2b625d1170d2435bababd6a5ea31a8b685e, require hosted PASS, and integrate only F3-WP1 when all gates pass. Do not begin F3-WP2.
+  type: WAIT_FOR_F3_WP2_TICKET
+  text: F3-WP1 is accepted and integrated. Do not begin F3-WP2 until a separate bounded ticket and higher Kimi inbox version are published.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -67,15 +67,17 @@ verification from the live PR checks.
   ChatGPT sign-in, least-privilege StoryStage MCP, structured proposal, and
   fail-closed/no-mutation feasibility boundary; it is not production Studio
   integration.
-- Kimi completed issue #72 on
-  `agent/kimi-f3-wp1-scope-workspace-foundation`. Codex rejected exact head
-  `8bd3ed8...` for bounded tab semantics and evidence-count defects, then
-  applied only those review corrections under the operating contract and
-  pushed exact successor `55add2b...`. Studio tests 76/76, typecheck, build,
-  screenshots/hashes, scope, and an independent successor audit pass. PR #78
-  is now in Codex `REVIEW` awaiting exact-head hosted verification. Kimi is
-  `WAIT`; F3-WP2, later frontend work, and all backend product work remain
-  blocked.
+- F3-WP1 is accepted and integrated at exact `product/v1@a4486ce...`. Kimi
+  completed issue #72; Codex applied only the bounded review corrections for
+  tab semantics and evidence truth, then exact PR #78 head `208ceca...`
+  passed Studio 76/76, typecheck, build, repository-root verification,
+  screenshots/hashes, independent exact-head and delta audits, and hosted run
+  `29866064607` attempt 2. The package provides one shared beat scope across
+  the rail, board, permanent scope header, and accessible Direct/Visual/Motion
+  workspace tabs. It does not provide direction editing, AI proposals,
+  persistence, media, rendering, or export. Kimi is `WAIT`; F3-WP2, later
+  frontend work, and all backend product work remain blocked pending separate
+  authorization.
 
 - Accepted creator-facing product implementation still ends at F2 on exact
   `87c01f9b...`; G0 is the accepted planning/governance milestone integrated at
