@@ -9,9 +9,9 @@
 - Product acceptance: Preston
 - Decomposition approval: Preston accepted G0 and the dependency-ordered
   E1-WP1 through E1-WP4 plan on 2026-07-20
-- Current authorization: E1-WP2 only through issue #57 at exact base
-  `a246987fb678712af022b46f3b23ad22f4d22b2a`; E1-WP3 and later work remain
-  blocked
+- Current authorization: E1-WP2 is accepted and integrated; authorization has
+  returned to WAIT, and E1-WP3 and later work remain blocked pending a separate
+  exact-base ticket and `START_NOW` update
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 
@@ -137,11 +137,22 @@ cannot request a durable, rendering, approval, shell, or arbitrary file action.
 - completion only when the server is read-only by construction and every
   denied authority produces a clear failure.
 
-**Authorized package status (2026-07-20):** issue #57 authorizes only E1-WP2 on
-`agent/codex-e1-wp2-mcp-scene-context`. The deliverable is one fixed synthetic
-scene context server and ephemeral proposal validator. App Server configuration,
-prompting, streamed round trip, a proposal-review surface, E1-WP3, and Kimi
-implementation remain blocked.
+**Accepted package status (2026-07-20):** PR #59 implements only E1-WP2 at
+candidate head `e8fcaa7e550f82e073dbbec7a7f8cca78a6b8f21`. The official
+MCP SDK is pinned; one visibly synthetic Ollo scene fixture is path-contained,
+raw-byte hash-pinned, and byte-identical on Windows; and the exact server surface
+is one immutable resource plus `get_scene_context` and
+`submit_direction_proposal`. Strict IDs/vocabulary, complete schema fingerprints,
+false-only apply/persist/canonical receipt fields, byte/item limits,
+cancellation/deadlines, fail-closed startup, bounded JSONL stdio, and real child
+process tests keep the lab proposal-only by construction. Local root verification,
+8 files/40 focused tests, hosted run `29803474883`, and independent exact-head
+scope and security audits passed. ChatGPT Pro accepted exact head `e8fcaa7...`,
+and the package merged into `product/v1` at
+`ec050cce094fd5adc1a50a132f76795b4543ac73`. This accepts only E1-WP2,
+not the complete E1 milestone. App Server configuration, prompting, streamed
+round trip, a proposal-review surface, E1-WP3, and Kimi implementation remain
+blocked pending a separate exact-base ticket and `START_NOW` update.
 
 ### E1-WP3 - Streamed structured-proposal round trip
 
