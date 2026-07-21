@@ -6,7 +6,7 @@
 - Issue: `#69`
 - Required branch: `agent/codex-e1-wp4-failure-security-gate`
 - Authorized implementation base: `8d9a47a4898df81db7630e2f0b7d4eecc88f7157`
-- Immutable implementation and evidence content: `3abfd354a5fb5c73ff54615ef538ae56365d01ff`
+- Immutable implementation and evidence content: `b43cee1cd8a4db78865988764d48eb8fdbfac9cf`
 - Integration target: `product/v1`
 - Package recommendation: `PASS`, subject to exact-pushed-SHA independent review, hosted verification, ChatGPT Pro verdict, and Preston's recorded final decision
 
@@ -32,7 +32,8 @@ E1-WP4 closes the isolated E1 failure/security feasibility package only:
   notification and streamed-text budgets;
 - fixed local lab-root containment, poisoned temporary-directory resistance,
   junction rejection, crash-to-clean-restart proof, cleanup aggregation, and
-  decoy-project before/after mutation evidence;
+  nine executable proposal-roundtrip failure seams beside a full-tree decoy
+  project, detecting added, removed, changed, or non-file entries;
 - creator-visible failure/recovery UI with disabled Apply authority;
 - bounded distribution/license questions and exact retained F3, B3, R1, and R2
   productization work.
@@ -51,8 +52,8 @@ Entry points:
 
 SHA-256:
 
-- failure matrix: `2efd378c211fad6ccba27b4a0e0fd71c2a83bfdcb1ebb89b6fc544d9e8f19415`
-- no-project-mutation receipt: `449d0b7e0634f309008d008707e776bf7efee6a1b9cb59f7e6368547d07e89c8`
+- failure matrix: `5ffda253d4c115d656f0576904d2dc68fdb7d73fe2e6cdd2b201f00e3da3e9dc`
+- no-project-mutation receipt: `100a1c3cab0c7bfdf94b85505cefa19e53aaf446a3da61dd986ccc16ca2d91f1`
 - process-cleanup receipt: `e30d178830e3f220ea8868e550f96f27c43d85152d42fa0047de2f7f60be083f`
 - 1440x900 capture: `f7c52f1ecbf18050ef1ca286da075edbf410d63c66b4835623622cedf9d9e810`
 
@@ -68,12 +69,25 @@ horizontal or vertical overflow and zero console warnings or errors.
 - `pnpm --filter @storystage/e1-director-lab typecheck` — PASS
 - `pnpm --filter @storystage/e1-director-lab test` — PASS, 1 file / 4 tests
 - `pnpm --filter @storystage/e1-director-lab build` — PASS, 19 modules
-- `pnpm verify` — PASS in 200.9 seconds, including privacy verification over
-  965 tracked/publishable files
+- `pnpm verify` — PASS in 199.3 seconds, including privacy verification over
+  967 tracked/publishable files
 - `git diff --check` — PASS
 
 Root lint emitted the two pre-existing Remotion non-pure-animation warnings in
 `apps/render-worker/src/kvp001-proof.ts`; it emitted zero errors.
+
+## Independent-review corrections
+
+The first immutable content candidate `3abfd354...` was rejected. This successor:
+
+- replaces the static two-file mutation receipt with executable round-trip
+  failure seams and full-tree unexpected-file detection;
+- requires the returned scene context to equal the complete pinned synthetic
+  fixture, rejecting schema-valid semantic drift;
+- normalizes unknown synthetic-scene IDs to `AUTHORITY_DENIED` and failed MCP
+  tool status to `PROPOSAL_REJECTED`; and
+- merges the live `product/v1` authorization ledger without rebase or history
+  rewriting, preserving `E1 / E1-WP4 / START_NOW`.
 
 ## Creator-visible control truth
 
