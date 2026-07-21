@@ -158,6 +158,24 @@ export class E1ProposalEventAdapter {
   }
 
   public consume(message: AppServerInboundMessage): void {
+    const terminalSensitiveMethods = new Set([
+      "turn/started",
+      "turn/completed",
+      "item/agentMessage/delta",
+      "item/mcpToolCall/progress",
+      "item/started",
+      "item/completed",
+      "error",
+    ]);
+    if (
+      this.turnCompleted &&
+      (message.kind === "blocked-request" ||
+        terminalSensitiveMethods.has(message.method))
+    ) {
+      throw protocolError(
+        "The proposal stream emitted typed activity after terminal completion.",
+      );
+    }
     if (message.kind === "blocked-request") {
       this.emit({ kind: "approval-blocked", method: message.method });
       throw protocolError(
@@ -202,9 +220,10 @@ export class E1ProposalEventAdapter {
           message.method,
         );
         this.assertTurn(progress.threadId, progress.turnId);
-        if (!this.toolCalls.has(progress.itemId)) {
+        const progressingTool = this.toolCalls.get(progress.itemId);
+        if (!progressingTool || progressingTool.completed) {
           throw protocolError(
-            "The proposal stream reported progress for an unknown tool call.",
+            "The proposal stream reported progress for an unknown or completed tool call.",
           );
         }
         this.emit({

@@ -207,7 +207,7 @@ function createSuccessfulClient(closeCode = 0): AppServerClient {
 }
 
 function createInterruptibleClient(
-  mode: "before-tool" | "during-stream" | "forbidden",
+  mode: "before-tool" | "during-stream" | "forbidden" | "late-after-terminal",
 ): { client: AppServerClient; getInterruptCount: () => number } {
   const child = new FakeChild();
   let interruptCount = 0;
@@ -260,6 +260,16 @@ function createInterruptibleClient(
             resolveTurn = resolve;
             queueMicrotask(() => {
               emit("turn/started", startedTurn());
+              if (mode === "late-after-terminal") {
+                finish("interrupted");
+                emit("item/agentMessage/delta", {
+                  threadId,
+                  turnId,
+                  itemId: "message-late",
+                  delta: "Too late",
+                });
+                return;
+              }
               if (mode === "before-tool" || finished) return;
               emit("item/agentMessage/delta", {
                 threadId,
@@ -453,7 +463,7 @@ describe("E1 streamed proposal round trip", () => {
           message: "Not allowed",
         }),
       ),
-    ).toThrow("unknown tool call");
+    ).toThrow("unknown or completed tool call");
 
     const duplicate = new E1ProposalEventAdapter();
     duplicate.startSession(threadId);
@@ -466,6 +476,65 @@ describe("E1 streamed proposal round trip", () => {
     expect(() => duplicate.consume(started)).toThrow(
       "repeated a tool-call identity",
     );
+  });
+
+  it("rejects typed deltas, items, and progress after terminal completion", () => {
+    const makeTerminal = () => {
+      const adapter = new E1ProposalEventAdapter();
+      adapter.startSession(threadId);
+      adapter.consume(notification("turn/started", startedTurn()));
+      adapter.consume(
+        notification("turn/completed", completedTurn("interrupted")),
+      );
+      return adapter;
+    };
+
+    expect(() =>
+      makeTerminal().consume(
+        notification("item/agentMessage/delta", {
+          threadId,
+          turnId,
+          itemId: "message-late",
+          delta: "Too late",
+        }),
+      ),
+    ).toThrow("after terminal completion");
+    expect(() =>
+      makeTerminal().consume(
+        lifecycle("item/started", {
+          id: "late-item",
+          type: "reasoning",
+        }),
+      ),
+    ).toThrow("after terminal completion");
+
+    const completedTool = new E1ProposalEventAdapter();
+    completedTool.startSession(threadId);
+    completedTool.consume(notification("turn/started", startedTurn()));
+    completedTool.consume(
+      lifecycle(
+        "item/started",
+        toolItem("tool-context", "get_scene_context", "inProgress"),
+      ),
+    );
+    completedTool.consume(
+      lifecycle(
+        "item/completed",
+        toolItem("tool-context", "get_scene_context", "completed", {
+          content: [],
+        }),
+      ),
+    );
+    expect(() =>
+      completedTool.consume(
+        notification("item/mcpToolCall/progress", {
+          threadId,
+          turnId,
+          itemId: "tool-context",
+          message: "Late progress",
+        }),
+      ),
+    ).toThrow("unknown or completed tool call");
   });
 
   it("runs the complete bounded lifecycle and starts cleanly again", async () => {
@@ -537,6 +606,19 @@ describe("E1 streamed proposal round trip", () => {
       }),
     ).rejects.toThrow("forbidden item type commandExecution");
     expect(fixture.getInterruptCount()).toBe(1);
+  });
+
+  it("fails visibly on typed activity after terminal completion", async () => {
+    const fixture = createInterruptibleClient("late-after-terminal");
+    await expect(
+      runE1ProposalRoundTrip({
+        verifyRuntime: async () => verifiedRuntime,
+        listConfiguredMcpServers: async () => [],
+        verifyMcpIsolation: async () => undefined,
+        launch: () => fixture.client,
+      }),
+    ).rejects.toThrow("after terminal completion");
+    expect(fixture.getInterruptCount()).toBe(0);
   });
 
   it("removes the isolated workspace even when shutdown fails", async () => {
