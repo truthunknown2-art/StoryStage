@@ -2,7 +2,9 @@
   "schemaVersion": 1,
   "package": "E1-WP3",
   "surface": "isolated-e1-director-lab",
-  "source": "live-roundtrip-receipt",
+  "source": "fail-closed-blocker-surface",
+  "evidenceStatus": "blocked-feasibility-capture",
+  "invalidatedReason": "The prior round-trip evidence is invalid; this replacement capture shows the truthful fail-closed security state.",
   "viewport": {
     "width": 1440,
     "height": 900,
@@ -10,7 +12,7 @@
   },
   "artifact": {
     "path": "reports/evidence/E1-WP3/director-lab-1440x900.png",
-    "sha256": "47225f92d9887431e15105706a1fe3ff138eb927b53d2dc14785edaccb04dad3"
+    "sha256": "b4383dd3b0294c021f23dd10b5cc6171a4b70e69b6bfbd29d0ea31f4884665b5"
   },
   "browserConsole": {
     "errors": 0,
@@ -22,8 +24,9 @@
     "applyEnabled": false
   },
   "mcpIsolation": {
-    "onlyStoryStageMcpEnabled": true,
-    "inheritedServerCount": 2,
+    "proofStatus": "invalidated",
+    "onlyStoryStageMcpEnabled": false,
+    "inheritedServerCount": null,
     "serverNamesPersisted": false
   }
 }

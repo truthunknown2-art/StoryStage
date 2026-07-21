@@ -91,6 +91,14 @@ button {
   background: #74e39e;
   box-shadow: 0 0 12px rgba(116, 227, 158, 0.8);
 }
+.run-status.is-blocked {
+  color: #e8a19a;
+  border-color: rgba(224, 112, 102, 0.42);
+}
+.run-status.is-blocked .status-dot {
+  background: #df7067;
+  box-shadow: 0 0 12px rgba(223, 112, 103, 0.75);
+}
 .authority-chip {
   justify-self: end;
   padding: 7px 13px;
@@ -268,6 +276,11 @@ button {
   font-weight: 800;
   text-transform: uppercase;
 }
+.validated-badge.is-invalid {
+  color: #e8a19a;
+  border-color: rgba(224, 112, 102, 0.42);
+  background: rgba(224, 112, 102, 0.08);
+}
 .rationale {
   margin: 0;
   padding: 15px 22px 17px;
@@ -360,6 +373,13 @@ button {
   color: #93a69b;
   font-size: 10px;
   line-height: 1.5;
+}
+.preview-panel.is-blocker {
+  border-color: rgba(224, 112, 102, 0.42);
+  background: rgba(104, 42, 38, 0.18);
+}
+.preview-panel.is-blocker span {
+  color: #e8a19a;
 }
 
 .trace-list {

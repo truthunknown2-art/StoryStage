@@ -1,7 +1,9 @@
 {
   "schemaVersion": 1,
   "package": "E1-WP3",
-  "source": "live-pinned-runtime",
+  "source": "invalidated-live-pinned-runtime",
+  "evidenceStatus": "invalidated-security-blocker",
+  "invalidatedReason": "Codex 0.144.1 structured MCP inventory exposed unrelated configured MCP credential values to the StoryStage process before isolation.",
   "observedAt": "2026-07-21T06:45:25.196Z",
   "runtime": {
     "packageVersion": "0.144.1",
@@ -334,8 +336,9 @@
     }
   ],
   "isolation": {
-    "onlyStoryStageMcpEnabled": true,
-    "inheritedServerCount": 2
+    "proofStatus": "invalidated",
+    "onlyStoryStageMcpEnabled": false,
+    "inheritedServerCount": null
   },
   "reviewAuthority": {
     "previewAvailable": true,
@@ -344,6 +347,8 @@
     "applyReason": "E1-WP3 validates an ephemeral proposal only; apply and persistence are outside this package."
   },
   "privacy": {
+    "credentialSafeDiscovery": false,
+    "credentialBoundaryViolated": true,
     "rawJsonRpcPersisted": false,
     "promptPersisted": false,
     "agentTextPersisted": false,

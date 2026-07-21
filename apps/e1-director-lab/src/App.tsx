@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { E1DirectorLabHost } from "./host";
 import type { ProposalChange } from "./model";
 import "./director-lab.css";
@@ -38,8 +37,6 @@ function describeChange(change: ProposalChange): {
 
 export function E1DirectorLabApp({ host }: { host: E1DirectorLabHost }) {
   const { model } = host;
-  const [previewing, setPreviewing] = useState(false);
-  const [decision, setDecision] = useState<"pending" | "rejected">("pending");
   const toolEvents = model.timeline.filter((event) => event.tool);
 
   return (
@@ -54,32 +51,30 @@ export function E1DirectorLabApp({ host }: { host: E1DirectorLabHost }) {
             <span>AI Director feasibility lab</span>
           </div>
         </div>
-        <div className="run-status" aria-label="Live run status">
+        <div className="run-status is-blocked" aria-label="Blocked run status">
           <span className="status-dot" />
-          Pinned runtime · complete
+          Pinned runtime · blocked
         </div>
-        <div className="authority-chip">Proposal only</div>
+        <div className="authority-chip">Security stop</div>
       </header>
 
       <p className="lab-boundary">
-        E1-WP3 ISOLATED SYNTHETIC LAB · LIVE RECORDED ROUND TRIP · NOTHING CAN
-        BE APPLIED OR SAVED
+        E1-WP3 EVIDENCE INVALIDATED · CREDENTIAL BOUNDARY BLOCKER · NOTHING
+        CAN BE APPLIED OR SAVED
       </p>
 
       <section className="lab-heading">
         <div>
-          <span className="section-kicker">Direction revision</span>
-          <h1>Review the AI Director’s proposal</h1>
+          <span className="section-kicker">Feasibility result</span>
+          <h1>AI Director round trip blocked</h1>
           <p>
-            A bounded idea travelled through the pinned Codex App Server and the
-            fixed StoryStage MCP.
+            Codex 0.144.1 cannot isolate the StoryStage MCP without exposing
+            unrelated MCP configuration to the host.
           </p>
         </div>
-        <div className={`decision-state is-${decision}`}>
-          <span>Review state</span>
-          <strong>
-            {decision === "pending" ? "Awaiting creator" : "Rejected locally"}
-          </strong>
+        <div className="decision-state is-rejected">
+          <span>Gate state</span>
+          <strong>Blocked / fail closed</strong>
         </div>
       </section>
 
@@ -119,13 +114,22 @@ export function E1DirectorLabApp({ host }: { host: E1DirectorLabHost }) {
           <header className="proposal-header">
             <div>
               <span className="section-kicker">
-                Validated ephemeral proposal
+                Historical unaccepted output
               </span>
               <h2>{model.proposal.summary}</h2>
             </div>
-            <span className="validated-badge">Validated</span>
+            <span className="validated-badge is-invalid">Invalidated</span>
           </header>
           <p className="rationale">{model.proposal.rationale}</p>
+
+          <section
+            className="preview-panel is-blocker"
+            aria-label="Security blocker"
+          >
+            <span>Credential boundary violation</span>
+            <strong>No credential-safe MCP inventory is available.</strong>
+            <p>{model.invalidatedReason}</p>
+          </section>
 
           <div className="change-heading">
             <strong>Affected direction items</strong>
@@ -149,31 +153,24 @@ export function E1DirectorLabApp({ host }: { host: E1DirectorLabHost }) {
             })}
           </div>
 
-          {previewing ? (
-            <section className="preview-panel" aria-label="Proposal preview">
-              <span>Read-only preview</span>
-              <strong>{model.proposal.summary}</strong>
-              <p>{model.proposal.rationale} No shot graph was changed.</p>
-            </section>
-          ) : null}
         </article>
 
         <aside className="trace-card panel">
           <header>
             <span className="section-kicker">Round-trip trace</span>
-            <strong>Typed event stream</strong>
+            <strong>Historical typed trace</strong>
           </header>
           <ol className="trace-list">
             <li>
-              <span className="trace-check">✓</span>
+              <span className="trace-check">!</span>
               <div>
-                <strong>Project thread opened</strong>
-                <small>Ephemeral · read-only</small>
+                <strong>Unsafe preflight preceded thread</strong>
+                <small>Trace retained for diagnosis only</small>
               </div>
             </li>
             {toolEvents.map((event) => (
               <li key={event.sequence}>
-                <span className="trace-check">✓</span>
+                <span className="trace-check">!</span>
                 <div>
                   <strong>
                     {event.kind === "tool-started" ? "Started" : "Completed"}{" "}
@@ -184,9 +181,9 @@ export function E1DirectorLabApp({ host }: { host: E1DirectorLabHost }) {
               </li>
             ))}
             <li>
-              <span className="trace-check">✓</span>
+              <span className="trace-check">!</span>
               <div>
-                <strong>Proposal validated</strong>
+                <strong>Proposal evidence invalidated</strong>
                 <small>
                   {model.streamFragmentCount} streamed text fragments
                 </small>
@@ -203,27 +200,22 @@ export function E1DirectorLabApp({ host }: { host: E1DirectorLabHost }) {
 
       <footer className="review-actions">
         <div>
-          <strong>Creator authority is preserved</strong>
-          <span>{model.applyReason}</span>
+          <strong>WP3 stopped at the security boundary</strong>
+          <span>{model.invalidatedReason}</span>
         </div>
         <button
           className="secondary-action"
           type="button"
-          disabled={decision === "rejected"}
-          onClick={() => setPreviewing((value) => !value)}
+          disabled
         >
-          {previewing ? "Close preview" : "Preview proposal"}
+          Preview unavailable
         </button>
         <button
           className="reject-action"
           type="button"
-          disabled={decision === "rejected"}
-          onClick={() => {
-            setPreviewing(false);
-            setDecision("rejected");
-          }}
+          disabled
         >
-          {decision === "rejected" ? "Rejected" : "Reject"}
+          Reject unavailable
         </button>
         <button
           className="apply-action"

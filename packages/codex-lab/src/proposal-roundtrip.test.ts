@@ -568,6 +568,25 @@ describe("E1 streamed proposal round trip", () => {
     expect(restarted.proposal).toEqual(proposal);
   });
 
+  it("fails before launch when the pinned runtime cannot isolate MCPs without credentials", async () => {
+    let launched = false;
+
+    await expect(
+      runE1ProposalRoundTrip({
+        verifyRuntime: async () => verifiedRuntime,
+        launch: () => {
+          launched = true;
+          return createSuccessfulClient();
+        },
+      }),
+    ).rejects.toMatchObject({
+      code: "PROTOCOL_INCOMPATIBLE",
+      stateHint: "incompatible",
+    });
+
+    expect(launched).toBe(false);
+  });
+
   it.each([
     ["before-tool", "turn-started"],
     ["during-stream", "agent-delta"],

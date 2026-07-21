@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { AppServerClient, getE1ProposalAppServerArgs } from "./app-server";
+import {
+  AppServerClient,
+  getE1ProposalAppServerArgs,
+  listConfiguredMcpServerNames,
+  verifyE1McpIsolation,
+} from "./app-server";
 import { FakeChild, answerRequests, asChild } from "./test-helpers";
 
 describe("E1 JSONL App Server client", () => {
@@ -126,5 +131,20 @@ describe("E1 JSONL App Server client", () => {
     expect(() => getE1ProposalAppServerArgs(["unsafe.name"])).toThrow(
       "invalid server name",
     );
+  });
+
+  it("refuses secret-bearing structured MCP discovery on the pinned runtime", async () => {
+    await expect(listConfiguredMcpServerNames("codex.exe")).rejects.toMatchObject(
+      {
+        code: "PROTOCOL_INCOMPATIBLE",
+        stateHint: "incompatible",
+      },
+    );
+    await expect(
+      verifyE1McpIsolation("codex.exe", []),
+    ).rejects.toMatchObject({
+      code: "PROTOCOL_INCOMPATIBLE",
+      stateHint: "incompatible",
+    });
   });
 });

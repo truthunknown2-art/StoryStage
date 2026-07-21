@@ -1,18 +1,12 @@
-import {
-  execFile,
-  spawn,
-  type ChildProcessWithoutNullStreams,
-} from "node:child_process";
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { join } from "node:path";
 import type { Writable } from "node:stream";
 import { fileURLToPath } from "node:url";
-import { promisify } from "node:util";
 import { classifyRpcFailure } from "./account-state";
 import { CodexLabError } from "./errors";
 import { runtimeManifest } from "./runtime-manifest";
 
 const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
-const execFileAsync = promisify(execFile);
 
 type JsonRpcId = number | string;
 type PendingRequest = {
@@ -545,102 +539,28 @@ function getE1DisabledCapabilityArgs(): readonly string[] {
   ].flatMap((feature) => ["--disable", feature]);
 }
 
-type ConfiguredMcpServer = { name: string; enabled: boolean };
-
-async function readConfiguredMcpServers(
-  executablePath: string,
-  configArgs: readonly string[] = [],
-): Promise<readonly ConfiguredMcpServer[]> {
-  let stdout: string;
-  try {
-    const result = await execFileAsync(
-      executablePath,
-      [...configArgs, "mcp", "list", "--json"],
-      {
-        encoding: "utf8",
-        env: allowlistedEnvironment(),
-        maxBuffer: 256 * 1024,
-        timeout: 10_000,
-        windowsHide: true,
-      },
-    );
-    stdout = result.stdout;
-  } catch {
-    throw new CodexLabError(
-      "PROTOCOL_INCOMPATIBLE",
-      "The pinned Codex runtime could not enumerate MCP isolation inputs.",
-      "incompatible",
-    );
-  }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(stdout);
-  } catch {
-    throw new CodexLabError(
-      "PROTOCOL_INCOMPATIBLE",
-      "The pinned Codex runtime returned an invalid MCP inventory.",
-      "incompatible",
-    );
-  }
-  if (
-    !Array.isArray(parsed) ||
-    !parsed.every(
-      (entry) =>
-        entry &&
-        typeof entry === "object" &&
-        "name" in entry &&
-        typeof entry.name === "string" &&
-        "enabled" in entry &&
-        typeof entry.enabled === "boolean",
-    )
-  ) {
-    throw new CodexLabError(
-      "PROTOCOL_INCOMPATIBLE",
-      "The pinned Codex runtime returned an incompatible MCP inventory.",
-      "incompatible",
-    );
-  }
-  return parsed.map((entry) => ({
-    name: entry.name,
-    enabled: entry.enabled,
-  }));
-}
-
 export async function listConfiguredMcpServerNames(
   executablePath: string,
 ): Promise<readonly string[]> {
-  return (
-    await readConfiguredMcpServers(
-      executablePath,
-      getE1DisabledCapabilityArgs(),
-    )
-  ).map((entry) => entry.name);
+  void executablePath;
+  throw new CodexLabError(
+    "PROTOCOL_INCOMPATIBLE",
+    "Codex 0.144.1 has no credential-safe structured MCP inventory for per-launch isolation.",
+    "incompatible",
+  );
 }
 
 export async function verifyE1McpIsolation(
   executablePath: string,
   configuredServerNames: readonly string[],
 ): Promise<void> {
-  const effective = await readConfiguredMcpServers(executablePath, [
-    ...getE1DisabledCapabilityArgs(),
-    ...getE1McpConfigArgs(configuredServerNames),
-  ]);
-  const enabled = effective.filter((entry) => entry.enabled);
-  if (
-    enabled.length !== 1 ||
-    enabled[0]?.name !== "storystage_e1" ||
-    effective.some(
-      (entry) =>
-        entry.name !== "storystage_e1" &&
-        !configuredServerNames.includes(entry.name),
-    )
-  ) {
-    throw new CodexLabError(
-      "PROTOCOL_INCOMPATIBLE",
-      "The pinned Codex runtime could not prove an isolated StoryStage MCP inventory.",
-      "incompatible",
-    );
-  }
+  void executablePath;
+  void configuredServerNames;
+  throw new CodexLabError(
+    "PROTOCOL_INCOMPATIBLE",
+    "Codex 0.144.1 cannot prove per-launch MCP isolation without receiving unrelated MCP configuration.",
+    "incompatible",
+  );
 }
 
 /** Launches the pinned App Server with one replacement MCP inventory. */
