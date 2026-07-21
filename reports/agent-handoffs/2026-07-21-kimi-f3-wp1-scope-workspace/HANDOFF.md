@@ -10,7 +10,9 @@ Tracking issue: https://github.com/truthunknown2-art/StoryStage/issues/72 (v62 c
 
 - Exact base: `product/v1@38969c4400e2a9c84a59346c28f7a72d5f9492bf`
   (verified as an ancestor of `origin/product/v1` before branching)
-- Implementation head: `b0948577c04a1289e5921eb75c53f57dbef11d04`.
+- Kimi implementation head: `b0948577c04a1289e5921eb75c53f57dbef11d04`.
+- Codex review-correction head:
+  `e89a2d6b8b2a2070405e133b0c10f4da4a016c61`.
 - Handback/evidence tip: named separately in the PR body.
 
 ## What was built
@@ -37,10 +39,12 @@ the new scene's first beat exactly once.
    episode / sequence / scene / beat, with the beat marked
    `aria-current="true"`.
 5. **Director Direct/Visual/Motion tabs** — real local tab state with
-   `tablist`/`tab`/`tabpanel` semantics, `aria-selected`, and Arrow/Home/End
-   keyboard support with focus follow. Each tab's panel repeats the shared
-   scope (`Scope: Scene N · Beat M — <title>`) plus truthful per-tab copy.
-   No editable fields, no Apply/Undo/Redo, no AI, no fake controls.
+   `tablist`/`tab`/`tabpanel` semantics, `aria-selected`, roving `tabIndex`,
+   and Arrow/Home/End keyboard support with focus follow. Every tab's
+   `aria-controls` target remains in the DOM; inactive panels are hidden.
+   Keyboard movement derives from the focused tab. Each panel repeats the
+   shared scope (`Scope: Scene N · Beat M — <title>`) plus truthful per-tab
+   copy. No editable fields, no Apply/Undo/Redo, no AI, no fake controls.
 6. **Stale F2/WP2 copy replaced** — the "Director controls arrive in F3"
    paragraph is gone (the F3-WP1 Director workspace is here); the Preview
    reason now truthfully reads "Preview stays disabled in F3-WP1 — this
@@ -98,6 +102,8 @@ files.
 2. `pnpm --filter @storystage/studio typecheck` — clean.
 3. `pnpm --filter @storystage/studio build` — clean (pre-existing >500 kB
    chunk warning only).
+   Codex reran commands 1–3 after the tab-semantics correction at
+   `e89a2d6b8b2a2070405e133b0c10f4da4a016c61`; all retained the same result.
 4. `pnpm verify` — **fails only at `verify:roadmap`**; see the conflict
    disclosure below. Every other component passes:
    - `verify:director-capability-assets` — PASS (19 assets).
@@ -134,7 +140,7 @@ would require editing `docs/ROADMAP_STATUS.md`, which this brief forbids
 
 ## Browser click-through (headless Chromium, 1440×900, dev server)
 
-All 12 checks passed with **zero console errors, zero warnings, zero page
+All 14 checks passed with **zero console errors, zero warnings, zero page
 errors** (machine-readable: `screenshots/clickthrough-report.json`):
 
 - Studio opens at Scene 1 · Beat 1: scope header breadcrumb
