@@ -11,12 +11,14 @@
   E1-WP1 through E1-WP4 plan on 2026-07-20
 - Current authorization: E1-WP3 is accepted at exact PR #64 head
   `681eeb4d7c28405ead53cb8afc16a048c749c53d` and integrated at
-  `ac2357d2e1419124d832fe26b67e26875f3821e8`. Issue #69 and the merged
-  status transition authorize only E1-WP4 from exact base
+  `ac2357d2e1419124d832fe26b67e26875f3821e8`. Status-only PR #70 is
+  integrated at `01e377579b76a1e7286dbd9ecba86a3888681112`; issue #69 and that
+  transition authorize only E1-WP4 from exact base
   `8d9a47a4898df81db7630e2f0b7d4eecc88f7157` on
   `agent/codex-e1-wp4-failure-security-gate`. Standing continuation authority
   does not waive exact-SHA review, hosted checks, Pro review, or Preston's final
-  E1 `PASS`/`FAIL` decision.
+  E1 `PASS`/`FAIL` decision. The complete E1 milestone, F3, backend product
+  work, and Kimi implementation remain blocked.
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 
@@ -316,6 +318,14 @@ fallback.
   commands/results, and known limitations; and
 - completion only when Pro finds the evidence truthful and Preston records
   `PASS` or `FAIL` against the exact pushed SHA.
+
+**Authorized package status (2026-07-21):** issue #69 authorizes only E1-WP4
+on `agent/codex-e1-wp4-failure-security-gate` from exact base
+`8d9a47a4898df81db7630e2f0b7d4eecc88f7157`, after the separate status-only
+transition is integrated. The package must close the required negative-state
+matrix and security/feasibility evidence without credential exposure, project
+mutation, hidden fallback, or production-security claims. F3, backend product
+work, and Kimi implementation remain blocked.
 
 ## Milestone non-goals
 

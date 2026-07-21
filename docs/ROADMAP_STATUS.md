@@ -10,30 +10,30 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: ACCEPTED_WAIT
+  state: START_NOW
   milestone: E1
-  package: E1-WP3
+  package: E1-WP4
   owner: Codex
-  exactBase: 4319967eac13dd628eb863dfb29f7bff3c83ffeb
-  branch: agent/codex-e1-wp3-streamed-proposal-roundtrip
-  issue: 62
-  pr: 64
-  candidateContentHead: 681eeb4d7c28405ead53cb8afc16a048c749c53d
+  exactBase: 8d9a47a4898df81db7630e2f0b7d4eecc88f7157
+  branch: agent/codex-e1-wp4-failure-security-gate
+  issue: 69
+  pr: null
+  candidateContentHead: 8d9a47a4898df81db7630e2f0b7d4eecc88f7157
   candidateRef: product/v1
 checks:
-  local: full-pnpm-verify-pass+privacy-944-files+codex-lab-84-tests+e1-director-lab-tests-build-pass
+  local: roadmap-consistency+codex-lab-wp3-baseline-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp3-exact-head-681eeb4d7c28405ead53cb8afc16a048c749c53d-review-clean-and-integrated-at-ac2357d2e1419124d832fe26b67e26875f3821e8
+  codex: issued-e1-wp4-only-at-exact-base-8d9a47a4898df81db7630e2f0b7d4eecc88f7157-through-issue-69
   pro: accept-complete-e1-wp3-exact-681eeb4d7c28405ead53cb8afc16a048c749c53d-no-blockers-safe-to-integrate
-  preston: authorize-e1-wp3-redacted-mcp-name-compatibility-adapter-fail-closed-no-credential-access-and-standing-dependency-ordered-continuation-2026-07-21
+  preston: standing-dependency-ordered-continuation-after-e1-wp3-acceptance-2026-07-21
 blockers:
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
-  - E1-WP4 requires a separate bounded issue and START_NOW status transition; F3, backend, and Kimi implementation remain blocked by their roadmap dependencies
+  - F3, backend product work, and Kimi implementation remain blocked by their roadmap dependencies and the E1 milestone gate
 nextAuthorizedAction:
-  type: PUBLISH_E1_WP4_START_TICKET
-  text: Create the separate dependency-ordered E1-WP4 issue and START_NOW transition from the accepted product head; do not implement E1-WP4 until that transition is integrated.
+  type: IMPLEMENT_E1_WP4_ONLY
+  text: After this status transition is integrated, execute only issue 69 from the exact base and stop before F3 or any backend or Kimi implementation.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -137,6 +137,12 @@ verification from the live PR checks.
   review surface truthfully keeps Apply disabled. This accepts only E1-WP3;
   the complete E1 milestone remains incomplete, E1-WP4 requires its own
   `START_NOW` transition, and Kimi remains `WAIT`.
+- On 2026-07-21 the separate issue #69 and this `START_NOW` transition
+  authorize only E1-WP4 from exact base
+  `product/v1@8d9a47a4898df81db7630e2f0b7d4eecc88f7157`. The package closes the
+  negative-state, security-boundary, feasibility, distribution-question, and
+  productization-delta evidence gate. It does not accept E1, start F3 or
+  backend product work, or wake Kimi.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
     and deterministic proposal/application path. Pro also required complete visual
