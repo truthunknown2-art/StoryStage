@@ -18,14 +18,14 @@ authorization:
   branch: agent/codex-e1-wp1-runtime-preflight
   issue: 53
   pr: 55
-  candidateContentHead: fe2909f3bd10a3c5e71f91d79a474ececdb3ea70
+  candidateContentHead: fe2909fa3f26e82026a261172fe00ad98245e612
   candidateRef: agent/codex-e1-wp1-runtime-preflight
 checks:
   local: root-verify+installed-schema+live-preflight-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp1-candidate-exact-fe2909f3bd10a3c5e71f91d79a474ececdb3ea70
+  codex: e1-wp1-candidate-exact-fe2909fa3f26e82026a261172fe00ad98245e612
   pro: accept-exact-2e1fbb0791a9e205d71f7bfaf00d55894dab5475
   preston: accept-g0-authorize-e1-wp1-only-2026-07-20
 blockers:
