@@ -10,30 +10,30 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: ACCEPTED_WAIT
+  state: START_NOW
   milestone: E1
-  package: E1-WP2
+  package: E1-WP3
   owner: Codex
-  exactBase: a246987fb678712af022b46f3b23ad22f4d22b2a
-  branch: agent/codex-e1-wp2-mcp-scene-context
-  issue: 57
-  pr: 59
-  candidateContentHead: e8fcaa7e550f82e073dbbec7a7f8cca78a6b8f21
-  candidateRef: agent/codex-e1-wp2-mcp-scene-context
+  exactBase: 4319967eac13dd628eb863dfb29f7bff3c83ffeb
+  branch: agent/codex-e1-wp3-streamed-proposal-roundtrip
+  issue: 62
+  pr: null
+  candidateContentHead: 4319967eac13dd628eb863dfb29f7bff3c83ffeb
+  candidateRef: product/v1
 checks:
-  local: root-verify+codex-lab-40-tests+fixture-hash-pass
+  local: roadmap-consistency+codex-lab-wp2-baseline-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp2-accepted-integrated-exact-ec050cce094fd5adc1a50a132f76795b4543ac73
+  codex: issued-e1-wp3-only-at-exact-base-4319967eac13dd628eb863dfb29f7bff3c83ffeb
   pro: accept-e1-wp2-exact-e8fcaa7e550f82e073dbbec7a7f8cca78a6b8f21
-  preston: continue-next-dependency-ordered-package-e1-wp2-only-2026-07-20
+  preston: authorize-e1-wp3-only-at-exact-base-4319967eac13dd628eb863dfb29f7bff3c83ffeb-2026-07-20
 blockers:
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
-  - E1-WP3, E1-WP4, F3, backend, and Kimi implementation remain unauthorized
+  - E1-WP4, F3, backend, and Kimi implementation remain unauthorized
 nextAuthorizedAction:
-  type: WAIT_FOR_SEPARATE_E1_WP3_AUTHORIZATION
-  text: E1-WP2 is accepted and integrated; wait for an explicit exact-base E1-WP3 ticket and START_NOW update.
+  type: IMPLEMENT_E1_WP3_ONLY
+  text: Execute only issue 62 from the exact base and stop before E1-WP4.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -77,9 +77,12 @@ verification from the live PR checks.
   plus exactly two bounded read-only tools, and every proposal receipt remains
   explicitly unapplied, unpersisted, and non-canonical. The fail-closed JSONL
   transport, strict schemas, cancellation/deadline behavior, and 40 focused
-  tests accept only E1-WP2, not the complete E1 milestone. Authorization has
-  returned to WAIT; E1-WP3, F3, backend product work, and Kimi implementation
-  remain unauthorized.
+  tests accept only E1-WP2, not the complete E1 milestone.
+- On 2026-07-20 Preston explicitly authorized only E1-WP3 at exact base
+  `product/v1@4319967eac13dd628eb863dfb29f7bff3c83ffeb`. Issue #62 and this
+  `START_NOW` transition authorize the streamed structured-proposal round trip
+  and isolated read-only review surface. E1-WP4, F3, backend product work, and
+  Kimi implementation remain unauthorized.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
     and deterministic proposal/application path. Pro also required complete visual
