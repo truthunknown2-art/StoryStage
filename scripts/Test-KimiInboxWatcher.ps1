@@ -145,31 +145,41 @@ Issue: ``#66``
   Assert-Equal $branch $receipt.requiredBranch 'Launch receipt branch mismatch.'
   Assert-Equal $expectedWorkspace $receipt.workingDirectory 'Launch receipt must pin the exact assignment workspace.'
 
-  Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt
+  $receiptPath = Join-Path $fixtureState 'launches\v60.json'
+  Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt -LaunchFilePath $receiptPath
   $dirtySentinel = Join-Path $expectedWorkspace 'watcher-dirty-sentinel.txt'
   [System.IO.File]::WriteAllText($dirtySentinel, 'dirty')
   $dirtyRejected = $false
-  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt } catch { $dirtyRejected = $_.Exception.Message -match 'not clean' }
+  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt -LaunchFilePath $receiptPath } catch { $dirtyRejected = $_.Exception.Message -match 'not clean' }
   Assert-Equal $true $dirtyRejected 'Runner must reject an untracked file before Kimi starts.'
   Remove-Item -LiteralPath $dirtySentinel -Force
 
   $wrongHeadLaunch = $receipt | Select-Object *
   $wrongHeadLaunch.acceptedBase = '0000000000000000000000000000000000000000'
   $wrongHeadRejected = $false
-  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $wrongHeadLaunch } catch { $wrongHeadRejected = $_.Exception.Message -match 'HEAD changed' }
+  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $wrongHeadLaunch -LaunchFilePath $receiptPath } catch { $wrongHeadRejected = $_.Exception.Message -match 'HEAD changed' }
   Assert-Equal $true $wrongHeadRejected 'Runner must reject a clean workspace at the wrong exact SHA.'
 
   Invoke-TestGit $expectedWorkspace @('switch', '-c', 'fixture-attached-head') | Out-Null
   $attachedRejected = $false
-  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt } catch { $attachedRejected = $_.Exception.Message -match 'no longer detached' }
+  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt -LaunchFilePath $receiptPath } catch { $attachedRejected = $_.Exception.Message -match 'no longer detached' }
   Assert-Equal $true $attachedRejected 'Runner must reject an attached assignment workspace.'
   Invoke-TestGit $expectedWorkspace @('switch', '--detach', $base) | Out-Null
 
   $wrongPathLaunch = $receipt | Select-Object *
   $wrongPathLaunch.workingDirectory = Join-Path $fixtureState 'repo'
   $wrongPathRejected = $false
-  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $wrongPathLaunch } catch { $wrongPathRejected = $_.Exception.Message -match 'does not match' }
+  try { Assert-PinnedKimiWorkspace -Directory (Join-Path $fixtureState 'repo') -Launch $wrongPathLaunch -LaunchFilePath $receiptPath } catch { $wrongPathRejected = $_.Exception.Message -match 'does not match' }
   Assert-Equal $true $wrongPathRejected 'Runner must reject a checkout outside the pinned version workspace.'
+
+  $externalWorkspace = Join-Path $fixtureRoot 'external-clean-checkout'
+  Invoke-CheckedGit -Arguments @('clone', '--no-checkout', '--origin', 'origin', $remote, $externalWorkspace) | Out-Null
+  Invoke-TestGit $externalWorkspace @('checkout', '--detach', $base) | Out-Null
+  $externalLaunch = $receipt | Select-Object *
+  $externalLaunch.workingDirectory = $externalWorkspace
+  $externalRejected = $false
+  try { Assert-PinnedKimiWorkspace -Directory $externalWorkspace -Launch $externalLaunch -LaunchFilePath $receiptPath } catch { $externalRejected = $_.Exception.Message -match 'does not match' }
+  Assert-Equal $true $externalRejected 'Runner must reject a different clean exact-base checkout even when receipt and argument agree.'
 
   $existingState = Join-Path $fixtureRoot 'existing-workspace-state'
   $existingWorkspace = Get-AssignmentWorkspacePath -Root $existingState -Version 60
@@ -256,6 +266,13 @@ Issue: ``#66``
 
   Invoke-TestGit $source @('branch', $branch, $base) | Out-Null
   Invoke-TestGit $source @('push', 'origin', $branch) | Out-Null
+  $lateBranchRejected = $false
+  try {
+    Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt -LaunchFilePath $receiptPath
+  } catch {
+    $lateBranchRejected = $_.Exception.Message -match 'appeared on origin'
+  }
+  Assert-Equal $true $lateBranchRejected 'Runner must reject a required branch created after workspace preparation.'
   $collisionState = Join-Path $fixtureRoot 'remote-branch-collision-state'
   $collisionInbox = $start | Select-Object *
   $collisionInbox.RequiredBranch = $branch
