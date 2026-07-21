@@ -9,9 +9,10 @@
 - Product acceptance: Preston
 - Decomposition approval: Preston accepted G0 and the dependency-ordered
   E1-WP1 through E1-WP4 plan on 2026-07-20
-- Current authorization: E1-WP3 only through issue #62 at exact base
-  `4319967eac13dd628eb863dfb29f7bff3c83ffeb`; E1-WP4 and later work remain
-  blocked
+- Current authorization: E1-WP3 through issue #62 at exact base
+  `4319967eac13dd628eb863dfb29f7bff3c83ffeb`, including Preston's 2026-07-21
+  redacted MCP-name compatibility amendment. Standing continuation authority
+  applies only after each dependency-ordered package passes its existing gates.
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 
@@ -158,7 +159,11 @@ E1-WP3 through issue #62 and a separate exact-base `START_NOW` update.
 ### E1-WP3 - Streamed structured-proposal round trip
 
 **Primary invariant:** the host can turn App Server events into an understandable
-proposal/approval experience without interpreting terminal text or applying it.
+proposal/approval experience without interpreting conversation/agent terminal
+text or applying it. The sole compatibility exception is the pinned, redacted
+human `codex mcp list` server-name table authorized by Preston on 2026-07-21;
+it must be parsed internally with an exact grammar and fail closed on any
+unknown shape without reading JSON inventory or credential-bearing fields.
 
 **Tasks**
 
@@ -194,7 +199,7 @@ App Server-to-MCP proposal round trip, typed host event model, and isolated
 read-only review surface. E1-WP4, F3, backend product work, and Kimi
 implementation remain blocked.
 
-**Blocked feasibility status (2026-07-20):** PR #64 content
+**Superseded blocked feasibility status (2026-07-20):** PR #64 content
 `b134cc62bda0055a857cf82b5a48ba57dd2ebc14` removes the unsafe structured MCP
 inventory path and fails before App Server launch. Final Sol-high audit and
 ChatGPT Pro confirmed that pinned Codex 0.144.1 emits raw configured MCP
@@ -207,8 +212,19 @@ blocked-state lab test and its production build, privacy, scoped lint, and diff
 check. The prior live round trip, only-StoryStage isolation claim, and accepted
 proposal-review evidence are invalidated. The replacement 1440x900 capture
 shows the truthful fail-closed state with zero console errors or warnings.
-E1-WP3 waits for Preston's platform or
-architecture decision; E1-WP4 and every downstream phase remain blocked.
+That state awaited Preston's platform or architecture decision.
+
+**Authorized compatibility amendment (2026-07-21):** Preston explicitly permits
+a tested internal adapter over only the redacted human `codex mcp list` name
+table, with fail-closed verification and no credential access. The adapter may
+extract only server name and enabled/disabled state, must reject unknown headers,
+columns, row shapes, control characters, duplicates, redaction-marker drift, or
+nonzero exits, and must never execute or parse `mcp list --json`. A live receipt
+may restore the isolation claim only after pre-launch configuration and the
+pinned runtime both prove that StoryStage is the sole enabled MCP. Preston also
+granted standing authority to continue through dependency-ordered packages
+while away; that authority does not waive hosted checks, exact-SHA Pro review,
+milestone gates, or the rule that E1-WP4 cannot start before E1-WP3 is accepted.
 
 ### E1-WP4 - Failure, security, and feasibility gate
 
