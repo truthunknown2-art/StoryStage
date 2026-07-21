@@ -1,15 +1,31 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `57`
+Inbox-Version: `58`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `G0-AI-NATIVE-PRESTON-DECISION-WAIT`
+Current-Task: `E1-WP1-CODEX-RUNTIME-PREFLIGHT-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `87c01f9b684642e39cf470f06be2aaf6797cd3d7`
-Required-Work-Branch: `none-planning-hold`
-Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-g0-ai-native-preston-decision-wait-v57.md`
+Accepted-Root-Base: `4ec99ebb33f274625e8e1fe0f1b401d9c0169fad`
+Required-Work-Branch: `none-e1-codex-hold`
+Full-Brief: `reports/agent-handoffs/2026-07-20-codex-kimi-e1-wp1-runtime-preflight-wait-v58.md`
 
 ## Current instruction
+
+Version 58 records Preston's G0 acceptance and authorization of only E1-WP1,
+the bounded issue #53 at exact base
+`4ec99ebb33f274625e8e1fe0f1b401d9c0169fad`, and the status-only PR #54
+integration at `e70467d0c38f976a9aeb98e10da3cc52c22096ba`. The live product
+ledger is now `E1 / E1-WP1 / START_NOW`, owned by Codex. Kimi remains `WAIT`
+with no implementation branch. Do not begin frontend/UI work, E1-WP2, F3,
+backend, or any later package. A future Kimi assignment still requires a
+higher inbox version with a separate bounded `START-NOW` task.
+
+Version 58 supersedes Version 57. Version 57 remains below as historical
+traceability.
+
+---
+
+Previous Version 57 instruction:
 
 Version 57 records ChatGPT Pro's final `ACCEPT` for exact PR #50 head
 `2e1fbb0791a9e205d71f7bfaf00d55894dab5475`, its integration into
