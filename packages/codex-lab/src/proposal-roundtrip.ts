@@ -54,12 +54,12 @@ const E1_LOGIN_TIMEOUT_MS = 5 * 60_000;
 
 const E1_TOOL_SCHEMA_FINGERPRINTS = {
   get_scene_context: {
-    input: "fa7c9bcba1bbdffbf5527bf5fca720f8000b301c77e413639477eb72a0edcba6",
-    output: "47b8f893044d6ce79377ca62f1d103638e26d1c396f4f547ae67b622304b8a3e",
+    input: "d33ddf8bb22395fb38379d4e821a1b81fea8c8caf12514fc9aea8aec6f1bec0f",
+    output: "f78a80b9ed25cbbced69996672fa1ab8966406028cd85997b18183cf8c1f9ae8",
   },
   submit_direction_proposal: {
-    input: "2b9f6257d09acab1b8ec32ddad8fd1cf7436ea98a86c4f7a3c3e69faca9d7f75",
-    output: "702769437e2701277c6597e79c63c5f037ecc59b100830217ec5ad6a19f443b4",
+    input: "90789225f01d51b85646698fa6899c1b4bca90162211c54bfab021c81bcb4e02",
+    output: "b28567422bfbe0f5342084cf832e5bdf39b9a9eaa3591ce0df8c696d6b849641",
   },
 } as const;
 
@@ -170,8 +170,23 @@ function normalizedPath(value: string): string {
   return resolve(value).replaceAll("/", "\\").toLowerCase();
 }
 
+function canonicalJson(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalJson);
+  if (value !== null && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.keys(record)
+        .sort()
+        .map((key) => [key, canonicalJson(record[key])]),
+    );
+  }
+  return value;
+}
+
 function jsonFingerprint(value: unknown): string {
-  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(canonicalJson(value)))
+    .digest("hex");
 }
 
 export function assertOfficialChatGptAuthUrl(value: string): void {

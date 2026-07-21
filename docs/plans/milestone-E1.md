@@ -257,6 +257,21 @@ must use only typed ChatGPT account/login events, retain auth URL/login ID only
 in memory, validate and correlate them exactly, prove one fixed MCP globally
 and thread-scoped, and prohibit every `turn/start` until both proofs pass.
 
+**Live successor result (2026-07-21):** official ChatGPT authentication
+completed inside the dedicated Codex-owned state root. The first authenticated
+inventory proof failed closed because the direct MCP client and App Server
+serialized identical JSON Schema object keys in different orders. The
+successor now hashes a recursive canonical JSON representation: object keys are
+sorted, array order and every schema value remain exact, and semantic drift is
+still rejected. A regression proves deep key reordering passes while a changed
+schema literal fails. The corrected live run proved exactly one fixed
+StoryStage MCP globally and thread-scoped before prompting, called only
+`get_scene_context` and `submit_direction_proposal`, returned one validated
+ephemeral proposal, persisted no raw protocol/account/thread/turn/token data,
+and kept Apply disabled. The sanitized live receipt and replacement 1440x900
+capture are committed with their hashes. This is candidate evidence for final
+exact-head review; it does not accept E1-WP3 or start E1-WP4.
+
 ### E1-WP4 - Failure, security, and feasibility gate
 
 **Primary invariant:** every unsupported, hostile, unavailable, or interrupted

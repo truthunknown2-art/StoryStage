@@ -1,10 +1,8 @@
 {
   "schemaVersion": 1,
   "package": "E1-WP3",
-  "source": "invalidated-live-pinned-runtime",
-  "evidenceStatus": "invalidated-security-blocker",
-  "invalidatedReason": "Codex 0.144.1 structured MCP inventory exposed unrelated configured MCP credential values to the StoryStage process before isolation.",
-  "observedAt": "2026-07-21T06:45:25.196Z",
+  "source": "live-pinned-runtime",
+  "observedAt": "2026-07-21T14:10:45.989Z",
   "runtime": {
     "packageVersion": "0.144.1",
     "cliVersion": "codex-cli 0.144.1",
@@ -22,25 +20,14 @@
     "projectId": "project-ollo-cloud-parade-lab",
     "sceneId": "scene-cloud-garden",
     "beatId": "beat-windbell-discovery",
-    "summary": "Emphasize Ollo's quiet listening and the wind bell's first tiny chime.",
-    "rationale": "This keeps the discovery beat gentle and reassuring while preserving the wind bell behind the silver fern until the chime.",
+    "summary": "Emphasize the wind bell’s first quiet chime.",
+    "rationale": "The first-tiny-chime cue makes the discovery’s reassuring turn clear while preserving the bell behind the silver fern until that moment.",
     "changes": [
-      {
-        "kind": "performance-cue",
-        "entityId": "character-ollo",
-        "capability": "head-turn",
-        "cue": "listen-to-windbell"
-      },
       {
         "kind": "performance-cue",
         "entityId": "character-windbell",
         "capability": "tiny-chime",
         "cue": "first-tiny-chime"
-      },
-      {
-        "kind": "layer-emphasis",
-        "layerId": "layer-silver-fern",
-        "emphasis": "foreground-soften"
       }
     ]
   },
@@ -135,35 +122,35 @@
     },
     {
       "sequence": 23,
-      "kind": "tool-started",
-      "tool": "get_scene_context"
+      "kind": "agent-delta"
     },
     {
       "sequence": 24,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 25,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 26,
+      "kind": "tool-started",
+      "tool": "get_scene_context"
+    },
+    {
+      "sequence": 27,
       "kind": "tool-completed",
       "tool": "get_scene_context"
     },
     {
-      "sequence": 25,
+      "sequence": 28,
       "kind": "tool-started",
       "tool": "submit_direction_proposal"
     },
     {
-      "sequence": 26,
+      "sequence": 29,
       "kind": "tool-completed",
       "tool": "submit_direction_proposal"
-    },
-    {
-      "sequence": 27,
-      "kind": "agent-delta"
-    },
-    {
-      "sequence": 28,
-      "kind": "agent-delta"
-    },
-    {
-      "sequence": 29,
-      "kind": "agent-delta"
     },
     {
       "sequence": 30,
@@ -331,14 +318,37 @@
     },
     {
       "sequence": 71,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 72,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 73,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 74,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 75,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 76,
+      "kind": "agent-delta"
+    },
+    {
+      "sequence": 77,
       "kind": "turn-completed",
       "status": "completed"
     }
   ],
   "isolation": {
-    "proofStatus": "invalidated",
-    "onlyStoryStageMcpEnabled": false,
-    "inheritedServerCount": null
+    "onlyStoryStageMcpEnabled": true,
+    "inheritedServerCount": 0
   },
   "reviewAuthority": {
     "previewAvailable": true,
@@ -347,8 +357,6 @@
     "applyReason": "E1-WP3 validates an ephemeral proposal only; apply and persistence are outside this package."
   },
   "privacy": {
-    "credentialSafeDiscovery": false,
-    "credentialBoundaryViolated": true,
     "rawJsonRpcPersisted": false,
     "promptPersisted": false,
     "agentTextPersisted": false,

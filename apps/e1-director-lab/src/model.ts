@@ -11,9 +11,7 @@ export type ProposalChange =
   | { kind: "layer-emphasis"; layerId: string; emphasis: string };
 
 export type ProposalLabModel = {
-  source: "invalidated-live-pinned-runtime";
-  evidenceStatus: "invalidated-security-blocker";
-  invalidatedReason: string;
+  source: "live-pinned-runtime";
   observedAt: string;
   runtimeVersion: string;
   scope: { projectId: string; sceneId: string; beatId: string };
@@ -33,9 +31,7 @@ export type ProposalLabModel = {
 };
 
 export const liveProposalLabModel: ProposalLabModel = {
-  source: liveEvidence.source as "invalidated-live-pinned-runtime",
-  evidenceStatus: liveEvidence.evidenceStatus as "invalidated-security-blocker",
-  invalidatedReason: liveEvidence.invalidatedReason,
+  source: liveEvidence.source as "live-pinned-runtime",
   observedAt: liveEvidence.observedAt,
   runtimeVersion: liveEvidence.runtime.cliVersion,
   scope: liveEvidence.scope,

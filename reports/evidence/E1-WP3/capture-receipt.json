@@ -2,31 +2,37 @@
   "schemaVersion": 1,
   "package": "E1-WP3",
   "surface": "isolated-e1-director-lab",
-  "source": "fail-closed-blocker-surface",
-  "evidenceStatus": "blocked-feasibility-capture",
-  "invalidatedReason": "The prior round-trip evidence is invalid; this replacement capture shows the truthful fail-closed security state.",
+  "source": "live-pinned-runtime",
+  "evidenceStatus": "completed-live-roundtrip-capture",
+  "observedAt": "2026-07-21T14:10:45.989Z",
   "viewport": {
     "width": 1440,
     "height": 900,
-    "deviceScale": "css"
+    "deviceScale": "css",
+    "scrollWidth": 1440,
+    "scrollHeight": 900
   },
   "artifact": {
     "path": "reports/evidence/E1-WP3/director-lab-1440x900.png",
-    "sha256": "b4383dd3b0294c021f23dd10b5cc6171a4b70e69b6bfbd29d0ea31f4884665b5"
+    "sha256": "bd4f10c11002c705195580824228d74605eccb3b0af5f48ad0c2e3b18ca971bd"
+  },
+  "liveReceipt": {
+    "path": "reports/evidence/E1-WP3/live-roundtrip.json",
+    "sha256": "87b34de4585802344973f3943444c22ce2fa936fe42979ef00745feefe9a1299"
   },
   "browserConsole": {
     "errors": 0,
     "warnings": 0
   },
   "authority": {
-    "previewAvailable": false,
-    "rejectAvailable": false,
+    "previewAvailable": true,
+    "rejectAvailable": true,
     "applyEnabled": false
   },
   "mcpIsolation": {
-    "proofStatus": "invalidated",
-    "onlyStoryStageMcpEnabled": false,
-    "inheritedServerCount": null,
+    "proofStatus": "passed-before-prompt",
+    "onlyStoryStageMcpEnabled": true,
+    "inheritedServerCount": 0,
     "serverNamesPersisted": false
   }
 }

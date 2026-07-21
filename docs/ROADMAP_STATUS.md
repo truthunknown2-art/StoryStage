@@ -127,6 +127,18 @@ verification from the live PR checks.
   the lab capture with the truthful blocked state. E1-WP3 remains unaccepted
   while Pro reviews the dedicated-state-root successor and until that successor
   passes official login, live isolation, and exact-SHA review.
+- The dedicated-state successor later passed official ChatGPT authentication
+  and the real bounded proposal round trip on 2026-07-21. A first authenticated
+  inventory check correctly failed closed on raw JSON object-order-sensitive
+  schema fingerprints; the surgical successor canonicalizes object key order
+  before hashing while retaining every schema value and array order. Focused
+  regression coverage accepts deep key reordering and still rejects semantic
+  schema drift. The replacement sanitized receipt proves exactly one fixed MCP,
+  zero inherited servers, the two expected tool calls, one validated ephemeral
+  proposal, and Apply disabled; the 1440x900 live review capture has zero browser
+  warnings/errors. E1-WP3 remains unaccepted until the corrected exact head is
+  pushed, hosted verification passes, independent audit is clean, and Pro gives
+  the final exact-head package verdict. E1-WP4 and Kimi remain blocked.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
     and deterministic proposal/application path. Pro also required complete visual

@@ -469,6 +469,18 @@ async function loadExactMcpStatus(): Promise<unknown> {
   };
 }
 
+function reverseJsonObjectKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(reverseJsonObjectKeys);
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .reverse()
+        .map(([key, child]) => [key, reverseJsonObjectKeys(child)]),
+    );
+  }
+  return value;
+}
+
 beforeAll(async () => {
   exactMcpStatus = await loadExactMcpStatus();
 });
@@ -508,6 +520,40 @@ describe("E1 streamed proposal round trip", () => {
     expect(E1_MCP_RESOURCE_URI).toBe(
       "storystage-e1://synthetic/scene-context/v1",
     );
+  });
+
+  it("accepts transport key reordering but rejects semantic schema drift", async () => {
+    const reorderedChild = new FakeChild();
+    answerRequests(reorderedChild, () => reverseJsonObjectKeys(exactMcpStatus));
+    await expect(
+      assertExactE1McpInventory(
+        new AppServerClient(asChild(reorderedChild)),
+        null,
+      ),
+    ).resolves.toBeUndefined();
+
+    const changed = structuredClone(exactMcpStatus) as {
+      data: [
+        {
+          tools: {
+            get_scene_context: {
+              inputSchema: {
+                properties: { schemaVersion: { const: number } };
+              };
+            };
+          };
+        },
+      ];
+    };
+    changed.data[0].tools.get_scene_context.inputSchema.properties.schemaVersion.const = 2;
+    const changedChild = new FakeChild();
+    answerRequests(changedChild, () => changed);
+    await expect(
+      assertExactE1McpInventory(
+        new AppServerClient(asChild(changedChild)),
+        null,
+      ),
+    ).rejects.toThrow("schemas did not match the accepted boundary");
   });
 
   it("uses the typed official ChatGPT login lifecycle without persisting its URL", async () => {
