@@ -1,18 +1,34 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `62`
+Inbox-Version: `63`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F3-WP1-SCOPE-WORKSPACE-FOUNDATION`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `38969c4400e2a9c84a59346c28f7a72d5f9492bf`
 Required-Work-Branch: `agent/kimi-f3-wp1-scope-workspace-foundation`
-Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp1-scope-workspace-foundation-v62.md`
+Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp1-tab-semantics-correction-v63.md`
 Issue: `#72`
 
 ## Current instruction
 
-Version 62 retries the same bounded F3-WP1 assignment after Version 61 posted
+Version 63 rejects PR #78 exact head
+`8bd3ed8e6caabc7b23ea453280740f91d531e952` for two bounded review defects:
+the Director tabs do not provide valid single-tab-stop semantics, and the
+handback/PR evidence count says 12/12 while the committed report contains 14
+checks. Continue only on the existing F3-WP1 work branch, apply the exact
+Version 63 correction brief, add focused regressions, correct the evidence
+claim, push one immutable successor, update the PR/handback, and exit. Do not
+begin F3-WP2 or backend work.
+
+Version 63 supersedes Version 62 as the active correction. Version 62 remains
+below as historical traceability and must not relaunch.
+
+---
+
+Previous Version 62 instruction:
+
+Version 62 retried the same bounded F3-WP1 assignment after Version 61 posted
 its claim but could not edit source. The watcher had launched Kimi in its
 validation-only no-checkout clone, while Kimi's safely created clean worktree
 was outside the session root. No source file changed, committed, or pushed.
@@ -23,7 +39,7 @@ ChatGPT Pro, and two independent audits accepted it. It merged at
 Version 62 brief, publish the exact handback/draft PR, then exit. Do not begin
 F3-WP2 or backend work.
 
-Version 62 supersedes Version 61. Version 61 remains below as historical
+Version 62 superseded Version 61. Version 61 remains below as historical
 traceability and must not relaunch.
 
 ---
