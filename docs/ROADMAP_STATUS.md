@@ -26,16 +26,16 @@ checks:
   hostedTarget: live-pr-head
 verdicts:
   codex: e1-wp3-select-dedicated-codex-state-root-and-official-app-server-chatgpt-login-after-redacted-table-rejected
-  pro: e1-wp3-genuine-credential-boundary-blocker-exact-04d9fdfa40574bbcc89f6364623245ec5e784949
+  pro: e1-wp3-dedicated-codex-state-and-official-login-architecture-accepted-exact-07d2ccf735edc11b6a8de129bd478a986551aa9a-conditional-on-doc-fix-and-hosted-pass
   preston: authorize-e1-wp3-redacted-mcp-name-compatibility-adapter-fail-closed-no-credential-access-and-standing-dependency-ordered-continuation-2026-07-21
 blockers:
-  - ChatGPT Pro architecture review is pending for the dedicated Codex-owned state root and official App Server login successor
+  - The exact documentation successor removing the obsolete human-table exception must pass hosted verification before implementation resumes
   - The dedicated state root will require one official interactive Sign in with ChatGPT before the live authenticated round trip can be accepted
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
   - E1-WP4 remains dependency-blocked until E1-WP3 is accepted; F3, backend, and Kimi implementation remain blocked by their roadmap dependencies
 nextAuthorizedAction:
-  type: PRO_REVIEW_E1_WP3_DEDICATED_CODEX_STATE_AUTH_ARCHITECTURE
-  text: Obtain exact-SHA Pro architecture review, then implement only the accepted dedicated-state-root and official App Server ChatGPT-login successor; do not read, copy, link, or enumerate global Codex config or credentials.
+  type: HOSTED_VERIFY_E1_WP3_ARCHITECTURE_CORRECTION_THEN_IMPLEMENT
+  text: Push and verify the documentation correction required by Pro, then implement only the accepted dedicated-state-root and official App Server ChatGPT-login successor; do not read, copy, link, or enumerate global Codex config or credentials.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -104,6 +104,13 @@ verification from the live PR checks.
   browser flow owns authentication and persistence inside that dedicated state
   root. StoryStage may observe typed auth state and open the returned URL, but
   must never read, copy, link, log, back up, or migrate Codex credential files.
+- ChatGPT Pro accepted that architecture at exact
+  `07d2ccf735edc11b6a8de129bd478a986551aa9a`, subject to removing the obsolete
+  human-table exception from the milestone and obtaining hosted PASS on the
+  corrected exact head. Pro requires a fixed non-roaming local state root,
+  inherited `CODEX_HOME` removal, typed ChatGPT login only, zero credential-file
+  reads, exact auth URL/correlation checks, double exact-one MCP verification,
+  and an absolute no-prompt-before-proof rule.
 - E1-WP3 previously blocked on PR #64. Final Sol-high audit and ChatGPT Pro found that
   pinned Codex 0.144.1 `mcp list --json` returns raw configured MCP environment
   and header values. StoryStage used that structured output only to discover

@@ -10,9 +10,11 @@
 - Decomposition approval: Preston accepted G0 and the dependency-ordered
   E1-WP1 through E1-WP4 plan on 2026-07-20
 - Current authorization: E1-WP3 through issue #62 at exact base
-  `4319967eac13dd628eb863dfb29f7bff3c83ffeb`, including Preston's 2026-07-21
-  redacted MCP-name compatibility amendment. Standing continuation authority
-  applies only after each dependency-ordered package passes its existing gates.
+  `4319967eac13dd628eb863dfb29f7bff3c83ffeb`. The redacted-table adapter was
+  rejected before implementation; ChatGPT Pro accepted the dedicated Codex
+  state/login successor at exact `07d2ccf735edc11b6a8de129bd478a986551aa9a`.
+  Standing continuation authority applies only after each dependency-ordered
+  package passes its existing gates.
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 
@@ -160,10 +162,9 @@ E1-WP3 through issue #62 and a separate exact-base `START_NOW` update.
 
 **Primary invariant:** the host can turn App Server events into an understandable
 proposal/approval experience without interpreting conversation/agent terminal
-text or applying it. The sole compatibility exception is the pinned, redacted
-human `codex mcp list` server-name table authorized by Preston on 2026-07-21;
-it must be parsed internally with an exact grammar and fail closed on any
-unknown shape without reading JSON inventory or credential-bearing fields.
+text or applying it. No compatibility exception exists: all terminal-based MCP
+discovery is prohibited. Isolation must come from the dedicated Codex-owned
+state root and be proven through typed App Server APIs before any prompt.
 
 **Tasks**
 
@@ -245,6 +246,16 @@ link, log, back up, export, or migrate those credential files. Acceptance still
 requires exact-one MCP proof before prompting, a successful official interactive
 login, the live schema-valid proposal round trip, hosted verification, and an
 exact-SHA Pro verdict. This architecture candidate does not start E1-WP4.
+
+**Pro architecture verdict (2026-07-21):** ACCEPTED at exact
+`07d2ccf735edc11b6a8de129bd478a986551aa9a`, conditional on this removal of the
+obsolete human-table exception and hosted PASS on the corrected exact head.
+Implementation must remove inherited `CODEX_HOME`, set only the canonical
+dedicated root, and require `initialize.codexHome` to match. StoryStage may
+create/select/pass the root but must treat all child state as opaque. The host
+must use only typed ChatGPT account/login events, retain auth URL/login ID only
+in memory, validate and correlate them exactly, prove one fixed MCP globally
+and thread-scoped, and prohibit every `turn/start` until both proofs pass.
 
 ### E1-WP4 - Failure, security, and feasibility gate
 
