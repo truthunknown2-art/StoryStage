@@ -554,6 +554,31 @@ describe("E1 streamed proposal round trip", () => {
         null,
       ),
     ).rejects.toThrow("schemas did not match the accepted boundary");
+
+    const reorderedArray = structuredClone(exactMcpStatus) as {
+      data: [
+        {
+          tools: {
+            submit_direction_proposal: {
+              inputSchema: { required: string[] };
+            };
+          };
+        },
+      ];
+    };
+    const required =
+      reorderedArray.data[0].tools.submit_direction_proposal.inputSchema
+        .required;
+    expect(required.length).toBeGreaterThan(1);
+    required.reverse();
+    const reorderedArrayChild = new FakeChild();
+    answerRequests(reorderedArrayChild, () => reorderedArray);
+    await expect(
+      assertExactE1McpInventory(
+        new AppServerClient(asChild(reorderedArrayChild)),
+        null,
+      ),
+    ).rejects.toThrow("schemas did not match the accepted boundary");
   });
 
   it("uses the typed official ChatGPT login lifecycle without persisting its URL", async () => {
@@ -825,6 +850,51 @@ describe("E1 streamed proposal round trip", () => {
     expect(() => duplicate.consume(started)).toThrow(
       "repeated a tool-call identity",
     );
+
+    const secondSubmission = new E1ProposalEventAdapter();
+    secondSubmission.startSession(threadId);
+    secondSubmission.consume(notification("turn/started", startedTurn()));
+    secondSubmission.consume(
+      lifecycle(
+        "item/started",
+        toolItem("tool-context", "get_scene_context", "inProgress"),
+      ),
+    );
+    secondSubmission.consume(
+      lifecycle(
+        "item/completed",
+        toolItem("tool-context", "get_scene_context", "completed", {
+          content: [],
+        }),
+      ),
+    );
+    secondSubmission.consume(
+      lifecycle(
+        "item/started",
+        toolItem("tool-proposal", "submit_direction_proposal", "inProgress"),
+      ),
+    );
+    secondSubmission.consume(
+      lifecycle(
+        "item/completed",
+        toolItem("tool-proposal", "submit_direction_proposal", "completed", {
+          content: [],
+          structuredContent: receipt,
+        }),
+      ),
+    );
+    expect(() =>
+      secondSubmission.consume(
+        lifecycle(
+          "item/started",
+          toolItem(
+            "tool-proposal-second",
+            "submit_direction_proposal",
+            "inProgress",
+          ),
+        ),
+      ),
+    ).toThrow("out of bounded order");
   });
 
   it("rejects typed deltas, items, and progress after terminal completion", () => {

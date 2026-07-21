@@ -587,7 +587,8 @@ export class E1ProposalEventAdapter {
         this.turnCompleted = true;
         if (
           completed.turn.status === "completed" &&
-          (this.completedToolCount("get_scene_context") !== 1 ||
+          (this.toolCalls.size !== 2 ||
+            this.completedToolCount("get_scene_context") !== 1 ||
             this.completedToolCount("submit_direction_proposal") !== 1)
         ) {
           throw protocolError(
@@ -678,7 +679,8 @@ export class E1ProposalEventAdapter {
       if (
         (tool === "get_scene_context" && this.toolCalls.size !== 0) ||
         (tool === "submit_direction_proposal" &&
-          this.completedToolCount("get_scene_context") !== 1)
+          (this.completedToolCount("get_scene_context") !== 1 ||
+            this.toolCalls.size !== 1))
       ) {
         throw protocolError(
           "The proposal turn used tools out of bounded order.",
