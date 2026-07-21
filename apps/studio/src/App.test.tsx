@@ -172,7 +172,9 @@ describe("F1 — Projects + Create", () => {
     );
     expect(studio).toHaveTextContent("Reference board — not animation");
     expect(studio).toHaveTextContent(/no imagery,\s*animation,\s*audio,\s*or render exists/i);
-    expect(studio).toHaveTextContent("Director controls arrive in F3");
+    expect(
+      within(studio).getByRole("tablist", { name: "Director workspace" }),
+    ).toBeInTheDocument();
     expect(
       within(studio).getByRole("button", { name: /Back to projects/ }),
     ).toBeEnabled();
@@ -341,7 +343,19 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     const user = userEvent.setup();
     const studio = await openDemoStudio(user);
 
-    expect(studio).toHaveTextContent("Director controls arrive in F3");
+    // F3-WP1 Director tabs show the shared scope with truthful copy only.
+    expect(
+      within(studio).getByRole("tablist", { name: "Director workspace" }),
+    ).toBeInTheDocument();
+    expect(
+      within(studio).getByRole("tab", { name: "Direct" }),
+    ).toBeInTheDocument();
+    expect(
+      within(studio).getByRole("tab", { name: "Visual" }),
+    ).toBeInTheDocument();
+    expect(
+      within(studio).getByRole("tab", { name: "Motion" }),
+    ).toBeInTheDocument();
     expect(
       within(studio).queryByRole("button", { name: /Apply/i }),
     ).not.toBeInTheDocument();
@@ -358,7 +372,9 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
       within(studio).getByRole("button", { name: "Export" }),
     ).toBeDisabled();
     expect(
-      studio.textContent?.includes("A real preview arrives after the WP2 Studio playhead work."),
+      studio.textContent?.includes(
+        "Preview stays disabled in F3-WP1 — this package is scope and workspace foundation only; there is no media to preview.",
+      ),
     ).toBe(true);
     expect(
       studio.textContent?.includes("Export unlocks when production services connect."),
@@ -665,5 +681,247 @@ describe("F2-WP3 — keyboard navigation and responsive quality", () => {
     expect(compactBlock, "compact stacked layout rule").not.toBeNull();
     // Visible keyboard focus contract is global.
     expect(css).toContain(":focus-visible");
+  });
+});
+
+describe("F3-WP1 — shared beat scope and Director tabs", () => {
+  async function openDemoStudio(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: /Open local demo project The Storylight in the Little Wood/,
+      }),
+    );
+    return screen.findByTestId("pv1-studio");
+  }
+
+  const rail = (studio: HTMLElement) =>
+    within(studio).getByRole("navigation", { name: "Episode hierarchy" });
+  const scopeHeader = (studio: HTMLElement) =>
+    within(studio).getByRole("navigation", { name: "Current scope" });
+  const beatCard = (studio: HTMLElement) =>
+    within(studio).getByRole("region", { name: "Selected beat" });
+
+  it("drives rail, beat board, scope header, and Director tab from one selected beat", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    // Initial shared scope: Scene 1, Beat 1.
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "The Storylight in the Little Wood",
+    );
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "Sequence 1 · A quiet ordinary",
+    );
+    expect(scopeHeader(studio)).toHaveTextContent("Scene 1 · The Home Nook");
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "Beat 1 · Morning light through the round window",
+    );
+    expect(beatCard(studio)).toHaveTextContent("Beat 1 of 2 · 70s");
+    expect(beatCard(studio)).toHaveTextContent(
+      "Morning light through the round window",
+    );
+    expect(
+      within(studio).getByRole("tab", { name: "Direct" }),
+    ).toHaveAttribute("aria-selected", "true");
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Scope: Scene 1 · Beat 1 — Morning light through the round window",
+    );
+    const beatOne = within(rail(studio)).getByRole("button", {
+      name: /Beat 1 Morning light through the round window/,
+    });
+    const beatTwo = within(rail(studio)).getByRole("button", {
+      name: /Beat 2 A shelf of unfinished stories/,
+    });
+    expect(beatOne).toHaveAttribute("aria-current", "true");
+    expect(beatTwo).not.toHaveAttribute("aria-current");
+
+    // Selecting Beat 2 in the rail synchronizes every surface.
+    await user.click(beatTwo);
+    expect(beatTwo).toHaveAttribute("aria-current", "true");
+    expect(beatOne).not.toHaveAttribute("aria-current");
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "Beat 2 · A shelf of unfinished stories",
+    );
+    expect(scopeHeader(studio)).not.toHaveTextContent(
+      "Beat 1 · Morning light through the round window",
+    );
+    expect(beatCard(studio)).toHaveTextContent("Beat 2 of 2 · 80s");
+    expect(beatCard(studio)).toHaveTextContent("A shelf of unfinished stories");
+    expect(beatCard(studio)).not.toHaveTextContent(
+      "Morning light through the round window",
+    );
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Scope: Scene 1 · Beat 2 — A shelf of unfinished stories",
+    );
+  });
+
+  it("selects the new scene's first beat exactly once and clears stale beat state", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    // Own Beat 2 in Scene 1, then change scenes from the rail.
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 A shelf of unfinished stories/,
+      }),
+    );
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "Beat 2 · A shelf of unfinished stories",
+    );
+
+    await user.click(
+      within(rail(studio)).getByRole("button", { name: /Scene 2 Forest Path/ }),
+    );
+
+    // First beat of the new scene is selected everywhere; nothing stale.
+    expect(scopeHeader(studio)).toHaveTextContent("Scene 2 · Forest Path");
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "Beat 1 · Ollo bounces ahead of Tix",
+    );
+    expect(beatCard(studio)).toHaveTextContent("Beat 1 of 2 · 85s");
+    expect(beatCard(studio)).toHaveTextContent("Ollo bounces ahead of Tix");
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Scope: Scene 2 · Beat 1 — Ollo bounces ahead of Tix",
+    );
+    expect(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 1 Ollo bounces ahead of Tix/,
+      }),
+    ).toHaveAttribute("aria-current", "true");
+    // No stale beat ownership: every rendered beat row belongs to scene-2,
+    // and the previous scene's beats are gone from the DOM.
+    const beatRows = studio.querySelectorAll("[data-beat-for]");
+    expect(beatRows.length).toBe(2);
+    for (const row of beatRows)
+      expect(row.getAttribute("data-beat-for")).toBe("scene-2");
+    expect(studio).not.toHaveTextContent("A shelf of unfinished stories");
+
+    // The same deterministic reset holds from the overview surface, and
+    // returning to Scene 1 does not resurrect the earlier Beat 2 selection.
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 A golden glow between the ferns/,
+      }),
+    );
+    await user.click(
+      within(
+        within(studio).getByRole("navigation", { name: "Episode overview" }),
+      ).getByRole("button", { name: /Scene 1 The Home Nook/ }),
+    );
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "Beat 1 · Morning light through the round window",
+    );
+    expect(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 1 Morning light through the round window/,
+      }),
+    ).toHaveAttribute("aria-current", "true");
+    expect(beatCard(studio)).toHaveTextContent("Beat 1 of 2 · 70s");
+  });
+
+  it("keeps Director tabs as real local state with truthful scope copy and keyboard support", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    const direct = within(studio).getByRole("tab", { name: "Direct" });
+    const visual = within(studio).getByRole("tab", { name: "Visual" });
+    const motion = within(studio).getByRole("tab", { name: "Motion" });
+    expect(direct).toHaveAttribute("aria-selected", "true");
+    expect(visual).toHaveAttribute("aria-selected", "false");
+    expect(motion).toHaveAttribute("aria-selected", "false");
+    expect(direct).toHaveAttribute("tabindex", "0");
+    expect(visual).toHaveAttribute("tabindex", "-1");
+    expect(motion).toHaveAttribute("tabindex", "-1");
+    for (const tab of [direct, visual, motion]) {
+      const panelId = tab.getAttribute("aria-controls");
+      expect(panelId).toBeTruthy();
+      expect(document.getElementById(panelId!)).toHaveAttribute(
+        "aria-labelledby",
+        tab.id,
+      );
+    }
+    expect(
+      within(studio).getAllByRole("tabpanel", { hidden: true }),
+    ).toHaveLength(3);
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "nothing here changes the plan yet",
+    );
+
+    await user.click(visual);
+    expect(visual).toHaveAttribute("aria-selected", "true");
+    expect(visual).toHaveAttribute("tabindex", "0");
+    expect(direct).toHaveAttribute("aria-selected", "false");
+    expect(direct).toHaveAttribute("tabindex", "-1");
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Visual direction (art, camera, lighting) is not editable in this package.",
+    );
+    // The tab still reflects the same shared beat scope.
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Scope: Scene 1 · Beat 1 — Morning light through the round window",
+    );
+
+    // Movement derives from the focused tab, even when it is not selected.
+    direct.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(visual).toHaveAttribute("aria-selected", "true");
+    expect(visual).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+    expect(motion).toHaveAttribute("aria-selected", "true");
+    expect(motion).toHaveFocus();
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Motion and performance direction arrive later.",
+    );
+    await user.keyboard("{Home}");
+    expect(direct).toHaveAttribute("aria-selected", "true");
+    expect(direct).toHaveFocus();
+    await user.keyboard("{End}");
+    expect(motion).toHaveAttribute("aria-selected", "true");
+    expect(motion).toHaveFocus();
+    await user.keyboard("{ArrowRight}");
+    expect(direct).toHaveAttribute("aria-selected", "true");
+    expect(direct).toHaveFocus();
+
+    // No editable direction fields, Apply/Undo/Redo, or fake controls.
+    const inspector = within(studio).getByRole("complementary", {
+      name: "Studio inspector",
+    });
+    expect(within(inspector).queryByRole("textbox")).not.toBeInTheDocument();
+    expect(within(inspector).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(
+      within(inspector).queryByRole("button", { name: /Apply|Undo|Redo/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("updates the permanent scope header across scenes, beats, and tabs", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Scene 6 Folded Hills/,
+      }),
+    );
+    expect(scopeHeader(studio)).toHaveTextContent("Sequence 3 · The journey");
+    expect(scopeHeader(studio)).toHaveTextContent("Scene 6 · Folded Hills");
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "Beat 1 · Paper hills unfold into a valley",
+    );
+
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 The Storylight shows the doorway/,
+      }),
+    );
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "Beat 2 · The Storylight shows the doorway",
+    );
+    expect(scopeHeader(studio)).not.toHaveTextContent("Beat 1 · Paper hills");
+
+    // Tab changes never alter the shared scope.
+    await user.click(within(studio).getByRole("tab", { name: "Motion" }));
+    expect(scopeHeader(studio)).toHaveTextContent(
+      "Beat 2 · The Storylight shows the doorway",
+    );
   });
 });
