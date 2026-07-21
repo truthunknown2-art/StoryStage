@@ -85,7 +85,7 @@ and observe Codex-owned account state without owning authentication material.
 - completion only when the exact runtime/schema can be reproduced from a clean
   lab checkout or the package fails with a documented blocker.
 
-**Candidate status (2026-07-20):** draft PR #55 implements only E1-WP1 at
+**Accepted package status (2026-07-20):** PR #55 implements only E1-WP1 at
 content commit `dcd75cf1affb8547c74bdbd66a4d7614761c2cc9`. The pinned
 Windows runtime/hash, canonical stable schema, authenticated account/model/
 usage observation, ephemeral thread/turn interrupt, matching interrupted
@@ -94,9 +94,13 @@ focused tests, installed-schema check, privacy check, and root verification pass
 locally. The exact-head audit corrections make usage-limit snapshots,
 early-reject promise orderings, missing/mismatched completion, unsupported
 optional-field assumptions, and account-method incompatibility fail closed.
-ChatGPT Pro review and hosted checks are pending. The App Server command's
-experimental label remains a production-packaging risk, and E1-WP2 remains
-blocked.
+ChatGPT Pro accepted exact PR head
+`8b74d6486fe46a891d1217bfcd9e98da6e1f932f`, hosted run `29798603209`
+passed, and the package merged into `product/v1` at
+`ed457eada98dfeecfacb9e081a9803ecf97906ca`. The App Server command's
+experimental label remains a production-packaging risk, the complete E1
+milestone is not accepted, and E1-WP2 remains blocked pending a separate
+exact-base ticket and `START_NOW` update.
 
 ### E1-WP2 - Read-only StoryStage MCP scene context
 
