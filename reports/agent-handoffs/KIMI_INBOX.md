@@ -1,27 +1,46 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `61`
+Inbox-Version: `62`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F3-WP1-SCOPE-WORKSPACE-FOUNDATION`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `38969c4400e2a9c84a59346c28f7a72d5f9492bf`
 Required-Work-Branch: `agent/kimi-f3-wp1-scope-workspace-foundation`
-Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp1-scope-workspace-foundation-v61.md`
+Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp1-scope-workspace-foundation-v62.md`
 Issue: `#72`
 
 ## Current instruction
 
-Version 61 retries the same bounded F3-WP1 assignment after Version 60 failed
-before prompt/model work because installed Kimi 0.27.0 rejected the watcher's
-obsolete `--auto --prompt` combination. PR #75 exact head `2859dcbe...` fixes
-the supported prompt-mode invocation and null-exit receipt, passed local/hosted
-verification and two audits, merged at `product/v1@c5089f69...`, and is
-installed byte-for-byte. Execute only the Version 61 brief, publish the exact
-handback/draft PR, then exit. Do not begin F3-WP2 or backend work.
+Version 62 retries the same bounded F3-WP1 assignment after Version 61 posted
+its claim but could not edit source. The watcher had launched Kimi in its
+validation-only no-checkout clone, while Kimi's safely created clean worktree
+was outside the session root. No source file changed, committed, or pushed.
+PR #77 exact head `b23efda...` makes a fresh, clean, exact-base, version-scoped
+checkout a deterministic fail-closed launch invariant; hosted run 29860607573,
+ChatGPT Pro, and two independent audits accepted it. It merged at
+`product/v1@f34baafd...` and is installed byte-for-byte. Execute only the
+Version 62 brief, publish the exact handback/draft PR, then exit. Do not begin
+F3-WP2 or backend work.
 
-Version 61 supersedes Version 60. Version 60 remains below as historical
+Version 62 supersedes Version 61. Version 61 remains below as historical
 traceability and must not relaunch.
+
+---
+
+Previous Version 61 instruction:
+
+Version 61 retried the same bounded F3-WP1 assignment after Version 60 failed
+before prompt/model work because installed Kimi 0.27.0 rejected the watcher's
+obsolete `--auto --prompt` combination. PR #75 exact head `2859dcbe...` fixed
+the supported prompt-mode invocation and null-exit receipt, passed local/hosted
+verification and two audits, merged at `product/v1@c5089f69...`, and was
+installed byte-for-byte. Version 61 posted its issue claim and created a clean
+local worktree, but the session root remained the validation-only checkout, so
+it made no source change and was stopped before retry.
+
+Version 61 superseded Version 60. Version 60 remains below as historical
+traceability.
 
 ---
 
