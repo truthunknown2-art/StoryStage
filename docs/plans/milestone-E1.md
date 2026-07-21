@@ -85,6 +85,15 @@ and observe Codex-owned account state without owning authentication material.
 - completion only when the exact runtime/schema can be reproduced from a clean
   lab checkout or the package fails with a documented blocker.
 
+**Candidate status (2026-07-20):** draft PR #55 implements only E1-WP1 at
+content commit `fe2909f3bd10a3c5e71f91d79a474ececdb3ea70`. The pinned
+Windows runtime/hash, canonical stable schema, authenticated account/model/
+usage observation, ephemeral thread/turn interrupt, clean shutdown, unchanged
+isolated workspace, redacted receipt, 15 focused tests, installed-schema check,
+privacy check, and root verification pass locally. Review and hosted checks are
+pending. The App Server command's experimental label remains a production-
+packaging risk, and E1-WP2 remains blocked.
+
 ### E1-WP2 - Read-only StoryStage MCP scene context
 
 **Primary invariant:** Codex can see only the bounded synthetic context and
