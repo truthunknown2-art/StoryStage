@@ -161,9 +161,10 @@ export function assertOfficialChatGptAuthUrl(value: string): void {
   } catch {
     throw protocolError("The official ChatGPT sign-in URL was invalid.");
   }
+  const officialHosts = new Set(["auth.openai.com", "chatgpt.com"]);
   if (
     parsed.protocol !== "https:" ||
-    parsed.hostname !== "chatgpt.com" ||
+    !officialHosts.has(parsed.hostname) ||
     parsed.port !== "" ||
     parsed.username !== "" ||
     parsed.password !== ""

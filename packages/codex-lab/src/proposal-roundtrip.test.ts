@@ -391,6 +391,11 @@ describe("E1 streamed proposal round trip", () => {
         "https://chatgpt.com/auth/login?state=opaque",
       ),
     ).not.toThrow();
+    expect(() =>
+      assertOfficialChatGptAuthUrl(
+        "https://auth.openai.com/oauth/authorize?state=opaque",
+      ),
+    ).not.toThrow();
     for (const hostile of [
       "http://chatgpt.com/auth/login",
       "https://chatgpt.com.evil.example/auth/login",
