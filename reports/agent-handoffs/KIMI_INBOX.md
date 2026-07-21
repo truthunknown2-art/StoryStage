@@ -1,27 +1,39 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `64`
+Inbox-Version: `65`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP1-CODEX-REVIEW-CORRECTION`
+Current-Task: `F3-WP1-ACCEPTED-WAIT`
 Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `38969c4400e2a9c84a59346c28f7a72d5f9492bf`
+Accepted-Root-Base: `a4486ce4433d06a9567a0d177b8c95bb427fd147`
 Required-Work-Branch: `NONE`
 Full-Brief: `NONE`
 Issue: `#72`
 
 ## Current instruction
 
-Version 64 cancels the Version 63 model wake before launch. The installed
-clean-workspace watcher correctly requires a new assignment branch to be absent
-locally and remotely, while this review correction must continue PR #78's
-existing branch. Codex will apply only the two already-published exact-head
-review corrections under the operating contract's frontend review-correction
-authority. Kimi remains `WAIT`; do not launch a model, begin F3-WP2, or start
-backend work.
+Version 65 records F3-WP1 acceptance and integration. PR #78 exact head
+`208ceca502c4c20178dbf303c16f85d6facbbaeb` passed Studio 76/76, typecheck,
+build, repository-root verification, exact-head/delta audits, and hosted run
+29866064607 attempt 2, then merged into `product/v1` at
+`a4486ce4433d06a9567a0d177b8c95bb427fd147`. Kimi remains `WAIT`; do not
+launch a model, modify the accepted PR, begin F3-WP2, or start backend work. A
+future frontend package requires a higher inbox version and separate bounded
+ticket.
 
-Version 64 supersedes Version 63 before model launch. Version 63 remains below
-as historical traceability and must not relaunch.
+Version 65 supersedes Version 64. Version 64 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 64 instruction:
+
+Version 64 cancelled the Version 63 model wake before launch. The installed
+clean-workspace watcher correctly requires a new assignment branch to be absent
+locally and remotely, while that review correction had to continue PR #78's
+existing branch. Codex applied only the two published exact-head review
+corrections under the operating contract's frontend review-correction
+authority. Kimi remained `WAIT`; F3-WP2 and backend work stayed blocked.
 
 ---
 
