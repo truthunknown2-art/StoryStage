@@ -35,8 +35,10 @@ work, E1-WP2, E1-WP3, E1-WP4, F3, backend, or any later package. A future Kimi
 assignment requires another higher inbox version with `START_NOW`, an exact
 accepted base, a required work branch, a full brief, and a separate issue.
 
-## Polling instruction
+## Wake-up instruction
 
-Continue the existing read-only 15-minute poll. Report this wait state once
-when version 59 is first observed, then report `no change` on later unchanged
-polls. Do not modify any issue, branch, pull request, or product file.
+Do not keep a Kimi session open to poll or report this wait state. The
+deterministic `StoryStage-KimiInboxWatcher` observes unchanged version 59
+without invoking Kimi. Remain closed until a higher validated `START_NOW`
+assignment launches one fresh bounded process. Do not modify any issue, branch,
+pull request, or product file.
