@@ -10,7 +10,7 @@
   },
   "artifact": {
     "path": "reports/evidence/E1-WP3/director-lab-1440x900.png",
-    "sha256": "1b67a42622936d320d854089e18ae42ce75c72994df24dcaa7291cb9e6d56871"
+    "sha256": "47225f92d9887431e15105706a1fe3ff138eb927b53d2dc14785edaccb04dad3"
   },
   "browserConsole": {
     "errors": 0,
@@ -20,5 +20,10 @@
     "previewAvailable": true,
     "rejectAvailable": true,
     "applyEnabled": false
+  },
+  "mcpIsolation": {
+    "onlyStoryStageMcpEnabled": true,
+    "inheritedServerCount": 2,
+    "serverNamesPersisted": false
   }
 }

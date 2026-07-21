@@ -5,6 +5,7 @@ import type { ZodType } from "zod";
 import {
   launchE1ProposalAppServer,
   listConfiguredMcpServerNames,
+  verifyE1McpIsolation,
   type AppServerClient,
   type AppServerInboundMessage,
 } from "./app-server";
@@ -89,6 +90,10 @@ export type E1ProposalRoundTripResult = {
     rejectAvailable: boolean;
     applyEnabled: false;
     applyReason: string;
+  };
+  isolation: {
+    onlyStoryStageMcpEnabled: true;
+    inheritedServerCount: number;
   };
 };
 
@@ -275,6 +280,10 @@ export class E1ProposalEventAdapter {
     return this.turnId;
   }
 
+  public hasTurnCompleted(): boolean {
+    return this.turnCompleted;
+  }
+
   private consumeItem(
     method: "item/started" | "item/completed",
     value: unknown,
@@ -402,6 +411,10 @@ export async function runE1ProposalRoundTrip(
     listConfiguredMcpServers?: (
       executablePath: string,
     ) => Promise<readonly string[]>;
+    verifyMcpIsolation?: (
+      executablePath: string,
+      configuredServerNames: readonly string[],
+    ) => Promise<void>;
     launch?: (
       executablePath: string,
       configuredServerNames: readonly string[],
@@ -419,6 +432,10 @@ export async function runE1ProposalRoundTrip(
     const configuredServerNames = await (
       options.listConfiguredMcpServers ?? listConfiguredMcpServerNames
     )(runtime.executablePath);
+    await (options.verifyMcpIsolation ?? verifyE1McpIsolation)(
+      runtime.executablePath,
+      configuredServerNames,
+    );
     client = (options.launch ?? launchE1ProposalAppServer)(
       runtime.executablePath,
       configuredServerNames,
@@ -488,15 +505,33 @@ export async function runE1ProposalRoundTrip(
       );
     }
 
+    const requestInterrupt = () => {
+      if (
+        interruptPromise ||
+        !client ||
+        !adapter.getTurnId() ||
+        adapter.hasTurnCompleted()
+      )
+        return;
+      adapter.requestCancellation();
+      interruptPromise = client.request("turn/interrupt", {
+        threadId,
+        turnId: adapter.getTurnId(),
+      });
+    };
     const unsubscribe = client.subscribeInbound((message) => {
       if (streamFailure) return;
       try {
         adapter.consume(message);
+        if (options.signal?.aborted) requestInterrupt();
       } catch (error) {
         streamFailure = error;
         adapter.reportError(error);
+        requestInterrupt();
       }
     });
+    const abortListener = () => requestInterrupt();
+    options.signal?.addEventListener("abort", abortListener);
     const startedNotification = client.waitForNotification(
       "turn/started",
       E1_PROPOSAL_TURN_TIMEOUT_MS,
@@ -518,17 +553,6 @@ export async function runE1ProposalRoundTrip(
       },
       E1_PROPOSAL_TURN_TIMEOUT_MS,
     );
-
-    const requestInterrupt = () => {
-      if (interruptPromise || !client || !adapter.getTurnId()) return;
-      adapter.requestCancellation();
-      interruptPromise = client.request("turn/interrupt", {
-        threadId,
-        turnId: adapter.getTurnId(),
-      });
-    };
-    const abortListener = () => requestInterrupt();
-    options.signal?.addEventListener("abort", abortListener);
 
     try {
       const started = parseResponse(
@@ -593,6 +617,12 @@ export async function runE1ProposalRoundTrip(
           applyReason:
             "E1-WP3 validates an ephemeral proposal only; apply and persistence are outside this package.",
         },
+        isolation: {
+          onlyStoryStageMcpEnabled: true,
+          inheritedServerCount: configuredServerNames.filter(
+            (name) => name !== E1_MCP_SERVER_NAME,
+          ).length,
+        },
       };
     } finally {
       options.signal?.removeEventListener("abort", abortListener);
@@ -604,7 +634,10 @@ export async function runE1ProposalRoundTrip(
     }
     throw error;
   } finally {
-    if (client) await client.close();
-    if (workspace) await rm(workspace, { recursive: true, force: true });
+    try {
+      if (client) await client.close();
+    } finally {
+      if (workspace) await rm(workspace, { recursive: true, force: true });
+    }
   }
 }

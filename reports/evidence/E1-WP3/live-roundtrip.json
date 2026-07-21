@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "package": "E1-WP3",
   "source": "live-pinned-runtime",
-  "observedAt": "2026-07-21T06:24:20.703Z",
+  "observedAt": "2026-07-21T06:45:25.196Z",
   "runtime": {
     "packageVersion": "0.144.1",
     "cliVersion": "codex-cli 0.144.1",
@@ -20,13 +20,9 @@
     "projectId": "project-ollo-cloud-parade-lab",
     "sceneId": "scene-cloud-garden",
     "beatId": "beat-windbell-discovery",
-    "summary": "Hold a gentle connection, then favor the wind bell’s first tiny chime.",
-    "rationale": "This keeps Ollo’s invitation calm and readable while preserving the silver fern’s foreground depth until the bell makes its first sound.",
+    "summary": "Emphasize Ollo's quiet listening and the wind bell's first tiny chime.",
+    "rationale": "This keeps the discovery beat gentle and reassuring while preserving the wind bell behind the silver fern until the chime.",
     "changes": [
-      {
-        "kind": "camera-intent",
-        "intent": "medium-connection"
-      },
       {
         "kind": "performance-cue",
         "entityId": "character-ollo",
@@ -129,31 +125,31 @@
     },
     {
       "sequence": 21,
-      "kind": "tool-started",
-      "tool": "get_scene_context"
+      "kind": "agent-delta"
     },
     {
       "sequence": 22,
-      "kind": "tool-completed",
-      "tool": "get_scene_context"
+      "kind": "agent-delta"
     },
     {
       "sequence": 23,
       "kind": "tool-started",
-      "tool": "submit_direction_proposal"
+      "tool": "get_scene_context"
     },
     {
       "sequence": 24,
       "kind": "tool-completed",
-      "tool": "submit_direction_proposal"
+      "tool": "get_scene_context"
     },
     {
       "sequence": 25,
-      "kind": "agent-delta"
+      "kind": "tool-started",
+      "tool": "submit_direction_proposal"
     },
     {
       "sequence": 26,
-      "kind": "agent-delta"
+      "kind": "tool-completed",
+      "tool": "submit_direction_proposal"
     },
     {
       "sequence": 27,
@@ -333,38 +329,14 @@
     },
     {
       "sequence": 71,
-      "kind": "agent-delta"
-    },
-    {
-      "sequence": 72,
-      "kind": "agent-delta"
-    },
-    {
-      "sequence": 73,
-      "kind": "agent-delta"
-    },
-    {
-      "sequence": 74,
-      "kind": "agent-delta"
-    },
-    {
-      "sequence": 75,
-      "kind": "agent-delta"
-    },
-    {
-      "sequence": 76,
-      "kind": "agent-delta"
-    },
-    {
-      "sequence": 77,
-      "kind": "agent-delta"
-    },
-    {
-      "sequence": 78,
       "kind": "turn-completed",
       "status": "completed"
     }
   ],
+  "isolation": {
+    "onlyStoryStageMcpEnabled": true,
+    "inheritedServerCount": 2
+  },
   "reviewAuthority": {
     "previewAvailable": true,
     "rejectAvailable": true,

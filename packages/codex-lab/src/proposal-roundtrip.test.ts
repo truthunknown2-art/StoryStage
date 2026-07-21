@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readdir } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { AppServerClient } from "./app-server";
 import { E1_MCP_SERVER_NAME } from "./mcp-scene-context";
 import {
@@ -127,9 +129,9 @@ function driveSuccessfulAdapter(adapter: E1ProposalEventAdapter): void {
   adapter.consume(notification("turn/completed", completedTurn()));
 }
 
-function createSuccessfulClient(): AppServerClient {
+function createSuccessfulClient(closeCode = 0): AppServerClient {
   const child = new FakeChild();
-  child.stdin.once("finish", () => child.emit("exit", 0, null));
+  child.stdin.once("finish", () => child.emit("exit", closeCode, null));
   answerRequests(child, (method) => {
     switch (method) {
       case "initialize":
@@ -202,6 +204,90 @@ function createSuccessfulClient(): AppServerClient {
     }
   });
   return new AppServerClient(asChild(child));
+}
+
+function createInterruptibleClient(
+  mode: "before-tool" | "during-stream" | "forbidden",
+): { client: AppServerClient; getInterruptCount: () => number } {
+  const child = new FakeChild();
+  let interruptCount = 0;
+  let finished = false;
+  let resolveTurn:
+    | ((value: { turn: ReturnType<typeof completedTurn>["turn"] }) => void)
+    | null = null;
+  child.stdin.once("finish", () => child.emit("exit", 0, null));
+  const emit = (method: string, params: unknown) =>
+    child.stdout.write(
+      `${JSON.stringify({ jsonrpc: "2.0", method, params })}\n`,
+    );
+  const finish = (status: "completed" | "interrupted") => {
+    if (finished) return;
+    finished = true;
+    const completed = completedTurn(status);
+    emit("turn/completed", completed);
+    resolveTurn?.({ turn: completed.turn });
+  };
+
+  answerRequests(child, (method) => {
+    switch (method) {
+      case "initialize":
+        return {
+          userAgent: "test",
+          codexHome: "private-test-home",
+          platformFamily: "windows",
+          platformOs: "windows",
+        };
+      case "thread/start":
+        return { thread: { id: threadId } };
+      case "mcpServerStatus/list":
+        return {
+          data: [
+            {
+              name: E1_MCP_SERVER_NAME,
+              authStatus: "notRequired",
+              resourceTemplates: [],
+              resources: [],
+              tools: {
+                get_scene_context: {},
+                submit_direction_proposal: {},
+              },
+            },
+          ],
+        };
+      case "turn/start":
+        return new Promise<{ turn: ReturnType<typeof completedTurn>["turn"] }>(
+          (resolve) => {
+            resolveTurn = resolve;
+            queueMicrotask(() => {
+              emit("turn/started", startedTurn());
+              if (mode === "before-tool" || finished) return;
+              emit("item/agentMessage/delta", {
+                threadId,
+                turnId,
+                itemId: "message-1",
+                delta: "Drafting",
+              });
+              if (mode === "during-stream" || finished) return;
+              emit("item/started", {
+                threadId,
+                turnId,
+                item: { id: "command-1", type: "commandExecution" },
+              });
+            });
+          },
+        );
+      case "turn/interrupt":
+        interruptCount += 1;
+        finish("interrupted");
+        return {};
+      default:
+        throw new Error(`Unexpected test request ${method}`);
+    }
+  });
+  return {
+    client: new AppServerClient(asChild(child)),
+    getInterruptCount: () => interruptCount,
+  };
 }
 
 const verifiedRuntime = {
@@ -388,6 +474,7 @@ describe("E1 streamed proposal round trip", () => {
       runE1ProposalRoundTrip({
         verifyRuntime: async () => verifiedRuntime,
         listConfiguredMcpServers: async () => [],
+        verifyMcpIsolation: async () => undefined,
         launch,
       });
 
@@ -401,10 +488,73 @@ describe("E1 streamed proposal round trip", () => {
       rejectAvailable: true,
       applyEnabled: false,
     });
+    expect(first.isolation).toEqual({
+      onlyStoryStageMcpEnabled: true,
+      inheritedServerCount: 0,
+    });
     expect(restarted.events[0]).toMatchObject({
       sequence: 1,
       kind: "session-started",
     });
     expect(restarted.proposal).toEqual(proposal);
+  });
+
+  it.each([
+    ["before-tool", "turn-started"],
+    ["during-stream", "agent-delta"],
+  ] as const)(
+    "interrupts exactly once when cancelled %s",
+    async (mode, abortKind) => {
+      const fixture = createInterruptibleClient(mode);
+      const controller = new AbortController();
+      const result = await runE1ProposalRoundTrip({
+        signal: controller.signal,
+        onEvent: (event) => {
+          if (event.kind === abortKind) controller.abort();
+        },
+        verifyRuntime: async () => verifiedRuntime,
+        listConfiguredMcpServers: async () => [],
+        verifyMcpIsolation: async () => undefined,
+        launch: () => fixture.client,
+      });
+
+      expect(result.state).toBe("cancelled");
+      expect(fixture.getInterruptCount()).toBe(1);
+      expect(result.events.map((event) => event.kind)).toContain(
+        "cancellation-requested",
+      );
+    },
+  );
+
+  it("interrupts a late forbidden event exactly once and fails visibly", async () => {
+    const fixture = createInterruptibleClient("forbidden");
+    await expect(
+      runE1ProposalRoundTrip({
+        verifyRuntime: async () => verifiedRuntime,
+        listConfiguredMcpServers: async () => [],
+        verifyMcpIsolation: async () => undefined,
+        launch: () => fixture.client,
+      }),
+    ).rejects.toThrow("forbidden item type commandExecution");
+    expect(fixture.getInterruptCount()).toBe(1);
+  });
+
+  it("removes the isolated workspace even when shutdown fails", async () => {
+    const listWorkspaces = async () =>
+      (await readdir(tmpdir()))
+        .filter((name) => name.startsWith("storystage-e1-wp3-workspace-"))
+        .sort();
+    const before = await listWorkspaces();
+
+    await expect(
+      runE1ProposalRoundTrip({
+        verifyRuntime: async () => verifiedRuntime,
+        listConfiguredMcpServers: async () => [],
+        verifyMcpIsolation: async () => undefined,
+        launch: () => createSuccessfulClient(1),
+      }),
+    ).rejects.toMatchObject({ code: "APP_SERVER_CRASHED" });
+
+    expect(await listWorkspaces()).toEqual(before);
   });
 });

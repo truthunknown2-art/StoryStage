@@ -152,12 +152,8 @@ export function E1DirectorLabApp({ host }: { host: E1DirectorLabHost }) {
           {previewing ? (
             <section className="preview-panel" aria-label="Proposal preview">
               <span>Read-only preview</span>
-              <strong>Gentle connection → first tiny chime</strong>
-              <p>
-                The selected beat would favor Ollo’s listening cue, soften the
-                foreground fern, and hold the medium connection before the
-                chime. No shot graph was changed.
-              </p>
+              <strong>{model.proposal.summary}</strong>
+              <p>{model.proposal.rationale} No shot graph was changed.</p>
             </section>
           ) : null}
         </article>

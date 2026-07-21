@@ -479,23 +479,30 @@ function tomlString(value: string): string {
   return JSON.stringify(value.replaceAll("\\", "/"));
 }
 
-function quotedTomlKey(value: string): string {
-  if (
-    !value ||
-    value.length > 128 ||
-    [...value].some((character) => character.charCodeAt(0) < 32)
-  ) {
+function tomlBareKey(value: string): string {
+  if (!value || value.length > 128 || !/^[A-Za-z0-9_-]+$/.test(value)) {
     throw new CodexLabError(
       "PROTOCOL_INCOMPATIBLE",
       "The configured MCP inventory contained an invalid server name.",
       "incompatible",
     );
   }
-  return JSON.stringify(value);
+  return value;
 }
 
 export function getE1ProposalAppServerArgs(
   configuredServerNames: readonly string[] = [],
+): readonly string[] {
+  return [
+    "app-server",
+    ...getE1DisabledCapabilityArgs(),
+    ...getE1McpConfigArgs(configuredServerNames),
+    "--stdio",
+  ];
+}
+
+function getE1McpConfigArgs(
+  configuredServerNames: readonly string[],
 ): readonly string[] {
   const tsxCli = join(repositoryRoot, "node_modules", "tsx", "dist", "cli.mjs");
   const mcpCli = join(
@@ -505,16 +512,27 @@ export function getE1ProposalAppServerArgs(
     "src",
     "mcp-cli.ts",
   );
-  const mcpConfig =
-    "mcp_servers={storystage_e1={" +
-    `command=${tomlString(process.execPath)},` +
-    `args=[${tomlString(tsxCli)},${tomlString(mcpCli)}],` +
-    `cwd=${tomlString(repositoryRoot)},enabled=true}}`;
-  const disabledInherited = configuredServerNames.flatMap((name) => [
+  const fixedStoryStage = [
     "-c",
-    `mcp_servers.${quotedTomlKey(name)}.enabled=false`,
-  ]);
-  const disabledCapabilities = [
+    `mcp_servers.storystage_e1.command=${tomlString(process.execPath)}`,
+    "-c",
+    `mcp_servers.storystage_e1.args=[${tomlString(tsxCli)},${tomlString(mcpCli)}]`,
+    "-c",
+    `mcp_servers.storystage_e1.cwd=${tomlString(repositoryRoot)}`,
+    "-c",
+    "mcp_servers.storystage_e1.enabled=true",
+  ];
+  const disabledInherited = configuredServerNames
+    .filter((name) => name !== "storystage_e1")
+    .flatMap((name) => [
+      "-c",
+      `mcp_servers.${tomlBareKey(name)}.enabled=false`,
+    ]);
+  return [...fixedStoryStage, ...disabledInherited];
+}
+
+function getE1DisabledCapabilityArgs(): readonly string[] {
+  return [
     "apps",
     "browser_use",
     "computer_use",
@@ -525,24 +543,19 @@ export function getE1ProposalAppServerArgs(
     "plugins",
     "shell_tool",
   ].flatMap((feature) => ["--disable", feature]);
-  return [
-    "app-server",
-    ...disabledCapabilities,
-    ...disabledInherited,
-    "-c",
-    mcpConfig,
-    "--stdio",
-  ];
 }
 
-export async function listConfiguredMcpServerNames(
+type ConfiguredMcpServer = { name: string; enabled: boolean };
+
+async function readConfiguredMcpServers(
   executablePath: string,
-): Promise<readonly string[]> {
+  configArgs: readonly string[] = [],
+): Promise<readonly ConfiguredMcpServer[]> {
   let stdout: string;
   try {
     const result = await execFileAsync(
       executablePath,
-      ["mcp", "list", "--json"],
+      [...configArgs, "mcp", "list", "--json"],
       {
         encoding: "utf8",
         env: allowlistedEnvironment(),
@@ -576,7 +589,9 @@ export async function listConfiguredMcpServerNames(
         entry &&
         typeof entry === "object" &&
         "name" in entry &&
-        typeof entry.name === "string",
+        typeof entry.name === "string" &&
+        "enabled" in entry &&
+        typeof entry.enabled === "boolean",
     )
   ) {
     throw new CodexLabError(
@@ -585,7 +600,47 @@ export async function listConfiguredMcpServerNames(
       "incompatible",
     );
   }
-  return parsed.map((entry) => entry.name);
+  return parsed.map((entry) => ({
+    name: entry.name,
+    enabled: entry.enabled,
+  }));
+}
+
+export async function listConfiguredMcpServerNames(
+  executablePath: string,
+): Promise<readonly string[]> {
+  return (
+    await readConfiguredMcpServers(
+      executablePath,
+      getE1DisabledCapabilityArgs(),
+    )
+  ).map((entry) => entry.name);
+}
+
+export async function verifyE1McpIsolation(
+  executablePath: string,
+  configuredServerNames: readonly string[],
+): Promise<void> {
+  const effective = await readConfiguredMcpServers(executablePath, [
+    ...getE1DisabledCapabilityArgs(),
+    ...getE1McpConfigArgs(configuredServerNames),
+  ]);
+  const enabled = effective.filter((entry) => entry.enabled);
+  if (
+    enabled.length !== 1 ||
+    enabled[0]?.name !== "storystage_e1" ||
+    effective.some(
+      (entry) =>
+        entry.name !== "storystage_e1" &&
+        !configuredServerNames.includes(entry.name),
+    )
+  ) {
+    throw new CodexLabError(
+      "PROTOCOL_INCOMPATIBLE",
+      "The pinned Codex runtime could not prove an isolated StoryStage MCP inventory.",
+      "incompatible",
+    );
+  }
 }
 
 /** Launches the pinned App Server with one replacement MCP inventory. */

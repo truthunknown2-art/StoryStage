@@ -42,6 +42,7 @@ async function main(): Promise<void> {
       ...(event.kind === "approval-blocked" ? { method: event.method } : {}),
       ...(event.kind === "error" ? { code: event.code } : {}),
     })),
+    isolation: result.isolation,
     reviewAuthority: result.reviewAuthority,
     privacy: {
       rawJsonRpcPersisted: false,

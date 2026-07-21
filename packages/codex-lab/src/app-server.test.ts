@@ -95,15 +95,36 @@ describe("E1 JSONL App Server client", () => {
   });
 
   it("replaces inherited MCP configuration with the fixed StoryStage server", () => {
-    const args = getE1ProposalAppServerArgs(["inherited.one"]);
+    const args = getE1ProposalAppServerArgs([
+      "inherited_one",
+      "inherited-two",
+      "storystage_e1",
+    ]);
     expect(args[0]).toBe("app-server");
     expect(args).toContain("apps");
     expect(args).toContain("shell_tool");
-    expect(args).toContain('mcp_servers."inherited.one".enabled=false');
-    expect(args.at(-2)).toContain("mcp_servers={storystage_e1=");
-    expect(args.at(-2)).toContain("mcp-cli.ts");
+    const fixedIndex = args.findIndex((arg) =>
+      arg.startsWith("mcp_servers.storystage_e1.command="),
+    );
+    const disabledIndex = args.indexOf(
+      "mcp_servers.inherited_one.enabled=false",
+    );
+    const secondDisabledIndex = args.indexOf(
+      "mcp_servers.inherited-two.enabled=false",
+    );
+    expect(fixedIndex).toBeGreaterThan(0);
+    expect(args.join(" ")).toContain("mcp-cli.ts");
+    expect(disabledIndex).toBeGreaterThan(fixedIndex);
+    expect(secondDisabledIndex).toBeGreaterThan(fixedIndex);
+    expect(args).not.toContain("mcp_servers.storystage_e1.enabled=false");
     expect(args.at(-1)).toBe("--stdio");
     expect(args.join(" ")).not.toContain("http://");
     expect(args.join(" ")).not.toContain("https://");
+  });
+
+  it("fails closed when an inherited MCP name cannot be addressed safely", () => {
+    expect(() => getE1ProposalAppServerArgs(["unsafe.name"])).toThrow(
+      "invalid server name",
+    );
   });
 });
