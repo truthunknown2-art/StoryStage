@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: ddddcf1e9281da808c925a06bf25fd52ee43fa66
+lastAcceptedProductHead: ed457eada98dfeecfacb9e081a9803ecf97906ca
 lastAcceptedMilestone: G0
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -10,7 +10,7 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: REVIEW
+  state: ACCEPTED_WAIT
   milestone: E1
   package: E1-WP1
   owner: Codex
@@ -25,16 +25,15 @@ checks:
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp1-audit-corrected-exact-dcd75cf1affb8547c74bdbd66a4d7614761c2cc9
-  pro: accept-exact-2e1fbb0791a9e205d71f7bfaf00d55894dab5475
+  codex: e1-wp1-accepted-integrated-exact-ed457eada98dfeecfacb9e081a9803ecf97906ca
+  pro: accept-exact-8b74d6486fe46a891d1217bfcd9e98da6e1f932f
   preston: accept-g0-authorize-e1-wp1-only-2026-07-20
 blockers:
-  - E1-WP1 corrected exact PR head still requires hosted verification and ChatGPT Pro review
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
   - E1-WP2, E1-WP3, E1-WP4, F3, backend, and Kimi implementation remain unauthorized
 nextAuthorizedAction:
-  type: REVIEW_E1_WP1_EXACT_HEAD
-  text: Review only PR #55 and its immutable E1-WP1 evidence; do not begin E1-WP2.
+  type: WAIT_FOR_SEPARATE_E1_WP2_AUTHORIZATION
+  text: E1-WP1 is accepted and integrated; wait for an explicit exact-base E1-WP2 ticket and START_NOW update.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -59,18 +58,17 @@ verification from the live PR checks.
 
 ## Current state
 
-- Accepted product implementation state still ends at F2 on exact
+- Accepted creator-facing product implementation still ends at F2 on exact
   `87c01f9b...`; G0 is the accepted planning/governance milestone integrated at
   `ddddcf1...` and does not itself implement product capability.
-- On 2026-07-20 Preston explicitly accepted G0 and authorized only the
-  dependency-ordered E1-WP1 feasibility package. Issue #53 is implemented in
-  draft PR #55 from exact base `4ec99eb...`; the pinned runtime, canonical
-  stable schema, redacted authenticated lifecycle receipt, focused checks, and
-  root verification pass at candidate content `dcd75cf...`. The corrected
-  candidate fails closed on successful usage-limit snapshots, early turn RPC
-  rejection, missing or mismatched completion, and non-interrupted terminal
-  states; the real Windows run confirms the matching `turn/completed` event.
-  The exact PR head still requires hosted verification and ChatGPT Pro review.
+- E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
+  Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
+  `29798603209` passed, and the immutable runtime/evidence content is
+  `dcd75cf...`. The real Windows receipt confirms the pinned App Server can
+  observe the signed-in ChatGPT account/model/rate/usage state, run an isolated
+  read-only ephemeral turn, verify matching interrupted completion, preserve
+  the workspace, redact private state, and shut down cleanly. This accepts only
+  E1-WP1, not the complete E1 milestone. Authorization has returned to WAIT;
   E1-WP2, F3, backend product work, and Kimi implementation remain unauthorized.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
