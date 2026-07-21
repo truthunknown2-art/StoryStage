@@ -145,6 +145,7 @@ function createSuccessfulClient(
     authUrl: string;
     complete?: boolean;
     crashAfterStart?: boolean;
+    beforeStartResponse?: () => void;
     onCancel?: () => void;
   },
 ): AppServerClient {
@@ -171,6 +172,7 @@ function createSuccessfulClient(
         };
       case "account/login/start":
         if (!login) throw new Error("Unexpected sign-in request");
+        login.beforeStartResponse?.();
         if (login.crashAfterStart) {
           setTimeout(() => child.emit("exit", 2, null), 0);
         } else if (login.complete !== false) {
@@ -477,6 +479,28 @@ describe("E1 streamed proposal round trip", () => {
       }),
     ).rejects.toMatchObject({ code: "OPERATION_CANCELLED" });
     expect(onCancel).toHaveBeenCalledOnce();
+  });
+
+  it("does not open the browser when cancelled before the login response", async () => {
+    const controller = new AbortController();
+    const openAuthUrl = vi.fn(async () => undefined);
+    const onCancel = vi.fn();
+    await expect(
+      runE1ProposalRoundTrip({
+        ...isolatedTestOptions,
+        signal: controller.signal,
+        openAuthUrl,
+        launch: () =>
+          createSuccessfulClient(0, {
+            authUrl: "https://chatgpt.com/auth/login?state=pre-open-abort-e1",
+            beforeStartResponse: () => controller.abort(),
+            complete: false,
+            onCancel,
+          }),
+      }),
+    ).rejects.toMatchObject({ code: "OPERATION_CANCELLED" });
+    expect(openAuthUrl).not.toHaveBeenCalled();
+    expect(onCancel).not.toHaveBeenCalled();
   });
 
   it("reports an App Server crash during login without waiting for timeout", async () => {

@@ -248,6 +248,39 @@ function waitForLoginCompletion(
   };
 }
 
+async function startChatGptLogin(
+  client: AppServerClient,
+  signal: AbortSignal | undefined,
+): Promise<unknown> {
+  let rejectAbort: (error: Error) => void = () => undefined;
+  const abort = new Promise<never>((_resolve, reject) => {
+    rejectAbort = reject;
+  });
+  const onAbort = () =>
+    rejectAbort(
+      new CodexLabError(
+        "OPERATION_CANCELLED",
+        "Official Sign in with ChatGPT was cancelled.",
+      ),
+    );
+  signal?.addEventListener("abort", onAbort, { once: true });
+  try {
+    return await Promise.race([
+      client.request("account/login/start", { type: "chatgpt" }),
+      abort,
+      client.waitForExit().then(() => {
+        throw new CodexLabError(
+          "APP_SERVER_CRASHED",
+          "The Codex App Server exited while starting official ChatGPT sign-in.",
+          "crashed",
+        );
+      }),
+    ]);
+  } finally {
+    signal?.removeEventListener("abort", onAbort);
+  }
+}
+
 async function requireChatGptAccount(
   client: AppServerClient,
   openAuthUrl: ((url: string) => Promise<void>) | undefined,
@@ -278,15 +311,17 @@ async function requireChatGptAccount(
   }
 
   const completion = waitForLoginCompletion(client, loginTimeoutMs, signal);
+  void completion.promise.catch(() => undefined);
   let loginId: string | undefined;
   try {
     const login = parseResponse(
       accountLoginStartResponseSchema,
-      await client.request("account/login/start", { type: "chatgpt" }),
+      await startChatGptLogin(client, signal),
       "account/login/start",
     );
     loginId = login.loginId;
     assertOfficialChatGptAuthUrl(login.authUrl);
+    throwIfAborted(signal);
     await openAuthUrl(login.authUrl);
     const notification = parseResponse(
       accountLoginCompletedNotificationSchema,

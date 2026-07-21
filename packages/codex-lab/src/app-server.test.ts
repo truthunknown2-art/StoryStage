@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   AppServerClient,
   getE1ProposalAppServerArgs,
@@ -70,14 +70,32 @@ describe("E1 JSONL App Server client", () => {
   });
 
   it("waits for child termination after a shutdown timeout", async () => {
+    vi.useFakeTimers();
     const child = new FakeChild();
+    child.kill.mockImplementation(() => true);
     const client = new AppServerClient(asChild(child));
-
-    await expect(client.close(5)).rejects.toMatchObject({
-      code: "APP_SERVER_TIMEOUT",
-      stateHint: "crashed",
-    });
-    expect(child.kill).toHaveBeenCalledOnce();
+    try {
+      const closing = client.close(5);
+      let settled = false;
+      void closing.then(
+        () => {
+          settled = true;
+        },
+        () => {
+          settled = true;
+        },
+      );
+      await vi.advanceTimersByTimeAsync(5);
+      expect(child.kill).toHaveBeenCalledOnce();
+      expect(settled).toBe(false);
+      child.emit("exit", 1, "SIGTERM");
+      await expect(closing).rejects.toMatchObject({
+        code: "APP_SERVER_TIMEOUT",
+        stateHint: "crashed",
+      });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("delivers notifications and blocked server requests in arrival order", async () => {

@@ -6,6 +6,7 @@ import { CodexLabError } from "./errors";
 
 const execFileAsync = promisify(execFile);
 const WINDOWS_ERROR = "The trusted Windows system boundary is unavailable.";
+const TRUSTED_WINDOWS_ROOT = "C:\\Windows";
 
 function systemError(): CodexLabError {
   return new CodexLabError(
@@ -33,14 +34,20 @@ export async function getTrustedWindowsPowerShell(): Promise<{
     !windir ||
     !win32.isAbsolute(root) ||
     /^(?:\\\\|\/\/)/.test(root) ||
-    !sameWindowsPath(root, windir)
+    !sameWindowsPath(root, windir) ||
+    !sameWindowsPath(root, TRUSTED_WINDOWS_ROOT)
   ) {
     throw systemError();
   }
   const canonicalRoot = await realpath(root).catch(() => {
     throw systemError();
   });
-  if (!sameWindowsPath(canonicalRoot, root)) throw systemError();
+  if (
+    !sameWindowsPath(canonicalRoot, root) ||
+    !sameWindowsPath(canonicalRoot, TRUSTED_WINDOWS_ROOT)
+  ) {
+    throw systemError();
+  }
 
   const executable = win32.join(
     canonicalRoot,
