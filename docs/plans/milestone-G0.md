@@ -30,7 +30,11 @@ the same accepted state and one next authorized action from Git alone.
    default with the user-requested Codex App Server + official ChatGPT sign-in +
    StoryStage MCP direction, add the bounded E1 feasibility milestone, and carry
    the decision through frontend, backend, release, security, and launch work.
-6. **G0-WP6 Governance gate** - exact pushed SHA, checks, Pro audit, and Preston
+6. **G0-WP6 Complete-shot rendering architecture amendment** - assign complete
+   bounded visual shots to Godot and episode assembly/audio/overlays to Remotion;
+   retain the supplied Godot reference analysis and add the two-shot boundary
+   proof before Ollo production work.
+7. **G0-WP7 Governance gate** - exact pushed SHA, checks, Pro audit, and Preston
    acceptance; status returns to WAIT.
 
 ## Non-goals
@@ -42,6 +46,7 @@ automation, or automatic issue of the next package.
 ## Verification and evidence
 
 - `git diff --check`;
+- visual-packet path/hash and complete-shot research-link checks;
 - link/path and milestone/package consistency scan;
 - stale active-phase/authority scan;
 - cold-start simulation from remote files;

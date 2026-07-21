@@ -12,6 +12,15 @@
 
 ## Evidence sources and fixed interpretation
 
+The product-facing hierarchy that E1 must make feasible is retained in
+[`../design/ai-copilot-studio/README.md`](../design/ai-copilot-studio/README.md)
+and its linked
+[`concept board`](../design/ai-copilot-studio/ai-copilot-concept-board.webp):
+New Project offers **Paste a script** or **What's your idea?**, and the same
+dockable AI Director becomes selection-aware inside Studio. E1 does not build
+that Product v1 UI; it proves the event, scope, auth, and proposal states F3 will
+render truthfully.
+
 - [Codex App Server](https://learn.chatgpt.com/docs/app-server.md) is the official
   deep-integration surface for authentication, conversation history, approvals,
   and streamed events. E1 uses its local stdio transport and generated schemas;

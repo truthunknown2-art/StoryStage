@@ -11,7 +11,7 @@ completedMilestones:
 authorization:
   state: PRO_GATE
   milestone: G0
-  package: G0-WP6
+  package: G0-WP7
   owner: Pro
   exactBase: b648ff0c6224d25461aea648fd6337bec96334d2
   branch: agent/codex-g0-ai-native-bridge
@@ -28,7 +28,7 @@ verdicts:
   pro: amendment-review-pending
   preston: null
 blockers:
-  - AI-native amendment requires hosted verification, Pro exact-SHA audit, and Preston acceptance
+  - AI-native, one-template launch-scope, and complete-shot engine amendments require hosted verification, Pro exact-SHA audit, and Preston acceptance
 nextAuthorizedAction:
   type: PRO_AUDIT_ONLY
   text: After hosted verification passes, Pro audits exact PR 50 head; do not start E1, F3, or backend implementation.
@@ -63,12 +63,14 @@ verification from the live PR checks.
   before accepting the gate. No E1, F3, or backend product work is authorized.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   + read-only StoryStage MCP feasibility before F3, then a native AI Director
-  and deterministic proposal/application path. The content candidate is
-  `6df8b2de...` in draft PR #50; exact-head verification and audit are pending.
+  and deterministic proposal/application path. Pro also required complete visual
+  Godot shots plus Remotion episode assembly and a retained UI reference packet.
+  Preston further fixed the private-launch UI to one **Ollo & Friends — Kids
+  Story** template with **Paste a script** and **What's your idea?** entry paths.
+  The content candidate is `6df8b2de...` in draft PR #50; exact-head verification
+  and audit are pending.
 - Kimi must remain `WAIT`; resolve its exact live inbox version and coordination
   head from `origin/agent/kimi-frontend` on every cold start and consistency run.
-- Kimi inbox v56 remains a valid WAIT/no-branch hold while Codex reviews the G0
-  amendment; a higher inbox version is not required merely to keep Kimi waiting.
 - PR #47 is closed, unmerged, and superseded; it grants no F3 authority.
 
 ## Allowed transitions

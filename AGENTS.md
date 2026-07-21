@@ -72,8 +72,14 @@ needs one deliverable, explicit non-goals, and a return condition.
 - Creator-facing product surfaces are only **Projects → Create → Studio**.
 - `packages/contracts` is shared vocabulary, not fixtures.
 - `packages/remotion-runtime` remains deterministic and browser-safe.
-- Godot is the pinned articulated 2D performance worker; Remotion remains the
-  single canonical episode compositor.
+- Godot is the pinned complete-visual-shot renderer: it owns the shot-local
+  character performance, set layers, props, occlusion, parallax, particles,
+  lights/shaders, and camera. Remotion remains the canonical episode editor,
+  audio/overlay authority, preview surface, and delivery renderer.
+- Do not implement the same shot camera, scene layer, or foreground occlusion in
+  both engines. Godot owns visual truth inside a shot; Remotion owns shot order,
+  trims, handles, transitions, narration/dialogue/SFX/music, captions/titles,
+  selected-range playback, stitching, encoding, and delivery.
 - Codex is the first supported in-product AI Director. StoryStage launches a
   pinned/verified local Codex App Server, Codex owns official ChatGPT sign-in
   and token state, and StoryStage exposes only a least-privilege MCP/typed-command

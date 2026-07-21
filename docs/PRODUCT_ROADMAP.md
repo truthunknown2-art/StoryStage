@@ -42,13 +42,14 @@ resume from the files above without reading the old conversation.
 
 ## 2. Product launch definition
 
-StoryStage private launch is a single-user Windows animation studio. It includes
-the Kids/Ollo production path and one Weird History pilot through the same
-project, timeline, audio, renderer, asset lifecycle, and delivery path. It is
-launch-ready only when Preston can:
+StoryStage private launch is a single-user Windows animation studio focused on
+one creator-facing project template: **Ollo & Friends — Kids Story**. The
+architecture remains template-capable, but no second template is displayed or
+required for this release. It is launch-ready only when Preston can:
 
 1. install or unpack one documented build on a clean Windows user profile;
-2. create a project from a screenplay and reopen it after closing the app;
+2. create an Ollo & Friends project either by pasting a screenplay or describing
+   an idea to the native AI Director, and reopen it after closing the app;
 3. review and edit acts, sequences, scenes, beats, direction, assets, rigs,
    narration, SFX, music, and timeline state through Projects → Create → Studio;
 4. use Codex inside StoryStage through official ChatGPT subscription sign-in to
@@ -64,39 +65,45 @@ launch-ready only when Preston can:
 8. complete one accepted 2–3 minute Kids pilot and one reliable 20-minute,
    36,000-frame production/export proof;
 9. recover from an interrupted save/render without corrupting the project;
-10. produce one publishable Weird History pilot through the same application;
-11. download the final MP4 and a diagnostic/project backup without using source
+10. download the final MP4 and a diagnostic/project backup without using source
     code, a terminal, hidden Legacy screens, or a special proof composition.
 
 **Optional extension:** Blender/After Effects specialist-shot bridge, only when
 an accepted shot cannot reasonably be produced by the 2D system.
 
-Private launch excludes accounts, cloud sync, collaboration, billing, a public
-store release, macOS/Linux packaging, generated-video services as the ordinary
-path, mandatory TTS, automatic telemetry, and automatic browser/session control.
+Private launch excludes additional project templates, accounts, cloud sync,
+collaboration, billing, a public store release, macOS/Linux packaging,
+generated-video services as the ordinary path, mandatory TTS, automatic
+telemetry, and automatic browser/session control.
 
 ## 3. Production architecture fixed by this roadmap
 
 ```text
-Show Pack + creative brief or screenplay + grammar + art direction
+Ollo & Friends template + creative brief or screenplay + art direction
   → subscription-backed Codex conversation through App Server + StoryStage MCP
   → editable script hierarchy and/or scoped direction proposal
   → deterministic validation and canonical episode plan
-  → approved assets + Godot character-performance jobs
-  → RGBA character passes + layered environment/camera/audio plan
-  → one Remotion preview/final composition
+  → accepted typed shot intent
+  → Godot complete-visual-shot jobs
+  → verified shot masters/proxies + optional requested auxiliary passes
+  → Remotion episode order/trims/transitions/audio/overlays
+  → selected-range preview or complete episode delivery
   → exact MP4 + project/evidence receipts
 ```
 
 - **Studio:** React creator UI. It never shells out or reads credentials.
 - **Desktop host:** privileged local project, file, device, provider, Godot,
   ffmpeg, and render orchestration behind typed adapters.
-- **Godot 4.x:** pinned open-source articulated 2D worker using documented
+- **Godot 4.x:** pinned open-source complete-visual-shot renderer using documented
   `Skeleton2D`, `Bone2D`, scene/resource, GDScript, and command-line interfaces.
+  It owns the bounded shot's layered set, articulated characters, props,
+  foreground occlusion, parallax, particles, lights/shaders, and local camera.
   StoryStage does not build a new animation engine or reverse-engineer Rive.
-- **Remotion:** the single canonical episode compositor for layered sets,
-  Godot passes, camera, edits, captions, narration, SFX, music, preview, and
-  final output.
+- **Remotion:** the canonical episode NLE for shot order, trims and handles,
+  transitions, global narration/dialogue/SFX/music, captions, titles, evidence
+  cards, selected-range preview, full-episode preview, stitching, encoding, and
+  delivery. It consumes verified Godot outputs and does not recreate their
+  camera or visual layer graph.
 - **Director intelligence:** Codex is the first supported product agent. The
   desktop host launches a pinned/verified Codex App Server locally; Codex owns
   official ChatGPT sign-in and credential state; StoryStage supplies a bounded
@@ -165,8 +172,9 @@ Failed gate → IMPLEMENTING on the same package
 | E1 Codex/StoryStage bridge       | Not started          | bounded read-only feasibility gate after accepted G0                    |
 | F3–F6 frontend                  | Not started          | F3 begins only after accepted E1 and a separate F3-WP1 ticket           |
 | Frontend Gate                   | Blocked              | requires accepted F1–F6 click-through                                   |
-| B1–B8 backend/product           | Blocked              | B1 begins only after Frontend Gate                                      |
-| Private launch                  | Blocked              | requires F3–F6/FG, B1–B7, R1–R2, and L1                                 |
+| B1–B6 backend/product           | Blocked              | B1 begins only after Frontend Gate                                      |
+| B7 future template              | Deferred             | not exposed or required for private launch                              |
+| Private launch                  | Blocked              | requires F3–F6/FG, B1–B6, R1–R2, and L1                                 |
 | Specialist bridge               | Conditional          | B8 activates only for one approved shot need                            |
 
 Critical path:
@@ -175,9 +183,10 @@ Critical path:
 G0 roadmap acceptance
 → E1 read-only Codex bridge feasibility
 → F3 → F4 → F5 → F6 → Frontend Gate
-→ B1 → B2 → B3 → B4 → B5 → R1 → B6 → B7
+→ B1 → B2 → B3 → B4 → B5 → R1 → B6
 → B8 only when a real specialist shot requires it
 → R2 → L1 private launch → S1 post-launch stabilization
+→ B7 only after a separately accepted post-launch template-expansion decision
 ```
 
 No calendar promise is attached to a broad phase. Each package is sized to one
@@ -209,11 +218,11 @@ row says conditional.
 | B5        | B2, B3, B4         | finished Kids pilot                                  |
 | R1        | B5                 | packaged-product foundation                          |
 | B6        | B5, R1             | long-form execution                                  |
-| B7        | B3, B4, B5, B6, R1 | second grammar pilot                                 |
-| B8        | B5, B7             | conditional; only when an approved shot activates it |
-| R2        | R1, B6, B7         | plus B8 only when activated                          |
+| B8        | B5                 | conditional; only when an approved shot activates it |
+| R2        | R1, B6             | plus B8 only when activated                          |
 | L1        | R2                 | private launch                                       |
 | S1        | L1                 | stabilization                                        |
+| B7        | S1                 | optional post-launch project-template expansion      |
 
 ## 6. Completed ideation and feasibility phases
 
@@ -477,7 +486,18 @@ the exact-SHA audit, Kimi remains waiting, and Preston accepts the roadmap.
 - **Verify/complete:** Product Plan, Roadmap, G0/E1 plans, status, and operating
   boundary agree on the exact auth/process/tool model and next gate.
 
-#### G0-WP6 — Governance gate
+#### G0-WP6 — Complete-shot rendering architecture amendment
+
+- **Tasks:** analyze the supplied Godot cutscene reference and creator process;
+  assign complete visual shots to Godot and episode assembly/audio/overlays to
+  Remotion; add the first two-shot boundary proof and propagate the ownership
+  decision through B2, B3, B6, risks, and acceptance evidence.
+- **Non-goals:** copying reference source/assets, one monolithic Godot scene,
+  rebuilding an NLE in Godot, or implementing production render code.
+- **Verify/complete:** Product Plan, Roadmap, G0 plan, retained research note,
+  and engine stop rules describe one non-overlapping shot/episode boundary.
+
+#### G0-WP7 — Governance gate
 
 - **Tasks:** push one docs-only candidate, run consistency/cold-start checks,
   obtain Pro's exact-SHA audit, record Preston's decision, and leave status WAIT.
@@ -612,12 +632,20 @@ Codex reviews, Pro audits the milestone, and Preston accepts it.
 
 #### F3-WP4 — AI Director conversation and proposal shell
 
-- **Tasks:** add a normal creator-facing AI Director panel using explicit E1-
-  derived fixture states: Codex connection/auth/usage state, persistent thread,
-  episode/scene/beat/range scope, streamed progress, tool activity summary,
-  structured script/direction proposal cards, affected-range/asset impact,
-  Preview, Apply, Revise, Reject, and Undo; add a Create entry for "Write with
-  AI" using Show Pack, cast, target duration, and brief.
+- **Tasks:** make New Project present exactly **Paste a script** and **What's your
+  idea?**; the second path opens the normal creator-facing AI Director panel for
+  an Ollo & Friends brief, target duration, tone, cast, and constraints; use
+  explicit E1-derived fixture states for Codex connection/auth/usage, persistent
+  thread, episode/scene/beat/range scope, streamed progress, tool activity,
+  structured screenplay/hierarchy/direction proposals, affected-range/asset
+  impact, scene-duration scrubber, captured playhead/range/shot/character context
+  chips, time-anchored proposal markers, Preview, Apply, Revise, Reject, and
+  Undo. Both creation paths meet at
+  the same editable proposal review before project creation. Follow the visual
+  hierarchy and truth rules in
+  [`design/ai-copilot-studio/README.md`](design/ai-copilot-studio/README.md) and
+  the linked
+  [`AI-copilot concept board`](design/ai-copilot-studio/ai-copilot-concept-board.webp).
 - **Non-goals:** live Codex/App Server connection, API key field, terminal as the
   ordinary UI, real project mutation, image generation, rendering, background
   autonomy, or pretending fixture output came from AI.
@@ -629,7 +657,12 @@ Codex reviews, Pro audits the milestone, and Preston accepts it.
 
 - **Tasks:** keyboard and focus flow for beats/tabs/fields/actions; compact
   layout; AI Director thread/proposal focus and live-region semantics; reduced
-  motion; exact screenshots/hashes; click-through/evidence.
+  motion; exact screenshots/hashes; click-through/evidence; compare the real
+  Product v1 captures against the supplied
+  [`Create reference`](design/ai-copilot-studio/create-screen-reference.webp),
+  [`Studio reference`](design/ai-copilot-studio/studio-timeline-reference.webp),
+  and
+  [`AI-copilot concept board`](design/ai-copilot-studio/ai-copilot-concept-board.webp).
 - **Non-goals:** F4 assets, live AI, persistence, media, or backend work.
 - **Verify/complete:** Studio tests, typecheck/build, root verify, 1920×1080,
   1440×900, and 1024×800 browser audit, zero console/page errors, Codex/Pro
@@ -922,20 +955,39 @@ retired-path report, exact handback, and hosted verification.
 **Milestone gate:** a real project can be created, edited, closed, reopened, and
 recovered through the accepted UI without hidden legacy surfaces or data loss.
 
-### B2 — Ollo visual engine: Godot performance + Remotion composition
+### B2 — Ollo visual engine: Godot complete shots + Remotion episode assembly
 
-**Objective:** produce the first coherent Ollo scene with articulated character
-performance, layered living environments, and one canonical Remotion result.
+**Objective:** produce the first coherent Ollo sequence from independently
+renderable, complete visual Godot shots and one canonical Remotion episode edit.
 
 **Milestone invariant:** one canonical plan produces one coherent 25–30 second
-Ollo scene through pinned Godot character jobs and the ordinary Remotion
-composition with no sliding, clipping, disappearing, ghosting, or nonsensical
-cuts.
+Ollo sequence. Godot owns all visual truth inside each shot; Remotion owns shot
+order, trims, transitions, global audio/overlays, preview, and delivery. The
+result has no sliding, clipping, disappearing, ghosting, or nonsensical cuts.
 
 **Dependencies/owners:** after B1; Codex implements workers/contracts/assets,
 Kimi reviews rig/set/scene UX, Pro audits, and Preston owns the visual gates.
 
-#### B2-WP1 — Ollo and environment production-readiness audit
+#### B2-WP1 — Complete-shot Godot/Remotion boundary proof
+
+- **Tasks:** create two independent Godot shot scenes totaling 8–12 seconds at
+  1920×1080/30 fps. Shot A includes a complete layered set, test character,
+  foreground occlusion, ambient/particles, and local camera. Shot B uses a
+  different framing, prop/reaction, light/shader, and separate scene graph. Each
+  emits exact frames, 12–24 frame handles, a complete visual master, proxy, cue
+  transcript, and source/plan/asset/engine/output hashes. Remotion trims handles,
+  reorders the shots without a Godot rerender, performs one cut and one overlap
+  transition, adds a caption/title plus global narration/SFX/music, and renders
+  the same Player/final timeline and selected/full range.
+- **Non-goals:** Ollo art, one giant `AnimationPlayer`, transparent-character-only
+  production architecture, final audio, or production worker abstraction.
+- **Verify/complete:** two repeat Godot renders are decoded-frame equivalent;
+  malformed/cancel cases fail visibly; changing only Shot B leaves Shot A's hash
+  unchanged; pure editorial/audio changes do not rerender either shot; no
+  gaps/duplicates/discontinuities occur; Player/final match; storage, decode,
+  and preview costs are measured.
+
+#### B2-WP2 — Ollo and environment production-readiness audit
 
 - **Tasks:** reconcile existing Candidate I images, atlases, prepared views,
   pivot/registration evidence, masks, tail corrections, motion diagnostics,
@@ -946,7 +998,7 @@ Kimi reviews rig/set/scene UX, Pro audits, and Preston owns the visual gates.
 - **Verify/complete:** hash-bound readiness matrix and visible contact sheet;
   Preston decides use/correct/regenerate per required view and layer.
 
-#### B2-WP2 — Canonical Godot rig package
+#### B2-WP3 — Canonical Godot rig package
 
 - **Tasks:** produce genuine front/left/right Ollo views; padded separated parts;
   stable pivots; `Skeleton2D`/`Bone2D`; draw order; masks; expressions; eye/blink
@@ -956,7 +1008,7 @@ Kimi reviews rig/set/scene UX, Pro audits, and Preston owns the visual gates.
 - **Verify/complete:** rest/orbit diagnostic for every joint/view, no crop-edge
   clipping, repeat build hashes, Preston rig review.
 
-#### B2-WP3 — Reusable Ollo performance library
+#### B2-WP4 — Reusable Ollo performance library
 
 - **Tasks:** idle/living hold, blink/gaze, talk, walk, run, reach, point, react,
   enter, exit, decelerate, named plant, settle; profile-aware travel; grounded
@@ -966,38 +1018,47 @@ Kimi reviews rig/set/scene UX, Pro audits, and Preston owns the visual gates.
 - **Verify/complete:** semantic-role reel for all views; foot-slip/trajectory,
   bounds, loop-seam, event, and repeat-render checks; Preston motion acceptance.
 
-#### B2-WP4 — Layered Little Wood set
+#### B2-WP5 — Layered Little Wood shot-scene systems
 
-- **Tasks:** far background, midground, character/prop plane, aligned foreground
-  occluders, ambient layer; cut-paper depth; camera-safe overscan; leaf/grass
-  sway, lantern flicker, water/pollen/fireflies, restrained distant loop;
-  deterministic seeds and layer metadata.
+- **Tasks:** build reusable Godot shot-scene systems for far background,
+  midground, character/prop plane, aligned foreground occluders, and ambient
+  layer; cut-paper depth; camera-safe overscan; leaf/grass sway, lantern flicker,
+  water/pollen/fireflies, restrained distant loop; particles, lights/shaders,
+  safe bounds, shot-local cameras, deterministic seeds, and layer metadata.
 - **Non-goals:** moving every object, default blur, 3D reconstruction, or new art
   grammar.
 - **Verify/complete:** still alignment at canonical framing; characters pass
   behind intended plants/trees without invisible edges; repeat frames match.
 
-#### B2-WP5 — Godot job and transparent-pass worker
+#### B2-WP6 — Bounded complete-shot Godot worker
 
-- **Tasks:** compile bounded character/performance jobs from accepted project
-  state; generate documented Godot scene/resources; headless execution; RGBA
-  frame output; progress/cancel/error/log contract; cache key; no engine binary or
-  user credentials in Git.
-- **Non-goals:** episode composition, AI, audio mix, or a custom animation engine.
-- **Verify/complete:** valid/invalid/cancel/retry tests; two identical jobs decode
-  to identical RGBA; transparent bounds and frame counts enforced.
+- **Tasks:** compile accepted `ShotVisualJob` state into documented Godot
+  scene/resources; headless execution; complete visual master and proxy by
+  default; exact handles, cue transcript, progress/cancel/error/log contract,
+  cache key, and receipt binding shot/plan, runtime, fps/range, canvas/color,
+  asset/rig hashes, output hashes, and optional explicitly requested alpha,
+  foreground/transition matte, ID matte, depth/plane-index, isolated-character,
+  or debug passes. No engine binary or user credentials enter Git.
+- **Non-goals:** episode composition, authoritative audio mix, AI, fixed PNG-only
+  transport, or a custom animation engine.
+- **Verify/complete:** valid/invalid/cancel/retry tests; repeat jobs are
+  decoded-frame equivalent; frame/handle/cue receipts are exact; lossless image
+  sequence versus intra-frame shot container plus proxy is benchmarked before a
+  production transport is selected.
 
-#### B2-WP6 — Canonical Remotion scene compositor
+#### B2-WP7 — Canonical Remotion episode assembly
 
-- **Tasks:** consume exact Godot passes; layered environment/occluders; props;
-  camera direction; deterministic edit timing; selected-range preview and final
-  scene use the same composition/config; evidence stills and MP4.
-- **Non-goals:** second preview renderer, final audio engine, long-form stitching,
-  or special Ollo composition.
+- **Tasks:** consume verified Godot shot masters/proxies; order and trim handles;
+  cuts and overlap transitions; global narration/dialogue/SFX/music; captions,
+  titles, and evidence cards; selected-range and full-episode Player/final use
+  one edit plan; evidence stills and MP4.
+- **Non-goals:** rebuilding shot cameras/layers/occlusion, a second preview truth,
+  long-form stitching, or an Ollo-only composition.
 - **Verify/complete:** preview/final representative frames match at exact frame;
-  no layer/camera/alpha drift; output frame count, codec, fps, dimensions verified.
+  shot outputs are reusable across editorial/audio changes; no handle, transition,
+  frame-count, codec, fps, dimension, or audio-timing drift.
 
-#### B2-WP7 — 25–30 second visual acceptance scene
+#### B2-WP8 — 25–30 second visual acceptance sequence
 
 - **Tasks:** freeze an original Storylight excerpt; direct purposeful shots;
   exercise profile travel, living hold, reach/prop contact, reaction, occlusion,
@@ -1008,12 +1069,12 @@ Kimi reviews rig/set/scene UX, Pro audits, and Preston owns the visual gates.
   mid-scene disappearance or teleport, downloadable MP4, Pro audit, Preston
   visual acceptance.
 
-**Required evidence:** approved Ollo registration and readiness, rig/pivot/profile
-proofs, action-library clips, layered-set/occlusion frames, deterministic Godot
-passes, canonical Remotion preview/final comparison, and coherent 25–30 second
-scene review.
+**Required evidence:** accepted two-shot boundary proof; approved Ollo
+registration/readiness; rig/pivot/profile proofs; action-library clips;
+layered-set/occlusion frames; deterministic complete Godot shot receipts;
+canonical Remotion preview/final comparison; and coherent 25–30 second sequence.
 
-**Milestone gate:** Preston accepts the coherent scene with grounded articulated
+**Milestone gate:** Preston accepts the coherent sequence with grounded articulated
 motion and no sliding, clipping, disappearing, ghosting, or nonsensical cuts.
 
 ### B3 — Subscription-backed AI Director automation
@@ -1048,7 +1109,8 @@ audits editorial behavior; Preston accepts privacy, agent authority, and quality
 
 - **Tasks:** route manual UI and AI actions through the same typed application
   commands; expose least-privilege read tools for project/show/script/selection/
-  assets/rigs/layers/continuity/timing plus proposal, preview, apply, undo, and
+  playhead/time-range/assets/rigs/layers/continuity/timing plus proposal,
+  preview, apply, undo, and
   selected-range render requests; add scope, size, path, cancellation, and
   permission checks with human confirmation for every durable or costly action.
 - **Non-goals:** raw project-file mutation, general shell/filesystem access,
@@ -1076,8 +1138,11 @@ audits editorial behavior; Preston accepts privacy, agent authority, and quality
 - **Tasks:** retain a deterministic/manual planning path; validate source
   lineage, hierarchy, total/scene duration bounds, screen direction, geography,
   character/prop continuity, asset/capability availability, camera bounds, audio
-  timing, and renderability; compile only accepted intent into bounded Godot jobs
-  and the canonical Remotion plan; explain warnings and fallback requests.
+  timing, and renderability; compile only accepted intent into `ShotVisualJob[]`,
+  `EpisodeEditPlan`, `AudioCuePlan`, and `ContinuityState`. Godot consumes only
+  complete-visual-shot jobs; Remotion consumes the episode edit, global audio,
+  caption/title/evidence overlay, selected-range, and delivery plans. Explain
+  warnings and fallback requests.
 - **Non-goals:** model/provider call, automatic creative acceptance, taste score,
   or silent invention of assets/capabilities.
 - **Verify/complete:** adversarial proposals fail predictably; accepted proposals
@@ -1086,7 +1151,14 @@ audits editorial behavior; Preston accepts privacy, agent authority, and quality
 #### B3-WP5 — AI Director sessions, context, and proposal streaming
 
 - **Tasks:** connect the accepted F3 panel to persistent project/episode/scene
-  threads; assemble only the selected bounded context; stream messages, tool
+  threads. On New Project, **What's your idea?** opens an episode-scoped thread
+  that gathers the Ollo story premise, target duration, tone, cast, and
+  constraints before proposing a screenplay and hierarchy. In Studio, the same
+  dock automatically follows the selected episode/sequence/scene/beat/shot,
+  playhead, time range, character, or asset while always showing its current
+  scope. Capture attached playhead/range context at send time so “here” cannot
+  drift while the response streams.
+  Assemble only that bounded context; stream messages, tool
   activity, progress, approvals, cancellation, and errors; support "Write a
   15-minute Ollo episode" and scene/beat/range revision prompts; validate typed
   output before it appears as a proposal; preserve model/version/invocation
@@ -1100,7 +1172,8 @@ audits editorial behavior; Preston accepts privacy, agent authority, and quality
 #### B3-WP6 — Proposal review, patch, undo, and selected-range rebuild
 
 - **Tasks:** show before/after script/direction diff, affected shots/range/assets,
-  accept/reject/edit by hierarchy level, preview the proposal, apply through the
+  time-anchored scrubber markers and affected audio/render jobs; accept/reject/
+  edit by hierarchy level, preview the proposal, apply through the
   deterministic command layer, undo/redo, regenerate only selected scope, and
   mark proposals stale when source/context changes.
 - **Non-goals:** silent auto-apply, entire-episode regeneration for one scene,
@@ -1113,9 +1186,9 @@ audits editorial behavior; Preston accepts privacy, agent authority, and quality
 - **Tasks:** encode only evidence-backed Scene Craft hard rules as blockers while
   keeping taste priors advisory; test purposeful coverage, reactions, motivated
   cuts/camera, action follow-through, energy/reveal, audio-led timing, and
-  continuity; run one unseen 15–20 minute Kids brief plus one materially different
-  Weird History brief through script and direction proposal; compare/edit blind
-  and record capability gaps.
+  continuity; run two materially different unseen 15–20 minute Ollo & Friends
+  briefs (for example, a gentle mystery and an active adventure) through script
+  and direction proposal; compare/edit blind and record capability gaps.
 - **Non-goals:** equal durations, universal shot quotas, overfitting Mr. Kipley,
   copying reference art/characters, generated-video services, or a benchmark-only
   composition.
@@ -1128,10 +1201,10 @@ failure states, MCP/tool authority tests, typed screenplay/proposal examples,
 deterministic compile results, persistent session evidence, edit/preview/apply/
 reject/undo/range-regeneration flows, and two materially different briefs.
 
-**Milestone gate:** Pro and Preston accept a sensible editable long-form Kids
-script/plan, a distinct Weird History proposal, and a coherent scene-level
-revision; deterministic validation blocks unrenderable or unauthorized changes,
-and StoryStage contains no API-key or website/session automation path.
+**Milestone gate:** Pro and Preston accept two distinct, sensible, editable
+long-form Ollo & Friends scripts/plans and a coherent scene-level revision;
+deterministic validation blocks unrenderable or unauthorized changes, and
+StoryStage contains no API-key or website/session automation path.
 
 ### B4 — Narration and sound engine
 
@@ -1373,17 +1446,20 @@ Kimi reviews long-form UX, Pro audits endurance, and Preston accepts.
 #### B6-WP3 — Selected-range preview and incremental rebuild
 
 - **Tasks:** render scene/beat/range; proxy quality; cache hit/miss display;
-  invalidate/rebuild affected Godot passes, Remotion layers, or audio; compare
-  proxy/final exact frame at sampled points.
+  cache complete Godot shot masters, proxies, and optional auxiliary passes;
+  invalidate/rebuild only affected shots or audio; preserve shot caches for pure
+  Remotion order/trim/transition/overlay/mix edits; compare proxy/final exact
+  frame at sampled points.
 - **Non-goals:** low-quality preview as separate editorial truth.
 - **Verify/complete:** edit one late scene without rebuilding whole episode;
   unchanged ranges retain hashes; preview/final framing matches.
 
 #### B6-WP4 — Chunked render and exact stitch
 
-- **Tasks:** bounded chunk plan; deterministic frame/audio overlaps; ffmpeg
-  stitch; codec/color/alpha/audio settings; manifest; temporary-file lifecycle;
-  final frame count/duration/hash; no gaps/duplicates/drift at boundaries.
+- **Tasks:** let Remotion execute bounded long-form episode chunks over verified
+  shot outputs; deterministic video/audio overlaps; ffmpeg stitch and delivery;
+  codec/color/audio settings; manifest; temporary-file lifecycle; final frame
+  count/duration/hash; no gaps/duplicates/drift at boundaries.
 - **Non-goals:** distributed cloud rendering or lossy evidence shortcuts.
 - **Verify/complete:** synthetic and real boundary tests; exact 36,000 video
   frames; sample-accurate audio duration; decoded boundary audit.
@@ -1415,20 +1491,22 @@ and project reopen.
 chunk boundary, restart, cancellation, frame count, audio duration, and recovery
 gate passes on the supported target PC.
 
-## 9. Second grammar, release hardening, launch, and stabilization
+## 9. Release hardening, launch, stabilization, and future templates
 
-### B7 — Publishable Weird History pilot
+### B7 — Future Weird History project template — DEFERRED POST-LAUNCH
 
-**Objective:** prove the second editorial grammar through the same project,
-Director, media, audio, and canonical render path without weakening Kids.
+**Objective:** after the Ollo & Friends private launch is accepted and stable,
+prove a second project template through the same project, Director, media,
+audio, and canonical render path without weakening Kids.
 
-**Dependencies/owners:** after B3-B6 and R1; Codex implements, Kimi reviews the
-workflow, Pro audits editorial/factual quality, and Preston accepts the pilot.
+**Dependencies/owners:** after accepted L1 and S1 plus a separate Preston
+template-expansion decision; Codex implements, Kimi reviews the workflow, Pro
+audits editorial/factual quality, and Preston accepts the pilot.
 
-**Milestone invariant:** after B3-B6 and R1, the same product and canonical
-render path produces a publishable Weird History pilot with an honest editorial
-and media grammar. Codex implements, Kimi reviews UX, Pro reviews editorial and
-factual quality, and Preston accepts.
+**Milestone invariant:** B7 is invisible and non-blocking during private-launch
+development. Once separately activated after launch stabilization, the same
+product and canonical render path produces a publishable Weird History pilot
+with an honest editorial and media template.
 
 #### B7-WP1 — Grammar and style bible
 
@@ -1498,11 +1576,12 @@ normal 2D system cannot reasonably satisfy its documented need.
 preserves provenance and reproducibility, and never becomes a second animation
 or episode-rendering system.
 
-**Dependencies/owners:** conditional after an accepted B5 or B7 shot need;
+**Dependencies/owners:** conditional after an accepted B5 shot need, or a later
+post-launch B7 shot need;
 Codex owns interchange/integration, the approved specialist owns the external
 shot, and Preston activates and accepts the exact scope.
 
-**Activation rule:** begin only when an accepted B5/B7 shot has a documented
+**Activation rule:** begin only when an accepted B5 shot (or later B7 shot) has a documented
 need the normal 2D system cannot reasonably satisfy and Preston approves the
 exact shot. Unactivated B8 is `NOT REQUIRED` and never blocks private launch.
 
@@ -1554,7 +1633,7 @@ rollback requirements.
 **Milestone invariant:** one frozen build, project format, and dependency set
 passes clean-install, creator-journey, render, recovery, accessibility, privacy,
 license, and documentation gates with no known P0/P1 defect. R2 depends on R1,
-B6, B7, and any activated B8; it judges an installed product, not a checkout.
+B6, and any activated B8; it judges an installed product, not a checkout.
 
 **Dependencies/owners:** Codex owns hardening, Kimi reviews UI/accessibility,
 Pro audits the release candidate, and Preston accepts the RC and known issues.
@@ -1605,7 +1684,7 @@ Pro audits the release candidate, and Preston accepts the RC and known issues.
 
 #### R2-WP6 — Full regression, help, and RC build
 
-- **Tasks:** E1, F1-F6, B1-B7, Kids 20-minute, Weird History, Codex not-installed/
+- **Tasks:** E1, F1-F6, B1-B6, Ollo & Friends Kids 20-minute, Codex not-installed/
   signed-out/revoked/offline/usage-limit/incompatible/MCP-failure states,
   install/uninstall, render/delivery, support bundle; concise first-run/help and
   sample projects; classify every defect against one immutable build.
@@ -1800,15 +1879,15 @@ Do not proceed to private launch when any of the following is true:
 | --------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------- |
 | Plan forgotten after chat compaction/new task | Git bootstrap documents + status ledger; goals/chat are non-authoritative          | roadmap acceptance     |
 | Old proofs mistaken for product               | B1 reuse-versus-retire audit; no proof counts as phase completion                  | B1-WP1                 |
-| Ollo source/rig inconsistency                 | exact readiness audit and Preston registration/motion gates                        | B2-WP1–3               |
-| Godot/Remotion mismatch                       | pinned Godot RGBA passes; one Remotion preview/final composition                   | B2-WP5–6               |
+| Ollo source/rig inconsistency                 | exact readiness audit and Preston registration/motion gates                        | B2-WP2–4               |
+| Godot/Remotion mismatch                       | complete visual Godot shots; one Remotion episode edit/audio/delivery composition  | B2-WP1, B2-WP6–8       |
 | AI produces incoherent/random direction       | structured proposal, deterministic validation, human edits, two-brief benchmark     | B3                     |
 | ChatGPT subscription treated as an API/session | Codex owns official ChatGPT auth; no key/cookie/web automation or silent fallback  | E1/B3/R2               |
 | Agent gains hidden production authority       | least-privilege MCP, one command layer, typed diff, approval, undo, scoped context  | E1/F3/B3/R2            |
 | App Server protocol changes                    | pinned runtime/schema, stable-method preference, compatibility preflight and gate   | E1/B3/R1               |
 | Audio underestimated                          | F5 UI then B4 engine before finished pilot                                         | F5/B4                  |
 | 20-minute memory/render failure               | selected-range caches, chunks, resume, exact 36,000-frame soak                     | B6                     |
-| Unlicensed Google/stock/SFX/media             | source/license metadata and hard delivery readiness rules                          | F4/B4/B7/R2            |
+| Unlicensed Google/stock/SFX/media             | source/license metadata and hard delivery readiness rules                          | F4/B4/R2; B7 if added  |
 | UI and roadmap dashboard drift                | `ROADMAP_STATUS.md` is authority; dashboard must read generated/exported status    | roadmap tooling ticket |
 | Overengineering                               | one package, visible result, explicit non-goals, split before work if too large    | every ticket           |
 
@@ -1816,18 +1895,18 @@ Do not proceed to private launch when any of the following is true:
 
 | Decision                     | Recommended default                                                                                                                                     | Deadline        |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| Private-launch grammar scope | Kids 20-minute workflow and one Weird History pilot are both required                                                                                   | G0 gate         |
+| Private-launch template scope | Expose only Ollo & Friends — Kids Story; add no placeholder/disabled second template; Weird History is post-launch                                   | G0 gate         |
 | AI agent                     | Codex first through local App Server + official ChatGPT sign-in + StoryStage MCP; no API-key or website-session fallback                                 | E1/B3-WP1       |
 | Agent extensibility          | Keep domain commands agent-neutral, but do not build or ship a generic provider/plugin framework in v1                                                     | B3-WP2          |
 | Screenplay privacy           | Show scope before each request; Codex owns auth; no cookies, raw tokens, API keys, silent background transmission, or conversation content in diagnostics | E1/B3-WP1/R2    |
 | TTS                          | Not required; user recording/import first                                                                                                               | F5 gate         |
-| Stock/archive/audio          | Approved sources and license policy; no unlicensed scraping                                                                                             | B7-WP2          |
+| Stock/archive/audio          | Approved sources and license policy; no unlicensed scraping; detailed archival workflow waits for post-launch B7                                        | F4/B4/B7-WP2    |
 | Windows signing              | Obtain a certificate if practical; otherwise explicitly accept unsigned private-beta friction                                                           | R1-WP2          |
 | Updates                      | Manual installer upgrades for private launch                                                                                                            | R1-WP2          |
 | Telemetry                    | None; user-triggered redacted diagnostics only                                                                                                          | R2-WP1          |
 | Supported hardware           | Set from measured R1/B6 results, not guesses                                                                                                            | R2-WP3          |
 | Private cohort               | Named bounded testers with backup instructions and an explicit support owner                                                                            | L1-WP2          |
-| B8                           | Inactive and non-blocking unless one specific approved shot requires it                                                                                 | B5/B7 shot lock |
+| B8                           | Inactive and non-blocking unless one specific approved shot requires it                                                                                 | B5 shot lock    |
 
 The roadmap candidate uses these defaults for sequencing. Preston's G0 decision
 either accepts them or records an exact amendment before implementation begins.
@@ -1835,9 +1914,10 @@ either accepts them or records an exact amendment before implementation begins.
 ## 14. Definition of complete
 
 StoryStage is not complete because a shell, schema, rig proof, render demo, or
-pilot exists. The private-launch product is complete only after B7, R2, and L1
+pilot exists. The private-launch product is complete only after B6, R2, and L1
 acceptance. B8 is either `NOT REQUIRED` or complete only for the exact activated
-specialist shot class. S1 closes the first stabilization cycle.
+specialist shot class. S1 closes the first stabilization cycle. B7 is optional
+post-launch template expansion and cannot block this release.
 
 The next permissible action after this amended roadmap is accepted is
 **E1-WP1 only**. No later E1 package, F3 implementation, later frontend phase,
