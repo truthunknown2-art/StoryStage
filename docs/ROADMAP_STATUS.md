@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: a4486ce4433d06a9567a0d177b8c95bb427fd147
+lastAcceptedProductHead: dcf9b7e600a11d7cd6fef4c20368c807c6f3b0be
 lastAcceptedMilestone: E1
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -11,30 +11,31 @@ completedMilestones:
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F3
   package: F3-WP2
-  owner: Kimi
+  owner: Codex
   exactBase: d7b46d891a981a13431b6272be39809142e727f6
   branch: agent/kimi-f3-wp2-direct-edits-scoped-history
   issue: 81
-  pr: null
-  candidateContentHead: d7b46d891a981a13431b6272be39809142e727f6
+  pr: 83
+  candidateContentHead: 53d0d6a5c8485ca628c4c1581598072b613ffe0a
   candidateRef: product/v1
 checks:
-  local: roadmap-consistency+format-check
+  local: studio-90+typecheck+build+synthetic-merge+roadmap+exact-successor-audits
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-f3-wp1-exact-208ceca502c4c20178dbf303c16f85d6facbbaeb-hosted-29866064607-attempt-2-pass
+  codex: accept-f3-wp2-exact-53d0d6a5c8485ca628c4c1581598072b613ffe0a-hosted-29872261103-pass
   pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
   preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
 blockers:
-  - F3-WP3 through F3-WP5 remain blocked by dependency order
+  - F3-WP3 requires a separate bounded START_NOW ticket and higher Kimi inbox version
+  - F3-WP4 through F3-WP5 remain blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F3_WP2_ONLY
-  text: Implement only issue #81 from exact base d7b46d891a981a13431b6272be39809142e727f6 on agent/kimi-f3-wp2-direct-edits-scoped-history, publish the exact handback, and stop before F3-WP3.
+  type: WAIT_FOR_F3_WP3_TICKET
+  text: F3-WP2 is accepted and integrated. Do not begin F3-WP3 until a separate bounded ticket and higher Kimi inbox version are published.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -75,20 +76,21 @@ verification from the live PR checks.
   the rail, board, permanent scope header, and accessible Direct/Visual/Motion
   workspace tabs. It does not provide direction editing, AI proposals,
   persistence, media, rendering, or export.
-- Under Preston's standing dependency-ordered continuation authority, separate
-  issue #81 and this `START_NOW` transition authorize only F3-WP2 from exact
-  base `product/v1@d7b46d8...` on
-  `agent/kimi-f3-wp2-direct-edits-scoped-history`. The package adds bounded
-  session-local Direct drafts, atomic per-beat Apply, and independently scoped
-  Undo/Redo with redo invalidation. It does not authorize AI interpretation,
-  persistence, timing, Visual/Motion editing, production schemas, F3-WP3,
-  backend work, Godot, Remotion, rendering, or export. Kimi may start only
-  after this status transition is integrated and a higher canonical inbox
-  version publishes the matching validated assignment.
+- F3-WP2 is accepted and integrated at exact `product/v1@dcf9b7e...`. Kimi
+  completed issue #81; Codex applied only the bounded review correction that
+  removed contradictory Motion-tab copy, then exact PR #83 successor head
+  `53d0d6a...` passed Studio 90/90, typecheck, production build, the clean
+  synthetic merge and roadmap check, independent exact-head code and visual
+  audits, three hash-matched 1440x900 screenshots with 18/18 browser checks,
+  and hosted Verify run `29872261103`. The package provides session-local
+  Direct drafts with atomic per-beat Apply and isolated Undo/Redo history. It
+  does not provide AI interpretation, persistence, Visual/Motion editing,
+  production schemas, media, rendering, or export.
 
-- Accepted creator-facing product implementation still ends at F2 on exact
-  `87c01f9b...`; G0 is the accepted planning/governance milestone integrated at
-  `ddddcf1...` and does not itself implement product capability.
+- Accepted creator-facing product implementation now reaches F3-WP2 on exact
+  `dcf9b7e...`; the complete F3 milestone is not yet accepted. G0 is the
+  accepted planning/governance milestone integrated at `ddddcf1...` and does
+  not itself implement product capability.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is

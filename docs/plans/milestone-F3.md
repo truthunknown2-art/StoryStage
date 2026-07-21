@@ -12,12 +12,12 @@
   decomposition was accepted in G0. On 2026-07-21 Preston recorded E1 `PASS`
   at exact head `357737d2c695098ac47db3efdab4470e1cb0a202` and directed the team to
   continue through the approved product roadmap without repetitive prompts.
-- Completed predecessor: F3-WP1 is accepted and integrated at
-  `product/v1@a4486ce4433d06a9567a0d177b8c95bb427fd147`.
-- Current authorization: only F3-WP2 through issue #81, after its separate
-  status transition and matching higher Kimi inbox version are integrated.
-- Exact implementation base: `d7b46d891a981a13431b6272be39809142e727f6`
-- Required F3-WP2 branch: `agent/kimi-f3-wp2-direct-edits-scoped-history`
+- Completed packages: F3-WP1 and F3-WP2 are accepted. F3-WP2 exact PR #83
+  successor head `53d0d6a5c8485ca628c4c1581598072b613ffe0a` is integrated at
+  `product/v1@dcf9b7e600a11d7cd6fef4c20368c807c6f3b0be`.
+- Current authorization: `ACCEPTED_WAIT`. F3-WP3 requires a separate bounded
+  ticket, status transition, and higher Kimi inbox version. F3-WP4 and F3-WP5
+  remain blocked by dependency order.
 - Backend product work remains blocked until the complete F6 Frontend Gate is
   accepted.
 
