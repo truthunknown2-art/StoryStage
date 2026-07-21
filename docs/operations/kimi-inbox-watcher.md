@@ -29,6 +29,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Install-KimiInboxWat
 Installation copies the two runtime scripts into the local coordination root,
 registers a least-privilege per-user task every five minutes, and performs one
 deterministic dry poll. It never starts Kimi during installation.
+If that poll sees a valid new `START_NOW`, it records the version as pending so
+the next real scheduled poll launches it exactly once.
 
 To remove the scheduled task while preserving its receipts:
 
@@ -64,7 +66,9 @@ the issue, execute only the brief, publish its handback, and exit. Repeated
 polls cannot relaunch the same version. The watcher atomically reserves the
 version before starting the external process, so a watcher crash cannot create
 a duplicate launch; a reserved launch that fails requires a corrected higher
-inbox version. The watcher never uses `--yolo`, never
+inbox version. Every Kimi assignment has a fixed three-hour maximum; timeout
+forces termination of the launched Kimi process tree and records exit `124`.
+The watcher never uses `--yolo`, never
 opens Kimi ACP/server ports, and never reads Kimi credentials or session data.
 
 `STOP` records an idle state; it does not kill a running implementation. Codex

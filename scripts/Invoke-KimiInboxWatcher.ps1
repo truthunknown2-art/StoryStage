@@ -127,9 +127,46 @@ function Get-InboxDecision {
   }
 
   if ($Inbox.Version -lt $previousVersion) { return 'rollback' }
-  if ($Inbox.Version -eq $previousVersion) { return 'unchanged' }
+  if ($Inbox.Version -eq $previousVersion) {
+    $pendingVersion = if ($null -ne $PreviousState -and
+        $null -ne $PreviousState.PSObject.Properties['pendingLaunchVersion']) {
+      [int]$PreviousState.pendingLaunchVersion
+    } else { 0 }
+    $launchedVersion = if ($null -ne $PreviousState -and
+        $null -ne $PreviousState.PSObject.Properties['lastLaunchedVersion'] -and
+        $null -ne $PreviousState.lastLaunchedVersion) {
+      [int]$PreviousState.lastLaunchedVersion
+    } else { 0 }
+    if ($Inbox.Status -eq 'START_NOW' -and $pendingVersion -eq $Inbox.Version -and
+        $launchedVersion -ne $Inbox.Version) {
+      foreach ($pair in @(
+          @('pendingTask', $Inbox.Task),
+          @('pendingAcceptedBase', $Inbox.AcceptedBase),
+          @('pendingRequiredBranch', $Inbox.RequiredBranch),
+          @('pendingFullBrief', $Inbox.FullBrief),
+          @('pendingIssue', $Inbox.Issue)
+        )) {
+        $property = $PreviousState.PSObject.Properties[$pair[0]]
+        if ($null -eq $property -or [string]$property.Value -ne [string]$pair[1]) {
+          return 'conflict'
+        }
+      }
+      return 'launch'
+    }
+    return 'unchanged'
+  }
   if ($Inbox.Status -eq 'START_NOW') { return 'launch' }
   'idle'
+}
+
+function Get-TextSha256 {
+  param([Parameter(Mandatory)] [string]$Text)
+  $sha = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    ([BitConverter]::ToString($sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($Text)))).Replace('-', '').ToLowerInvariant()
+  } finally {
+    $sha.Dispose()
+  }
 }
 
 function Read-WatcherState {
@@ -172,6 +209,9 @@ function Assert-StartNowAssignment {
 
   if ($Inbox.Task -match '(?i)(wait|hold)' -or [string]::IsNullOrWhiteSpace($Inbox.Task)) {
     throw 'START_NOW requires a concrete non-wait task.'
+  }
+  if ($Inbox.Task -notmatch '^[A-Za-z0-9._/-]+$') {
+    throw 'START_NOW requires a safe machine-readable task identifier.'
   }
   if ($Inbox.AcceptedBase -notmatch '^[0-9a-f]{40}$') {
     throw 'START_NOW requires a full 40-character accepted base SHA.'
@@ -236,6 +276,7 @@ function Invoke-KimiWatcherPoll {
     $previous = Read-WatcherState -Path $statePath
     $decision = Get-InboxDecision -Inbox $inbox -PreviousState $previous
     if ($decision -eq 'rollback') { throw 'Inbox-Version moved backwards; refusing to process it.' }
+    if ($decision -eq 'conflict') { throw 'Pending START_NOW identity changed without a higher Inbox-Version.' }
     if ($decision -eq 'unchanged') {
       Write-WatcherLog -Root $Root -Message "IDLE unchanged inbox v$($inbox.Version) $($inbox.Status); no Kimi launch."
       return [pscustomobject]@{ Decision = $decision; Version = $inbox.Version; Launched = $false }
@@ -249,6 +290,7 @@ function Invoke-KimiWatcherPoll {
       observedAt = [DateTimeOffset]::UtcNow.ToString('o')
       lastLaunchedVersion = if ($null -ne $previous) { $previous.lastLaunchedVersion } else { $null }
       lastLaunchPid = if ($null -ne $previous) { $previous.lastLaunchPid } else { $null }
+      pendingLaunchVersion = $null
       lastError = $null
     }
 
@@ -259,7 +301,14 @@ function Invoke-KimiWatcherPoll {
     }
 
     try {
-      Assert-StartNowAssignment -Inbox $inbox -Repo $repo | Out-Null
+      $validatedBrief = Assert-StartNowAssignment -Inbox $inbox -Repo $repo
+      $briefHash = Get-TextSha256 -Text $validatedBrief
+      if ($null -ne $previous -and
+          $null -ne $previous.PSObject.Properties['pendingBriefSha256'] -and
+          -not [string]::IsNullOrWhiteSpace([string]$previous.pendingBriefSha256) -and
+          [string]$previous.pendingBriefSha256 -ne $briefHash) {
+        throw 'Pending START_NOW brief changed without a higher Inbox-Version.'
+      }
       $prompt = New-AssignmentPrompt -Inbox $inbox
       $launchDirectory = Join-Path $Root 'launches'
       $launchPath = Join-Path $launchDirectory ("v{0}.json" -f $inbox.Version)
@@ -278,8 +327,15 @@ function Invoke-KimiWatcherPoll {
       Write-AtomicJson -Path $launchPath -Value $launch
 
       if ($DryRun) {
+        $state.pendingLaunchVersion = $inbox.Version
+        $state.pendingTask = $inbox.Task
+        $state.pendingAcceptedBase = $inbox.AcceptedBase
+        $state.pendingRequiredBranch = $inbox.RequiredBranch
+        $state.pendingFullBrief = $inbox.FullBrief
+        $state.pendingIssue = $inbox.Issue
+        $state.pendingBriefSha256 = $briefHash
         Write-AtomicJson -Path $statePath -Value $state
-        Write-WatcherLog -Root $Root -Message "DRY-RUN valid START_NOW v$($inbox.Version); no Kimi launch."
+        Write-WatcherLog -Root $Root -Message "DRY-RUN valid START_NOW v$($inbox.Version); pending for the next real poll, no Kimi launch."
         return [pscustomobject]@{ Decision = 'launch'; Version = $inbox.Version; Launched = $false; DryRun = $true }
       }
 
@@ -301,6 +357,7 @@ function Invoke-KimiWatcherPoll {
       $state.lastLaunchedVersion = $inbox.Version
       $state.lastLaunchPid = $null
       $state.lastLaunchState = 'reserved'
+      $state.pendingLaunchVersion = $null
       $state.lastLaunchAt = [DateTimeOffset]::UtcNow.ToString('o')
       Write-AtomicJson -Path $statePath -Value $state
       $process = if ($null -ne $ProcessStarter) {

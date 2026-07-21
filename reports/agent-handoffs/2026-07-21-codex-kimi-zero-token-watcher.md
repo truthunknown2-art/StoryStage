@@ -22,7 +22,10 @@ in user at limited privilege. Its trigger repetition interval is exactly
 `PT5M`; overlapping task instances are ignored and the watcher also owns a
 named mutex. It may start on battery and is not stopped by a switch to battery.
 Each valid launch version is atomically reserved before the external process is
-started, closing the crash-gap duplicate-launch case.
+started, closing the crash-gap duplicate-launch case. An installation dry-run
+keeps a valid assignment pending for the next real poll. Every assignment is
+hard-limited to three hours, after which its launched process tree is forcibly
+terminated and a timeout result is recorded.
 
 No Kimi ACP/server port, long-lived agent session, credential read, model call,
 branch switch, merge, rebase, reset, cherry-pick, or force-push is part of the

@@ -1,5 +1,6 @@
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Invoke-KimiInboxWatcher.ps1') -LibraryOnly
+. (Join-Path $PSScriptRoot 'Run-KimiInboxAssignment.ps1') -LibraryOnly
 
 function Assert-Equal($Expected, $Actual, [string]$Message) {
   if ($Expected -ne $Actual) { throw "$Message Expected '$Expected', got '$Actual'." }
@@ -45,6 +46,20 @@ Issue: `#66`
 $start = ConvertFrom-KimiInbox -Text $startInbox
 Assert-Equal 'launch' (Get-InboxDecision -Inbox $start -PreviousState ([pscustomobject]@{ lastObservedVersion = 59 })) 'Higher START_NOW must launch.'
 Assert-Equal 'unchanged' (Get-InboxDecision -Inbox $start -PreviousState ([pscustomobject]@{ lastObservedVersion = 60 })) 'Processed START_NOW must not relaunch.'
+$pendingDecisionState = [pscustomobject]@{
+  lastObservedVersion = 60
+  lastLaunchedVersion = $null
+  pendingLaunchVersion = 60
+  pendingTask = $start.Task
+  pendingAcceptedBase = $start.AcceptedBase
+  pendingRequiredBranch = $start.RequiredBranch
+  pendingFullBrief = $start.FullBrief
+  pendingIssue = $start.Issue
+}
+Assert-Equal 'launch' (Get-InboxDecision -Inbox $start -PreviousState $pendingDecisionState) 'Matching dry-run identity must remain launchable.'
+$changedStart = $start | Select-Object *
+$changedStart.Task = 'F3-WP1-CHANGED-WITHOUT-VERSION'
+Assert-Equal 'conflict' (Get-InboxDecision -Inbox $changedStart -PreviousState $pendingDecisionState) 'Same-version pending identity drift must fail closed.'
 Assert-Equal $true (Test-SafeBriefPath -Path $start.FullBrief) 'Valid brief path rejected.'
 Assert-Equal $false (Test-SafeBriefPath -Path 'reports/agent-handoffs/../secret.md') 'Traversal brief path accepted.'
 Assert-Equal $false (Test-SafeBriefPath -Path 'C:\secret.md') 'Rooted brief path accepted.'
@@ -100,8 +115,16 @@ Issue: ``#66``
   $first = Invoke-KimiWatcherPoll -Root $fixtureState -Url $remote -Executable 'kimi.exe' -DryRun
   Assert-Equal 'launch' $first.Decision 'Valid higher START_NOW must reach the launch decision.'
   Assert-Equal $false $first.Launched 'Dry-run START_NOW must not launch Kimi.'
-  $second = Invoke-KimiWatcherPoll -Root $fixtureState -Url $remote -Executable 'kimi.exe' -DryRun
-  Assert-Equal 'unchanged' $second.Decision 'The same START_NOW version must not relaunch.'
+  $pendingState = Get-Content -Raw -LiteralPath (Join-Path $fixtureState 'state.json') -Encoding utf8 | ConvertFrom-Json
+  Assert-Equal 60 $pendingState.pendingLaunchVersion 'Dry-run START_NOW must remain pending.'
+  $second = Invoke-KimiWatcherPoll -Root $fixtureState -Url $remote -Executable 'powershell.exe' -ProcessStarter {
+    param($Arguments)
+    [pscustomobject]@{ Id = 6060 }
+  }
+  Assert-Equal 'launch' $second.Decision 'The real poll after a dry run must launch the pending version.'
+  Assert-Equal $true $second.Launched 'Pending START_NOW must launch exactly once.'
+  $third = Invoke-KimiWatcherPoll -Root $fixtureState -Url $remote -Executable 'kimi.exe' -DryRun
+  Assert-Equal 'unchanged' $third.Decision 'A launched START_NOW version must not relaunch.'
   $receipt = Get-Content -Raw -LiteralPath (Join-Path $fixtureState 'launches\v60.json') -Encoding utf8 | ConvertFrom-Json
   Assert-Equal 60 $receipt.inboxVersion 'Launch receipt version mismatch.'
   Assert-Equal $branch $receipt.requiredBranch 'Launch receipt branch mismatch.'
@@ -122,6 +145,25 @@ Issue: ``#66``
   Assert-Equal 'reserved' $reservedState.lastLaunchState 'Failed process startup must retain its reserved state.'
   $afterCrash = Invoke-KimiWatcherPoll -Root $crashState -Url $remote -Executable 'kimi.exe' -DryRun
   Assert-Equal 'unchanged' $afterCrash.Decision 'A reserved version must not relaunch after a watcher failure.'
+
+  $fakeProcess = [pscustomobject]@{ Id = 7070; ExitCode = 0 }
+  $fakeProcess | Add-Member -MemberType ScriptMethod -Name WaitForExit -Value {
+    param($Milliseconds)
+    return $false
+  }
+  $script:stoppedProcessId = 0
+  $timeoutOutcome = Invoke-BoundedKimiProcess -Executable 'kimi.exe' -Prompt 'bounded fixture prompt' -Directory $source -StandardOutputPath (Join-Path $fixtureRoot 'stdout.log') -StandardErrorPath (Join-Path $fixtureRoot 'stderr.log') -TimeoutSeconds 1 -ProcessStarter {
+    param($Arguments)
+    $fakeProcess
+  } -ProcessTreeStopper {
+    param($ProcessId)
+    $script:stoppedProcessId = $ProcessId
+    return $true
+  }
+  Assert-Equal $true $timeoutOutcome.TimedOut 'A stuck Kimi process must time out.'
+  Assert-Equal 124 $timeoutOutcome.ExitCode 'A timed-out Kimi process must use exit code 124.'
+  Assert-Equal 7070 $script:stoppedProcessId 'Timeout must terminate the launched process tree.'
+  Assert-Equal $true $timeoutOutcome.TerminationSucceeded 'Successful process-tree termination must be recorded.'
 } finally {
   $resolvedTemp = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
   $resolvedFixture = [System.IO.Path]::GetFullPath($fixtureRoot)
