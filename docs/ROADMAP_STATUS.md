@@ -10,7 +10,7 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: IMPLEMENTING
+  state: PRO_GATE
   milestone: E1
   package: E1-WP3
   owner: Codex
@@ -25,16 +25,17 @@ checks:
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp3-fail-closed-content-b134cc62bda0055a857cf82b5a48ba57dd2ebc14
+  codex: e1-wp3-select-dedicated-codex-state-root-and-official-app-server-chatgpt-login-after-redacted-table-rejected
   pro: e1-wp3-genuine-credential-boundary-blocker-exact-04d9fdfa40574bbcc89f6364623245ec5e784949
   preston: authorize-e1-wp3-redacted-mcp-name-compatibility-adapter-fail-closed-no-credential-access-and-standing-dependency-ordered-continuation-2026-07-21
 blockers:
-  - The authorized redacted MCP-name compatibility adapter has not yet passed adversarial parsing, live isolation, and exact-SHA review
+  - ChatGPT Pro architecture review is pending for the dedicated Codex-owned state root and official App Server login successor
+  - The dedicated state root will require one official interactive Sign in with ChatGPT before the live authenticated round trip can be accepted
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
   - E1-WP4 remains dependency-blocked until E1-WP3 is accepted; F3, backend, and Kimi implementation remain blocked by their roadmap dependencies
 nextAuthorizedAction:
-  type: IMPLEMENT_E1_WP3_REDACTED_MCP_NAME_ADAPTER
-  text: Implement and verify only the authorized credential-safe, fail-closed redacted MCP-name compatibility adapter; obtain exact-SHA review before issuing the next dependency-ordered package.
+  type: PRO_REVIEW_E1_WP3_DEDICATED_CODEX_STATE_AUTH_ARCHITECTURE
+  text: Obtain exact-SHA Pro architecture review, then implement only the accepted dedicated-state-root and official App Server ChatGPT-login successor; do not read, copy, link, or enumerate global Codex config or credentials.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -90,6 +91,19 @@ verification from the live PR checks.
   interpretation, or terminal UI. Preston also granted standing authority to
   continue through dependency-ordered bounded packages while away, but no
   package may start before its predecessors and exact-SHA gates pass.
+- The authorized table adapter failed its own no-credential-access condition
+  before implementation. Pinned 0.144.1 masks environment/header values but
+  prints stdio Command and Args plus HTTP URL/query values verbatim. Synthetic
+  sentinels proved those columns can contain credential material, and the CLI
+  exposes no names/status-only projection. StoryStage therefore cannot capture,
+  stream, proxy, or parse that table without becoming credential-bearing.
+- Under Preston's standing continuation authority, Codex selected the narrowest
+  clean successor for Pro review: a dedicated Codex-owned state root containing
+  no inherited user `config.toml`; only `storystage_e1` is supplied on the App
+  Server command line. The App Server's official `account/login/start` ChatGPT
+  browser flow owns authentication and persistence inside that dedicated state
+  root. StoryStage may observe typed auth state and open the returned URL, but
+  must never read, copy, link, log, back up, or migrate Codex credential files.
 - E1-WP3 previously blocked on PR #64. Final Sol-high audit and ChatGPT Pro found that
   pinned Codex 0.144.1 `mcp list --json` returns raw configured MCP environment
   and header values. StoryStage used that structured output only to discover
@@ -99,9 +113,9 @@ verification from the live PR checks.
   redacted terminal-table parsing was outside the then-accepted constraints. Content
   `b134cc62bda0055a857cf82b5a48ba57dd2ebc14` removes the unsafe path, fails
   before App Server launch, invalidates the prior isolation claim, and replaces
-  the lab capture with the truthful blocked state. The 2026-07-21 amendment now
-  authorizes a narrowly tested redacted-name adapter; E1-WP3 remains unaccepted
-  until that successor passes live isolation and exact-SHA review.
+  the lab capture with the truthful blocked state. E1-WP3 remains unaccepted
+  while Pro reviews the dedicated-state-root successor and until that successor
+  passes official login, live isolation, and exact-SHA review.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
     and deterministic proposal/application path. Pro also required complete visual

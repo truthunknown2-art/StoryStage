@@ -214,7 +214,7 @@ proposal-review evidence are invalidated. The replacement 1440x900 capture
 shows the truthful fail-closed state with zero console errors or warnings.
 That state awaited Preston's platform or architecture decision.
 
-**Authorized compatibility amendment (2026-07-21):** Preston explicitly permits
+**Superseded compatibility amendment (2026-07-21):** Preston explicitly permitted
 a tested internal adapter over only the redacted human `codex mcp list` name
 table, with fail-closed verification and no credential access. The adapter may
 extract only server name and enabled/disabled state, must reject unknown headers,
@@ -225,6 +225,26 @@ pinned runtime both prove that StoryStage is the sole enabled MCP. Preston also
 granted standing authority to continue through dependency-ordered packages
 while away; that authority does not waive hosted checks, exact-SHA Pro review,
 milestone gates, or the rule that E1-WP4 cannot start before E1-WP3 is accepted.
+
+**Credential-boundary result:** adversarial testing rejected that adapter before
+implementation. Pinned Codex 0.144.1 prints stdio Command and Args and HTTP
+URL/query columns verbatim. Synthetic sentinels proved that those fields can
+contain credential material, while `mcp list --help` offers no supported
+names/status-only projection. Capturing, streaming, proxying, or partially
+parsing the table would expose those bytes to a StoryStage-owned process before
+discard, so the adapter cannot satisfy its own no-credential-access condition.
+
+**Dedicated-state successor for Pro review:** under Preston's standing
+dependency-ordered continuation authority, Codex selects a dedicated Codex-owned
+state root with no inherited user `config.toml`. StoryStage supplies only the
+fixed `storystage_e1` MCP on the App Server command line. When signed out, the
+host uses the pinned typed `account/login/start` ChatGPT flow and opens only its
+returned official auth URL; Codex owns credential creation, storage, refresh,
+and logout inside its dedicated state root. StoryStage must never read, copy,
+link, log, back up, export, or migrate those credential files. Acceptance still
+requires exact-one MCP proof before prompting, a successful official interactive
+login, the live schema-valid proposal round trip, hosted verification, and an
+exact-SHA Pro verdict. This architecture candidate does not start E1-WP4.
 
 ### E1-WP4 - Failure, security, and feasibility gate
 
