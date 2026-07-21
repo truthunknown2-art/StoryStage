@@ -70,7 +70,7 @@ const DIRECTOR_TABS = [
     id: "motion",
     label: "Motion",
     truth:
-      "Motion and performance direction arrive later. No animation or rendering exists in this package, and this tab changes nothing.",
+      "Motion controls arrive later. The performance note in Direct is session-local text only; it does not animate or render this beat.",
   },
 ] as const;
 

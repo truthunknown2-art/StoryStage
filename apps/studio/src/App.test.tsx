@@ -881,7 +881,7 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
     expect(motion).toHaveAttribute("aria-selected", "true");
     expect(motion).toHaveFocus();
     expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
-      "Motion and performance direction arrive later.",
+      "Motion controls arrive later. The performance note in Direct is session-local text only; it does not animate or render this beat.",
     );
     await user.keyboard("{Home}");
     expect(direct).toHaveAttribute("aria-selected", "true");
