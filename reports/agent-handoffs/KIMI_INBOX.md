@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `68`
+Inbox-Version: `69`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F3-WP3-VISUAL-MOTION-SCOPED-HISTORY`
 Status: `START-NOW`
@@ -12,16 +12,33 @@ Issue: `#85`
 
 ## Current instruction
 
-Version 68 starts only F3-WP3 through issue #85 from exact accepted base
+Version 69 retries the unchanged F3-WP3 assignment through issue #85 after the
+local watcher correctly failed closed on a transient pending-brief fingerprint
+mismatch. The same immutable Version 68 full brief, exact accepted base
 `fe004232e4650dfceaa4360d98f9627595c0cc8c` on the new required branch
-`agent/kimi-f3-wp3-visual-motion-scoped-history`. Execute the complete Version
-68 brief: add the bounded Visual and Motion intent controls to the same atomic
+`agent/kimi-f3-wp3-visual-motion-scoped-history`, and package scope remain
+unchanged. Execute the complete Version 68 brief: add the bounded Visual and
+Motion intent controls to the same atomic
 per-beat history as Direct, expose only committed values through the honest
 planning summary, preserve accepted F1/F2/F3-WP1/F3-WP2 behavior, publish the
 exact evidence, handback, and draft PR, then exit. Do not begin F3-WP4, AI
 behavior, persistence, backend, Godot, Remotion, rendering, or export work.
 
-Version 68 supersedes Version 67. Version 67 remains below as historical
+Version 69 supersedes Version 68 for launch identity only. Version 68 remains
+below as the unchanged full-brief identity and must not relaunch.
+
+---
+
+Previous Version 68 instruction:
+
+Version 68 started only F3-WP3 through issue #85 from exact accepted base
+`fe004232e4650dfceaa4360d98f9627595c0cc8c` on the required branch
+`agent/kimi-f3-wp3-visual-motion-scoped-history`. Its full brief remains the
+canonical implementation contract for Version 69. The watcher dry-run
+validated it, but the first real poll failed closed before launching Kimi; no
+model tokens were consumed and no work branch was created.
+
+Version 68 superseded Version 67. Version 67 remains below as historical
 traceability and must not relaunch.
 
 ---
