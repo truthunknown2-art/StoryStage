@@ -10,29 +10,29 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: ACCEPTED_WAIT
-  milestone: G0
-  package: G0-WP7
-  owner: Preston
-  exactBase: ddddcf1e9281da808c925a06bf25fd52ee43fa66
-  branch: product/v1
-  issue: null
-  pr: 50
-  candidateContentHead: 79e108831887daeae319b779276e4bbcafee250e
+  state: START_NOW
+  milestone: E1
+  package: E1-WP1
+  owner: Codex
+  exactBase: 4ec99ebb33f274625e8e1fe0f1b401d9c0169fad
+  branch: agent/codex-e1-wp1-runtime-preflight
+  issue: 53
+  pr: null
+  candidateContentHead: 4ec99ebb33f274625e8e1fe0f1b401d9c0169fad
   candidateRef: product/v1
 checks:
   local: roadmap-consistency+root-verify-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: integrated-pr-50-at-ddddcf1e9281da808c925a06bf25fd52ee43fa66
+  codex: issued-e1-wp1-only-at-exact-base-4ec99ebb33f274625e8e1fe0f1b401d9c0169fad
   pro: accept-exact-2e1fbb0791a9e205d71f7bfaf00d55894dab5475
   preston: accept-g0-authorize-e1-wp1-only-2026-07-20
 blockers:
-  - E1-WP1 requires a separate issue, exact-base branch, and START_NOW status update
+  - E1-WP2, E1-WP3, E1-WP4, F3, backend, and Kimi implementation remain unauthorized
 nextAuthorizedAction:
-  type: ISSUE_E1_WP1_ONLY
-  text: Create and publish only the bounded E1-WP1 ticket; do not start E1-WP2, F3, backend, or Kimi implementation.
+  type: IMPLEMENT_E1_WP1_ONLY
+  text: Execute only issue 53 from the exact base and stop before E1-WP2.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -61,10 +61,10 @@ verification from the live PR checks.
   `87c01f9b...`; G0 is the accepted planning/governance milestone integrated at
   `ddddcf1...` and does not itself implement product capability.
 - On 2026-07-20 Preston explicitly accepted G0 and authorized only the
-  dependency-ordered E1-WP1 feasibility package. That decision does not start
-  implementation until a separate exact-base issue and `START_NOW` status are
-  published. E1-WP2, F3, backend product work, and Kimi implementation remain
-  unauthorized.
+  dependency-ordered E1-WP1 feasibility package. Issue #53 now bounds that
+  package at exact base `4ec99eb...`; `START_NOW` authorizes Codex to implement
+  only the isolated runtime/protocol/auth preflight. E1-WP2, F3, backend product
+  work, and Kimi implementation remain unauthorized.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   + read-only StoryStage MCP feasibility before F3, then a native AI Director
   and deterministic proposal/application path. Pro also required complete visual
