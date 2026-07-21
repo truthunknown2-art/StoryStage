@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -6,7 +6,9 @@ import { prepareE1LabWorkspace } from "./lab-workspace";
 
 describe("E1 lab workspace containment", () => {
   it("creates a disposable workspace under the fixed StoryStage lab root", async () => {
-    const root = await mkdtemp(join(tmpdir(), "storystage-e1-lab-root-"));
+    const root = await realpath(
+      await mkdtemp(join(tmpdir(), "storystage-e1-lab-root-")),
+    );
     const codexHome = join(root, "StoryStage", "codex", "0.144.1");
     await mkdir(codexHome, { recursive: true });
     try {
@@ -20,8 +22,12 @@ describe("E1 lab workspace containment", () => {
   });
 
   it("rejects a junction component before creating a workspace through it", async () => {
-    const root = await mkdtemp(join(tmpdir(), "storystage-e1-lab-junction-"));
-    const outside = await mkdtemp(join(tmpdir(), "storystage-e1-lab-outside-"));
+    const root = await realpath(
+      await mkdtemp(join(tmpdir(), "storystage-e1-lab-junction-")),
+    );
+    const outside = await realpath(
+      await mkdtemp(join(tmpdir(), "storystage-e1-lab-outside-")),
+    );
     const storyStageRoot = join(root, "StoryStage");
     const codexHome = join(storyStageRoot, "codex", "0.144.1");
     await mkdir(codexHome, { recursive: true });

@@ -16,7 +16,7 @@
       "command": "pnpm --filter @storystage/codex-lab test",
       "result": "PASS",
       "testFiles": 15,
-      "tests": 103
+      "tests": 104
     },
     {
       "command": "pnpm --filter @storystage/e1-director-lab typecheck",

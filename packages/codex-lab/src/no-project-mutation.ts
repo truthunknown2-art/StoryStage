@@ -55,33 +55,38 @@ const verifiedRuntime = {
   protocolSha256: "deterministic-e1-wp4-protocol",
 };
 
-async function listFiles(root: string, current = root): Promise<string[]> {
-  const files: string[] = [];
+async function listTreeEntries(
+  root: string,
+  current = root,
+): Promise<string[]> {
+  const entries: string[] = [];
   for (const entry of await readdir(current, { withFileTypes: true })) {
     const path = join(current, entry.name);
-    if (entry.isDirectory()) files.push(...(await listFiles(root, path)));
-    else if (entry.isFile())
-      files.push(relative(root, path).replaceAll("\\", "/"));
-    else files.push(`${relative(root, path).replaceAll("\\", "/")}:non-file`);
+    const relativePath = relative(root, path).replaceAll("\\", "/");
+    if (entry.isDirectory()) {
+      entries.push(`${relativePath}/`);
+      entries.push(...(await listTreeEntries(root, path)));
+    } else if (entry.isFile()) entries.push(relativePath);
+    else entries.push(`${relativePath}:non-file`);
   }
-  return files.sort();
+  return entries.sort();
 }
 
-async function snapshot(root: string): Promise<{
+export async function createE1Wp4TreeSnapshot(root: string): Promise<{
   sha256: string;
-  files: string[];
+  entries: string[];
 }> {
-  const files = await listFiles(root);
+  const entries = await listTreeEntries(root);
   const hash = createHash("sha256");
-  for (const relativePath of files) {
+  for (const relativePath of entries) {
     hash.update(relativePath);
     hash.update("\0");
-    if (!relativePath.endsWith(":non-file")) {
+    if (!relativePath.endsWith("/") && !relativePath.endsWith(":non-file")) {
       hash.update(await readFile(join(root, relativePath)));
     }
     hash.update("\0");
   }
-  return { sha256: hash.digest("hex"), files };
+  return { sha256: hash.digest("hex"), entries };
 }
 
 async function loadExactMcpStatus(): Promise<unknown> {
@@ -328,7 +333,7 @@ export async function createE1Wp4NoProjectMutationReceipt() {
       await mkdir(dirname(path), { recursive: true });
       await writeFile(path, content, "utf8");
     }
-    const before = await snapshot(decoyRoot);
+    const before = await createE1Wp4TreeSnapshot(decoyRoot);
 
     assertE1Wp4FailureGate();
     serializeE1Wp4FailureGateReceipt();
@@ -338,20 +343,25 @@ export async function createE1Wp4NoProjectMutationReceipt() {
     });
     const failureExercises = await runFailureExercises(root);
 
-    const after = await snapshot(decoyRoot);
+    const after = await createE1Wp4TreeSnapshot(decoyRoot);
     if (
       before.sha256 !== after.sha256 ||
-      before.files.join("\0") !== after.files.join("\0")
+      before.entries.join("\0") !== after.entries.join("\0")
     ) {
       throw new Error("The E1-WP4 decoy project mutation tripwire changed.");
     }
     return {
-      schemaVersion: 2,
+      schemaVersion: 3,
       package: "E1-WP4",
       evidenceClass: "deterministic-roundtrip-decoy-project-tripwire",
       scope: "actual-roundtrip-failure-seams-with-sibling-decoy-project",
-      decoyFileCount: before.files.length,
-      decoyFiles: before.files,
+      decoyEntryCount: before.entries.length,
+      decoyDirectoryCount: before.entries.filter((entry) => entry.endsWith("/"))
+        .length,
+      decoyFileCount: before.entries.filter(
+        (entry) => !entry.endsWith("/") && !entry.endsWith(":non-file"),
+      ).length,
+      decoyEntries: before.entries,
       beforeSha256: before.sha256,
       afterSha256: after.sha256,
       unchanged: true,

@@ -1,17 +1,23 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "package": "E1-WP4",
   "evidenceClass": "deterministic-roundtrip-decoy-project-tripwire",
   "scope": "actual-roundtrip-failure-seams-with-sibling-decoy-project",
+  "decoyEntryCount": 8,
+  "decoyDirectoryCount": 4,
   "decoyFileCount": 4,
-  "decoyFiles": [
+  "decoyEntries": [
+    ".git/",
     ".git/HEAD",
+    ".git/refs/",
+    ".git/refs/heads/",
     ".git/refs/heads/private-launch",
     "project.json",
+    "scenes/",
     "scenes/scene.json"
   ],
-  "beforeSha256": "abc9692cf670fe8ba338af29040755c6d3f06776675f1f05310a8b1e5634fd1b",
-  "afterSha256": "abc9692cf670fe8ba338af29040755c6d3f06776675f1f05310a8b1e5634fd1b",
+  "beforeSha256": "071fd9b35bcda593038f44466d09d1956a65fd00c7d237fb198445311e8867d1",
+  "afterSha256": "071fd9b35bcda593038f44466d09d1956a65fd00c7d237fb198445311e8867d1",
   "unchanged": true,
   "unexpectedFileDetection": true,
   "failurePathCount": 9,
