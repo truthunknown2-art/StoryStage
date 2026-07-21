@@ -9,8 +9,9 @@
 - Product acceptance: Preston
 - Decomposition approval: Preston accepted G0 and the dependency-ordered
   E1-WP1 through E1-WP4 plan on 2026-07-20
-- Current authorization: E1-WP1 only, after a separate exact-base issue and
-  `START_NOW` ledger update; E1-WP2 and later work remain blocked
+- Current authorization: E1-WP2 only through issue #57 at exact base
+  `a246987fb678712af022b46f3b23ad22f4d22b2a`; E1-WP3 and later work remain
+  blocked
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 
@@ -99,8 +100,10 @@ ChatGPT Pro accepted exact PR head
 passed, and the package merged into `product/v1` at
 `ed457eada98dfeecfacb9e081a9803ecf97906ca`. The App Server command's
 experimental label remains a production-packaging risk, the complete E1
-milestone is not accepted, and E1-WP2 remains blocked pending a separate
-exact-base ticket and `START_NOW` update.
+milestone is not accepted, and no later package was authorized by the WP1
+acceptance. Preston subsequently directed Codex to continue the dependency-
+ordered work; issue #57 and the separate `START_NOW` ledger update authorize
+only E1-WP2 from exact base `a246987fb678712af022b46f3b23ad22f4d22b2a`.
 
 ### E1-WP2 - Read-only StoryStage MCP scene context
 
@@ -133,6 +136,12 @@ cannot request a durable, rendering, approval, shell, or arbitrary file action.
 - assertions that the lab fixture is byte-identical after every run; and
 - completion only when the server is read-only by construction and every
   denied authority produces a clear failure.
+
+**Authorized package status (2026-07-20):** issue #57 authorizes only E1-WP2 on
+`agent/codex-e1-wp2-mcp-scene-context`. The deliverable is one fixed synthetic
+scene context server and ephemeral proposal validator. App Server configuration,
+prompting, streamed round trip, a proposal-review surface, E1-WP3, and Kimi
+implementation remain blocked.
 
 ### E1-WP3 - Streamed structured-proposal round trip
 
