@@ -31,6 +31,19 @@ project creation. Do not label the choice "project grammar." Do not show a
 disabled or placeholder Weird History option. Additional templates are future
 work.
 
+## Connection experience
+
+- If Codex is unavailable on **What's your idea?**, show **Connect AI Director**.
+- The connection sheet checks the pinned local Codex runtime, then offers
+  **Sign in with ChatGPT** through Codex's official browser/device flow.
+- StoryStage starts and configures its internal bounded MCP server automatically.
+  Never ask the creator for an MCP URL, JSON, terminal command, API key, cookie,
+  access/refresh token, or password.
+- The AI Director header always shows one compact truthful state: Connected,
+  Signed out, Offline, Usage limit, Update required, or Crashed.
+- **Settings → AI Director** contains reconnect, sign out, runtime check, and
+  redacted diagnostics. Advanced implementation details remain collapsed.
+
 ## Required Studio hierarchy
 
 - Keep the visual canvas and selected shot/scene as the primary surface.

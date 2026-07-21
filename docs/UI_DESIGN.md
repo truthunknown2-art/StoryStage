@@ -22,6 +22,11 @@ Both paths use the single private-launch template, **Ollo & Friends — Kids
 Story**, then choose art direction, target duration, cast, guide-voice state,
 format, and language before the same editable proposal review.
 
+When AI is disconnected, **What's your idea?** shows **Connect AI Director** and
+a small **Sign in with ChatGPT** connection sheet. The creator never configures
+MCP, pastes a key, or opens a terminal. The chat header shows a compact truthful
+connection state, with reconnect/sign-out/runtime check in Settings.
+
 Keep generation quality, candidate counts, rig requirements, provider routing, and licensed-media preferences under `More options`.
 
 Reference packet: [AI-native Create and Studio visual direction](design/ai-copilot-studio/README.md).

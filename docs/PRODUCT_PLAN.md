@@ -81,6 +81,12 @@ New project starts with exactly two equally clear paths:
    story, target duration, tone, cast, and constraints, then review its proposed
    screenplay and hierarchy.
 
+If Codex is not connected, the second path shows **Connect AI Director**. A
+small connection sheet verifies the pinned local Codex runtime and starts
+Codex's official **Sign in with ChatGPT** browser/device flow. StoryStage starts
+and configures its bounded MCP server automatically; the creator never enters an
+MCP URL, JSON configuration, API key, cookie, token, or password.
+
 Both paths meet at the same editable review step before any project state is
 committed or media is rendered.
 
@@ -112,6 +118,10 @@ committed or media is rendered.
   markers on the scrubber, explains affected shots/assets/audio/render jobs, and
   offers Preview, Apply, Revise, Reject, and Undo. Accepted changes use the same
   validated commands as manual controls.
+- **AI Director connection:** the panel header always shows Connected, Signed
+  out, Offline, Usage limit, Update required, or Crashed. **Settings → AI
+  Director** provides reconnect, sign out, runtime check, and redacted
+  diagnostics—never raw MCP or credential configuration.
 - **Bottom:** compact episode overview plus expanded tracks for the selected scene.
 - **Tracks:** characters, props, camera, voice, SFX, and music.
 - **Top-right:** Preview and Export.

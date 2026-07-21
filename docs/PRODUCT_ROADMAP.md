@@ -634,7 +634,11 @@ Codex reviews, Pro audits the milestone, and Preston accepts it.
 
 - **Tasks:** make New Project present exactly **Paste a script** and **What's your
   idea?**; the second path opens the normal creator-facing AI Director panel for
-  an Ollo & Friends brief, target duration, tone, cast, and constraints; use
+  an Ollo & Friends brief, target duration, tone, cast, and constraints. If
+  disconnected, show a compact **Connect AI Director** sheet with runtime check
+  and **Sign in with ChatGPT**; the creator never configures MCP or enters a key.
+  Keep a truthful status chip in Create/Studio plus **Settings → AI Director**
+  for reconnect, sign out, runtime check, and redacted diagnostics. Use
   explicit E1-derived fixture states for Codex connection/auth/usage, persistent
   thread, episode/scene/beat/range scope, streamed progress, tool activity,
   structured screenplay/hierarchy/direction proposals, affected-range/asset
@@ -1097,7 +1101,8 @@ audits editorial behavior; Preston accepts privacy, agent authority, and quality
 - **Tasks:** convert the E1 evidence into one launch ADR; pin/discover the
   supported Codex runtime and generated App Server schema; use local stdio;
   delegate sign-in, token refresh, sign-out, account, model, and usage state to
-  Codex; define explicit script/context transmission, retention/logging,
+  Codex; let the host start/configure the bounded StoryStage MCP server without
+  creator-entered MCP settings; define explicit script/context transmission, retention/logging,
   diagnostics redaction, offline behavior, and manual/deterministic fallback.
 - **Non-goals:** OpenAI API key UI, provider billing, cookie/session automation,
   remote WebSocket exposure, arbitrary agent plugins, or silent API fallback.
