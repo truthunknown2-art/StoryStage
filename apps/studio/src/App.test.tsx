@@ -343,7 +343,9 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     const user = userEvent.setup();
     const studio = await openDemoStudio(user);
 
-    // F3-WP1 Director tabs show the shared scope with truthful copy only.
+    // F3-WP2 Director tabs: Direct exposes the real bounded session-local
+    // drafts with honest initial history states; Visual and Motion stay
+    // truthful, non-editable later-package surfaces.
     expect(
       within(studio).getByRole("tablist", { name: "Director workspace" }),
     ).toBeInTheDocument();
@@ -356,9 +358,18 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     expect(
       within(studio).getByRole("tab", { name: "Motion" }),
     ).toBeInTheDocument();
+    // The Direct tab is selected by default: exactly three bounded drafts
+    // plus real Apply/Undo/Redo with honest disabled history states.
+    expect(within(studio).getAllByRole("textbox")).toHaveLength(3);
     expect(
-      within(studio).queryByRole("button", { name: /Apply/i }),
-    ).not.toBeInTheDocument();
+      within(studio).getByRole("button", { name: "Apply" }),
+    ).toBeEnabled();
+    expect(
+      within(studio).getByRole("button", { name: "Undo" }),
+    ).toBeDisabled();
+    expect(
+      within(studio).getByRole("button", { name: "Redo" }),
+    ).toBeDisabled();
     // No shot/action/camera control fields exist in this slice.
     expect(
       within(studio).queryByRole("combobox", {
@@ -373,7 +384,7 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     ).toBeDisabled();
     expect(
       studio.textContent?.includes(
-        "Preview stays disabled in F3-WP1 — this package is scope and workspace foundation only; there is no media to preview.",
+        "Preview stays disabled in F3-WP2 — Direct edits are session-local direction only; there is still no media to preview.",
       ),
     ).toBe(true);
     expect(
@@ -845,7 +856,7 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
       within(studio).getAllByRole("tabpanel", { hidden: true }),
     ).toHaveLength(3);
     expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
-      "nothing here changes the plan yet",
+      "Session-local only — this direction and its undo history stay in this Studio session.",
     );
 
     await user.click(visual);
@@ -882,15 +893,35 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
     expect(direct).toHaveAttribute("aria-selected", "true");
     expect(direct).toHaveFocus();
 
-    // No editable direction fields, Apply/Undo/Redo, or fake controls.
+    // The Direct tab now exposes exactly the three bounded session-local
+    // drafts plus real Apply/Undo/Redo with honest initial disabled
+    // states; Visual and Motion expose no editing or false capability.
     const inspector = within(studio).getByRole("complementary", {
       name: "Studio inspector",
     });
+    await user.click(visual);
     expect(within(inspector).queryByRole("textbox")).not.toBeInTheDocument();
     expect(within(inspector).queryByRole("combobox")).not.toBeInTheDocument();
     expect(
       within(inspector).queryByRole("button", { name: /Apply|Undo|Redo/i }),
     ).not.toBeInTheDocument();
+    await user.click(motion);
+    expect(within(inspector).queryByRole("textbox")).not.toBeInTheDocument();
+    expect(within(inspector).queryByRole("combobox")).not.toBeInTheDocument();
+    expect(
+      within(inspector).queryByRole("button", { name: /Apply|Undo|Redo/i }),
+    ).not.toBeInTheDocument();
+    await user.click(direct);
+    expect(within(inspector).getAllByRole("textbox")).toHaveLength(3);
+    expect(
+      within(inspector).getByRole("button", { name: "Apply" }),
+    ).toBeEnabled();
+    expect(
+      within(inspector).getByRole("button", { name: "Undo" }),
+    ).toBeDisabled();
+    expect(
+      within(inspector).getByRole("button", { name: "Redo" }),
+    ).toBeDisabled();
   });
 
   it("updates the permanent scope header across scenes, beats, and tabs", async () => {
@@ -923,5 +954,286 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
     expect(scopeHeader(studio)).toHaveTextContent(
       "Beat 2 · The Storylight shows the doorway",
     );
+  });
+});
+
+describe("F3-WP2 — Direct drafts and scoped per-beat history", () => {
+  async function openDemoStudio(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: /Open local demo project The Storylight in the Little Wood/,
+      }),
+    );
+    return screen.findByTestId("pv1-studio");
+  }
+
+  const rail = (studio: HTMLElement) =>
+    within(studio).getByRole("navigation", { name: "Episode hierarchy" });
+
+  const directFields = (studio: HTMLElement) => ({
+    purpose: within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    performance: within(studio).getByRole("textbox", {
+      name: "Performance direction",
+    }),
+    continuity: within(studio).getByRole("textbox", {
+      name: "Continuity note",
+    }),
+  });
+
+  const applyButton = (studio: HTMLElement) =>
+    within(studio).getByRole("button", { name: "Apply" });
+  const undoButton = (studio: HTMLElement) =>
+    within(studio).getByRole("button", { name: "Undo" });
+  const redoButton = (studio: HTMLElement) =>
+    within(studio).getByRole("button", { name: "Redo" });
+
+  it("commits the complete three-field draft as one atomic Apply step with honest states", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+
+    // The session-local boundary wording is plain and always visible.
+    expect(studio).toHaveTextContent(
+      "Session-local only — this direction and its undo history stay in this Studio session. They are not saved to the project, are not interpreted by AI, and are not used for animation, rendering, or export.",
+    );
+
+    const fields = directFields(studio);
+    expect(applyButton(studio)).toBeEnabled();
+    expect(undoButton(studio)).toBeDisabled();
+    expect(redoButton(studio)).toBeDisabled();
+    expect(studio).toHaveTextContent(
+      "Draft matches this beat's committed session direction.",
+    );
+
+    await user.type(fields.purpose, "Establish the nook as a safe home base");
+    await user.type(fields.performance, "Warm, unhurried, slightly sleepy");
+    await user.type(fields.continuity, "Window light stays warm into Beat 2");
+    expect(studio).toHaveTextContent(
+      "Unapplied draft changes — Apply commits them as one step in this beat's session history.",
+    );
+    // Editing the draft alone never creates history.
+    expect(undoButton(studio)).toBeDisabled();
+
+    await user.click(applyButton(studio));
+    expect(studio).toHaveTextContent(
+      "Draft matches this beat's committed session direction.",
+    );
+    expect(undoButton(studio)).toBeEnabled();
+    expect(redoButton(studio)).toBeDisabled();
+    expect(fields.purpose).toHaveValue(
+      "Establish the nook as a safe home base",
+    );
+    expect(fields.performance).toHaveValue("Warm, unhurried, slightly sleepy");
+    expect(fields.continuity).toHaveValue(
+      "Window light stays warm into Beat 2",
+    );
+  });
+
+  it("creates no phantom history step when Apply is unchanged", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const fields = directFields(studio);
+
+    await user.type(fields.purpose, "First committed purpose");
+    await user.click(applyButton(studio));
+    // Re-applying the identical snapshot is a truthful no-op.
+    await user.click(applyButton(studio));
+
+    // Exactly one undo step exists: a single Undo returns to the initial
+    // empty snapshot, and no further undo is available. A phantom step
+    // would leave Undo enabled on an identical snapshot here.
+    await user.click(undoButton(studio));
+    expect(fields.purpose).toHaveValue("");
+    expect(undoButton(studio)).toBeDisabled();
+    expect(redoButton(studio)).toBeEnabled();
+
+    await user.click(redoButton(studio));
+    expect(fields.purpose).toHaveValue("First committed purpose");
+  });
+
+  it("restores prior and exact undone snapshots and syncs the visible draft", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const fields = directFields(studio);
+
+    await user.type(fields.purpose, "Purpose A");
+    await user.type(fields.performance, "Performance A");
+    await user.type(fields.continuity, "Continuity A");
+    await user.click(applyButton(studio));
+
+    await user.clear(fields.purpose);
+    await user.type(fields.purpose, "Purpose B");
+    await user.clear(fields.performance);
+    await user.type(fields.performance, "Performance B");
+    await user.clear(fields.continuity);
+    await user.type(fields.continuity, "Continuity B");
+    await user.click(applyButton(studio));
+
+    // Undo restores the prior committed snapshot into the visible draft.
+    await user.click(undoButton(studio));
+    expect(fields.purpose).toHaveValue("Purpose A");
+    expect(fields.performance).toHaveValue("Performance A");
+    expect(fields.continuity).toHaveValue("Continuity A");
+    expect(studio).toHaveTextContent(
+      "Draft matches this beat's committed session direction.",
+    );
+    expect(redoButton(studio)).toBeEnabled();
+
+    // Redo restores the exact undone snapshot.
+    await user.click(redoButton(studio));
+    expect(fields.purpose).toHaveValue("Purpose B");
+    expect(fields.performance).toHaveValue("Performance B");
+    expect(fields.continuity).toHaveValue("Continuity B");
+    expect(redoButton(studio)).toBeDisabled();
+    expect(undoButton(studio)).toBeEnabled();
+  });
+
+  it("invalidates only the selected beat's redo branch after Undo plus a distinct Apply", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const fields = directFields(studio);
+
+    await user.type(fields.purpose, "Snapshot A");
+    await user.click(applyButton(studio));
+    await user.clear(fields.purpose);
+    await user.type(fields.purpose, "Snapshot B");
+    await user.click(applyButton(studio));
+
+    await user.click(undoButton(studio));
+    expect(fields.purpose).toHaveValue("Snapshot A");
+
+    // A distinct commit after Undo truncates this beat's redo branch.
+    await user.clear(fields.purpose);
+    await user.type(fields.purpose, "Snapshot C");
+    await user.click(applyButton(studio));
+    expect(redoButton(studio)).toBeDisabled();
+
+    // The committed line is now empty → A → C: B can never reappear.
+    await user.click(undoButton(studio));
+    expect(fields.purpose).toHaveValue("Snapshot A");
+    await user.click(redoButton(studio));
+    expect(fields.purpose).toHaveValue("Snapshot C");
+    expect(redoButton(studio)).toBeDisabled();
+  });
+
+  it("keeps drafts, commits, and histories independent across two beats in one scene", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const fields = directFields(studio);
+
+    // Commit on Scene 1 · Beat 1.
+    await user.type(fields.purpose, "Beat 1 committed purpose");
+    await user.click(applyButton(studio));
+
+    // Beat 2 starts clean: no leaked draft, commit, or history.
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 A shelf of unfinished stories/,
+      }),
+    );
+    expect(fields.purpose).toHaveValue("");
+    expect(fields.performance).toHaveValue("");
+    expect(fields.continuity).toHaveValue("");
+    expect(undoButton(studio)).toBeDisabled();
+    expect(redoButton(studio)).toBeDisabled();
+    expect(studio).toHaveTextContent(
+      "Draft matches this beat's committed session direction.",
+    );
+
+    // An unapplied Beat 2 draft survives leaving and returning, and never
+    // appears on Beat 1.
+    await user.type(fields.purpose, "Beat 2 unapplied draft");
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 1 Morning light through the round window/,
+      }),
+    );
+    expect(fields.purpose).toHaveValue("Beat 1 committed purpose");
+    expect(undoButton(studio)).toBeEnabled();
+
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 A shelf of unfinished stories/,
+      }),
+    );
+    expect(fields.purpose).toHaveValue("Beat 2 unapplied draft");
+    expect(studio).toHaveTextContent("Unapplied draft changes");
+    expect(undoButton(studio)).toBeDisabled();
+
+    // Committing Beat 2 never touches Beat 1's independent history.
+    await user.click(applyButton(studio));
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 1 Morning light through the round window/,
+      }),
+    );
+    expect(fields.purpose).toHaveValue("Beat 1 committed purpose");
+    await user.click(undoButton(studio));
+    expect(fields.purpose).toHaveValue("");
+    expect(undoButton(studio)).toBeDisabled();
+
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Beat 2 A shelf of unfinished stories/,
+      }),
+    );
+    expect(fields.purpose).toHaveValue("Beat 2 unapplied draft");
+    expect(undoButton(studio)).toBeEnabled();
+    expect(redoButton(studio)).toBeDisabled();
+  });
+
+  it("keeps histories independent across scenes and selects the first beat without leaking state", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const fields = directFields(studio);
+
+    // Commit on Scene 1 · Beat 1, then change scenes from the rail.
+    await user.type(fields.purpose, "Scene 1 beat 1 purpose");
+    await user.click(applyButton(studio));
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Scene 2 Forest Path/,
+      }),
+    );
+
+    // The scene change still selects its first beat, and nothing leaks:
+    // clean draft, clean history, honest status.
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Scope: Scene 2 · Beat 1 — Ollo bounces ahead of Tix",
+    );
+    expect(fields.purpose).toHaveValue("");
+    expect(fields.performance).toHaveValue("");
+    expect(fields.continuity).toHaveValue("");
+    expect(undoButton(studio)).toBeDisabled();
+    expect(redoButton(studio)).toBeDisabled();
+    expect(studio).toHaveTextContent(
+      "Draft matches this beat's committed session direction.",
+    );
+
+    // Commit a different snapshot on Scene 2 · Beat 1.
+    await user.type(fields.purpose, "Scene 2 beat 1 purpose");
+    await user.click(applyButton(studio));
+
+    // Leave and return: Scene 1 kept its own committed snapshot and undo
+    // availability; Scene 2 kept its own independent commit.
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Scene 1 The Home Nook/,
+      }),
+    );
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Scope: Scene 1 · Beat 1 — Morning light through the round window",
+    );
+    expect(fields.purpose).toHaveValue("Scene 1 beat 1 purpose");
+    expect(undoButton(studio)).toBeEnabled();
+
+    await user.click(
+      within(rail(studio)).getByRole("button", {
+        name: /Scene 2 Forest Path/,
+      }),
+    );
+    expect(fields.purpose).toHaveValue("Scene 2 beat 1 purpose");
+    expect(undoButton(studio)).toBeEnabled();
+    expect(redoButton(studio)).toBeDisabled();
   });
 });

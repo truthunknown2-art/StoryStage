@@ -1,0 +1,97 @@
+{
+  "viewport": "1440x900",
+  "url": "http://127.0.0.1:5193/",
+  "checks": [
+    {
+      "name": "scope header opens at Scene 1 · Beat 1 · Morning light through the round window",
+      "ok": true
+    },
+    {
+      "name": "Direct tab selected initially",
+      "ok": true
+    },
+    {
+      "name": "session-local boundary wording is visible in the Direct panel",
+      "ok": true
+    },
+    {
+      "name": "Undo disabled before any commit",
+      "ok": true
+    },
+    {
+      "name": "Redo disabled before any commit",
+      "ok": true
+    },
+    {
+      "name": "unapplied status appears while drafting",
+      "ok": true
+    },
+    {
+      "name": "screenshot 1 captured (before Apply)",
+      "ok": true
+    },
+    {
+      "name": "after Apply the status reads committed",
+      "ok": true
+    },
+    {
+      "name": "Undo enabled after Apply",
+      "ok": true
+    },
+    {
+      "name": "Redo still disabled after Apply",
+      "ok": true
+    },
+    {
+      "name": "screenshot 2 captured (after Apply)",
+      "ok": true
+    },
+    {
+      "name": "after Undo the fields restore the prior committed (empty) snapshot",
+      "ok": true
+    },
+    {
+      "name": "Undo disabled after undoing the only step",
+      "ok": true
+    },
+    {
+      "name": "Redo enabled after Undo",
+      "ok": true
+    },
+    {
+      "name": "screenshot 3 captured (after Undo)",
+      "ok": true
+    },
+    {
+      "name": "Redo restores the exact undone snapshot",
+      "ok": true
+    },
+    {
+      "name": "zero console errors/warnings",
+      "ok": true
+    },
+    {
+      "name": "zero page errors",
+      "ok": true
+    }
+  ],
+  "consoleIssues": [],
+  "pageErrors": [],
+  "screenshots": [
+    {
+      "file": "wp2-scene1-beat1-direct-before-apply-1440x900.png",
+      "sha256": "08b66a852a482c1baf8fac82d2eeffe5779555446a155a6a4c3afce2bbc31a4c",
+      "state": "Scene 1 · Beat 1 · Direct: three drafts filled, status 'Unapplied draft changes', Undo/Redo disabled, scope header and session-local boundary visible"
+    },
+    {
+      "file": "wp2-scene1-beat1-direct-after-apply-1440x900.png",
+      "sha256": "dd4b5abac53e461ad9d0344c4b93038d357378465416558cf525c2d79f79d756",
+      "state": "Same beat after Apply: committed status, Undo enabled, Redo disabled, drafts unchanged in the fields"
+    },
+    {
+      "file": "wp2-scene1-beat1-direct-after-undo-1440x900.png",
+      "sha256": "d71e44834db3583b9680a869105e794f9520a62353d4a2e74210845af9cc5979",
+      "state": "Same beat after Undo: fields restored to the prior committed empty snapshot, Undo disabled, Redo enabled"
+    }
+  ]
+}
