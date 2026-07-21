@@ -107,8 +107,7 @@ files.
    Codex also reran repository-root `pnpm verify` on the corrected branch;
    every workspace suite passed in 205.9 seconds with only the two unchanged
    Remotion lint warnings.
-4. `pnpm verify` — **fails only at `verify:roadmap`**; see the conflict
-   disclosure below. Every other component passes:
+4. `pnpm verify` — **PASS** on the corrected review branch in 205.9 seconds:
    - `verify:director-capability-assets` — PASS (19 assets).
    - `verify:candidate-rig-review-implementation-receipt` — PASS.
    - `verify:e1-app-server-schema` — PASS.
@@ -126,9 +125,9 @@ files.
      tests hit their 5 s timeouts while a recursive typecheck ran
      concurrently; each suite is green in isolation and serially.)
 
-## verify:roadmap conflict disclosure (pre-existing, out of scope)
+## Historical verify:roadmap conflict (resolved before review)
 
-`pnpm verify:roadmap` fails with
+Kimi's original v62 exact-base `pnpm verify:roadmap` run failed with
 `Codex owns the active package but Kimi is not waiting: START-NOW`.
 Root cause: the mandated exact base `38969c4` predates the status
 transition `431284c docs(roadmap): accept E1 and start F3-WP1` (PR #73),
@@ -139,7 +138,11 @@ named). The failure was reproduced on the **pristine base** with all of
 this package's changes stashed — it is independent of this diff. Fixing it
 would require editing `docs/ROADMAP_STATUS.md`, which this brief forbids
 (roadmap/coordination file) and which Codex already updated on
-`product/v1` tip. Reported on issue #72; not worked around.
+`product/v1` tip. Reported on issue #72; not worked around during the Kimi
+implementation. During exact-head review, canonical inbox v64 moved Kimi to
+`WAIT`, status PR #79 moved F3-WP1 to Codex `REVIEW`, and the corrected branch
+then passed repository-root `pnpm verify` in 205.9 seconds. This is historical
+traceability, not a current package limitation.
 
 ## Browser click-through (headless Chromium, 1440×900, dev server)
 
@@ -194,9 +197,6 @@ rail, board, scope header, and tab panel synchronized in each.
   reference art; the beat card is planning metadata only.
 - Tab panels are read-only scope mirrors; no direction editing exists in
   this package.
-- `pnpm verify` cannot fully pass on the mandated exact base for the
-  pre-existing roadmap-consistency reason disclosed above and on
-  issue #72.
 
 ## Integration instructions
 
