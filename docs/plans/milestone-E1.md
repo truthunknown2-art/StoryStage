@@ -7,6 +7,10 @@
 - Owner: Codex
 - Auditor: ChatGPT Pro
 - Product acceptance: Preston
+- Decomposition approval: Preston accepted G0 and the dependency-ordered
+  E1-WP1 through E1-WP4 plan on 2026-07-20
+- Current authorization: E1-WP1 only, after a separate exact-base issue and
+  `START_NOW` ledger update; E1-WP2 and later work remain blocked
 - Kimi state: WAIT; no `apps/studio` implementation during E1
 - Implementation class: isolated, non-shipping feasibility lab
 
