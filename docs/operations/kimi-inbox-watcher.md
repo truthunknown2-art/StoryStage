@@ -59,9 +59,17 @@ explicit `Issue: #N`. The full brief must repeat the exact base, branch, and
 issue. Validation failures are logged and require a corrected higher inbox
 version.
 
+Before a real launch, the watcher creates a new version-scoped checkout at
+`%LOCALAPPDATA%\StoryStage\coordination\workspaces\v<Inbox-Version>`, checks
+out the exact accepted base on a detached HEAD, and verifies its origin, exact
+HEAD, and empty tracked/untracked status. Existing version directories or
+existing remote work branches fail closed; the watcher never deletes or reuses
+them. The runner repeats the same checks immediately before process start.
+
 One validated version starts one fresh hidden
-`kimi --prompt ... --output-format stream-json` session in the dedicated
-coordination checkout. Kimi prompt mode is non-interactive and applies its auto
+`kimi --prompt ... --output-format stream-json` session in that pinned clean
+checkout. The no-checkout control clone is used only for validation and is
+never a model working directory. Kimi prompt mode is non-interactive and applies its auto
 permission policy by default; the watcher must not add the incompatible
 `--auto`, the broader `--yolo`, or `--plan`. The fixed prompt makes Kimi reread GitHub truth, claim
 the issue, execute only the brief, publish its handback, and exit. Repeated

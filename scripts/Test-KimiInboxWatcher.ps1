@@ -87,6 +87,7 @@ try {
   Invoke-TestGit $source @('branch', '-M', 'product/v1') | Out-Null
   Invoke-TestGit $source @('remote', 'add', 'origin', $remote) | Out-Null
   Invoke-TestGit $source @('push', '-u', 'origin', 'product/v1') | Out-Null
+  Invoke-TestGit $remote @('symbolic-ref', 'HEAD', 'refs/heads/product/v1') | Out-Null
   $base = (Invoke-TestGit $source @('rev-parse', 'HEAD')).Trim()
   Invoke-TestGit $source @('switch', '-c', 'agent/kimi-frontend') | Out-Null
 
@@ -117,17 +118,72 @@ Issue: ``#66``
   Assert-Equal $false $first.Launched 'Dry-run START_NOW must not launch Kimi.'
   $pendingState = Get-Content -Raw -LiteralPath (Join-Path $fixtureState 'state.json') -Encoding utf8 | ConvertFrom-Json
   Assert-Equal 60 $pendingState.pendingLaunchVersion 'Dry-run START_NOW must remain pending.'
+  $script:capturedWatcherArguments = $null
   $second = Invoke-KimiWatcherPoll -Root $fixtureState -Url $remote -Executable 'powershell.exe' -ProcessStarter {
     param($Arguments)
+    $script:capturedWatcherArguments = @($Arguments)
     [pscustomobject]@{ Id = 6060 }
   }
   Assert-Equal 'launch' $second.Decision 'The real poll after a dry run must launch the pending version.'
   Assert-Equal $true $second.Launched 'Pending START_NOW must launch exactly once.'
+  $workingDirectoryIndex = [Array]::IndexOf($script:capturedWatcherArguments, '-WorkingDirectory')
+  Assert-Equal $true ($workingDirectoryIndex -ge 0) 'Watcher launch omitted the assignment working directory.'
+  $launchedWorkspace = $script:capturedWatcherArguments[$workingDirectoryIndex + 1].Trim('"')
+  $expectedWorkspace = Get-AssignmentWorkspacePath -Root $fixtureState -Version 60
+  Assert-Equal $expectedWorkspace $launchedWorkspace 'Watcher passed the wrong assignment working directory.'
+  Assert-Equal $false ($launchedWorkspace -eq (Join-Path $fixtureState 'repo')) 'Watcher passed the no-checkout control clone to Kimi.'
+  Assert-Equal $base (Invoke-TestGit $launchedWorkspace @('rev-parse', 'HEAD')).Trim() 'Assignment workspace HEAD must equal the accepted base.'
+  $detachedResult = Invoke-CheckedGit -Arguments @('-C', $launchedWorkspace, 'symbolic-ref', '--quiet', 'HEAD') -AllowFailure
+  Assert-Equal 1 $detachedResult.ExitCode 'Assignment workspace must begin detached.'
+  Assert-Equal '' (Invoke-TestGit $launchedWorkspace @('status', '--porcelain=v1', '--untracked-files=all')).Trim() 'Assignment workspace must begin clean.'
+  $controlStatus = (Invoke-TestGit (Join-Path $fixtureState 'repo') @('status', '--short')).Trim()
+  Assert-Equal $true (-not [string]::IsNullOrWhiteSpace($controlStatus)) 'Fixture control clone must reproduce the dirty no-checkout state.'
   $third = Invoke-KimiWatcherPoll -Root $fixtureState -Url $remote -Executable 'kimi.exe' -DryRun
   Assert-Equal 'unchanged' $third.Decision 'A launched START_NOW version must not relaunch.'
   $receipt = Get-Content -Raw -LiteralPath (Join-Path $fixtureState 'launches\v60.json') -Encoding utf8 | ConvertFrom-Json
   Assert-Equal 60 $receipt.inboxVersion 'Launch receipt version mismatch.'
   Assert-Equal $branch $receipt.requiredBranch 'Launch receipt branch mismatch.'
+  Assert-Equal $expectedWorkspace $receipt.workingDirectory 'Launch receipt must pin the exact assignment workspace.'
+
+  Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt
+  $dirtySentinel = Join-Path $expectedWorkspace 'watcher-dirty-sentinel.txt'
+  [System.IO.File]::WriteAllText($dirtySentinel, 'dirty')
+  $dirtyRejected = $false
+  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt } catch { $dirtyRejected = $_.Exception.Message -match 'not clean' }
+  Assert-Equal $true $dirtyRejected 'Runner must reject an untracked file before Kimi starts.'
+  Remove-Item -LiteralPath $dirtySentinel -Force
+
+  $wrongHeadLaunch = $receipt | Select-Object *
+  $wrongHeadLaunch.acceptedBase = '0000000000000000000000000000000000000000'
+  $wrongHeadRejected = $false
+  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $wrongHeadLaunch } catch { $wrongHeadRejected = $_.Exception.Message -match 'HEAD changed' }
+  Assert-Equal $true $wrongHeadRejected 'Runner must reject a clean workspace at the wrong exact SHA.'
+
+  Invoke-TestGit $expectedWorkspace @('switch', '-c', 'fixture-attached-head') | Out-Null
+  $attachedRejected = $false
+  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt } catch { $attachedRejected = $_.Exception.Message -match 'no longer detached' }
+  Assert-Equal $true $attachedRejected 'Runner must reject an attached assignment workspace.'
+  Invoke-TestGit $expectedWorkspace @('switch', '--detach', $base) | Out-Null
+
+  $wrongPathLaunch = $receipt | Select-Object *
+  $wrongPathLaunch.workingDirectory = Join-Path $fixtureState 'repo'
+  $wrongPathRejected = $false
+  try { Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $wrongPathLaunch } catch { $wrongPathRejected = $_.Exception.Message -match 'does not match' }
+  Assert-Equal $true $wrongPathRejected 'Runner must reject a checkout outside the pinned version workspace.'
+
+  $existingState = Join-Path $fixtureRoot 'existing-workspace-state'
+  $existingWorkspace = Get-AssignmentWorkspacePath -Root $existingState -Version 60
+  New-Item -ItemType Directory -Path $existingWorkspace -Force | Out-Null
+  $sentinelPath = Join-Path $existingWorkspace 'sentinel.txt'
+  [System.IO.File]::WriteAllText($sentinelPath, 'preserve me')
+  $existingRejected = $false
+  try {
+    New-AssignmentWorkspace -Root $existingState -Url $remote -Inbox $start | Out-Null
+  } catch {
+    $existingRejected = $_.Exception.Message -match 'refusing to reuse or delete'
+  }
+  Assert-Equal $true $existingRejected 'Watcher must reject a pre-existing version workspace.'
+  Assert-Equal 'preserve me' ([System.IO.File]::ReadAllText($sentinelPath)) 'Watcher altered a pre-existing version workspace.'
 
   $crashState = Join-Path $fixtureRoot 'crash-state'
   $simulatedCrash = $false
@@ -197,6 +253,21 @@ Issue: ``#66``
     return $false
   }
   Assert-Equal $false $failedStopOutcome.TerminationSucceeded 'Failed process-tree termination must remain visible.'
+
+  Invoke-TestGit $source @('branch', $branch, $base) | Out-Null
+  Invoke-TestGit $source @('push', 'origin', $branch) | Out-Null
+  $collisionState = Join-Path $fixtureRoot 'remote-branch-collision-state'
+  $collisionInbox = $start | Select-Object *
+  $collisionInbox.RequiredBranch = $branch
+  $collisionInbox.AcceptedBase = $base
+  $branchCollisionRejected = $false
+  try {
+    New-AssignmentWorkspace -Root $collisionState -Url $remote -Inbox $collisionInbox | Out-Null
+  } catch {
+    $branchCollisionRejected = $_.Exception.Message -match 'already exists on origin'
+  }
+  Assert-Equal $true $branchCollisionRejected 'Watcher must reject an existing remote required branch.'
+  Assert-Equal $false (Test-Path -LiteralPath (Get-AssignmentWorkspacePath -Root $collisionState -Version 60)) 'Branch collision must not create a workspace.'
 } finally {
   $resolvedTemp = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
   $resolvedFixture = [System.IO.Path]::GetFullPath($fixtureRoot)

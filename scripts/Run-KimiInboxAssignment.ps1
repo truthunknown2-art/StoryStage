@@ -76,6 +76,63 @@ function Invoke-BoundedKimiProcess {
   }
 }
 
+function Invoke-RunnerGit {
+  param(
+    [Parameter(Mandatory)] [string]$Directory,
+    [Parameter(Mandatory)] [string[]]$Arguments,
+    [switch]$AllowFailure
+  )
+  $priorPreference = $ErrorActionPreference
+  $ErrorActionPreference = 'Continue'
+  try {
+    $output = @(& git -C $Directory @Arguments 2>&1)
+    $exitCode = $LASTEXITCODE
+  } finally {
+    $ErrorActionPreference = $priorPreference
+  }
+  if (-not $AllowFailure -and $exitCode -ne 0) { throw "Assignment workspace Git validation failed with exit code $exitCode." }
+  [pscustomobject]@{
+    ExitCode = $exitCode
+    Output = (($output | ForEach-Object { $_.ToString() }) -join [Environment]::NewLine).Trim()
+  }
+}
+
+function Assert-PinnedKimiWorkspace {
+  param(
+    [Parameter(Mandatory)] [string]$Directory,
+    [Parameter(Mandatory)] [object]$Launch
+  )
+
+  if (-not (Test-Path -LiteralPath (Join-Path $Directory '.git'))) {
+    throw 'Kimi coordination working directory is not a Git checkout.'
+  }
+  if ([string]::IsNullOrWhiteSpace([string]$Launch.workingDirectory)) {
+    throw 'Kimi assignment launch receipt has no pinned working directory.'
+  }
+  $resolvedWorkingDirectory = [System.IO.Path]::GetFullPath($Directory)
+  $expectedWorkingDirectory = [System.IO.Path]::GetFullPath([string]$Launch.workingDirectory)
+  if (-not $resolvedWorkingDirectory.Equals($expectedWorkingDirectory, [StringComparison]::OrdinalIgnoreCase)) {
+    throw 'Kimi assignment working directory does not match the pinned launch receipt.'
+  }
+  if ([string]$Launch.acceptedBase -notmatch '^[0-9a-f]{40}$') {
+    throw 'Kimi assignment launch receipt has an invalid accepted base.'
+  }
+  if ([string]::IsNullOrWhiteSpace([string]$Launch.repositoryUrl) -or
+      [string]$Launch.requiredBranch -notmatch '^agent/[A-Za-z0-9._/-]+$') {
+    throw 'Kimi assignment launch receipt has invalid repository or branch identity.'
+  }
+
+  $origin = (Invoke-RunnerGit -Directory $resolvedWorkingDirectory -Arguments @('remote', 'get-url', 'origin')).Output
+  if ($origin -ne [string]$Launch.repositoryUrl) { throw 'Kimi assignment workspace origin changed before launch.' }
+  $head = (Invoke-RunnerGit -Directory $resolvedWorkingDirectory -Arguments @('rev-parse', 'HEAD')).Output
+  if ($head -ne [string]$Launch.acceptedBase) { throw 'Kimi assignment workspace HEAD changed before launch.' }
+  $symbolicHead = Invoke-RunnerGit -Directory $resolvedWorkingDirectory -Arguments @('symbolic-ref', '--quiet', 'HEAD') -AllowFailure
+  if ($symbolicHead.ExitCode -eq 0) { throw 'Kimi assignment workspace is no longer detached.' }
+  if ($symbolicHead.ExitCode -ne 1) { throw 'Unable to verify detached Kimi assignment workspace HEAD.' }
+  $workspaceStatus = (Invoke-RunnerGit -Directory $resolvedWorkingDirectory -Arguments @('status', '--porcelain=v1', '--untracked-files=all')).Output
+  if (-not [string]::IsNullOrWhiteSpace($workspaceStatus)) { throw 'Kimi assignment workspace is not clean immediately before launch.' }
+}
+
 if ($LibraryOnly) { return }
 
 if ([string]::IsNullOrWhiteSpace($LaunchFile) -or
@@ -88,9 +145,7 @@ $launch = Get-Content -Raw -LiteralPath $LaunchFile -Encoding utf8 | ConvertFrom
 if ($launch.schemaVersion -ne 1 -or $launch.inboxVersion -lt 1 -or [string]::IsNullOrWhiteSpace($launch.prompt)) {
   throw 'Invalid Kimi assignment launch receipt.'
 }
-if (-not (Test-Path -LiteralPath (Join-Path $WorkingDirectory '.git'))) {
-  throw 'Kimi coordination working directory is not a Git checkout.'
-}
+Assert-PinnedKimiWorkspace -Directory $WorkingDirectory -Launch $launch
 
 $launchRoot = Split-Path -Parent $LaunchFile
 $root = Split-Path -Parent $launchRoot
