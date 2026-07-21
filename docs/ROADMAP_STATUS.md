@@ -18,18 +18,18 @@ authorization:
   branch: agent/codex-e1-wp1-runtime-preflight
   issue: 53
   pr: 55
-  candidateContentHead: fbad61aebda80188f1eb70bb9d08663224c4e23e
+  candidateContentHead: dcd75cf1affb8547c74bdbd66a4d7614761c2cc9
   candidateRef: agent/codex-e1-wp1-runtime-preflight
 checks:
   local: root-verify+installed-schema+live-preflight-pass
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: e1-wp1-candidate-exact-fbad61aebda80188f1eb70bb9d08663224c4e23e
+  codex: e1-wp1-audit-corrected-exact-dcd75cf1affb8547c74bdbd66a4d7614761c2cc9
   pro: accept-exact-2e1fbb0791a9e205d71f7bfaf00d55894dab5475
   preston: accept-g0-authorize-e1-wp1-only-2026-07-20
 blockers:
-  - E1-WP1 exact PR head still requires hosted verification and review
+  - E1-WP1 corrected exact PR head still requires hosted verification and ChatGPT Pro review
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
   - E1-WP2, E1-WP3, E1-WP4, F3, backend, and Kimi implementation remain unauthorized
 nextAuthorizedAction:
@@ -66,9 +66,12 @@ verification from the live PR checks.
   dependency-ordered E1-WP1 feasibility package. Issue #53 is implemented in
   draft PR #55 from exact base `4ec99eb...`; the pinned runtime, canonical
   stable schema, redacted authenticated lifecycle receipt, focused checks, and
-  root verification pass at candidate content `fbad61a...`. The exact PR head
-  still requires hosted verification and review. E1-WP2, F3, backend product
-  work, and Kimi implementation remain unauthorized.
+  root verification pass at candidate content `dcd75cf...`. The corrected
+  candidate fails closed on successful usage-limit snapshots, early turn RPC
+  rejection, missing or mismatched completion, and non-interrupted terminal
+  states; the real Windows run confirms the matching `turn/completed` event.
+  The exact PR head still requires hosted verification and ChatGPT Pro review.
+  E1-WP2, F3, backend product work, and Kimi implementation remain unauthorized.
 - ChatGPT Pro advised the amendment: Codex App Server + official ChatGPT sign-in
   - read-only StoryStage MCP feasibility before F3, then a native AI Director
     and deterministic proposal/application path. Pro also required complete visual
