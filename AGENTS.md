@@ -16,6 +16,11 @@ Only one phase and one ticket per agent may be active. A finished ticket does
 not authorize the next ticket. Backend product work remains blocked until
 Preston accepts the Frontend Gate after F6.
 
+Kimi is woken only by the deterministic zero-token watcher documented in
+[`docs/operations/kimi-inbox-watcher.md`](docs/operations/kimi-inbox-watcher.md).
+Never keep Kimi open to poll Git or report unchanged `WAIT` state. A future
+Codex task must run the committed watcher status command during cold start.
+
 If a request conflicts with the active phase, ownership, allowed files, or
 acceptance gate, stop and report the conflict. Do not improvise a second
 workstream.
