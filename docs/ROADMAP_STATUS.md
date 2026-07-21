@@ -10,7 +10,7 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
 authorization:
-  state: PRO_GATE
+  state: IMPLEMENTING
   milestone: E1
   package: E1-WP3
   owner: Codex
@@ -21,21 +21,20 @@ authorization:
   candidateContentHead: b134cc62bda0055a857cf82b5a48ba57dd2ebc14
   candidateRef: agent/codex-e1-wp3-streamed-proposal-roundtrip
 checks:
-  local: fail-closed-mcp-isolation+codex-lab-57-tests+director-lab-1-test-and-build+privacy+scoped-eslint+diff-check-pass
+  local: architecture-doc-correction+roadmap+diff-check-pass
   hostedSource: github-pr-checks
-  hostedTarget: live-pr-head
+  hostedTarget: run-29811567145-pass-exact-1c43708f15afb8bb237352e47d6c418d5293378e
 verdicts:
   codex: e1-wp3-select-dedicated-codex-state-root-and-official-app-server-chatgpt-login-after-redacted-table-rejected
   pro: e1-wp3-dedicated-codex-state-and-official-login-architecture-accepted-exact-07d2ccf735edc11b6a8de129bd478a986551aa9a-conditional-on-doc-fix-and-hosted-pass
   preston: authorize-e1-wp3-redacted-mcp-name-compatibility-adapter-fail-closed-no-credential-access-and-standing-dependency-ordered-continuation-2026-07-21
 blockers:
-  - The exact documentation successor removing the obsolete human-table exception must pass hosted verification before implementation resumes
   - The dedicated state root will require one official interactive Sign in with ChatGPT before the live authenticated round trip can be accepted
   - Codex CLI labels app-server experimental; production packaging remains blocked pending the E1 milestone gate
   - E1-WP4 remains dependency-blocked until E1-WP3 is accepted; F3, backend, and Kimi implementation remain blocked by their roadmap dependencies
 nextAuthorizedAction:
-  type: HOSTED_VERIFY_E1_WP3_ARCHITECTURE_CORRECTION_THEN_IMPLEMENT
-  text: Push and verify the documentation correction required by Pro, then implement only the accepted dedicated-state-root and official App Server ChatGPT-login successor; do not read, copy, link, or enumerate global Codex config or credentials.
+  type: IMPLEMENT_E1_WP3_DEDICATED_CODEX_STATE_AND_TYPED_LOGIN
+  text: Implement only the Pro-accepted dedicated-state-root, typed ChatGPT login, and exact-one MCP proof successor; do not read, copy, link, or enumerate global Codex config or credentials.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -111,6 +110,11 @@ verification from the live PR checks.
   inherited `CODEX_HOME` removal, typed ChatGPT login only, zero credential-file
   reads, exact auth URL/correlation checks, double exact-one MCP verification,
   and an absolute no-prompt-before-proof rule.
+- The required milestone correction is exact
+  `1c43708f15afb8bb237352e47d6c418d5293378e`; hosted Verify StoryStage run
+  `29811567145` passed that exact head. Pro's prerequisites are therefore met
+  and E1-WP3 may return to implementation. This does not accept the package or
+  start E1-WP4.
 - E1-WP3 previously blocked on PR #64. Final Sol-high audit and ChatGPT Pro found that
   pinned Codex 0.144.1 `mcp list --json` returns raw configured MCP environment
   and header values. StoryStage used that structured output only to discover
