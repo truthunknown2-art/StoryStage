@@ -265,6 +265,15 @@ Issue: ``#66``
   Assert-Equal $false $failedStopOutcome.TerminationSucceeded 'Failed process-tree termination must remain visible.'
 
   Invoke-TestGit $source @('branch', $branch, $base) | Out-Null
+  Invoke-TestGit $expectedWorkspace @('branch', $branch, $base) | Out-Null
+  $lateLocalBranchRejected = $false
+  try {
+    Assert-PinnedKimiWorkspace -Directory $expectedWorkspace -Launch $receipt -LaunchFilePath $receiptPath
+  } catch {
+    $lateLocalBranchRejected = $_.Exception.Message -match 'appeared locally'
+  }
+  Assert-Equal $true $lateLocalBranchRejected 'Runner must reject a required branch created locally after workspace preparation.'
+  Invoke-TestGit $expectedWorkspace @('branch', '-D', $branch) | Out-Null
   Invoke-TestGit $source @('push', 'origin', $branch) | Out-Null
   $lateBranchRejected = $false
   try {

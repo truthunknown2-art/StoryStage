@@ -144,6 +144,11 @@ function Assert-PinnedKimiWorkspace {
   if ($symbolicHead.ExitCode -ne 1) { throw 'Unable to verify detached Kimi assignment workspace HEAD.' }
   $workspaceStatus = (Invoke-RunnerGit -Directory $resolvedWorkingDirectory -Arguments @('status', '--porcelain=v1', '--untracked-files=all')).Output
   if (-not [string]::IsNullOrWhiteSpace($workspaceStatus)) { throw 'Kimi assignment workspace is not clean immediately before launch.' }
+  $localBranch = Invoke-RunnerGit -Directory $resolvedWorkingDirectory -Arguments @(
+    'show-ref', '--verify', '--quiet', "refs/heads/$($Launch.requiredBranch)"
+  ) -AllowFailure
+  if ($localBranch.ExitCode -eq 0) { throw 'The required work branch appeared locally before Kimi launch.' }
+  if ($localBranch.ExitCode -ne 1) { throw 'Unable to re-verify that the required work branch is absent locally.' }
   $remoteBranch = Invoke-RunnerGit -Directory $resolvedWorkingDirectory -Arguments @(
     'ls-remote', '--exit-code', '--heads', 'origin', "refs/heads/$($Launch.requiredBranch)"
   ) -AllowFailure
