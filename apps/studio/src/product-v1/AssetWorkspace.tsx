@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { OLLO_DEMO_SCENES } from "./demo-project";
 import {
   ASSET_CATEGORIES,
@@ -31,6 +31,9 @@ import {
   type ResolvedSceneRequirement,
   type SceneRequirementFixture,
 } from "./asset-requirements";
+import { buildRequestPack } from "./asset-request-pack";
+import type { LocalCandidateRecord } from "./asset-import";
+import { AssetRequestImport } from "./AssetRequestImport";
 
 /**
  * F4-WP1 Assets & Rigs workspace: category navigation, episode/scene
@@ -52,6 +55,30 @@ export function AssetWorkspace({
   const [category, setCategory] = useState<AssetCategoryId>("characters");
   const [scope, setScope] = useState<AssetScope>(INITIAL_ASSET_SCOPE);
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+
+  /* F4-WP3: scene-scoped request/import transient state. The open panel is
+   * bound to exactly one requirement id; any scene, category, or requirement
+   * scope change closes it so a hidden candidate from another scope can never
+   * be retained. Confirmed records live only in this session-local map keyed
+   * by requirement id — they never change F4-WP2 readiness or counts. */
+  const [openRequestId, setOpenRequestId] = useState<string | null>(null);
+  const [candidatesByRequirement, setCandidatesByRequirement] = useState<
+    Record<string, readonly LocalCandidateRecord[]>
+  >({});
+  const requestInvokerRef = useRef<HTMLButtonElement | null>(null);
+  const restoreRequestFocusRef = useRef(false);
+
+  const closeRequest = (restoreFocus: boolean) => {
+    if (openRequestId === null) return;
+    restoreRequestFocusRef.current = restoreFocus;
+    setOpenRequestId(null);
+  };
+
+  useEffect(() => {
+    if (openRequestId !== null || !restoreRequestFocusRef.current) return;
+    restoreRequestFocusRef.current = false;
+    requestInvokerRef.current?.focus();
+  }, [openRequestId]);
 
   const visibleAssets = filterAssetFixtures(category, scope);
   const resolvedSelectedId = resolveAssetSelection(
@@ -78,6 +105,26 @@ export function AssetWorkspace({
   );
   const requirementCounts = countRequirements(scopeRequirements);
   const requirementScopeName = requirementScopeLabel(scope);
+
+  /* Fail-closed backstop: if the open request requirement is no longer a
+   * visible, available, non-ready entry in the current scope, close the
+   * transient panel (render-time adjustment, same pattern as selection). */
+  const openRequestItem =
+    openRequestId === null
+      ? undefined
+      : scopeRequirements.find(
+          (item) =>
+            item.entry.id === openRequestId &&
+            item.unavailableReason === null &&
+            item.entry.readiness !== "ready",
+        );
+  if (openRequestId !== null && openRequestItem === undefined) {
+    restoreRequestFocusRef.current = false;
+    setOpenRequestId(null);
+  }
+  const openRequestPack = openRequestItem
+    ? buildRequestPack(openRequestItem)
+    : null;
   const selectedSceneRequirement =
     selectedAsset && scope.sceneId !== SCOPE_ALL
       ? scopeRequirements.find(
@@ -87,6 +134,7 @@ export function AssetWorkspace({
 
   const openRequirementRecord = (item: ResolvedSceneRequirement) => {
     if (item.asset === null) return;
+    closeRequest(false);
     setCategory(item.asset.category);
     setSelectedAssetId(item.asset.id);
     if (scope.sceneId === SCOPE_ALL) {
@@ -128,7 +176,10 @@ export function AssetWorkspace({
               aria-current={category === entry.id ? "true" : undefined}
               className={`pv1-asset-category ${category === entry.id ? "is-selected" : ""}`}
               key={entry.id}
-              onClick={() => setCategory(entry.id)}
+              onClick={() => {
+                closeRequest(false);
+                setCategory(entry.id);
+              }}
               type="button"
             >
               {entry.label}
@@ -140,14 +191,15 @@ export function AssetWorkspace({
             <span>Episode</span>
             <select
               aria-label="Episode filter"
-              onChange={(event) =>
+              onChange={(event) => {
+                closeRequest(false);
                 setScope((current) =>
                   sanitizeAssetScope({
                     ...current,
                     episodeId: event.target.value,
                   }),
-                )
-              }
+                );
+              }}
               value={scope.episodeId}
             >
               <option value={SCOPE_ALL}>All episodes</option>
@@ -162,14 +214,15 @@ export function AssetWorkspace({
             <span>Scene</span>
             <select
               aria-label="Scene filter"
-              onChange={(event) =>
+              onChange={(event) => {
+                closeRequest(false);
                 setScope((current) =>
                   sanitizeAssetScope({
                     ...current,
                     sceneId: event.target.value,
                   }),
-                )
-              }
+                );
+              }}
               value={scope.sceneId}
             >
               <option value={SCOPE_ALL}>All scenes</option>
@@ -298,7 +351,48 @@ export function AssetWorkspace({
                       </button>
                       <span>{entry.nextPreparation.unavailableReason}</span>
                     </span>
+                    {item.unavailableReason === null && !isReady ? (
+                      <button
+                        aria-expanded={openRequestId === entry.id}
+                        aria-label={`Request image pack for ${entry.plannedName} in ${requirementSceneLabel(entry.sceneId)}`}
+                        className="pv1-secondary pv1-requirement-request"
+                        onClick={(event) => {
+                          requestInvokerRef.current = event.currentTarget;
+                          setOpenRequestId(entry.id);
+                        }}
+                        type="button"
+                      >
+                        Request image pack
+                      </button>
+                    ) : null}
+                    {(candidatesByRequirement[entry.id]?.length ?? 0) > 0 ? (
+                      <span className="pv1-requirement-candidates" role="note">
+                        Local candidate records:{" "}
+                        {candidatesByRequirement[entry.id]!.length} —
+                        descriptive session records only; no files exist and
+                        readiness is unchanged.
+                      </span>
+                    ) : null}
                   </div>
+                  {openRequestId === entry.id &&
+                  openRequestItem !== undefined &&
+                  openRequestPack !== null ? (
+                    <AssetRequestImport
+                      item={openRequestItem}
+                      onClose={() => closeRequest(true)}
+                      onConfirmRecord={(record) =>
+                        setCandidatesByRequirement((current) => ({
+                          ...current,
+                          [entry.id]: [
+                            ...(current[entry.id] ?? []),
+                            record,
+                          ],
+                        }))
+                      }
+                      pack={openRequestPack}
+                      reviewList={candidatesByRequirement[entry.id] ?? []}
+                    />
+                  ) : null}
                 </li>
               );
             })}

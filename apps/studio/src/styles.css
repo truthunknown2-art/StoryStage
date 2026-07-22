@@ -3467,3 +3467,316 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* F4-WP3 scene-scoped request pack and candidate-import panel         */
+/* ------------------------------------------------------------------ */
+
+.pv1-requirement-request {
+  font-size: 11px;
+  min-height: 30px;
+  padding: 4px 12px;
+}
+
+.pv1-requirement-candidates {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.pv1-request {
+  background: #101816;
+  border: 1px solid rgba(145, 228, 179, 0.3);
+  border-radius: 10px;
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+}
+
+.pv1-request-head {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.pv1-request-head small {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pv1-request-head h3 {
+  color: var(--ink);
+  font-size: 15px;
+  margin: 2px 0 4px;
+  outline: none;
+}
+
+.pv1-request-head h3:focus-visible {
+  outline: 2px solid var(--accent, #91e4b3);
+  outline-offset: 2px;
+}
+
+.pv1-request-context {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.pv1-request-close {
+  flex-shrink: 0;
+  font-size: 11px;
+  min-height: 30px;
+  padding: 4px 12px;
+}
+
+.pv1-request h4 {
+  color: var(--ink);
+  font-size: 12.5px;
+  margin: 0 0 6px;
+}
+
+.pv1-request h5 {
+  color: var(--ink);
+  font-size: 11.5px;
+  margin: 0 0 4px;
+}
+
+.pv1-request-pack,
+.pv1-request-guidance,
+.pv1-request-import,
+.pv1-request-review {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+}
+
+.pv1-request-pack ul,
+.pv1-request-guidance ol,
+.pv1-request-review ul {
+  color: var(--muted);
+  display: grid;
+  font-size: 11.5px;
+  gap: 6px;
+  line-height: 1.55;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.pv1-request-pack .pv1-request-block li strong {
+  color: var(--ink);
+  display: block;
+  font-size: 11.5px;
+}
+
+.pv1-request-pack .pv1-request-block li span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.pv1-request-columns {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.pv1-request-field {
+  display: grid;
+  gap: 4px;
+}
+
+.pv1-request-field label {
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.pv1-request-field input,
+.pv1-request-field textarea {
+  background: #0b100f;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+.pv1-request-field textarea {
+  resize: vertical;
+}
+
+.pv1-request-field input:focus-visible,
+.pv1-request-field textarea:focus-visible {
+  outline: 2px solid var(--accent, #91e4b3);
+  outline-offset: 1px;
+}
+
+.pv1-request-field input[aria-invalid="true"] {
+  border-color: #e49191;
+}
+
+.pv1-request-field small {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.pv1-request-truth {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pv1-request-use {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.pv1-request-status {
+  color: var(--muted);
+  font-size: 11.5px;
+  margin: 0;
+}
+
+.pv1-request-status strong {
+  color: var(--ink);
+}
+
+.pv1-request-actions {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.pv1-request-actions > .pv1-request-truth,
+.pv1-request-actions > .pv1-request-candidates,
+.pv1-request-actions > .pv1-request-candidate-summary,
+.pv1-request-actions > .pv1-request-alert,
+.pv1-request-actions > .pv1-request-note,
+.pv1-request-actions > .pv1-request-field,
+.pv1-request-actions > .pv1-request-buttons {
+  justify-self: stretch;
+}
+
+.pv1-request-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pv1-request-candidates {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-request-candidate {
+  align-items: start;
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  text-align: left;
+  width: 100%;
+}
+
+.pv1-request-candidate small {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.pv1-request-candidate-summary {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.pv1-request-candidate-summary div {
+  display: grid;
+  gap: 2px;
+}
+
+.pv1-request-candidate-summary dt {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.pv1-request-candidate-summary dd {
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pv1-request-alert {
+  background: rgba(228, 145, 145, 0.08);
+  border: 1px solid rgba(228, 145, 145, 0.4);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 11.5px;
+  line-height: 1.55;
+  margin: 0;
+  outline: none;
+  padding: 8px 10px;
+}
+
+.pv1-request-note {
+  background: rgba(145, 228, 179, 0.06);
+  border: 1px solid rgba(145, 228, 179, 0.25);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+  margin: 0;
+  padding: 8px 10px;
+}
+
+.pv1-request-review li {
+  display: grid;
+  gap: 2px;
+}
+
+.pv1-request-review li strong {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.pv1-request-review li small {
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.pv1-request-review li span {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.pv1-request-scope {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  line-height: 1.45;
+  margin: 0;
+}
