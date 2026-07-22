@@ -1,16 +1,32 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `88`
+Inbox-Version: `89`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE`
+Current-Task: `F4-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE-RECOVERY`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `0b8d03940e65114d6cd7edba4ae4fa2028be2c19`
-Required-Work-Branch: `agent/kimi-f4-wp5-responsive-accessibility-evidence`
-Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp5-responsive-accessibility-evidence-v88.md`
+Required-Work-Branch: `agent/kimi-f4-wp5-responsive-accessibility-evidence-v2`
+Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp5-recovery-v89.md`
 Issue: `#117`
 
 ## Current instruction
+
+Version 89 recovers only F4-WP5 after the Version 88 Kimi CLI exited before a
+handback. Start from exact accepted base
+`0b8d03940e65114d6cd7edba4ae4fa2028be2c19` on required branch
+`agent/kimi-f4-wp5-responsive-accessibility-evidence-v2`, incorporate exact
+preserved unaccepted WIP `51ff4741f246b86244f13d11a2ad3b373f99d75f`,
+finish the Version 88 tests/evidence/handback, and exit. Do not start F5/F6 or
+any real-file, provider, persistence, backend, Godot, Remotion, render, export,
+packaging, or private-launch work.
+
+Version 89 supersedes Version 88. Version 88 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 88 instruction:
 
 Version 88 starts only F4-WP5 through issue #117 from exact accepted base
 `0b8d03940e65114d6cd7edba4ae4fa2028be2c19` on required branch
