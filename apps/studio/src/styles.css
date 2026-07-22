@@ -4134,6 +4134,16 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   flex-wrap: wrap;
 }
 
+/* At compact width the control row stacks in the intentional order:
+ * asset categories above the episode/scene filters, both before the
+ * requirements region. */
+@media (max-width: 1024px) {
+  .pv1-assets-controls {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+
 /* A wide declared part/review table never widens the document: it lives in
  * a labelled, keyboard-reachable contained horizontal scroller that engages
  * only when the table genuinely overflows the panel. The table keeps a
