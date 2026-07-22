@@ -1,9 +1,9 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `83`
+Inbox-Version: `84`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F4-WP3-IMAGE-REQUEST-IMPORT-UX`
-Status: `START_NOW`
+Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `5eb0037fb6e702696d008b913de53721c12a47b7`
 Required-Work-Branch: `agent/kimi-f4-wp3-image-request-import-ux`
@@ -11,6 +11,20 @@ Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp3-image-request-i
 Issue: `#109`
 
 ## Current instruction
+
+Version 84 is a coordination-only successor that changes the machine-readable
+status spelling from the watcher-compatible `START_NOW` alias to the canonical
+roadmap-guard spelling `START-NOW`. Task, issue, exact base, required branch,
+full brief, scope, evidence, and stop conditions are byte-for-byte unchanged
+from Version 83. Execute only F4-WP3 and publish one immutable handback before
+exiting.
+
+Version 84 supersedes Version 83. Version 83 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 83 instruction:
 
 Version 83 starts only F4-WP3 through issue #109 from exact accepted base
 `5eb0037fb6e702696d008b913de53721c12a47b7` on required branch
@@ -22,7 +36,7 @@ Do not start F4-WP4, touch real files or providers, claim generation/import/
 approval success, or begin backend, Godot, Remotion, persistence, rendering,
 export, packaging, or private-launch work.
 
-Version 83 supersedes Version 82. Version 82 remains below as historical
+Version 83 superseded Version 82. Version 82 remains below as historical
 traceability and must not relaunch.
 
 ---
