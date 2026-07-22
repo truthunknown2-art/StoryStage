@@ -13,15 +13,15 @@ completedMilestones:
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
   F4: 5c7107f3b201780865c30f11a59716e4a82d16d4
 authorization:
-  state: ACCEPTED_WAIT
-  milestone: F4
-  package: F4-WP5
-  owner: Codex
-  exactBase: 0b8d03940e65114d6cd7edba4ae4fa2028be2c19
-  branch: agent/codex-f4-wp5-review-correction
-  issue: 117
-  pr: 121
-  candidateContentHead: 44f521860c89eb883da4b56495cc1dad67d1c73a
+  state: START_NOW
+  milestone: F5
+  package: F5-WP1
+  owner: Kimi
+  exactBase: eb9890d75126381e61849a5994f28474d133bfb7
+  branch: agent/kimi-f5-wp1-audio-workspace-track-hierarchy
+  issue: 124
+  pr: null
+  candidateContentHead: eb9890d75126381e61849a5994f28474d133bfb7
   candidateRef: product/v1
 checks:
   local: roadmap-consistency+format-check
@@ -32,11 +32,11 @@ verdicts:
   pro: accept-complete-f4-exact-44f521860c89eb883da4b56495cc1dad67d1c73a-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F5-WP1 remains blocked until a separate issue, complete milestone plan, and START_NOW status/inbox transition authorize it from the exact accepted base
+  - F5-WP2 remains blocked until F5-WP1 passes exact-head review and is accepted
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: WAIT_FOR_F5_WP1_TICKET
-  text: F4 is accepted and integrated. Keep Kimi at WAIT and do not begin F5-WP1 until its complete milestone plan, separate issue, and exact-base START_NOW transitions are durable.
+  type: IMPLEMENT_F5_WP1_ONLY
+  text: Implement only issue #124 from exact base eb9890d75126381e61849a5994f28474d133bfb7 on agent/kimi-f5-wp1-audio-workspace-track-hierarchy, publish the exact handback, and stop before F5-WP2.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -204,6 +204,18 @@ verification from the live PR checks.
   promotion, backend workers, Godot, Remotion, rendering, export, packaging,
   QA, private launch, F5, or later work. F5-WP1 requires its own complete plan,
   issue, exact-base status transition, and higher validated Kimi inbox.
+- The complete F5 milestone plan is integrated through PR #123 at exact
+  `product/v1@eb9890d75126381e61849a5994f28474d133bfb7`; hosted Verify run
+  `29958094934` passed on attempt 2 after attempt 1 hit only the unchanged
+  asset-pipeline authored-decoration-mask `beforeAll` timing race. Issue #124
+  and this `START_NOW` transition authorize only F5-WP1 from that exact base on
+  required branch `agent/kimi-f5-wp1-audio-workspace-track-hierarchy`. The
+  package adds the Narration, Dialogue, SFX, and Music workspace hierarchy,
+  shared scene/beat scope, truthful local-demo take/cue cards, selected-track
+  inspector, and guide-versus-final timing labels. It does not authorize
+  devices, files/import, playback, waveforms, lip sync, mixing, persistence,
+  backend contracts, providers, Godot, Remotion, rendering, export, packaging,
+  F5-WP2, or later work.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
