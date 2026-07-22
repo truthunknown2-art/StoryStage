@@ -232,6 +232,7 @@ export function AssetRequestImport({
       aria-label={`Request image pack for ${pack.plannedName} in ${pack.sceneLabel}`}
       className="pv1-request"
       data-testid="pv1-request"
+      id={`pv1-request-${pack.requirementId}`}
       onKeyDown={(event) => {
         if (event.key !== "Escape") return;
         event.stopPropagation();
