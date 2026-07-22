@@ -17,7 +17,7 @@ authorization:
   package: F4-WP5
   owner: Kimi
   exactBase: 0b8d03940e65114d6cd7edba4ae4fa2028be2c19
-  branch: agent/kimi-f4-wp5-responsive-accessibility-evidence
+  branch: agent/kimi-f4-wp5-responsive-accessibility-evidence-v2
   issue: 117
   pr: null
   candidateContentHead: 0b8d03940e65114d6cd7edba4ae4fa2028be2c19
@@ -35,7 +35,7 @@ blockers:
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
   type: IMPLEMENT_F4_WP5_ONLY
-  text: Implement only issue #117 from exact base 0b8d03940e65114d6cd7edba4ae4fa2028be2c19 on agent/kimi-f4-wp5-responsive-accessibility-evidence, publish the exact handback, and stop before F5.
+  text: Recover and complete only issue #117 from exact base 0b8d03940e65114d6cd7edba4ae4fa2028be2c19 on agent/kimi-f4-wp5-responsive-accessibility-evidence-v2 using preserved unaccepted WIP 51ff4741f246b86244f13d11a2ad3b373f99d75f, publish the exact handback, and stop before F5.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -187,7 +187,12 @@ verification from the live PR checks.
   later work.
 - Issue #117 and this `START_NOW` transition authorize only F4-WP5 from exact
   base `product/v1@0b8d03940e65114d6cd7edba4ae4fa2028be2c19` on required
-  branch `agent/kimi-f4-wp5-responsive-accessibility-evidence`. The package may
+  recovery branch `agent/kimi-f4-wp5-responsive-accessibility-evidence-v2`.
+  Version 88's Kimi CLI exited before handback after focused 12/12 and a
+  resource-sensitive full-suite run. Its six-file in-scope workspace is
+  preserved as explicitly unaccepted WIP
+  `51ff4741f246b86244f13d11a2ad3b373f99d75f`; only a higher validated inbox
+  may resume it on the recovery branch. The package may
   complete only the integrated Assets & Rigs keyboard, focus, responsive,
   reduced-motion, and exact evidence gate at 1920x1080, 1440x900, and 1024x800.
   It must preserve every accepted F4 readiness, source/rights, request/import,
