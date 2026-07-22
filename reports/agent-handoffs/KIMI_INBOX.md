@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `76`
+Inbox-Version: `77`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F3-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE`
 Status: `START-NOW`
@@ -12,7 +12,12 @@ Issue: `#95`
 
 ## Current instruction
 
-Version 76 starts only F3-WP5 through issue #95 from exact accepted base
+Version 77 reissues the unchanged, bounded F3-WP5 assignment after the local
+watcher rejected Version 76 because its pending brief fingerprint did not
+match on the first real poll. The canonical inbox commit and full brief did
+not move; this higher version preserves the watcher's fail-closed contract
+without bypassing or editing its state. Start only F3-WP5 through issue #95
+from exact accepted base
 `272812f25fa0f4f794edfb69426028349900382e` on required branch
 `agent/kimi-f3-wp5-responsive-accessibility-evidence`. Complete the full
 keyboard/focus, accessibility, reduced-motion, three-viewport responsive,
@@ -21,8 +26,17 @@ behavior and local-fixture truth boundaries. Publish one immutable handback and
 exit. Do not start F4, live AI integration, persistence, backend work, Godot,
 Remotion, rendering, export, packaging, or private-launch work.
 
-Version 76 supersedes Version 75. Version 75 remains below as historical
+Version 77 supersedes Version 76. Version 76 remains below as historical
 traceability and must not relaunch.
+
+---
+
+Previous Version 76 instruction:
+
+Version 76 issued the same F3-WP5 task, exact base, required branch, full brief,
+and issue. The watcher dry-run accepted it, but the first real poll rejected it
+fail closed because the pending brief fingerprint appeared to change. No Kimi
+assignment launched for Version 76.
 
 ---
 
