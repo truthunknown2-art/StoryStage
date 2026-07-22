@@ -14,9 +14,10 @@
   direction recorded on 2026-07-21
 - Decomposition approval: the dependency-ordered F5-WP1 through F5-WP5
   decomposition was accepted in G0 and is restated here before implementation
-- Current authorization: `ACCEPTED_WAIT`. F5-WP1 requires a separate issue,
-  exact-base status transition, full brief, required branch, and higher
-  validated Kimi inbox version before `START_NOW`
+- Current authorization: only F5-WP1 through issue #124 from exact base
+  `eb9890d75126381e61849a5994f28474d133bfb7` on required branch
+  `agent/kimi-f5-wp1-audio-workspace-track-hierarchy`, after the matching
+  product status transition and higher validated Kimi inbox are published
 - Backend product work remains blocked until the complete F6 Frontend Gate is
   accepted
 
