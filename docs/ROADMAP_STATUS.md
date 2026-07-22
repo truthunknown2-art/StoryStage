@@ -12,18 +12,18 @@ completedMilestones:
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
 authorization:
-  state: ACCEPTED_WAIT
+  state: START_NOW
   milestone: F4
-  package: F4-WP3
-  owner: Codex
-  exactBase: 5eb0037fb6e702696d008b913de53721c12a47b7
-  branch: agent/kimi-f4-wp3-image-request-import-ux
-  issue: 109
-  pr: 111
-  candidateContentHead: 750eacb91c426e92a3360f1cff73f7138cec5563
+  package: F4-WP4
+  owner: Kimi
+  exactBase: 3a98dfff7b543821c02ead9499a9ec0efd93913b
+  branch: agent/kimi-f4-wp4-layer-rig-review-ux
+  issue: 113
+  pr: null
+  candidateContentHead: 3a98dfff7b543821c02ead9499a9ec0efd93913b
   candidateRef: product/v1
 checks:
-  local: studio-194+focused-18+typecheck+build+browser-16+11-screenshot-hashes+exact-successor-audits+root-verify
+  local: roadmap-consistency+format-check
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
@@ -31,12 +31,11 @@ verdicts:
   pro: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F4-WP4 requires a separate bounded START_NOW ticket and higher Kimi inbox version
   - F4-WP5 remains blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: WAIT_FOR_F4_WP4_TICKET
-  text: F4-WP3 is accepted and integrated. Do not begin F4-WP4 until a separate bounded ticket, exact-base status transition, and higher Kimi inbox version are published.
+  type: IMPLEMENT_F4_WP4_ONLY
+  text: Implement only issue #113 from exact base 3a98dfff7b543821c02ead9499a9ec0efd93913b on agent/kimi-f4-wp4-layer-rig-review-ux, publish the exact handback, and stop before F4-WP5.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -170,6 +169,17 @@ verification from the live PR checks.
   generation, downloads, uploads, approval, layer/rig review, persistence,
   backend, Godot, Remotion, rendering, export, packaging, F4-WP4, or later
   work.
+- Issue #113 and this `START_NOW` transition authorize only F4-WP4 from exact
+  base `product/v1@3a98dfff7b543821c02ead9499a9ec0efd93913b` on required
+  branch `agent/kimi-f4-wp4-layer-rig-review-ux`. The package may add only a
+  deterministic Product v1 layer-and-rig review prototype with declared local
+  turnaround, part, padded-bounds, pivot, mask, profile, expression/viseme,
+  motion-checklist, layered-set plane, and foreground-occluder review truth.
+  It must derive visible Incomplete, Needs correction, and Review-ready states
+  without claiming files, decoded media, slicing, socket calculation, mask or
+  rig creation, approval, capability promotion, or production readiness. It
+  does not authorize F4-WP5, persistence, providers, workers, backend, Godot,
+  Remotion, rendering, export, packaging, or later work.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
