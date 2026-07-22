@@ -20,8 +20,11 @@ Inbox: version `86` on `origin/agent/kimi-frontend`
   `8fb079d1f44a7a57fa3f7dabd13baa8bec330742`). The start transition changes
   only `docs/ROADMAP_STATUS.md` and `docs/plans/milestone-F4.md`; it is the
   Codex-published authorization the roadmap consistency guard requires.
-- Exact implementation and evidence SHA:
-  `f8c4a4b7e2047a10ccec00a46a43659cce80aee1`.
+- Exact review-clean implementation and evidence SHA:
+  `c87afa4df42207ec84ba21bbb77e9b15be22279c`. This successor contains the
+  original implementation/evidence commit
+  `f8c4a4b7e2047a10ccec00a46a43659cce80aee1` plus the bounded independent
+  audit corrections described below.
 - Handback tip: the commit containing this file; GitHub issue #113 and pull
   request #115 record its exact pushed SHA because a commit cannot embed its
   own identity.
@@ -79,6 +82,12 @@ deterministic layer-and-rig review prototype:
   switches fixture state, or closes. Other categories omit the review action;
   eligible requirements without a declared example show a disabled control
   with the exact reason.
+- Independent exact-head review then closed four fail-closed gaps: an
+  explicitly blocked checklist row can no longer derive Review-ready;
+  duplicate or stale-scene session candidate bindings become unavailable;
+  blank review, part, mask, plane, and occluder identities become
+  unavailable; and switching to an unavailable example focuses its readable
+  alert. Focused regression tests pin all four corrections.
 
 The implementation/evidence commit adds 18 files or file changes with 4,199
 insertions and 1 deletion. `App.test.tsx` changes only by importing the new
@@ -107,9 +116,9 @@ export success strings in the workspace.
 
 ## Verification
 
-- Focused F4-WP4 suite (`src/product-v1/asset-review.test.tsx`): PASS, 21/21
+- Focused F4-WP4 suite (`src/product-v1/asset-review.test.tsx`): PASS, 23/23
   tests.
-- `pnpm --filter @storystage/studio test`: PASS, 215/215 tests.
+- `pnpm --filter @storystage/studio test`: PASS, 217/217 tests.
 - `pnpm --filter @storystage/studio typecheck`: PASS.
 - `pnpm --filter @storystage/studio build`: PASS; only the pre-existing Vite
   large-chunk warning remains.
@@ -121,7 +130,9 @@ export success strings in the workspace.
   (exit 0). Roadmap consistency, generated artifacts, E1 security evidence,
   privacy, repository lint, all-package typecheck, and all tests passed,
   including Story Engine 353/353, asset-pipeline 126/126, and Studio
-  215/215. Two earlier attempts hit the documented unchanged CPU/resource
+  215/215 on the original implementation tree. After the bounded audit
+  corrections, the affected focused suite passed 23/23 and the complete
+  Studio suite passed 217/217. Two earlier attempts hit the documented unchanged CPU/resource
   contention flakes in untouched packages (story-engine loop-test timeouts;
   an asset-pipeline temp-dir cleanup race); each failing suite passed in
   isolation, and the serialized worker-capped run passed end to end on the
