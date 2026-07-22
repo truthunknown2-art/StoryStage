@@ -1,16 +1,33 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `82`
+Inbox-Version: `83`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP2-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F4-WP3-IMAGE-REQUEST-IMPORT-UX`
+Status: `START_NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `1c6ded8b4db75bbf669ce09efff2fb804cdd1593`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#103`
+Accepted-Root-Base: `5eb0037fb6e702696d008b913de53721c12a47b7`
+Required-Work-Branch: `agent/kimi-f4-wp3-image-request-import-ux`
+Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp3-image-request-import-ux-v83.md`
+Issue: `#109`
 
 ## Current instruction
+
+Version 83 starts only F4-WP3 through issue #109 from exact accepted base
+`5eb0037fb6e702696d008b913de53721c12a47b7` on required branch
+`agent/kimi-f4-wp3-image-request-import-ux`. Extend only the accepted Product
+v1 Assets & Rigs workspace with the deterministic request-pack and
+candidate-import UI prototype in the full brief. Preserve the F4-WP2 scene
+requirement/readiness truth and publish one immutable handback before exiting.
+Do not start F4-WP4, touch real files or providers, claim generation/import/
+approval success, or begin backend, Godot, Remotion, persistence, rendering,
+export, packaging, or private-launch work.
+
+Version 83 supersedes Version 82. Version 82 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 82 instruction:
 
 Version 82 records F4-WP2 acceptance and integration. PR #105 predecessor
 head `67432073aa96c6bafb634fdad5afd0c876db13a5` passed hosted verification but
@@ -25,7 +42,7 @@ post-merge run `29913212707` passed. PR #105 merged into `product/v1` at
 backend product work, Godot, Remotion, persistence, rendering, export,
 packaging, and every later package remain unauthorized by this inbox.
 
-Version 82 supersedes Version 81. Version 81 remains below as historical
+Version 82 superseded Version 81. Version 81 remains below as historical
 traceability and must not relaunch.
 
 ---
