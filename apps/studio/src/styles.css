@@ -1414,7 +1414,7 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   display: grid;
   flex: 1;
   gap: 18px;
-  grid-template-columns: 250px minmax(0, 1fr) 290px;
+  grid-template-columns: 250px minmax(0, 1fr) 290px 330px;
   min-height: 0;
   padding: 18px 24px;
 }
@@ -1657,7 +1657,8 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   }
 
   .pv1-studio-rail,
-  .pv1-studio-inspector {
+  .pv1-studio-inspector,
+  .pv1-ai-panel {
     border: 0;
     padding: 0;
   }
@@ -1876,6 +1877,13 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
     border-left: 0;
     border-top: 1px solid var(--line);
     order: 3;
+    padding: 14px 0 0;
+  }
+
+  .pv1-ai-panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    order: 4;
     padding: 14px 0 0;
   }
 
@@ -2157,4 +2165,877 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   color: var(--pv1-faint);
   font-size: 10.5px;
   padding-top: 8px;
+}
+/* ── F3-WP4: AI Director conversation/proposal shell (local fixtures) ── */
+
+.pv1-ai-fixture-note {
+  background: rgba(242, 198, 109, 0.07);
+  border: 1px solid rgba(242, 198, 109, 0.3);
+  border-radius: 8px;
+  color: #d9c88f;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 0;
+  padding: 5px 10px;
+}
+
+/* Status chip + Settings → AI Director */
+
+.pv1-ai-controls {
+  position: relative;
+}
+
+.pv1-ai-chip {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+}
+
+.pv1-ai-chip:hover {
+  border-color: var(--green);
+}
+
+.pv1-ai-chip.is-connected {
+  color: var(--green);
+}
+
+.pv1-ai-settings {
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45);
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 14px 16px 16px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 320px;
+  z-index: 40;
+}
+
+.pv1-ai-settings h2 {
+  color: #dfe7e3;
+  font-size: 13px;
+}
+
+.pv1-ai-settings-field {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.pv1-ai-settings-field span {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pv1-ai-settings-field select {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 12px;
+  min-height: 38px;
+  padding: 0 10px;
+  width: 100%;
+}
+
+.pv1-ai-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pv1-ai-settings-actions .pv1-secondary {
+  min-height: 36px;
+  padding: 0 11px;
+}
+
+.pv1-ai-settings-truth,
+.pv1-ai-settings-result {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pv1-ai-settings-result {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.pv1-ai-diagnostics {
+  display: grid;
+  gap: 5px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-ai-diagnostics code {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  display: block;
+  font-size: 10.5px;
+  padding: 5px 8px;
+}
+
+@media (max-width: 1024px) {
+  .pv1-ai-settings {
+    position: static;
+    width: 100%;
+  }
+}
+
+/* Connect AI Director surface */
+
+.pv1-ai-connect {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 16px 18px 18px;
+}
+
+.pv1-ai-connect h2 {
+  align-items: center;
+  color: #dfe7e3;
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+}
+
+.pv1-ai-connect-state {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pv1-ai-connect-state strong {
+  color: #dfe7e3;
+}
+
+.pv1-ai-connect-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pv1-ai-connect-truth {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* F3-WP4 Create: two-path choice, paste, idea, shared review */
+
+.pv1-create-narrow {
+  margin: 0 auto;
+  max-width: 860px;
+  padding: 36px 28px 48px;
+  width: 100%;
+}
+
+.pv1-create-review {
+  margin: 0 auto;
+  max-width: 900px;
+  padding: 30px 28px 48px;
+  width: 100%;
+}
+
+.pv1-create-crumb {
+  align-items: center;
+  color: var(--pv1-faint);
+  display: flex;
+  font-size: 11.5px;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.pv1-quiet {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  display: inline-flex;
+  font-size: 11.5px;
+  gap: 5px;
+  min-height: 32px;
+  padding: 0 4px;
+}
+
+.pv1-quiet:hover {
+  color: var(--green);
+}
+
+.pv1-create-choice h1,
+.pv1-create-narrow .pv1-card h1 {
+  color: #f4f7f5;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.pv1-create-choice .pv1-lede,
+.pv1-create-narrow .pv1-card .pv1-lede {
+  margin-bottom: 18px;
+}
+
+.pv1-template-card {
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+}
+
+.pv1-template-card img {
+  border-radius: 10px;
+  display: block;
+  height: 72px;
+  object-fit: cover;
+  width: 128px;
+}
+
+.pv1-template-card strong {
+  color: #f4f7f5;
+  display: block;
+  font-size: 14px;
+}
+
+.pv1-template-card span {
+  color: var(--pv1-faint);
+  display: block;
+  font-size: 11.5px;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+.pv1-path-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .pv1-path-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.pv1-path-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--green);
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 18px;
+  text-align: left;
+}
+
+.pv1-path-card:hover {
+  border-color: var(--green);
+}
+
+.pv1-path-card strong {
+  color: #f4f7f5;
+  font-size: 15px;
+}
+
+.pv1-path-card span {
+  color: var(--pv1-faint);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.pv1-idea-form {
+  display: grid;
+  gap: 14px;
+}
+
+.pv1-idea-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pv1-idea-field {
+  display: grid;
+  gap: 6px;
+}
+
+.pv1-idea-field span {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pv1-idea-field textarea,
+.pv1-idea-field input,
+.pv1-idea-field select {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.pv1-idea-field textarea {
+  resize: vertical;
+}
+
+.pv1-idea-field textarea:focus-visible,
+.pv1-idea-field input:focus-visible,
+.pv1-idea-field select:focus-visible {
+  border-color: var(--green);
+  outline: none;
+}
+
+.pv1-create-submit-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+/* Shared Review proposal surface */
+
+.pv1-proposal-review {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: grid;
+  gap: 18px;
+  padding: 22px 24px 24px;
+}
+
+.pv1-proposal-review-heading {
+  align-items: start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.pv1-proposal-review-heading small {
+  align-items: center;
+  color: var(--pv1-faint);
+  display: flex;
+  font-size: 11px;
+  font-weight: 800;
+  gap: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pv1-proposal-review-heading h1 {
+  color: #f4f7f5;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+}
+
+.pv1-proposal-hierarchy > h2 {
+  color: #dfe7e3;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.pv1-proposal-hierarchy > ol {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-proposal-scene {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.pv1-proposal-scene-heading {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+}
+
+.pv1-proposal-title-input,
+.pv1-proposal-scene-title-input,
+.pv1-proposal-direction-input {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.pv1-proposal-title-input {
+  border-radius: 8px;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  padding: 6px 10px;
+  width: 100%;
+}
+
+.pv1-proposal-scene-title-input {
+  border-radius: 7px;
+  color: #dfe7e3;
+  flex: 1;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-right: 10px;
+  min-width: 0;
+  padding: 4px 8px;
+}
+
+.pv1-proposal-direction-input {
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+  margin-top: 4px;
+  padding: 7px 10px;
+  resize: vertical;
+  width: 100%;
+}
+
+.pv1-proposal-title-input:focus-visible,
+.pv1-proposal-scene-title-input:focus-visible,
+.pv1-proposal-direction-input:focus-visible {
+  border-color: var(--green);
+  outline: none;
+}
+
+.pv1-proposal-scene-heading small {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+}
+
+.pv1-proposal-scene > ol {
+  border-left: 2px solid var(--line);
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0 0 0 12px;
+}
+
+.pv1-proposal-facts {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.pv1-proposal-facts div {
+  display: grid;
+  gap: 3px;
+}
+
+.pv1-proposal-facts dt {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pv1-proposal-facts dd {
+  color: #dbe3df;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.pv1-proposal-demo-note {
+  background: rgba(145, 228, 179, 0.07);
+  border: 1px solid rgba(145, 228, 179, 0.3);
+  border-radius: 10px;
+  color: var(--green);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+  padding: 10px 14px;
+}
+
+.pv1-proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Docked Studio AI Director panel */
+
+.pv1-ai-panel {
+  border-left: 1px solid var(--line);
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  overflow-y: auto;
+  padding-left: 16px;
+}
+
+.pv1-ai-panel-heading {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.pv1-ai-panel-heading h2 {
+  align-items: center;
+  color: #dfe7e3;
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+}
+
+.pv1-ai-scope {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pv1-ai-labels {
+  display: grid;
+  gap: 8px;
+}
+
+.pv1-ai-labels div {
+  display: grid;
+  gap: 2px;
+}
+
+.pv1-ai-labels dt {
+  color: var(--pv1-faint);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pv1-ai-labels dd {
+  color: #dbe3df;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.pv1-ai-scrubber {
+  display: grid;
+  gap: 6px;
+}
+
+.pv1-ai-scrubber label {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pv1-ai-scrubber label small {
+  color: var(--pv1-faint);
+  display: block;
+  font-weight: 400;
+  margin-top: 2px;
+}
+
+.pv1-ai-scrubber input[type="range"] {
+  accent-color: var(--green);
+  width: 100%;
+}
+
+.pv1-ai-thread {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-ai-thread-empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  color: var(--pv1-faint);
+  font-size: 11.5px;
+  line-height: 1.5;
+  padding: 12px 14px;
+}
+
+.pv1-ai-turn {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 12px 14px;
+}
+
+.pv1-ai-turn-request {
+  color: #f4f7f5;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pv1-ai-turn-status {
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin: 0;
+  padding: 3px 10px;
+  text-transform: uppercase;
+}
+
+.pv1-ai-turn-status.is-streaming {
+  background: rgba(242, 198, 109, 0.1);
+  border: 1px solid rgba(242, 198, 109, 0.35);
+  color: var(--amber);
+}
+
+.pv1-ai-turn-status.is-complete {
+  background: rgba(145, 228, 179, 0.1);
+  border: 1px solid rgba(145, 228, 179, 0.35);
+  color: var(--green);
+}
+
+.pv1-ai-turn-status.is-cancelled,
+.pv1-ai-turn-status.is-error {
+  background: rgba(255, 96, 71, 0.08);
+  border: 1px solid rgba(255, 96, 71, 0.3);
+  color: var(--red);
+}
+
+.pv1-ai-stages {
+  display: grid;
+  gap: 5px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-ai-stages li {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  padding-left: 16px;
+  position: relative;
+}
+
+.pv1-ai-stages li::before {
+  background: var(--line-strong);
+  border-radius: 50%;
+  content: "";
+  height: 6px;
+  left: 0;
+  position: absolute;
+  top: 5px;
+  width: 6px;
+}
+
+.pv1-ai-stages li.is-done {
+  color: var(--muted);
+}
+
+.pv1-ai-stages li.is-done::before {
+  background: var(--green);
+}
+
+.pv1-ai-turn-note {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pv1-ai-captured-scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-ai-captured-scope li {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+}
+
+.pv1-ai-proposal {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding-top: 10px;
+  width: 100%;
+}
+
+.pv1-ai-proposal h3 {
+  color: #dfe7e3;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.pv1-ai-proposal-facts {
+  display: grid;
+  gap: 8px;
+}
+
+.pv1-ai-proposal-facts dt {
+  color: var(--pv1-faint);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pv1-ai-proposal-facts dd {
+  color: #dbe3df;
+  font-size: 11.5px;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.pv1-ai-markers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-ai-markers li {
+  background: rgba(145, 228, 179, 0.08);
+  border: 1px solid rgba(145, 228, 179, 0.3);
+  border-radius: 8px;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+}
+
+.pv1-ai-preview {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.pv1-ai-preview p {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pv1-ai-preview strong {
+  color: #dfe7e3;
+}
+
+.pv1-ai-proposal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pv1-ai-proposal-actions .pv1-primary,
+.pv1-ai-proposal-actions .pv1-secondary {
+  min-height: 36px;
+  padding: 0 11px;
+}
+
+.pv1-ai-proposal-actions .pv1-primary:disabled,
+.pv1-ai-proposal-actions .pv1-secondary:disabled {
+  opacity: 0.55;
+}
+
+.pv1-ai-proposal-status {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pv1-ai-composer {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding-top: 12px;
+}
+
+.pv1-ai-composer label {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+
+.pv1-ai-composer label span {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pv1-ai-composer textarea {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 10px 12px;
+  resize: vertical;
+  width: 100%;
+}
+
+.pv1-ai-composer textarea:focus-visible {
+  border-color: var(--green);
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv1-ai-chip,
+  .pv1-path-card,
+  .pv1-template-card {
+    transition-duration: 0.01ms !important;
+  }
 }

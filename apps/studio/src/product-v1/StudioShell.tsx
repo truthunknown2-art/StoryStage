@@ -12,6 +12,9 @@ import {
   Undo2,
 } from "lucide-react";
 import olloCastArt from "../assets/ollo-friends-cast-v1.jpg";
+import { AiDirectorControls } from "./AiDirectorControls";
+import { AiDirectorPanel } from "./AiDirectorPanel";
+import type { AiConnectionState } from "./ai-director-fixture";
 import {
   LOCAL_DEMO_BANNER,
   OLLO_DEMO_PROJECT,
@@ -159,16 +162,28 @@ const INTENT_SELECT_FIELDS = {
  * Selected direction summary on the reference board lists the selected
  * beat's five Visual/Motion values. All values are planning intent only —
  * nothing is saved, interpreted by AI, animated, rendered, or exported.
+ *
+ * F3-WP4 docks the right-side AI Director conversation/proposal panel
+ * (local labelled fixtures only) and adds the truthful AI Director status
+ * chip to the topbar. The panel reads the same selected scene/beat and
+ * playhead as authoritative scope; its one bounded real transition is an
+ * Apply that commits exactly one proposed `performanceDirection` change
+ * to the immutable captured beat through the same session-local per-beat
+ * history, failing closed on stale selection or unapplied manual drafts.
  */
 export function StudioShell({
+  aiConnection,
   artStyleLabel,
   grammarLabel,
+  onAiConnectionChange,
   onBackToProjects,
   projectTitle,
   usesLayoutDemo = false,
 }: {
+  aiConnection: AiConnectionState;
   artStyleLabel: string;
   grammarLabel: string;
+  onAiConnectionChange: (next: AiConnectionState) => void;
   onBackToProjects: () => void;
   projectTitle: string;
   /** True when the visible hierarchy is the bounded Ollo layout demo rather
@@ -212,7 +227,8 @@ export function StudioShell({
     [selectedSceneId],
   );
   const selectedScene: DemoScene = OLLO_DEMO_SCENES[selectedIndex]!;
-  const previousScene = selectedIndex > 0 ? OLLO_DEMO_SCENES[selectedIndex - 1]! : null;
+  const previousScene =
+    selectedIndex > 0 ? OLLO_DEMO_SCENES[selectedIndex - 1]! : null;
   const nextScene =
     selectedIndex < OLLO_DEMO_SCENES.length - 1
       ? OLLO_DEMO_SCENES[selectedIndex + 1]!
@@ -243,7 +259,10 @@ export function StudioShell({
   /* Direct state for the currently selected beat only. Every mutation
    * goes through one updater that reads and writes only this beat's key,
    * so no edit, apply, undo, or redo can touch another beat or scene. */
-  const selectedBeatDirectKey = directBeatKey(selectedSceneId, selectedBeatIndex);
+  const selectedBeatDirectKey = directBeatKey(
+    selectedSceneId,
+    selectedBeatIndex,
+  );
   const selectedBeatDirect =
     directByBeat[selectedBeatDirectKey] ?? initialBeatDirectState();
   const updateSelectedBeatDirect = (
@@ -261,6 +280,34 @@ export function StudioShell({
   /* F3-WP3: the committed snapshot drives the board's Selected direction
    * summary. Draft values never appear there — only Apply commits them. */
   const committedSelectedBeat = committedDirectDraft(selectedBeatDirect);
+
+  /* F3-WP4: the docked AI Director panel commits its one bounded proposal
+   * Apply through this writer, which targets exactly the captured beat's
+   * key — never another beat or scene. */
+  const commitBeatDirect = (beatKey: string, next: BeatDirectState) => {
+    setDirectByBeat((current) => ({ ...current, [beatKey]: next }));
+  };
+
+  /* F3-WP4: the panel's one honest recovery action returns selection to a
+   * proposal's immutable captured scope. A same-scene return selects the
+   * beat directly; a cross-scene return rides the accepted scene-change
+   * adjustment (which resets to the first beat) and then applies the
+   * captured beat exactly once, after the scene has settled. */
+  const pendingCapturedBeatRef = useRef<number | null>(null);
+  const returnToCapturedScope = (sceneId: string, beatIndex: number) => {
+    if (sceneId === selectedSceneId) {
+      setSelectedBeatIndex(beatIndex);
+      return;
+    }
+    pendingCapturedBeatRef.current = beatIndex;
+    selectScene(sceneId);
+  };
+  useEffect(() => {
+    if (pendingCapturedBeatRef.current === null) return;
+    const capturedBeat = pendingCapturedBeatRef.current;
+    pendingCapturedBeatRef.current = null;
+    setSelectedBeatIndex(capturedBeat);
+  }, [selectedSceneId]);
 
   /** One bounded Visual/Motion intent select bound to the shared draft. */
   const intentSelect = (
@@ -301,10 +348,9 @@ export function StudioShell({
       }}
     >
       <p className="pv1-direct-note" role="note">
-        Session-local only — this direction and its undo history stay in
-        this Studio session. They are not saved to the project, are not
-        interpreted by AI, and are not used for animation, rendering, or
-        export.
+        Session-local only — this direction and its undo history stay in this
+        Studio session. They are not saved to the project, are not interpreted
+        by AI, and are not used for animation, rendering, or export.
       </p>
       {fields}
       <div className="pv1-direct-actions">
@@ -431,6 +477,10 @@ export function StudioShell({
           <span className="pv1-badge">{grammarLabel}</span>
           <span className="pv1-badge">{artStyleLabel}</span>
         </span>
+        <AiDirectorControls
+          connection={aiConnection}
+          onConnectionChange={onAiConnectionChange}
+        />
         <span className="pv1-banner" role="note">
           {LOCAL_DEMO_BANNER}
         </span>
@@ -470,9 +520,9 @@ export function StudioShell({
       <div className="pv1-studio-layout">
         {usesLayoutDemo ? (
           <p className="pv1-layout-demo-note" role="note">
-            Layout demo — the eight scenes below are the bounded Ollo demo
-            plan, not scenes from your script. Script-specific scenes have
-            not been planned or generated yet.
+            Layout demo — the eight scenes below are the bounded Ollo demo plan,
+            not scenes from your script. Script-specific scenes have not been
+            planned or generated yet.
           </p>
         ) : null}
         <nav aria-label="Episode hierarchy" className="pv1-studio-rail">
@@ -547,7 +597,10 @@ export function StudioShell({
                                 Selected scene {selectedIndex + 1} ·{" "}
                                 {selectedScene.title}
                               </span>
-                              <button onClick={revealSelectedScene} type="button">
+                              <button
+                                onClick={revealSelectedScene}
+                                type="button"
+                              >
                                 <LocateFixed size={12} aria-hidden /> Reveal
                               </button>
                             </p>
@@ -692,19 +745,15 @@ export function StudioShell({
           <div className="pv1-board-canvas">
             {/* Reference art is ordinary browser UI, not a Remotion composition. */}
             {/* eslint-disable-next-line @remotion/warn-native-media-tag */}
-            <img
-              alt="Ollo & Friends cast reference art"
-              src={olloCastArt}
-            />
+            <img alt="Ollo & Friends cast reference art" src={olloCastArt} />
             <p className="pv1-board-note">
-              Local reference art only — no imagery, animation, audio, or
-              render exists for this scene.
+              Local reference art only — no imagery, animation, audio, or render
+              exists for this scene.
             </p>
           </div>
           <div className="pv1-playhead">
             <label htmlFor="pv1-playhead-slider">
-              Scene playhead{" "}
-              <small>local UI timing — not media playback</small>
+              Scene playhead <small>local UI timing — not media playback</small>
             </label>
             <input
               aria-label={`Scene playhead for ${selectedScene.title} — local UI timing, not media playback`}
@@ -732,18 +781,19 @@ export function StudioShell({
             <button
               aria-label="Previous scene"
               disabled={!previousScene}
-              onClick={() =>
-                previousScene && selectScene(previousScene.id)
-              }
+              onClick={() => previousScene && selectScene(previousScene.id)}
               type="button"
             >
               <ChevronLeft size={16} aria-hidden /> Previous
             </button>
             <span className="pv1-transport-readout" aria-live="polite">
               Scene {selectedIndex + 1} of {OLLO_DEMO_SCENES.length} ·{" "}
-              {selectedScene.seconds}s · episode {formatClock(sceneStart(selectedScene.id))}–
-              {formatClock(sceneStart(selectedScene.id) + selectedScene.seconds)} of{" "}
-              {formatClock(OLLO_DEMO_TOTAL_SECONDS)}
+              {selectedScene.seconds}s · episode{" "}
+              {formatClock(sceneStart(selectedScene.id))}–
+              {formatClock(
+                sceneStart(selectedScene.id) + selectedScene.seconds,
+              )}{" "}
+              of {formatClock(OLLO_DEMO_TOTAL_SECONDS)}
             </span>
             <button
               aria-label="Next scene"
@@ -859,8 +909,7 @@ export function StudioShell({
             </button>
             <small>
               Preview stays disabled in F3-WP3 — direction intent is
-              session-local planning only; there is still no media to
-              preview.
+              session-local planning only; there is still no media to preview.
             </small>
             <button className="pv1-primary" disabled type="button">
               Export
@@ -868,6 +917,21 @@ export function StudioShell({
             <small>Export unlocks when production services connect.</small>
           </div>
         </aside>
+
+        {/* F3-WP4: docked right-side AI Director conversation/proposal
+         * panel. The visual board remains the primary surface. */}
+        <AiDirectorPanel
+          connection={aiConnection}
+          directByBeat={directByBeat}
+          onCommitBeat={commitBeatDirect}
+          onConnectionChange={onAiConnectionChange}
+          onPlayheadChange={setPlayheadSeconds}
+          onReturnToScope={returnToCapturedScope}
+          playheadSeconds={playheadSeconds}
+          selectedBeatIndex={selectedBeatIndex}
+          selectedScene={selectedScene}
+          selectedSceneIndex={selectedIndex}
+        />
       </div>
 
       <nav aria-label="Episode overview" className="pv1-studio-overview">

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -11,6 +12,37 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { App } from "./App";
 import { ProductV1App } from "./product-v1/ProductV1App";
+import {
+  AI_CONNECTION_LABELS,
+  AI_CONNECTION_STATES,
+  AI_FIXTURE_LABEL,
+  advanceAiTurn,
+  aiApplyBlocker,
+  applyProposalToBeatState,
+  buildFixtureProposal,
+  canApplyAiTurn,
+  canUndoProposalApply,
+  cancelAiTurn,
+  captureAiScope,
+  completeAiTurn,
+  rejectAiTurnProposal,
+  startAiTurn,
+  supersedePendingProposals,
+  undoProposalApply,
+  type AiCapturedScope,
+} from "./product-v1/ai-director-fixture";
+import {
+  CREATE_TEMPLATE_LABEL,
+  buildIdeaProposal,
+  buildPasteProposal,
+} from "./product-v1/create-proposal";
+import {
+  applyDirectDraft,
+  committedDirectDraft,
+  directDraftsEqual,
+  initialBeatDirectState,
+  updateDirectDraft,
+} from "./product-v1/direct-history";
 
 afterEach(() => {
   cleanup();
@@ -31,8 +63,15 @@ async function openCreate(user: ReturnType<typeof userEvent.setup>) {
     screen.getByRole("button", { name: /New project/ }),
   );
   return screen.findByRole("heading", {
-    name: /Turn your script into an animated first cut/,
+    name: /Start a new Kids Story/,
   });
+}
+
+/** F3-WP4: from the two-path choice onto the Paste a script path. */
+async function openPastePath(user: ReturnType<typeof userEvent.setup>) {
+  await openCreate(user);
+  await user.click(screen.getByRole("button", { name: /Paste a script/ }));
+  return screen.findByRole("heading", { name: "Paste a script" });
 }
 
 describe("F1 — Projects + Create", () => {
@@ -57,7 +96,10 @@ describe("F1 — Projects + Create", () => {
     const user = userEvent.setup();
     await openCreate(user);
     expect(
-      screen.getByRole("button", { name: "Create first cut" }),
+      screen.getByRole("button", { name: /Paste a script/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /What's your idea\?/ }),
     ).toBeInTheDocument();
     await user.click(
       screen.getByRole("button", { name: /Back to projects/ }),
@@ -67,11 +109,10 @@ describe("F1 — Projects + Create", () => {
     ).toBeInTheDocument();
   });
 
-  it("updates word count, duration, and beat preview on edits and .txt import", async () => {
+  it("updates word count and duration on edits and bounded .txt import", async () => {
     const user = userEvent.setup();
-    await openCreate(user);
+    await openPastePath(user);
     const scriptInput = screen.getByRole("textbox", { name: "Script" });
-    expect(screen.getByText(/Beats appear here as you write/)).toBeInTheDocument();
 
     await user.type(scriptInput, "One small paragraph.");
     expect(screen.getByText(/3 words · about 5 seconds/)).toBeInTheDocument();
@@ -83,11 +124,6 @@ describe("F1 — Projects + Create", () => {
       target: { files: [file] },
     });
     expect(await screen.findByText(/68 words · about 27 seconds/)).toBeInTheDocument();
-    // Five paragraphs → four visible beats plus the "and N more" note.
-    expect(
-      await screen.findByText("Lila lives in a…"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("and 1 more")).toBeInTheDocument();
 
     const badFile = new File(["not a script"], "story.md", {
       type: "text/markdown",
@@ -100,71 +136,77 @@ describe("F1 — Projects + Create", () => {
     ).toBeInTheDocument();
   });
 
-  it("updates grammar, art style, narration, format, and language state", async () => {
+  it("offers the single Kids Story template with exactly two paths and no Weird History", async () => {
     const user = userEvent.setup();
     await openCreate(user);
-
-    const weirdHistory = screen.getByRole("button", {
-      name: /Weird History/,
-    });
-    await user.click(weirdHistory);
-    expect(weirdHistory).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText("Ollo & Friends — Kids Story")).toBeInTheDocument();
+    expect(screen.getByText(/Kids Adventure grammar/)).toBeInTheDocument();
+    expect(screen.getByText(/Storybook Cutout style/)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /Kids Adventure/ }),
-    ).toHaveAttribute("aria-pressed", "false");
-
-    const collage = screen.getByRole("button", { name: /Paper Collage/ });
-    await user.click(collage);
-    expect(collage).toHaveAttribute("aria-pressed", "true");
-
-    const narration = screen.getByLabelText("Narration mode");
-    await user.selectOptions(narration, "silent");
-    expect(narration).toHaveValue("silent");
-
-    const format = screen.getByLabelText("Episode format");
-    expect(format).toHaveValue("16:9");
+      screen.getByRole("button", { name: /Paste a script/ }),
+    ).toBeInTheDocument();
     expect(
-      within(format as HTMLSelectElement).getByRole("option", {
-        name: "9:16 — arrives later",
-      }),
-    ).toBeDisabled();
-
-    const language = screen.getByLabelText("Language");
-    expect(language).toHaveValue("english");
+      screen.getByRole("button", { name: /What's your idea\?/ }),
+    ).toBeInTheDocument();
+    // The old grammar-first hierarchy is gone: no grammar or art-style
+    // choice, and Weird History is never shown.
+    expect(screen.queryByText(/Weird History/)).not.toBeInTheDocument();
     expect(
-      within(language as HTMLSelectElement).getByRole("option", {
-        name: "More languages — arrives later",
-      }),
-    ).toBeDisabled();
-  });
-
-  it("blocks first-cut navigation on an empty script with a useful error", async () => {
-    const user = userEvent.setup();
-    await openCreate(user);
+      screen.queryByRole("button", { name: /Paper Collage|Soft 2D/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Narration mode")).not.toBeInTheDocument();
     await user.click(
-      screen.getByRole("button", { name: "Create first cut" }),
+      screen.getByRole("button", { name: /What's your idea\?/ }),
+    );
+    // Signed out by default: the idea path opens the Connect AI Director
+    // fixture instead of the conversation form.
+    expect(
+      await screen.findByRole("heading", { name: /Connect AI Director/ }),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: /Choose a different path/ }),
     );
     expect(
-      await screen.findByText("Add your script before creating the first cut."),
+      await screen.findByRole("heading", { name: /Start a new Kids Story/ }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", {
-        name: /Turn your script into an animated first cut/,
-      }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByTestId("pv1-studio"),
-    ).not.toBeInTheDocument();
   });
 
-  it("opens the honest Studio shell for a valid script and never claims generation", async () => {
+  it("blocks proposal review on an empty script with a useful error", async () => {
     const user = userEvent.setup();
-    await openCreate(user);
+    await openPastePath(user);
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    expect(
+      await screen.findByText("Add your script before creating a proposal."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Paste a script" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: "Review proposal" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("pv1-studio")).not.toBeInTheDocument();
+  });
+
+  it("enters the honest Studio shell only through proposal review and never claims generation", async () => {
+    const user = userEvent.setup();
+    await openPastePath(user);
     fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
       target: { value: SAMPLE_SCRIPT },
     });
+    // The form cannot enter Studio directly — only the review can.
+    expect(
+      screen.queryByRole("button", { name: /Enter Studio/ }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const review = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    expect(review).toHaveTextContent("Ollo & Friends — Kids Story");
+    expect(review).toHaveTextContent("From your script");
     await user.click(
-      screen.getByRole("button", { name: "Create first cut" }),
+      within(review).getByRole("button", {
+        name: "Enter Studio — local demo only",
+      }),
     );
     const studio = await screen.findByTestId("pv1-studio");
     expect(studio).toHaveTextContent(
@@ -313,25 +355,35 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     expect(previous).toBeEnabled();
   });
 
-  it("shows the creator's actual grammar and art style, with the layout-demo disclosure", async () => {
+  it("shows the single template labels and proposal title, with the layout-demo disclosure", async () => {
     const user = userEvent.setup();
-    await openCreate(user);
-    await user.click(screen.getByRole("button", { name: /Weird History/ }));
-    await user.click(screen.getByRole("button", { name: /Paper Collage/ }));
+    await openPastePath(user);
     fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
       target: { value: SAMPLE_SCRIPT },
     });
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const review = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
     await user.click(
-      screen.getByRole("button", { name: "Create first cut" }),
+      within(review).getByRole("button", {
+        name: "Enter Studio — local demo only",
+      }),
     );
     const studio = await screen.findByTestId("pv1-studio");
     const topbar = studio.querySelector(".pv1-topbar")!;
-    expect(topbar).toHaveTextContent("Weird History");
-    expect(topbar).toHaveTextContent("Paper Collage");
-    expect(topbar).not.toHaveTextContent("Kids Adventure");
-    expect(topbar).not.toHaveTextContent("Storybook Cutout");
-    expect(studio).toHaveTextContent(/Layout demo — the eight scenes below are the bounded Ollo demo plan, not scenes from your script/);
-    expect(studio).toHaveTextContent(/Script-specific scenes have not been planned or generated yet/);
+    // One private-launch template: the same labels whatever the path, and
+    // the proposal's episode title becomes the visible project title.
+    expect(topbar).toHaveTextContent("Kids Adventure");
+    expect(topbar).toHaveTextContent("Storybook Cutout");
+    expect(topbar).toHaveTextContent("Lila lives in a quiet village…");
+    expect(topbar).not.toHaveTextContent("Weird History");
+    expect(studio).toHaveTextContent(
+      /Layout demo — the eight scenes below are the bounded Ollo demo plan, not scenes from your script/,
+    );
+    expect(studio).toHaveTextContent(
+      /Script-specific scenes have not been planned or generated yet/,
+    );
   });
 
   it("keeps the seeded demo badges without the layout-demo disclosure", async () => {
@@ -404,6 +456,24 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     expect(
       within(studio).queryByRole("button", { name: /Play|Pause|Scrub/i }),
     ).not.toBeInTheDocument();
+    // F3-WP4: the docked AI Director panel is present, honestly labelled,
+    // and signed-out by default — a fixture Connect surface, never a
+    // terminal or engineering console.
+    const aiPanel = within(studio).getByRole("complementary", {
+      name: "AI Director",
+    });
+    expect(aiPanel).toHaveTextContent(
+      "Local AI Director fixture — no service connected",
+    );
+    expect(
+      within(aiPanel).getByRole("heading", { name: /Connect AI Director/ }),
+    ).toBeInTheDocument();
+    expect(
+      within(aiPanel).getByRole("button", { name: "Sign in with ChatGPT" }),
+    ).toBeInTheDocument();
+    expect(aiPanel).not.toHaveTextContent(
+      /api[- ]?key|token|cookie|mcp|terminal/i,
+    );
   });
 });
 
@@ -1775,5 +1845,1209 @@ describe("F3-WP3 — Visual and Motion scoped history", () => {
     );
     expect(summary(studio)).toHaveTextContent(PLANNING_NOTE);
     expect(referenceImage().getAttribute("src")).toBe(srcBefore);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────── */
+/* F3-WP4 — AI Director conversation and proposal shell                 */
+/* ──────────────────────────────────────────────────────────────────── */
+
+const WP4_SCOPE_INPUT: AiCapturedScope = {
+  sceneId: "scene-1",
+  sceneIndex: 1,
+  sceneTitle: "The Home Nook",
+  beatIndex: 0,
+  beatTitle: "Morning light through the round window",
+  playheadSeconds: 12,
+  rangeStartSeconds: 0,
+  rangeEndSeconds: 70,
+};
+
+describe("F3-WP4 — AI Director fixture state model (pure)", () => {
+  it("provides six labelled connection fixtures and honest fixture text", () => {
+    expect(AI_CONNECTION_STATES).toHaveLength(6);
+    expect(AI_CONNECTION_LABELS.connected).toBe("Connected");
+    expect(AI_CONNECTION_LABELS["signed-out"]).toBe("Signed out");
+    expect(AI_CONNECTION_LABELS.offline).toBe("Offline");
+    expect(AI_CONNECTION_LABELS["usage-limit"]).toBe("Usage limit");
+    expect(AI_CONNECTION_LABELS["update-required"]).toBe("Update required");
+    expect(AI_CONNECTION_LABELS.crashed).toBe("Crashed");
+    expect(AI_FIXTURE_LABEL).toBe(
+      "Local AI Director fixture — no service connected",
+    );
+  });
+
+  it("captures request scope immutably and settles turns deterministically", () => {
+    const scopeInput = { ...WP4_SCOPE_INPUT };
+    const scope = captureAiScope(scopeInput);
+    scopeInput.playheadSeconds = 99;
+    scopeInput.beatIndex = 1;
+    expect(scope.playheadSeconds).toBe(12);
+    expect(scope.beatIndex).toBe(0);
+
+    const turn = startAiTurn(1, "Hold the hush", scope);
+    expect(turn.status).toBe("streaming");
+    expect(turn.stageIndex).toBe(0);
+    let advanced = turn;
+    for (let index = 0; index < 10; index += 1)
+      advanced = advanceAiTurn(advanced);
+    expect(advanced.stageIndex).toBe(3); // caps at the last fixture stage
+
+    // Cancelled and Error are turn states; they can never complete.
+    const cancelled = cancelAiTurn(turn);
+    expect(cancelled.status).toBe("cancelled");
+    expect(cancelled.scope).toEqual(scope); // captured scope preserved
+    expect(completeAiTurn(cancelled, "connected").status).toBe("cancelled");
+    expect(completeAiTurn(turn, "offline").status).toBe("error");
+    expect(completeAiTurn(turn, "usage-limit").status).toBe("error");
+
+    const completed = completeAiTurn(turn, "connected");
+    expect(completed.status).toBe("complete");
+    expect(completed.proposal).not.toBeNull();
+    // Deterministic: the same request and scope always build the same
+    // proposal.
+    expect(completed.proposal).toEqual(
+      buildFixtureProposal(1, "Hold the hush", scope),
+    );
+  });
+
+  it("fails Apply closed on stale scope or unapplied manual drafts only", () => {
+    const scope = captureAiScope(WP4_SCOPE_INPUT);
+    const clean = initialBeatDirectState();
+    expect(
+      aiApplyBlocker({
+        scope,
+        selectedSceneId: "scene-2",
+        selectedBeatIndex: 0,
+        beatState: clean,
+      }),
+    ).toBe("stale-scope");
+    expect(
+      aiApplyBlocker({
+        scope,
+        selectedSceneId: "scene-1",
+        selectedBeatIndex: 1,
+        beatState: clean,
+      }),
+    ).toBe("stale-scope");
+    const dirty = updateDirectDraft(clean, { beatPurpose: "manual" });
+    expect(
+      aiApplyBlocker({
+        scope,
+        selectedSceneId: "scene-1",
+        selectedBeatIndex: 0,
+        beatState: dirty,
+      }),
+    ).toBe("unapplied-manual-draft");
+    expect(
+      aiApplyBlocker({
+        scope,
+        selectedSceneId: "scene-1",
+        selectedBeatIndex: 0,
+        beatState: clean,
+      }),
+    ).toBeNull();
+  });
+
+  it("commits exactly performanceDirection through the existing history and undoes exactly", () => {
+    const scope = captureAiScope(WP4_SCOPE_INPUT);
+    const proposal = buildFixtureProposal(1, "Hold the hush", scope);
+    const manual = applyDirectDraft(
+      updateDirectDraft(initialBeatDirectState(), {
+        beatPurpose: "Keep it cozy",
+        performanceDirection: "Soft and slow",
+      }),
+    );
+    const priorCommitted = committedDirectDraft(manual);
+    const applied = applyProposalToBeatState(manual, proposal);
+    // One atomic step, exactly one changed field.
+    expect(applied.history.length).toBe(manual.history.length + 1);
+    expect(committedDirectDraft(applied).performanceDirection).toBe(
+      proposal.performanceDirection,
+    );
+    expect(committedDirectDraft(applied).beatPurpose).toBe("Keep it cozy");
+    expect(committedDirectDraft(applied).continuityNote).toBe(
+      priorCommitted.continuityNote,
+    );
+    expect(committedDirectDraft(applied).framing).toBe(priorCommitted.framing);
+    // Exact Undo restores the prior snapshot; the guard closes after any
+    // later manual commit.
+    const appliedRevision = {
+      revision: applied.cursor,
+      node: committedDirectDraft(applied),
+    };
+    expect(canUndoProposalApply(applied, appliedRevision)).toBe(true);
+    const undone = undoProposalApply(applied);
+    expect(
+      directDraftsEqual(committedDirectDraft(undone), priorCommitted),
+    ).toBe(true);
+    const movedOn = applyDirectDraft(
+      updateDirectDraft(applied, { beatPurpose: "A manual follow-up" }),
+    );
+    expect(canUndoProposalApply(movedOn, appliedRevision)).toBe(false);
+    expect(
+      canUndoProposalApply(
+        updateDirectDraft(applied, { continuityNote: "draft" }),
+        appliedRevision,
+      ),
+    ).toBe(false);
+  });
+
+  it("binds panel Undo to the exact history revision, never field equality", () => {
+    const scope = captureAiScope(WP4_SCOPE_INPUT);
+    const proposal = buildFixtureProposal(1, "Hold the hush", scope);
+    // AI applies snapshot S: one new revision on the empty initial snapshot.
+    const applied = applyProposalToBeatState(
+      initialBeatDirectState(),
+      proposal,
+    );
+    const appliedRevision = {
+      revision: applied.cursor,
+      node: committedDirectDraft(applied),
+    };
+    expect(canUndoProposalApply(applied, appliedRevision)).toBe(true);
+
+    // A manual commit creates T on top of S.
+    const withT = applyDirectDraft(
+      updateDirectDraft(applied, { beatPurpose: "Manual follow-up T" }),
+    );
+    expect(canUndoProposalApply(withT, appliedRevision)).toBe(false);
+
+    // A later manual commit recreates S by value. Field equality with the
+    // applied snapshot holds, but the applied revision is no longer the
+    // current history node, so panel Undo stays closed and can never
+    // restore the intervening T.
+    const recreated = applyDirectDraft(
+      updateDirectDraft(withT, { beatPurpose: "" }),
+    );
+    expect(
+      directDraftsEqual(committedDirectDraft(recreated), appliedRevision.node),
+    ).toBe(true);
+    expect(recreated.cursor).not.toBe(appliedRevision.revision);
+    expect(canUndoProposalApply(recreated, appliedRevision)).toBe(false);
+
+    // Undoing the recreation through the accepted history restores T — the
+    // panel Undo must stay closed exactly so it cannot perform this move.
+    const backToT = undoProposalApply(recreated);
+    expect(committedDirectDraft(backToT).beatPurpose).toBe(
+      "Manual follow-up T",
+    );
+    expect(canUndoProposalApply(backToT, appliedRevision)).toBe(false);
+
+    // Cursor reuse is not revision identity. After undoing S, a new branch
+    // can commit the same values at cursor 1, but it creates a different
+    // immutable history node and must not revive the old panel Undo.
+    const beforeAi = undoProposalApply(applied);
+    const reusedCursor = applyDirectDraft(
+      updateDirectDraft(beforeAi, {
+        performanceDirection: proposal.performanceDirection,
+      }),
+    );
+    expect(reusedCursor.cursor).toBe(appliedRevision.revision);
+    expect(
+      directDraftsEqual(committedDirectDraft(reusedCursor), appliedRevision.node),
+    ).toBe(true);
+    expect(committedDirectDraft(reusedCursor)).not.toBe(appliedRevision.node);
+    expect(canUndoProposalApply(reusedCursor, appliedRevision)).toBe(false);
+  });
+
+  it("never lets rejected, cancelled, error, or superseded proposals apply", () => {
+    const scope = captureAiScope(WP4_SCOPE_INPUT);
+    const completed = completeAiTurn(
+      startAiTurn(1, "Hold the hush", scope),
+      "connected",
+    );
+    expect(canApplyAiTurn(completed)).toBe(true);
+    expect(canApplyAiTurn(rejectAiTurnProposal(completed))).toBe(false);
+    expect(canApplyAiTurn(cancelAiTurn(startAiTurn(2, "Hold", scope)))).toBe(
+      false,
+    );
+    expect(
+      canApplyAiTurn(completeAiTurn(startAiTurn(3, "Hold", scope), "crashed")),
+    ).toBe(false);
+    const cancelled = cancelAiTurn(startAiTurn(2, "Hold", scope));
+    const errored = completeAiTurn(startAiTurn(3, "Hold", scope), "crashed");
+    const streaming = startAiTurn(4, "Keep moving", scope);
+    const appliedTurn = { ...completed, resolution: "applied" as const };
+    const settled = supersedePendingProposals([
+      completed,
+      cancelled,
+      errored,
+      streaming,
+      appliedTurn,
+    ]);
+    expect(settled[0]!.resolution).toBe("superseded");
+    expect(canApplyAiTurn(settled[0]!)).toBe(false);
+    expect(settled[1]).toBe(cancelled);
+    expect(settled[1]!.status).toBe("cancelled");
+    expect(settled[2]).toBe(errored);
+    expect(settled[2]!.status).toBe("error");
+    expect(settled[3]!.resolution).toBe("superseded");
+    expect(settled[4]).toBe(appliedTurn);
+    // A newer request never disturbs an already-applied resolution record.
+    expect(settled[4]!.resolution).toBe("applied");
+  });
+
+  it("supersedes a still-streaming turn so it can never become applicable", () => {
+    const scope = captureAiScope(WP4_SCOPE_INPUT);
+    const streaming = startAiTurn(1, "First overlapping request", scope);
+    expect(streaming.status).toBe("streaming");
+    expect(streaming.resolution).toBe("pending");
+
+    // The overlapping send supersedes the turn while it is still streaming.
+    const [superseded] = supersedePendingProposals([streaming]);
+    expect(superseded!.status).toBe("streaming");
+    expect(superseded!.resolution).toBe("superseded");
+    expect(canApplyAiTurn(superseded!)).toBe(false);
+
+    // It may finish its deterministic replay cleanup...
+    let replayed = superseded!;
+    for (let index = 0; index < 10; index += 1)
+      replayed = advanceAiTurn(replayed);
+    expect(replayed.stageIndex).toBe(3);
+    const settled = completeAiTurn(replayed, "connected");
+    // ...but it never produces a proposal and never becomes pending,
+    // applicable, applied, or undoable.
+    expect(settled.status).toBe("complete");
+    expect(settled.resolution).toBe("superseded");
+    expect(settled.proposal).toBeNull();
+    expect(canApplyAiTurn(settled)).toBe(false);
+    // A superseded streaming turn also never flips to the Error turn state
+    // when the connection fixture is dropped at completion time.
+    const droppedSettled = completeAiTurn(replayed, "offline");
+    expect(droppedSettled.status).toBe("complete");
+    expect(droppedSettled.resolution).toBe("superseded");
+    expect(droppedSettled.proposal).toBeNull();
+  });
+});
+
+describe("F3-WP4 — New Project proposal model (pure)", () => {
+  it("builds a deterministic paste proposal with an honest impact and no bypass for empty input", () => {
+    expect(buildPasteProposal("")).toBeNull();
+    expect(buildPasteProposal("   \n  ")).toBeNull();
+    const proposal = buildPasteProposal(SAMPLE_SCRIPT)!;
+    expect(proposal).toEqual(buildPasteProposal(SAMPLE_SCRIPT));
+    expect(proposal.source).toBe("paste");
+    expect(proposal.templateLabel).toBe(CREATE_TEMPLATE_LABEL);
+    expect(proposal.templateLabel).toBe("Ollo & Friends — Kids Story");
+    expect(proposal.episodeTitle).toBe("Lila lives in a quiet village…");
+    // Five paragraphs → scenes of at most two beats each.
+    expect(proposal.scenes).toHaveLength(3);
+    expect(
+      proposal.scenes.reduce((sum, scene) => sum + scene.beats.length, 0),
+    ).toBe(5);
+    expect(proposal.hiddenBeatCount).toBe(0);
+    expect(proposal.scenes[0]!.beats[0]!.title).toBe(
+      "Lila lives in a quiet village at the edge of a deep, whispering forest.",
+    );
+    expect(proposal.assetImpactLabel).toMatch(
+      /No assets, media, or project files/,
+    );
+    expect(proposal.affectedRangeLabel).toMatch(
+      /Whole episode · about 27 seconds/,
+    );
+
+    const longScript = Array.from(
+      { length: 8 },
+      (_, index) => `Paragraph ${index + 1} of a longer quiet story.`,
+    ).join("\n\n");
+    const longProposal = buildPasteProposal(longScript)!;
+    expect(longProposal.hiddenBeatCount).toBe(2);
+  });
+
+  it("builds a deterministic idea proposal echoing the conversation fields", () => {
+    const empty = buildIdeaProposal({
+      storyIdea: "  ",
+      targetDurationSeconds: 60,
+      tone: "Gentle",
+      cast: "",
+      constraints: "",
+    });
+    expect(empty).toBeNull();
+    const idea = {
+      storyIdea: "A brave lantern guides three friends home through the wood",
+      targetDurationSeconds: 60,
+      tone: "Playful" as const,
+      cast: "Ollo and Tix",
+      constraints: "Keep it gentle",
+    };
+    const proposal = buildIdeaProposal(idea)!;
+    expect(proposal).toEqual(buildIdeaProposal(idea));
+    expect(proposal.source).toBe("idea");
+    expect(proposal.scenes).toHaveLength(3);
+    expect(proposal.scenes.map((scene) => scene.title)).toEqual([
+      "Scene 1 · Opening",
+      "Scene 2 · Middle",
+      "Scene 3 · Resolution",
+    ]);
+    expect(proposal.scenes.every((scene) => scene.seconds === 20)).toBe(true);
+    expect(proposal.affectedRangeLabel).toBe(
+      "Whole episode · about 1 min (fixture target)",
+    );
+    expect(proposal.directionSummary).toBe(
+      "A playful three-scene Kids Story for Ollo and Tix. Constraints honored: Keep it gentle.",
+    );
+    expect(proposal.assetImpactLabel).toMatch(
+      /No assets, media, or project files/,
+    );
+  });
+});
+
+describe("F3-WP4 — two-path New Project and shared proposal review", () => {
+  it("converges both paths on the same review model and never bypasses review", async () => {
+    const user = userEvent.setup();
+
+    // Paste path → review.
+    await openPastePath(user);
+    expect(
+      screen.queryByRole("button", { name: /Enter Studio/ }),
+    ).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
+      target: { value: SAMPLE_SCRIPT },
+    });
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const pasteReview = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    expect(pasteReview).toHaveTextContent("From your script");
+    expect(pasteReview).toHaveTextContent(AI_FIXTURE_LABEL);
+    expect(
+      within(pasteReview).getByRole("region", {
+        name: "Proposed episode hierarchy",
+      }),
+    ).toBeInTheDocument();
+    expect(pasteReview).toHaveTextContent("Direction summary");
+    expect(pasteReview).toHaveTextContent("Affected range");
+    expect(pasteReview).toHaveTextContent("Asset impact");
+    expect(pasteReview).toHaveTextContent(
+      "Entering Studio is local demo navigation only — no production project, media, render, or export has been created.",
+    );
+
+    // Revise returns to the intact form; review appears again on submit.
+    await user.click(
+      within(pasteReview).getByRole("button", { name: /Revise input/ }),
+    );
+    expect(screen.getByRole("textbox", { name: "Script" })).toHaveValue(
+      SAMPLE_SCRIPT,
+    );
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const reviewAgain = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    // Start over returns to the two-path choice.
+    await user.click(
+      within(reviewAgain).getByRole("button", { name: "Start over" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: /Start a new Kids Story/ }),
+    ).toBeInTheDocument();
+
+    // Idea path → the same review landmarks.
+    await user.click(
+      screen.getByRole("button", { name: /What's your idea\?/ }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Sign in with ChatGPT" }),
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Story idea" }), {
+      target: { value: "A brave lantern guides three friends home" },
+    });
+    await user.selectOptions(screen.getByLabelText("Target duration"), "60");
+    await user.selectOptions(screen.getByLabelText("Tone"), "Playful");
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const ideaReview = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    expect(ideaReview).toHaveTextContent("From your idea");
+    expect(ideaReview).toHaveTextContent(AI_FIXTURE_LABEL);
+    expect(
+      within(ideaReview).getByRole("region", {
+        name: "Proposed episode hierarchy",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(ideaReview).getByRole("textbox", { name: "Scene 1 title" }),
+    ).toHaveValue("Scene 1 · Opening");
+    expect(ideaReview).toHaveTextContent(
+      "Whole episode · about 1 min (fixture target)",
+    );
+    expect(
+      within(ideaReview).getByRole("button", {
+        name: "Enter Studio — local demo only",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("lets the creator edit the paste proposal locally and carries only the reviewed title into the demo Studio", async () => {
+    const user = userEvent.setup();
+    await openPastePath(user);
+    fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
+      target: { value: SAMPLE_SCRIPT },
+    });
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const review = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+
+    // Hierarchy and direction are genuinely editable local fields.
+    const episodeTitle = within(review).getByRole("textbox", {
+      name: "Episode title",
+    });
+    expect(episodeTitle).toHaveValue("Lila lives in a quiet village…");
+    await user.clear(episodeTitle);
+    await user.type(episodeTitle, "Lila and the Lantern");
+    const sceneDirection = within(review).getByRole("textbox", {
+      name: "Scene 1 direction",
+    });
+    await user.clear(sceneDirection);
+    await user.type(sceneDirection, "Open softly and let the glow lead.");
+    const beatTitle = within(review).getByRole("textbox", {
+      name: "Scene 1 beat 1 title",
+    });
+    await user.clear(beatTitle);
+    await user.type(beatTitle, "Lila finds the glow");
+    const summary = within(review).getByRole("textbox", {
+      name: "Direction summary",
+    });
+    await user.clear(summary);
+    await user.type(summary, "One gentle edited pass.");
+    expect(episodeTitle).toHaveValue("Lila and the Lantern");
+    expect(sceneDirection).toHaveValue("Open softly and let the glow lead.");
+    expect(beatTitle).toHaveValue("Lila finds the glow");
+    expect(summary).toHaveValue("One gentle edited pass.");
+    // The review states plainly what the demo consumes.
+    expect(review).toHaveTextContent(
+      "The demo Studio opens the fixed Ollo layout-demo episode under your reviewed episode title; reviewed scenes, beats, and direction stay in this review and are not carried into the demo Studio or saved.",
+    );
+
+    // Editing the proposal is distinct from revising the source input:
+    // the script stays intact and re-creating rebuilds deterministically.
+    await user.click(
+      within(review).getByRole("button", { name: /Revise input/ }),
+    );
+    expect(screen.getByRole("textbox", { name: "Script" })).toHaveValue(
+      SAMPLE_SCRIPT,
+    );
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const rebuilt = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    expect(
+      within(rebuilt).getByRole("textbox", { name: "Episode title" }),
+    ).toHaveValue("Lila lives in a quiet village…");
+
+    // Edit again, then enter Studio: the reviewed episode title — the one
+    // field the existing demo draft model consumes — survives; the
+    // reviewed beats honestly do not.
+    const titleAgain = within(rebuilt).getByRole("textbox", {
+      name: "Episode title",
+    });
+    await user.clear(titleAgain);
+    await user.type(titleAgain, "Lila and the Lantern");
+    const beatAgain = within(rebuilt).getByRole("textbox", {
+      name: "Scene 1 beat 1 title",
+    });
+    await user.clear(beatAgain);
+    await user.type(beatAgain, "Lila finds the glow");
+    await user.click(
+      within(rebuilt).getByRole("button", {
+        name: "Enter Studio — local demo only",
+      }),
+    );
+    const studio = await screen.findByTestId("pv1-studio");
+    expect(studio.querySelector(".pv1-topbar")!).toHaveTextContent(
+      "Lila and the Lantern",
+    );
+    expect(studio).toHaveTextContent(/Layout demo/);
+    expect(studio).not.toHaveTextContent("Lila finds the glow");
+  });
+
+  it("lets the creator edit the idea proposal through the same shared review gate", async () => {
+    const user = userEvent.setup();
+    await openCreate(user);
+    await user.click(
+      screen.getByRole("button", { name: /What's your idea\?/ }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Sign in with ChatGPT" }),
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Story idea" }), {
+      target: { value: "A brave lantern guides three friends home" },
+    });
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const review = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    expect(review).toHaveTextContent(AI_FIXTURE_LABEL);
+
+    const sceneTitle = within(review).getByRole("textbox", {
+      name: "Scene 1 title",
+    });
+    expect(sceneTitle).toHaveValue("Scene 1 · Opening");
+    await user.clear(sceneTitle);
+    await user.type(sceneTitle, "Scene 1 · The lantern wakes");
+    const beatDirection = within(review).getByRole("textbox", {
+      name: "Scene 1 beat 1 direction",
+    });
+    await user.clear(beatDirection);
+    await user.type(beatDirection, "Start almost still, then one small step.");
+    expect(sceneTitle).toHaveValue("Scene 1 · The lantern wakes");
+    expect(beatDirection).toHaveValue(
+      "Start almost still, then one small step.",
+    );
+
+    // The same unbypassable gate: Studio entry only through the review,
+    // and the reviewed episode title is what the demo Studio shows.
+    const episodeTitle = within(review).getByRole("textbox", {
+      name: "Episode title",
+    });
+    await user.clear(episodeTitle);
+    await user.type(episodeTitle, "The Lantern Walk");
+    await user.click(
+      within(review).getByRole("button", {
+        name: "Enter Studio — local demo only",
+      }),
+    );
+    const studio = await screen.findByTestId("pv1-studio");
+    expect(studio.querySelector(".pv1-topbar")!).toHaveTextContent(
+      "The Lantern Walk",
+    );
+    expect(studio).toHaveTextContent(/Layout demo/);
+  });
+
+  it("keeps a blank reviewed episode title inside the accessible review gate", async () => {
+    const user = userEvent.setup();
+    await openPastePath(user);
+    fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
+      target: { value: SAMPLE_SCRIPT },
+    });
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const review = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    const episodeTitle = within(review).getByRole("textbox", {
+      name: "Episode title",
+    });
+    await user.clear(episodeTitle);
+    await user.type(episodeTitle, "   ");
+    await user.click(
+      within(review).getByRole("button", {
+        name: "Enter Studio — local demo only",
+      }),
+    );
+    expect(episodeTitle).toBeInvalid();
+    expect(episodeTitle).toHaveAttribute("required");
+    expect(within(review).getByRole("alert")).toHaveTextContent(
+      "Add an episode title before entering Studio.",
+    );
+    expect(screen.queryByTestId("pv1-studio")).not.toBeInTheDocument();
+  });
+
+  it("gates the idea conversation behind the Connect fixture and keeps it creator-facing", async () => {
+    const user = userEvent.setup();
+    await openCreate(user);
+    await user.click(
+      screen.getByRole("button", { name: /What's your idea\?/ }),
+    );
+    // Signed out by default: the compact Connect AI Director fixture with a
+    // truthful sign-in action and runtime check, never a terminal.
+    const connect = await screen.findByRole("region", {
+      name: "Connect AI Director",
+    });
+    expect(connect).toHaveTextContent(AI_FIXTURE_LABEL);
+    expect(connect).toHaveTextContent("Current state: Signed out");
+    await user.click(
+      within(connect).getByRole("button", { name: "Run runtime check" }),
+    );
+    expect(connect).toHaveTextContent(/no runtime was contacted/i);
+    expect(connect).not.toHaveTextContent(
+      /api[- ]?key|password|cookie|bearer|localhost|127\.0\.0\.1|\$\s|curl /i,
+    );
+    await user.click(
+      within(connect).getByRole("button", { name: "Sign in with ChatGPT" }),
+    );
+    // Only local demo state changed: the truthful chip and the form.
+    expect(
+      screen.getByRole("button", {
+        name: /AI Director status: Connected/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Story idea" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Target duration")).toBeInTheDocument();
+    expect(screen.getByLabelText("Tone")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Cast" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Constraints" }),
+    ).toBeInTheDocument();
+
+    // Empty idea fails closed with a useful error; review is not shown.
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    expect(
+      await screen.findByText(
+        "Tell StoryStage your story idea before creating a proposal.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("article", { name: "Review proposal" }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("F3-WP4 — Studio AI Director shell", () => {
+  async function openDemoStudio(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: /Open local demo project The Storylight in the Little Wood/,
+      }),
+    );
+    return screen.findByTestId("pv1-studio");
+  }
+
+  const aiPanel = (studio: HTMLElement) =>
+    within(studio).getByRole("complementary", { name: "AI Director" });
+
+  const settleFixtureTurn = () =>
+    act(
+      () =>
+        new Promise((resolvePromise) => {
+          setTimeout(resolvePromise, 1400);
+        }),
+    );
+
+  async function connectAndRequest(
+    user: ReturnType<typeof userEvent.setup>,
+    studio: HTMLElement,
+    request: string,
+  ) {
+    await user.click(
+      within(aiPanel(studio)).getByRole("button", {
+        name: "Sign in with ChatGPT",
+      }),
+    );
+    await user.type(
+      within(aiPanel(studio)).getByRole("textbox", {
+        name: "AI Director request",
+      }),
+      request,
+    );
+    await user.click(
+      within(aiPanel(studio)).getByRole("button", { name: "Send request" }),
+    );
+  }
+
+  it("streams a scoped fixture proposal and never retargets the captured scope", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    expect(panel).toHaveTextContent("Scope: Scene 1 · Beat 1");
+    fireEvent.change(
+      within(panel).getByRole("slider", {
+        name: /AI Director scene scrubber/,
+      }),
+      { target: { value: "30" } },
+    );
+    await connectAndRequest(user, studio, "Hold the hush before the lantern");
+
+    // Streaming state with staged fixture progress and a real Cancel.
+    expect(panel).toHaveTextContent("Streaming (fixture turn)");
+    const stages = within(panel).getByRole("list", {
+      name: "Streamed progress (fixture replay)",
+    });
+    expect(within(stages).getAllByRole("listitem")).toHaveLength(4);
+    expect(
+      within(panel).getByRole("button", { name: "Cancel request" }),
+    ).toBeInTheDocument();
+
+    await settleFixtureTurn();
+    expect(panel).toHaveTextContent("Complete (fixture turn)");
+    expect(panel).toHaveTextContent(
+      "Re-direct Beat 1 “Morning light through the round window” around your request",
+    );
+    expect(panel).toHaveTextContent(
+      "Play “Morning light through the round window” so the moment lands first: Hold the hush before the lantern",
+    );
+    expect(panel).toHaveTextContent("Beat 1 only · 0:00–1:10 of the scene");
+    expect(panel).toHaveTextContent(
+      "get_scene_context · submit_direction_proposal",
+    );
+    expect(panel).toHaveTextContent("0:00 · Beat start");
+    expect(panel).toHaveTextContent("0:30 · Captured playhead");
+    const captured = within(panel).getByRole("list", {
+      name: "Captured scope",
+    });
+    expect(captured).toHaveTextContent("Scene 1 · The Home Nook");
+    expect(captured).toHaveTextContent(
+      "Beat 1 · Morning light through the round window",
+    );
+    expect(captured).toHaveTextContent("Playhead 0:30");
+    expect(captured).toHaveTextContent("Range 0:00–1:10");
+
+    // Preview changes nothing.
+    await user.click(
+      within(panel).getByRole("button", { name: "Preview proposal" }),
+    );
+    expect(panel).toHaveTextContent("Preview only — no direction has changed.");
+    expect(panel).toHaveTextContent("Current committed direction: (empty)");
+    expect(
+      within(studio).getByRole("textbox", {
+        name: "Performance direction",
+      }),
+    ).toHaveValue("");
+
+    // Selection changes never retarget the immutable captured scope; Apply
+    // fails closed with one honest recovery action.
+    await user.click(
+      within(
+        within(studio).getByRole("navigation", { name: "Episode hierarchy" }),
+      ).getByRole("button", { name: /Beat 2 A shelf of unfinished stories/ }),
+    );
+    expect(captured).toHaveTextContent(
+      "Beat 1 · Morning light through the round window",
+    );
+    expect(captured).toHaveTextContent("Playhead 0:30");
+    expect(
+      within(panel).getByRole("button", { name: "Apply proposal" }),
+    ).toBeDisabled();
+    expect(panel).toHaveTextContent(
+      "Apply is closed: the current selection differs from the captured scope.",
+    );
+    await user.click(
+      within(panel).getByRole("button", {
+        name: "Return to captured scope",
+      }),
+    );
+    expect(
+      within(studio).getByRole("navigation", { name: "Current scope" }),
+    ).toHaveTextContent("Beat 1 · Morning light through the round window");
+    expect(
+      within(panel).getByRole("button", { name: "Apply proposal" }),
+    ).toBeEnabled();
+  });
+
+  it("applies exactly the captured beat's performanceDirection and undoes it exactly", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "Hold the hush before the lantern");
+    await settleFixtureTurn();
+
+    await user.click(
+      within(panel).getByRole("button", { name: "Apply proposal" }),
+    );
+    expect(panel).toHaveTextContent(
+      "Applied to the captured beat's session-local direction — Undo restores the exact prior snapshot.",
+    );
+    const proposedDirection =
+      "Play “Morning light through the round window” so the moment lands first: Hold the hush before the lantern";
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue(proposedDirection);
+    // Exactly one field changed; the draft matches the committed snapshot.
+    expect(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    ).toHaveValue("");
+    expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
+      "Draft matches this beat's committed session direction.",
+    );
+
+    // Another beat is untouched.
+    await user.click(
+      within(
+        within(studio).getByRole("navigation", { name: "Episode hierarchy" }),
+      ).getByRole("button", { name: /Beat 2 A shelf of unfinished stories/ }),
+    );
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("");
+    await user.click(
+      within(
+        within(studio).getByRole("navigation", { name: "Episode hierarchy" }),
+      ).getByRole("button", {
+        name: /Beat 1 Morning light through the round window/,
+      }),
+    );
+
+    // Exact Undo through the same history restores the prior snapshot.
+    await user.click(
+      within(panel).getByRole("button", { name: "Undo proposal apply" }),
+    );
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("");
+    expect(within(studio).getByRole("button", { name: "Undo" })).toBeDisabled();
+    expect(panel).toHaveTextContent(
+      "Pending — Preview, Revise, and Reject change no direction.",
+    );
+  });
+
+  it("fails Apply closed while the captured beat has unapplied manual drafts", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "Hold the hush before the lantern");
+    await settleFixtureTurn();
+
+    await user.type(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+      "Keep it cozy",
+    );
+    expect(
+      within(panel).getByRole("button", { name: "Apply proposal" }),
+    ).toBeDisabled();
+    expect(panel).toHaveTextContent(
+      "Apply is closed: the captured beat has unapplied manual drafts. Apply or undo them in the Director workspace first.",
+    );
+
+    // Committing the manual draft in the Director workspace re-opens Apply;
+    // the proposal then changes only performanceDirection on top of it.
+    await user.click(within(studio).getByRole("button", { name: "Apply" }));
+    await user.click(
+      within(panel).getByRole("button", { name: "Apply proposal" }),
+    );
+    expect(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    ).toHaveValue("Keep it cozy");
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue(
+      "Play “Morning light through the round window” so the moment lands first: Hold the hush before the lantern",
+    );
+    // One Director Undo returns to the manual snapshot, proving both commits
+    // live in the same accepted per-beat history.
+    await user.click(within(studio).getByRole("button", { name: "Undo" }));
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("");
+    expect(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    ).toHaveValue("Keep it cozy");
+  });
+
+  it("models Cancelled and Error as turn states while the connection stays truthful", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "Try one");
+    await user.click(
+      within(panel).getByRole("button", { name: "Cancel request" }),
+    );
+    expect(panel).toHaveTextContent("Cancelled (fixture turn)");
+    expect(panel).toHaveTextContent(
+      "Cancelled before a proposal was produced — the captured scope below is preserved and nothing was applied.",
+    );
+    expect(
+      within(panel).getByRole("list", { name: "Captured scope" }),
+    ).toHaveTextContent("Beat 1 · Morning light through the round window");
+    expect(
+      within(panel).queryByRole("button", { name: "Apply proposal" }),
+    ).not.toBeInTheDocument();
+
+    // One honest recovery action reloads the request for editing.
+    await user.click(
+      within(panel).getByRole("button", { name: "Revise and resend" }),
+    );
+    expect(
+      within(panel).getByRole("textbox", { name: "AI Director request" }),
+    ).toHaveValue("Try one");
+
+    // A connection drop before settling resolves to the Error turn state;
+    // the connection chip stays independently truthful.
+    await user.click(
+      within(panel).getByRole("button", { name: "Send request" }),
+    );
+    await user.click(
+      within(studio).getByRole("button", { name: /AI Director status:/ }),
+    );
+    await user.selectOptions(
+      within(
+        within(studio).getByRole("region", { name: "AI Director settings" }),
+      ).getByRole("combobox", { name: "Connection fixture state" }),
+      "offline",
+    );
+    await settleFixtureTurn();
+    expect(panel).toHaveTextContent("Error (fixture turn)");
+    expect(panel).toHaveTextContent(
+      "The fixture connection was not Connected when the turn settled — no proposal was produced and nothing was applied.",
+    );
+    expect(
+      within(studio).getByRole("button", {
+        name: /AI Director status: Offline/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("");
+  });
+
+  it("rejects and supersedes proposals without ever appearing applied", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "First request");
+    await settleFixtureTurn();
+    expect(panel).toHaveTextContent("Complete (fixture turn)");
+
+    // A newer request supersedes the pending one before it could apply.
+    await user.type(
+      within(panel).getByRole("textbox", { name: "AI Director request" }),
+      "Second request",
+    );
+    await user.click(
+      within(panel).getByRole("button", { name: "Send request" }),
+    );
+    expect(panel).toHaveTextContent(
+      "Superseded by a newer request — it can no longer be applied.",
+    );
+    const firstProposal = within(panel).getByTestId("pv1-ai-proposal-1");
+    expect(
+      within(firstProposal).getByRole("button", { name: "Apply proposal" }),
+    ).toBeDisabled();
+
+    await settleFixtureTurn();
+    const secondProposal = within(panel).getByTestId("pv1-ai-proposal-2");
+    await user.click(
+      within(secondProposal).getByRole("button", { name: "Reject proposal" }),
+    );
+    expect(secondProposal).toHaveTextContent(
+      "Rejected — no direction was changed.",
+    );
+    expect(
+      within(secondProposal).getByRole("button", { name: "Apply proposal" }),
+    ).toBeDisabled();
+    // No turn ever touched the captured beat's direction.
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("");
+    expect(within(studio).getByRole("button", { name: "Undo" })).toBeDisabled();
+  });
+
+  it("supersedes a still-streaming request so only the newest turn is applicable", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "First overlapping request");
+    expect(panel).toHaveTextContent("Streaming (fixture turn)");
+
+    // The newer request is sent before the first turn settles.
+    await user.type(
+      within(panel).getByRole("textbox", { name: "AI Director request" }),
+      "Second overlapping request",
+    );
+    await user.click(
+      within(panel).getByRole("button", { name: "Send request" }),
+    );
+
+    // The first turn is superseded mid-stream: an honest note, and only
+    // the newest (second) turn still offers Cancel.
+    expect(panel).toHaveTextContent(
+      "Superseded by a newer request — finishing its fixture replay; it can never become applicable, applied, or undoable.",
+    );
+    expect(
+      within(panel).getAllByRole("button", { name: "Cancel request" }),
+    ).toHaveLength(1);
+
+    await settleFixtureTurn();
+
+    // The superseded turn settled without a proposal and can never apply.
+    expect(panel).toHaveTextContent(
+      "Superseded by a newer request before a proposal was produced — nothing was applied.",
+    );
+    expect(
+      within(panel).queryByTestId("pv1-ai-proposal-1"),
+    ).not.toBeInTheDocument();
+
+    // Only the newest request completes into an applicable proposal.
+    const secondProposal = within(panel).getByTestId("pv1-ai-proposal-2");
+    expect(
+      within(secondProposal).getByRole("button", { name: "Apply proposal" }),
+    ).toBeEnabled();
+    expect(
+      within(panel).getAllByRole("button", { name: "Apply proposal" }),
+    ).toHaveLength(1);
+  });
+
+  it("keeps panel Undo closed after later history changes, even when values recur", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "Hold the hush before the lantern");
+    await settleFixtureTurn();
+    await user.click(
+      within(panel).getByRole("button", { name: "Apply proposal" }),
+    );
+    const appliedDirection =
+      "Play “Morning light through the round window” so the moment lands first: Hold the hush before the lantern";
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue(appliedDirection);
+    const panelUndo = () =>
+      within(panel).getByRole("button", { name: "Undo proposal apply" });
+    expect(panelUndo()).toBeEnabled();
+
+    // A manual commit T on top of the AI snapshot closes panel Undo honestly.
+    await user.type(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+      "Manual follow-up T",
+    );
+    await user.click(within(studio).getByRole("button", { name: "Apply" }));
+    expect(panelUndo()).toBeDisabled();
+    expect(panel).toHaveTextContent(
+      "Applied. This beat's history changed afterwards, so panel Undo is closed — use the Director workspace Undo.",
+    );
+
+    // A later manual commit recreates the AI snapshot by value; panel Undo
+    // stays closed and never restores T.
+    await user.clear(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    );
+    await user.click(within(studio).getByRole("button", { name: "Apply" }));
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue(appliedDirection);
+    expect(panelUndo()).toBeDisabled();
+
+    // The Director workspace Undo owns that history move: it restores T.
+    await user.click(within(studio).getByRole("button", { name: "Undo" }));
+    expect(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    ).toHaveValue("Manual follow-up T");
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue(appliedDirection);
+    expect(panelUndo()).toBeDisabled();
+  });
+
+  it("keeps manual direction state independent of the AI proposal lifecycle", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+
+    // Commit manual direction on Beat 2 first.
+    await user.click(
+      within(
+        within(studio).getByRole("navigation", { name: "Episode hierarchy" }),
+      ).getByRole("button", { name: /Beat 2 A shelf of unfinished stories/ }),
+    );
+    await user.type(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+      "Manual purpose for beat two",
+    );
+    await user.click(within(studio).getByRole("button", { name: "Apply" }));
+
+    // AI proposal on Beat 1 applies and undoes; Beat 2 is untouched.
+    await user.click(
+      within(
+        within(studio).getByRole("navigation", { name: "Episode hierarchy" }),
+      ).getByRole("button", {
+        name: /Beat 1 Morning light through the round window/,
+      }),
+    );
+    await connectAndRequest(user, studio, "Hold the hush before the lantern");
+    await settleFixtureTurn();
+    await user.click(
+      within(panel).getByRole("button", { name: "Apply proposal" }),
+    );
+    await user.click(
+      within(
+        within(studio).getByRole("navigation", { name: "Episode hierarchy" }),
+      ).getByRole("button", { name: /Beat 2 A shelf of unfinished stories/ }),
+    );
+    expect(
+      within(studio).getByRole("textbox", { name: "Beat purpose" }),
+    ).toHaveValue("Manual purpose for beat two");
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("");
+    await user.click(
+      within(
+        within(studio).getByRole("navigation", { name: "Episode hierarchy" }),
+      ).getByRole("button", {
+        name: /Beat 1 Morning light through the round window/,
+      }),
+    );
+    await user.click(
+      within(panel).getByRole("button", { name: "Undo proposal apply" }),
+    );
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("");
+  });
+
+  it("exposes the six connection fixtures and truthful local actions in Settings → AI Director", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    expect(
+      within(studio).getByRole("button", {
+        name: /AI Director status: Signed out/,
+      }),
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(studio).getByRole("button", { name: /AI Director status:/ }),
+    );
+    const settings = within(studio).getByRole("region", {
+      name: "AI Director settings",
+    });
+    expect(settings).toHaveTextContent("Settings → AI Director");
+    expect(settings).toHaveTextContent(AI_FIXTURE_LABEL);
+    const fixtureSelect = within(settings).getByRole("combobox", {
+      name: "Connection fixture state",
+    });
+    expect(
+      within(fixtureSelect as HTMLSelectElement).getAllByRole("option"),
+    ).toHaveLength(6);
+
+    for (const [value, label] of [
+      ["connected", "Connected"],
+      ["offline", "Offline"],
+      ["usage-limit", "Usage limit"],
+      ["update-required", "Update required"],
+      ["crashed", "Crashed"],
+    ] as const) {
+      await user.selectOptions(fixtureSelect, value);
+      expect(
+        within(studio).getByRole("button", {
+          name: `AI Director status: ${label} — open AI Director settings`,
+        }),
+      ).toBeInTheDocument();
+    }
+
+    // Reconnect and sign-out are local fixture transitions only.
+    await user.click(
+      within(settings).getByRole("button", { name: "Reconnect" }),
+    );
+    expect(
+      within(studio).getByRole("button", {
+        name: /AI Director status: Connected/,
+      }),
+    ).toBeInTheDocument();
+    await user.click(
+      within(settings).getByRole("button", { name: "Sign out" }),
+    );
+    expect(
+      within(studio).getByRole("button", {
+        name: /AI Director status: Signed out/,
+      }),
+    ).toBeInTheDocument();
+
+    // Runtime check and redacted diagnostics carry no credential material.
+    await user.click(
+      within(settings).getByRole("button", { name: "Run runtime check" }),
+    );
+    expect(settings).toHaveTextContent(/no runtime was contacted/i);
+    await user.click(
+      within(settings).getByRole("button", {
+        name: "View redacted diagnostics",
+      }),
+    );
+    expect(settings).toHaveTextContent(
+      "credentials: <redacted — never accessed>",
+    );
+    expect(settings).not.toHaveTextContent(
+      /api[- ]?key|password|cookie|bearer|localhost|127\.0\.0\.1/i,
+    );
   });
 });

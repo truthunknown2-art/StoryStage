@@ -1,0 +1,58 @@
+{
+  "viewport": "1440x900",
+  "url": "http://127.0.0.1:5195/",
+  "checks": [
+    {
+      "name": "idea entry reaches the shared editable proposal review",
+      "ok": true
+    },
+    {
+      "name": "idea review permits local edits to episode, scene, beat, direction, and direction summary",
+      "ok": true
+    },
+    {
+      "name": "blank or whitespace-only reviewed episode title fails closed before Studio",
+      "ok": true
+    },
+    {
+      "name": "blank-title failure exposes an inline alert and invalid title field",
+      "ok": true
+    },
+    {
+      "name": "paste entry reaches the same editable proposal review",
+      "ok": true
+    },
+    {
+      "name": "paste review permits local edits to episode, scene, beat, and direction",
+      "ok": true
+    },
+    {
+      "name": "reviewed episode title carries into the local Studio demo",
+      "ok": true
+    },
+    {
+      "name": "reviewed scene, beat, and direction remain review-only as disclosed",
+      "ok": true
+    },
+    {
+      "name": "zero console warnings",
+      "ok": true
+    },
+    {
+      "name": "zero console errors",
+      "ok": true
+    },
+    {
+      "name": "zero page errors observed from a listener attached before both corrected entry flows",
+      "ok": true
+    }
+  ],
+  "consoleIssues": [],
+  "pageErrors": [],
+  "screenshots": [
+    "wp4-correction-idea-editable-review-1440x900.png",
+    "wp4-correction-blank-title-gate-1440x900.png",
+    "wp4-correction-paste-editable-review-1440x900.png",
+    "wp4-correction-reviewed-title-studio-boundary-1440x900.png"
+  ]
+}
