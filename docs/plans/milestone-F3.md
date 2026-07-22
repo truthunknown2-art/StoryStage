@@ -12,14 +12,14 @@
   decomposition was accepted in G0. On 2026-07-21 Preston recorded E1 `PASS`
   at exact head `357737d2c695098ac47db3efdab4470e1cb0a202` and directed the team to
   continue through the approved product roadmap without repetitive prompts.
-- Completed packages: F3-WP1, F3-WP2, and F3-WP3 are accepted. F3-WP3 exact
-  PR #87 handback tip `1579ee1ff1c078ae1f7849546cd9c87a21880620` is integrated
-  at `product/v1@24c7a95b3bc90e33b77113a4af4b76df2fd1cd42`.
-- Current authorization: only F3-WP4 through issue #89, after this separate
-  status transition and matching higher Kimi inbox version are integrated.
+- Completed packages: F3-WP1 through F3-WP4 are accepted. F3-WP4 correction
+  PR #93 exact head `837e00402f665e7a1caa5c92d05991c205fea736` is integrated
+  at `product/v1@d5207bd7410d1388b3e1797fb0a98f04e680f6d1`.
+- Current authorization: accepted wait after F3-WP4. No later package is
+  authorized by this plan entry.
 - Exact implementation base: `0111274544afda55f8481be103bd3c7ad4db661a`
-- Required F3-WP4 branch: `agent/kimi-f3-wp4-ai-director-proposal-shell`
-- F3-WP5 remains blocked by dependency order and the F3-WP4 exact-head gate.
+- Accepted F3-WP4 successor branch: `agent/kimi-f3-wp4-review-corrections-v74`
+- F3-WP5 remains blocked until its separate issue and `START_NOW` transition.
 - Backend product work remains blocked until the complete F6 Frontend Gate is
   accepted.
 
@@ -120,6 +120,11 @@ mutation, image generation, rendering, or background autonomy.
 offline, limited, error, and cancelled fixtures; bounded proposal-action tests;
 one understandable reversible proposed change; responsive screenshots; root
 verification; and exact pushed handback. Stop before F3-WP5.
+
+**Accepted evidence:** correction PR #93 exact head `837e004...`, hosted Verify
+run `29888901074`, Studio 123/123, complete workspace checks, independent Sol
+code/governance and Terra visual/evidence audits, and product merge
+`d5207bd...`. F3-WP5 remains separately blocked.
 
 ### F3-WP5 - Responsive, accessibility, and evidence gate
 

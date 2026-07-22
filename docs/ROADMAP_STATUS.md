@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: 24c7a95b3bc90e33b77113a4af4b76df2fd1cd42
+lastAcceptedProductHead: d5207bd7410d1388b3e1797fb0a98f04e680f6d1
 lastAcceptedMilestone: E1
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -11,30 +11,30 @@ completedMilestones:
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F3
   package: F3-WP4
-  owner: Kimi
+  owner: Codex
   exactBase: 0111274544afda55f8481be103bd3c7ad4db661a
   branch: agent/kimi-f3-wp4-review-corrections-v74
   issue: 89
-  pr: null
-  candidateContentHead: 0111274544afda55f8481be103bd3c7ad4db661a
+  pr: 93
+  candidateContentHead: 837e00402f665e7a1caa5c92d05991c205fea736
   candidateRef: product/v1
 checks:
   local: roadmap-consistency+format-check
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-f3-wp3-exact-1579ee1ff1c078ae1f7849546cd9c87a21880620-hosted-29877591185-pass
+  codex: accept-f3-wp4-exact-837e00402f665e7a1caa5c92d05991c205fea736-hosted-29888901074-pass
   pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
   preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
 blockers:
-  - F3-WP5 remains blocked by dependency order and the F3-WP4 exact-head gate
+  - F3-WP5 remains blocked until a separate issue and START_NOW status transition authorize it
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F3_WP4_ONLY
-  text: Correct only the rejected F3-WP4 PR #91 head through issue #89 on agent/kimi-f3-wp4-review-corrections-v74, publish a fresh exact handback, and stop before F3-WP5.
+  type: WAIT_FOR_F3_WP5_TICKET
+  text: F3-WP4 is accepted and integrated. Keep Kimi at WAIT and do not begin F3-WP5 until its separate issue and START_NOW transition are durable.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -97,24 +97,20 @@ verification from the live PR checks.
   summary. It does not provide AI interpretation, persistence, production
   schemas, media, animation, executable camera moves, Godot, Remotion,
   rendering, or export.
-- Issue #89 and this `START_NOW` transition authorize only F3-WP4 from exact
-  base `product/v1@0111274544afda55f8481be103bd3c7ad4db661a`. Kimi may build
-  the labelled local-fixture AI Director conversation/proposal shell and the
-  exact two-path New Project entry. Live Codex integration, project mutation,
-  persistence, media, Godot, Remotion, rendering, export, F3-WP5, and backend
-  product work remain blocked.
+- F3-WP4 is accepted and integrated at exact `product/v1@d5207bd...`. Codex
+  rejected predecessor PR #91, then correction PR #93 exact successor
+  `837e004...` passed Studio 123/123, typecheck, production build, the complete
+  recursive workspace suite, Sol code/history and governance audits, Terra
+  visual/evidence audit, four hash-matched 1440x900 correction screenshots,
+  explicit zero console/page-error evidence, and hosted Verify run
+  `29888901074`. The package provides the exact two-path New Project entry,
+  shared editable local proposal review, and labelled local-fixture AI Director
+  conversation/proposal shell with fail-closed Apply/Undo state. It does not
+  connect live AI, persist review edits, create script-specific production
+  plans or media, animate, render, or export.
 
-- Codex rejected PR #91 exact head `536265ebb4f2fd7f9e021de2aaa3aada2dee673e`
-  after exact-head code review found three bounded defects: the shared proposal
-  review is not editable, overlapping streaming requests can leave multiple
-  applicable proposals, and AI Undo is matched by content rather than the
-  exact history revision. The candidate also contains avoidable whole-file
-  formatting churn. The fresh correction branch may incorporate that rejected
-  head and fix only these findings; it does not authorize F3-WP5 or broaden any
-  product capability.
-
-- Accepted creator-facing product implementation now reaches F3-WP3 on exact
-  `24c7a95...`; the complete F3 milestone is not yet accepted. G0 is the
+- Accepted creator-facing product implementation now reaches F3-WP4 on exact
+  `d5207bd...`; the complete F3 milestone is not yet accepted. G0 is the
   accepted planning/governance milestone integrated at `ddddcf1...` and does
   not itself implement product capability.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
