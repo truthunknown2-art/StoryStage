@@ -12,15 +12,15 @@ completedMilestones:
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
 authorization:
-  state: ACCEPTED_WAIT
-  milestone: F3
-  package: F3-WP5
-  owner: Codex
-  exactBase: b03622cb9a99ce0fa5048b799468c50835d2703f
-  branch: agent/kimi-f3-wp5-responsive-accessibility-evidence
-  issue: 95
-  pr: 97
-  candidateContentHead: f56960d5d9cfd051927ccb6b531090f3256f4e4e
+  state: START_NOW
+  milestone: F4
+  package: F4-WP1
+  owner: Kimi
+  exactBase: d6fe17ca7507cfd37f61a954b5f5034982c3554d
+  branch: agent/kimi-f4-wp1-asset-workspace-information-architecture
+  issue: 99
+  pr: null
+  candidateContentHead: d6fe17ca7507cfd37f61a954b5f5034982c3554d
   candidateRef: product/v1
 checks:
   local: roadmap-consistency+format-check
@@ -31,11 +31,11 @@ verdicts:
   pro: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F4-WP1 remains blocked until a separate issue and START_NOW status transition authorize it from the exact accepted base
+  - F4-WP2 remains blocked until F4-WP1 passes exact-head review and is accepted
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: WAIT_FOR_F4_WP1_TICKET
-  text: F3 is accepted and integrated. Keep Kimi at WAIT and do not begin F4-WP1 until its separate issue and exact-base START_NOW transition are durable.
+  type: IMPLEMENT_F4_WP1_ONLY
+  text: Implement only issue #99 from exact base d6fe17ca7507cfd37f61a954b5f5034982c3554d on agent/kimi-f4-wp1-asset-workspace-information-architecture, publish the exact handback, and stop before F4-WP2.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -126,6 +126,14 @@ verification from the live PR checks.
   never bypasses a failed gate, broadens a package, or marks the overall studio
   complete. F4-WP1 therefore still requires its own issue and `START_NOW`
   transition from the exact accepted product base.
+- Issue #99 and this `START_NOW` transition authorize only F4-WP1 from exact
+  base `product/v1@d6fe17ca7507cfd37f61a954b5f5034982c3554d` on required
+  branch `agent/kimi-f4-wp1-asset-workspace-information-architecture`. The
+  package creates only the Product v1 Assets and Rigs information architecture,
+  truthful local fixtures, scope filters, selection/detail synchronization,
+  and readiness vocabulary. It does not authorize F4-WP2, real asset files,
+  import/generation, slicing/rigging, approval, persistence, backend, Godot,
+  Remotion, rendering, export, or packaging.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
