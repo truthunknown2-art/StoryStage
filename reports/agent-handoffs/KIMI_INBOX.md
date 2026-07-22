@@ -1,16 +1,34 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `85`
+Inbox-Version: `86`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP3-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F4-WP4-LAYER-RIG-REVIEW-UX`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `b7f04c396328f2a0a9302059235092efc848e74d`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#109`
+Accepted-Root-Base: `3a98dfff7b543821c02ead9499a9ec0efd93913b`
+Required-Work-Branch: `agent/kimi-f4-wp4-layer-rig-review-ux`
+Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp4-layer-rig-review-ux-v86.md`
+Issue: `#113`
 
 ## Current instruction
+
+Version 86 starts only F4-WP4 through issue #113 from exact accepted base
+`3a98dfff7b543821c02ead9499a9ec0efd93913b` on required branch
+`agent/kimi-f4-wp4-layer-rig-review-ux`. Extend only the accepted Product v1
+Assets & Rigs workspace with the deterministic layer-and-rig review prototype
+in the full brief. Preserve F4-WP1 through F4-WP3 scope, readiness, request,
+source/rights, and session-local candidate truth. Publish one immutable
+handback and exit. Do not start F4-WP5, touch real files or preparation
+services, claim approval/capability/production readiness, or begin backend,
+Godot, Remotion, persistence, rendering, export, packaging, or private-launch
+work.
+
+Version 86 supersedes Version 85. Version 85 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 85 instruction:
 
 Version 85 records F4-WP3 acceptance and integration. Initial PR #111 head
 `1affdfdc3737c13b16d52a382b805d9971634433` was rejected by independent
