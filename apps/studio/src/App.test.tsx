@@ -17,6 +17,7 @@ import "./product-v1/asset-requirements.test";
 import "./product-v1/asset-request-import.test";
 import "./product-v1/asset-review.test";
 import "./product-v1/asset-accessibility.test";
+import "./product-v1/audio-workspace.test";
 import {
   AI_CONNECTION_LABELS,
   AI_CONNECTION_STATES,
