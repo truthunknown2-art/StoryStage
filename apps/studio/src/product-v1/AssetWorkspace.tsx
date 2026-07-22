@@ -358,7 +358,8 @@ export function AssetWorkspace({
                         className="pv1-secondary pv1-requirement-request"
                         onClick={(event) => {
                           requestInvokerRef.current = event.currentTarget;
-                          setOpenRequestId(entry.id);
+                          if (openRequestId === entry.id) closeRequest(true);
+                          else setOpenRequestId(entry.id);
                         }}
                         type="button"
                       >

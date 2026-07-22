@@ -264,7 +264,6 @@ export const transitionImport = (
     case "edit-source":
       if (
         state.kind !== "reviewing" &&
-        state.kind !== "confirming" &&
         state.kind !== "missing-source" &&
         state.kind !== "missing-license"
       )
@@ -273,7 +272,6 @@ export const transitionImport = (
     case "edit-license":
       if (
         state.kind !== "reviewing" &&
-        state.kind !== "confirming" &&
         state.kind !== "missing-source" &&
         state.kind !== "missing-license"
       )
@@ -382,10 +380,14 @@ export const transitionImport = (
           license: state.license,
           reason: duplicateReason,
         };
-      const referenceLabel =
-        context.pack.references.find(
-          (reference) => reference.id === candidate.referenceId,
-        )?.label ?? candidate.referenceId;
+      const reference = context.pack.references.find(
+        (entry) => entry.id === candidate.referenceId,
+      );
+      if (!reference)
+        return {
+          kind: "unavailable",
+          reason: `Stale reference identity at confirmation: ${candidate.referenceId}. The workflow failed closed; no candidate was created and nothing changed.`,
+        };
       return {
         kind: "confirmed",
         record: {
@@ -396,7 +398,7 @@ export const transitionImport = (
           declaredFormat: candidate.declaredFormat,
           source: state.source.trim(),
           license: state.license.trim(),
-          referenceLabel,
+          referenceLabel: reference.label,
           coveredViews: candidate.coveredViews,
           truth: CONFIRMED_CANDIDATE_TRUTH,
         },

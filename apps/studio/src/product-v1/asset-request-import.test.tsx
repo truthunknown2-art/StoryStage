@@ -262,6 +262,37 @@ describe("F4-WP3 — import workflow machine (pure)", () => {
         context,
       ).kind,
     ).toBe("unavailable");
+    expect(
+      transitionImport(
+        confirming,
+        { type: "edit-source", value: "changed behind locked review" },
+        context,
+      ).kind,
+    ).toBe("unavailable");
+    expect(
+      transitionImport(
+        confirming,
+        { type: "edit-license", value: "changed behind locked review" },
+        context,
+      ).kind,
+    ).toBe("unavailable");
+  });
+
+  it("fails closed when a confirming candidate has a stale reference association", () => {
+    const context = contextFor();
+    const staleReferenceContext: ImportContext = {
+      ...context,
+      pack: { ...context.pack, references: [] },
+    };
+    const result = transitionImport(
+      confirmingState(),
+      { type: "confirm" },
+      staleReferenceContext,
+    );
+    expect(result.kind).toBe("unavailable");
+    if (result.kind !== "unavailable") throw new Error("expected unavailable");
+    expect(result.reason).toContain("Stale reference identity");
+    expect(staleReferenceContext.reviewList).toHaveLength(0);
   });
 
   it("reaches the wrong-format state from declared metadata and never creates a candidate", () => {
@@ -366,6 +397,16 @@ describe("F4-WP3 — request pack preview (UI)", () => {
     /* The panel moved focus in deliberately. */
     const heading = within(panel).getByRole("heading", { name: "Dot" });
     expect(document.activeElement).toBe(heading);
+    /* The expanded invoker toggles closed and restores focus instead of
+     * becoming a dead control outside the open panel. */
+    const invoker = screen.getByRole("button", {
+      name: "Request image pack for Dot in Scene 3 · Berry Patch",
+    });
+    await user.click(invoker);
+    expect(screen.queryByTestId("pv1-request")).toBeNull();
+    expect(document.activeElement).toBe(invoker);
+    await user.click(invoker);
+    expect(requestPanel()).toBeTruthy();
     /* Ready requirements and unavailable rows expose no request path. */
     expect(
       screen.queryByRole("button", {

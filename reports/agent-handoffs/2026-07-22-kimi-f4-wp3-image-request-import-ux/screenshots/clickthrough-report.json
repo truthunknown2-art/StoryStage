@@ -1,7 +1,7 @@
 {
   "task": "F4-WP3-IMAGE-REQUEST-IMPORT-UX",
   "base": "http://127.0.0.1:5173/",
-  "capturedAt": "2026-07-22T12:39:56.596Z",
+  "capturedAt": "2026-07-22T13:31:46.247Z",
   "viewport": "1440x900",
   "checks": [
     {
@@ -151,7 +151,7 @@
   "screenshots": [
     {
       "file": "screenshots/wp3-1440x900-request-button-focus.png",
-      "sha256": "dc0a5151c42787b40798f277b9a77bcec361808af006f9b558691ac08bd79c09"
+      "sha256": "936be07202bdf5a78c6c96a35b9f5ac2ae3c86bd613d12eef13915a9d23ae532"
     },
     {
       "file": "screenshots/wp3-1440x900-request-pack-preview.png",
