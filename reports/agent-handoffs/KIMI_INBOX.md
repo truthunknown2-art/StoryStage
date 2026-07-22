@@ -1,16 +1,35 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `79`
+Inbox-Version: `80`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP1-ASSET-WORKSPACE-INFORMATION-ARCHITECTURE`
-Status: `START-NOW`
+Current-Task: `F4-WP1-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `d6fe17ca7507cfd37f61a954b5f5034982c3554d`
-Required-Work-Branch: `agent/kimi-f4-wp1-asset-workspace-information-architecture`
-Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp1-asset-workspace-information-architecture-v79.md`
+Accepted-Root-Base: `648e9458642f5abdb8751a8dd74c8a3a1db9253e`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#99`
 
 ## Current instruction
+
+Version 80 records F4-WP1 acceptance and integration. PR #101 exact head
+`aa66103336e2ad7aa19d90e1cf9419d576510c09` passed Studio 153/153,
+typecheck, production build, lint with zero errors, the 17/17 browser audit,
+nine hash-matched 1440x900 screenshots, zero console/page errors, independent
+Sol code/a11y and Terra visual/evidence audits, hosted Verify run
+`29905070316`, and post-merge run `29905734404` attempt 2. Attempt 1's only
+failure was the documented unchanged asset-pipeline CPU timeout. It merged
+into `product/v1` at `648e9458642f5abdb8751a8dd74c8a3a1db9253e`. Kimi is
+now `WAIT`; F4-WP2,
+backend product work, Godot, Remotion, persistence, rendering, export,
+packaging, and every later package remain unauthorized by this inbox.
+
+Version 80 supersedes Version 79. Version 79 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 79 instruction:
 
 Version 79 starts only F4-WP1 through issue #99 from exact accepted base
 `d6fe17ca7507cfd37f61a954b5f5034982c3554d` on required branch
