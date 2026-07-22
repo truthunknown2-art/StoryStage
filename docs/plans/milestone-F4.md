@@ -12,11 +12,11 @@
   direction recorded on 2026-07-21
 - Decomposition approval: the dependency-ordered F4-WP1 through F4-WP5
   decomposition was accepted in G0
-- Current authorization: F4-WP4 is accepted and integrated; wait for the
-  separate bounded F4-WP5 ticket, exact-base transition, and higher Kimi inbox
-- Exact implementation base: `3a98dfff7b543821c02ead9499a9ec0efd93913b`
+- Current authorization: only F4-WP5 through issue #117 after the matching
+  exact-base status transition and higher validated Kimi inbox are published
+- Exact implementation base: `0b8d03940e65114d6cd7edba4ae4fa2028be2c19`
 - Required branch:
-  `agent/kimi-f4-wp4-layer-rig-review-ux`
+  `agent/kimi-f4-wp5-responsive-accessibility-evidence`
 - Accepted F4-WP4 product head:
   `5dad1aa72c2e3e9ea5a7f5a4e4625f1775e1ef4b`
 - Backend product work remains blocked until the complete F6 Frontend Gate is
