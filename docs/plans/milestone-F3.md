@@ -15,9 +15,11 @@
 - Completed packages: F3-WP1, F3-WP2, and F3-WP3 are accepted. F3-WP3 exact
   PR #87 handback tip `1579ee1ff1c078ae1f7849546cd9c87a21880620` is integrated
   at `product/v1@24c7a95b3bc90e33b77113a4af4b76df2fd1cd42`.
-- Current authorization: `ACCEPTED_WAIT`. F3-WP4 requires a separate bounded
-  ticket, status transition, and higher Kimi inbox version. F3-WP5 remains
-  blocked by dependency order.
+- Current authorization: only F3-WP4 through issue #89, after this separate
+  status transition and matching higher Kimi inbox version are integrated.
+- Exact implementation base: `0111274544afda55f8481be103bd3c7ad4db661a`
+- Required F3-WP4 branch: `agent/kimi-f3-wp4-ai-director-proposal-shell`
+- F3-WP5 remains blocked by dependency order and the F3-WP4 exact-head gate.
 - Backend product work remains blocked until the complete F6 Frontend Gate is
   accepted.
 

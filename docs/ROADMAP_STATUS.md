@@ -11,18 +11,18 @@ completedMilestones:
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
 authorization:
-  state: ACCEPTED_WAIT
+  state: START_NOW
   milestone: F3
-  package: F3-WP3
-  owner: Codex
-  exactBase: fe004232e4650dfceaa4360d98f9627595c0cc8c
-  branch: agent/kimi-f3-wp3-visual-motion-scoped-history
-  issue: 85
-  pr: 87
-  candidateContentHead: 1579ee1ff1c078ae1f7849546cd9c87a21880620
+  package: F3-WP4
+  owner: Kimi
+  exactBase: 0111274544afda55f8481be103bd3c7ad4db661a
+  branch: agent/kimi-f3-wp4-ai-director-proposal-shell
+  issue: 89
+  pr: null
+  candidateContentHead: 0111274544afda55f8481be103bd3c7ad4db661a
   candidateRef: product/v1
 checks:
-  local: studio-100+typecheck+build+recursive-workspace+synthetic-merge+exact-head-code-and-visual-audits
+  local: roadmap-consistency+format-check
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
@@ -30,12 +30,11 @@ verdicts:
   pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
   preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
 blockers:
-  - F3-WP4 requires a separate bounded START_NOW ticket and higher Kimi inbox version
-  - F3-WP5 remains blocked by dependency order
+  - F3-WP5 remains blocked by dependency order and the F3-WP4 exact-head gate
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: WAIT_FOR_F3_WP4_TICKET
-  text: F3-WP3 is accepted and integrated. Do not begin F3-WP4 until a separate bounded ticket and higher Kimi inbox version are published.
+  type: IMPLEMENT_F3_WP4_ONLY
+  text: Implement only issue #89 from exact base 0111274544afda55f8481be103bd3c7ad4db661a on agent/kimi-f3-wp4-ai-director-proposal-shell, publish the exact handback, and stop before F3-WP5.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -98,6 +97,12 @@ verification from the live PR checks.
   summary. It does not provide AI interpretation, persistence, production
   schemas, media, animation, executable camera moves, Godot, Remotion,
   rendering, or export.
+- Issue #89 and this `START_NOW` transition authorize only F3-WP4 from exact
+  base `product/v1@0111274544afda55f8481be103bd3c7ad4db661a`. Kimi may build
+  the labelled local-fixture AI Director conversation/proposal shell and the
+  exact two-path New Project entry. Live Codex integration, project mutation,
+  persistence, media, Godot, Remotion, rendering, export, F3-WP5, and backend
+  product work remain blocked.
 
 - Accepted creator-facing product implementation now reaches F3-WP3 on exact
   `24c7a95...`; the complete F3 milestone is not yet accepted. G0 is the
