@@ -1,6 +1,6 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `72`
+Inbox-Version: `73`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F3-WP4-AI-DIRECTOR-PROPOSAL-SHELL`
 Status: `START-NOW`
@@ -11,6 +11,20 @@ Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp4-ai-director-pro
 Issue: `#89`
 
 ## Current instruction
+
+Version 73 incorporates the final exact-base scope audit without broadening the
+package. Connection state is separate from cancelled/error turn state; every AI
+surface is explicitly a no-service local fixture; request scope is captured
+immutably; and Apply may change only the captured beat's performance direction
+through existing session-local history, failing closed for stale selection or
+unapplied manual drafts. Issue #89 and the full brief now match these guards.
+
+Version 73 supersedes Version 72. Version 72 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 72 instruction:
 
 Version 72 corrects Version 71's invalid underscore status enum to the
 canonical `START-NOW` transport value. The assignment, exact base, branch,

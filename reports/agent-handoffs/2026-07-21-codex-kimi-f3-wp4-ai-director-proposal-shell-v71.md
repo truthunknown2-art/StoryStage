@@ -2,7 +2,7 @@
 
 ## Assignment identity
 
-- Inbox-Version: `72`
+- Inbox-Version: `73`
 - Issue: `#89`
 - Exact accepted base: `0111274544afda55f8481be103bd3c7ad4db661a`
 - Required branch: `agent/kimi-f3-wp4-ai-director-proposal-shell`
@@ -39,9 +39,14 @@ production mutation occurred.
 
 ## Connection and failure fixtures
 
-- Provide deterministic labelled local states for **Connected**, **Signed out**,
-  **Offline**, **Usage limit**, **Update required**, **Crashed/error**, and
-  **Cancelled**. Never imply they came from a live Codex session.
+- Provide deterministic labelled connection states for **Connected**,
+  **Signed out**, **Offline**, **Usage limit**, **Update required**, and
+  **Crashed**. Model **Cancelled** and **Error** as turn/result states while the
+  connection state remains independently truthful. Never imply any state came
+  from a live Codex session.
+- Every AI surface says **Local AI Director fixture — no service connected**.
+  E1-derived means matching vocabulary and event shape only; do not import or
+  call the E1 lab or imply its recorded live result is occurring now.
 - Signed-out or disconnected idea entry opens compact **Connect AI Director**
   UI with a runtime-check fixture and **Sign in with ChatGPT** fixture action.
   These may transition only local demo state.
@@ -62,12 +67,16 @@ production mutation occurred.
   accepted E1 vocabulary.
 - Show one structured, time-anchored screenplay/hierarchy/direction proposal
   with affected range, affected assets, and proposal markers.
-- **Preview**, **Apply**, **Revise**, **Reject**, and **Undo** mutate only the
-  bounded local fixture proposal state. Apply is explicit and reversible. It
-  remains independent from the accepted manual Direct/Visual/Motion per-beat
-  history and cannot call a host or production adapter.
+- **Preview**, **Revise**, and **Reject** do not change project direction.
+  **Apply** may commit exactly one proposed `performanceDirection` change to
+  the immutable captured beat through the accepted session-local per-beat
+  history. **Undo** restores the exact prior snapshot without touching another
+  beat or scene. Apply fails closed when current selection differs from the
+  captured scope or the captured beat has unapplied manual drafts. It cannot
+  call a host or production adapter.
 - Rejected, cancelled, error, limited, and offline proposals never appear
-  applied. Preserve understandable scope and one honest recovery action.
+  applied. Selection changes do not retarget an existing request or proposal.
+  Preserve the immutable captured scope and one honest recovery action.
 - Preserve accepted F1/F2 navigation and F3-WP1 through F3-WP3 manual
   direction/history behavior.
 
@@ -106,12 +115,14 @@ render/export; background autonomy; F3-WP5; or backend product work.
 
 - both entry paths converge on the same proposal-review model and cannot bypass
   review;
-- Connected, Signed out, Offline, Usage limit, Update required, Crashed/error,
-  and Cancelled states remain explicit local fixtures with no credentials or
-  live-service claims;
-- scope/time anchors/affected range/assets remain stable through
-  Preview/Revise/Reject/Apply/Undo; Apply is explicit and reversible; and
-  rejected/cancelled/error proposals cannot appear applied;
+- six independent connection fixtures (Connected, Signed out, Offline, Usage
+  limit, Update required, Crashed) plus Cancelled and Error turn/results remain
+  explicit local fixtures with no credentials or live-service claims;
+- captured scope/time anchors/affected range/assets remain stable across
+  selection changes; Preview/Revise/Reject do not mutate direction; Apply
+  changes only the captured beat through existing session-local history; exact
+  Undo restores it; stale-selection and unapplied-manual-draft Apply fail
+  closed; and rejected/cancelled/error proposals cannot appear applied;
 - existing F1/F2 navigation and F3-WP1 through F3-WP3 manual direction/history
   tests remain passing;
 - `pnpm --filter @storystage/studio test`;
