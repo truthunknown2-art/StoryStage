@@ -34,6 +34,19 @@ import {
 import { buildRequestPack } from "./asset-request-pack";
 import type { LocalCandidateRecord } from "./asset-import";
 import { AssetRequestImport } from "./AssetRequestImport";
+import {
+  NO_REVIEW_EXAMPLE_REASON,
+  REVIEW_FIXTURES,
+  reviewEligibility,
+  reviewFixturesFor,
+  type ReviewFixture,
+} from "./asset-review";
+import { AssetReview } from "./AssetReview";
+
+/** The review action label per eligible category: characters and rigs open
+ * the layer-and-rig review, layered sets open the set-layer review. */
+const reviewActionLabel = (category: AssetCategoryId): string =>
+  category === "layered-sets" ? "Review set layers" : "Review layers & rig";
 
 /**
  * F4-WP1 Assets & Rigs workspace: category navigation, episode/scene
@@ -44,13 +57,21 @@ import { AssetRequestImport } from "./AssetRequestImport";
  * empty scope (render-time adjustment, no effect races). This surface never
  * touches the Studio's selected scene/beat, never creates an artifact, and
  * keeps every preparation action visibly unavailable with its reason.
+ *
+ * F4-WP3 added the scene-scoped request/import panel; F4-WP4 adds the
+ * scene-scoped layer-and-rig review panel. At most one transient panel is
+ * open at a time: opening a review closes any open request/import, and
+ * opening a request/import closes any open review. Neither panel ever
+ * changes requirement readiness or counts.
  */
 export function AssetWorkspace({
   usesLayoutDemo = false,
   requirementFixtures = SCENE_REQUIREMENTS,
+  reviewFixtures = REVIEW_FIXTURES,
 }: {
   usesLayoutDemo?: boolean;
   requirementFixtures?: readonly SceneRequirementFixture[];
+  reviewFixtures?: readonly ReviewFixture[];
 }) {
   const [category, setCategory] = useState<AssetCategoryId>("characters");
   const [scope, setScope] = useState<AssetScope>(INITIAL_ASSET_SCOPE);
@@ -79,6 +100,27 @@ export function AssetWorkspace({
     restoreRequestFocusRef.current = false;
     requestInvokerRef.current?.focus();
   }, [openRequestId]);
+
+  /* F4-WP4: scene-scoped layer-and-rig review transient state. The open
+   * panel is bound to exactly one requirement id; any scene, episode,
+   * category, requirement, or selected-record scope change closes it, and
+   * opening it closes any open request/import panel. Review state is purely
+   * presentational — it never changes F4-WP2 readiness or counts. */
+  const [openReviewId, setOpenReviewId] = useState<string | null>(null);
+  const reviewInvokerRef = useRef<HTMLButtonElement | null>(null);
+  const restoreReviewFocusRef = useRef(false);
+
+  const closeReview = (restoreFocus: boolean) => {
+    if (openReviewId === null) return;
+    restoreReviewFocusRef.current = restoreFocus;
+    setOpenReviewId(null);
+  };
+
+  useEffect(() => {
+    if (openReviewId !== null || !restoreReviewFocusRef.current) return;
+    restoreReviewFocusRef.current = false;
+    reviewInvokerRef.current?.focus();
+  }, [openReviewId]);
 
   const visibleAssets = filterAssetFixtures(category, scope);
   const resolvedSelectedId = resolveAssetSelection(
@@ -125,6 +167,28 @@ export function AssetWorkspace({
   const openRequestPack = openRequestItem
     ? buildRequestPack(openRequestItem)
     : null;
+
+  /* Fail-closed backstop for the review panel: the open review requirement
+   * must remain visible, cleanly resolved, review-eligible, and backed by at
+   * least one declared example in the current scope; otherwise the transient
+   * panel closes (render-time adjustment, same pattern as the request). */
+  const openReviewItem =
+    openReviewId === null
+      ? undefined
+      : scopeRequirements.find(
+          (item) =>
+            item.entry.id === openReviewId &&
+            item.unavailableReason === null &&
+            reviewEligibility(item) === "eligible",
+        );
+  const openReviewFixtureList =
+    openReviewItem === undefined
+      ? []
+      : reviewFixturesFor(openReviewItem.entry.id, reviewFixtures);
+  if (openReviewId !== null && openReviewFixtureList.length === 0) {
+    restoreReviewFocusRef.current = false;
+    setOpenReviewId(null);
+  }
   const selectedSceneRequirement =
     selectedAsset && scope.sceneId !== SCOPE_ALL
       ? scopeRequirements.find(
@@ -135,6 +199,7 @@ export function AssetWorkspace({
   const openRequirementRecord = (item: ResolvedSceneRequirement) => {
     if (item.asset === null) return;
     closeRequest(false);
+    closeReview(false);
     setCategory(item.asset.category);
     setSelectedAssetId(item.asset.id);
     if (scope.sceneId === SCOPE_ALL) {
@@ -178,6 +243,7 @@ export function AssetWorkspace({
               key={entry.id}
               onClick={() => {
                 closeRequest(false);
+                closeReview(false);
                 setCategory(entry.id);
               }}
               type="button"
@@ -193,6 +259,7 @@ export function AssetWorkspace({
               aria-label="Episode filter"
               onChange={(event) => {
                 closeRequest(false);
+                closeReview(false);
                 setScope((current) =>
                   sanitizeAssetScope({
                     ...current,
@@ -216,6 +283,7 @@ export function AssetWorkspace({
               aria-label="Scene filter"
               onChange={(event) => {
                 closeRequest(false);
+                closeReview(false);
                 setScope((current) =>
                   sanitizeAssetScope({
                     ...current,
@@ -358,6 +426,7 @@ export function AssetWorkspace({
                         className="pv1-secondary pv1-requirement-request"
                         onClick={(event) => {
                           requestInvokerRef.current = event.currentTarget;
+                          closeReview(false);
                           if (openRequestId === entry.id) closeRequest(true);
                           else setOpenRequestId(entry.id);
                         }}
@@ -366,6 +435,49 @@ export function AssetWorkspace({
                         Request image pack
                       </button>
                     ) : null}
+                    {(() => {
+                      /* F4-WP4: the review action exists only for eligible
+                       * character/rig/layered-set requirements. An eligible
+                       * requirement without a declared example shows a
+                       * truthful disabled reason; other categories omit the
+                       * action entirely. The enabled control always opens a
+                       * real panel — it never leads nowhere. */
+                      const eligibility = reviewEligibility(item);
+                      if (eligibility !== "eligible") return null;
+                      const examples = reviewFixturesFor(
+                        entry.id,
+                        reviewFixtures,
+                      );
+                      if (examples.length === 0)
+                        return (
+                          <span className="pv1-requirement-no-review">
+                            <button
+                              className="pv1-secondary"
+                              disabled
+                              type="button"
+                            >
+                              {reviewActionLabel(entry.category)}
+                            </button>
+                            <span>{NO_REVIEW_EXAMPLE_REASON}</span>
+                          </span>
+                        );
+                      return (
+                        <button
+                          aria-expanded={openReviewId === entry.id}
+                          aria-label={`${reviewActionLabel(entry.category)} for ${entry.plannedName} in ${requirementSceneLabel(entry.sceneId)}`}
+                          className="pv1-secondary pv1-requirement-review"
+                          onClick={(event) => {
+                            reviewInvokerRef.current = event.currentTarget;
+                            closeRequest(false);
+                            if (openReviewId === entry.id) closeReview(true);
+                            else setOpenReviewId(entry.id);
+                          }}
+                          type="button"
+                        >
+                          {reviewActionLabel(entry.category)}
+                        </button>
+                      );
+                    })()}
                     {(candidatesByRequirement[entry.id]?.length ?? 0) > 0 ? (
                       <span className="pv1-requirement-candidates" role="note">
                         Local candidate records:{" "}
@@ -392,6 +504,16 @@ export function AssetWorkspace({
                       }
                       pack={openRequestPack}
                       reviewList={candidatesByRequirement[entry.id] ?? []}
+                    />
+                  ) : null}
+                  {openReviewId === entry.id &&
+                  openReviewItem !== undefined &&
+                  openReviewFixtureList.length > 0 ? (
+                    <AssetReview
+                      fixtures={openReviewFixtureList}
+                      item={openReviewItem}
+                      onClose={() => closeReview(true)}
+                      sessionCandidates={candidatesByRequirement[entry.id] ?? []}
                     />
                   ) : null}
                 </li>
@@ -423,7 +545,10 @@ export function AssetWorkspace({
                     <button
                       aria-current={isSelected ? "true" : undefined}
                       className={`pv1-asset-item ${isSelected ? "is-selected" : ""}`}
-                      onClick={() => setSelectedAssetId(asset.id)}
+                      onClick={() => {
+                        closeReview(false);
+                        setSelectedAssetId(asset.id);
+                      }}
                       type="button"
                     >
                       <strong>{asset.name}</strong>
