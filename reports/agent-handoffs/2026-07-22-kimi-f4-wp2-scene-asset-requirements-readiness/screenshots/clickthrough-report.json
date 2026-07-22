@@ -1,0 +1,134 @@
+{
+  "task": "F4-WP2-SCENE-ASSET-REQUIREMENTS-READINESS",
+  "base": "http://127.0.0.1:5173/",
+  "capturedAt": "2026-07-22T10:11:13.162Z",
+  "viewport": "1440x900",
+  "checks": [
+    {
+      "name": "episode aggregate: visible scope, mechanically matching totals, and ready disclaimer",
+      "pass": true,
+      "details": {
+        "text": "Episode requirements summaryEpisode 1 · The Storylight in the Little Wood · All scenesEpisode-scope summary across every scene of the bounded Ollo demo plan — not a selected-scene result. Choose one scene in the Scene filter for scene-scoped requirement truth. Counts derive from the 37 records listed below.Required 33 · Optional 4 · Reusable 34Ready 7 · Candidate 5 · Missing 3 · Needs preparation 15 · Needs review 7Ready here means only that this local planning record satisfies this package's local checklist — it is not artifact, review, approval, rig, capability, or production readiness, and no file, image, layer, or rig exists.OlloCharacters · Required · Reusable · Ready · Scene 1 · The Home NookLocal planning checklist complete for this scene: Ollo is named, described, and scoped in the bounded Ollo demo plan. Ready here means only that this local planning record satisfies this package's local checklist — it is not artifact, review, approval, rig, capability, or production readiness"
+      }
+    },
+    {
+      "name": "episode aggregate: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "scene 3 partial: all readiness states, independent necessity/reuse, and selected scope",
+      "pass": true,
+      "details": {
+        "text": "Scene requirementsScene 3 · Berry PatchScene-scoped planning truth for Scene 3 · Berry Patch only — the Scene filter is the scope authority. Counts derive from the 6 records listed below.Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1Ready here means only that this local planning record satisfies this package's local checklist — it is not artifact, review, approval, rig, capability, or production readiness, and no file, image, layer, or rig exists.OlloCharacters · Required · Reusable · ReadyLocal planning checklist complete for this scene: Ollo is named, described, and scoped in the bounded Ollo demo plan. Ready here means only that this local planning record satisfies this package's local checklist — it is not artifact, review, approval, rig, capability, or production readiness, and no file, image, layer, or rig exists.Declared by the bounded local F4-WP2 fixture — not derived from script text, AI, or any service.Open recordAttach reference artUnavailable — image import and generation do not exist in this demo. A later F4 package adds them.TixCharacters · Optional · Reusable · CandidateA labelled local candidate record exists, but it remains unreviewed and no artifact exists. Declared by the bounded local F4-WP2 fixture — not derived from script text, AI, or any service.Open recordAttach reference artUnavailable — im"
+      }
+    },
+    {
+      "name": "scene 3 partial: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "keyboard focus: unique Open-record control has visible focus",
+      "pass": true,
+      "details": {
+        "active": true,
+        "outlineWidth": "2px",
+        "outlineStyle": "solid",
+        "ariaLabel": "Open Dropped berry trail record for Scene 3 · Berry Patch"
+      }
+    },
+    {
+      "name": "scene 4 blocked: zero ready and readable blocker on every row",
+      "pass": true,
+      "details": {
+        "rows": 4,
+        "reasons": [
+          "The local checklist has enough descriptive information for a later review, but no review or approval has occurred.",
+          "A labelled local candidate record exists, but it remains unreviewed and no artifact exists.",
+          "The local checklist has enough descriptive information for a later review, but no review or approval has occurred.",
+          "The record identifies rig-marker preparation for bounce, turn, and reach performances, but no rigging service or output exists."
+        ]
+      }
+    },
+    {
+      "name": "scene 4 blocked: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "scene 1 ready: local-only disclaimer and record-less missing truth",
+      "pass": true,
+      "details": {
+        "text": "Scene requirementsScene 1 · The Home NookScene-scoped planning truth for Scene 1 · The Home Nook only — the Scene filter is the scope authority. Counts derive from the 5 records listed below.Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1Ready here means only that this local planning record satisfies this package's local checklist — it is not artifact, review, approval, rig, capability, or production readiness, and no file, image, layer, or rig exists.OlloCharacters · Required · Reusable · ReadyLocal planning checklist complete for this scene: Ollo is named, described, and scoped in the bounded Ollo demo plan. Ready here means only that this local planning record satisfies this package's local checklist — it is not artifact, review, approval, rig, capability, or production readiness, and no file, image, layer, or rig exists.Declared by the bounded local F4-WP2 fixture — not derived from script text, AI, or any service.Open recordAttach reference artUnavailable — image import and generation do not exist in this demo. A later F4 package adds them.The Home Nook setLayered Sets · Required · Reusable · Needs preparationThe record identifies layer preparation (background, midground, and foreground planes), but no slicing service or layer output exists. Declared by the bounded local F4-WP2 fixture — not derived from script t"
+      }
+    },
+    {
+      "name": "scene 1 ready: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "empty state: no hidden Props record and scene requirement scope remains authoritative",
+      "pass": true,
+      "details": {
+        "list": "All episodes · Scene 2 · Forest PathNo props records are scoped to All episodes · Scene 2 · Forest Path. Nothing is hidden — this scope honestly has no records yet, and no assets can be created or imported in this demo.",
+        "detail": "Nothing selected — the current category and filters form an honest empty scope. Choosing a wider scene filter or another category shows its records; no record is kept hidden from an earlier scope.",
+        "requirementScope": "Scene 2 · Forest Path"
+      }
+    },
+    {
+      "name": "honest empty state: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    }
+  ],
+  "consoleIssues": [],
+  "pageErrors": [],
+  "screenshots": [
+    {
+      "file": "screenshots/wp2-1440x900-all-scenes-aggregate.png",
+      "sha256": "cb9a5dcc03ed6882ac6e9c1d4b008ab8b533b53a8cc8689794321886fe51a1b4"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-scene3-partial.png",
+      "sha256": "e019a04778b8c2bbbb76ce93045cb09e15a9c23a1ff19e25c2b8a3d887ff8e1d"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-open-record-focus.png",
+      "sha256": "e4378da0e0e39ff17a5f5a3af2922353bf01dc0a56d4966a6d63257b350378ff"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-scene4-blocked.png",
+      "sha256": "8440a657c6341f3e6489f9da902d857b47eccd7f4d634e0c258eba1f5eb0fff2"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-scene1-ready.png",
+      "sha256": "88e6ad58683c3f8dce07212b979eaca4a311196aca40a6b784899cd6cf4a8415"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-empty-props-scene2.png",
+      "sha256": "7d13883fb555274be419589754f20d12f524570150cdc98299a63dd0ac81049a"
+    }
+  ]
+}
