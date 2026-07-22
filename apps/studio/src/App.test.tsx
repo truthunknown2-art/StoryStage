@@ -62,7 +62,9 @@ const SAMPLE_SCRIPT = [
 
 async function openCreate(user: ReturnType<typeof userEvent.setup>) {
   render(<App />);
-  await user.click(screen.getByRole("button", { name: /New project/ }));
+  await user.click(
+    screen.getByRole("button", { name: /New project/ }),
+  );
   return screen.findByRole("heading", {
     name: /Start a new Kids Story/,
   });
@@ -85,9 +87,7 @@ describe("F1 — Projects + Create", () => {
       screen.getByRole("button", { name: /New project/ }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(
-        /Local UI demo — production services are not connected\./,
-      ),
+      screen.getByText(/Local UI demo — production services are not connected\./),
     ).toBeInTheDocument();
     expect(
       screen.getByText("The Storylight in the Little Wood"),
@@ -104,7 +104,9 @@ describe("F1 — Projects + Create", () => {
     expect(
       screen.getByRole("button", { name: /What's your idea\?/ }),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Back to projects/ }));
+    await user.click(
+      screen.getByRole("button", { name: /Back to projects/ }),
+    );
     expect(
       await screen.findByRole("heading", { name: "Projects" }),
     ).toBeInTheDocument();
@@ -124,9 +126,7 @@ describe("F1 — Projects + Create", () => {
     fireEvent.change(screen.getByLabelText("Import .txt file"), {
       target: { files: [file] },
     });
-    expect(
-      await screen.findByText(/68 words · about 27 seconds/),
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/68 words · about 27 seconds/)).toBeInTheDocument();
 
     const badFile = new File(["not a script"], "story.md", {
       type: "text/markdown",
@@ -134,7 +134,9 @@ describe("F1 — Projects + Create", () => {
     fireEvent.change(screen.getByLabelText("Import .txt file"), {
       target: { files: [badFile] },
     });
-    expect(await screen.findByText(/is not a \.txt file/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/is not a \.txt file/),
+    ).toBeInTheDocument();
   });
 
   it("offers the single Kids Story template with exactly two paths and no Weird History", async () => {
@@ -214,9 +216,7 @@ describe("F1 — Projects + Create", () => {
       "Local UI demo — production services are not connected.",
     );
     expect(studio).toHaveTextContent("Reference board — not animation");
-    expect(studio).toHaveTextContent(
-      /no imagery,\s*animation,\s*audio,\s*or render exists/i,
-    );
+    expect(studio).toHaveTextContent(/no imagery,\s*animation,\s*audio,\s*or render exists/i);
     expect(
       within(studio).getByRole("tablist", { name: "Director workspace" }),
     ).toBeInTheDocument();
@@ -256,8 +256,12 @@ describe("F1 — Projects + Create", () => {
     // stay understandable. ProductV1App supports this via its fixture prop.
     cleanup();
     render(<ProductV1App showDemoProject={false} />);
-    expect(await screen.findByText("No projects yet")).toBeInTheDocument();
-    expect(screen.getByText(/Create your first story/)).toBeInTheDocument();
+    expect(
+      await screen.findByText("No projects yet"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Create your first story/),
+    ).toBeInTheDocument();
   });
 });
 
@@ -288,9 +292,7 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
       within(studio).getByRole("heading", { name: "Berry Patch" }),
     ).toBeInTheDocument();
     expect(
-      within(studio).getByText(
-        /Scene 3 of 8 · 140s · episode 5:10–7:30 of 20:00/,
-      ),
+      within(studio).getByText(/Scene 3 of 8 · 140s · episode 5:10–7:30 of 20:00/),
     ).toBeInTheDocument();
     expect(
       within(rail).getByRole("button", { name: /Scene 3 Berry Patch/ }),
@@ -320,9 +322,7 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
       within(studio).getByRole("heading", { name: "Lantern Bridge" }),
     ).toBeInTheDocument();
     expect(
-      within(studio).getByText(
-        /Scene 5 of 8 · 170s · episode 10:00–12:50 of 20:00/,
-      ),
+      within(studio).getByText(/Scene 5 of 8 · 170s · episode 10:00–12:50 of 20:00/),
     ).toBeInTheDocument();
     const rail = within(studio).getByRole("navigation", {
       name: "Episode hierarchy",
@@ -420,9 +420,15 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
     // The Direct tab is selected by default: exactly three bounded drafts
     // plus real Apply/Undo/Redo with honest disabled history states.
     expect(within(studio).getAllByRole("textbox")).toHaveLength(3);
-    expect(within(studio).getByRole("button", { name: "Apply" })).toBeEnabled();
-    expect(within(studio).getByRole("button", { name: "Undo" })).toBeDisabled();
-    expect(within(studio).getByRole("button", { name: "Redo" })).toBeDisabled();
+    expect(
+      within(studio).getByRole("button", { name: "Apply" }),
+    ).toBeEnabled();
+    expect(
+      within(studio).getByRole("button", { name: "Undo" }),
+    ).toBeDisabled();
+    expect(
+      within(studio).getByRole("button", { name: "Redo" }),
+    ).toBeDisabled();
     // The only Director comboboxes are the four bounded Visual/Motion
     // intent selects on their hidden tabs; no shot or action control
     // fields exist in this slice.
@@ -448,9 +454,7 @@ describe("F2-WP1 — Studio shell selection invariant", () => {
       ),
     ).toBe(true);
     expect(
-      studio.textContent?.includes(
-        "Export unlocks when production services connect.",
-      ),
+      studio.textContent?.includes("Export unlocks when production services connect."),
     ).toBe(true);
     expect(
       within(studio).queryByRole("button", { name: /Play|Pause|Scrub/i }),
@@ -558,9 +562,7 @@ describe("F2-WP2 — long-form navigation and bounded rendering", () => {
     for (const row of beatRows)
       expect(row.getAttribute("data-beat-for")).toBe("scene-5");
     expect(studio).toHaveTextContent("The bridge lanterns wake one by one");
-    expect(studio).not.toHaveTextContent(
-      "Morning light through the round window",
-    );
+    expect(studio).not.toHaveTextContent("Morning light through the round window");
   });
 
   it("keeps a hidden selection reachable behind a collapsed sequence with reveal", async () => {
@@ -585,7 +587,9 @@ describe("F2-WP2 — long-form navigation and bounded rendering", () => {
     const summary = within(railNav).getByRole("note");
     expect(summary).toHaveTextContent("Selected scene 3 · Berry Patch");
 
-    await user.click(within(summary).getByRole("button", { name: /Reveal/ }));
+    await user.click(
+      within(summary).getByRole("button", { name: /Reveal/ }),
+    );
     expect(
       within(railNav).getByRole("button", { name: /Scene 3 Berry Patch/ }),
     ).toHaveAttribute("aria-current", "true");
@@ -611,7 +615,9 @@ describe("F2-WP2 — long-form navigation and bounded rendering", () => {
     const summary = within(railNav).getByRole("note");
     expect(summary).toHaveTextContent("Selected scene 5 · Lantern Bridge");
 
-    await user.click(within(summary).getByRole("button", { name: /Reveal/ }));
+    await user.click(
+      within(summary).getByRole("button", { name: /Reveal/ }),
+    );
     expect(
       within(railNav).getByRole("button", { name: /Scene 5 Lantern Bridge/ }),
     ).toHaveAttribute("aria-current", "true");
@@ -704,9 +710,7 @@ describe("F2-WP3 — keyboard navigation and responsive quality", () => {
       within(studio).getByRole("heading", { name: "Lantern Bridge" }),
     ).toBeInTheDocument();
     expect(
-      within(studio).getByText(
-        /Scene 5 of 8 · 170s · episode 10:00–12:50 of 20:00/,
-      ),
+      within(studio).getByText(/Scene 5 of 8 · 170s · episode 10:00–12:50 of 20:00/),
     ).toBeInTheDocument();
 
     // First/last clamps.
@@ -764,10 +768,7 @@ describe("F2-WP3 — keyboard navigation and responsive quality", () => {
     const motionBlock = css.match(
       /@media \(prefers-reduced-motion: reduce\) \{[^}]*\.pv1-rail-scene[^}]*\}/s,
     );
-    expect(
-      motionBlock,
-      "reduced-motion block must cover pv1 controls",
-    ).not.toBeNull();
+    expect(motionBlock, "reduced-motion block must cover pv1 controls").not.toBeNull();
     // Compact treatment: stacked ordered regions below 1024px.
     const compactBlock = css.match(
       /@media \(max-width: 1024px\) \{[^]*?\.pv1-studio-layout \{[^}]*flex-direction: column/s,
@@ -815,10 +816,9 @@ describe("F3-WP1 — shared beat scope and Director tabs", () => {
     expect(beatCard(studio)).toHaveTextContent(
       "Morning light through the round window",
     );
-    expect(within(studio).getByRole("tab", { name: "Direct" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(
+      within(studio).getByRole("tab", { name: "Direct" }),
+    ).toHaveAttribute("aria-selected", "true");
     expect(within(studio).getByRole("tabpanel")).toHaveTextContent(
       "Scope: Scene 1 · Beat 1 — Morning light through the round window",
     );
@@ -1356,7 +1356,8 @@ describe("F3-WP3 — Visual and Motion scoped history", () => {
     return screen.findByTestId("pv1-studio");
   }
 
-  const EMPTY_SUMMARY = "No Visual or Motion direction committed for this beat";
+  const EMPTY_SUMMARY =
+    "No Visual or Motion direction committed for this beat";
   const PLANNING_NOTE = "Planning overlay — not animation or rendered output.";
 
   const rail = (studio: HTMLElement) =>
@@ -1400,7 +1401,9 @@ describe("F3-WP3 — Visual and Motion scoped history", () => {
     expect(framing).toHaveValue("Wide");
     expect(composition).toHaveValue("Window light on the shelf");
     expect(summary(studio)).toHaveTextContent(EMPTY_SUMMARY);
-    expect(summary(studio)).not.toHaveTextContent("Window light on the shelf");
+    expect(summary(studio)).not.toHaveTextContent(
+      "Window light on the shelf",
+    );
     expect(studio).toHaveTextContent("Unapplied draft changes");
 
     // Motion tab: draft Camera intent, Performance pace, and End hold.
@@ -1506,7 +1509,9 @@ describe("F3-WP3 — Visual and Motion scoped history", () => {
     await user.click(applyButton(studio));
     expect(undoButton(studio)).toBeEnabled();
     expect(summary(studio)).toHaveTextContent("Medium");
-    expect(summary(studio)).toHaveTextContent("The round window behind Ollo");
+    expect(summary(studio)).toHaveTextContent(
+      "The round window behind Ollo",
+    );
     expect(summary(studio)).toHaveTextContent("Locked-off");
     expect(summary(studio)).toHaveTextContent("Gentle");
     expect(summary(studio)).toHaveTextContent("No hold");
@@ -2043,10 +2048,7 @@ describe("F3-WP4 — AI Director fixture state model (pure)", () => {
     );
     expect(reusedCursor.cursor).toBe(appliedRevision.revision);
     expect(
-      directDraftsEqual(
-        committedDirectDraft(reusedCursor),
-        appliedRevision.node,
-      ),
+      directDraftsEqual(committedDirectDraft(reusedCursor), appliedRevision.node),
     ).toBe(true);
     expect(committedDirectDraft(reusedCursor)).not.toBe(appliedRevision.node);
     expect(canUndoProposalApply(reusedCursor, appliedRevision)).toBe(false);

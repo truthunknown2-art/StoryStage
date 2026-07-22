@@ -23,11 +23,13 @@ import {
   READY_LOCAL_RECORD_DISCLAIMER,
   REQUIREMENT_NECESSITY_LABELS,
   REQUIREMENT_READINESS_LABELS,
+  SCENE_REQUIREMENTS,
   countRequirements,
   requirementSceneLabel,
   requirementScopeLabel,
   resolveScopeRequirements,
   type ResolvedSceneRequirement,
+  type SceneRequirementFixture,
 } from "./asset-requirements";
 
 /**
@@ -42,8 +44,10 @@ import {
  */
 export function AssetWorkspace({
   usesLayoutDemo = false,
+  requirementFixtures = SCENE_REQUIREMENTS,
 }: {
   usesLayoutDemo?: boolean;
+  requirementFixtures?: readonly SceneRequirementFixture[];
 }) {
   const [category, setCategory] = useState<AssetCategoryId>("characters");
   const [scope, setScope] = useState<AssetScope>(INITIAL_ASSET_SCOPE);
@@ -68,12 +72,17 @@ export function AssetWorkspace({
    * shows scene truth, `all` shows an episode summary that discloses its
    * scope. Counts derive mechanically from the same resolved entries the
    * list renders. */
-  const scopeRequirements = resolveScopeRequirements(scope);
+  const scopeRequirements = resolveScopeRequirements(
+    scope,
+    requirementFixtures,
+  );
   const requirementCounts = countRequirements(scopeRequirements);
   const requirementScopeName = requirementScopeLabel(scope);
   const selectedSceneRequirement =
     selectedAsset && scope.sceneId !== SCOPE_ALL
-      ? scopeRequirements.find((item) => item.asset?.id === selectedAsset.id)
+      ? scopeRequirements.find(
+          (item) => item.entry.assetId === selectedAsset.id,
+        )
       : undefined;
 
   const openRequirementRecord = (item: ResolvedSceneRequirement) => {

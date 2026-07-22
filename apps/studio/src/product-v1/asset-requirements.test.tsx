@@ -166,6 +166,9 @@ describe("F4-WP2 — fail-closed resolution (pure)", () => {
   const nook = SCENE_REQUIREMENTS.find(
     (entry) => entry.id === "req-s1-home-nook",
   )!;
+  const shelf = SCENE_REQUIREMENTS.find(
+    (entry) => entry.id === "req-s1-story-shelf",
+  )!;
   const cases: Array<[string, SceneRequirementFixture, string]> = [
     [
       "unknown record reference",
@@ -181,6 +184,33 @@ describe("F4-WP2 — fail-closed resolution (pure)", () => {
       "stale scene reference",
       { ...nook, id: "bad-scene", sceneId: "scene-2" },
       "no longer scoped to this scene",
+    ],
+    [
+      "unknown scene identity",
+      { ...shelf, id: "bad-unknown-scene", sceneId: "scene-404" },
+      "Unknown scene reference",
+    ],
+    [
+      "stale planned name",
+      { ...ready, id: "bad-name", plannedName: "Not Ollo" },
+      "name no longer matches",
+    ],
+    [
+      "unbounded source truth",
+      { ...ready, id: "bad-source", sourceTruth: "Automatically inferred" },
+      "source truth must match",
+    ],
+    [
+      "unbounded next action",
+      {
+        ...ready,
+        id: "bad-action",
+        nextPreparation: {
+          action: "Generate now",
+          unavailableReason: "Available",
+        },
+      },
+      "next preparation action",
     ],
     [
       "ready claim on a name-only record",
@@ -242,8 +272,29 @@ describe("F4-WP2 — fail-closed resolution (pure)", () => {
       const resolved = resolveSceneRequirement(entry);
       expect(resolved.unavailableReason, name).not.toBeNull();
       expect(resolved.unavailableReason, name).toContain(fragment);
-      expect(resolved.asset, name).toBeNull();
     }
+  });
+
+  it("preserves a known record identity when its requirement fails closed", () => {
+    const resolved = resolveSceneRequirement({
+      ...ready,
+      id: "bad-known-category",
+      category: "props",
+    });
+    expect(resolved.unavailableReason).toContain("category no longer matches");
+    expect(resolved.asset?.id).toBe("char-ollo");
+    expect(resolved.reusable).toBe(true);
+  });
+
+  it("rejects a record moved outside the requirement scene's episode", () => {
+    const movedAssets = ASSET_FIXTURES.map((asset) =>
+      asset.id === "char-ollo" ? { ...asset, episodeId: "episode-stale" } : asset,
+    );
+    const resolved = resolveSceneRequirement(ready, movedAssets);
+    expect(resolved.unavailableReason).toContain(
+      "episode no longer contains this requirement scene",
+    );
+    expect(resolved.asset?.id).toBe("char-ollo");
   });
 
   it("counts every displayed unavailable row but never counts one as ready or as a necessity", () => {
@@ -263,6 +314,32 @@ describe("F4-WP2 — fail-closed resolution (pure)", () => {
 });
 
 describe("F4-WP2 — scope counts and labels (pure)", () => {
+  it("fails unknown episode and invalid episode/scene scopes closed", () => {
+    const unknownEpisode = resolveScopeRequirements({
+      episodeId: "episode-404",
+      sceneId: SCOPE_ALL,
+    });
+    const mismatchedScene = resolveScopeRequirements({
+      episodeId: "episode-1",
+      sceneId: "scene-404",
+    });
+    expect(unknownEpisode).toEqual([]);
+    expect(mismatchedScene).toEqual([]);
+    expect(countRequirements(unknownEpisode).ready).toBe(0);
+    expect(
+      requirementScopeLabel({
+        episodeId: "episode-404",
+        sceneId: SCOPE_ALL,
+      }),
+    ).toBe("Unavailable episode scope · episode-404");
+    expect(
+      requirementScopeLabel({
+        episodeId: "episode-1",
+        sceneId: "scene-404",
+      }),
+    ).toBe("Unavailable scene scope · scene-404");
+  });
+
   it("derives episode aggregates mechanically from the same records", () => {
     const episode = countRequirements(resolveScopeRequirements(ALL_SCENES));
     expect(episode).toEqual({
@@ -481,6 +558,30 @@ describe("F4-WP2 — episode summary and scene states (UI)", () => {
 });
 
 describe("F4-WP2 — synchronization and the open-record path (UI)", () => {
+  it("keeps rejected requirement identity synchronized into explicit unavailable detail", async () => {
+    const user = userEvent.setup();
+    const ready = SCENE_REQUIREMENTS.find(
+      (entry) => entry.id === "req-s1-ollo",
+    )!;
+    render(
+      <AssetWorkspace
+        requirementFixtures={[
+          { ...ready, id: "bad-ui-category", category: "props" },
+        ]}
+      />,
+    );
+    await selectScene(user, "scene-1");
+    expect(rowFor("Ollo").textContent).toContain(
+      "Unavailable — Stale fixture reference",
+    );
+    expect(sceneRequirementDetail()).toContain(
+      "Unavailable —Stale fixture reference: the record's category no longer matches this requirement.",
+    );
+    expect(sceneRequirementDetail()).not.toContain(
+      "No requirement record exists",
+    );
+  });
+
   it("synchronizes category, list, detail, and requirement row on Open record in scene scope", async () => {
     const user = userEvent.setup();
     render(<AssetWorkspace />);

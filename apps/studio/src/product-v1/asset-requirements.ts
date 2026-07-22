@@ -36,9 +36,11 @@
  */
 
 import {
+  ASSET_EPISODES,
   ASSET_FIXTURES,
   SCOPE_ALL,
   type AssetCategoryId,
+  type AssetEpisodeFixture,
   type AssetFixture,
   type AssetScope,
 } from "./asset-workspace";
@@ -686,13 +688,50 @@ export interface ResolvedSceneRequirement {
 export const resolveSceneRequirement = (
   entry: SceneRequirementFixture,
   assets: readonly AssetFixture[] = ASSET_FIXTURES,
+  episodes: readonly AssetEpisodeFixture[] = ASSET_EPISODES,
 ): ResolvedSceneRequirement => {
-  const unavailable = (reason: string): ResolvedSceneRequirement => ({
+  const referencedAsset =
+    entry.assetId === null
+      ? null
+      : (assets.find((candidate) => candidate.id === entry.assetId) ?? null);
+  const unavailable = (
+    reason: string,
+    asset: AssetFixture | null = referencedAsset,
+  ): ResolvedSceneRequirement => ({
     entry,
-    asset: null,
-    reusable: false,
+    asset,
+    reusable: asset !== null && asset.sceneIds.length > 1,
     unavailableReason: reason,
   });
+
+  const scene = OLLO_DEMO_SCENES.find(
+    (candidate) => candidate.id === entry.sceneId,
+  );
+  const episode = episodes.find((candidate) =>
+    candidate.sceneIds.includes(entry.sceneId),
+  );
+  if (!scene || !episode)
+    return unavailable(
+      `Unknown scene reference: ${entry.sceneId}. This entry cannot be counted or shown as ready.`,
+    );
+  if (entry.sourceTruth !== REQUIREMENT_SOURCE_TRUTH)
+    return unavailable(
+      "Invalid fixture: requirement source truth must match the bounded local declaration exactly.",
+    );
+  const knownPreparation = [
+    PREP_REFERENCE,
+    PREP_LAYERS,
+    PREP_RIG,
+    PREP_CREATE_RECORD,
+  ].some(
+    (candidate) =>
+      candidate.action === entry.nextPreparation.action &&
+      candidate.unavailableReason === entry.nextPreparation.unavailableReason,
+  );
+  if (!knownPreparation)
+    return unavailable(
+      "Invalid fixture: the next preparation action or unavailable reason is not a bounded F4-WP2 value.",
+    );
 
   if (entry.readiness === "ready") {
     if (entry.readyExplanation === null || entry.blocker !== null)
@@ -713,10 +752,15 @@ export const resolveSceneRequirement = (
     return { entry, asset: null, reusable: false, unavailableReason: null };
   }
 
-  const asset = assets.find((candidate) => candidate.id === entry.assetId);
+  const asset = referencedAsset;
   if (!asset)
     return unavailable(
       `Unknown local record reference: ${entry.assetId}. This entry cannot be counted or shown as ready.`,
+      null,
+    );
+  if (asset.episodeId !== episode.id)
+    return unavailable(
+      "Stale fixture reference: the record's episode no longer contains this requirement scene.",
     );
   if (asset.category !== entry.category)
     return unavailable(
@@ -725,6 +769,10 @@ export const resolveSceneRequirement = (
   if (!asset.sceneIds.includes(entry.sceneId))
     return unavailable(
       "Stale fixture reference: the record is no longer scoped to this scene.",
+    );
+  if (asset.name !== entry.plannedName)
+    return unavailable(
+      "Stale fixture reference: the record's name no longer matches this requirement.",
     );
   if (entry.readiness === "ready" && asset.readiness !== "described")
     return unavailable(
@@ -753,12 +801,29 @@ export const resolveScopeRequirements = (
   scope: AssetScope,
   requirements: readonly SceneRequirementFixture[] = SCENE_REQUIREMENTS,
   assets: readonly AssetFixture[] = ASSET_FIXTURES,
-): readonly ResolvedSceneRequirement[] =>
-  requirements
+  episodes: readonly AssetEpisodeFixture[] = ASSET_EPISODES,
+): readonly ResolvedSceneRequirement[] => {
+  const episodeSceneIds =
+    scope.episodeId === SCOPE_ALL
+      ? new Set(episodes.flatMap((episode) => episode.sceneIds))
+      : new Set(
+          episodes.find((episode) => episode.id === scope.episodeId)
+            ?.sceneIds ?? [],
+        );
+  if (episodeSceneIds.size === 0) return [];
+  if (
+    scope.sceneId !== SCOPE_ALL &&
+    !episodeSceneIds.has(scope.sceneId)
+  )
+    return [];
+  return requirements
     .filter(
-      (entry) => scope.sceneId === SCOPE_ALL || entry.sceneId === scope.sceneId,
+      (entry) =>
+        episodeSceneIds.has(entry.sceneId) &&
+        (scope.sceneId === SCOPE_ALL || entry.sceneId === scope.sceneId),
     )
-    .map((entry) => resolveSceneRequirement(entry, assets));
+    .map((entry) => resolveSceneRequirement(entry, assets, episodes));
+};
 
 export interface RequirementCounts {
   total: number;
@@ -828,10 +893,21 @@ export const requirementSceneLabel = (sceneId: string): string => {
 
 /** The scope identity shown beside every aggregate and list, so an episode
  * summary can never masquerade as a selected-scene result. */
-export const requirementScopeLabel = (scope: AssetScope): string =>
-  scope.sceneId === SCOPE_ALL
-    ? "Episode 1 · The Storylight in the Little Wood · All scenes"
-    : requirementSceneLabel(scope.sceneId);
+export const requirementScopeLabel = (scope: AssetScope): string => {
+  const episodes =
+    scope.episodeId === SCOPE_ALL
+      ? ASSET_EPISODES
+      : ASSET_EPISODES.filter(
+          (episode) => episode.id === scope.episodeId,
+        );
+  if (episodes.length === 0)
+    return `Unavailable episode scope · ${scope.episodeId}`;
+  if (scope.sceneId === SCOPE_ALL)
+    return "Episode 1 · The Storylight in the Little Wood · All scenes";
+  if (!episodes.some((episode) => episode.sceneIds.includes(scope.sceneId)))
+    return `Unavailable scene scope · ${scope.sceneId}`;
+  return requirementSceneLabel(scope.sceneId);
+};
 
 /** The single requirement entry for one asset in one scene, used to keep
  * the selected-asset detail synchronized with the requirement list. */

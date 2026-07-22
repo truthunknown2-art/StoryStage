@@ -1,8 +1,11 @@
 # F4-WP2 immutable handback
 
-Task: `F4-WP2-SCENE-ASSET-REQUIREMENTS-READINESS`  
-Issue: [#103](https://github.com/truthunknown2-art/StoryStage/issues/103)  
-Required branch: `agent/kimi-f4-wp2-scene-asset-requirements-readiness`  
+Task: `F4-WP2-SCENE-ASSET-REQUIREMENTS-READINESS`
+
+Issue: [#103](https://github.com/truthunknown2-art/StoryStage/issues/103)
+
+Required branch: `agent/kimi-f4-wp2-scene-asset-requirements-readiness`
+
 Inbox: version `81` on `origin/agent/kimi-frontend`
 
 ## Exact identity
@@ -62,6 +65,15 @@ defects before freezing the implementation:
 4. Unavailable rendered rows remain included in the displayed total.
 5. Open-record buttons have unique asset-and-scene accessible names.
 
+The exact-head code audit then found and Codex corrected two additional
+fail-closed defects: unknown episode/scene scopes and stale record metadata can
+no longer enter counts, and rejected requirements retain known record identity
+so list and detail show the same explicit Unavailable result. Episode,
+scene, planned name, source truth, and bounded next-action metadata are now
+validated, with regression coverage for each path. The accidental whole-file
+formatting of `App.test.tsx` was reverted so its only package delta is the one
+required regression import.
+
 The evidence script's unused `window` lint declaration was also removed. A
 user-space `pnpm`/`pnpm.cmd` shim wrapping `corepack pnpm` was created under
 `C:\Users\pbirc\bin` only to recover the hidden watcher shell environment; it
@@ -70,8 +82,8 @@ is not part of the repository, product, or package result.
 ## Verification
 
 - `pnpm --filter @storystage/studio exec vitest run src/product-v1/asset-requirements.test.tsx`
-  — PASS, 19/19 focused tests.
-- `pnpm --filter @storystage/studio test` — PASS, 172/172 tests. The focused
+  — PASS, 23/23 focused tests after the exact-head fail-closed corrections.
+- `pnpm --filter @storystage/studio test` — PASS, 176/176 tests. The focused
   suite is imported by the standard Studio entrypoint.
 - `pnpm --filter @storystage/studio typecheck` — PASS.
 - `pnpm --filter @storystage/studio build` — PASS; only the existing Vite
@@ -81,9 +93,9 @@ is not part of the repository, product, or package result.
 - `git diff --check` — PASS.
 - Repository-root `pnpm verify` — PASS after incorporating the accepted
   F4-WP2 start transition: roadmap consistency, generated artifacts, E1
-  failure/security evidence, privacy (1055 files), lint, all-package
+  failure/security evidence, privacy (1056 files), lint, all-package
   typecheck, and all tests. Notable suites: Story Engine 353/353,
-  asset-pipeline 126/126, Studio 172/172.
+  asset-pipeline 126/126, Studio 176/176.
 - `node apps/studio/scripts/f4-wp2-evidence.mjs` against the local Studio dev
   server — PASS, 11/11 browser checks, zero console issues, zero page errors,
   and no horizontal document overflow in any captured state.
@@ -97,9 +109,10 @@ verification passed. No status content was invented or edited in this package.
 ## Evidence
 
 Machine-readable report:
-`screenshots/clickthrough-report.json`  
+`screenshots/clickthrough-report.json`
+
 Report SHA-256:
-`b2f133a29ad92e60d633c345ab2052790d42cc6f3f4f4d5aa6c069edbca5de83`
+`26dba75612a380c175021a4c406973e06d102984fc2209e1ab382798ee864c9b`
 
 The six 1440x900 screenshots and their SHA-256 hashes are:
 
