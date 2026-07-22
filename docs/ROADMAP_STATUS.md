@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: 1c6ded8b4db75bbf669ce09efff2fb804cdd1593
+lastAcceptedProductHead: b7f04c396328f2a0a9302059235092efc848e74d
 lastAcceptedMilestone: F3
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -12,30 +12,31 @@ completedMilestones:
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F4
   package: F4-WP3
-  owner: Kimi
+  owner: Codex
   exactBase: 5eb0037fb6e702696d008b913de53721c12a47b7
   branch: agent/kimi-f4-wp3-image-request-import-ux
   issue: 109
-  pr: null
-  candidateContentHead: 5eb0037fb6e702696d008b913de53721c12a47b7
+  pr: 111
+  candidateContentHead: 750eacb91c426e92a3360f1cff73f7138cec5563
   candidateRef: product/v1
 checks:
-  local: roadmap-consistency+format-check
+  local: studio-194+focused-18+typecheck+build+browser-16+11-screenshot-hashes+exact-successor-audits+root-verify
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-f4-wp2-exact-ded8dcb645c409f955c6de7c8a716863907f9413-hosted-29912677634-pass-postmerge-29913212707-pass
+  codex: accept-f4-wp3-exact-750eacb91c426e92a3360f1cff73f7138cec5563-hosted-29924796418-pass-postmerge-29925497839-pass
   pro: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F4-WP4 and F4-WP5 remain blocked by dependency order
+  - F4-WP4 requires a separate bounded START_NOW ticket and higher Kimi inbox version
+  - F4-WP5 remains blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F4_WP3_ONLY
-  text: Implement only issue #109 from exact base 5eb0037fb6e702696d008b913de53721c12a47b7 on agent/kimi-f4-wp3-image-request-import-ux, publish the exact handback, and stop before F4-WP4.
+  type: WAIT_FOR_F4_WP4_TICKET
+  text: F4-WP3 is accepted and integrated. Do not begin F4-WP4 until a separate bounded ticket, exact-base status transition, and higher Kimi inbox version are published.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -154,16 +155,21 @@ verification from the live PR checks.
   real assets, file/import/generation work, capability counts, production
   approval, persistence, backend, Godot, Remotion, rendering, export,
   packaging, F4-WP3, or later work.
-- Issue #109 and this `START_NOW` transition authorize only F4-WP3 from exact
-  base `product/v1@5eb0037fb6e702696d008b913de53721c12a47b7` on required
-  branch `agent/kimi-f4-wp3-image-request-import-ux`. The package may add a
-  deterministic scene-scoped request-pack preview, labelled reference and
-  expected-view/layer inventory, local import/drop/error/cancel states,
-  source/license fields, and explicit confirmation before only a local
-  candidate record enters review. It does not authorize real clipboard,
-  browser, files, generation, downloads, uploads, approval, layer/rig review,
-  persistence, backend, Godot, Remotion, rendering, export, packaging,
-  F4-WP4, or later work.
+- F4-WP3 is accepted and integrated at exact
+  `product/v1@b7f04c396328f2a0a9302059235092efc848e74d`. Initial PR #111 head
+  `1affdfd...` was rejected by exact-head code review for three P2 fail-closed
+  and control defects and was not merged. Corrected exact head `750eacb...`
+  passed Studio 194/194, focused 18/18, typecheck, production build, complete
+  serialized repository-root verification, 16/16 browser checks, eleven
+  hash-matched 1440x900 screenshots, zero console/page errors, and independent
+  Sol code/fail-closed plus Terra visual/evidence audits with no P0/P1/P2.
+  Hosted Verify run `29924796418` and post-merge run `29925497839` passed. The
+  package provides only deterministic request planning and session-local
+  descriptive candidate records with explicit source/rights and confirmation
+  truth. It does not provide real clipboard, browser, files, providers,
+  generation, downloads, uploads, approval, layer/rig review, persistence,
+  backend, Godot, Remotion, rendering, export, packaging, F4-WP4, or later
+  work.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
