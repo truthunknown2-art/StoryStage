@@ -11,15 +11,15 @@ completedMilestones:
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
 authorization:
-  state: ACCEPTED_WAIT
+  state: START_NOW
   milestone: F3
-  package: F3-WP4
-  owner: Codex
-  exactBase: 0111274544afda55f8481be103bd3c7ad4db661a
-  branch: agent/kimi-f3-wp4-review-corrections-v74
-  issue: 89
-  pr: 93
-  candidateContentHead: 837e00402f665e7a1caa5c92d05991c205fea736
+  package: F3-WP5
+  owner: Kimi
+  exactBase: 272812f25fa0f4f794edfb69426028349900382e
+  branch: agent/kimi-f3-wp5-responsive-accessibility-evidence
+  issue: 95
+  pr: null
+  candidateContentHead: 272812f25fa0f4f794edfb69426028349900382e
   candidateRef: product/v1
 checks:
   local: roadmap-consistency+format-check
@@ -30,11 +30,11 @@ verdicts:
   pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
   preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
 blockers:
-  - F3-WP5 remains blocked until a separate issue and START_NOW status transition authorize it
+  - F4 remains blocked until the complete F3 milestone passes exact-head review and Preston acceptance
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: WAIT_FOR_F3_WP5_TICKET
-  text: F3-WP4 is accepted and integrated. Keep Kimi at WAIT and do not begin F3-WP5 until its separate issue and START_NOW transition are durable.
+  type: IMPLEMENT_F3_WP5_ONLY
+  text: Implement only issue #95 from exact base 272812f25fa0f4f794edfb69426028349900382e on agent/kimi-f3-wp5-responsive-accessibility-evidence, publish the exact handback, and stop before F4.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -108,6 +108,15 @@ verification from the live PR checks.
   conversation/proposal shell with fail-closed Apply/Undo state. It does not
   connect live AI, persist review edits, create script-specific production
   plans or media, animate, render, or export.
+- On 2026-07-21 the separate issue #95 and this `START_NOW` transition
+  authorize only F3-WP5 from exact base
+  `product/v1@272812f25fa0f4f794edfb69426028349900382e` on required branch
+  `agent/kimi-f3-wp5-responsive-accessibility-evidence`. The package closes
+  keyboard/focus, accessibility, reduced-motion, three-viewport responsive,
+  reference-comparison, and exact evidence requirements for the complete F3
+  milestone candidate. It does not accept F3, start F4, connect live AI,
+  persist projects, or authorize backend, Godot, Remotion, rendering, export,
+  packaging, or private-launch work.
 
 - Accepted creator-facing product implementation now reaches F3-WP4 on exact
   `d5207bd...`; the complete F3 milestone is not yet accepted. G0 is the

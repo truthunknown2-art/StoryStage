@@ -15,11 +15,13 @@
 - Completed packages: F3-WP1 through F3-WP4 are accepted. F3-WP4 correction
   PR #93 exact head `837e00402f665e7a1caa5c92d05991c205fea736` is integrated
   at `product/v1@d5207bd7410d1388b3e1797fb0a98f04e680f6d1`.
-- Current authorization: accepted wait after F3-WP4. No later package is
-  authorized by this plan entry.
-- Exact implementation base: `0111274544afda55f8481be103bd3c7ad4db661a`
-- Accepted F3-WP4 successor branch: `agent/kimi-f3-wp4-review-corrections-v74`
-- F3-WP5 remains blocked until its separate issue and `START_NOW` transition.
+- Current authorization: only F3-WP5 through issue #95 after the matching
+  status transition and higher Kimi inbox version are published.
+- Exact implementation base: `272812f25fa0f4f794edfb69426028349900382e`
+- Required F3-WP5 branch:
+  `agent/kimi-f3-wp5-responsive-accessibility-evidence`
+- F4 remains blocked until the complete F3 milestone passes exact-head review,
+  ChatGPT Pro audit, and Preston acceptance.
 - Backend product work remains blocked until the complete F6 Frontend Gate is
   accepted.
 
