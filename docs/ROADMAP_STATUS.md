@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
+lastAcceptedProductHead: 648e9458642f5abdb8751a8dd74c8a3a1db9253e
 lastAcceptedMilestone: F3
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -12,30 +12,31 @@ completedMilestones:
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F4
   package: F4-WP1
-  owner: Kimi
+  owner: Codex
   exactBase: d6fe17ca7507cfd37f61a954b5f5034982c3554d
   branch: agent/kimi-f4-wp1-asset-workspace-information-architecture
   issue: 99
-  pr: null
-  candidateContentHead: d6fe17ca7507cfd37f61a954b5f5034982c3554d
+  pr: 101
+  candidateContentHead: aa66103336e2ad7aa19d90e1cf9419d576510c09
   candidateRef: product/v1
 checks:
-  local: roadmap-consistency+format-check
+  local: studio-153+typecheck+build+lint+browser-17+9-screenshot-hashes+exact-successor-audits+root-verify
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-hosted-29898272414-pass
+  codex: accept-f4-wp1-exact-aa66103336e2ad7aa19d90e1cf9419d576510c09-hosted-29905070316-pass-postmerge-29905734404-attempt-2-pass
   pro: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F4-WP2 remains blocked until F4-WP1 passes exact-head review and is accepted
+  - F4-WP2 requires a separate bounded START_NOW ticket and higher Kimi inbox version
+  - F4-WP3 through F4-WP5 remain blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F4_WP1_ONLY
-  text: Implement only issue #99 from exact base d6fe17ca7507cfd37f61a954b5f5034982c3554d on agent/kimi-f4-wp1-asset-workspace-information-architecture, publish the exact handback, and stop before F4-WP2.
+  type: WAIT_FOR_F4_WP2_TICKET
+  text: F4-WP1 is accepted and integrated. Do not begin F4-WP2 until a separate bounded ticket, exact-base status transition, and higher Kimi inbox version are published.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -124,16 +125,21 @@ verification from the live PR checks.
   That authority selects only the next unblocked roadmap package after its
   predecessor, exact-SHA review, hosted checks, and durable transition pass; it
   never bypasses a failed gate, broadens a package, or marks the overall studio
-  complete. F4-WP1 therefore still requires its own issue and `START_NOW`
-  transition from the exact accepted product base.
-- Issue #99 and this `START_NOW` transition authorize only F4-WP1 from exact
-  base `product/v1@d6fe17ca7507cfd37f61a954b5f5034982c3554d` on required
-  branch `agent/kimi-f4-wp1-asset-workspace-information-architecture`. The
-  package creates only the Product v1 Assets and Rigs information architecture,
-  truthful local fixtures, scope filters, selection/detail synchronization,
-  and readiness vocabulary. It does not authorize F4-WP2, real asset files,
-  import/generation, slicing/rigging, approval, persistence, backend, Godot,
-  Remotion, rendering, export, or packaging.
+  complete.
+- F4-WP1 is accepted and integrated at exact `product/v1@648e945...`. Kimi
+  completed issue #99; Codex applied only the bounded review corrections that
+  wired all 18 new regressions into the standard Studio suite and added visible
+  keyboard-focus evidence. Exact PR #101 head `aa66103...` passed Studio
+  153/153, typecheck, production build, lint with zero errors, 17/17 browser
+  checks, nine hash-matched 1440x900 screenshots, zero console/page errors,
+  independent Sol code/a11y and Terra visual/evidence audits, hosted Verify run
+  `29905070316`, and post-merge run `29905734404` attempt 2. Attempt 1's only
+  failure was the documented unchanged asset-pipeline CPU timeout. The package provides only
+  the Product v1 Assets and Rigs information architecture, truthful local demo
+  records, scene/episode scope filters, synchronized selection/detail, and the
+  bounded readiness vocabulary. It does not provide F4-WP2 readiness
+  aggregation, real asset files, import/generation, slicing/rigging, approval,
+  persistence, backend, Godot, Remotion, rendering, export, or packaging.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
