@@ -392,6 +392,9 @@ async function shot(page, name) {
       focused.outlineStyle === "solid",
     focused,
   );
+  report.screenshots.push(
+    await shot(page, "wp1-1440x900-workspace-tab-focus"),
+  );
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("Enter");
   await page.waitForSelector("[data-testid='pv1-assets']");
@@ -419,6 +422,9 @@ async function shot(page, name) {
       Number.parseFloat(categoryFocus.outlineWidth) >= 2 &&
       categoryFocus.outlineStyle === "solid",
     categoryFocus,
+  );
+  report.screenshots.push(
+    await shot(page, "wp1-1440x900-asset-category-focus"),
   );
 
   report.consoleIssues = consoleIssues;

@@ -1,7 +1,7 @@
 {
   "task": "F4-WP1-ASSET-WORKSPACE-INFORMATION-ARCHITECTURE",
   "base": "http://127.0.0.1:5195/",
-  "capturedAt": "2026-07-22T08:15:08.118Z",
+  "capturedAt": "2026-07-22T08:40:37.141Z",
   "viewport": "1440x900",
   "checks": [
     {
@@ -358,7 +358,7 @@
   "screenshots": [
     {
       "file": "screenshots/wp1-1440x900-projects.png",
-      "sha256": "16b8dc3f03862e5d18bfc3a18277e9fdcc9f5d7b8203af3a0ff3e7ea4917eebf"
+      "sha256": "1b55a93a097d2980bc79e1be3c90a6d15fd77ca659978cec8b52d1c574e55b08"
     },
     {
       "file": "screenshots/wp1-1440x900-proposal-review.png",
@@ -383,6 +383,14 @@
     {
       "file": "screenshots/wp1-1440x900-assets-empty-scope.png",
       "sha256": "cb4ccb89aa9b6c6ec6096925d2398f7c69e1735ca29eaef0ae1950e5c59d5aaa"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-workspace-tab-focus.png",
+      "sha256": "b0747b83a1bf8ebe4fc46c66a80f57c3f8fcfc54b4d234410ea92dc4af31feb7"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-asset-category-focus.png",
+      "sha256": "694a49e4158308826ec309db866c6bebc707f3a8d5961063d5eeacef38a74c49"
     }
   ]
 }

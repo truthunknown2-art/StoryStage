@@ -12,8 +12,10 @@ Inbox: version `79` on `origin/agent/kimi-frontend`
   (`product/v1` head at dispatch; the watcher-supplied workspace was detached
   at exactly this commit, verified before writing).
 - Implementation SHA: `c2273d3db4ca74acc1a732c20ceeca1d4a041a59`
-- Handback tip: the commit containing this file, reported as an exact remote
-  SHA in PR #101 and issue #99 because a Git commit cannot embed its own SHA.
+- Kimi handback tip: `0ded42ebaad72361d61a285845dc0944e7eb8dc9`.
+- Final review-correction tip: the commit containing this updated file,
+  reported as an exact remote SHA in PR #101 and issue #99 because a Git
+  commit cannot embed its own SHA.
 - Required branch was confirmed absent locally and remotely before creation.
 
 ## Delivered result
@@ -70,7 +72,10 @@ The handback commit adds this package's evidence directory
 plus a one-line `/* global … */` comment fix in
 `apps/studio/scripts/f4-wp1-evidence.mjs` that keeps `pnpm lint` at zero
 errors (the branch is never rewritten; the correction rides the handback
-commit instead of amending the pushed implementation). No manifest,
+commit instead of amending the pushed implementation). Codex's review
+successor adds one side-effect test import in `apps/studio/src/App.test.tsx`,
+two evidence-script capture calls, two focus-state PNGs, and this truthful
+handback update. No manifest,
 lockfile, roadmap/status, coordination inbox, contract, story engine,
 desktop, worker, Godot, Remotion, asset, audio, persistence, renderer,
 export, packaging, or legacy production `AssetExchange`/Assets file was
@@ -78,9 +83,10 @@ changed.
 
 ## Verification
 
-- `pnpm --filter @storystage/studio test` — PASS, 135/135 tests (the pinned
-  accepted file list, unchanged; manifests are out of scope for this
-  package).
+- `pnpm --filter @storystage/studio test` — PASS, 153/153 tests. Codex's
+  bounded review correction imports the focused asset-workspace suite from
+  the already-enumerated `App.test.tsx` entrypoint, so all 18 new regressions
+  now run in the required standard command without changing the manifest.
 - `pnpm --filter @storystage/studio exec vitest run src/product-v1/asset-workspace.test.tsx`
   — PASS, 18/18 focused tests: category navigation and selected state;
   episode/scene filter synchronization and invalid combinations
@@ -89,9 +95,7 @@ changed.
   stale-selection clearing; truth tests (disabled preparation actions, no
   success claim, fixture labels, readiness disclaimer); Studio switching
   preservation of scene/beat and AI panel session state. The focused file
-  runs via explicit vitest invocation because the pinned script list lives
-  in the manifest, which this package may not change; Codex can pin it at
-  integration.
+  also remains directly runnable for diagnosis.
 - `pnpm --filter @storystage/studio typecheck` — PASS.
 - `pnpm --filter @storystage/studio build` — PASS; only the pre-existing
   Vite large-chunk warning remains.
@@ -126,7 +130,8 @@ changed.
     purity warnings in `apps/render-worker/src/kvp001-proof.ts` remain.
   - `pnpm typecheck` (all packages) — PASS.
   - `pnpm test` (recursive, all packages) — the apps/studio suite passes
-    135/135 and `@storystage/story-engine` passes 353/353 standalone;
+    153/153 after the review correction and `@storystage/story-engine` passes
+    353/353 standalone;
     `packages/asset-pipeline` (outside this package's allowed files,
     byte-identical to the base) shows pre-existing timing-sensitive 5 s
     test timeouts in heavy CPU image tests
@@ -159,7 +164,7 @@ changed.
 ## Evidence
 
 Machine-readable report: `screenshots/clickthrough-report.json`
-Report SHA-256: `3de58860986dc8aef75ae763d6a7d2b8fcee93fe8ce68ae76c9741819ddf5686`
+Report SHA-256: `af8c4c3c1a92599bfe01cb69bede05ef354fb24d05b6cf0c7ba83e3f2f67137e`
 
 Listeners (`console` warning/error and `pageerror`) were attached before any
 navigation. The real Projects → Create → shared proposal review → Studio →
@@ -167,7 +172,7 @@ Assets & Rigs path was exercised at 1440×900. Captured states, each
 SHA-256-hashed and recorded in the report:
 
 - `wp1-1440x900-projects.png` —
-  `16b8dc3f03862e5d18bfc3a18277e9fdcc9f5d7b8203af3a0ff3e7ea4917eebf`
+  `1b55a93a097d2980bc79e1be3c90a6d15fd77ca659978cec8b52d1c574e55b08`
 - `wp1-1440x900-proposal-review.png` —
   `be6794751d825f67e7cb596732e35ab1e17f9190fc69ed9e0c8392ac9a8aa675`
 - `wp1-1440x900-studio-board.png` —
@@ -184,13 +189,20 @@ SHA-256-hashed and recorded in the report:
 - `wp1-1440x900-assets-empty-scope.png` (honest empty scope: Props, Scene
   2 · Forest Path) —
   `cb4ccb89aa9b6c6ec6096925d2398f7c69e1735ca29eaef0ae1950e5c59d5aaa`
+- `wp1-1440x900-workspace-tab-focus.png` (visible keyboard focus on the
+  Scene board / Assets & Rigs workspace switch) —
+  `b0747b83a1bf8ebe4fc46c66a80f57c3f8fcfc54b4d234410ea92dc4af31feb7`
+- `wp1-1440x900-asset-category-focus.png` (visible keyboard focus on the
+  Characters category control) —
+  `694a49e4158308826ec309db866c6bebc707f3a8d5961063d5eeacef38a74c49`
 
 The report also records: workspace-switch and category `aria-current`
 semantics, list/detail identity synchronization, stale-selection clearing,
 disabled preparation controls with reasons, the fixture disclaimer, zero
 enabled preparation controls and zero success claims, and keyboard
 reachability with visible ≥2 px focus outlines for the workspace switch and
-category navigation.
+category navigation. Both focus states are now captured in the nine-image
+evidence set as well as measured in the report.
 
 ## Visible-control truth state
 
