@@ -57,8 +57,9 @@ The successor branch contains only the bounded corrections for those findings:
 visible 2px focus treatment for the alert and terminal note, single-Escape
 close-and-restore behavior, focused regression coverage, and fail-closed
 browser evidence that performs the complete entry route with keyboard input,
-tabs to and arrow-scrolls the review-table scroller, and captures the two new
-focus states. No fixture/model semantics or accepted F4-WP1 through F4-WP4
+tabs to the review-table scroller, issues ArrowRight, and requires movement
+only when overflow exists. It also captures the two new focus states. No fixture/model
+semantics or accepted F4-WP1 through F4-WP4
 truth changed. The successor PR and issue #117 record its exact pushed tip.
 
 ## Recovery note
@@ -201,7 +202,9 @@ audited successor tree after the correction above.
   no horizontal document overflow in any captured state. Each viewport proves
   the complete Projects-to-Assets entry route with keyboard input and exact
   focus identities. The run also proves visible programmatic status focus,
-  single-Escape invoker restoration, and Tab/ArrowRight scroller operation.
+  single-Escape invoker restoration, and Tab reachability plus conditional
+  ArrowRight behavior for the scroller. The captured table reflows to its
+  886px container, so this exact state has no horizontal distance to scroll.
 
 Note: the audited-successor evidence was captured against a dev server on port 5196 because
 port 5173 is held by a stale v84-workspace server outside this workspace
@@ -267,8 +270,9 @@ regress, not reused files.
   source field.
 - `3229307c55f56e00b6c7f2bbe071a6d99d46a45f33016401280e987a13816af2`
   `screenshots/wp5-1024x800-review-table-scroller-focus.png` (1024x800) -
-  review-table scroller reached by Tab, visibly focused, and operated by
-  ArrowRight without widening the document.
+  review-table scroller reached by Tab and visibly focused; ArrowRight was
+  issued, but the captured table and container are both 886px wide, so no
+  horizontal movement is claimed or required. The document does not widen.
 - `fd579e265de6fbce34616baf73073eafc7250dc5259b58fd626e3e96a7d0e453`
   `screenshots/wp5-1024x800-review-table-close-reachable.png` (1024x800) —
   review-table Close keyboard-reachable beside the contained scroller.
