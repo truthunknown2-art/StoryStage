@@ -16,7 +16,7 @@ authorization:
   package: F3-WP4
   owner: Kimi
   exactBase: 0111274544afda55f8481be103bd3c7ad4db661a
-  branch: agent/kimi-f3-wp4-ai-director-proposal-shell
+  branch: agent/kimi-f3-wp4-review-corrections-v74
   issue: 89
   pr: null
   candidateContentHead: 0111274544afda55f8481be103bd3c7ad4db661a
@@ -34,7 +34,7 @@ blockers:
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
   type: IMPLEMENT_F3_WP4_ONLY
-  text: Implement only issue #89 from exact base 0111274544afda55f8481be103bd3c7ad4db661a on agent/kimi-f3-wp4-ai-director-proposal-shell, publish the exact handback, and stop before F3-WP5.
+  text: Correct only the rejected F3-WP4 PR #91 head through issue #89 on agent/kimi-f3-wp4-review-corrections-v74, publish a fresh exact handback, and stop before F3-WP5.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -103,6 +103,15 @@ verification from the live PR checks.
   exact two-path New Project entry. Live Codex integration, project mutation,
   persistence, media, Godot, Remotion, rendering, export, F3-WP5, and backend
   product work remain blocked.
+
+- Codex rejected PR #91 exact head `536265ebb4f2fd7f9e021de2aaa3aada2dee673e`
+  after exact-head code review found three bounded defects: the shared proposal
+  review is not editable, overlapping streaming requests can leave multiple
+  applicable proposals, and AI Undo is matched by content rather than the
+  exact history revision. The candidate also contains avoidable whole-file
+  formatting churn. The fresh correction branch may incorporate that rejected
+  head and fix only these findings; it does not authorize F3-WP5 or broaden any
+  product capability.
 
 - Accepted creator-facing product implementation now reaches F3-WP3 on exact
   `24c7a95...`; the complete F3 milestone is not yet accepted. G0 is the
