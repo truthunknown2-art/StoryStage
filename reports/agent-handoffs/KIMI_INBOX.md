@@ -1,16 +1,42 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `89`
+Inbox-Version: `90`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE-RECOVERY`
-Status: `START-NOW`
+Current-Task: `F4-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `0b8d03940e65114d6cd7edba4ae4fa2028be2c19`
-Required-Work-Branch: `agent/kimi-f4-wp5-responsive-accessibility-evidence-v2`
-Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp5-recovery-v89.md`
+Accepted-Root-Base: `5c7107f3b201780865c30f11a59716e4a82d16d4`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#117`
 
 ## Current instruction
+
+Version 90 records complete F4 acceptance and integration. Independent audit
+rejected the original Kimi handback `ec4fb78...`; the bounded corrected
+implementation/evidence tree `a5f642f...` and final exact handback tip
+`44f521860c89eb883da4b56495cc1dad67d1c73a` passed focused 12/12, combined
+request/accessibility 30/30, Studio 229/229, typecheck, production build,
+touched lint, serialized root verification, a 52/52 browser audit, 16 unique
+required-size screenshots, zero console/page errors, three independent
+exact-head audits, hosted Verify run `29952061999`, and ChatGPT Pro's
+exact-head milestone audit with no blockers. PR #121 merged into `product/v1`
+at `5c7107f3b201780865c30f11a59716e4a82d16d4`; postmerge Verify run
+`29953736441` passed on retry after its first attempt hit only the unchanged
+MCP stdio timing race. Kimi is now `WAIT`.
+
+F5-WP1 requires a separate exact-base issue, complete milestone plan, full
+brief, product status transition, and strictly higher validated inbox version.
+Do not start F5, F6, persistence, files/devices, providers, workers, backend,
+Godot, Remotion, rendering, export, packaging, QA, private launch, or any later
+work from this inbox.
+
+Version 90 supersedes Version 89. Version 89 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 89 instruction:
 
 Version 89 recovers only F4-WP5 after the Version 88 Kimi CLI exited before a
 handback. Start from exact accepted base
