@@ -19,6 +19,18 @@ import {
   type AssetCategoryId,
   type AssetScope,
 } from "./asset-workspace";
+import {
+  READY_LOCAL_RECORD_DISCLAIMER,
+  REQUIREMENT_NECESSITY_LABELS,
+  REQUIREMENT_READINESS_LABELS,
+  SCENE_REQUIREMENTS,
+  countRequirements,
+  requirementSceneLabel,
+  requirementScopeLabel,
+  resolveScopeRequirements,
+  type ResolvedSceneRequirement,
+  type SceneRequirementFixture,
+} from "./asset-requirements";
 
 /**
  * F4-WP1 Assets & Rigs workspace: category navigation, episode/scene
@@ -32,8 +44,10 @@ import {
  */
 export function AssetWorkspace({
   usesLayoutDemo = false,
+  requirementFixtures = SCENE_REQUIREMENTS,
 }: {
   usesLayoutDemo?: boolean;
+  requirementFixtures?: readonly SceneRequirementFixture[];
 }) {
   const [category, setCategory] = useState<AssetCategoryId>("characters");
   const [scope, setScope] = useState<AssetScope>(INITIAL_ASSET_SCOPE);
@@ -52,6 +66,33 @@ export function AssetWorkspace({
 
   const sceneOptions = scenesForEpisodeScope(scope.episodeId);
   const scopeLabel = assetScopeFilterLabel(scope);
+
+  /* F4-WP2: scene-scoped requirement truth over the same deterministic
+   * fixtures. The scene filter is the scope authority — a selected scene
+   * shows scene truth, `all` shows an episode summary that discloses its
+   * scope. Counts derive mechanically from the same resolved entries the
+   * list renders. */
+  const scopeRequirements = resolveScopeRequirements(
+    scope,
+    requirementFixtures,
+  );
+  const requirementCounts = countRequirements(scopeRequirements);
+  const requirementScopeName = requirementScopeLabel(scope);
+  const selectedSceneRequirement =
+    selectedAsset && scope.sceneId !== SCOPE_ALL
+      ? scopeRequirements.find(
+          (item) => item.entry.assetId === selectedAsset.id,
+        )
+      : undefined;
+
+  const openRequirementRecord = (item: ResolvedSceneRequirement) => {
+    if (item.asset === null) return;
+    setCategory(item.asset.category);
+    setSelectedAssetId(item.asset.id);
+    if (scope.sceneId === SCOPE_ALL) {
+      setScope((current) => ({ ...current, sceneId: item.entry.sceneId }));
+    }
+  };
 
   return (
     <section
@@ -145,6 +186,126 @@ export function AssetWorkspace({
         </div>
       </div>
 
+      <section
+        aria-label="Scene asset requirements"
+        className="pv1-requirements"
+        data-testid="pv1-requirements"
+      >
+        <header className="pv1-requirements-head">
+          <div>
+            <small>
+              {scope.sceneId === SCOPE_ALL
+                ? "Episode requirements summary"
+                : "Scene requirements"}
+            </small>
+            <h2>{requirementScopeName}</h2>
+          </div>
+          <p className="pv1-requirements-scope-note" role="note">
+            {scope.sceneId === SCOPE_ALL
+              ? `Episode-scope summary across every scene of the bounded Ollo demo plan — not a selected-scene result. Choose one scene in the Scene filter for scene-scoped requirement truth. Counts derive from the ${requirementCounts.total} records listed below.`
+              : `Scene-scoped planning truth for ${requirementScopeName} only — the Scene filter is the scope authority. Counts derive from the ${requirementCounts.total} records listed below.`}
+          </p>
+        </header>
+        <p className="pv1-requirement-counts" aria-label="Requirement counts">
+          <span>
+            Required {requirementCounts.required} · Optional{" "}
+            {requirementCounts.optional} · Reusable {requirementCounts.reusable}
+          </span>
+          <span>
+            Ready {requirementCounts.ready} · Candidate{" "}
+            {requirementCounts.candidate} · Missing {requirementCounts.missing}{" "}
+            · Needs preparation {requirementCounts.needsPreparation} · Needs
+            review {requirementCounts.needsReview}
+          </span>
+          {requirementCounts.unavailable > 0 ? (
+            <span className="pv1-requirement-count-unavailable">
+              Unavailable {requirementCounts.unavailable} — invalid or stale
+              fixture references fail closed and are never counted as ready
+            </span>
+          ) : null}
+        </p>
+        {requirementCounts.ready > 0 ? (
+          <p className="pv1-requirement-ready-note" role="note">
+            {READY_LOCAL_RECORD_DISCLAIMER}
+          </p>
+        ) : null}
+        {scopeRequirements.length === 0 ? (
+          <p className="pv1-asset-empty" role="note">
+            No requirement records are scoped to {requirementScopeName}. Nothing
+            is hidden — this scope honestly has no requirement records yet, and
+            none can be created, imported, or generated in this demo.
+          </p>
+        ) : (
+          <ul className="pv1-requirement-list">
+            {scopeRequirements.map((item) => {
+              const { entry } = item;
+              const isReady = entry.readiness === "ready";
+              /* Exactly one row per (asset, scene): the open-record marker
+               * can only exist in selected-scene mode, so an episode summary
+               * never shows several current rows for one shared record. */
+              const isOpen =
+                scope.sceneId !== SCOPE_ALL &&
+                item.asset?.id === selectedAsset?.id;
+              return (
+                <li
+                  className={`pv1-requirement-row ${isOpen ? "is-open" : ""}`}
+                  key={entry.id}
+                >
+                  <div className="pv1-requirement-main">
+                    <strong>{entry.plannedName}</strong>
+                    <small>
+                      {assetCategoryLabel(entry.category)} ·{" "}
+                      {REQUIREMENT_NECESSITY_LABELS[entry.necessity]}
+                      {item.reusable ? " · Reusable" : ""} ·{" "}
+                      {REQUIREMENT_READINESS_LABELS[entry.readiness]}
+                      {scope.sceneId === SCOPE_ALL
+                        ? ` · ${requirementSceneLabel(entry.sceneId)}`
+                        : ""}
+                    </small>
+                    {item.unavailableReason !== null ? (
+                      <span className="pv1-requirement-reason">
+                        Unavailable — {item.unavailableReason}
+                      </span>
+                    ) : (
+                      <span className="pv1-requirement-reason">
+                        {isReady ? entry.readyExplanation : entry.blocker}{" "}
+                        {isReady ? READY_LOCAL_RECORD_DISCLAIMER : ""}
+                      </span>
+                    )}
+                    <span className="pv1-requirement-source">
+                      {entry.sourceTruth}
+                    </span>
+                  </div>
+                  <div className="pv1-requirement-actions">
+                    {item.asset !== null ? (
+                      <button
+                        aria-label={`Open ${entry.plannedName} record for ${requirementSceneLabel(entry.sceneId)}`}
+                        aria-current={isOpen ? "true" : undefined}
+                        className="pv1-secondary pv1-requirement-open"
+                        onClick={() => openRequirementRecord(item)}
+                        type="button"
+                      >
+                        Open record
+                      </button>
+                    ) : (
+                      <span className="pv1-requirement-no-record" role="note">
+                        No local record exists to open.
+                      </span>
+                    )}
+                    <span className="pv1-asset-preparation">
+                      <button className="pv1-secondary" disabled type="button">
+                        {entry.nextPreparation.action}
+                      </button>
+                      <span>{entry.nextPreparation.unavailableReason}</span>
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
       <div className="pv1-assets-columns">
         <section
           aria-label={`${assetCategoryLabel(category)} records in scope`}
@@ -221,6 +382,60 @@ export function AssetWorkspace({
                   <dd>
                     {ASSET_READINESS_LABELS[selectedAsset.readiness]} —{" "}
                     {ASSET_READINESS_NOTES[selectedAsset.readiness]}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Scene requirement</dt>
+                  <dd className="pv1-asset-scene-requirement">
+                    {selectedSceneRequirement ? (
+                      <>
+                        {selectedSceneRequirement.unavailableReason !== null ? (
+                          <>
+                            Unavailable —
+                            {selectedSceneRequirement.unavailableReason}
+                          </>
+                        ) : (
+                          <>
+                            {
+                              REQUIREMENT_NECESSITY_LABELS[
+                                selectedSceneRequirement.entry.necessity
+                              ]
+                            }
+                            {selectedSceneRequirement.reusable
+                              ? " · Reusable"
+                              : ""}{" "}
+                            ·{" "}
+                            {
+                              REQUIREMENT_READINESS_LABELS[
+                                selectedSceneRequirement.entry.readiness
+                              ]
+                            }{" "}
+                            in {requirementSceneLabel(scope.sceneId)} —{" "}
+                            {selectedSceneRequirement.entry.readiness ===
+                            "ready"
+                              ? selectedSceneRequirement.entry.readyExplanation
+                              : selectedSceneRequirement.entry.blocker}{" "}
+                            {selectedSceneRequirement.entry.readiness ===
+                            "ready"
+                              ? READY_LOCAL_RECORD_DISCLAIMER
+                              : ""}
+                          </>
+                        )}
+                      </>
+                    ) : scope.sceneId === SCOPE_ALL ? (
+                      <>
+                        Scene-scoped requirement truth appears here when one
+                        scene is selected in the Scene filter. The summary above
+                        covers {requirementScopeName} and is not a
+                        selected-scene result.
+                      </>
+                    ) : (
+                      <>
+                        No requirement record exists for this asset in{" "}
+                        {requirementSceneLabel(scope.sceneId)} — an honest gap
+                        in the bounded fixture, never a hidden ready state.
+                      </>
+                    )}
                   </dd>
                 </div>
                 <div>

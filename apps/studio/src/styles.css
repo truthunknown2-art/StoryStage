@@ -3321,6 +3321,147 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   min-width: 220px;
 }
 
+.pv1-requirements {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.pv1-requirements-head {
+  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  justify-content: space-between;
+}
+
+.pv1-requirements-head small {
+  color: var(--pv1-faint);
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pv1-requirements-head h2 {
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.pv1-requirements-scope-note {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 520px;
+}
+
+.pv1-requirement-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+}
+
+.pv1-requirement-counts span {
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.pv1-requirement-counts .pv1-requirement-count-unavailable {
+  color: #f0b429;
+}
+
+.pv1-requirement-ready-note {
+  background: rgba(145, 228, 179, 0.06);
+  border: 1px solid rgba(145, 228, 179, 0.25);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+  margin: 0;
+  padding: 8px 10px;
+}
+
+.pv1-requirement-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-requirement-row {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.pv1-requirement-row.is-open {
+  background: rgba(145, 228, 179, 0.08);
+  border-color: rgba(145, 228, 179, 0.45);
+}
+
+.pv1-requirement-main {
+  display: grid;
+  gap: 3px;
+}
+
+.pv1-requirement-main strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.pv1-requirement-main small {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.pv1-requirement-reason {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.pv1-requirement-source {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.pv1-requirement-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pv1-requirement-open {
+  font-size: 11px;
+  min-height: 30px;
+  padding: 4px 12px;
+}
+
+.pv1-requirement-no-record {
+  color: var(--muted);
+  font-size: 11px;
+  font-style: italic;
+}
+
+.pv1-asset-scene-requirement {
+  line-height: 1.6;
+}
+
 @media (max-width: 1024px) {
   .pv1-assets-columns {
     grid-template-columns: minmax(0, 1fr);
