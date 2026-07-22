@@ -1,16 +1,35 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `92`
+Inbox-Version: `93`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F5-WP1-AUDIO-WORKSPACE-TRACK-HIERARCHY`
+Current-Task: `F5-WP1-TRUTH-EVIDENCE-CORRECTION-V2`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `eb9890d75126381e61849a5994f28474d133bfb7`
-Required-Work-Branch: `agent/kimi-f5-wp1-audio-workspace-track-hierarchy`
-Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f5-wp1-audio-workspace-track-hierarchy-v91.md`
+Accepted-Root-Base: `11f6f049d306efb9808559a24e2bd532be4cdc87`
+Required-Work-Branch: `agent/kimi-f5-wp1-audio-workspace-track-hierarchy-v2`
+Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f5-wp1-truth-evidence-correction-v93.md`
 Issue: `#124`
 
 ## Current instruction
+
+Version 93 rejects exact F5-WP1 handback
+`311c115487db63814d9ea1bde62f3ea047ba05eb` and starts only the bounded
+empty-inspector truth and exact-nine evidence-gate correction in the full
+brief. Start a fresh v2 branch from live accepted product base
+`11f6f049d306efb9808559a24e2bd532be4cdc87`, incorporate the two exact
+rejected-branch commits without modifying PR #126, and open one new draft PR.
+Preserve the accepted Audio workspace, track/scope behavior, keyboard
+contract, and non-empty planning-card truth. Recapture the exact nine images,
+publish one immutable successor handback, and exit. Do not begin F5-WP2 or
+broaden into real audio, persistence, backend, Godot, Remotion, rendering,
+export, packaging, QA, or private launch.
+
+Version 93 supersedes Version 92. Version 92 remains below as rejected
+historical traceability and must not relaunch.
+
+---
+
+Previous Version 92 instruction:
 
 Version 92 corrects Version 91's invalid underscore status enum to the
 canonical `START-NOW` transport value. The assignment, exact base, required
