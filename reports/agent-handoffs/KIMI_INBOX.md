@@ -1,16 +1,34 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `80`
+Inbox-Version: `81`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP1-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F4-WP2-SCENE-ASSET-REQUIREMENTS-READINESS`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `648e9458642f5abdb8751a8dd74c8a3a1db9253e`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#99`
+Accepted-Root-Base: `f99ff77890355e1e6003d48e683b3153ce59c64b`
+Required-Work-Branch: `agent/kimi-f4-wp2-scene-asset-requirements-readiness`
+Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp2-scene-asset-requirements-readiness-v81.md`
+Issue: `#103`
 
 ## Current instruction
+
+Version 81 starts only F4-WP2 through issue #103 from exact accepted base
+`f99ff77890355e1e6003d48e683b3153ce59c64b` on required branch
+`agent/kimi-f4-wp2-scene-asset-requirements-readiness`. Extend only the
+accepted Product v1 Assets & Rigs workspace with deterministic scene-scoped
+required/optional/reusable classifications, the bounded readiness vocabulary,
+explicit blocker reasons, and episode counts that never hide selected-scene
+scope. Publish one immutable handback and exit. Do not start F4-WP3, perform
+automatic script analysis, create/import/approve assets, or begin backend,
+Godot, Remotion, persistence, rendering, export, packaging, or private-launch
+work.
+
+Version 81 supersedes Version 80. Version 80 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 80 instruction:
 
 Version 80 records F4-WP1 acceptance and integration. PR #101 exact head
 `aa66103336e2ad7aa19d90e1cf9419d576510c09` passed Studio 153/153,
