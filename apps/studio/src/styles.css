@@ -1874,7 +1874,10 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   .pv1-studio-rail {
     border-bottom: 1px solid var(--line);
     border-right: 0;
+    max-height: 300px;
     order: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 0 0 14px;
   }
 

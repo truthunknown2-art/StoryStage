@@ -9,7 +9,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import { ProductV1App } from "./product-v1/ProductV1App";
 import {
@@ -47,6 +47,7 @@ import {
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  vi.unstubAllGlobals();
 });
 
 const SAMPLE_SCRIPT = [
@@ -3216,6 +3217,18 @@ describe("F3-WP5 — responsive, accessibility, and evidence gate", () => {
     ).toHaveFocus();
   });
 
+  it("moves Studio Connect focus to the composer before the signed-out surface is removed", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await user.click(
+      within(panel).getByRole("button", { name: "Sign in with ChatGPT" }),
+    );
+    expect(
+      within(panel).getByRole("textbox", { name: "AI Director request" }),
+    ).toHaveFocus();
+  });
+
   it("closes the AI Director settings with Escape, returns focus to the chip, and announces connection changes once", async () => {
     const user = userEvent.setup();
     await openCreate(user);
@@ -3316,6 +3329,68 @@ describe("F3-WP5 — responsive, accessibility, and evidence gate", () => {
     expect(
       within(studio).getByRole("textbox", { name: "Performance direction" }),
     ).toHaveValue("");
+  });
+
+  it("re-announces identical same-scope outcomes for distinct fixture turns", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "First gentle pass");
+    await settleFixtureTurn();
+    const firstNotice = within(panel).getByTestId("pv1-ai-turn-notice");
+    expect(firstNotice).toHaveAttribute("data-notice-key", "1:complete");
+    expect(firstNotice).toHaveTextContent(
+      "Fixture proposal ready for the captured scope — Scene 1 · Beat 1.",
+    );
+
+    await user.type(
+      within(panel).getByRole("textbox", { name: "AI Director request" }),
+      "Second gentle pass",
+    );
+    await user.click(
+      within(panel).getByRole("button", { name: "Send request" }),
+    );
+    await settleFixtureTurn();
+    const secondNotice = within(panel).getByTestId("pv1-ai-turn-notice");
+    expect(secondNotice).toHaveAttribute("data-notice-key", "2:complete");
+    expect(secondNotice).toHaveTextContent(
+      "Fixture proposal ready for the captured scope — Scene 1 · Beat 1.",
+    );
+  });
+
+  it("settles immediately without staged progress when reduced motion is requested", async () => {
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn((query: string) => ({
+        addEventListener: vi.fn(),
+        addListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+        matches: query === "(prefers-reduced-motion: reduce)",
+        media: query,
+        onchange: null,
+        removeEventListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    );
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "No decorative progress");
+    await act(
+      () =>
+        new Promise((resolvePromise) => {
+          setTimeout(resolvePromise, 20);
+        }),
+    );
+    expect(panel).toHaveTextContent("Complete (fixture turn)");
+    expect(
+      within(panel).queryByRole("list", {
+        name: "Streamed progress (fixture replay)",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(panel).queryByRole("button", { name: "Cancel request" }),
+    ).not.toBeInTheDocument();
   });
 
   it("moves focus to the proposal status on Reject", async () => {

@@ -103,15 +103,18 @@ export function AiDirectorPanel({
    * Applied/rejected/superseded states are already announced by the
    * visible per-proposal polite status line below, so they are not
    * duplicated here, and the thread is never re-announced wholesale. */
-  const [turnNotice, setTurnNotice] = useState("");
+  const [turnNotice, setTurnNotice] = useState<{
+    key: string;
+    text: string;
+  } | null>(null);
   const announcedTurnsRef = useRef(new Map<number, AiTurn["status"]>());
   useEffect(() => {
-    let latest: string | null = null;
+    let latest: { key: string; text: string } | null = null;
     for (const turn of turns) {
       if (turn.status === "streaming") continue;
       if (announcedTurnsRef.current.get(turn.id) === turn.status) continue;
       announcedTurnsRef.current.set(turn.id, turn.status);
-      latest =
+      const text =
         turn.status === "complete"
           ? turn.proposal !== null
             ? `Fixture proposal ready for the captured scope — Scene ${turn.scope.sceneIndex} · Beat ${turn.scope.beatIndex + 1}.`
@@ -119,6 +122,7 @@ export function AiDirectorPanel({
           : turn.status === "cancelled"
             ? "Request cancelled — captured scope preserved, nothing was applied."
             : "Request ended in the Error fixture state — no proposal was produced and nothing was applied.";
+      latest = { key: `${turn.id}:${turn.status}`, text };
     }
     if (latest !== null) setTurnNotice(latest);
   }, [turns]);
@@ -144,7 +148,8 @@ export function AiDirectorPanel({
      * ordinary mouse click on blank page space never yanks focus back. */
     const nowConnected = isAiConnected(connection);
     const contentChanged =
-      prevTurnsRef.current !== turns || prevConnectedRef.current !== nowConnected;
+      prevTurnsRef.current !== turns ||
+      prevConnectedRef.current !== nowConnected;
     prevTurnsRef.current = turns;
     prevConnectedRef.current = nowConnected;
     const pending = pendingFocusRef.current;
@@ -184,6 +189,24 @@ export function AiDirectorPanel({
   const connected = isAiConnected(connection);
 
   const scheduleTurnReplay = (turnId: number) => {
+    const reducedMotion =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (reducedMotion) {
+      timersRef.current.push(
+        window.setTimeout(
+          () =>
+            setTurns((current) =>
+              current.map((turn) =>
+                turn.id === turnId
+                  ? completeAiTurn(turn, connectionRef.current)
+                  : turn,
+              ),
+            ),
+          0,
+        ),
+      );
+      return;
+    }
     AI_STREAM_STAGES.forEach((_, index) => {
       timersRef.current.push(
         window.setTimeout(
@@ -471,8 +494,15 @@ export function AiDirectorPanel({
           {AI_FIXTURE_LABEL}
         </p>
       </header>
-      <p className="pv1-sr-only" role="status">
-        {turnNotice}
+      <p
+        aria-atomic="true"
+        className="pv1-sr-only"
+        data-notice-key={turnNotice?.key ?? "empty"}
+        data-testid="pv1-ai-turn-notice"
+        key={turnNotice?.key ?? "empty"}
+        role="status"
+      >
+        {turnNotice?.text ?? ""}
       </p>
 
       <p className="pv1-ai-scope">
@@ -647,6 +677,7 @@ export function AiDirectorPanel({
       ) : (
         <ConnectAiDirector
           connection={connection}
+          onBeforeConnect={() => queuePanelFocus("[data-ai-composer]")}
           onConnectionChange={onConnectionChange}
         />
       )}
