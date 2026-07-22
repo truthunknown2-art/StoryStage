@@ -66,6 +66,9 @@ export function CreateProject({
   onEnterStudio: (proposal: CreateProposal) => void;
 }) {
   const [reviewing, setReviewing] = useState(false);
+  const [reviewProposal, setReviewProposal] = useState<CreateProposal | null>(
+    null,
+  );
   const [scriptError, setScriptError] = useState<string | null>(null);
   const [ideaError, setIdeaError] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
@@ -73,13 +76,6 @@ export function CreateProject({
 
   const words = countWords(draft.script);
   const durationSeconds = estimateDurationSeconds(words);
-
-  const proposal: CreateProposal | null =
-    draft.path === "paste"
-      ? buildPasteProposal(draft.script)
-      : draft.path === "idea"
-        ? buildIdeaProposal(draft.idea)
-        : null;
 
   const update = (patch: Partial<CreateDraft>) => {
     onDraftChange({ ...draft, ...patch });
@@ -110,6 +106,7 @@ export function CreateProject({
 
   const choosePath = (path: CreatePath) => {
     setReviewing(false);
+    setReviewProposal(null);
     setScriptError(null);
     setIdeaError(null);
     setImportError(null);
@@ -117,20 +114,24 @@ export function CreateProject({
   };
 
   const submitPaste = () => {
-    if (words === 0) {
+    const built = buildPasteProposal(draft.script);
+    if (built === null) {
       setScriptError("Add your script before creating a proposal.");
       return;
     }
+    setReviewProposal(built);
     setReviewing(true);
   };
 
   const submitIdea = () => {
-    if (draft.idea.storyIdea.trim().length === 0) {
+    const built = buildIdeaProposal(draft.idea);
+    if (built === null) {
       setIdeaError(
         "Tell StoryStage your story idea before creating a proposal.",
       );
       return;
     }
+    setReviewProposal(built);
     setReviewing(true);
   };
 
@@ -155,18 +156,22 @@ export function CreateProject({
     </header>
   );
 
-  // Both entry paths converge here: one shared review, no bypass. The
-  // review is only reachable after path validation produced a proposal.
-  if (reviewing && proposal) {
+  // Both entry paths converge here: one shared, genuinely editable review,
+  // no bypass. The review is only reachable after path validation produced
+  // a deterministic local proposal; edits live in this review's own state
+  // and re-submitting either path rebuilds deterministically from the
+  // source input.
+  if (reviewing && reviewProposal) {
     return (
       <main className="pv1-page" data-testid="pv1-create">
         {topbar}
         <div className="pv1-create-review">
           <ProposalReview
             onDiscard={() => choosePath("choice")}
-            onEnterStudio={() => onEnterStudio(proposal)}
+            onEnterStudio={() => onEnterStudio(reviewProposal)}
+            onProposalChange={setReviewProposal}
             onRevise={() => setReviewing(false)}
-            proposal={proposal}
+            proposal={reviewProposal}
           />
         </div>
       </main>

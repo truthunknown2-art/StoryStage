@@ -18,6 +18,7 @@ import {
   startAiTurn,
   supersedePendingProposals,
   undoProposalApply,
+  type AiAppliedRevision,
   type AiConnectionState,
   type AiTurn,
 } from "./ai-director-fixture";
@@ -28,7 +29,6 @@ import {
   directBeatKey,
   initialBeatDirectState,
   type BeatDirectState,
-  type DirectDraft,
 } from "./direct-history";
 
 /** Deterministic fixture replay pacing for the streamed-progress states.
@@ -76,7 +76,7 @@ export function AiDirectorPanel({
   const [requestText, setRequestText] = useState("");
   const [nextTurnId, setNextTurnId] = useState(1);
   const [appliedSnapshots, setAppliedSnapshots] = useState<
-    Record<number, DirectDraft>
+    Record<number, AiAppliedRevision>
   >({});
   const [previewTurnId, setPreviewTurnId] = useState<number | null>(null);
   const timersRef = useRef<number[]>([]);
@@ -172,18 +172,20 @@ export function AiDirectorPanel({
     const next = applyProposalToBeatState(beatState, turn.proposal);
     if (next === beatState) return; // already carries exactly this direction
     onCommitBeat(directBeatKey(turn.scope.sceneId, turn.scope.beatIndex), next);
+    // Bind later Undo to the exact history revision this apply created —
+    // never to field equality with a later, different commit.
     setAppliedSnapshots((current) => ({
       ...current,
-      [turn.id]: committedDirectDraft(next),
+      [turn.id]: { revision: next.cursor, node: committedDirectDraft(next) },
     }));
     settleTurn(turn.id, (current) => ({ ...current, resolution: "applied" }));
   };
 
   const undoTurnApply = (turn: AiTurn) => {
-    const snapshot = appliedSnapshots[turn.id];
-    if (!snapshot) return;
+    const applied = appliedSnapshots[turn.id];
+    if (!applied) return;
     const beatState = beatStateFor(turn);
-    if (!canUndoProposalApply(beatState, snapshot)) return;
+    if (!canUndoProposalApply(beatState, applied)) return;
     onCommitBeat(
       directBeatKey(turn.scope.sceneId, turn.scope.beatIndex),
       undoProposalApply(beatState),
@@ -210,11 +212,11 @@ export function AiDirectorPanel({
       committedDirectDraft(beatState).performanceDirection ===
       proposal.performanceDirection;
     const applicable = canApplyAiTurn(turn);
-    const appliedSnapshot = appliedSnapshots[turn.id];
+    const appliedRevision = appliedSnapshots[turn.id];
     const undoable =
       turn.resolution === "applied" &&
-      appliedSnapshot !== undefined &&
-      canUndoProposalApply(beatState, appliedSnapshot);
+      appliedRevision !== undefined &&
+      canUndoProposalApply(beatState, appliedRevision);
 
     return (
       <div
@@ -425,14 +427,30 @@ export function AiDirectorPanel({
                       </li>
                     ))}
                   </ul>
-                  <button
-                    className="pv1-secondary"
-                    onClick={() => settleTurn(turn.id, cancelAiTurn)}
-                    type="button"
-                  >
-                    Cancel request
-                  </button>
+                  {turn.resolution === "superseded" ? (
+                    <p className="pv1-ai-turn-note">
+                      Superseded by a newer request — finishing its fixture
+                      replay; it can never become applicable, applied, or
+                      undoable.
+                    </p>
+                  ) : (
+                    <button
+                      className="pv1-secondary"
+                      onClick={() => settleTurn(turn.id, cancelAiTurn)}
+                      type="button"
+                    >
+                      Cancel request
+                    </button>
+                  )}
                 </>
+              ) : null}
+              {turn.status === "complete" &&
+              turn.resolution === "superseded" &&
+              turn.proposal === null ? (
+                <p className="pv1-ai-turn-note">
+                  Superseded by a newer request before a proposal was produced —
+                  nothing was applied.
+                </p>
               ) : null}
               {turn.status === "cancelled" ? (
                 <p className="pv1-ai-turn-note">

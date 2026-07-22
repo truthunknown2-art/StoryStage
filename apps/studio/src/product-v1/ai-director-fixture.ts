@@ -23,8 +23,6 @@
 import {
   applyDirectDraft,
   canUndoDirect,
-  committedDirectDraft,
-  directDraftsEqual,
   hasUnappliedDirectChanges,
   undoDirect,
   updateDirectDraft,
@@ -235,12 +233,16 @@ export const advanceAiTurn = (turn: AiTurn): AiTurn => {
 
 /** Complete a streaming turn. Fails closed to the Error turn state when
  * the connection fixture is not Connected at completion time; Cancelled
- * turns and already-settled turns can never complete. */
+ * turns and already-settled turns can never complete. A turn superseded
+ * while still streaming may finish this deterministic cleanup, but it
+ * settles without a proposal and stays superseded, so it can never become
+ * pending, applicable, applied, or undoable. */
 export const completeAiTurn = (
   turn: AiTurn,
   connection: AiConnectionState,
 ): AiTurn => {
   if (turn.status !== "streaming") return turn;
+  if (turn.resolution === "superseded") return { ...turn, status: "complete" };
   if (!isAiConnected(connection)) return { ...turn, status: "error" };
   return {
     ...turn,
@@ -261,11 +263,17 @@ export const rejectAiTurnProposal = (turn: AiTurn): AiTurn =>
     ? { ...turn, resolution: "rejected" }
     : turn;
 
-/** A newer request supersedes every earlier still-pending proposal, so
- * only one clearly scoped proposal can be applied at a time. */
+/** A newer request supersedes every earlier unsettled request — a
+ * completed still-pending proposal and a turn that is still streaming
+ * alike — so only one clearly scoped proposal can ever be applicable at a
+ * time. A superseded streaming turn may finish its deterministic replay
+ * cleanup (see `completeAiTurn`), but it can never become pending,
+ * applicable, applied, or undoable. Already-settled turns (applied,
+ * rejected, superseded) are never disturbed. */
 export const supersedePendingProposals = (turns: readonly AiTurn[]): AiTurn[] =>
   turns.map((turn) =>
-    turn.status === "complete" && turn.resolution === "pending"
+    turn.resolution === "pending" &&
+    (turn.status === "streaming" || turn.status === "complete")
       ? { ...turn, resolution: "superseded" }
       : turn,
   );
@@ -318,17 +326,31 @@ export const applyProposalToBeatState = (
     }),
   );
 
-/** Fail-closed Undo guard for a proposal apply: the captured beat's
- * committed head must still be exactly the snapshot the apply produced,
- * with no unapplied manual drafts and a prior snapshot to restore. Any
- * later manual commit disables the panel Undo honestly. */
+/** Immutable identity of the exact history node one proposal apply created.
+ * The history node is compared by object identity, not by cursor or field
+ * equality: a truncated redo branch can reuse a cursor and recreate the same
+ * values, but it cannot recreate this node. */
+export interface AiAppliedRevision {
+  revision: number;
+  node: DirectDraft;
+}
+
+/** Fail-closed Undo guard for a proposal apply: the captured beat's current
+ * commit must still be the same immutable history-node object created by the
+ * AI Apply. A truncated redo branch may reuse its cursor and values, but not
+ * its node identity, so it cannot revive the obsolete panel Undo. */
 export const canUndoProposalApply = (
   beatState: BeatDirectState,
-  appliedSnapshot: DirectDraft,
-): boolean =>
-  canUndoDirect(beatState) &&
-  !hasUnappliedDirectChanges(beatState) &&
-  directDraftsEqual(committedDirectDraft(beatState), appliedSnapshot);
+  applied: AiAppliedRevision,
+): boolean => {
+  const appliedNode = beatState.history[applied.revision];
+  return (
+    canUndoDirect(beatState) &&
+    !hasUnappliedDirectChanges(beatState) &&
+    beatState.cursor === applied.revision &&
+    appliedNode === applied.node
+  );
+};
 
 /** Restore the exact prior committed snapshot of the captured beat. */
 export const undoProposalApply = (state: BeatDirectState): BeatDirectState =>
