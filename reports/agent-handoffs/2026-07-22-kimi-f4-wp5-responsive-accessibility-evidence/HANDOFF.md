@@ -31,12 +31,17 @@ Inbox: version `89` on `origin/agent/kimi-frontend`
   only `docs/ROADMAP_STATUS.md` and `docs/plans/milestone-F4.md`; it is the
   Codex-published authorization the roadmap consistency guard requires
   (owner Kimi, START_NOW, exact base, v2 branch, issue #117).
-- Exact implementation and evidence SHA:
+- Superseded pre-audit implementation and evidence predecessor:
   `b838c6d13db9ff6027a8e534602a14a204dd2fb9`. Its ancestry contains the
   cherry-picked WIP, the status-transition merge, the portable F4-WP5
   evidence script and fresh captured matrix
   (`45c8f501f42196ae728e25badfd09fd92299d3cd`), and the bounded compact
-  stacked-order correction described below.
+  stacked-order correction described below. It does not contain the later
+  independent-audit corrections and is not the reviewed implementation tree.
+- Exact audited implementation and evidence correction SHA:
+  `a5f642fdc3df9a86241669c855a27ad3b8b67244`. This is the corrected code,
+  tests, evidence runner, report, and 16-screenshot tree independently accepted
+  by the code/accessibility, visual/evidence, and governance reviewers.
 - Handback tip: the commit containing this file; GitHub issue #117 and the
   draft PR record its exact pushed SHA because a commit cannot embed its own
   identity.
