@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: b7f04c396328f2a0a9302059235092efc848e74d
+lastAcceptedProductHead: 5dad1aa72c2e3e9ea5a7f5a4e4625f1775e1ef4b
 lastAcceptedMilestone: F3
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -12,30 +12,30 @@ completedMilestones:
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F4
   package: F4-WP4
-  owner: Kimi
+  owner: Codex
   exactBase: 3a98dfff7b543821c02ead9499a9ec0efd93913b
   branch: agent/kimi-f4-wp4-layer-rig-review-ux
   issue: 113
-  pr: null
-  candidateContentHead: 3a98dfff7b543821c02ead9499a9ec0efd93913b
+  pr: 115
+  candidateContentHead: c96c5b9e672305d30f70b891ca7195af07aa582e
   candidateRef: product/v1
 checks:
-  local: roadmap-consistency+format-check
+  local: studio-217+focused-23+typecheck+build+lint+browser-18+10-screenshot-hashes+exact-successor-audits+root-verify
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-f4-wp3-exact-750eacb91c426e92a3360f1cff73f7138cec5563-hosted-29924796418-pass-postmerge-29925497839-pass
+  codex: accept-f4-wp4-exact-c96c5b9e672305d30f70b891ca7195af07aa582e-hosted-29937550475-pass-postmerge-29938267777-pass
   pro: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F4-WP5 remains blocked by dependency order
+  - F4-WP5 requires a separate bounded START_NOW ticket and higher Kimi inbox version
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F4_WP4_ONLY
-  text: Implement only issue #113 from exact base 3a98dfff7b543821c02ead9499a9ec0efd93913b on agent/kimi-f4-wp4-layer-rig-review-ux, publish the exact handback, and stop before F4-WP5.
+  type: WAIT_FOR_F4_WP5_TICKET
+  text: F4-WP4 is accepted and integrated. Do not begin F4-WP5 until a separate bounded ticket, exact-base status transition, and higher Kimi inbox version are published.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -169,17 +169,22 @@ verification from the live PR checks.
   generation, downloads, uploads, approval, layer/rig review, persistence,
   backend, Godot, Remotion, rendering, export, packaging, F4-WP4, or later
   work.
-- Issue #113 and this `START_NOW` transition authorize only F4-WP4 from exact
-  base `product/v1@3a98dfff7b543821c02ead9499a9ec0efd93913b` on required
-  branch `agent/kimi-f4-wp4-layer-rig-review-ux`. The package may add only a
-  deterministic Product v1 layer-and-rig review prototype with declared local
-  turnaround, part, padded-bounds, pivot, mask, profile, expression/viseme,
-  motion-checklist, layered-set plane, and foreground-occluder review truth.
-  It must derive visible Incomplete, Needs correction, and Review-ready states
-  without claiming files, decoded media, slicing, socket calculation, mask or
-  rig creation, approval, capability promotion, or production readiness. It
-  does not authorize F4-WP5, persistence, providers, workers, backend, Godot,
-  Remotion, rendering, export, packaging, or later work.
+- F4-WP4 is accepted and integrated at exact
+  `product/v1@5dad1aa72c2e3e9ea5a7f5a4e4625f1775e1ef4b`. Initial implementation
+  `f8c4a4b...` was not merged until Codex corrected four fail-closed and focus
+  defects. Review-clean implementation `c87afa4...` and exact PR #115 handback
+  tip `c96c5b9...` passed focused 23/23, Studio 217/217, typecheck, production
+  build, touched lint, diff check, complete serialized repository-root
+  verification, 18/18 browser checks, ten unique 1440x900 screenshots, zero
+  console/page errors, and independent Sol code/accessibility plus Terra
+  visual/evidence audits with no remaining finding. Hosted Verify run
+  `29937550475` and post-merge run `29938267777` passed. The package provides
+  only deterministic declared-metadata review for character/rig and layered-set
+  fixtures with truthful Incomplete, Needs correction, and Review-ready states.
+  It does not provide files, decoded media, slicing, socket calculation, masks,
+  rigs, approval, capabilities, production readiness, persistence, providers,
+  workers, backend, Godot, Remotion, rendering, export, packaging, F4-WP5, or
+  later work.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
