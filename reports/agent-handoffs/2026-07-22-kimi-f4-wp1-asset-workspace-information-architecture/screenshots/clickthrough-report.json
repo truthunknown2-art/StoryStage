@@ -1,0 +1,396 @@
+{
+  "task": "F4-WP1-ASSET-WORKSPACE-INFORMATION-ARCHITECTURE",
+  "base": "http://127.0.0.1:5195/",
+  "capturedAt": "2026-07-22T08:40:37.141Z",
+  "viewport": "1440x900",
+  "checks": [
+    {
+      "name": "projects: no horizontal overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "regions": {
+          "[data-testid='pv1-projects']": {
+            "left": 0,
+            "right": 1440,
+            "top": 0,
+            "bottom": 900,
+            "width": 1440,
+            "height": 900
+          }
+        },
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "studio: accepted scope header shows Scene 1 · Beat 1 on arrival",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "assets overview: no horizontal overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "regions": {
+          "[data-testid='pv1-assets']": {
+            "left": 0,
+            "right": 1440,
+            "top": 127,
+            "bottom": 900,
+            "width": 1440,
+            "height": 773
+          },
+          ".pv1-workspace-switch": {
+            "left": 0,
+            "right": 1440,
+            "top": 89,
+            "bottom": 127,
+            "width": 1440,
+            "height": 38
+          },
+          ".pv1-asset-categories": {
+            "left": 24,
+            "right": 453,
+            "top": 344,
+            "bottom": 375,
+            "width": 429,
+            "height": 31
+          },
+          ".pv1-asset-filters": {
+            "left": 925,
+            "right": 1416,
+            "top": 334,
+            "bottom": 385,
+            "width": 491,
+            "height": 51
+          },
+          ".pv1-asset-list": {
+            "left": 24,
+            "right": 364,
+            "top": 401,
+            "bottom": 644,
+            "width": 340,
+            "height": 243
+          },
+          ".pv1-asset-detail": {
+            "left": 382,
+            "right": 1416,
+            "top": 401,
+            "bottom": 821,
+            "width": 1034,
+            "height": 420
+          }
+        },
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "assets overview: workspace switch exposes selected state",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "assets overview: Characters category current, Ollo selected in list and detail",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "assets overview: fixture label and readiness disclaimer are visible",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "layered set detail: no horizontal overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "regions": {
+          "[data-testid='pv1-assets']": {
+            "left": 0,
+            "right": 1440,
+            "top": 127,
+            "bottom": 900,
+            "width": 1440,
+            "height": 773
+          },
+          ".pv1-workspace-switch": {
+            "left": 0,
+            "right": 1440,
+            "top": 89,
+            "bottom": 127,
+            "width": 1440,
+            "height": 38
+          },
+          ".pv1-asset-categories": {
+            "left": 24,
+            "right": 453,
+            "top": 344,
+            "bottom": 375,
+            "width": 429,
+            "height": 31
+          },
+          ".pv1-asset-filters": {
+            "left": 925,
+            "right": 1416,
+            "top": 334,
+            "bottom": 385,
+            "width": 491,
+            "height": 51
+          },
+          ".pv1-asset-list": {
+            "left": 24,
+            "right": 364,
+            "top": 401,
+            "bottom": 578,
+            "width": 340,
+            "height": 177
+          },
+          ".pv1-asset-detail": {
+            "left": 382,
+            "right": 1416,
+            "top": 401,
+            "bottom": 821,
+            "width": 1034,
+            "height": 420
+          }
+        },
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "layered set detail: list and detail stay synchronized on one identity",
+      "pass": true,
+      "details": {
+        "heading": "Lantern Bridge set",
+        "selected": "Lantern Bridge set",
+        "actionDisabled": true,
+        "reason": "Lantern Bridge setLocal demo record — no artifact existsCategoryLayered SetsScopeEpisode 1 · The Storylight in the Little Wood · Scene 5 · Lantern BridgeWhat is knownThe bridge whose lanterns wake one by one, planned as parallax layers.Source truthPlanned as a layered set in the local Ollo demo plan — no artwork has been sliced and no layer files exist.Approval truthNot reviewed — this demo has no approval workflow, so nothing here is or can be approved.ReadinessRecord only — Only a name and its scene scope are recorded. Nothing has been described, referenced, or prepared.Next preparationSlice artwork into layersUnavailable — there is no artwork to slice and no slicing capability in this demo. A later F4 package adds layer review."
+      }
+    },
+    {
+      "name": "layered set detail: preparation action disabled with its honest reason",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "scene filter change: no horizontal overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "regions": {
+          "[data-testid='pv1-assets']": {
+            "left": 0,
+            "right": 1440,
+            "top": 127,
+            "bottom": 900,
+            "width": 1440,
+            "height": 773
+          },
+          ".pv1-workspace-switch": {
+            "left": 0,
+            "right": 1440,
+            "top": 89,
+            "bottom": 127,
+            "width": 1440,
+            "height": 38
+          },
+          ".pv1-asset-categories": {
+            "left": 24,
+            "right": 453,
+            "top": 344,
+            "bottom": 375,
+            "width": 429,
+            "height": 31
+          },
+          ".pv1-asset-filters": {
+            "left": 925,
+            "right": 1416,
+            "top": 334,
+            "bottom": 385,
+            "width": 491,
+            "height": 51
+          },
+          ".pv1-asset-list": {
+            "left": 24,
+            "right": 364,
+            "top": 401,
+            "bottom": 644,
+            "width": 340,
+            "height": 243
+          },
+          ".pv1-asset-detail": {
+            "left": 382,
+            "right": 1416,
+            "top": 401,
+            "bottom": 821,
+            "width": 1034,
+            "height": 420
+          }
+        },
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "scene filter change: Scene 3 narrows the list and keeps the still-visible selection",
+      "pass": true,
+      "details": {
+        "listHeading": "All episodes · Scene 3 · Berry Patch",
+        "items": [
+          "Ollo",
+          "Tix",
+          "Dot"
+        ],
+        "selected": "Tix",
+        "detailHeading": "Tix"
+      }
+    },
+    {
+      "name": "stale selection clearing: excluded selection falls to the first valid record with no hidden stale detail",
+      "pass": true,
+      "details": {
+        "selected": "Ollo",
+        "detailHeading": "Ollo",
+        "detailText": "OlloLocal demo record — no artifact existsCategoryCharactersScopeEpisode 1 · The Storylight in the Little Wood · Episode-wide (every scene)What is knownOllo, the small hero who carries the Storylight through the little wood.Source truthNamed in the local Ollo demo plan — no design, image, or model file exists.Approval truthNot reviewed — this demo has no approval workflow, so nothing here is or can be approved.ReadinessDescribed — A written description exists for this record. No reference image, file, or layer exists.Next preparationAttach reference artUnavailable — image import and generation do not exist in this demo. A later F4 package adds them."
+      }
+    },
+    {
+      "name": "empty scope: no horizontal overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "regions": {
+          "[data-testid='pv1-assets']": {
+            "left": 0,
+            "right": 1440,
+            "top": 127,
+            "bottom": 900,
+            "width": 1440,
+            "height": 773
+          },
+          ".pv1-workspace-switch": {
+            "left": 0,
+            "right": 1440,
+            "top": 89,
+            "bottom": 127,
+            "width": 1440,
+            "height": 38
+          },
+          ".pv1-asset-categories": {
+            "left": 24,
+            "right": 453,
+            "top": 344,
+            "bottom": 375,
+            "width": 429,
+            "height": 31
+          },
+          ".pv1-asset-filters": {
+            "left": 925,
+            "right": 1416,
+            "top": 334,
+            "bottom": 385,
+            "width": 491,
+            "height": 51
+          },
+          ".pv1-asset-list": {
+            "left": 24,
+            "right": 364,
+            "top": 401,
+            "bottom": 533,
+            "width": 340,
+            "height": 132
+          },
+          ".pv1-asset-detail": {
+            "left": 382,
+            "right": 1416,
+            "top": 401,
+            "bottom": 469,
+            "width": 1034,
+            "height": 68
+          }
+        },
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "empty scope: honest empty list and detail, no hidden records",
+      "pass": true,
+      "details": {
+        "listText": "All episodes · Scene 2 · Forest PathNo props records are scoped to All episodes · Scene 2 · Forest Path. Nothing is hidden — this scope honestly has no records yet, and no assets can be created or imported in this demo.",
+        "detailText": "Nothing selected — the current category and filters form an honest empty scope. Choosing a wider scene filter or another category shows its records; no record is kept hidden from an earlier scope.",
+        "itemCount": 0
+      }
+    },
+    {
+      "name": "truth sweep: no enabled preparation control and no success claim anywhere",
+      "pass": true,
+      "details": {
+        "enabledButtons": 0
+      }
+    },
+    {
+      "name": "keyboard: workspace switch is reachable with a visible focus outline",
+      "pass": true,
+      "details": {
+        "cls": "pv1-workspace-tab ",
+        "outlineWidth": "2px",
+        "outlineStyle": "solid"
+      }
+    },
+    {
+      "name": "keyboard: category navigation is reachable with a visible focus outline",
+      "pass": true,
+      "details": {
+        "cls": "pv1-asset-category is-selected",
+        "label": "Characters",
+        "outlineWidth": "2px",
+        "outlineStyle": "solid"
+      }
+    }
+  ],
+  "consoleIssues": [],
+  "pageErrors": [],
+  "screenshots": [
+    {
+      "file": "screenshots/wp1-1440x900-projects.png",
+      "sha256": "1b55a93a097d2980bc79e1be3c90a6d15fd77ca659978cec8b52d1c574e55b08"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-proposal-review.png",
+      "sha256": "be6794751d825f67e7cb596732e35ab1e17f9190fc69ed9e0c8392ac9a8aa675"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-studio-board.png",
+      "sha256": "fe29fd11da6bd0be19e368d763b54406443dbad558a9f49a49c845c8f51b83f0"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-assets-overview.png",
+      "sha256": "498920926e3c907609146bc40148a5152d56c1b911bcdc3fb1ecd6922fd9682f"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-assets-layered-set-detail.png",
+      "sha256": "bf81a1a46ebca8c16b5eb0953f3229afdad15d10a8d05f43a0d2f2fa72aeed75"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-assets-scene-filter.png",
+      "sha256": "9301cee4bf77d99e5670b19a72f3b36ce14735254d856accfce365543188cf46"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-assets-empty-scope.png",
+      "sha256": "cb4ccb89aa9b6c6ec6096925d2398f7c69e1735ca29eaef0ae1950e5c59d5aaa"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-workspace-tab-focus.png",
+      "sha256": "b0747b83a1bf8ebe4fc46c66a80f57c3f8fcfc54b4d234410ea92dc4af31feb7"
+    },
+    {
+      "file": "screenshots/wp1-1440x900-asset-category-focus.png",
+      "sha256": "694a49e4158308826ec309db866c6bebc707f3a8d5961063d5eeacef38a74c49"
+    }
+  ]
+}

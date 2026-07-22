@@ -14,6 +14,7 @@ import {
 import olloCastArt from "../assets/ollo-friends-cast-v1.jpg";
 import { AiDirectorControls } from "./AiDirectorControls";
 import { AiDirectorPanel } from "./AiDirectorPanel";
+import { AssetWorkspace } from "./AssetWorkspace";
 import type { AiConnectionState } from "./ai-director-fixture";
 import {
   LOCAL_DEMO_BANNER,
@@ -81,6 +82,16 @@ const DIRECTOR_TABS = [
 ] as const;
 
 type DirectorTabId = (typeof DIRECTOR_TABS)[number]["id"];
+
+/* F4-WP1: the two Studio workspaces. The scene board remains the accepted
+ * default; Assets & Rigs is reachable from the same shell and back without
+ * disturbing the selected scene/beat or any session-local direction state. */
+const STUDIO_WORKSPACES = [
+  { id: "board", label: "Scene board" },
+  { id: "assets", label: "Assets & Rigs" },
+] as const;
+
+type StudioWorkspaceId = (typeof STUDIO_WORKSPACES)[number]["id"];
 
 const DIRECT_FIELDS: Array<{
   id: "beatPurpose" | "performanceDirection" | "continuityNote";
@@ -170,6 +181,11 @@ const INTENT_SELECT_FIELDS = {
  * Apply that commits exactly one proposed `performanceDirection` change
  * to the immutable captured beat through the same session-local per-beat
  * history, failing closed on stale selection or unapplied manual drafts.
+ *
+ * F4-WP1 adds the Assets & Rigs workspace switch. The board surfaces stay
+ * mounted behind `hidden` while the workspace is open, so the accepted
+ * scene/beat scope, playhead, per-beat direction history, and AI panel
+ * state are preserved exactly; asset filters can never change them.
  */
 export function StudioShell({
   aiConnection,
@@ -212,6 +228,11 @@ export function StudioShell({
   }
   const [selectedDirectorTab, setSelectedDirectorTab] =
     useState<DirectorTabId>("direct");
+  /* F4-WP1: which Studio workspace is visible. All board state (scene,
+   * beat, playhead, direction, AI panel) stays mounted behind `hidden`, so
+   * switching workspaces preserves the accepted scope exactly. */
+  const [studioWorkspace, setStudioWorkspace] =
+    useState<StudioWorkspaceId>("board");
 
   /* F3-WP2/F3-WP3: session-local direction state keyed by deterministic
    * UI-local beat identity (scene ID + beat index). Each beat keeps its
@@ -525,7 +546,24 @@ export function StudioShell({
         </ol>
       </nav>
 
-      <div className="pv1-studio-layout">
+      {/* F4-WP1: one understandable switch between the scene board and the
+       * Assets & Rigs workspace. The accepted scene/beat scope above stays
+       * authoritative in both. */}
+      <nav aria-label="Studio workspace" className="pv1-workspace-switch">
+        {STUDIO_WORKSPACES.map((workspace) => (
+          <button
+            aria-current={studioWorkspace === workspace.id ? "true" : undefined}
+            className={`pv1-workspace-tab ${studioWorkspace === workspace.id ? "is-selected" : ""}`}
+            key={workspace.id}
+            onClick={() => setStudioWorkspace(workspace.id)}
+            type="button"
+          >
+            {workspace.label}
+          </button>
+        ))}
+      </nav>
+
+      <div className="pv1-studio-layout" hidden={studioWorkspace !== "board"}>
         {usesLayoutDemo ? (
           <p className="pv1-layout-demo-note" role="note">
             Layout demo — the eight scenes below are the bounded Ollo demo plan,
@@ -944,7 +982,18 @@ export function StudioShell({
         />
       </div>
 
-      <nav aria-label="Episode overview" className="pv1-studio-overview">
+      {/* F4-WP1: the Assets & Rigs workspace replaces the board surfaces
+       * (kept mounted, hidden) so the selected scene/beat and every
+       * session-local direction and AI panel state are preserved exactly. */}
+      {studioWorkspace === "assets" ? (
+        <AssetWorkspace usesLayoutDemo={usesLayoutDemo} />
+      ) : null}
+
+      <nav
+        aria-label="Episode overview"
+        className="pv1-studio-overview"
+        hidden={studioWorkspace !== "board"}
+      >
         {OLLO_DEMO_SCENES.map((scene, index) => {
           const isSelected = scene.id === selectedSceneId;
           return (

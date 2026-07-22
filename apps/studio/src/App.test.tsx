@@ -12,6 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 import { ProductV1App } from "./product-v1/ProductV1App";
+import "./product-v1/asset-workspace.test";
 import {
   AI_CONNECTION_LABELS,
   AI_CONNECTION_STATES,
