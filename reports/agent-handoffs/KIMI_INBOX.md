@@ -1,16 +1,37 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `84`
+Inbox-Version: `85`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP3-IMAGE-REQUEST-IMPORT-UX`
-Status: `START-NOW`
+Current-Task: `F4-WP3-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `5eb0037fb6e702696d008b913de53721c12a47b7`
-Required-Work-Branch: `agent/kimi-f4-wp3-image-request-import-ux`
-Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp3-image-request-import-ux-v83.md`
+Accepted-Root-Base: `b7f04c396328f2a0a9302059235092efc848e74d`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#109`
 
 ## Current instruction
+
+Version 85 records F4-WP3 acceptance and integration. Initial PR #111 head
+`1affdfdc3737c13b16d52a382b805d9971634433` was rejected by independent
+exact-head code review for three P2 fail-closed/control defects and was not
+merged. Corrected exact head
+`750eacb91c426e92a3360f1cff73f7138cec5563` passed Studio 194/194,
+focused 18/18, typecheck, production build, complete serialized repository-root
+verification, 16/16 browser checks, eleven hash-matched 1440x900 screenshots,
+zero console/page errors, and independent Sol code/fail-closed plus Terra
+visual/evidence audits with no P0/P1/P2. Hosted Verify run `29924796418` and
+post-merge run `29925497839` passed. PR #111 merged into `product/v1` at
+`b7f04c396328f2a0a9302059235092efc848e74d`. Kimi is now `WAIT`; F4-WP4,
+backend product work, Godot, Remotion, persistence, rendering, export,
+packaging, and every later package remain unauthorized by this inbox.
+
+Version 85 supersedes Version 84. Version 84 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 84 instruction:
 
 Version 84 is a coordination-only successor that changes the machine-readable
 status spelling from the watcher-compatible `START_NOW` alias to the canonical
