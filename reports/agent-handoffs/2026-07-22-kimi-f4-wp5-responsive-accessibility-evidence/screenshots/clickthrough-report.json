@@ -1,12 +1,54 @@
 {
   "task": "F4-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE",
-  "base": "http://127.0.0.1:5195/",
-  "capturedAt": "2026-07-22T18:12:44.739Z",
+  "base": "http://127.0.0.1:5196/",
+  "capturedAt": "2026-07-22T18:53:57.905Z",
   "viewports": [
     {
       "viewport": "1920x1080",
-      "url": "http://127.0.0.1:5195/",
+      "url": "http://127.0.0.1:5196/",
       "checks": [
+        {
+          "name": "complete Projects to Assets & Rigs journey is keyboard-only with exact focus identity at every transition",
+          "pass": true,
+          "details": [
+            {
+              "label": "Projects: New project",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "New project"
+            },
+            {
+              "label": "Create: Paste a script",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Paste a scriptBring your own words — StoryStage drafts a local screenplay proposal for your review."
+            },
+            {
+              "label": "Create: Script textbox",
+              "reached": true,
+              "tag": "textarea",
+              "accessibleName": "Script"
+            },
+            {
+              "label": "Create: Create proposal",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Create proposal"
+            },
+            {
+              "label": "Shared review: Enter Studio",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Enter Studio — local demo only"
+            },
+            {
+              "label": "Studio: Assets & Rigs",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Assets & Rigs"
+            }
+          ]
+        },
         {
           "name": "workspace overview: no horizontal document overflow; categories, filters, requirements, list, and detail all present",
           "pass": true,
@@ -285,7 +327,7 @@
       "screenshots": [
         {
           "file": "screenshots/wp5-1920x1080-workspace-overview.png",
-          "sha256": "5384ca2b54c72a2c20c1f34ea077af65acdf91b19a2201d68bb1465910f7edfc",
+          "sha256": "5e0821d41d757406eec4c8b639b43c9b43558a626ea39d34543ea02e702ef031",
           "width": 1920,
           "height": 1080
         },
@@ -306,8 +348,50 @@
     },
     {
       "viewport": "1440x900",
-      "url": "http://127.0.0.1:5195/",
+      "url": "http://127.0.0.1:5196/",
       "checks": [
+        {
+          "name": "complete Projects to Assets & Rigs journey is keyboard-only with exact focus identity at every transition",
+          "pass": true,
+          "details": [
+            {
+              "label": "Projects: New project",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "New project"
+            },
+            {
+              "label": "Create: Paste a script",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Paste a scriptBring your own words — StoryStage drafts a local screenplay proposal for your review."
+            },
+            {
+              "label": "Create: Script textbox",
+              "reached": true,
+              "tag": "textarea",
+              "accessibleName": "Script"
+            },
+            {
+              "label": "Create: Create proposal",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Create proposal"
+            },
+            {
+              "label": "Shared review: Enter Studio",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Enter Studio — local demo only"
+            },
+            {
+              "label": "Studio: Assets & Rigs",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Assets & Rigs"
+            }
+          ]
+        },
         {
           "name": "multi-scene readiness: episode aggregate summary names its scope and keeps per-scene truth visible",
           "pass": true,
@@ -401,6 +485,15 @@
           }
         },
         {
+          "name": "wrong-format failure: programmatic alert focus keeps a visible >=2px indicator",
+          "pass": true,
+          "details": {
+            "focused": true,
+            "outlineWidth": "2px",
+            "outlineStyle": "solid"
+          }
+        },
+        {
           "name": "wrong-format failure: no horizontal document overflow",
           "pass": true,
           "details": {
@@ -469,6 +562,33 @@
         },
         {
           "name": "wp5-1440x900-wrong-format-failure: exact 1440x900 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1440,
+            "height": 900
+          }
+        },
+        {
+          "name": "active request Escape: one key closes the panel and restores the exact invoker",
+          "pass": true,
+          "details": {
+            "panelOpen": false,
+            "focused": true
+          }
+        },
+        {
+          "name": "confirmed terminal state: programmatic status focus keeps a visible >=2px indicator and counts remain unchanged",
+          "pass": true,
+          "details": {
+            "focused": true,
+            "outlineWidth": "2px",
+            "outlineStyle": "solid",
+            "countsScene3": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1",
+            "now": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1"
+          }
+        },
+        {
+          "name": "wp5-1440x900-confirmed-terminal-focus: exact 1440x900 screenshot dimensions",
           "pass": true,
           "details": {
             "width": 1440,
@@ -560,19 +680,25 @@
       "screenshots": [
         {
           "file": "screenshots/wp5-1440x900-multi-scene-readiness-aggregate.png",
-          "sha256": "8898e26bd9869b4e50eb56d8d2a70c72a0cbce0cef2250608be85fbbdf711aa8",
+          "sha256": "c6d54e676aa3eb90082c7e8afb2572bf7d9edce57534d7f406c90ecf988211d8",
           "width": 1440,
           "height": 900
         },
         {
           "file": "screenshots/wp5-1440x900-wrong-format-failure.png",
-          "sha256": "67a0cf20e90845a8ca80c9750cbb3c8a4db2f6bd63f754d87ff86cfe1f701d94",
+          "sha256": "2a3afe3466efa8bad76bf6797d686b8668b8acfd55aa3aea861dfff2e9babfc0",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "file": "screenshots/wp5-1440x900-confirmed-terminal-focus.png",
+          "sha256": "4d2d0db178b54c6bf90fcc210cd345e555981fd6b2ea571a58c722cb338e2342",
           "width": 1440,
           "height": 900
         },
         {
           "file": "screenshots/wp5-1440x900-needs-correction-blocker.png",
-          "sha256": "0b576a8fe1c06beae6571df6374d432f09fdc16749b45d03514c30fe5fa208cc",
+          "sha256": "960b060a272c5a52f65272ee7f6c2edfd1c56ccb60621a4be992ba8318f41147",
           "width": 1440,
           "height": 900
         },
@@ -593,8 +719,50 @@
     },
     {
       "viewport": "1024x800",
-      "url": "http://127.0.0.1:5195/",
+      "url": "http://127.0.0.1:5196/",
       "checks": [
+        {
+          "name": "complete Projects to Assets & Rigs journey is keyboard-only with exact focus identity at every transition",
+          "pass": true,
+          "details": [
+            {
+              "label": "Projects: New project",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "New project"
+            },
+            {
+              "label": "Create: Paste a script",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Paste a scriptBring your own words — StoryStage drafts a local screenplay proposal for your review."
+            },
+            {
+              "label": "Create: Script textbox",
+              "reached": true,
+              "tag": "textarea",
+              "accessibleName": "Script"
+            },
+            {
+              "label": "Create: Create proposal",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Create proposal"
+            },
+            {
+              "label": "Shared review: Enter Studio",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Enter Studio — local demo only"
+            },
+            {
+              "label": "Studio: Assets & Rigs",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Assets & Rigs"
+            }
+          ]
+        },
         {
           "name": "stacked overview: intentional order header, categories, filters, requirements, asset list, selected detail",
           "pass": true,
@@ -722,16 +890,42 @@
           }
         },
         {
-          "name": "review table: labelled keyboard-reachable contained scroller; the document never widens",
+          "name": "review table: Tab reaches the labelled contained scroller with visible focus; ArrowRight scrolls when overflow exists; the document never widens",
           "pass": true,
           "details": {
-            "exists": true,
-            "role": "region",
-            "tabIndex": "0",
-            "regionLabel": "Declared part inventory table — horizontally scrollable when wider than the panel",
-            "tableLabel": "Declared part inventory (demo metadata)",
-            "documentScrollWidth": 1024,
-            "documentClientWidth": 1024
+            "scrollerJourney": {
+              "label": "Review: declared part inventory scroller",
+              "reached": true,
+              "tag": "div",
+              "accessibleName": "Declared part inventory table — horizontally scrollable when wider than the panel"
+            },
+            "scrollerBefore": {
+              "scrollLeft": 0,
+              "scrollWidth": 886,
+              "clientWidth": 886
+            },
+            "scroller": {
+              "focused": true,
+              "role": "region",
+              "tabIndex": "0",
+              "regionLabel": "Declared part inventory table — horizontally scrollable when wider than the panel",
+              "tableLabel": "Declared part inventory (demo metadata)",
+              "scrollLeft": 0,
+              "scrollWidth": 886,
+              "clientWidth": 886,
+              "outlineWidth": "2px",
+              "outlineStyle": "solid",
+              "documentScrollWidth": 1024,
+              "documentClientWidth": 1024
+            }
+          }
+        },
+        {
+          "name": "wp5-1024x800-review-table-scroller-focus: exact 1024x800 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1024,
+            "height": 800
           }
         },
         {
@@ -831,7 +1025,7 @@
       "screenshots": [
         {
           "file": "screenshots/wp5-1024x800-stacked-overview.png",
-          "sha256": "15eaa67d0550c6982848dd4b6a2da163192d6d0e9698f1772098ce9d27b24fd9",
+          "sha256": "78431486a3405c09cb7c6ea41b1349f0b38672587fd632e040136a04ce20e559",
           "width": 1024,
           "height": 800
         },
@@ -848,14 +1042,20 @@
           "height": 800
         },
         {
+          "file": "screenshots/wp5-1024x800-review-table-scroller-focus.png",
+          "sha256": "3229307c55f56e00b6c7f2bbe071a6d99d46a45f33016401280e987a13816af2",
+          "width": 1024,
+          "height": 800
+        },
+        {
           "file": "screenshots/wp5-1024x800-review-table-close-reachable.png",
-          "sha256": "2e4e175fea92c32d4ffdfba9378513bc31f343aa267c6f4a4c76d394f5f3d582",
+          "sha256": "fd579e265de6fbce34616baf73073eafc7250dc5259b58fd626e3e96a7d0e453",
           "width": 1024,
           "height": 800
         },
         {
           "file": "screenshots/wp5-1024x800-escape-return-focus.png",
-          "sha256": "614ac22a00776bec6939108c916db3aec989bba65e4f2053ffc1d750402ee0c0",
+          "sha256": "68e741f81822345c4ff850fe7a5d1d634f7174ea8ca069b2a575bf1cc5e4be7a",
           "width": 1024,
           "height": 800
         },
@@ -878,14 +1078,14 @@
     },
     {
       "viewport": "all",
-      "url": "http://127.0.0.1:5195/",
+      "url": "http://127.0.0.1:5196/",
       "checks": [
         {
           "name": "evidence integrity: every captured screenshot has a unique SHA-256",
           "pass": true,
           "details": {
-            "screenshots": 14,
-            "unique": 14
+            "screenshots": 16,
+            "unique": 16
           }
         }
       ],

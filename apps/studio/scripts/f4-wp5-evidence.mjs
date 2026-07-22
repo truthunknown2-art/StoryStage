@@ -159,17 +159,79 @@ async function measureRegions(page, selectors) {
   }, selectors);
 }
 
+async function tabTo(page, locator, label, maxTabs = 160) {
+  const matches = await locator.count();
+  if (matches !== 1)
+    throw new Error(`${label}: expected one keyboard target, found ${matches}`);
+  for (let index = 0; index <= maxTabs; index += 1) {
+    const focused = await locator.evaluate(
+      (element) => document.activeElement === element,
+    );
+    if (focused) {
+      return locator.evaluate((element, targetLabel) => ({
+        label: targetLabel,
+        reached: true,
+        tag: element.tagName.toLowerCase(),
+        accessibleName:
+          element.getAttribute("aria-label") ?? element.textContent?.trim() ?? "",
+      }), label);
+    }
+    await page.keyboard.press("Tab");
+  }
+  throw new Error(`${label}: keyboard Tab traversal did not reach the target`);
+}
+
+async function activateByKeyboard(page, locator, label) {
+  const result = await tabTo(page, locator, label);
+  await page.keyboard.press("Enter");
+  return result;
+}
+
 async function enterAssetsWorkspace(page) {
   await page.goto(BASE, { waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "New project" }).first().click();
-  await page.getByRole("button", { name: /Paste a script/ }).click();
-  await page.getByRole("textbox", { name: "Script" }).fill(SAMPLE_SCRIPT);
-  await page.getByRole("button", { name: "Create proposal" }).click();
+  const journey = [];
+  journey.push(
+    await activateByKeyboard(
+      page,
+      page.locator("main").getByRole("button", { name: "New project" }),
+      "Projects: New project",
+    ),
+  );
+  journey.push(
+    await activateByKeyboard(
+      page,
+      page.getByRole("button", { name: /Paste a script/ }),
+      "Create: Paste a script",
+    ),
+  );
+  const scriptInput = page.getByRole("textbox", { name: "Script" });
+  journey.push(await tabTo(page, scriptInput, "Create: Script textbox"));
+  await page.keyboard.insertText(SAMPLE_SCRIPT);
+  journey.push(
+    await activateByKeyboard(
+      page,
+      page.getByRole("button", { name: "Create proposal" }),
+      "Create: Create proposal",
+    ),
+  );
   await page.getByRole("article", { name: "Review proposal" }).waitFor();
-  await page.getByRole("button", { name: /Enter Studio/ }).click();
+  journey.push(
+    await activateByKeyboard(
+      page,
+      page.getByRole("button", { name: /Enter Studio/ }),
+      "Shared review: Enter Studio",
+    ),
+  );
   await page.waitForSelector("[data-testid='pv1-studio']");
-  await page.getByRole("button", { name: "Assets & Rigs" }).click();
+  journey.push(
+    await activateByKeyboard(
+      page,
+      page.getByRole("button", { name: "Assets & Rigs" }),
+      "Studio: Assets & Rigs",
+    ),
+  );
   await page.waitForSelector("[data-testid='pv1-assets']");
+  return journey;
 }
 
 const countsText = (page) =>
@@ -243,7 +305,13 @@ async function truthScan(page) {
     const rec = (name, pass, details) =>
       vp.checks.push({ name, pass, details });
 
-    await enterAssetsWorkspace(page);
+    const keyboardJourney = await enterAssetsWorkspace(page);
+    rec(
+      "complete Projects to Assets & Rigs journey is keyboard-only with exact focus identity at every transition",
+      keyboardJourney.length === 6 &&
+        keyboardJourney.every((step) => step.reached),
+      keyboardJourney,
+    );
     await page.getByLabel("Scene filter").selectOption("scene-1");
     const countsAtStart = await countsText(page);
 
@@ -370,7 +438,13 @@ async function truthScan(page) {
     const rec = (name, pass, details) =>
       vp.checks.push({ name, pass, details });
 
-    await enterAssetsWorkspace(page);
+    const keyboardJourney = await enterAssetsWorkspace(page);
+    rec(
+      "complete Projects to Assets & Rigs journey is keyboard-only with exact focus identity at every transition",
+      keyboardJourney.length === 6 &&
+        keyboardJourney.every((step) => step.reached),
+      keyboardJourney,
+    );
 
     // Multi-scene readiness/aggregate truth (episode scope).
     await page.getByLabel("Scene filter").selectOption("all");
@@ -423,6 +497,22 @@ async function truthScan(page) {
         (await countsText(page)) === countsScene3,
       { countsScene3, now: await countsText(page), text: text.slice(-700) },
     );
+    const failureAlert = page.locator(".pv1-request-alert");
+    const failureFocus = await failureAlert.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        focused: document.activeElement === element,
+        outlineWidth: style.outlineWidth,
+        outlineStyle: style.outlineStyle,
+      };
+    });
+    rec(
+      "wrong-format failure: programmatic alert focus keeps a visible >=2px indicator",
+      failureFocus.focused &&
+        Number.parseFloat(failureFocus.outlineWidth) >= 2 &&
+        failureFocus.outlineStyle === "solid",
+      failureFocus,
+    );
     await page
       .locator("[data-testid='pv1-request']")
       .scrollIntoViewIfNeeded();
@@ -433,9 +523,51 @@ async function truthScan(page) {
       m,
     );
     await shot(vp, page, width, height, "wp5-1440x900-wrong-format-failure");
+    const requestInvoker = page.getByRole("button", { name: DOT_REQUEST_LABEL });
+    await page.keyboard.press("Escape");
+    const requestEscape = await requestInvoker.evaluate((element) => ({
+      panelOpen: document.querySelector("[data-testid='pv1-request']") !== null,
+      focused: document.activeElement === element,
+    }));
+    rec(
+      "active request Escape: one key closes the panel and restores the exact invoker",
+      !requestEscape.panelOpen && requestEscape.focused,
+      requestEscape,
+    );
+
+    // Confirmed terminal state: its programmatic status focus is also visible.
+    await page.keyboard.press("Enter");
+    await page.waitForSelector("[data-testid='pv1-request']");
     await page
-      .getByRole("button", { name: "Close request panel for Dot" })
+      .getByRole("button", { name: "Choose a declared demo candidate" })
       .click();
+    await page.getByRole("button", { name: /Dot view sheet/ }).click();
+    await page.getByLabel("Source (required)").fill("Painted in my own tool");
+    await page.getByLabel("License / rights (required)").fill("I own the result");
+    await page.getByRole("button", { name: "Continue to confirmation" }).click();
+    await page
+      .getByRole("button", { name: "Confirm local candidate record" })
+      .click();
+    const terminalNote = page.locator(".pv1-request-note");
+    const terminalFocus = await terminalNote.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        focused: document.activeElement === element,
+        outlineWidth: style.outlineWidth,
+        outlineStyle: style.outlineStyle,
+      };
+    });
+    rec(
+      "confirmed terminal state: programmatic status focus keeps a visible >=2px indicator and counts remain unchanged",
+      terminalFocus.focused &&
+        Number.parseFloat(terminalFocus.outlineWidth) >= 2 &&
+        terminalFocus.outlineStyle === "solid" &&
+        (await countsText(page)) === countsScene3,
+      { ...terminalFocus, countsScene3, now: await countsText(page) },
+    );
+    await terminalNote.scrollIntoViewIfNeeded();
+    await shot(vp, page, width, height, "wp5-1440x900-confirmed-terminal-focus");
+    await page.keyboard.press("Escape");
 
     // Needs correction: the exact readable contradiction is the blocker.
     await page.getByRole("button", { name: DOT_REVIEW_LABEL }).click();
@@ -569,7 +701,13 @@ async function truthScan(page) {
     const rec = (name, pass, details) =>
       vp.checks.push({ name, pass, details });
 
-    await enterAssetsWorkspace(page);
+    const keyboardJourney = await enterAssetsWorkspace(page);
+    rec(
+      "complete Projects to Assets & Rigs journey is keyboard-only with exact focus identity at every transition",
+      keyboardJourney.length === 6 &&
+        keyboardJourney.every((step) => step.reached),
+      keyboardJourney,
+    );
     await page.getByLabel("Scene filter").selectOption("scene-1");
     const countsAtStart = await countsText(page);
 
@@ -670,29 +808,52 @@ async function truthScan(page) {
     await page.getByRole("button", { name: OLLO_REVIEW_LABEL }).click();
     await page.waitForSelector("[data-testid='pv1-review']");
     await page.getByRole("button", { name: "Review-ready example" }).click();
-    const scroller = await page.evaluate(() => {
-      const region = document.querySelector(".pv1-review-table-scroll");
-      const table = region?.querySelector("table");
+    const scrollerLocator = page.locator(".pv1-review-table-scroll");
+    const scrollerJourney = await tabTo(
+      page,
+      scrollerLocator,
+      "Review: declared part inventory scroller",
+    );
+    const scrollerBefore = await scrollerLocator.evaluate((region) => ({
+      scrollLeft: region.scrollLeft,
+      scrollWidth: region.scrollWidth,
+      clientWidth: region.clientWidth,
+    }));
+    await page.keyboard.press("ArrowRight");
+    const scroller = await scrollerLocator.evaluate((region) => {
+      const table = region.querySelector("table");
+      const style = getComputedStyle(region);
       return {
-        exists: region !== null,
-        role: region?.getAttribute("role") ?? null,
-        tabIndex: region?.getAttribute("tabindex") ?? null,
-        regionLabel: region?.getAttribute("aria-label") ?? null,
+        focused: document.activeElement === region,
+        role: region.getAttribute("role"),
+        tabIndex: region.getAttribute("tabindex"),
+        regionLabel: region.getAttribute("aria-label"),
         tableLabel: table?.getAttribute("aria-label") ?? null,
+        scrollLeft: region.scrollLeft,
+        scrollWidth: region.scrollWidth,
+        clientWidth: region.clientWidth,
+        outlineWidth: style.outlineWidth,
+        outlineStyle: style.outlineStyle,
         documentScrollWidth: document.documentElement.scrollWidth,
         documentClientWidth: document.documentElement.clientWidth,
       };
     });
     rec(
-      "review table: labelled keyboard-reachable contained scroller; the document never widens",
-      scroller.exists &&
+      "review table: Tab reaches the labelled contained scroller with visible focus; ArrowRight scrolls when overflow exists; the document never widens",
+      scrollerJourney.reached &&
+        scroller.focused &&
         scroller.role === "region" &&
         scroller.tabIndex === "0" &&
         scroller.regionLabel !== null &&
         scroller.tableLabel !== null &&
+        Number.parseFloat(scroller.outlineWidth) >= 2 &&
+        scroller.outlineStyle === "solid" &&
+        (scroller.scrollWidth <= scroller.clientWidth ||
+          scroller.scrollLeft > scrollerBefore.scrollLeft) &&
         scroller.documentScrollWidth <= scroller.documentClientWidth,
-      scroller,
+      { scrollerJourney, scrollerBefore, scroller },
     );
+    await shot(vp, page, width, height, "wp5-1024x800-review-table-scroller-focus");
     const closeButton = page.getByRole("button", {
       name: "Close review panel for Ollo",
     });

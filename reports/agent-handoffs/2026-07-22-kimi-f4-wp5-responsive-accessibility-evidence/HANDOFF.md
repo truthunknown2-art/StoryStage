@@ -1,4 +1,4 @@
-# F4-WP5 immutable handback
+# F4-WP5 audited successor handback
 
 Task: `F4-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE-RECOVERY`
 
@@ -9,7 +9,9 @@ Pull request: recorded on the issue and in the PR itself; this file is
 committed before the PR exists, so the PR/issue comments carry the exact
 link and tip SHA.
 
-Required branch: `agent/kimi-f4-wp5-responsive-accessibility-evidence-v2`
+Original Kimi branch: `agent/kimi-f4-wp5-responsive-accessibility-evidence-v2`
+
+Audited successor branch: `agent/codex-f4-wp5-review-correction`
 
 Inbox: version `89` on `origin/agent/kimi-frontend`
 
@@ -24,7 +26,7 @@ Inbox: version `89` on `origin/agent/kimi-frontend`
   `65c283d2beb3f377d49450ba5af4cdd082ece5f1`. Its diff touches only the six
   Version 88 allowed source files.
 - Codex start and recovery status transition incorporated before final
-  verification: merge commit `122431af39ed2d036d4f232ab30639be357b2fdc`
+  verification: merge commit `122431a88b3480ccf00375158576486d4db4c55c`
   bringing `product/v1@9873819739396cf8314affa9893be0fa3e106f21`. It changes
   only `docs/ROADMAP_STATUS.md` and `docs/plans/milestone-F4.md`; it is the
   Codex-published authorization the roadmap consistency guard requires
@@ -38,6 +40,26 @@ Inbox: version `89` on `origin/agent/kimi-frontend`
 - Handback tip: the commit containing this file; GitHub issue #117 and the
   draft PR record its exact pushed SHA because a commit cannot embed its own
   identity.
+
+## Independent exact-head correction
+
+Codex independently audited the original pushed Kimi handback tip
+`ec4fb78c4ee2cd1d48261bcfa79cd16bdcaf59b6`. Hosted verification passed, but
+the exact head was rejected before milestone review because the audit found
+four evidence/accessibility defects: programmatically focused request status
+targets had no visible focus treatment; an active request required two Escape
+presses to restore its invoker; the evidence used pointer activation for the
+Projects-to-Assets route; and the table scroller's keyboard reachability was
+inferred rather than exercised. The handoff also named the status-lineage
+merge incorrectly; the resolvable identity is now recorded above.
+
+The successor branch contains only the bounded corrections for those findings:
+visible 2px focus treatment for the alert and terminal note, single-Escape
+close-and-restore behavior, focused regression coverage, and fail-closed
+browser evidence that performs the complete entry route with keyboard input,
+tabs to and arrow-scrolls the review-table scroller, and captures the two new
+focus states. No fixture/model semantics or accepted F4-WP1 through F4-WP4
+truth changed. The successor PR and issue #117 record its exact pushed tip.
 
 ## Recovery note
 
@@ -102,7 +124,7 @@ Implementation (cherry-picked preserved WIP, unchanged content):
 described above).
 
 Evidence: `apps/studio/scripts/f4-wp5-evidence.mjs` and this directory's
-`screenshots/` (14 PNGs + `clickthrough-report.json`).
+`screenshots/` (16 PNGs + `clickthrough-report.json`).
 
 Incorporated Codex status transition (not authored here):
 `docs/ROADMAP_STATUS.md`, `docs/plans/milestone-F4.md`.
@@ -135,15 +157,19 @@ and zero approval/production/render/export success strings.
 
 ## Verification
 
-Every command below ran on this exact branch in this workspace.
+Every command below ran in this workspace. The focused, complete Studio,
+typecheck, build, lint, diff, root, and browser results were rerun on the
+audited successor tree after the correction above.
 
 - `pnpm install --frozen-lockfile`: PASS (29.7s; lockfile untouched).
 - Focused F4-WP5 suite
   (`cd apps/studio && pnpm exec vitest run src/product-v1/asset-accessibility.test.tsx`):
-  PASS, 12/12, 17.88s on the final tree.
+  PASS, 12/12 on the final tree. The combined request/import and accessibility
+  regression files also pass 30/30, including the prior F4-WP3 contract updated
+  to assert single-Escape recovery.
 - Complete Studio suite
   (`VITEST_MAX_WORKERS=2 pnpm --filter @storystage/studio test`):
-  PASS, 229/229, 1m57.959s wall (vitest duration 116.94s) on the final
+  PASS, 229/229 (vitest duration 95.24s) on the final
   tree. Resource-pressure history, matching the v89 known-verification
   state: a 4-worker run finished 228/229 and a 1-worker run 227/229, each
   with only the unchanged pre-existing 5000ms-timeout flakes
@@ -155,26 +181,29 @@ Every command below ran on this exact branch in this workspace.
 - `pnpm --filter @storystage/studio typecheck`: PASS.
 - `pnpm --filter @storystage/studio build`: PASS (15.1s; only the
   pre-existing Vite large-chunk warning).
-- Touched-file ESLint (the five touched TS/TSX files plus the evidence
+- Touched-file ESLint (the touched TS/TSX files plus the evidence
   script): PASS, zero errors. `styles.css` has no matching ESLint
   configuration, as in prior packages.
 - `git diff --check`: PASS (committed diff vs base and working tree).
 - Serialized repository-root verification
   (`VITEST_MAX_WORKERS=4 pnpm --workspace-concurrency=1 verify`):
-  PASS, exit 0, 7m2.299s. Roadmap consistency, generated-artifact checks,
+  PASS, exit 0, 4m47s. Roadmap consistency, generated-artifact checks,
   E1 security evidence, privacy, repository lint (0 errors; 2 pre-existing
   warnings), all-package typecheck, and all tests passed: contracts 11/11,
   fixtures 2/2, orchestration 4/4, codex-lab 104/104, e1-director-lab 4/4,
   registration-review 21/21, story-engine 353/353, remotion-runtime 29/29,
   asset-pipeline 126/126, asset-worker 5/5, render-worker 24/24, desktop
   11/11, Studio 229/229.
-- Browser evidence
-  (`STUDIO_BASE_URL=http://127.0.0.1:5195/ node apps/studio/scripts/f4-wp5-evidence.mjs`):
-  PASS, 44/44 checks (11 at 1920x1080, 15 at 1440x900, 17 at 1024x800, 1
+- Audited-successor browser evidence
+  (`STUDIO_BASE_URL=http://127.0.0.1:5196/ node apps/studio/scripts/f4-wp5-evidence.mjs`):
+  PASS, 52/52 checks (12 at 1920x1080, 20 at 1440x900, 19 at 1024x800, 1
   cross-viewport integrity), zero console warnings/errors, zero page errors,
-  no horizontal document overflow in any captured state.
+  no horizontal document overflow in any captured state. Each viewport proves
+  the complete Projects-to-Assets entry route with keyboard input and exact
+  focus identities. The run also proves visible programmatic status focus,
+  single-Escape invoker restoration, and Tab/ArrowRight scroller operation.
 
-Note: the evidence was captured against a dev server on port 5195 because
+Note: the audited-successor evidence was captured against a dev server on port 5196 because
 port 5173 is held by a stale v84-workspace server outside this workspace
 (the same condition the F4-WP4 handback recorded); the script defaults to
 5173 and the used base URL is recorded in the report.
@@ -184,20 +213,20 @@ port 5173 is held by a stale v84-workspace server outside this workspace
 Machine-readable report: `screenshots/clickthrough-report.json`
 
 Report SHA-256:
-`fe464bb81714cf9742cc6918eb290169db6736cd0c79ff2e007573fef5b09cf6`
+`506308d1c76f256013e9120a9f26be4d0d8555ef693dcca06666decc57e73820`
 
 The report records exact viewport and URL, every per-state check, document
 width measurements, named critical-region bounds, keyboard focus identity
 and reachability, panel/state truth, reduced-motion query and computed
 styles, console warnings/errors (none), page errors (none), visible truth
 strings, the forbidden enabled-claim scan, counts/readiness preservation,
-and the SHA-256 and exact dimensions of every screenshot. All 14 hashes are
+and the SHA-256 and exact dimensions of every screenshot. All 16 hashes are
 unique. Two 1440x900 captures are byte-identical to the accepted F4-WP4
 captures of the same deterministic states (same machine, renderer, fixtures,
 and scroll contract) — fresh captures proving those accepted states did not
 regress, not reused files.
 
-- `5384ca2b54c72a2c20c1f34ea077af65acdf91b19a2201d68bb1465910f7edfc`
+- `5e0821d41d757406eec4c8b639b43c9b43558a626ea39d34543ea02e702ef031`
   `screenshots/wp5-1920x1080-workspace-overview.png` (1920x1080) — complete
   workspace overview.
 - `2f0983d0c29fbe2ca4188cbb1d0182c5b9976ef3e257c97fc972e406029b9f54`
@@ -207,14 +236,17 @@ regress, not reused files.
   `screenshots/wp5-1920x1080-review-ready-nonproduction-truth.png`
   (1920x1080) — Review-ready layer/rig state with the adjacent
   non-production truth.
-- `8898e26bd9869b4e50eb56d8d2a70c72a0cbce0cef2250608be85fbbdf711aa8`
+- `c6d54e676aa3eb90082c7e8afb2572bf7d9edce57534d7f406c90ecf988211d8`
   `screenshots/wp5-1440x900-multi-scene-readiness-aggregate.png` (1440x900)
   — multi-scene readiness with the honest episode aggregate scope note.
-- `67a0cf20e90845a8ca80c9750cbb3c8a4db2f6bd63f754d87ff86cfe1f701d94`
+- `2a3afe3466efa8bad76bf6797d686b8668b8acfd55aa3aea861dfff2e9babfc0`
   `screenshots/wp5-1440x900-wrong-format-failure.png` (1440x900) —
   wrong-format failure: declared metadata, not media sniffing, no candidate
   created.
-- `0b576a8fe1c06beae6571df6374d432f09fdc16749b45d03514c30fe5fa208cc`
+- `4d2d0db178b54c6bf90fcc210cd345e555981fd6b2ea571a58c722cb338e2342`
+  `screenshots/wp5-1440x900-confirmed-terminal-focus.png` (1440x900) -
+  confirmed terminal request status with visible programmatic focus.
+- `960b060a272c5a52f65272ee7f6c2edfd1c56ccb60621a4be992ba8318f41147`
   `screenshots/wp5-1440x900-needs-correction-blocker.png` (1440x900) — Dot
   Needs correction with the exact readable contradiction.
 - `02c385d012dbffe31de095111e7c146611159da27535c182476438c788d82c7a`
@@ -223,7 +255,7 @@ regress, not reused files.
 - `35028f7db96df826d515a382d47dcb00fbd55afcd8b7586b0f11950b4e11b563`
   `screenshots/wp5-1440x900-foreground-occluder-review.png` (1440x900) —
   foreground occluder with intended subject relationship.
-- `15eaa67d0550c6982848dd4b6a2da163192d6d0e9698f1772098ce9d27b24fd9`
+- `78431486a3405c09cb7c6ea41b1349f0b38672587fd632e040136a04ce20e559`
   `screenshots/wp5-1024x800-stacked-overview.png` (1024x800) — intentional
   stacked order at compact width.
 - `770d9db37ac9bfc0249fd581e35acd3ae2f5e9f8c27300d09b9a2b1feaf489f9`
@@ -233,10 +265,14 @@ regress, not reused files.
   `screenshots/wp5-1024x800-request-validation-focus.png` (1024x800) —
   focused request validation: readable alert, aria-invalid, focus on the
   source field.
-- `2e4e175fea92c32d4ffdfba9378513bc31f343aa267c6f4a4c76d394f5f3d582`
+- `3229307c55f56e00b6c7f2bbe071a6d99d46a45f33016401280e987a13816af2`
+  `screenshots/wp5-1024x800-review-table-scroller-focus.png` (1024x800) -
+  review-table scroller reached by Tab, visibly focused, and operated by
+  ArrowRight without widening the document.
+- `fd579e265de6fbce34616baf73073eafc7250dc5259b58fd626e3e96a7d0e453`
   `screenshots/wp5-1024x800-review-table-close-reachable.png` (1024x800) —
   review-table Close keyboard-reachable beside the contained scroller.
-- `614ac22a00776bec6939108c916db3aec989bba65e4f2053ffc1d750402ee0c0`
+- `68e741f81822345c4ff850fe7a5d1d634f7174ea8ca069b2a575bf1cc5e4be7a`
   `screenshots/wp5-1024x800-escape-return-focus.png` (1024x800) — Escape
   return-focus on the exact surviving invoker.
 - `dce1d306cb07b4b4360955d6ebe052f384a46fe19325d7159626a1747878f5e4`

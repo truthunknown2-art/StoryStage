@@ -3737,7 +3737,6 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   font-size: 11.5px;
   line-height: 1.55;
   margin: 0;
-  outline: none;
   padding: 8px 10px;
 }
 
@@ -3750,6 +3749,12 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   line-height: 1.55;
   margin: 0;
   padding: 8px 10px;
+}
+
+.pv1-request-alert:focus,
+.pv1-request-note:focus {
+  outline: 2px solid var(--accent, #91e4b3);
+  outline-offset: 2px;
 }
 
 .pv1-request-review li {

@@ -236,13 +236,7 @@ export function AssetRequestImport({
       onKeyDown={(event) => {
         if (event.key !== "Escape") return;
         event.stopPropagation();
-        if (
-          state.kind === "idle" ||
-          state.kind === "cancelled" ||
-          state.kind === "confirmed"
-        )
-          onClose();
-        else send({ type: "cancel" });
+        onClose();
       }}
       ref={panelRef}
     >

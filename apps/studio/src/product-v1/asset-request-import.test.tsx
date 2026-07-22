@@ -638,13 +638,11 @@ describe("F4-WP3 — candidate import flow (UI)", () => {
       name: "Dot",
     });
     expect(document.activeElement).toBe(heading);
-    /* Escape from an in-flight flow cancels into the explicit cancelled
-     * state; Escape again closes and restores the invoker. */
+    /* Escape from an in-flight flow closes immediately and restores the
+     * exact invoker; keyboard recovery never requires a second Escape. */
     await user.click(
       screen.getByRole("button", { name: "Choose a declared demo candidate" }),
     );
-    await user.keyboard("{Escape}");
-    expect(requestPanel().textContent).toContain(CANCELLED_TRUTH);
     await user.keyboard("{Escape}");
     expect(screen.queryByTestId("pv1-request")).toBeNull();
     expect(document.activeElement).toBe(invoker);

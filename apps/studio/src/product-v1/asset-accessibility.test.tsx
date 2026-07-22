@@ -239,7 +239,7 @@ describe("F4-WP5 — request/import focus contract", () => {
 
     invoker.focus();
     await pressEnter(user);
-    const panel = requestPanel();
+    let panel = requestPanel();
     expect(panel.id).toBe(controlsId);
     expect(invoker).toHaveAttribute("aria-expanded", "true");
     /* Opening moves focus to the labelled heading. */
@@ -250,6 +250,17 @@ describe("F4-WP5 — request/import focus contract", () => {
 
     /* Validation: missing source moves focus to the field and announces one
      * concise alert; missing license does the same for its field. */
+    await user.click(
+      screen.getByRole("button", { name: "Choose a declared demo candidate" }),
+    );
+    /* One Escape from an active request workflow closes the inline panel and
+     * restores focus to its exact surviving invoker. It never requires a
+     * second Escape through an intermediate cancelled state. */
+    await user.keyboard("{Escape}");
+    expect(screen.queryByTestId("pv1-request")).toBeNull();
+    expect(document.activeElement).toBe(invoker);
+    await pressEnter(user);
+    panel = requestPanel();
     await user.click(
       screen.getByRole("button", { name: "Choose a declared demo candidate" }),
     );
@@ -575,6 +586,11 @@ describe("F4-WP5 — reduced-motion contract", () => {
     /* The F4-WP5 table scroller keeps the 2px visible focus indicator. */
     expect(css).toMatch(
       /\.pv1-review-table-scroll:focus-visible\s*\{[^}]*outline:\s*2px solid/s,
+    );
+    /* Every programmatically focused request outcome keeps the same visible
+     * >=2px treatment, including fail-closed alerts and terminal notes. */
+    expect(css).toMatch(
+      /\.pv1-request-alert:focus,\s*\.pv1-request-note:focus\s*\{[^}]*outline:\s*2px solid/s,
     );
 
     const user = userEvent.setup();
