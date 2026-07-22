@@ -163,6 +163,34 @@ describe("F4-WP4 — review fixture model (pure)", () => {
     ).toBe(true);
   });
 
+  it("never derives Review-ready when a complete declaration contains an explicitly blocked checklist row", () => {
+    const character = mutateCharacterRig(OLLO_READY, (declaration) => ({
+      ...declaration,
+      checklist: declaration.checklist.map((entry, index) =>
+        index === 0
+          ? { ...entry, pass: false, blockReason: "Manual review is still required." }
+          : entry,
+      ),
+    }));
+    const set = mutateLayeredSet(SET_READY, (declaration) => ({
+      ...declaration,
+      checklist: declaration.checklist.map((entry, index) =>
+        index === 0
+          ? { ...entry, pass: false, blockReason: "Plane review is still required." }
+          : entry,
+      ),
+    }));
+    for (const [fixture, requirementId] of [
+      [character, "req-s1-ollo"],
+      [set, "req-s1-home-nook"],
+    ] as const) {
+      const resolved = resolveReviewFixture(fixture, itemFor(requirementId));
+      expect(resolved.state).toBe("needs-correction");
+      expect(resolved.missing).toHaveLength(0);
+      expect(resolved.checklist.some((row) => !row.pass)).toBe(true);
+    }
+  });
+
   it("derives the Dot needs-correction example with one exact readable contradiction", () => {
     const resolved = resolveReviewFixture(
       fixtureFor("review-req-s3-dot-needs-correction"),
@@ -243,6 +271,22 @@ describe("F4-WP4 — review fixture model (pure)", () => {
       [{ ...sessionRecord, requirementId: "req-s1-ollo" }],
     );
     expect(foreign.candidate?.provenance).toBe("fixture");
+
+    const staleScene = resolveReviewFixture(
+      fixtureFor("review-req-s3-dot-needs-correction"),
+      itemFor("req-s3-dot"),
+      [{ ...sessionRecord, sceneId: "scene-2" }],
+    );
+    expect(staleScene.unavailableReason).toContain("Stale scene association");
+    expect(staleScene.state).toBeNull();
+
+    const duplicated = resolveReviewFixture(
+      fixtureFor("review-req-s3-dot-needs-correction"),
+      itemFor("req-s3-dot"),
+      [sessionRecord, { ...sessionRecord }],
+    );
+    expect(duplicated.unavailableReason).toContain("Duplicate required identity");
+    expect(duplicated.state).toBeNull();
   });
 
   it("fails closed for every listed identity and structural defect class", () => {
@@ -252,6 +296,11 @@ describe("F4-WP4 — review fixture model (pure)", () => {
         "unknown requirement identity",
         { ...structuredClone(OLLO_READY), requirementId: "req-nope" },
         "Unknown requirement identity",
+      ],
+      [
+        "blank review-record identity",
+        { ...structuredClone(OLLO_READY), id: "   " },
+        "Invalid required identity",
       ],
       [
         "stale scene association",
@@ -288,6 +337,16 @@ describe("F4-WP4 — review fixture model (pure)", () => {
           parts: [declaration.parts[0]!, declaration.parts[0]!],
         })),
         "Duplicate required identity",
+      ],
+      [
+        "blank part identity",
+        mutateCharacterRig(OLLO_READY, (declaration) => ({
+          ...declaration,
+          parts: declaration.parts.map((part, index) =>
+            index === 0 ? { ...part, id: " " } : part,
+          ),
+        })),
+        "Invalid required identity",
       ],
       [
         "missing padded bounds",
@@ -343,6 +402,16 @@ describe("F4-WP4 — review fixture model (pure)", () => {
           masks: null,
         })),
         "Missing mask declaration",
+      ],
+      [
+        "blank mask identity",
+        mutateCharacterRig(OLLO_READY, (declaration) => ({
+          ...declaration,
+          masks: declaration.masks!.map((mask, index) =>
+            index === 0 ? { ...mask, id: "" } : mask,
+          ),
+        })),
+        "Invalid required identity",
       ],
       [
         "missing mask declaration (referenced but undeclared)",
@@ -437,6 +506,26 @@ describe("F4-WP4 — review fixture model (pure)", () => {
           ),
         })),
         "Unknown layered-set plane",
+      ],
+      [
+        "blank layered-set plane identity",
+        mutateLayeredSet(SET_READY, (declaration) => ({
+          ...declaration,
+          planes: declaration.planes.map((plane, index) =>
+            index === 0 ? { ...plane, id: "" } : plane,
+          ),
+        })),
+        "Invalid required identity",
+      ],
+      [
+        "blank foreground-occluder identity",
+        mutateLayeredSet(SET_READY, (declaration) => ({
+          ...declaration,
+          occluders: declaration.occluders.map((occluder, index) =>
+            index === 0 ? { ...occluder, id: " " } : occluder,
+          ),
+        })),
+        "Invalid required identity",
       ],
       [
         "duplicate plane order",
@@ -954,6 +1043,30 @@ describe("F4-WP4 — review UI", () => {
     expect(alert.textContent).toContain("fails closed as unavailable");
     expect(reviewPanel().textContent).toContain("enters no counts");
     expect(reviewPanel().textContent).not.toContain("Review state:");
+  });
+
+  it("moves focus to the readable alert when switching from a valid example to an unavailable example", async () => {
+    const user = userEvent.setup();
+    const broken = mutateCharacterRig(
+      fixtureFor("review-req-s1-ollo-incomplete"),
+      (declaration) => ({
+        ...declaration,
+        turnaroundViews: ["Front view", "Overhead view"],
+      }),
+    );
+    render(<AssetWorkspace reviewFixtures={[OLLO_READY, broken]} />);
+    await selectScene(user, "scene-1");
+    await user.click(
+      screen.getByRole("button", {
+        name: "Review layers & rig for Ollo in Scene 1 · The Home Nook",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Incomplete example" }),
+    );
+    const alert = within(reviewPanel()).getByRole("alert");
+    expect(alert.textContent).toContain("Unknown turnaround view");
+    expect(document.activeElement).toBe(alert);
   });
 
   it("keeps every approval, preparation, and production control disabled with its reason and reports no production claim", async () => {

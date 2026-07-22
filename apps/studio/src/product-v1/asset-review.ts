@@ -953,6 +953,9 @@ const duplicatesIn = (ids: readonly string[]): string | null => {
   return null;
 };
 
+const hasBlankIdentity = (ids: readonly string[]): boolean =>
+  ids.some((id) => id.trim() === "");
+
 /** Validate a checklist declaration structurally: exactly the required
  * checks, no unknown check, and no self-contradictory check state. Returns
  * the fail-closed reason or null. */
@@ -1035,11 +1038,15 @@ const validateCharacterRig = (
       return `Unknown turnaround view: "${view}" is not one of the required views (${requiredViews.join(", ")}). This review fails closed as unavailable.`;
   }
   const duplicateRequired = duplicatesIn(declaration.requiredPartIds);
+  if (hasBlankIdentity(declaration.requiredPartIds))
+    return "Invalid required identity: a required part has an empty stable local ID. This review fails closed as unavailable.";
   if (duplicateRequired !== null)
     return `Duplicate required identity: part "${duplicateRequired}" is listed twice as required. This review fails closed as unavailable.`;
   const duplicatePart = duplicatesIn(
     declaration.parts.map((part) => part.id),
   );
+  if (hasBlankIdentity(declaration.parts.map((part) => part.id)))
+    return "Invalid required identity: a declared part has an empty stable local ID. This review fails closed as unavailable.";
   if (duplicatePart !== null)
     return `Duplicate required identity: part "${duplicatePart}" is declared twice. This review fails closed as unavailable.`;
   const partIds = new Set(declaration.parts.map((part) => part.id));
@@ -1047,10 +1054,14 @@ const validateCharacterRig = (
   if (declaration.requiredMaskIds.length > 0 && masks === null)
     return "Missing mask declaration: masks are required but no mask declaration exists at all. This review fails closed as unavailable.";
   const duplicateRequiredMask = duplicatesIn(declaration.requiredMaskIds);
+  if (hasBlankIdentity(declaration.requiredMaskIds))
+    return "Invalid required identity: a required mask has an empty stable local ID. This review fails closed as unavailable.";
   if (duplicateRequiredMask !== null)
     return `Duplicate required identity: mask "${duplicateRequiredMask}" is listed twice as required. This review fails closed as unavailable.`;
   const maskIds = new Set((masks ?? []).map((mask) => mask.id));
   const duplicateMask = duplicatesIn((masks ?? []).map((mask) => mask.id));
+  if (hasBlankIdentity((masks ?? []).map((mask) => mask.id)))
+    return "Invalid required identity: a declared mask has an empty stable local ID. This review fails closed as unavailable.";
   if (duplicateMask !== null)
     return `Duplicate required identity: mask "${duplicateMask}" is declared twice. This review fails closed as unavailable.`;
   for (const mask of masks ?? []) {
@@ -1207,7 +1218,9 @@ const resolveCharacterRig = (
       ? "needs-correction"
       : missing.length > 0
         ? "incomplete"
-        : "review-ready";
+        : rows.some((row) => !row.pass)
+          ? "needs-correction"
+          : "review-ready";
 
   return {
     kind: "character-rig",
@@ -1232,6 +1245,8 @@ const resolveCharacterRig = (
 
 /** Validate the structural facts of a layered-set declaration, fail closed. */
 const validateLayeredSet = (declaration: LayeredSetDeclaration): string | null => {
+  if (hasBlankIdentity(declaration.planes.map((plane) => plane.id)))
+    return "Invalid required identity: a layered-set plane has an empty stable local ID. This review fails closed as unavailable.";
   const duplicatePlane = duplicatesIn(
     declaration.planes.map((plane) => plane.id),
   );
@@ -1251,6 +1266,8 @@ const validateLayeredSet = (declaration: LayeredSetDeclaration): string | null =
   const duplicateOccluder = duplicatesIn(
     declaration.occluders.map((occluder) => occluder.id),
   );
+  if (hasBlankIdentity(declaration.occluders.map((occluder) => occluder.id)))
+    return "Invalid required identity: a foreground occluder has an empty stable local ID. This review fails closed as unavailable.";
   if (duplicateOccluder !== null)
     return `Duplicate required identity: occluder "${duplicateOccluder}" is declared twice. This review fails closed as unavailable.`;
   for (const occluder of declaration.occluders) {
@@ -1312,7 +1329,9 @@ const resolveLayeredSet = (
       ? "needs-correction"
       : missing.length > 0
         ? "incomplete"
-        : "review-ready";
+        : rows.some((row) => !row.pass)
+          ? "needs-correction"
+          : "review-ready";
 
   return {
     kind: "layered-set",
@@ -1341,6 +1360,11 @@ export const resolveReviewFixture = (
   item: ResolvedSceneRequirement | null,
   sessionCandidates: readonly LocalCandidateRecord[] = [],
 ): ResolvedReview => {
+  if (fixture.id.trim() === "")
+    return invalid(
+      fixture,
+      "Invalid required identity: this review record has an empty stable local ID. This review fails closed as unavailable.",
+    );
   if (item === null || fixture.requirementId !== item.entry.id)
     return invalid(
       fixture,
@@ -1372,11 +1396,22 @@ export const resolveReviewFixture = (
       `Mismatched category: a layered-set review cannot describe the ${category} requirement "${item.entry.plannedName}". This review fails closed as unavailable.`,
     );
 
-  const sessionRecord = sessionCandidates.find(
+  const matchingSessionRecords = sessionCandidates.filter(
     (record) =>
       record.id === fixture.candidateId &&
       record.requirementId === item.entry.id,
   );
+  if (matchingSessionRecords.length > 1)
+    return invalid(
+      fixture,
+      `Duplicate required identity: session-local candidate ${fixture.candidateId} is declared more than once for this requirement. This review fails closed as unavailable.`,
+    );
+  const sessionRecord = matchingSessionRecords[0];
+  if (sessionRecord !== undefined && sessionRecord.sceneId !== item.entry.sceneId)
+    return invalid(
+      fixture,
+      `Stale scene association: session-local candidate ${fixture.candidateId} is scoped to ${sessionRecord.sceneId}, but this requirement is scoped to ${item.entry.sceneId}. This review fails closed as unavailable.`,
+    );
   if (
     sessionRecord === undefined &&
     !knownDemoCandidateIds(item.entry.id).includes(fixture.candidateId)

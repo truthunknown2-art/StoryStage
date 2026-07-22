@@ -27,8 +27,8 @@ import {
  * pivots, generates masks, builds rigs, approves, promotes, or claims any
  * production state. Focus enters the labelled heading on open; Escape and
  * Close hand focus back to the invoking row control (handled by the parent);
- * switching the declared example never moves focus or changes requirement
- * counts/readiness.
+ * switching to a fail-closed example moves focus to its readable alert;
+ * switching examples never changes requirement counts/readiness.
  */
 export function AssetReview({
   fixtures,
@@ -53,18 +53,24 @@ export function AssetReview({
     resolved.find((entry) => entry.fixture.id === selectedId) ??
     resolved[0] ??
     null;
+  const activeFixtureId = active?.fixture.id ?? null;
+  const activeUnavailableReason = active?.unavailableReason ?? null;
 
   /* Opening moves focus into the labelled review heading; a fail-closed
-   * unavailable review instead moves focus to its readable alert. The mount
-   * target is fixed at first render: the panel closes on any scope change
-   * rather than retaining a stale identity. */
-  const focusAlertOnMountRef = useRef(
-    active !== null && active.unavailableReason !== null,
-  );
+   * unavailable review instead moves focus to its readable alert. Switching
+   * to a fail-closed example also focuses that newly mounted alert. */
+  const didFocusInitialTargetRef = useRef(false);
   useEffect(() => {
-    if (focusAlertOnMountRef.current) alertRef.current?.focus();
-    else headingRef.current?.focus();
-  }, []);
+    if (!didFocusInitialTargetRef.current) {
+      didFocusInitialTargetRef.current = true;
+      if (activeFixtureId !== null && activeUnavailableReason !== null)
+        alertRef.current?.focus();
+      else headingRef.current?.focus();
+      return;
+    }
+    if (activeFixtureId !== null && activeUnavailableReason !== null)
+      alertRef.current?.focus();
+  }, [activeFixtureId, activeUnavailableReason]);
 
   /* Fail-closed backstop: if the selected example identity is no longer
    * declared for this requirement, fall to the first declared example — a
