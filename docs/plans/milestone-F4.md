@@ -12,13 +12,14 @@
   direction recorded on 2026-07-21
 - Decomposition approval: the dependency-ordered F4-WP1 through F4-WP5
   decomposition was accepted in G0
-- Current authorization: only F4-WP5 through issue #117 after the matching
-  exact-base status transition and higher validated Kimi inbox are published
-- Exact implementation base: `0b8d03940e65114d6cd7edba4ae4fa2028be2c19`
-- Required branch:
-  `agent/kimi-f4-wp5-responsive-accessibility-evidence`
-- Accepted F4-WP4 product head:
-  `5dad1aa72c2e3e9ea5a7f5a4e4625f1775e1ef4b`
+- Current authorization: F4 is accepted at exact product merge
+  `5c7107f3b201780865c30f11a59716e4a82d16d4`; Kimi is `WAIT`
+- Accepted F4-WP5 implementation/evidence correction:
+  `a5f642fdc3df9a86241669c855a27ad3b8b67244`
+- Accepted exact handback head:
+  `44f521860c89eb883da4b56495cc1dad67d1c73a`
+- F5-WP1 remains unauthorized until its separate complete milestone plan,
+  issue, exact-base status transition, and higher validated Kimi inbox exist
 - Backend product work remains blocked until the complete F6 Frontend Gate is
   accepted
 
@@ -141,3 +142,20 @@ sources/rights, request/import states, layer and rig review, and the next real
 preparation action without claiming that asset services, files, images, rigs,
 or production capabilities exist. Passing F4 does not authorize F5 until its
 separate exact-base ticket/status transition.
+
+## Acceptance receipt
+
+F4-WP1 through F4-WP5 and the complete F4 milestone are accepted and
+integrated at `product/v1@5c7107f3b201780865c30f11a59716e4a82d16d4`.
+PR #121 exact head `44f521860c89eb883da4b56495cc1dad67d1c73a`
+passed the focused, Studio, typecheck, build, lint, serialized root, 52/52
+browser, 16-screenshot/hash, three-reviewer, hosted-run `29952061999`, and
+ChatGPT Pro exact-head gates. The merge tree is byte-identical to the accepted
+candidate; postmerge run `29953736441` passed on retry after an unchanged MCP
+stdio timing race, and a clean detached checkout passed roadmap consistency,
+focused F4-WP5 12/12, and the exact MCP transport file 5/5.
+
+This acceptance closes only the frontend Assets & Rigs milestone. It grants no
+real file/media access, generation/import, persistence, asset approval,
+capability promotion, worker/backend, Godot, Remotion, render/export, Windows
+packaging, QA, or private-launch authority. Kimi inbox v90 records `WAIT`.
