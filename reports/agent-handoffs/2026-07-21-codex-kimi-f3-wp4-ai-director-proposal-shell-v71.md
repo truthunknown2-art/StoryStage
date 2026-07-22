@@ -2,7 +2,7 @@
 
 ## Assignment identity
 
-- Inbox-Version: `71`
+- Inbox-Version: `72`
 - Issue: `#89`
 - Exact accepted base: `0111274544afda55f8481be103bd3c7ad4db661a`
 - Required branch: `agent/kimi-f3-wp4-ai-director-proposal-shell`

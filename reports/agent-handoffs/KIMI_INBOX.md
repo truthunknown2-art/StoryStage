@@ -1,9 +1,9 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `71`
+Inbox-Version: `72`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F3-WP4-AI-DIRECTOR-PROPOSAL-SHELL`
-Status: `START_NOW`
+Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `0111274544afda55f8481be103bd3c7ad4db661a`
 Required-Work-Branch: `agent/kimi-f3-wp4-ai-director-proposal-shell`
@@ -11,6 +11,19 @@ Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp4-ai-director-pro
 Issue: `#89`
 
 ## Current instruction
+
+Version 72 corrects Version 71's invalid underscore status enum to the
+canonical `START-NOW` transport value. The assignment, exact base, branch,
+issue, scope, and full brief are unchanged. Version 71 could not pass the
+roadmap consistency guard and the watcher was uninstalled before it was
+published, so it did not launch Kimi or consume model tokens.
+
+Version 72 supersedes Version 71. Version 71 remains below as invalid
+historical traceability and must not relaunch.
+
+---
+
+Previous Version 71 instruction:
 
 Version 71 starts only F3-WP4 through issue #89 from exact accepted base
 `0111274544afda55f8481be103bd3c7ad4db661a` on required branch
