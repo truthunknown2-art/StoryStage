@@ -709,13 +709,20 @@ describe("F4-WP2 — truth boundaries (UI)", () => {
       button.classList.contains("pv1-requirement-open"),
     );
     const preparationButtons = buttons.filter(
-      (button) => !button.classList.contains("pv1-requirement-open"),
+      (button) => button.closest(".pv1-asset-preparation") !== null,
+    );
+    /* F4-WP3 adds one enabled Request-image-pack control per non-ready row;
+     * it performs a bounded local-state action, so it is not a preparation
+     * button and must stay enabled. */
+    const requestButtons = buttons.filter((button) =>
+      button.classList.contains("pv1-requirement-request"),
     );
     expect(openButtons).toHaveLength(36);
     expect(preparationButtons).toHaveLength(37);
+    expect(requestButtons).toHaveLength(30);
     for (const button of preparationButtons)
       expect((button as HTMLButtonElement).disabled).toBe(true);
-    for (const button of openButtons)
+    for (const button of [...openButtons, ...requestButtons])
       expect((button as HTMLButtonElement).disabled).toBe(false);
     const workspaceText = screen.getByTestId("pv1-assets").textContent ?? "";
     expect(workspaceText).not.toMatch(

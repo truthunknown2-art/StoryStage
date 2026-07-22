@@ -14,6 +14,7 @@ import { App } from "./App";
 import { ProductV1App } from "./product-v1/ProductV1App";
 import "./product-v1/asset-workspace.test";
 import "./product-v1/asset-requirements.test";
+import "./product-v1/asset-request-import.test";
 import {
   AI_CONNECTION_LABELS,
   AI_CONNECTION_STATES,
