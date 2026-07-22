@@ -89,6 +89,7 @@ export function AssetReview({
       aria-label={`${kindLabel} for ${item.entry.plannedName} in ${sceneLabel}`}
       className="pv1-review"
       data-testid="pv1-review"
+      id={`pv1-review-${item.entry.id}`}
       onKeyDown={(event) => {
         if (event.key !== "Escape") return;
         event.stopPropagation();
@@ -251,43 +252,57 @@ function CharacterRigSections({
 
       <div className="pv1-review-block" data-testid="pv1-review-parts">
         <h4>Part inventory (declared)</h4>
-        <table className="pv1-review-table">
-          <thead>
-            <tr>
-              <th scope="col">Part ID</th>
-              <th scope="col">Padded bounds (declared)</th>
-              <th scope="col">Pivot (declared)</th>
-              <th scope="col">Attachment intent</th>
-            </tr>
-          </thead>
-          <tbody>
-            {review.parts.map((part) => (
-              <tr key={part.id}>
-                <th scope="row">
-                  {part.id}
-                  <small>{part.label}</small>
-                </th>
-                <td>
-                  {part.bounds === null
-                    ? "Not declared"
-                    : `x ${part.bounds.x}, y ${part.bounds.y}, ${part.bounds.width} × ${part.bounds.height}, padding ${part.bounds.padding}`}
-                </td>
-                <td>
-                  {part.pivot === null
-                    ? "Not declared"
-                    : `x ${part.pivot.x}, y ${part.pivot.y}`}
-                </td>
-                <td>
-                  {part.attachment.parentPartId === null
-                    ? "Root part"
-                    : `Attached to ${part.attachment.parentPartId}`}
-                  {" — "}
-                  {part.attachment.intent}
-                </td>
+        {/* F4-WP5: the wide declared part table lives in a labelled,
+         * keyboard-reachable contained horizontal scroller, so it can never
+         * widen the document at compact viewports. The table itself carries
+         * an accessible name; state text never relies on color alone. */}
+        <div
+          aria-label="Declared part inventory table — horizontally scrollable when wider than the panel"
+          className="pv1-review-table-scroll"
+          role="region"
+          tabIndex={0}
+        >
+          <table
+            aria-label="Declared part inventory (demo metadata)"
+            className="pv1-review-table"
+          >
+            <thead>
+              <tr>
+                <th scope="col">Part ID</th>
+                <th scope="col">Padded bounds (declared)</th>
+                <th scope="col">Pivot (declared)</th>
+                <th scope="col">Attachment intent</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {review.parts.map((part) => (
+                <tr key={part.id}>
+                  <th scope="row">
+                    {part.id}
+                    <small>{part.label}</small>
+                  </th>
+                  <td>
+                    {part.bounds === null
+                      ? "Not declared"
+                      : `x ${part.bounds.x}, y ${part.bounds.y}, ${part.bounds.width} × ${part.bounds.height}, padding ${part.bounds.padding}`}
+                  </td>
+                  <td>
+                    {part.pivot === null
+                      ? "Not declared"
+                      : `x ${part.pivot.x}, y ${part.pivot.y}`}
+                  </td>
+                  <td>
+                    {part.attachment.parentPartId === null
+                      ? "Root part"
+                      : `Attached to ${part.attachment.parentPartId}`}
+                    {" — "}
+                    {part.attachment.intent}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         {review.requiredPartStatus.some((entry) => !entry.declared) ? (
           <p className="pv1-review-note-inline" role="note">
             Required parts not declared:{" "}

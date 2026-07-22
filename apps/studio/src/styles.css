@@ -3737,7 +3737,6 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   font-size: 11.5px;
   line-height: 1.55;
   margin: 0;
-  outline: none;
   padding: 8px 10px;
 }
 
@@ -3750,6 +3749,12 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   line-height: 1.55;
   margin: 0;
   padding: 8px 10px;
+}
+
+.pv1-request-alert:focus,
+.pv1-request-note:focus {
+  outline: 2px solid var(--accent, #91e4b3);
+  outline-offset: 2px;
 }
 
 .pv1-request-review li {
@@ -4122,4 +4127,44 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   color: var(--pv1-faint);
   font-size: 10.5px;
   line-height: 1.45;
+}
+
+/* ------------------------------------------------------------------ */
+/* F4-WP5 responsive, accessibility, and evidence gate                 */
+/* ------------------------------------------------------------------ */
+
+/* The workspace header and control groups wrap instead of clipping at
+ * compact widths (categories, filters, and action groups already wrap). */
+.pv1-assets-header {
+  flex-wrap: wrap;
+}
+
+/* At compact width the control row stacks in the intentional order:
+ * asset categories above the episode/scene filters, both before the
+ * requirements region. */
+@media (max-width: 1024px) {
+  .pv1-assets-controls {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+
+/* A wide declared part/review table never widens the document: it lives in
+ * a labelled, keyboard-reachable contained horizontal scroller that engages
+ * only when the table genuinely overflows the panel. The table keeps a
+ * readable minimum and reflows above it. */
+.pv1-review-table-scroll {
+  border-radius: 6px;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.pv1-review-table-scroll:focus-visible {
+  outline: 2px solid var(--accent, #91e4b3);
+  outline-offset: 2px;
+}
+
+.pv1-review-table-scroll .pv1-review-table {
+  min-width: 560px;
 }

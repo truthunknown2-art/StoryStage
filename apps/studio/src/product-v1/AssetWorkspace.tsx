@@ -48,6 +48,22 @@ import { AssetReview } from "./AssetReview";
 const reviewActionLabel = (category: AssetCategoryId): string =>
   category === "layered-sets" ? "Review set layers" : "Review layers & rig";
 
+/* F4-WP5 focus backstop: when a scope, category, or record change removes an
+ * open transient panel (or its invoker) without a restore request, focus must
+ * never fall to `body` or removed content — it moves to the Scene filter, the
+ * stable surviving scope-authority control. Focus that already rests on a
+ * surviving control is never yanked. */
+const recoverStrandedFocus = (target: HTMLElement | null) => {
+  const active = document.activeElement;
+  if (
+    active !== null &&
+    active !== document.body &&
+    document.contains(active)
+  )
+    return;
+  target?.focus();
+};
+
 /**
  * F4-WP1 Assets & Rigs workspace: category navigation, episode/scene
  * filters, and a synchronized selected-asset detail over deterministic local
@@ -88,6 +104,7 @@ export function AssetWorkspace({
   >({});
   const requestInvokerRef = useRef<HTMLButtonElement | null>(null);
   const restoreRequestFocusRef = useRef(false);
+  const requestWasOpenRef = useRef(false);
 
   const closeRequest = (restoreFocus: boolean) => {
     if (openRequestId === null) return;
@@ -95,10 +112,22 @@ export function AssetWorkspace({
     setOpenRequestId(null);
   };
 
+  /* The Scene filter is the stable surviving scope-authority control used by
+   * the F4-WP5 stranded-focus backstop. */
+  const sceneFilterRef = useRef<HTMLSelectElement | null>(null);
+
   useEffect(() => {
-    if (openRequestId !== null || !restoreRequestFocusRef.current) return;
-    restoreRequestFocusRef.current = false;
-    requestInvokerRef.current?.focus();
+    if (openRequestId !== null) {
+      requestWasOpenRef.current = true;
+      return;
+    }
+    if (!requestWasOpenRef.current) return;
+    if (restoreRequestFocusRef.current) {
+      restoreRequestFocusRef.current = false;
+      requestInvokerRef.current?.focus();
+      return;
+    }
+    recoverStrandedFocus(sceneFilterRef.current);
   }, [openRequestId]);
 
   /* F4-WP4: scene-scoped layer-and-rig review transient state. The open
@@ -109,6 +138,7 @@ export function AssetWorkspace({
   const [openReviewId, setOpenReviewId] = useState<string | null>(null);
   const reviewInvokerRef = useRef<HTMLButtonElement | null>(null);
   const restoreReviewFocusRef = useRef(false);
+  const reviewWasOpenRef = useRef(false);
 
   const closeReview = (restoreFocus: boolean) => {
     if (openReviewId === null) return;
@@ -117,9 +147,17 @@ export function AssetWorkspace({
   };
 
   useEffect(() => {
-    if (openReviewId !== null || !restoreReviewFocusRef.current) return;
-    restoreReviewFocusRef.current = false;
-    reviewInvokerRef.current?.focus();
+    if (openReviewId !== null) {
+      reviewWasOpenRef.current = true;
+      return;
+    }
+    if (!reviewWasOpenRef.current) return;
+    if (restoreReviewFocusRef.current) {
+      restoreReviewFocusRef.current = false;
+      reviewInvokerRef.current?.focus();
+      return;
+    }
+    recoverStrandedFocus(sceneFilterRef.current);
   }, [openReviewId]);
 
   const visibleAssets = filterAssetFixtures(category, scope);
@@ -291,6 +329,7 @@ export function AssetWorkspace({
                   }),
                 );
               }}
+              ref={sceneFilterRef}
               value={scope.sceneId}
             >
               <option value={SCOPE_ALL}>All scenes</option>
@@ -421,6 +460,7 @@ export function AssetWorkspace({
                     </span>
                     {item.unavailableReason === null && !isReady ? (
                       <button
+                        aria-controls={`pv1-request-${entry.id}`}
                         aria-expanded={openRequestId === entry.id}
                         aria-label={`Request image pack for ${entry.plannedName} in ${requirementSceneLabel(entry.sceneId)}`}
                         className="pv1-secondary pv1-requirement-request"
@@ -463,6 +503,7 @@ export function AssetWorkspace({
                         );
                       return (
                         <button
+                          aria-controls={`pv1-review-${entry.id}`}
                           aria-expanded={openReviewId === entry.id}
                           aria-label={`${reviewActionLabel(entry.category)} for ${entry.plannedName} in ${requirementSceneLabel(entry.sceneId)}`}
                           className="pv1-secondary pv1-requirement-review"
