@@ -1,8 +1,8 @@
 # F3-WP5 immutable handback
 
-Task: `F3-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE`  
-Issue: [#95](https://github.com/truthunknown2-art/StoryStage/issues/95)  
-Draft PR: [#97](https://github.com/truthunknown2-art/StoryStage/pull/97)  
+Task: `F3-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE`
+Issue: [#95](https://github.com/truthunknown2-art/StoryStage/issues/95)
+Draft PR: [#97](https://github.com/truthunknown2-art/StoryStage/pull/97)
 Required branch: `agent/kimi-f3-wp5-responsive-accessibility-evidence`
 
 ## Exact identity
