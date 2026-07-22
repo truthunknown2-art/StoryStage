@@ -1,16 +1,31 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `70`
+Inbox-Version: `71`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP3-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F3-WP4-AI-DIRECTOR-PROPOSAL-SHELL`
+Status: `START_NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `24c7a95b3bc90e33b77113a4af4b76df2fd1cd42`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#85`
+Accepted-Root-Base: `0111274544afda55f8481be103bd3c7ad4db661a`
+Required-Work-Branch: `agent/kimi-f3-wp4-ai-director-proposal-shell`
+Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp4-ai-director-proposal-shell-v71.md`
+Issue: `#89`
 
 ## Current instruction
+
+Version 71 starts only F3-WP4 through issue #89 from exact accepted base
+`0111274544afda55f8481be103bd3c7ad4db661a` on required branch
+`agent/kimi-f3-wp4-ai-director-proposal-shell`. Build the labelled local-fixture
+two-path New Project, shared proposal review, and docked AI Director shell in
+the full brief. Preserve all accepted manual direction/history behavior. Do not
+start F3-WP5, live AI integration, persistence, backend work, Godot, Remotion,
+rendering, or export. Publish one immutable handback and exit.
+
+Version 71 supersedes Version 70. Version 70 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 70 instruction:
 
 Version 70 records F3-WP3 acceptance and integration. PR #87 exact handback
 tip `1579ee1ff1c078ae1f7849546cd9c87a21880620` passed Studio 100/100,
