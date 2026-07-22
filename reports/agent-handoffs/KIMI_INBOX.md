@@ -1,16 +1,34 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `87`
+Inbox-Version: `88`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP4-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F4-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `5dad1aa72c2e3e9ea5a7f5a4e4625f1775e1ef4b`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#113`
+Accepted-Root-Base: `0b8d03940e65114d6cd7edba4ae4fa2028be2c19`
+Required-Work-Branch: `agent/kimi-f4-wp5-responsive-accessibility-evidence`
+Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp5-responsive-accessibility-evidence-v88.md`
+Issue: `#117`
 
 ## Current instruction
+
+Version 88 starts only F4-WP5 through issue #117 from exact accepted base
+`0b8d03940e65114d6cd7edba4ae4fa2028be2c19` on required branch
+`agent/kimi-f4-wp5-responsive-accessibility-evidence`. Complete only the
+integrated Product v1 Assets & Rigs keyboard, focus, responsive,
+reduced-motion, and exact evidence gate in the full brief. Preserve every
+accepted F4 readiness, source/rights, request/import, session-local candidate,
+and declared layer/rig review truth. Publish one immutable handback and exit.
+Do not start F5/F6, change fixture/model semantics, touch real files/providers,
+or begin persistence, workers, backend, Godot, Remotion, rendering, export,
+packaging, or private-launch work.
+
+Version 88 supersedes Version 87. Version 87 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 87 instruction:
 
 Version 87 records F4-WP4 acceptance and integration. Kimi's initial
 implementation `f8c4a4b...` received four bounded Codex review corrections;
