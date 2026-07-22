@@ -1,28 +1,42 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `78`
+Inbox-Version: `79`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F4-WP1-ASSET-WORKSPACE-INFORMATION-ARCHITECTURE`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `fd0bd16c531e1742c14b21fc79cf8c47eb82d200`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#95`
+Accepted-Root-Base: `d6fe17ca7507cfd37f61a954b5f5034982c3554d`
+Required-Work-Branch: `agent/kimi-f4-wp1-asset-workspace-information-architecture`
+Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp1-asset-workspace-information-architecture-v79.md`
+Issue: `#99`
 
 ## Current instruction
 
-Version 78 records complete F3 acceptance and integration. PR #97 exact head
+Version 79 starts only F4-WP1 through issue #99 from exact accepted base
+`d6fe17ca7507cfd37f61a954b5f5034982c3554d` on required branch
+`agent/kimi-f4-wp1-asset-workspace-information-architecture`. Implement the
+Product v1 Characters, Locations, Layered Sets, Props, and Rigs information
+architecture, episode/scene filters, synchronized selection/detail, truthful
+local demo fixtures, and readiness vocabulary exactly as bounded by the full
+brief. Publish one immutable handback and exit. Do not start F4-WP2, revive the
+legacy production Assets screen, create/import/approve assets, or begin
+backend, Godot, Remotion, persistence, rendering, export, packaging, or
+private-launch work.
+
+Version 79 supersedes Version 78. Version 78 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 78 instruction:
+
+Version 78 recorded complete F3 acceptance and integration. PR #97 exact head
 `f56960d5d9cfd051927ccb6b531090f3256f4e4e` passed Studio 135/135,
 typecheck, production build, the 40/40 browser audit, 22 unique required-size
 screenshots, zero console/page errors, three independent audits, clean
 synthetic root verification, hosted Verify run `29898272414`, and ChatGPT
 Pro's exact-head milestone audit with no blockers. It merged into `product/v1`
-at `fd0bd16c531e1742c14b21fc79cf8c47eb82d200`. Kimi is now `WAIT`.
-F4-WP1 requires a separate exact-base issue, full brief, status transition, and
-higher inbox version. Do not start F4, backend work, Godot, Remotion,
-persistence, rendering, export, packaging, or private-launch work from this
-inbox.
+at `fd0bd16c531e1742c14b21fc79cf8c47eb82d200`. Kimi was placed at `WAIT`.
 
 Version 78 supersedes Version 77. Version 77 remains below as historical
 traceability and must not relaunch.
