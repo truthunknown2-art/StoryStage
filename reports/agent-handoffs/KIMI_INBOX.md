@@ -1,16 +1,32 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `75`
+Inbox-Version: `76`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP4-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F3-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE`
+Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `d5207bd7410d1388b3e1797fb0a98f04e680f6d1`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#89`
+Accepted-Root-Base: `272812f25fa0f4f794edfb69426028349900382e`
+Required-Work-Branch: `agent/kimi-f3-wp5-responsive-accessibility-evidence`
+Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp5-responsive-accessibility-evidence-v76.md`
+Issue: `#95`
 
 ## Current instruction
+
+Version 76 starts only F3-WP5 through issue #95 from exact accepted base
+`272812f25fa0f4f794edfb69426028349900382e` on required branch
+`agent/kimi-f3-wp5-responsive-accessibility-evidence`. Complete the full
+keyboard/focus, accessibility, reduced-motion, three-viewport responsive,
+reference-comparison, and exact evidence brief. Preserve all accepted F3
+behavior and local-fixture truth boundaries. Publish one immutable handback and
+exit. Do not start F4, live AI integration, persistence, backend work, Godot,
+Remotion, rendering, export, packaging, or private-launch work.
+
+Version 76 supersedes Version 75. Version 75 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 75 instruction:
 
 Version 75 records F3-WP4 acceptance and integration. Correction PR #93 exact
 head `837e00402f665e7a1caa5c92d05991c205fea736` passed Studio 123/123,
