@@ -1,8 +1,8 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: 5dad1aa72c2e3e9ea5a7f5a4e4625f1775e1ef4b
-lastAcceptedMilestone: F3
+lastAcceptedProductHead: 5c7107f3b201780865c30f11a59716e4a82d16d4
+lastAcceptedMilestone: F4
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
   E0: 81a0e64dedad5bab9e4f2f285c40341e1343412f
@@ -11,31 +11,32 @@ completedMilestones:
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
+  F4: 5c7107f3b201780865c30f11a59716e4a82d16d4
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F4
   package: F4-WP5
-  owner: Kimi
+  owner: Codex
   exactBase: 0b8d03940e65114d6cd7edba4ae4fa2028be2c19
-  branch: agent/kimi-f4-wp5-responsive-accessibility-evidence-v2
+  branch: agent/codex-f4-wp5-review-correction
   issue: 117
-  pr: null
-  candidateContentHead: 0b8d03940e65114d6cd7edba4ae4fa2028be2c19
+  pr: 121
+  candidateContentHead: 44f521860c89eb883da4b56495cc1dad67d1c73a
   candidateRef: product/v1
 checks:
   local: roadmap-consistency+format-check
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-f4-wp4-exact-c96c5b9e672305d30f70b891ca7195af07aa582e-hosted-29937550475-pass-postmerge-29938267777-pass-status-postmerge-29939686702-pass
-  pro: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-no-blockers
+  codex: accept-complete-f4-exact-44f521860c89eb883da4b56495cc1dad67d1c73a-hosted-29952061999-pass-merge-5c7107f3b201780865c30f11a59716e4a82d16d4-postmerge-29953736441-pass
+  pro: accept-complete-f4-exact-44f521860c89eb883da4b56495cc1dad67d1c73a-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F5 remains blocked by dependency order and the complete F4 milestone gate
+  - F5-WP1 remains blocked until a separate issue, complete milestone plan, and START_NOW status/inbox transition authorize it from the exact accepted base
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F4_WP5_ONLY
-  text: Recover and complete only issue #117 from exact base 0b8d03940e65114d6cd7edba4ae4fa2028be2c19 on agent/kimi-f4-wp5-responsive-accessibility-evidence-v2 using preserved unaccepted WIP 51ff4741f246b86244f13d11a2ad3b373f99d75f, publish the exact handback, and stop before F5.
+  type: WAIT_FOR_F5_WP1_TICKET
+  text: F4 is accepted and integrated. Keep Kimi at WAIT and do not begin F5-WP1 until its complete milestone plan, separate issue, and exact-base START_NOW transitions are durable.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -185,20 +186,24 @@ verification from the live PR checks.
   rigs, approval, capabilities, production readiness, persistence, providers,
   workers, backend, Godot, Remotion, rendering, export, packaging, F4-WP5, or
   later work.
-- Issue #117 and this `START_NOW` transition authorize only F4-WP5 from exact
-  base `product/v1@0b8d03940e65114d6cd7edba4ae4fa2028be2c19` on required
-  recovery branch `agent/kimi-f4-wp5-responsive-accessibility-evidence-v2`.
-  Version 88's Kimi CLI exited before handback after focused 12/12 and a
-  resource-sensitive full-suite run. Its six-file in-scope workspace is
-  preserved as explicitly unaccepted WIP
-  `51ff4741f246b86244f13d11a2ad3b373f99d75f`; only a higher validated inbox
-  may resume it on the recovery branch. The package may
-  complete only the integrated Assets & Rigs keyboard, focus, responsive,
-  reduced-motion, and exact evidence gate at 1920x1080, 1440x900, and 1024x800.
-  It must preserve every accepted F4 readiness, source/rights, request/import,
-  session-local candidate, and layer/rig review truth. It does not authorize
-  fixture/model changes, F5, F6, persistence, providers, workers, backend,
-  Godot, Remotion, rendering, export, packaging, or later work.
+- F4-WP5 and the complete F4 milestone are accepted and integrated at exact
+  `product/v1@5c7107f3b201780865c30f11a59716e4a82d16d4`. Independent review
+  rejected original Kimi handback `ec4fb78...`; bounded corrected
+  implementation/evidence tree `a5f642f...` and final exact PR #121 head
+  `44f5218...` passed focused 12/12, combined request/accessibility 30/30,
+  Studio 229/229, typecheck, production build, touched lint, serialized root
+  verification, 52/52 browser checks, 16 unique exact-size screenshots, zero
+  console/page errors, and three independent exact-head audits. Hosted Verify
+  run `29952061999` passed, ChatGPT Pro accepted the exact head with no
+  blockers, PR #121 merged at `5c7107f...`, and postmerge Verify run
+  `29953736441` passed on retry after its first attempt hit only the unchanged
+  MCP stdio timing race. F4 provides the truthful scene-scoped Assets & Rigs
+  planning, readiness, request/import, declared-metadata layer/rig review, and
+  complete responsive/accessibility journey. It does not provide real files,
+  media inspection, generation/import, persistence, approval or capability
+  promotion, backend workers, Godot, Remotion, rendering, export, packaging,
+  QA, private launch, F5, or later work. F5-WP1 requires its own complete plan,
+  issue, exact-base status transition, and higher validated Kimi inbox.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
