@@ -1,16 +1,36 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `81`
+Inbox-Version: `82`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP2-SCENE-ASSET-REQUIREMENTS-READINESS`
-Status: `START-NOW`
+Current-Task: `F4-WP2-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `f99ff77890355e1e6003d48e683b3153ce59c64b`
-Required-Work-Branch: `agent/kimi-f4-wp2-scene-asset-requirements-readiness`
-Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp2-scene-asset-requirements-readiness-v81.md`
+Accepted-Root-Base: `1c6ded8b4db75bbf669ce09efff2fb804cdd1593`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#103`
 
 ## Current instruction
+
+Version 82 records F4-WP2 acceptance and integration. PR #105 predecessor
+head `67432073aa96c6bafb634fdad5afd0c876db13a5` passed hosted verification but
+was rejected by exact-head code audit and was not merged. Corrected exact head
+`ded8dcb645c409f955c6de7c8a716863907f9413` passed Studio 176/176, focused
+23/23, typecheck, production build, lint with zero errors, repository-root
+verification, 11/11 browser checks, six hash-matched 1440x900 screenshots,
+zero console/page errors, and independent Sol code/fail-closed plus Terra
+visual/evidence audits with no P0/P1/P2. Hosted Verify run `29912677634` and
+post-merge run `29913212707` passed. PR #105 merged into `product/v1` at
+`1c6ded8b4db75bbf669ce09efff2fb804cdd1593`. Kimi is now `WAIT`; F4-WP3,
+backend product work, Godot, Remotion, persistence, rendering, export,
+packaging, and every later package remain unauthorized by this inbox.
+
+Version 82 supersedes Version 81. Version 81 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 81 instruction:
 
 Version 81 starts only F4-WP2 through issue #103 from exact accepted base
 `f99ff77890355e1e6003d48e683b3153ce59c64b` on required branch
