@@ -12,11 +12,11 @@
   direction recorded on 2026-07-21
 - Decomposition approval: the dependency-ordered F4-WP1 through F4-WP5
   decomposition was accepted in G0
-- Current authorization: only F4-WP1 through issue #99 after the matching
+- Current authorization: only F4-WP2 through issue #103 after the matching
   exact-base status transition and higher validated Kimi inbox are published
-- Exact implementation base: `d6fe17ca7507cfd37f61a954b5f5034982c3554d`
+- Exact implementation base: `f99ff77890355e1e6003d48e683b3153ce59c64b`
 - Required branch:
-  `agent/kimi-f4-wp1-asset-workspace-information-architecture`
+  `agent/kimi-f4-wp2-scene-asset-requirements-readiness`
 - Backend product work remains blocked until the complete F6 Frontend Gate is
   accepted
 
