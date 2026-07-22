@@ -4123,3 +4123,33 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
   font-size: 10.5px;
   line-height: 1.45;
 }
+
+/* ------------------------------------------------------------------ */
+/* F4-WP5 responsive, accessibility, and evidence gate                 */
+/* ------------------------------------------------------------------ */
+
+/* The workspace header and control groups wrap instead of clipping at
+ * compact widths (categories, filters, and action groups already wrap). */
+.pv1-assets-header {
+  flex-wrap: wrap;
+}
+
+/* A wide declared part/review table never widens the document: it lives in
+ * a labelled, keyboard-reachable contained horizontal scroller that engages
+ * only when the table genuinely overflows the panel. The table keeps a
+ * readable minimum and reflows above it. */
+.pv1-review-table-scroll {
+  border-radius: 6px;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.pv1-review-table-scroll:focus-visible {
+  outline: 2px solid var(--accent, #91e4b3);
+  outline-offset: 2px;
+}
+
+.pv1-review-table-scroll .pv1-review-table {
+  min-width: 560px;
+}
