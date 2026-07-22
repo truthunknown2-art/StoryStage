@@ -130,9 +130,7 @@ export success strings in the workspace.
   (exit 0). Roadmap consistency, generated artifacts, E1 security evidence,
   privacy, repository lint, all-package typecheck, and all tests passed,
   including Story Engine 353/353, asset-pipeline 126/126, and Studio
-  215/215 on the original implementation tree. After the bounded audit
-  corrections, the affected focused suite passed 23/23 and the complete
-  Studio suite passed 217/217. Two earlier attempts hit the documented unchanged CPU/resource
+  217/217 on the corrected implementation tree. Two earlier attempts hit the documented unchanged CPU/resource
   contention flakes in untouched packages (story-engine loop-test timeouts;
   an asset-pipeline temp-dir cleanup race); each failing suite passed in
   isolation, and the serialized worker-capped run passed end to end on the
