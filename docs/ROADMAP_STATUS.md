@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: 648e9458642f5abdb8751a8dd74c8a3a1db9253e
+lastAcceptedProductHead: 1c6ded8b4db75bbf669ce09efff2fb804cdd1593
 lastAcceptedMilestone: F3
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -12,30 +12,31 @@ completedMilestones:
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F4
   package: F4-WP2
-  owner: Kimi
+  owner: Codex
   exactBase: f99ff77890355e1e6003d48e683b3153ce59c64b
   branch: agent/kimi-f4-wp2-scene-asset-requirements-readiness
   issue: 103
-  pr: null
-  candidateContentHead: f99ff77890355e1e6003d48e683b3153ce59c64b
+  pr: 105
+  candidateContentHead: ded8dcb645c409f955c6de7c8a716863907f9413
   candidateRef: product/v1
 checks:
-  local: roadmap-consistency+format-check
+  local: studio-176+focused-23+typecheck+build+lint+browser-11+6-screenshot-hashes+exact-successor-audits+root-verify
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-f4-wp1-exact-aa66103336e2ad7aa19d90e1cf9419d576510c09-hosted-29905070316-pass-postmerge-29905734404-attempt-2-pass
+  codex: accept-f4-wp2-exact-ded8dcb645c409f955c6de7c8a716863907f9413-hosted-29912677634-pass-postmerge-29913212707-pass
   pro: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F4-WP3 through F4-WP5 remain blocked by dependency order
+  - F4-WP3 requires a separate bounded START_NOW ticket and higher Kimi inbox version
+  - F4-WP4 and F4-WP5 remain blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F4_WP2_ONLY
-  text: Implement only issue #103 from exact base f99ff77890355e1e6003d48e683b3153ce59c64b on agent/kimi-f4-wp2-scene-asset-requirements-readiness, publish the exact handback, and stop before F4-WP3.
+  type: WAIT_FOR_F4_WP3_TICKET
+  text: F4-WP2 is accepted and integrated. Do not begin F4-WP3 until a separate bounded ticket, exact-base status transition, and higher Kimi inbox version are published.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -139,15 +140,21 @@ verification from the live PR checks.
   bounded readiness vocabulary. It does not provide F4-WP2 readiness
   aggregation, real asset files, import/generation, slicing/rigging, approval,
   persistence, backend, Godot, Remotion, rendering, export, or packaging.
-- Issue #103 and this `START_NOW` transition authorize only F4-WP2 from exact
-  base `product/v1@f99ff77890355e1e6003d48e683b3153ce59c64b` on required
-  branch `agent/kimi-f4-wp2-scene-asset-requirements-readiness`. The package
-  may add scene-scoped required/optional/reusable classifications, the bounded
-  missing/candidate/needs-preparation/needs-review/ready vocabulary, explicit
-  blocker reasons, and episode counts that never hide scene scope. It does not
-  authorize automatic script analysis, real assets, file/import/generation
-  work, capability counts, production approval, persistence, backend, Godot,
-  Remotion, rendering, export, packaging, F4-WP3, or later work.
+- F4-WP2 is accepted and integrated at exact
+  `product/v1@1c6ded8b4db75bbf669ce09efff2fb804cdd1593`. PR #105 predecessor
+  `6743207...` passed hosted checks but was rejected by code audit and was not
+  merged. Corrected exact head `ded8dcb...` passed Studio 176/176, focused
+  23/23, typecheck, production build, lint with zero errors, complete
+  repository-root verification, 11/11 browser checks, six hash-matched
+  1440x900 screenshots, zero console/page errors, and independent Sol
+  code/fail-closed plus Terra visual/evidence audits with no P0/P1/P2. Hosted
+  Verify run `29912677634` and post-merge run `29913212707` passed. The package
+  provides only deterministic scene-scoped required/optional/reusable planning
+  classifications, bounded local readiness/blocker truth, and mechanically
+  derived scene/episode counts. It does not provide automatic script analysis,
+  real assets, file/import/generation work, capability counts, production
+  approval, persistence, backend, Godot, Remotion, rendering, export,
+  packaging, F4-WP3, or later work.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
