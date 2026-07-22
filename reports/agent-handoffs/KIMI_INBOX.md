@@ -1,30 +1,44 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `77`
+Inbox-Version: `78`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE`
-Status: `START-NOW`
+Current-Task: `F3-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `272812f25fa0f4f794edfb69426028349900382e`
-Required-Work-Branch: `agent/kimi-f3-wp5-responsive-accessibility-evidence`
-Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp5-responsive-accessibility-evidence-v76.md`
+Accepted-Root-Base: `fd0bd16c531e1742c14b21fc79cf8c47eb82d200`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#95`
 
 ## Current instruction
 
-Version 77 reissues the unchanged, bounded F3-WP5 assignment after the local
+Version 78 records complete F3 acceptance and integration. PR #97 exact head
+`f56960d5d9cfd051927ccb6b531090f3256f4e4e` passed Studio 135/135,
+typecheck, production build, the 40/40 browser audit, 22 unique required-size
+screenshots, zero console/page errors, three independent audits, clean
+synthetic root verification, hosted Verify run `29898272414`, and ChatGPT
+Pro's exact-head milestone audit with no blockers. It merged into `product/v1`
+at `fd0bd16c531e1742c14b21fc79cf8c47eb82d200`. Kimi is now `WAIT`.
+F4-WP1 requires a separate exact-base issue, full brief, status transition, and
+higher inbox version. Do not start F4, backend work, Godot, Remotion,
+persistence, rendering, export, packaging, or private-launch work from this
+inbox.
+
+Version 78 supersedes Version 77. Version 77 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 77 instruction:
+
+Version 77 reissued the unchanged, bounded F3-WP5 assignment after the local
 watcher rejected Version 76 because its pending brief fingerprint did not
 match on the first real poll. The canonical inbox commit and full brief did
-not move; this higher version preserves the watcher's fail-closed contract
-without bypassing or editing its state. Start only F3-WP5 through issue #95
-from exact accepted base
+not move; the higher version preserved the watcher's fail-closed contract
+without bypassing or editing its state. It authorized only F3-WP5 through
+issue #95 from exact accepted base
 `272812f25fa0f4f794edfb69426028349900382e` on required branch
-`agent/kimi-f3-wp5-responsive-accessibility-evidence`. Complete the full
-keyboard/focus, accessibility, reduced-motion, three-viewport responsive,
-reference-comparison, and exact evidence brief. Preserve all accepted F3
-behavior and local-fixture truth boundaries. Publish one immutable handback and
-exit. Do not start F4, live AI integration, persistence, backend work, Godot,
-Remotion, rendering, export, packaging, or private-launch work.
+`agent/kimi-f3-wp5-responsive-accessibility-evidence`.
 
 Version 77 supersedes Version 76. Version 76 remains below as historical
 traceability and must not relaunch.
