@@ -1,9 +1,9 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `91`
+Inbox-Version: `92`
 Inbox-Branch: `agent/kimi-frontend`
 Current-Task: `F5-WP1-AUDIO-WORKSPACE-TRACK-HIERARCHY`
-Status: `START_NOW`
+Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `eb9890d75126381e61849a5994f28474d133bfb7`
 Required-Work-Branch: `agent/kimi-f5-wp1-audio-workspace-track-hierarchy`
@@ -11,6 +11,19 @@ Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f5-wp1-audio-workspace
 Issue: `#124`
 
 ## Current instruction
+
+Version 92 corrects Version 91's invalid underscore status enum to the
+canonical `START-NOW` transport value. The assignment, exact base, required
+branch, issue, scope, and audited full brief are unchanged. The watcher was
+uninstalled before Version 91 was published, so Version 91 could not launch or
+consume model tokens.
+
+Version 92 supersedes Version 91. Version 91 remains below as invalid
+historical traceability and must not relaunch.
+
+---
+
+Previous Version 91 instruction:
 
 Version 91 starts only F5-WP1 through issue #124 from exact verified base
 `eb9890d75126381e61849a5994f28474d133bfb7` on required branch
