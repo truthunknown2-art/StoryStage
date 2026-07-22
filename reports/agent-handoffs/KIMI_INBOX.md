@@ -1,16 +1,37 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `86`
+Inbox-Version: `87`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-WP4-LAYER-RIG-REVIEW-UX`
-Status: `START-NOW`
+Current-Task: `F4-WP4-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `3a98dfff7b543821c02ead9499a9ec0efd93913b`
-Required-Work-Branch: `agent/kimi-f4-wp4-layer-rig-review-ux`
-Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f4-wp4-layer-rig-review-ux-v86.md`
+Accepted-Root-Base: `5dad1aa72c2e3e9ea5a7f5a4e4625f1775e1ef4b`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#113`
 
 ## Current instruction
+
+Version 87 records F4-WP4 acceptance and integration. Kimi's initial
+implementation `f8c4a4b...` received four bounded Codex review corrections;
+review-clean implementation `c87afa4...` and exact PR #115 handback tip
+`c96c5b9...` passed focused 23/23, Studio 217/217, typecheck, production build,
+touched lint, diff check, complete serialized repository-root verification,
+18/18 browser checks, ten unique 1440x900 screenshots, zero console/page
+errors, and independent Sol code/accessibility plus Terra visual/evidence
+audits with no remaining finding. Hosted Verify run `29937550475` and
+post-merge run `29938267777` passed. PR #115 merged into `product/v1` at
+`5dad1aa72c2e3e9ea5a7f5a4e4625f1775e1ef4b`. Kimi is now `WAIT`; F4-WP5,
+F5, F6, backend product work, persistence, providers, workers, Godot, Remotion,
+rendering, export, packaging, and every later package remain unauthorized by
+this inbox.
+
+Version 87 supersedes Version 86. Version 86 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 86 instruction:
 
 Version 86 starts only F4-WP4 through issue #113 from exact accepted base
 `3a98dfff7b543821c02ead9499a9ec0efd93913b` on required branch
