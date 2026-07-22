@@ -468,6 +468,14 @@ export function StudioShell({
     document.getElementById(`pv1-director-tab-${nextId}`)?.focus();
   };
 
+  /* F3-WP5: entering the Studio moves focus deliberately to the primary
+   * board heading — once, on arrival. Scene/beat selection afterwards keeps
+   * the accepted rail keyboard contract (focus follows selection). */
+  const boardHeadingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    boardHeadingRef.current?.focus();
+  }, []);
+
   return (
     <main className="pv1-page" data-testid="pv1-studio">
       <header className="pv1-topbar">
@@ -687,7 +695,9 @@ export function StudioShell({
               <small>
                 Scene {selectedIndex + 1} of {OLLO_DEMO_SCENES.length}
               </small>
-              <h1>{selectedScene.title}</h1>
+              <h1 ref={boardHeadingRef} tabIndex={-1}>
+                {selectedScene.title}
+              </h1>
             </div>
             <span className="pv1-badge">Reference board — not animation</span>
           </header>

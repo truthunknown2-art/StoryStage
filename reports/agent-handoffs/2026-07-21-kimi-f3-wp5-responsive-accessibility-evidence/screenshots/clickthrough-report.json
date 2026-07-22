@@ -1,0 +1,1291 @@
+{
+  "task": "F3-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE",
+  "base": "http://127.0.0.1:5195/",
+  "capturedAt": "2026-07-22T06:47:05.039Z",
+  "viewports": [
+    {
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5195/",
+      "checks": [
+        {
+          "name": "projects: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1440,
+            "clientWidth": 1440,
+            "regions": {
+              "[data-testid='pv1-projects']": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 900,
+                "width": 1440,
+                "height": 900
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 58,
+                "width": 1440,
+                "height": 58
+              },
+              ".pv1-projects-body": {
+                "left": 180,
+                "right": 1260,
+                "top": 58,
+                "bottom": 566,
+                "width": 1080,
+                "height": 508
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "projects: focus lands on the Projects heading",
+          "pass": true,
+          "details": {
+            "focusProjects": "Projects"
+          }
+        },
+        {
+          "name": "create choice: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1440,
+            "clientWidth": 1440,
+            "regions": {
+              "[data-testid='pv1-create']": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 900,
+                "width": 1440,
+                "height": 900
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 58,
+                "width": 1440,
+                "height": 58
+              },
+              ".pv1-create-narrow": {
+                "left": 290,
+                "right": 1150,
+                "top": 58,
+                "bottom": 462,
+                "width": 860,
+                "height": 404
+              },
+              ".pv1-create-review": null
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "create choice: focus on the surface heading",
+          "pass": true,
+          "details": {}
+        },
+        {
+          "name": "paste form: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1440,
+            "clientWidth": 1440,
+            "regions": {
+              "[data-testid='pv1-create']": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 900,
+                "width": 1440,
+                "height": 900
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 58,
+                "width": 1440,
+                "height": 58
+              },
+              ".pv1-create-narrow": {
+                "left": 290,
+                "right": 1150,
+                "top": 58,
+                "bottom": 710,
+                "width": 860,
+                "height": 652
+              },
+              ".pv1-create-review": null
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "shared review: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1440,
+            "clientWidth": 1440,
+            "regions": {
+              "[data-testid='pv1-create']": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 1541,
+                "width": 1440,
+                "height": 1541
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 58,
+                "width": 1440,
+                "height": 58
+              },
+              ".pv1-create-narrow": null,
+              ".pv1-create-review": {
+                "left": 270,
+                "right": 1170,
+                "top": 58,
+                "bottom": 1541,
+                "width": 900,
+                "height": 1483
+              },
+              ".pv1-proposal-review": {
+                "left": 298,
+                "right": 1142,
+                "top": 88,
+                "bottom": 1493,
+                "width": 844,
+                "height": 1405
+              },
+              ".pv1-proposal-actions": {
+                "left": 323,
+                "right": 1117,
+                "top": 1424,
+                "bottom": 1468,
+                "width": 794,
+                "height": 44
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "shared review: focus on the episode title field",
+          "pass": true,
+          "details": {}
+        },
+        {
+          "name": "shared review: Enter Studio action is fully visible and reachable",
+          "pass": true,
+          "details": {
+            "x": 883.703125,
+            "y": 783.3125,
+            "width": 233.296875,
+            "height": 44
+          }
+        },
+        {
+          "name": "studio: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1440,
+            "clientWidth": 1440,
+            "regions": {
+              "[data-testid='pv1-studio']": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 1121,
+                "width": 1440,
+                "height": 1121
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 58,
+                "width": 1440,
+                "height": 58
+              },
+              ".pv1-scope-header": {
+                "left": 0,
+                "right": 1440,
+                "top": 58,
+                "bottom": 89,
+                "width": 1440,
+                "height": 31
+              },
+              ".pv1-studio-rail": {
+                "left": 24,
+                "right": 274,
+                "top": 162,
+                "bottom": 999,
+                "width": 250,
+                "height": 837
+              },
+              ".pv1-studio-board": {
+                "left": 292,
+                "right": 760,
+                "top": 162,
+                "bottom": 999,
+                "width": 468,
+                "height": 837
+              },
+              ".pv1-studio-inspector": {
+                "left": 778,
+                "right": 1068,
+                "top": 162,
+                "bottom": 999,
+                "width": 290,
+                "height": 837
+              },
+              ".pv1-ai-panel": {
+                "left": 1086,
+                "right": 1416,
+                "top": 162,
+                "bottom": 999,
+                "width": 330,
+                "height": 837
+              },
+              ".pv1-studio-overview": {
+                "left": 0,
+                "right": 1440,
+                "top": 1017,
+                "bottom": 1121,
+                "width": 1440,
+                "height": 103
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "studio: board between rail and inspector (visual order)",
+          "pass": true,
+          "details": {
+            "rail": {
+              "left": 24,
+              "right": 274,
+              "top": 162,
+              "bottom": 999,
+              "width": 250,
+              "height": 837
+            },
+            "board": {
+              "left": 292,
+              "right": 760,
+              "top": 162,
+              "bottom": 999,
+              "width": 468,
+              "height": 837
+            },
+            "inspector": {
+              "left": 778,
+              "right": 1068,
+              "top": 162,
+              "bottom": 999,
+              "width": 290,
+              "height": 837
+            }
+          }
+        },
+        {
+          "name": "studio: focus on the board heading",
+          "pass": true,
+          "details": {}
+        },
+        {
+          "name": "studio: Visual tab is selected through the real Director tab contract",
+          "pass": true,
+          "details": {}
+        },
+        {
+          "name": "studio: Motion tab is selected through the real Director tab contract",
+          "pass": true,
+          "details": {}
+        },
+        {
+          "name": "studio: AI panel signed-out truth (Connect surface, fixture label)",
+          "pass": true,
+          "details": {}
+        },
+        {
+          "name": "studio: signed-out runtime check remains an explicit no-contact fixture",
+          "pass": true,
+          "details": {}
+        },
+        {
+          "name": "studio + AI proposal: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1440,
+            "clientWidth": 1440,
+            "regions": {
+              "[data-testid='pv1-studio']": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 1313,
+                "width": 1440,
+                "height": 1313
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1440,
+                "top": 0,
+                "bottom": 58,
+                "width": 1440,
+                "height": 58
+              },
+              ".pv1-scope-header": {
+                "left": 0,
+                "right": 1440,
+                "top": 58,
+                "bottom": 89,
+                "width": 1440,
+                "height": 31
+              },
+              ".pv1-studio-rail": {
+                "left": 24,
+                "right": 274,
+                "top": 162,
+                "bottom": 1192,
+                "width": 250,
+                "height": 1030
+              },
+              ".pv1-studio-board": {
+                "left": 292,
+                "right": 760,
+                "top": 162,
+                "bottom": 1192,
+                "width": 468,
+                "height": 1030
+              },
+              ".pv1-studio-inspector": {
+                "left": 778,
+                "right": 1068,
+                "top": 162,
+                "bottom": 1192,
+                "width": 290,
+                "height": 1030
+              },
+              ".pv1-ai-panel": {
+                "left": 1086,
+                "right": 1416,
+                "top": 162,
+                "bottom": 1192,
+                "width": 330,
+                "height": 1030
+              },
+              ".pv1-studio-overview": {
+                "left": 0,
+                "right": 1440,
+                "top": 1210,
+                "bottom": 1313,
+                "width": 1440,
+                "height": 103
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "studio: focus moves to Undo proposal apply after Apply",
+          "pass": true,
+          "details": {
+            "focusUndo": "Undo proposal apply"
+          }
+        },
+        {
+          "name": "studio: focus returns to Apply proposal after Undo",
+          "pass": true,
+          "details": {
+            "focusApply": "Apply proposal"
+          }
+        },
+        {
+          "name": "offline/error truth: Error turn + truthful Offline chip",
+          "pass": true,
+          "details": {}
+        }
+      ],
+      "consoleIssues": [],
+      "pageErrors": [],
+      "screenshots": [
+        {
+          "file": "screenshots/wp5-1440x900-projects.png",
+          "sha256": "16b8dc3f03862e5d18bfc3a18277e9fdcc9f5d7b8203af3a0ff3e7ea4917eebf"
+        },
+        {
+          "file": "screenshots/wp5-1440x900-create-choice.png",
+          "sha256": "af9541ccd132579e73e40ec4e34d132df887c2f592075421fa2b05a59f64ba99"
+        },
+        {
+          "file": "screenshots/wp5-1440x900-paste-proposal-review.png",
+          "sha256": "be6794751d825f67e7cb596732e35ab1e17f9190fc69ed9e0c8392ac9a8aa675"
+        },
+        {
+          "file": "screenshots/wp5-1440x900-paste-proposal-review-actions.png",
+          "sha256": "ef18dad2781342e9de224ef0b2c9432ccf5bb66810f12b480f562a4f752836fe"
+        },
+        {
+          "file": "screenshots/wp5-1440x900-studio-manual-direction.png",
+          "sha256": "dca0b45bb7038f99b94932a5f6bcf80fdb34ea86f0eba2fabf569e9d35f1cc31"
+        },
+        {
+          "file": "screenshots/wp5-1440x900-studio-visual.png",
+          "sha256": "317a6a6c7053c0eb9ce65c28c06b35e4a525cdd18d588c00e8858223f2545348"
+        },
+        {
+          "file": "screenshots/wp5-1440x900-studio-motion.png",
+          "sha256": "374a5ada2804c93312374b07fed2f6d37d63508e2e9457eb2775fde012367da4"
+        },
+        {
+          "file": "screenshots/wp5-1440x900-studio-ai-signed-out.png",
+          "sha256": "0a85721b222187bcec7769686e28a65fe3fb25b7f7013a471d736197d74fb5f7"
+        },
+        {
+          "file": "screenshots/wp5-1440x900-studio-ai-proposal.png",
+          "sha256": "fd33478c656ab1f8b4bceab64d6d442eb00709340f73abbe9db6949d4518fb8e"
+        },
+        {
+          "file": "screenshots/wp5-1440x900-ai-error-offline-truth.png",
+          "sha256": "a57834bba8ae84d4a4ac73e89058e080e3f76dc77c458b796f49ff5749847568"
+        }
+      ],
+      "reducedMotion": null
+    },
+    {
+      "viewport": "1920x1080",
+      "url": "http://127.0.0.1:5195/",
+      "checks": [
+        {
+          "name": "projects: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1920,
+            "clientWidth": 1920,
+            "regions": {
+              "[data-testid='pv1-projects']": {
+                "left": 0,
+                "right": 1920,
+                "top": 0,
+                "bottom": 1080,
+                "width": 1920,
+                "height": 1080
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1920,
+                "top": 0,
+                "bottom": 58,
+                "width": 1920,
+                "height": 58
+              },
+              ".pv1-projects-body": {
+                "left": 420,
+                "right": 1500,
+                "top": 58,
+                "bottom": 566,
+                "width": 1080,
+                "height": 508
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "idea connect (signed out): no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1920,
+            "clientWidth": 1920,
+            "regions": {
+              "[data-testid='pv1-create']": {
+                "left": 0,
+                "right": 1920,
+                "top": 0,
+                "bottom": 1080,
+                "width": 1920,
+                "height": 1080
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1920,
+                "top": 0,
+                "bottom": 58,
+                "width": 1920,
+                "height": 58
+              },
+              ".pv1-create-narrow": {
+                "left": 530,
+                "right": 1390,
+                "top": 58,
+                "bottom": 389,
+                "width": 860,
+                "height": 331
+              },
+              ".pv1-create-review": null
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "idea path: sign-in moves focus to the form heading",
+          "pass": true,
+          "details": {
+            "focusIdea": "What's your idea?"
+          }
+        },
+        {
+          "name": "idea review: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1920,
+            "clientWidth": 1920,
+            "regions": {
+              "[data-testid='pv1-create']": {
+                "left": 0,
+                "right": 1920,
+                "top": 0,
+                "bottom": 1358,
+                "width": 1920,
+                "height": 1358
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1920,
+                "top": 0,
+                "bottom": 58,
+                "width": 1920,
+                "height": 58
+              },
+              ".pv1-create-narrow": null,
+              ".pv1-create-review": {
+                "left": 510,
+                "right": 1410,
+                "top": 58,
+                "bottom": 1358,
+                "width": 900,
+                "height": 1300
+              },
+              ".pv1-proposal-review": {
+                "left": 538,
+                "right": 1382,
+                "top": 88,
+                "bottom": 1310,
+                "width": 844,
+                "height": 1222
+              },
+              ".pv1-proposal-actions": {
+                "left": 563,
+                "right": 1357,
+                "top": 1241,
+                "bottom": 1285,
+                "width": 794,
+                "height": 44
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "studio: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1920,
+            "clientWidth": 1920,
+            "regions": {
+              "[data-testid='pv1-studio']": {
+                "left": 0,
+                "right": 1920,
+                "top": 0,
+                "bottom": 1243,
+                "width": 1920,
+                "height": 1243
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1920,
+                "top": 0,
+                "bottom": 58,
+                "width": 1920,
+                "height": 58
+              },
+              ".pv1-scope-header": {
+                "left": 0,
+                "right": 1920,
+                "top": 58,
+                "bottom": 89,
+                "width": 1920,
+                "height": 31
+              },
+              ".pv1-studio-rail": {
+                "left": 24,
+                "right": 274,
+                "top": 162,
+                "bottom": 1121,
+                "width": 250,
+                "height": 959
+              },
+              ".pv1-studio-board": {
+                "left": 292,
+                "right": 1240,
+                "top": 162,
+                "bottom": 1121,
+                "width": 948,
+                "height": 959
+              },
+              ".pv1-studio-inspector": {
+                "left": 1258,
+                "right": 1548,
+                "top": 162,
+                "bottom": 1121,
+                "width": 290,
+                "height": 959
+              },
+              ".pv1-ai-panel": {
+                "left": 1566,
+                "right": 1896,
+                "top": 162,
+                "bottom": 1121,
+                "width": 330,
+                "height": 959
+              },
+              ".pv1-studio-overview": {
+                "left": 0,
+                "right": 1920,
+                "top": 1139,
+                "bottom": 1243,
+                "width": 1920,
+                "height": 103
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "studio: clean wide capture starts with topbar and scope header visible",
+          "pass": true,
+          "details": {
+            "topbar": {
+              "left": 0,
+              "right": 1920,
+              "top": 0,
+              "bottom": 58,
+              "width": 1920,
+              "height": 58
+            },
+            "scope": {
+              "left": 0,
+              "right": 1920,
+              "top": 58,
+              "bottom": 89,
+              "width": 1920,
+              "height": 31
+            }
+          }
+        },
+        {
+          "name": "settings: Escape closes and focus returns to the chip",
+          "pass": true,
+          "details": {
+            "settingsGone": true,
+            "chipFocus": "AI Director: Connected"
+          }
+        }
+      ],
+      "consoleIssues": [],
+      "pageErrors": [],
+      "screenshots": [
+        {
+          "file": "screenshots/wp5-1920x1080-create-idea-connect-signed-out.png",
+          "sha256": "a63b59db9f785a1bda22ea5fc06964fe6c1ade93b67b76ff3f7a92d09be64e12"
+        },
+        {
+          "file": "screenshots/wp5-1920x1080-idea-proposal-review.png",
+          "sha256": "1b61119dad511f5396c4325306920cea148863fd8fc54accedc948dc29cd42b5"
+        },
+        {
+          "file": "screenshots/wp5-1920x1080-studio.png",
+          "sha256": "d4b7412da4cd7cd6eccd0042236d62fb1e4a01a0d6e4742d9e717d753b21bc00"
+        }
+      ],
+      "reducedMotion": null
+    },
+    {
+      "viewport": "1024x800",
+      "url": "http://127.0.0.1:5195/",
+      "checks": [
+        {
+          "name": "projects: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1024,
+            "clientWidth": 1024,
+            "regions": {
+              "[data-testid='pv1-projects']": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 800,
+                "width": 1024,
+                "height": 800
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 58,
+                "width": 1024,
+                "height": 58
+              },
+              ".pv1-projects-body": {
+                "left": 0,
+                "right": 1024,
+                "top": 58,
+                "bottom": 556,
+                "width": 1024,
+                "height": 498
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "create choice compact: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1024,
+            "clientWidth": 1024,
+            "regions": {
+              "[data-testid='pv1-create']": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 800,
+                "width": 1024,
+                "height": 800
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 58,
+                "width": 1024,
+                "height": 58
+              },
+              ".pv1-create-narrow": {
+                "left": 82,
+                "right": 942,
+                "top": 58,
+                "bottom": 462,
+                "width": 860,
+                "height": 404
+              },
+              ".pv1-create-review": null
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "shared review compact: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1024,
+            "clientWidth": 1024,
+            "regions": {
+              "[data-testid='pv1-create']": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 1541,
+                "width": 1024,
+                "height": 1541
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 58,
+                "width": 1024,
+                "height": 58
+              },
+              ".pv1-create-narrow": null,
+              ".pv1-create-review": {
+                "left": 62,
+                "right": 962,
+                "top": 58,
+                "bottom": 1541,
+                "width": 900,
+                "height": 1483
+              },
+              ".pv1-proposal-review": {
+                "left": 90,
+                "right": 934,
+                "top": 88,
+                "bottom": 1493,
+                "width": 844,
+                "height": 1405
+              },
+              ".pv1-proposal-actions": {
+                "left": 115,
+                "right": 909,
+                "top": 1424,
+                "bottom": 1468,
+                "width": 794,
+                "height": 44
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "shared review compact: final action is fully visible and reachable",
+          "pass": true,
+          "details": {
+            "x": 675.703125,
+            "y": 683.3125,
+            "width": 233.296875,
+            "height": 44
+          }
+        },
+        {
+          "name": "settings compact: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1024,
+            "clientWidth": 1024,
+            "regions": {
+              "[data-testid='pv1-studio']": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 3312,
+                "width": 1024,
+                "height": 3312
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 402,
+                "width": 1024,
+                "height": 402
+              },
+              ".pv1-scope-header": {
+                "left": 0,
+                "right": 1024,
+                "top": 402,
+                "bottom": 433,
+                "width": 1024,
+                "height": 31
+              },
+              ".pv1-studio-rail": {
+                "left": 24,
+                "right": 1000,
+                "top": 504,
+                "bottom": 804,
+                "width": 976,
+                "height": 300
+              },
+              ".pv1-studio-board": {
+                "left": 24,
+                "right": 1000,
+                "top": 820,
+                "bottom": 1855,
+                "width": 976,
+                "height": 1035
+              },
+              ".pv1-studio-inspector": {
+                "left": 24,
+                "right": 1000,
+                "top": 1871,
+                "bottom": 2559,
+                "width": 976,
+                "height": 688
+              },
+              ".pv1-ai-panel": {
+                "left": 24,
+                "right": 1000,
+                "top": 2575,
+                "bottom": 3111,
+                "width": 976,
+                "height": 536
+              },
+              ".pv1-studio-overview": {
+                "left": 0,
+                "right": 1024,
+                "top": 3129,
+                "bottom": 3312,
+                "width": 1024,
+                "height": 184
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "studio compact: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1024,
+            "clientWidth": 1024,
+            "regions": {
+              "[data-testid='pv1-studio']": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 2968,
+                "width": 1024,
+                "height": 2968
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1024,
+                "top": 0,
+                "bottom": 58,
+                "width": 1024,
+                "height": 58
+              },
+              ".pv1-scope-header": {
+                "left": 0,
+                "right": 1024,
+                "top": 58,
+                "bottom": 89,
+                "width": 1024,
+                "height": 31
+              },
+              ".pv1-studio-rail": {
+                "left": 24,
+                "right": 1000,
+                "top": 160,
+                "bottom": 460,
+                "width": 976,
+                "height": 300
+              },
+              ".pv1-studio-board": {
+                "left": 24,
+                "right": 1000,
+                "top": 476,
+                "bottom": 1511,
+                "width": 976,
+                "height": 1035
+              },
+              ".pv1-studio-inspector": {
+                "left": 24,
+                "right": 1000,
+                "top": 1527,
+                "bottom": 2215,
+                "width": 976,
+                "height": 688
+              },
+              ".pv1-ai-panel": {
+                "left": 24,
+                "right": 1000,
+                "top": 2231,
+                "bottom": 2767,
+                "width": 976,
+                "height": 536
+              },
+              ".pv1-studio-overview": {
+                "left": 0,
+                "right": 1024,
+                "top": 2785,
+                "bottom": 2968,
+                "width": 1024,
+                "height": 184
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "studio compact: intentional stacked order rail < board < inspector < AI panel",
+          "pass": true,
+          "details": {
+            "rail": 160,
+            "board": 476,
+            "inspector": 1527,
+            "aiPanel": 2231
+          }
+        },
+        {
+          "name": "studio compact: board begins inside the first viewport",
+          "pass": true,
+          "details": {
+            "board": {
+              "left": 24,
+              "right": 1000,
+              "top": 476,
+              "bottom": 1511,
+              "width": 976,
+              "height": 1035
+            }
+          }
+        },
+        {
+          "name": "keyboard: tab stops carry a visible focus outline (>=2px)",
+          "pass": true,
+          "details": [
+            {
+              "label": "Back to projects",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Act I · Everyday Problem",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Sequence 1 · A quiet ordinary",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Scene 1 The Home Nook — 150 seconds, not produced",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Beat 1 Morning light through the round window — 70 seconds",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Beat 2 A shelf of unfinished stories — 80 seconds",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Scene 2 Forest Path — 160 seconds, not produced",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Sequence 2 · First signs",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Scene 3 Berry Patch — 140 seconds, not produced",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Scene 4 Little Stream — 150 seconds, not produced",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Act II · The Little Elsewhere",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            },
+            {
+              "label": "Sequence 3 · The journey",
+              "tag": "button",
+              "outlineWidth": "2px",
+              "outlineStyle": "solid"
+            }
+          ]
+        },
+        {
+          "name": "keyboard: rail ArrowDown moves selection+focus to Scene 2 with visible outline",
+          "pass": true,
+          "details": {
+            "id": "pv1-rail-scene-scene-2",
+            "label": "Scene 2 Forest Path — 160 seconds, not produced",
+            "outlineWidth": "2px",
+            "outlineStyle": "solid",
+            "rect": {
+              "left": 515,
+              "right": 669
+            }
+          }
+        },
+        {
+          "name": "studio compact + AI proposal: no horizontal overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1024,
+            "clientWidth": 1024,
+            "regions": {
+              "[data-testid='pv1-studio']": {
+                "left": 0,
+                "right": 1024,
+                "top": -2119,
+                "bottom": 1160,
+                "width": 1024,
+                "height": 3279
+              },
+              ".pv1-topbar": {
+                "left": 0,
+                "right": 1024,
+                "top": -2119,
+                "bottom": -2061,
+                "width": 1024,
+                "height": 58
+              },
+              ".pv1-scope-header": {
+                "left": 0,
+                "right": 1024,
+                "top": -2061,
+                "bottom": -2030,
+                "width": 1024,
+                "height": 31
+              },
+              ".pv1-studio-rail": {
+                "left": 24,
+                "right": 1000,
+                "top": -1959,
+                "bottom": -1659,
+                "width": 976,
+                "height": 300
+              },
+              ".pv1-studio-board": {
+                "left": 24,
+                "right": 1000,
+                "top": -1643,
+                "bottom": -608,
+                "width": 976,
+                "height": 1035
+              },
+              ".pv1-studio-inspector": {
+                "left": 24,
+                "right": 1000,
+                "top": -592,
+                "bottom": 96,
+                "width": 976,
+                "height": 688
+              },
+              ".pv1-ai-panel": {
+                "left": 24,
+                "right": 1000,
+                "top": 112,
+                "bottom": 958,
+                "width": 976,
+                "height": 846
+              },
+              ".pv1-studio-overview": {
+                "left": 0,
+                "right": 1024,
+                "top": 976,
+                "bottom": 1160,
+                "width": 1024,
+                "height": 184
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "studio compact: Apply proposal action reachable in flow",
+          "pass": true,
+          "details": {
+            "x": 428.203125,
+            "y": 721.609375,
+            "width": 118.65625,
+            "height": 36
+          }
+        },
+        {
+          "name": "reduced motion: media query matches and transitions/animations clamp to 0.01ms with auto scroll",
+          "pass": true,
+          "details": {
+            "matches": true,
+            "railTransitionDuration": "1e-05s",
+            "railAnimationDuration": "1e-05s",
+            "railAnimationIterationCount": "1",
+            "railAnimationName": "none",
+            "panelScrollBehavior": "auto",
+            "chipTransitionDuration": "1e-05s",
+            "stagedProgressCount": 0
+          }
+        },
+        {
+          "name": "compact error truth: Error turn and Offline connection remain distinct",
+          "pass": true,
+          "details": {}
+        }
+      ],
+      "consoleIssues": [],
+      "pageErrors": [],
+      "screenshots": [
+        {
+          "file": "screenshots/wp5-1024x800-projects.png",
+          "sha256": "130e11c728ff02959c71d130c00a6af48c801418aa82a3dfffd192a7cd93c219"
+        },
+        {
+          "file": "screenshots/wp5-1024x800-create-choice.png",
+          "sha256": "49022357cca98fcfa9bce5a6d46e77dd7cb0c3858a4a78ad86ada482a775bb53"
+        },
+        {
+          "file": "screenshots/wp5-1024x800-paste-proposal-review.png",
+          "sha256": "82fffe00217a154731cab7919d1739756c5508dad6253e1c3f36c172dcec40b1"
+        },
+        {
+          "file": "screenshots/wp5-1024x800-paste-proposal-review-actions.png",
+          "sha256": "ff01096da34a0f4aeb253bbc93dfc17e0163cbe6085a7f521da9a4345d626e25"
+        },
+        {
+          "file": "screenshots/wp5-1024x800-studio-settings.png",
+          "sha256": "c82bff3d386edefdaaa6fd623c5670f30702e74b9fc1d87eed2d5b920e51129a"
+        },
+        {
+          "file": "screenshots/wp5-1024x800-studio-keyboard-focus.png",
+          "sha256": "ae01cfd9836ceb9529d0bca10131d8e7b69ac712d741e7eed084482d5cf4718a"
+        },
+        {
+          "file": "screenshots/wp5-1024x800-studio-ai-proposal.png",
+          "sha256": "7bb597e69ae487542c16d97a2cfd1d0837b2288458f45e3ac7e9d511ed09ef20"
+        },
+        {
+          "file": "screenshots/wp5-1024x800-reduced-motion.png",
+          "sha256": "7dcee63fd2df009fc39e3f8e3e8a48087779b3aaf18f82df457636d67f4d91a5"
+        },
+        {
+          "file": "screenshots/wp5-1024x800-ai-error-offline-truth.png",
+          "sha256": "96c74539dec8bdda608419691259baedca1994c3d68bdd075dcf0c6a45e47cc6"
+        }
+      ],
+      "reducedMotion": {
+        "matches": true,
+        "railTransitionDuration": "1e-05s",
+        "railAnimationDuration": "1e-05s",
+        "railAnimationIterationCount": "1",
+        "railAnimationName": "none",
+        "panelScrollBehavior": "auto",
+        "chipTransitionDuration": "1e-05s",
+        "stagedProgressCount": 0
+      }
+    }
+  ],
+  "referenceHashes": {
+    "docs/design/ai-copilot-studio/create-screen-reference.webp": "e1a0b7f1e4d4085d899780783343b1357e6fa52562a4f6b86ec03d063c06796d",
+    "docs/design/ai-copilot-studio/studio-timeline-reference.webp": "2c0176f485831d10617ba15ad4fc49680d42714fb4528706ea5a8bbd6bb3a9f0",
+    "docs/design/ai-copilot-studio/ai-copilot-concept-board.webp": "984f3a66eb4946edd998a429cf2f8c4b126a49f145e01f796051f2aab62fc0f6",
+    "docs/design/ai-copilot-studio/README.md": "0edeca2954a5e7e5f25a87fe186ee1c1dd3e748085ede6adf6de67236ea6e08b"
+  }
+}

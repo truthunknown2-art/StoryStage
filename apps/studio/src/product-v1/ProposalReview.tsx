@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ListChecks } from "lucide-react";
 import { formatDuration } from "./beat-preview";
 import { AI_FIXTURE_LABEL } from "./ai-director-fixture";
@@ -20,6 +20,11 @@ import type {
  * change, and never assets, media, rendering, or export. Revise input
  * stays a distinct action that returns to the source input rather than
  * touching the proposal.
+ *
+ * F3-WP5: arriving on the review focuses the episode-title field (the one
+ * required editable field), and the blank-title gate moves focus back to
+ * that invalid control so keyboard and assistive-technology users land
+ * exactly where the correction belongs.
  */
 export function ProposalReview({
   proposal,
@@ -35,11 +40,17 @@ export function ProposalReview({
   onRevise: () => void;
 }) {
   const [showTitleError, setShowTitleError] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const titleIsBlank = proposal.episodeTitle.trim().length === 0;
+
+  useEffect(() => {
+    titleInputRef.current?.focus();
+  }, []);
 
   const enterStudio = () => {
     if (titleIsBlank) {
       setShowTitleError(true);
+      titleInputRef.current?.focus();
       return;
     }
     onEnterStudio();
@@ -98,6 +109,7 @@ export function ProposalReview({
                   episodeTitle: event.target.value,
                 });
               }}
+              ref={titleInputRef}
               required
               value={proposal.episodeTitle}
             />

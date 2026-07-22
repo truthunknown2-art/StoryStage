@@ -48,6 +48,13 @@ const beatStartSeconds = (scene: DemoScene, beatIndex: number) =>
  * through the accepted session-local per-beat history and fails closed
  * on stale selection or unapplied manual drafts; Undo restores the exact
  * prior snapshot. It can never call a host or production adapter.
+ *
+ * F3-WP5: settled turn outcomes (completion, cancellation, error) are
+ * announced once through one concise visually-hidden polite status —
+ * applied/rejected/superseded remain announced by the visible per-proposal
+ * polite status line — and every proposal action that removes or disables
+ * the used control moves focus deliberately to the next sensible control
+ * instead of stranding it on the document body.
  */
 export function AiDirectorPanel({
   connection,
@@ -91,10 +98,115 @@ export function AiDirectorPanel({
     [],
   );
 
+  /* F3-WP5: one concise visually-hidden polite status announces each
+   * settled turn outcome exactly once (completion, cancellation, error).
+   * Applied/rejected/superseded states are already announced by the
+   * visible per-proposal polite status line below, so they are not
+   * duplicated here, and the thread is never re-announced wholesale. */
+  const [turnNotice, setTurnNotice] = useState<{
+    key: string;
+    text: string;
+  } | null>(null);
+  const announcedTurnsRef = useRef(new Map<number, AiTurn["status"]>());
+  useEffect(() => {
+    let latest: { key: string; text: string } | null = null;
+    for (const turn of turns) {
+      if (turn.status === "streaming") continue;
+      if (announcedTurnsRef.current.get(turn.id) === turn.status) continue;
+      announcedTurnsRef.current.set(turn.id, turn.status);
+      const text =
+        turn.status === "complete"
+          ? turn.proposal !== null
+            ? `Fixture proposal ready for the captured scope — Scene ${turn.scope.sceneIndex} · Beat ${turn.scope.beatIndex + 1}.`
+            : "Superseded request finished without a proposal — nothing was applied."
+          : turn.status === "cancelled"
+            ? "Request cancelled — captured scope preserved, nothing was applied."
+            : "Request ended in the Error fixture state — no proposal was produced and nothing was applied.";
+      latest = { key: `${turn.id}:${turn.status}`, text };
+    }
+    if (latest !== null) setTurnNotice(latest);
+  }, [turns]);
+
+  /* F3-WP5 deliberate focus: proposal actions that remove or disable the
+   * control the creator just used queue one post-commit focus move to the
+   * control that makes sense next (Apply → its Undo, Undo → Apply, Cancel
+   * → Revise and resend, Reject → the proposal status, Revise → the
+   * composer, Return to captured scope → the re-enabled Apply). A generic
+   * guard then catches any remaining case where a panel state change
+   * strands focus on the document body and returns it to the composer —
+   * focus is never left in removed content. */
+  const panelRef = useRef<HTMLElement>(null);
+  const pendingFocusRef = useRef<{ selector: string; attempts: number } | null>(
+    null,
+  );
+  const focusWasInsideRef = useRef(false);
+  const prevTurnsRef = useRef(turns);
+  const prevConnectedRef = useRef(isAiConnected(connection));
+  useEffect(() => {
+    /* Arm the stranded-focus guard only on commits where panel content
+     * actually changed (turn lifecycle or connection surface swap), so an
+     * ordinary mouse click on blank page space never yanks focus back. */
+    const nowConnected = isAiConnected(connection);
+    const contentChanged =
+      prevTurnsRef.current !== turns ||
+      prevConnectedRef.current !== nowConnected;
+    prevTurnsRef.current = turns;
+    prevConnectedRef.current = nowConnected;
+    const pending = pendingFocusRef.current;
+    if (pending !== null) {
+      const target = panelRef.current?.querySelector<HTMLElement>(
+        pending.selector,
+      );
+      if (target && !target.hasAttribute("disabled")) {
+        target.focus();
+        pendingFocusRef.current = null;
+      } else if ((pending.attempts += 1) > 6) {
+        pendingFocusRef.current = null;
+      }
+    } else if (
+      contentChanged &&
+      focusWasInsideRef.current &&
+      (document.activeElement === null ||
+        document.activeElement === document.body)
+    ) {
+      const rest =
+        panelRef.current?.querySelector<HTMLElement>("[data-ai-composer]") ??
+        panelRef.current?.querySelector<HTMLElement>("button:not(:disabled)");
+      rest?.focus();
+    }
+    focusWasInsideRef.current =
+      panelRef.current?.contains(document.activeElement) ?? false;
+  });
+
+  const queuePanelFocus = (selector: string) => {
+    pendingFocusRef.current = { selector, attempts: 0 };
+  };
+
+  const proposalActionSelector = (turnId: number, action: string) =>
+    `[data-testid="pv1-ai-proposal-${turnId}"] [data-action="${action}"]`;
+
   const selectedBeat = selectedScene.beats[selectedBeatIndex]!;
   const connected = isAiConnected(connection);
 
   const scheduleTurnReplay = (turnId: number) => {
+    const reducedMotion =
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (reducedMotion) {
+      timersRef.current.push(
+        window.setTimeout(
+          () =>
+            setTurns((current) =>
+              current.map((turn) =>
+                turn.id === turnId
+                  ? completeAiTurn(turn, connectionRef.current)
+                  : turn,
+              ),
+            ),
+          0,
+        ),
+      );
+      return;
+    }
     AI_STREAM_STAGES.forEach((_, index) => {
       timersRef.current.push(
         window.setTimeout(
@@ -179,6 +291,7 @@ export function AiDirectorPanel({
       [turn.id]: { revision: next.cursor, node: committedDirectDraft(next) },
     }));
     settleTurn(turn.id, (current) => ({ ...current, resolution: "applied" }));
+    queuePanelFocus(proposalActionSelector(turn.id, "undo-apply"));
   };
 
   const undoTurnApply = (turn: AiTurn) => {
@@ -196,6 +309,7 @@ export function AiDirectorPanel({
       return next;
     });
     settleTurn(turn.id, (current) => ({ ...current, resolution: "pending" }));
+    queuePanelFocus(proposalActionSelector(turn.id, "apply"));
   };
 
   const renderProposal = (turn: AiTurn) => {
@@ -269,6 +383,7 @@ export function AiDirectorPanel({
         <div className="pv1-ai-proposal-actions">
           <button
             className="pv1-secondary"
+            data-action="preview"
             onClick={() =>
               setPreviewTurnId((current) =>
                 current === turn.id ? null : turn.id,
@@ -280,22 +395,33 @@ export function AiDirectorPanel({
           </button>
           <button
             className="pv1-secondary"
+            data-action="revise"
             disabled={turn.resolution !== "pending"}
-            onClick={() => setRequestText(turn.requestText)}
+            onClick={() => {
+              setRequestText(turn.requestText);
+              queuePanelFocus("[data-ai-composer]");
+            }}
             type="button"
           >
             Revise request
           </button>
           <button
             className="pv1-secondary"
+            data-action="reject"
             disabled={turn.resolution !== "pending"}
-            onClick={() => settleTurn(turn.id, rejectAiTurnProposal)}
+            onClick={() => {
+              settleTurn(turn.id, rejectAiTurnProposal);
+              queuePanelFocus(
+                proposalActionSelector(turn.id, "proposal-status"),
+              );
+            }}
             type="button"
           >
             Reject proposal
           </button>
           <button
             className="pv1-primary"
+            data-action="apply"
             disabled={!applicable || blocker !== null || alreadyMatches}
             onClick={() => applyTurn(turn)}
             type="button"
@@ -305,6 +431,7 @@ export function AiDirectorPanel({
           {turn.resolution === "applied" ? (
             <button
               className="pv1-secondary"
+              data-action="undo-apply"
               disabled={!undoable}
               onClick={() => undoTurnApply(turn)}
               type="button"
@@ -313,7 +440,12 @@ export function AiDirectorPanel({
             </button>
           ) : null}
         </div>
-        <p aria-live="polite" className="pv1-ai-proposal-status">
+        <p
+          aria-live="polite"
+          className="pv1-ai-proposal-status"
+          data-action="proposal-status"
+          tabIndex={-1}
+        >
           {turn.resolution === "applied"
             ? undoable
               ? "Applied to the captured beat's session-local direction — Undo restores the exact prior snapshot."
@@ -333,9 +465,11 @@ export function AiDirectorPanel({
         {applicable && blocker === "stale-scope" ? (
           <button
             className="pv1-secondary"
-            onClick={() =>
-              onReturnToScope(turn.scope.sceneId, turn.scope.beatIndex)
-            }
+            data-action="return-to-scope"
+            onClick={() => {
+              onReturnToScope(turn.scope.sceneId, turn.scope.beatIndex);
+              queuePanelFocus(proposalActionSelector(turn.id, "apply"));
+            }}
             type="button"
           >
             Return to captured scope
@@ -350,6 +484,7 @@ export function AiDirectorPanel({
       aria-label="AI Director"
       className="pv1-ai-panel"
       data-testid="pv1-ai-director"
+      ref={panelRef}
     >
       <header className="pv1-ai-panel-heading">
         <h2>
@@ -359,6 +494,16 @@ export function AiDirectorPanel({
           {AI_FIXTURE_LABEL}
         </p>
       </header>
+      <p
+        aria-atomic="true"
+        className="pv1-sr-only"
+        data-notice-key={turnNotice?.key ?? "empty"}
+        data-testid="pv1-ai-turn-notice"
+        key={turnNotice?.key ?? "empty"}
+        role="status"
+      >
+        {turnNotice?.text ?? ""}
+      </p>
 
       <p className="pv1-ai-scope">
         Scope: Scene {selectedSceneIndex + 1} · Beat {selectedBeatIndex + 1} —{" "}
@@ -407,7 +552,7 @@ export function AiDirectorPanel({
           </li>
         ) : (
           turns.map((turn) => (
-            <li className="pv1-ai-turn" key={turn.id}>
+            <li className="pv1-ai-turn" data-turn={turn.id} key={turn.id}>
               <p className="pv1-ai-turn-request">“{turn.requestText}”</p>
               <p className={`pv1-ai-turn-status is-${turn.status}`}>
                 {AI_TURN_STATUS_LABELS[turn.status]} (fixture turn)
@@ -436,7 +581,13 @@ export function AiDirectorPanel({
                   ) : (
                     <button
                       className="pv1-secondary"
-                      onClick={() => settleTurn(turn.id, cancelAiTurn)}
+                      data-action="cancel"
+                      onClick={() => {
+                        settleTurn(turn.id, cancelAiTurn);
+                        queuePanelFocus(
+                          `[data-turn="${turn.id}"] [data-action="revise-resend"]`,
+                        );
+                      }}
                       type="button"
                     >
                       Cancel request
@@ -480,7 +631,11 @@ export function AiDirectorPanel({
               {turn.status === "cancelled" || turn.status === "error" ? (
                 <button
                   className="pv1-secondary"
-                  onClick={() => setRequestText(turn.requestText)}
+                  data-action="revise-resend"
+                  onClick={() => {
+                    setRequestText(turn.requestText);
+                    queuePanelFocus("[data-ai-composer]");
+                  }}
                   type="button"
                 >
                   Revise and resend
@@ -504,6 +659,7 @@ export function AiDirectorPanel({
             <span>Ask the AI Director about the selected beat</span>
             <textarea
               aria-label="AI Director request"
+              data-ai-composer
               onChange={(event) => setRequestText(event.target.value)}
               placeholder="Describe the direction change you want — a labelled local fixture answers."
               rows={2}
@@ -521,6 +677,7 @@ export function AiDirectorPanel({
       ) : (
         <ConnectAiDirector
           connection={connection}
+          onBeforeConnect={() => queuePanelFocus("[data-ai-composer]")}
           onConnectionChange={onConnectionChange}
         />
       )}

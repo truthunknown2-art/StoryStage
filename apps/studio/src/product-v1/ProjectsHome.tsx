@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import olloCastArt from "../assets/ollo-friends-cast-v1.jpg";
 import { LOCAL_DEMO_BANNER, OLLO_DEMO_PROJECT } from "./demo-project";
@@ -7,6 +8,10 @@ import { LOCAL_DEMO_BANNER, OLLO_DEMO_PROJECT } from "./demo-project";
  * New project action, the labelled local Ollo demo card, and an
  * understandable empty state — no accounts, analytics, or production
  * bureaucracy.
+ *
+ * F3-WP5: arriving on this surface (first load or Back to projects) moves
+ * focus deliberately to the Projects heading instead of stranding the
+ * keyboard user on a removed control or the document body.
  */
 export function ProjectsHome({
   showDemoProject,
@@ -17,6 +22,10 @@ export function ProjectsHome({
   onNewProject: () => void;
   onOpenDemo: () => void;
 }) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
   return (
     <main className="pv1-page" data-testid="pv1-projects">
       <header className="pv1-topbar">
@@ -31,7 +40,9 @@ export function ProjectsHome({
       <section className="pv1-projects-body" aria-label="Projects">
         <div className="pv1-projects-heading">
           <div>
-            <h1>Projects</h1>
+            <h1 ref={headingRef} tabIndex={-1}>
+              Projects
+            </h1>
             <p>Your stories live here.</p>
           </div>
           <button className="pv1-primary" onClick={onNewProject} type="button">

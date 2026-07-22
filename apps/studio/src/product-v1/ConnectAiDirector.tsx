@@ -16,9 +16,11 @@ import {
  */
 export function ConnectAiDirector({
   connection,
+  onBeforeConnect,
   onConnectionChange,
 }: {
   connection: AiConnectionState;
+  onBeforeConnect?: () => void;
   onConnectionChange: (next: AiConnectionState) => void;
 }) {
   const [runtimeCheckShown, setRuntimeCheckShown] = useState(false);
@@ -26,7 +28,7 @@ export function ConnectAiDirector({
 
   return (
     <section aria-label="Connect AI Director" className="pv1-ai-connect">
-      <h2>
+      <h2 data-pv1-connect-heading tabIndex={-1}>
         <PlugZap size={15} aria-hidden /> Connect AI Director
       </h2>
       <p className="pv1-ai-connect-state">
@@ -39,7 +41,10 @@ export function ConnectAiDirector({
         {signedOut ? (
           <button
             className="pv1-primary"
-            onClick={() => onConnectionChange("connected")}
+            onClick={() => {
+              onBeforeConnect?.();
+              onConnectionChange("connected");
+            }}
             type="button"
           >
             Sign in with ChatGPT
@@ -47,7 +52,10 @@ export function ConnectAiDirector({
         ) : (
           <button
             className="pv1-primary"
-            onClick={() => onConnectionChange("connected")}
+            onClick={() => {
+              onBeforeConnect?.();
+              onConnectionChange("connected");
+            }}
             type="button"
           >
             Reconnect

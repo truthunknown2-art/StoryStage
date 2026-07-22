@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   CircleAlert,
@@ -73,6 +73,38 @@ export function CreateProject({
   const [ideaError, setIdeaError] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const rootRef = useRef<HTMLElement>(null);
+  const choiceHeadingRef = useRef<HTMLHeadingElement>(null);
+  const pasteHeadingRef = useRef<HTMLHeadingElement>(null);
+  const ideaHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  /* F3-WP5: every Create surface change moves focus deliberately to that
+   * surface's heading (the shared review focuses its own title field).
+   * The key is the visible surface identity only, so unrelated state —
+   * like toggling the settings chip connection on the paste form — never
+   * yanks focus away from the control the creator is using. */
+  const connected = isAiConnected(aiConnection);
+  const surfaceKey =
+    reviewing && reviewProposal
+      ? "review"
+      : draft.path === "idea" && !connected
+        ? "idea-connect"
+        : draft.path;
+  useEffect(() => {
+    const target =
+      surfaceKey === "choice"
+        ? choiceHeadingRef.current
+        : surfaceKey === "paste"
+          ? pasteHeadingRef.current
+          : surfaceKey === "idea"
+            ? ideaHeadingRef.current
+            : surfaceKey === "idea-connect"
+              ? rootRef.current?.querySelector<HTMLElement>(
+                  "[data-pv1-connect-heading]",
+                )
+              : null;
+    target?.focus();
+  }, [surfaceKey]);
 
   const words = countWords(draft.script);
   const durationSeconds = estimateDurationSeconds(words);
@@ -163,7 +195,7 @@ export function CreateProject({
   // source input.
   if (reviewing && reviewProposal) {
     return (
-      <main className="pv1-page" data-testid="pv1-create">
+      <main className="pv1-page" data-testid="pv1-create" ref={rootRef}>
         {topbar}
         <div className="pv1-create-review">
           <ProposalReview
@@ -180,7 +212,7 @@ export function CreateProject({
 
   if (draft.path === "paste") {
     return (
-      <main className="pv1-page" data-testid="pv1-create">
+      <main className="pv1-page" data-testid="pv1-create" ref={rootRef}>
         {topbar}
         <div className="pv1-create-narrow">
           <nav aria-label="Create path" className="pv1-create-crumb">
@@ -194,7 +226,9 @@ export function CreateProject({
             <span>Paste a script</span>
           </nav>
           <section aria-label="Paste a script" className="pv1-card">
-            <h1>Paste a script</h1>
+            <h1 ref={pasteHeadingRef} tabIndex={-1}>
+              Paste a script
+            </h1>
             <p className="pv1-lede">
               Your words stay on this device. StoryStage drafts a deterministic
               local screenplay proposal for your review — nothing is generated
@@ -263,7 +297,7 @@ export function CreateProject({
 
   if (draft.path === "idea") {
     return (
-      <main className="pv1-page" data-testid="pv1-create">
+      <main className="pv1-page" data-testid="pv1-create" ref={rootRef}>
         {topbar}
         <div className="pv1-create-narrow">
           <nav aria-label="Create path" className="pv1-create-crumb">
@@ -278,7 +312,9 @@ export function CreateProject({
           </nav>
           {isAiConnected(aiConnection) ? (
             <section aria-label="What's your idea?" className="pv1-card">
-              <h1>What&apos;s your idea?</h1>
+              <h1 ref={ideaHeadingRef} tabIndex={-1}>
+                What&apos;s your idea?
+              </h1>
               <p className="pv1-lede">
                 Describe your story and the AI Director drafts a proposal for
                 your review. {AI_FIXTURE_LABEL}
@@ -390,11 +426,13 @@ export function CreateProject({
   }
 
   return (
-    <main className="pv1-page" data-testid="pv1-create">
+    <main className="pv1-page" data-testid="pv1-create" ref={rootRef}>
       {topbar}
       <div className="pv1-create-narrow">
         <section aria-label="Choose how to start" className="pv1-create-choice">
-          <h1>Start a new Kids Story</h1>
+          <h1 ref={choiceHeadingRef} tabIndex={-1}>
+            Start a new Kids Story
+          </h1>
           <p className="pv1-lede">
             One private-launch template, two ways in. You review the proposal
             before anything enters Studio.
