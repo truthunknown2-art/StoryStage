@@ -1,16 +1,31 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `73`
+Inbox-Version: `74`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP4-AI-DIRECTOR-PROPOSAL-SHELL`
+Current-Task: `F3-WP4-REVIEW-CORRECTIONS`
 Status: `START-NOW`
 Issued-By: `Codex`
 Accepted-Root-Base: `0111274544afda55f8481be103bd3c7ad4db661a`
-Required-Work-Branch: `agent/kimi-f3-wp4-ai-director-proposal-shell`
-Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp4-ai-director-proposal-shell-v71.md`
+Required-Work-Branch: `agent/kimi-f3-wp4-review-corrections-v74`
+Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp4-review-corrections-v74.md`
 Issue: `#89`
 
 ## Current instruction
+
+Version 74 rejects PR #91 exact handback tip
+`536265ebb4f2fd7f9e021de2aaa3aada2dee673e` and starts only its bounded review
+correction on the fresh required branch. Incorporate that exact rejected head,
+then fix the shared editable proposal review, streaming-request supersession,
+revision-bound AI Undo, and unrelated formatting churn exactly as specified in
+the Version 74 full brief. Publish a new draft PR and immutable handback, then
+exit. Do not modify the old work branch or begin F3-WP5.
+
+Version 74 supersedes Version 73. Version 73 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 73 instruction:
 
 Version 73 incorporates the final exact-base scope audit without broadening the
 package. Connection state is separate from cancelled/error turn state; every AI
