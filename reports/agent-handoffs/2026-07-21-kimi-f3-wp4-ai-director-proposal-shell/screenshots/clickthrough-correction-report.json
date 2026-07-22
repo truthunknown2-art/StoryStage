@@ -41,9 +41,14 @@
     {
       "name": "zero console errors",
       "ok": true
+    },
+    {
+      "name": "zero page errors observed from a listener attached before both corrected entry flows",
+      "ok": true
     }
   ],
   "consoleIssues": [],
+  "pageErrors": [],
   "screenshots": [
     "wp4-correction-idea-editable-review-1440x900.png",
     "wp4-correction-blank-title-gate-1440x900.png",
