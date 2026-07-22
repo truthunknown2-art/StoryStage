@@ -1015,7 +1015,6 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 
 .pv1-script-input:focus-visible {
   border-color: var(--green);
-  outline: none;
 }
 
 .pv1-script-footer {
@@ -1387,10 +1386,29 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pv1-page * {
+  .pv1-page *,
+  .pv1-page *::before,
+  .pv1-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* F3-WP5: visually-hidden polite status announcements (connection fixture
+ * changes, settled AI turn outcomes). Present in the accessibility tree,
+ * never visible on screen. */
+.pv1-sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 /* F2-WP1 Studio shell */
@@ -2512,7 +2530,6 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .pv1-idea-field input:focus-visible,
 .pv1-idea-field select:focus-visible {
   border-color: var(--green);
-  outline: none;
 }
 
 .pv1-create-submit-row {
@@ -2631,7 +2648,6 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .pv1-proposal-scene-title-input:focus-visible,
 .pv1-proposal-direction-input:focus-visible {
   border-color: var(--green);
-  outline: none;
 }
 
 .pv1-proposal-scene-heading small {
@@ -3029,13 +3045,4 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 
 .pv1-ai-composer textarea:focus-visible {
   border-color: var(--green);
-  outline: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pv1-ai-chip,
-  .pv1-path-card,
-  .pv1-template-card {
-    transition-duration: 0.01ms !important;
-  }
 }

@@ -3051,3 +3051,334 @@ describe("F3-WP4 — Studio AI Director shell", () => {
     );
   });
 });
+
+describe("F3-WP5 — responsive, accessibility, and evidence gate", () => {
+  async function openDemoStudio(user: ReturnType<typeof userEvent.setup>) {
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", {
+        name: /Open local demo project The Storylight in the Little Wood/,
+      }),
+    );
+    return screen.findByTestId("pv1-studio");
+  }
+
+  const aiPanel = (studio: HTMLElement) =>
+    within(studio).getByRole("complementary", { name: "AI Director" });
+
+  const settleFixtureTurn = () =>
+    act(
+      () =>
+        new Promise((resolvePromise) => {
+          setTimeout(resolvePromise, 1400);
+        }),
+    );
+
+  async function connectAndRequest(
+    user: ReturnType<typeof userEvent.setup>,
+    studio: HTMLElement,
+    request: string,
+  ) {
+    await user.click(
+      within(aiPanel(studio)).getByRole("button", {
+        name: "Sign in with ChatGPT",
+      }),
+    );
+    await user.type(
+      within(aiPanel(studio)).getByRole("textbox", {
+        name: "AI Director request",
+      }),
+      request,
+    );
+    await user.click(
+      within(aiPanel(studio)).getByRole("button", { name: "Send request" }),
+    );
+  }
+
+  it("moves focus deliberately across the whole creator journey", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    // Arrival on Projects: focus lands on the surface heading, not the body.
+    expect(screen.getByRole("heading", { name: "Projects" })).toHaveFocus();
+
+    await user.click(screen.getByRole("button", { name: /New project/ }));
+    expect(
+      await screen.findByRole("heading", { name: /Start a new Kids Story/ }),
+    ).toHaveFocus();
+
+    await user.click(screen.getByRole("button", { name: /Paste a script/ }));
+    expect(
+      await screen.findByRole("heading", { name: "Paste a script" }),
+    ).toHaveFocus();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
+      target: { value: SAMPLE_SCRIPT },
+    });
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    // The shared review focuses its one required editable field.
+    const review = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    expect(
+      within(review).getByRole("textbox", { name: "Episode title" }),
+    ).toHaveFocus();
+
+    // Revise returns to the intact form with focus on its heading.
+    await user.click(
+      within(review).getByRole("button", { name: "Revise input" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Paste a script" }),
+    ).toHaveFocus();
+
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const reviewAgain = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    await user.click(
+      within(reviewAgain).getByRole("button", {
+        name: "Enter Studio — local demo only",
+      }),
+    );
+    // Studio entry lands on the primary board heading — once, on arrival.
+    const studio = await screen.findByTestId("pv1-studio");
+    expect(
+      within(studio).getByRole("heading", { name: "The Home Nook" }),
+    ).toHaveFocus();
+
+    await user.click(
+      within(studio).getByRole("button", { name: "Back to projects" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Projects" }),
+    ).toHaveFocus();
+  });
+
+  it("focuses the invalid episode title on the blank-title gate and clears it without a stale announcement", async () => {
+    const user = userEvent.setup();
+    await openPastePath(user);
+    fireEvent.change(screen.getByRole("textbox", { name: "Script" }), {
+      target: { value: SAMPLE_SCRIPT },
+    });
+    await user.click(screen.getByRole("button", { name: "Create proposal" }));
+    const review = await screen.findByRole("article", {
+      name: "Review proposal",
+    });
+    const episodeTitle = within(review).getByRole("textbox", {
+      name: "Episode title",
+    });
+    await user.clear(episodeTitle);
+    await user.type(episodeTitle, "   ");
+    await user.click(
+      within(review).getByRole("button", {
+        name: "Enter Studio — local demo only",
+      }),
+    );
+    // One accessible error, and focus is moved to the invalid control.
+    expect(within(review).getByRole("alert")).toHaveTextContent(
+      "Add an episode title before entering Studio.",
+    );
+    expect(episodeTitle).toBeInvalid();
+    expect(episodeTitle).toHaveFocus();
+    expect(screen.queryByTestId("pv1-studio")).not.toBeInTheDocument();
+
+    // Correcting the title clears the invalid state and the announcement.
+    await user.type(episodeTitle, "The Lantern Probe");
+    expect(within(review).queryByRole("alert")).not.toBeInTheDocument();
+    expect(episodeTitle).not.toBeInvalid();
+    await user.click(
+      within(review).getByRole("button", {
+        name: "Enter Studio — local demo only",
+      }),
+    );
+    expect(await screen.findByTestId("pv1-studio")).toBeInTheDocument();
+  });
+
+  it("moves focus deliberately through the idea path Connect gate", async () => {
+    const user = userEvent.setup();
+    await openCreate(user);
+    await user.click(
+      screen.getByRole("button", { name: /What's your idea\?/ }),
+    );
+    // Signed out: focus lands on the Connect surface heading.
+    const connect = await screen.findByRole("region", {
+      name: "Connect AI Director",
+    });
+    expect(
+      within(connect).getByRole("heading", { name: "Connect AI Director" }),
+    ).toHaveFocus();
+    // Fixture sign-in swaps the surface; focus moves to the form heading.
+    await user.click(
+      within(connect).getByRole("button", { name: "Sign in with ChatGPT" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "What's your idea?" }),
+    ).toHaveFocus();
+  });
+
+  it("closes the AI Director settings with Escape, returns focus to the chip, and announces connection changes once", async () => {
+    const user = userEvent.setup();
+    await openCreate(user);
+    const chip = screen.getByRole("button", {
+      name: /AI Director status: Signed out/,
+    });
+    expect(chip).toHaveAttribute("aria-expanded", "false");
+    expect(chip).toHaveAttribute("aria-controls", "pv1-ai-settings");
+
+    await user.click(chip);
+    const settings = await screen.findByRole("region", {
+      name: "AI Director settings",
+    });
+    expect(chip).toHaveAttribute("aria-expanded", "true");
+
+    // A connection fixture change is announced exactly once through one
+    // concise status — not by re-reading the whole surface.
+    const fixtureSelect = within(settings).getByRole("combobox", {
+      name: "Connection fixture state",
+    });
+    await user.selectOptions(fixtureSelect, "offline");
+    expect(
+      screen.getByText("AI Director fixture state: Offline."),
+    ).toBeInTheDocument();
+
+    // Escape is the deterministic keyboard close path; focus returns to the
+    // chip that opened the disclosure.
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("region", { name: "AI Director settings" }),
+    ).not.toBeInTheDocument();
+    expect(chip).toHaveFocus();
+    expect(chip).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("announces a cancelled turn once and moves focus Cancel → Revise and resend → composer", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "Hold the hush");
+    await user.click(
+      within(panel).getByRole("button", { name: "Cancel request" }),
+    );
+    // The settled outcome is announced once (unique text in the document).
+    expect(
+      screen.getByText(
+        "Request cancelled — captured scope preserved, nothing was applied.",
+      ),
+    ).toBeInTheDocument();
+    // The removed Cancel control never strands focus: it moves to the one
+    // honest recovery action.
+    const revise = within(panel).getByRole("button", {
+      name: "Revise and resend",
+    });
+    expect(revise).toHaveFocus();
+    await user.click(revise);
+    const composer = within(panel).getByRole("textbox", {
+      name: "AI Director request",
+    });
+    expect(composer).toHaveFocus();
+    expect(composer).toHaveValue("Hold the hush");
+  });
+
+  it("announces completion once and moves focus Apply → Undo → Apply", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(
+      user,
+      studio,
+      "Make the lantern moment land softer",
+    );
+    await settleFixtureTurn();
+    expect(
+      screen.getByText(
+        "Fixture proposal ready for the captured scope — Scene 1 · Beat 1.",
+      ),
+    ).toBeInTheDocument();
+
+    await user.click(
+      within(panel).getByRole("button", { name: "Apply proposal" }),
+    );
+    // Apply disables itself on success; focus lands on its bounded Undo.
+    const undoApply = within(panel).getByRole("button", {
+      name: "Undo proposal apply",
+    });
+    expect(undoApply).toHaveFocus();
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue(
+      "Play “Morning light through the round window” so the moment lands first: Make the lantern moment land softer",
+    );
+
+    await user.click(undoApply);
+    expect(
+      within(panel).getByRole("button", { name: "Apply proposal" }),
+    ).toHaveFocus();
+    expect(
+      within(studio).getByRole("textbox", { name: "Performance direction" }),
+    ).toHaveValue("");
+  });
+
+  it("moves focus to the proposal status on Reject", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "Try rejecting");
+    await settleFixtureTurn();
+    const proposal = within(panel).getByTestId("pv1-ai-proposal-1");
+    await user.click(
+      within(proposal).getByRole("button", { name: "Reject proposal" }),
+    );
+    const status = proposal.querySelector("[data-action='proposal-status']");
+    expect(status).not.toBeNull();
+    expect(status).toHaveFocus();
+    expect(status).toHaveTextContent("Rejected — no direction was changed.");
+  });
+
+  it("announces an Error turn once and keeps the connection announcement truthful", async () => {
+    const user = userEvent.setup();
+    const studio = await openDemoStudio(user);
+    const panel = aiPanel(studio);
+    await connectAndRequest(user, studio, "Try error path");
+    // Drop the fixture connection before the turn settles.
+    await user.click(
+      within(studio).getByRole("button", { name: /AI Director status:/ }),
+    );
+    await user.selectOptions(
+      within(
+        within(studio).getByRole("region", { name: "AI Director settings" }),
+      ).getByRole("combobox", { name: "Connection fixture state" }),
+      "offline",
+    );
+    await user.keyboard("{Escape}");
+    await settleFixtureTurn();
+    expect(panel).toHaveTextContent("Error (fixture turn)");
+    expect(
+      screen.getByText(
+        "Request ended in the Error fixture state — no proposal was produced and nothing was applied.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("AI Director fixture state: Offline."),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the visible-focus and reduced-motion contracts in the stylesheet", () => {
+    const cssPath = resolve(process.cwd(), "src/styles.css");
+    const css = readFileSync(cssPath, "utf8");
+    // No pv1 focus-visible rule may remove the global 2px outline.
+    expect(css).not.toMatch(/:focus-visible\s*\{[^}]*outline:\s*none/s);
+    // The reduced-motion blanket collapses transitions, animations, and
+    // animated scrolling for every pv1 element.
+    const blanketIndex = css.indexOf(".pv1-page *,");
+    expect(blanketIndex).toBeGreaterThan(-1);
+    expect(css.slice(Math.max(0, blanketIndex - 80), blanketIndex)).toContain(
+      "prefers-reduced-motion: reduce",
+    );
+    const blanket = css.slice(blanketIndex, blanketIndex + 420);
+    expect(blanket).toContain("animation-duration: 0.01ms !important");
+    expect(blanket).toContain("scroll-behavior: auto !important");
+    expect(blanket).toContain("transition-duration: 0.01ms !important");
+    // The visually-hidden announcement utility exists.
+    expect(css).toContain(".pv1-sr-only");
+  });
+});

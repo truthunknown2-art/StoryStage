@@ -26,7 +26,7 @@ export function ConnectAiDirector({
 
   return (
     <section aria-label="Connect AI Director" className="pv1-ai-connect">
-      <h2>
+      <h2 data-pv1-connect-heading tabIndex={-1}>
         <PlugZap size={15} aria-hidden /> Connect AI Director
       </h2>
       <p className="pv1-ai-connect-state">
