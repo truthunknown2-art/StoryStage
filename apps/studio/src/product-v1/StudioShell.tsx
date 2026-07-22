@@ -15,6 +15,7 @@ import olloCastArt from "../assets/ollo-friends-cast-v1.jpg";
 import { AiDirectorControls } from "./AiDirectorControls";
 import { AiDirectorPanel } from "./AiDirectorPanel";
 import { AssetWorkspace } from "./AssetWorkspace";
+import { AudioWorkspace } from "./AudioWorkspace";
 import type { AiConnectionState } from "./ai-director-fixture";
 import {
   LOCAL_DEMO_BANNER,
@@ -83,12 +84,14 @@ const DIRECTOR_TABS = [
 
 type DirectorTabId = (typeof DIRECTOR_TABS)[number]["id"];
 
-/* F4-WP1: the two Studio workspaces. The scene board remains the accepted
- * default; Assets & Rigs is reachable from the same shell and back without
- * disturbing the selected scene/beat or any session-local direction state. */
+/* F4-WP1 introduced the Studio workspace switch; F5-WP1 adds the Audio
+ * workspace. The scene board remains the accepted default; Assets & Rigs and
+ * Audio are reachable from the same shell and back without disturbing the
+ * selected scene/beat or any session-local direction state. */
 const STUDIO_WORKSPACES = [
   { id: "board", label: "Scene board" },
   { id: "assets", label: "Assets & Rigs" },
+  { id: "audio", label: "Audio" },
 ] as const;
 
 type StudioWorkspaceId = (typeof STUDIO_WORKSPACES)[number]["id"];
@@ -186,6 +189,11 @@ const INTENT_SELECT_FIELDS = {
  * mounted behind `hidden` while the workspace is open, so the accepted
  * scene/beat scope, playhead, per-beat direction history, and AI panel
  * state are preserved exactly; asset filters can never change them.
+ *
+ * F5-WP1 adds the Audio workspace to the same switch. It receives the
+ * shell's selected scene/beat as its one visible scope and drives scope
+ * changes through the same authoritative selection callbacks, so the board,
+ * the scope header, and the audio surface can never disagree.
  */
 export function StudioShell({
   aiConnection,
@@ -546,9 +554,9 @@ export function StudioShell({
         </ol>
       </nav>
 
-      {/* F4-WP1: one understandable switch between the scene board and the
-       * Assets & Rigs workspace. The accepted scene/beat scope above stays
-       * authoritative in both. */}
+      {/* F4-WP1/F5-WP1: one understandable switch between the scene board,
+       * the Assets & Rigs workspace, and the Audio workspace. The accepted
+       * scene/beat scope above stays authoritative in all three. */}
       <nav aria-label="Studio workspace" className="pv1-workspace-switch">
         {STUDIO_WORKSPACES.map((workspace) => (
           <button
@@ -987,6 +995,19 @@ export function StudioShell({
        * session-local direction and AI panel state are preserved exactly. */}
       {studioWorkspace === "assets" ? (
         <AssetWorkspace usesLayoutDemo={usesLayoutDemo} />
+      ) : null}
+
+      {/* F5-WP1: the Audio workspace reads and drives the same authoritative
+       * selected scene/beat through the shell's own selection callbacks, so
+       * both workspaces and the scope header always agree on one scope. */}
+      {studioWorkspace === "audio" ? (
+        <AudioWorkspace
+          onSelectBeat={selectBeat}
+          onSelectScene={selectScene}
+          selectedBeatIndex={selectedBeatIndex}
+          selectedScene={selectedScene}
+          usesLayoutDemo={usesLayoutDemo}
+        />
       ) : null}
 
       <nav
