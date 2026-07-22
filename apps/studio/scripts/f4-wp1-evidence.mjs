@@ -1,4 +1,4 @@
-/* global console, document, process */
+/* global console, document, getComputedStyle, process, window */
 /* F4-WP1 reproducible browser evidence capture.
  * Exercises the real Product v1 Projects → Create → Studio → Assets & Rigs
  * path at 1440x900 against the dev server on 127.0.0.1:5195, with
