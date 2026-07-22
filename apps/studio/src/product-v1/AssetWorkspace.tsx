@@ -1,0 +1,250 @@
+import { useState } from "react";
+import { OLLO_DEMO_SCENES } from "./demo-project";
+import {
+  ASSET_CATEGORIES,
+  ASSET_EPISODES,
+  ASSET_FIXTURE_LABEL,
+  ASSET_READINESS_DISCLAIMER,
+  ASSET_READINESS_LABELS,
+  ASSET_READINESS_NOTES,
+  INITIAL_ASSET_SCOPE,
+  SCOPE_ALL,
+  assetCategoryLabel,
+  assetFixtureScopeLabel,
+  assetScopeFilterLabel,
+  filterAssetFixtures,
+  resolveAssetSelection,
+  sanitizeAssetScope,
+  scenesForEpisodeScope,
+  type AssetCategoryId,
+  type AssetScope,
+} from "./asset-workspace";
+
+/**
+ * F4-WP1 Assets & Rigs workspace: category navigation, episode/scene
+ * filters, and a synchronized selected-asset detail over deterministic local
+ * demo records. One selection identity is shared by the list and the detail;
+ * whenever a category or filter change excludes the selected record, the
+ * selection deterministically falls to the first visible record or an honest
+ * empty scope (render-time adjustment, no effect races). This surface never
+ * touches the Studio's selected scene/beat, never creates an artifact, and
+ * keeps every preparation action visibly unavailable with its reason.
+ */
+export function AssetWorkspace({
+  usesLayoutDemo = false,
+}: {
+  usesLayoutDemo?: boolean;
+}) {
+  const [category, setCategory] = useState<AssetCategoryId>("characters");
+  const [scope, setScope] = useState<AssetScope>(INITIAL_ASSET_SCOPE);
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+
+  const visibleAssets = filterAssetFixtures(category, scope);
+  const resolvedSelectedId = resolveAssetSelection(
+    visibleAssets,
+    selectedAssetId,
+  );
+  if (resolvedSelectedId !== selectedAssetId) {
+    setSelectedAssetId(resolvedSelectedId);
+  }
+  const selectedAsset =
+    visibleAssets.find((asset) => asset.id === resolvedSelectedId) ?? null;
+
+  const sceneOptions = scenesForEpisodeScope(scope.episodeId);
+  const scopeLabel = assetScopeFilterLabel(scope);
+
+  return (
+    <section
+      aria-label="Assets and rigs workspace"
+      className="pv1-assets"
+      data-testid="pv1-assets"
+    >
+      <header className="pv1-assets-header">
+        <div>
+          <small>Assets &amp; Rigs workspace</small>
+          <h1>{assetCategoryLabel(category)}</h1>
+        </div>
+        <span className="pv1-badge">Planning records — not assets</span>
+      </header>
+
+      <p className="pv1-assets-truth" role="note">
+        Every item here is a local demo record grounded in the bounded Ollo demo
+        plan — no image, file, layer, rig, or approval exists for any of them.{" "}
+        <span>{ASSET_READINESS_DISCLAIMER}</span>
+      </p>
+      {usesLayoutDemo ? (
+        <p className="pv1-layout-demo-note" role="note">
+          Layout demo — these records describe the bounded Ollo demo plan, not
+          assets from your script. Script-specific assets have not been planned
+          or created.
+        </p>
+      ) : null}
+
+      <div className="pv1-assets-controls">
+        <nav aria-label="Asset categories" className="pv1-asset-categories">
+          {ASSET_CATEGORIES.map((entry) => (
+            <button
+              aria-current={category === entry.id ? "true" : undefined}
+              className={`pv1-asset-category ${category === entry.id ? "is-selected" : ""}`}
+              key={entry.id}
+              onClick={() => setCategory(entry.id)}
+              type="button"
+            >
+              {entry.label}
+            </button>
+          ))}
+        </nav>
+        <div className="pv1-asset-filters">
+          <label>
+            <span>Episode</span>
+            <select
+              aria-label="Episode filter"
+              onChange={(event) =>
+                setScope((current) =>
+                  sanitizeAssetScope({
+                    ...current,
+                    episodeId: event.target.value,
+                  }),
+                )
+              }
+              value={scope.episodeId}
+            >
+              <option value={SCOPE_ALL}>All episodes</option>
+              {ASSET_EPISODES.map((episode) => (
+                <option key={episode.id} value={episode.id}>
+                  {episode.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Scene</span>
+            <select
+              aria-label="Scene filter"
+              onChange={(event) =>
+                setScope((current) =>
+                  sanitizeAssetScope({
+                    ...current,
+                    sceneId: event.target.value,
+                  }),
+                )
+              }
+              value={scope.sceneId}
+            >
+              <option value={SCOPE_ALL}>All scenes</option>
+              {sceneOptions.map((scene) => {
+                const index = OLLO_DEMO_SCENES.indexOf(scene);
+                return (
+                  <option key={scene.id} value={scene.id}>
+                    Scene {index + 1} · {scene.title}
+                  </option>
+                );
+              })}
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div className="pv1-assets-columns">
+        <section
+          aria-label={`${assetCategoryLabel(category)} records in scope`}
+          className="pv1-asset-list"
+        >
+          <h2>{scopeLabel}</h2>
+          {visibleAssets.length === 0 ? (
+            <p className="pv1-asset-empty" role="note">
+              No {assetCategoryLabel(category).toLowerCase()} records are scoped
+              to {scopeLabel}. Nothing is hidden — this scope honestly has no
+              records yet, and no assets can be created or imported in this
+              demo.
+            </p>
+          ) : (
+            <ul>
+              {visibleAssets.map((asset) => {
+                const isSelected = asset.id === resolvedSelectedId;
+                return (
+                  <li key={asset.id}>
+                    <button
+                      aria-current={isSelected ? "true" : undefined}
+                      className={`pv1-asset-item ${isSelected ? "is-selected" : ""}`}
+                      onClick={() => setSelectedAssetId(asset.id)}
+                      type="button"
+                    >
+                      <strong>{asset.name}</strong>
+                      <small>
+                        {ASSET_READINESS_LABELS[asset.readiness]} ·{" "}
+                        {ASSET_FIXTURE_LABEL}
+                      </small>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        <section
+          aria-label="Selected asset detail"
+          className="pv1-asset-detail"
+        >
+          {selectedAsset ? (
+            <>
+              <header>
+                <h2>{selectedAsset.name}</h2>
+                <p className="pv1-asset-detail-label" role="note">
+                  {ASSET_FIXTURE_LABEL}
+                </p>
+              </header>
+              <dl>
+                <div>
+                  <dt>Category</dt>
+                  <dd>{assetCategoryLabel(selectedAsset.category)}</dd>
+                </div>
+                <div>
+                  <dt>Scope</dt>
+                  <dd>{assetFixtureScopeLabel(selectedAsset)}</dd>
+                </div>
+                <div>
+                  <dt>What is known</dt>
+                  <dd>{selectedAsset.summary}</dd>
+                </div>
+                <div>
+                  <dt>Source truth</dt>
+                  <dd>{selectedAsset.sourceTruth}</dd>
+                </div>
+                <div>
+                  <dt>Approval truth</dt>
+                  <dd>{selectedAsset.approvalTruth}</dd>
+                </div>
+                <div>
+                  <dt>Readiness</dt>
+                  <dd>
+                    {ASSET_READINESS_LABELS[selectedAsset.readiness]} —{" "}
+                    {ASSET_READINESS_NOTES[selectedAsset.readiness]}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Next preparation</dt>
+                  <dd className="pv1-asset-preparation">
+                    <button className="pv1-secondary" disabled type="button">
+                      {selectedAsset.nextPreparation.action}
+                    </button>
+                    <span>
+                      {selectedAsset.nextPreparation.unavailableReason}
+                    </span>
+                  </dd>
+                </div>
+              </dl>
+            </>
+          ) : (
+            <p className="pv1-asset-empty" role="note">
+              Nothing selected — the current category and filters form an honest
+              empty scope. Choosing a wider scene filter or another category
+              shows its records; no record is kept hidden from an earlier scope.
+            </p>
+          )}
+        </section>
+      </div>
+    </section>
+  );
+}

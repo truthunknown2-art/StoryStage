@@ -3049,3 +3049,280 @@ h1, h2, h3, strong { font-family: "Segoe UI Variable Display", Inter, "Segoe UI"
 .pv1-ai-composer textarea:focus-visible {
   border-color: var(--green);
 }
+
+
+/* F4-WP1 Assets & Rigs workspace */
+
+/* The board surfaces stay mounted behind `hidden` while the workspace is
+ * open; the attribute must win over the grid/flex display rules. */
+.pv1-studio-layout[hidden],
+.pv1-studio-overview[hidden] {
+  display: none;
+}
+
+.pv1-workspace-switch {
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+}
+
+.pv1-workspace-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 14px;
+}
+
+.pv1-workspace-tab:hover {
+  color: var(--ink);
+}
+
+.pv1-workspace-tab.is-selected {
+  border-bottom-color: var(--green);
+  color: var(--green);
+}
+
+.pv1-assets {
+  display: grid;
+  flex: 1;
+  gap: 16px;
+  align-content: start;
+  min-height: 0;
+  padding: 18px 24px;
+}
+
+.pv1-assets-header {
+  align-items: end;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.pv1-assets-header small {
+  color: var(--pv1-faint);
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pv1-assets-header h1 {
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+.pv1-assets-truth {
+  background: rgba(145, 228, 179, 0.06);
+  border: 1px solid rgba(145, 228, 179, 0.25);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.pv1-assets .pv1-layout-demo-note {
+  margin: 0;
+}
+
+.pv1-assets-controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.pv1-asset-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pv1-asset-category {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+}
+
+.pv1-asset-category:hover {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.pv1-asset-category.is-selected {
+  background: rgba(145, 228, 179, 0.12);
+  border-color: rgba(145, 228, 179, 0.45);
+  color: var(--green);
+}
+
+.pv1-asset-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pv1-asset-filters label {
+  display: grid;
+  gap: 4px;
+}
+
+.pv1-asset-filters label > span {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pv1-asset-filters select {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 12px;
+  min-height: 34px;
+  padding: 0 10px;
+}
+
+.pv1-assets-columns {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 340px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.pv1-asset-list,
+.pv1-asset-detail {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.pv1-asset-list h2 {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.pv1-asset-list ul {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pv1-asset-item {
+  background: #0e1413;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.pv1-asset-item:hover {
+  border-color: var(--line-strong);
+}
+
+.pv1-asset-item.is-selected {
+  background: rgba(145, 228, 179, 0.08);
+  border-color: rgba(145, 228, 179, 0.45);
+}
+
+.pv1-asset-item strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.pv1-asset-item small {
+  color: var(--pv1-faint);
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.pv1-asset-empty {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pv1-asset-detail {
+  display: grid;
+  gap: 12px;
+}
+
+.pv1-asset-detail header h2 {
+  font-size: 18px;
+}
+
+.pv1-asset-detail-label {
+  color: var(--pv1-faint);
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.pv1-asset-detail dl {
+  display: grid;
+  gap: 12px;
+}
+
+.pv1-asset-detail dt {
+  color: var(--pv1-faint);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pv1-asset-detail dd {
+  color: #dbe3df;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 3px;
+}
+
+.pv1-asset-preparation {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pv1-asset-preparation .pv1-secondary:disabled {
+  opacity: 0.55;
+}
+
+.pv1-asset-preparation span {
+  color: var(--muted);
+  flex: 1;
+  font-size: 11px;
+  line-height: 1.5;
+  min-width: 220px;
+}
+
+@media (max-width: 1024px) {
+  .pv1-assets-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
