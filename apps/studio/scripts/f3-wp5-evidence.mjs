@@ -1,12 +1,16 @@
+/* global console, document, getComputedStyle, matchMedia, process, window */
 /* F3-WP5 reproducible browser evidence capture.
  * Exercises the real Product v1 journey at 1920x1080, 1440x900, 1024x800
  * against the dev server on 127.0.0.1:5195, with console/pageerror
  * listeners attached before any navigation. Produces screenshots +
  * machine-readable clickthrough report under the package evidence dir. */
-const fs = require("node:fs");
-const path = require("node:path");
-const crypto = require("node:crypto");
-const REPO_ROOT = path.resolve(__dirname, "../../..");
+import crypto from "node:crypto";
+import fs from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+const loadPackage = createRequire(import.meta.url);
+const REPO_ROOT = path.resolve(import.meta.dirname, "../../..");
 const pnpmStore = path.join(REPO_ROOT, "node_modules", ".pnpm");
 const playwrightStores = fs
   .readdirSync(pnpmStore)
@@ -16,7 +20,7 @@ if (playwrightStores.length !== 1) {
     `Expected exactly one installed playwright-core, found ${playwrightStores.length}`,
   );
 }
-const pw = require(
+const pw = loadPackage(
   path.join(pnpmStore, playwrightStores[0], "node_modules", "playwright-core"),
 );
 

@@ -1,7 +1,7 @@
 {
   "task": "F3-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE",
   "base": "http://127.0.0.1:5195/",
-  "capturedAt": "2026-07-22T06:37:58.210Z",
+  "capturedAt": "2026-07-22T06:47:05.039Z",
   "viewports": [
     {
       "viewport": "1440x900",
@@ -1255,7 +1255,7 @@
         },
         {
           "file": "screenshots/wp5-1024x800-studio-keyboard-focus.png",
-          "sha256": "e2c8d8cab2acdb3e2c70cd6139b27245377ec5c58925c737d356b65269bf9c5a"
+          "sha256": "ae01cfd9836ceb9529d0bca10131d8e7b69ac712d741e7eed084482d5cf4718a"
         },
         {
           "file": "screenshots/wp5-1024x800-studio-ai-proposal.png",
