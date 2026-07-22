@@ -16,6 +16,8 @@ Inbox: version `84` on `origin/agent/kimi-frontend`
   `f5885d8d9a1c8444e14c0f1f2ead011035e9150d`.
 - Exact implementation and evidence SHA:
   `10586e0836f641408d67808e3fa04af893a62446`.
+- Codex exact-head review-correction SHA:
+  `2bc92c53a223a7ecc2c9e0d335208e5dc8c917c9`.
 - Handback tip: the commit containing this file; GitHub issue #109 and the
   pull request record its exact pushed SHA because a commit cannot embed its
   own identity.
@@ -57,10 +59,27 @@ The implementation/evidence commit adds 21 files or file changes with 3,030
 insertions and 10 deletions. `App.test.tsx` changes only by importing the new
 focused regression suite.
 
+## Review corrections
+
+Independent exact-head code review found three P2 fail-closed/control defects,
+all corrected before acceptance:
+
+1. A candidate with an unknown or stale reference association now fails closed
+   at confirmation instead of retaining the raw unknown ID as a label.
+2. The exported workflow machine rejects source or rights edits while metadata
+   is locked in the confirming state; the disabled UI fields are no longer the
+   only enforcement boundary.
+3. The already-expanded request control now toggles the panel closed and
+   restores focus instead of becoming a dead control outside the panel.
+
+Regression coverage exercises all three paths. The browser evidence was
+regenerated after the toggle correction; its request-button focus capture and
+machine-readable hashes were refreshed.
+
 ## Verification
 
-- Focused F4-WP3 suite: PASS, 17/17 tests.
-- `pnpm --filter @storystage/studio test`: PASS, 193/193 tests.
+- Focused F4-WP3 suite: PASS, 18/18 tests.
+- `pnpm --filter @storystage/studio test`: PASS, 194/194 tests.
 - `pnpm --filter @storystage/studio typecheck`: PASS.
 - `pnpm --filter @storystage/studio build`: PASS; only the existing Vite
   large-chunk warning remains.
@@ -68,10 +87,10 @@ focused regression suite.
   ESLint has no matching configuration.
 - `git diff --check`: PASS.
 - Serialized repository-root `pnpm --workspace-concurrency=1 verify`: PASS in
-  256.9 seconds. Roadmap consistency, generated artifacts, E1 security
-  evidence, privacy (1,073 files), repository lint, all-package typecheck,
+  the 332.5-second combined Studio/build/root gate. Roadmap consistency,
+  generated artifacts, E1 security evidence, privacy (1,074 files), repository lint, all-package typecheck,
   and all tests passed. Notable suites include Story Engine 353/353,
-  asset-pipeline 126/126, and Studio 193/193. Repository lint retains only the
+  asset-pipeline 126/126, and Studio 194/194. Repository lint retains only the
   two pre-existing Remotion purity warnings in
   `apps/render-worker/src/kvp001-proof.ts`.
 - `node apps/studio/scripts/f4-wp3-evidence.mjs` against the local Studio dev
@@ -84,7 +103,7 @@ Machine-readable report:
 `screenshots/clickthrough-report.json`
 
 Report SHA-256:
-`ed49c40a5b8aac004a50ba195fccf6dca8853c492b6131b61d60e5d83fdcb0bd`
+`b1a1765a71ddd7ba37cb4056d6be0274916a9f3009818943687d7b399529d060`
 
 The report records every screenshot SHA-256 and verifies request focus,
 request-pack truth, drop intent, metadata review, missing source, missing
