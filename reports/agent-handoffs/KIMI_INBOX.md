@@ -1,16 +1,32 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `74`
+Inbox-Version: `75`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F3-WP4-REVIEW-CORRECTIONS`
-Status: `START-NOW`
+Current-Task: `F3-WP4-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `0111274544afda55f8481be103bd3c7ad4db661a`
-Required-Work-Branch: `agent/kimi-f3-wp4-review-corrections-v74`
-Full-Brief: `reports/agent-handoffs/2026-07-21-codex-kimi-f3-wp4-review-corrections-v74.md`
+Accepted-Root-Base: `d5207bd7410d1388b3e1797fb0a98f04e680f6d1`
+Required-Work-Branch: `NONE`
+Full-Brief: `NONE`
 Issue: `#89`
 
 ## Current instruction
+
+Version 75 records F3-WP4 acceptance and integration. Correction PR #93 exact
+head `837e00402f665e7a1caa5c92d05991c205fea736` passed Studio 123/123,
+typecheck, production build, the complete recursive workspace suite, clean Sol
+code/history and governance audits, clean Terra visual/evidence audit, and
+hosted Verify run `29888901074`. It merged into `product/v1` at
+`d5207bd7410d1388b3e1797fb0a98f04e680f6d1`. Kimi is now `WAIT`; F3-WP5,
+backend product work, Godot, Remotion, persistence, rendering, export, and any
+later package remain unauthorized by this inbox.
+
+Version 75 supersedes Version 74. Version 74 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 74 instruction:
 
 Version 74 rejects PR #91 exact handback tip
 `536265ebb4f2fd7f9e021de2aaa3aada2dee673e` and starts only its bounded review
