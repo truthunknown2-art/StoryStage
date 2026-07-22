@@ -1,16 +1,34 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `90`
+Inbox-Version: `91`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F4-ACCEPTED-WAIT`
-Status: `WAIT`
+Current-Task: `F5-WP1-AUDIO-WORKSPACE-TRACK-HIERARCHY`
+Status: `START_NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `5c7107f3b201780865c30f11a59716e4a82d16d4`
-Required-Work-Branch: `NONE`
-Full-Brief: `NONE`
-Issue: `#117`
+Accepted-Root-Base: `eb9890d75126381e61849a5994f28474d133bfb7`
+Required-Work-Branch: `agent/kimi-f5-wp1-audio-workspace-track-hierarchy`
+Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f5-wp1-audio-workspace-track-hierarchy-v91.md`
+Issue: `#124`
 
 ## Current instruction
+
+Version 91 starts only F5-WP1 through issue #124 from exact verified base
+`eb9890d75126381e61849a5994f28474d133bfb7` on required branch
+`agent/kimi-f5-wp1-audio-workspace-track-hierarchy`. Build only the Product v1
+Audio workspace and Narration/Dialogue/SFX/Music hierarchy, shared scene/beat
+scope, truthful local-demo take/cue cards, selected-track inspector, and
+guide-versus-final timing labels in the full brief. Preserve every accepted
+F1-F4 surface and truth boundary. Publish one immutable handback and exit. Do
+not begin F5-WP2 or any device, file/import, playback, waveform, lip-sync,
+mixing, persistence, provider, worker, backend, Godot, Remotion, rendering,
+export, packaging, QA, private-launch, or later-package work.
+
+Version 91 supersedes Version 90. Version 90 remains below as historical
+traceability and must not relaunch.
+
+---
+
+Previous Version 90 instruction:
 
 Version 90 records complete F4 acceptance and integration. Independent audit
 rejected the original Kimi handback `ec4fb78...`; the bounded corrected
