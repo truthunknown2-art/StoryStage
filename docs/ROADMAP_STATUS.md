@@ -1,8 +1,8 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: d5207bd7410d1388b3e1797fb0a98f04e680f6d1
-lastAcceptedMilestone: E1
+lastAcceptedProductHead: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
+lastAcceptedMilestone: F3
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
   E0: 81a0e64dedad5bab9e4f2f285c40341e1343412f
@@ -10,31 +10,32 @@ completedMilestones:
   F2: 87c01f9b684642e39cf470f06be2aaf6797cd3d7
   G0: ddddcf1e9281da808c925a06bf25fd52ee43fa66
   E1: 38969c4400e2a9c84a59346c28f7a72d5f9492bf
+  F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F3
   package: F3-WP5
-  owner: Kimi
-  exactBase: 272812f25fa0f4f794edfb69426028349900382e
+  owner: Codex
+  exactBase: b03622cb9a99ce0fa5048b799468c50835d2703f
   branch: agent/kimi-f3-wp5-responsive-accessibility-evidence
   issue: 95
-  pr: null
-  candidateContentHead: 272812f25fa0f4f794edfb69426028349900382e
+  pr: 97
+  candidateContentHead: f56960d5d9cfd051927ccb6b531090f3256f4e4e
   candidateRef: product/v1
 checks:
   local: roadmap-consistency+format-check
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-f3-wp4-exact-837e00402f665e7a1caa5c92d05991c205fea736-hosted-29888901074-pass
-  pro: accept-complete-e1-wp4-exact-357737d2c695098ac47db3efdab4470e1cb0a202-no-blockers
-  preston: pass-e1-exact-357737d2c695098ac47db3efdab4470e1cb0a202-and-continue-dependency-ordered-roadmap-2026-07-21
+  codex: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-hosted-29898272414-pass
+  pro: accept-complete-f3-exact-f56960d5d9cfd051927ccb6b531090f3256f4e4e-no-blockers
+  preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F4 remains blocked until the complete F3 milestone passes exact-head review and Preston acceptance
+  - F4-WP1 remains blocked until a separate issue and START_NOW status transition authorize it from the exact accepted base
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F3_WP5_ONLY
-  text: Implement only issue #95 from exact base 272812f25fa0f4f794edfb69426028349900382e on agent/kimi-f3-wp5-responsive-accessibility-evidence, publish the exact handback, and stop before F4.
+  type: WAIT_FOR_F4_WP1_TICKET
+  text: F3 is accepted and integrated. Keep Kimi at WAIT and do not begin F4-WP1 until its separate issue and exact-base START_NOW transition are durable.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -108,20 +109,23 @@ verification from the live PR checks.
   conversation/proposal shell with fail-closed Apply/Undo state. It does not
   connect live AI, persist review edits, create script-specific production
   plans or media, animate, render, or export.
-- On 2026-07-21 the separate issue #95 and this `START_NOW` transition
-  authorize only F3-WP5 from exact base
-  `product/v1@272812f25fa0f4f794edfb69426028349900382e` on required branch
-  `agent/kimi-f3-wp5-responsive-accessibility-evidence`. The package closes
-  keyboard/focus, accessibility, reduced-motion, three-viewport responsive,
-  reference-comparison, and exact evidence requirements for the complete F3
-  milestone candidate. It does not accept F3, start F4, connect live AI,
-  persist projects, or authorize backend, Godot, Remotion, rendering, export,
-  packaging, or private-launch work.
-
-- Accepted creator-facing product implementation now reaches F3-WP4 on exact
-  `d5207bd...`; the complete F3 milestone is not yet accepted. G0 is the
-  accepted planning/governance milestone integrated at `ddddcf1...` and does
-  not itself implement product capability.
+- F3-WP5 and the complete F3 milestone are accepted and integrated at exact
+  `product/v1@fd0bd16...`. PR #97 exact head `f56960d...` passed Studio
+  135/135, typecheck, production build, a 40/40 browser audit, 22 unique
+  screenshots at the required 1920x1080, 1440x900, and 1024x800 viewports,
+  zero console/page errors, three independent audits, clean synthetic root
+  verification, hosted Verify run `29898272414`, and ChatGPT Pro's exact-head
+  milestone audit with no blockers. The accepted F3 surface provides scoped
+  manual direction/history and a truthful local-fixture AI proposal journey;
+  it does not provide live AI, persistence, media, assets, Godot, Remotion,
+  rendering, export, packaging, or private-launch readiness.
+- On 2026-07-21 Preston explicitly granted standing authority to continue
+  through dependency-ordered phases without asking for routine confirmation.
+  That authority selects only the next unblocked roadmap package after its
+  predecessor, exact-SHA review, hosted checks, and durable transition pass; it
+  never bypasses a failed gate, broadens a package, or marks the overall studio
+  complete. F4-WP1 therefore still requires its own issue and `START_NOW`
+  transition from the exact accepted product base.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is

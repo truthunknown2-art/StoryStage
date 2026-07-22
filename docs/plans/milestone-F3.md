@@ -12,16 +12,14 @@
   decomposition was accepted in G0. On 2026-07-21 Preston recorded E1 `PASS`
   at exact head `357737d2c695098ac47db3efdab4470e1cb0a202` and directed the team to
   continue through the approved product roadmap without repetitive prompts.
-- Completed packages: F3-WP1 through F3-WP4 are accepted. F3-WP4 correction
-  PR #93 exact head `837e00402f665e7a1caa5c92d05991c205fea736` is integrated
-  at `product/v1@d5207bd7410d1388b3e1797fb0a98f04e680f6d1`.
-- Current authorization: only F3-WP5 through issue #95 after the matching
-  status transition and higher Kimi inbox version are published.
-- Exact implementation base: `272812f25fa0f4f794edfb69426028349900382e`
-- Required F3-WP5 branch:
-  `agent/kimi-f3-wp5-responsive-accessibility-evidence`
-- F4 remains blocked until the complete F3 milestone passes exact-head review,
-  ChatGPT Pro audit, and Preston acceptance.
+- Completed packages: F3-WP1 through F3-WP5 are accepted. PR #97 exact head
+  `f56960d5d9cfd051927ccb6b531090f3256f4e4e` is integrated at
+  `product/v1@fd0bd16c531e1742c14b21fc79cf8c47eb82d200`.
+- Current authorization: `ACCEPTED_WAIT`. F4-WP1 requires a separate issue,
+  exact-base status transition, and higher validated Kimi inbox version.
+- Preston granted standing dependency-ordered phase-continuation authority on
+  2026-07-21. It removes repetitive confirmation prompts but does not skip any
+  package, exact-SHA review, hosted check, or durable transition.
 - Backend product work remains blocked until the complete F6 Frontend Gate is
   accepted.
 
@@ -149,10 +147,17 @@ Product v1 references.
 verification, responsive browser audit, zero console/page errors, exact pushed
 handback, ChatGPT Pro milestone audit, and Preston acceptance.
 
+**Accepted evidence:** PR #97 exact head `f56960d...`, Studio 135/135,
+typecheck/build, 40/40 browser audit, 22 unique correctly dimensioned
+screenshots, zero console/page errors, three independent audits, clean
+synthetic root verification, hosted run `29898272414`, ChatGPT Pro exact-head
+ACCEPT with no blockers, and product merge `fd0bd16...`.
+
 ## Milestone gate
 
 Preston can manually edit and undo scoped direction, review a clearly scoped AI
 proposal through the truthful local demo, and understand what would change
-without state leakage or false production claims. Passing F3 does not authorize
-F4 until its separate ticket/status transition, and no backend product work may
-start before the accepted F6 Frontend Gate.
+without state leakage or false production claims. This gate passed at
+`product/v1@fd0bd16...`. F4 still requires its separate ticket/status
+transition, and no backend product work may start before the accepted F6
+Frontend Gate.
