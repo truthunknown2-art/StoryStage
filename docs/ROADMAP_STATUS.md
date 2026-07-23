@@ -1,7 +1,7 @@
 ---
 statusSchemaVersion: 1
 productBranch: product/v1
-lastAcceptedProductHead: 5c7107f3b201780865c30f11a59716e4a82d16d4
+lastAcceptedProductHead: a4325a99c707e819dffff514e16875cc0db33f28
 lastAcceptedMilestone: F4
 completedMilestones:
   P0: 9f3d6fac522f99b693c163c822334076ee9584bd
@@ -13,33 +13,36 @@ completedMilestones:
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
   F4: 5c7107f3b201780865c30f11a59716e4a82d16d4
 authorization:
-  state: START_NOW
+  state: ACCEPTED_WAIT
   milestone: F5
   package: F5-WP1
-  owner: Kimi
-  exactBase: eb9890d75126381e61849a5994f28474d133bfb7
-  branch: agent/kimi-f5-wp1-audio-workspace-track-hierarchy
+  owner: Codex
+  exactBase: 11f6f049d306efb9808559a24e2bd532be4cdc87
+  branch: agent/kimi-f5-wp1-audio-workspace-track-hierarchy-v2
   issue: 124
-  pr: null
-  candidateContentHead: eb9890d75126381e61849a5994f28474d133bfb7
+  pr: 127
+  candidateContentHead: 22daef36d080fbbbab03f981cae19f11c1ea2828
   candidateRef: product/v1
 checks:
-  local: roadmap-consistency+format-check
+  local: studio-focused-23+studio-252+typecheck+build+touched-lint+diff-check+browser-15+9-screenshot-hashes+three-independent-audits+root-verify
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
-  codex: accept-complete-f4-exact-44f521860c89eb883da4b56495cc1dad67d1c73a-hosted-29952061999-pass-merge-5c7107f3b201780865c30f11a59716e4a82d16d4-postmerge-29953736441-pass
+  codex: accept-f5-wp1-exact-22daef36d080fbbbab03f981cae19f11c1ea2828-hosted-29969068237-attempt-3-pass-merge-a4325a99c707e819dffff514e16875cc0db33f28-postmerge-29970325457-pass
   pro: accept-complete-f4-exact-44f521860c89eb883da4b56495cc1dad67d1c73a-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F5-WP2 remains blocked until F5-WP1 passes exact-head review and is accepted
+  - F5-WP2 requires a separate bounded START_NOW ticket and higher Kimi inbox version
+  - F5-WP3 through F5-WP5 remain blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: IMPLEMENT_F5_WP1_ONLY
-  text: Implement only issue #124 from exact base eb9890d75126381e61849a5994f28474d133bfb7 on agent/kimi-f5-wp1-audio-workspace-track-hierarchy, publish the exact handback, and stop before F5-WP2.
+  type: WAIT_FOR_F5_WP2_TICKET
+  text: F5-WP1 is accepted and integrated. Do not begin F5-WP2 until a separate bounded ticket, exact-base status transition, and higher Kimi inbox version are published.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
+  - pr: 126
+    reason: rejected F5-WP1 predecessor superseded by accepted correction PR 127
 ---
 
 # StoryStage roadmap status
@@ -216,6 +219,25 @@ verification from the live PR checks.
   devices, files/import, playback, waveforms, lip sync, mixing, persistence,
   backend contracts, providers, Godot, Remotion, rendering, export, packaging,
   F5-WP2, or later work.
+- F5-WP1 is accepted and integrated at exact
+  `product/v1@a4325a99c707e819dffff514e16875cc0db33f28`. Independent review
+  rejected predecessor PR #126 exact head `311c115...` for an empty inspector
+  that manufactured card/status/timing truth and an evidence gate that did not
+  pin the exact screenshot set. Corrected PR #127 exact head `22daef36...`
+  passed focused 23/23, Studio 252/252, typecheck, production build, touched
+  lint, diff check, 15/15 browser checks, nine unique exact-size 1440x900
+  screenshots, zero console/page errors, complete root verification, and three
+  independent exact-head code/accessibility, visual/evidence, and governance
+  audits. Hosted Verify run `29969068237` passed on attempt 3 after attempts 1
+  and 2 hit two different unchanged timing-sensitive tests; both implicated
+  tests passed independently on the exact candidate. PR #127 merged at
+  `a4325a9...`, and postmerge Verify run `29970325457` passed. The package
+  provides the truthful Narration, Dialogue, SFX, and Music planning hierarchy,
+  shared scene/beat scope, deterministic planning-card selection, selected-track
+  inspector, and guide-versus-final timing labels. It does not provide device
+  access, recording, real takes, files/import, playback, waveforms, trim/gain,
+  lip sync, mixing, persistence, backend, Godot, Remotion, rendering, export,
+  packaging, F5-WP2, or later work.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
