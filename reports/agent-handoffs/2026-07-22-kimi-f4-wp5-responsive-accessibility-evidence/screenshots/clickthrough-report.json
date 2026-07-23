@@ -1,0 +1,1098 @@
+{
+  "task": "F4-WP5-RESPONSIVE-ACCESSIBILITY-EVIDENCE",
+  "base": "http://127.0.0.1:5196/",
+  "capturedAt": "2026-07-22T18:53:57.905Z",
+  "viewports": [
+    {
+      "viewport": "1920x1080",
+      "url": "http://127.0.0.1:5196/",
+      "checks": [
+        {
+          "name": "complete Projects to Assets & Rigs journey is keyboard-only with exact focus identity at every transition",
+          "pass": true,
+          "details": [
+            {
+              "label": "Projects: New project",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "New project"
+            },
+            {
+              "label": "Create: Paste a script",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Paste a scriptBring your own words — StoryStage drafts a local screenplay proposal for your review."
+            },
+            {
+              "label": "Create: Script textbox",
+              "reached": true,
+              "tag": "textarea",
+              "accessibleName": "Script"
+            },
+            {
+              "label": "Create: Create proposal",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Create proposal"
+            },
+            {
+              "label": "Shared review: Enter Studio",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Enter Studio — local demo only"
+            },
+            {
+              "label": "Studio: Assets & Rigs",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Assets & Rigs"
+            }
+          ]
+        },
+        {
+          "name": "workspace overview: no horizontal document overflow; categories, filters, requirements, list, and detail all present",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1920,
+            "clientWidth": 1920,
+            "regions": {
+              "[data-testid='pv1-assets']": {
+                "left": 0,
+                "right": 1920,
+                "top": 127,
+                "bottom": 1808,
+                "width": 1920,
+                "height": 1681
+              },
+              ".pv1-assets-header": {
+                "left": 24,
+                "right": 1896,
+                "top": 145,
+                "bottom": 191,
+                "width": 1872,
+                "height": 46
+              },
+              ".pv1-asset-categories": {
+                "left": 24,
+                "right": 453,
+                "top": 326,
+                "bottom": 357,
+                "width": 429,
+                "height": 31
+              },
+              ".pv1-asset-filters": {
+                "left": 1405,
+                "right": 1896,
+                "top": 316,
+                "bottom": 367,
+                "width": 491,
+                "height": 51
+              },
+              "[data-testid='pv1-requirements']": {
+                "left": 24,
+                "right": 1896,
+                "top": 383,
+                "bottom": 1288,
+                "width": 1872,
+                "height": 905
+              },
+              ".pv1-asset-list": {
+                "left": 24,
+                "right": 364,
+                "top": 1304,
+                "bottom": 1417,
+                "width": 340,
+                "height": 112
+              },
+              ".pv1-asset-detail": {
+                "left": 382,
+                "right": 1896,
+                "top": 1304,
+                "bottom": 1790,
+                "width": 1514,
+                "height": 486
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "wp5-1920x1080-workspace-overview: exact 1920x1080 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "name": "request open: focus moves into the labelled request heading",
+          "pass": true,
+          "details": {
+            "focused": true,
+            "text": "Dot"
+          }
+        },
+        {
+          "name": "request source-and-rights state: required source/license fields, declared-metadata honesty, and no import claim",
+          "pass": true,
+          "details": {
+            "text": "tirely outside StoryStage, in tools you choose.Candidate import (demo records only)Import state: Reviewing candidate metadataProposed nameDot view sheetDeclared formatpng — declared demo metadata, not media sniffing or decodingReference associationDot — local planning recordExpected-view coverageCovers every expected view: Front view, Three-quarter view, Side view.Source (required)Creator-entered local UI text — it does not prove provenance, ownership, or that the source really provided this image.License / rights (required)Creator-entered local UI text — it does not prove permission, license validity, or legal sufficiency.Continue to confirmationCancel importLocal candidate records for this requirement (0)None yet. Confirmation above admits only a session-local descriptive record here — never a file, and it changes no readiness or counts.Requirement req-s3-dot · Scene 3 · Berry Patch · Characters — this panel never retains candidates from another scene, category, or requirement scope."
+          }
+        },
+        {
+          "name": "request source-and-rights: no horizontal document overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1920,
+            "clientWidth": 1920,
+            "regions": {
+              "[data-testid='pv1-assets']": {
+                "left": 0,
+                "right": 1920,
+                "top": -1138,
+                "bottom": 2120,
+                "width": 1920,
+                "height": 3258
+              },
+              ".pv1-assets-header": {
+                "left": 24,
+                "right": 1896,
+                "top": -1120,
+                "bottom": -1074,
+                "width": 1872,
+                "height": 46
+              },
+              ".pv1-asset-categories": {
+                "left": 24,
+                "right": 453,
+                "top": -939,
+                "bottom": -908,
+                "width": 429,
+                "height": 31
+              },
+              ".pv1-asset-filters": {
+                "left": 1405,
+                "right": 1896,
+                "top": -949,
+                "bottom": -898,
+                "width": 491,
+                "height": 51
+              },
+              "[data-testid='pv1-requirements']": {
+                "left": 24,
+                "right": 1896,
+                "top": -882,
+                "bottom": 1600,
+                "width": 1872,
+                "height": 2482
+              },
+              ".pv1-asset-list": {
+                "left": 24,
+                "right": 364,
+                "top": 1616,
+                "bottom": 1859,
+                "width": 340,
+                "height": 243
+              },
+              ".pv1-asset-detail": {
+                "left": 382,
+                "right": 1896,
+                "top": 1616,
+                "bottom": 2102,
+                "width": 1514,
+                "height": 486
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "wp5-1920x1080-request-source-rights: exact 1920x1080 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "name": "review-ready layer/rig state: turnaround, parts/pivots, masks, profiles, checklist, and the adjacent non-production truth",
+          "pass": true,
+          "details": {
+            "text": "Layer & rig review · scene-scopedOlloScene 1 · The Home Nook · Characters · Declared demo review fixtures — descriptive evidence only, no candidate file or derived artifact exists.CloseIncomplete exampleNeeds correction exampleReview-ready exampleReview state: Review-readyReview states describe only the declared local checklist of a labelled demo fixture — no file, image, layer, rig, or skeleton exists or was inspected.The declared local checklist is internally complete for review — no files were inspected, no layer or rig exists, and this is not approval, capability, or production readiness.Turnaround views (required)Front viewDeclaredThree-quarter viewDeclaredSide viewDeclaredPart inventory (declared)Part IDPadded bounds (declared)Pivot (declared)Attachment intentbodyBodyx 0, y 0, 240 × 320, padding 16x 120, y 280Root part — Carries the whole characterfaceFacex 40, y 24, 160 × 120, padding 8x 120, y 84Attached to body — Tracks the body for turns and expression changesarm-leftLeft armx 180, y 120, 80 × 140, padding 8x 200, y 140Attached to body — Reach performancesarm-rightRight armx -20, y 120, 80 × 140, padding 8x 0, y 140Attached to body — Reach performancesDeclared fixture metadata only — nothing here is measured, calculated, sliced, or rigged, and no image, skeleton, mask, or layer exists.Mask declarations (required)mask-face-alphaDeclaredmask-face-alphaalpha mask applyin"
+          }
+        },
+        {
+          "name": "counts unchanged through transient review panel",
+          "pass": true,
+          "details": {
+            "countsAtStart": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1",
+            "now": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1"
+          }
+        },
+        {
+          "name": "review-ready: no horizontal document overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1920,
+            "clientWidth": 1920,
+            "regions": {
+              "[data-testid='pv1-assets']": {
+                "left": 0,
+                "right": 1920,
+                "top": -527,
+                "bottom": 3021,
+                "width": 1920,
+                "height": 3548
+              },
+              ".pv1-assets-header": {
+                "left": 24,
+                "right": 1896,
+                "top": -509,
+                "bottom": -463,
+                "width": 1872,
+                "height": 46
+              },
+              ".pv1-asset-categories": {
+                "left": 24,
+                "right": 453,
+                "top": -328,
+                "bottom": -297,
+                "width": 429,
+                "height": 31
+              },
+              ".pv1-asset-filters": {
+                "left": 1405,
+                "right": 1896,
+                "top": -338,
+                "bottom": -287,
+                "width": 491,
+                "height": 51
+              },
+              "[data-testid='pv1-requirements']": {
+                "left": 24,
+                "right": 1896,
+                "top": -271,
+                "bottom": 2502,
+                "width": 1872,
+                "height": 2773
+              },
+              ".pv1-asset-list": {
+                "left": 24,
+                "right": 364,
+                "top": 2518,
+                "bottom": 2630,
+                "width": 340,
+                "height": 112
+              },
+              ".pv1-asset-detail": {
+                "left": 382,
+                "right": 1896,
+                "top": 2518,
+                "bottom": 3003,
+                "width": 1514,
+                "height": 486
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "wp5-1920x1080-review-ready-nonproduction-truth: exact 1920x1080 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1920,
+            "height": 1080
+          }
+        },
+        {
+          "name": "truth boundaries: zero enabled approval/promotion/production/file/provider/Godot/render/export claims",
+          "pass": true,
+          "details": {
+            "enabledForbidden": [],
+            "fileInputs": 0,
+            "passwordFields": 0,
+            "apiKey": false,
+            "approved": false,
+            "productionReady": false,
+            "generated": false,
+            "imported": false,
+            "uploaded": false,
+            "rendered": false,
+            "exported": false
+          }
+        }
+      ],
+      "consoleIssues": [],
+      "pageErrors": [],
+      "screenshots": [
+        {
+          "file": "screenshots/wp5-1920x1080-workspace-overview.png",
+          "sha256": "5e0821d41d757406eec4c8b639b43c9b43558a626ea39d34543ea02e702ef031",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "file": "screenshots/wp5-1920x1080-request-source-rights.png",
+          "sha256": "2f0983d0c29fbe2ca4188cbb1d0182c5b9976ef3e257c97fc972e406029b9f54",
+          "width": 1920,
+          "height": 1080
+        },
+        {
+          "file": "screenshots/wp5-1920x1080-review-ready-nonproduction-truth.png",
+          "sha256": "83cbeb6e0f1b42ad9d0a0c1f12e9ec98bf765f075dd50bf1a13cafc91bf282d3",
+          "width": 1920,
+          "height": 1080
+        }
+      ],
+      "reducedMotion": null
+    },
+    {
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5196/",
+      "checks": [
+        {
+          "name": "complete Projects to Assets & Rigs journey is keyboard-only with exact focus identity at every transition",
+          "pass": true,
+          "details": [
+            {
+              "label": "Projects: New project",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "New project"
+            },
+            {
+              "label": "Create: Paste a script",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Paste a scriptBring your own words — StoryStage drafts a local screenplay proposal for your review."
+            },
+            {
+              "label": "Create: Script textbox",
+              "reached": true,
+              "tag": "textarea",
+              "accessibleName": "Script"
+            },
+            {
+              "label": "Create: Create proposal",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Create proposal"
+            },
+            {
+              "label": "Shared review: Enter Studio",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Enter Studio — local demo only"
+            },
+            {
+              "label": "Studio: Assets & Rigs",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Assets & Rigs"
+            }
+          ]
+        },
+        {
+          "name": "multi-scene readiness: episode aggregate summary names its scope and keeps per-scene truth visible",
+          "pass": true,
+          "details": {
+            "text": "Episode requirements summaryEpisode 1 · The Storylight in the Little Wood · All scenesEpisode-scope summary across every scene of the bounded Ollo demo plan — not a selected-scene result. Choose one scene in the Scene filter for scene-scoped requirement truth. Counts derive from the 37 records listed below.Required 33 · Optional 4 · Reusable 34Ready 7 · Candidate 5 · Missing 3 · Needs preparation 15 · Needs review 7Ready here means only that this local planning record satisfies this package's local checklist — it is not artifact, review, approval, rig, capability, or production readiness, and no file, image, layer, or rig exists.OlloCharacters · Required · Reusable · Ready · Scene 1 · The Home NookLocal planning checklist complete for this scene: Ollo is named, described, and scoped in the bounded Ollo demo plan. Ready here means only that this local planning record satisfies this packag",
+            "countsAtStart": "Required 33 · Optional 4 · Reusable 34Ready 7 · Candidate 5 · Missing 3 · Needs preparation 15 · Needs review 7"
+          }
+        },
+        {
+          "name": "multi-scene readiness: no horizontal document overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1440,
+            "clientWidth": 1440,
+            "regions": {
+              "[data-testid='pv1-assets']": {
+                "left": 0,
+                "right": 1440,
+                "top": 127,
+                "bottom": 7567,
+                "width": 1440,
+                "height": 7440
+              },
+              ".pv1-assets-header": {
+                "left": 24,
+                "right": 1416,
+                "top": 145,
+                "bottom": 191,
+                "width": 1392,
+                "height": 46
+              },
+              ".pv1-asset-categories": {
+                "left": 24,
+                "right": 453,
+                "top": 344,
+                "bottom": 375,
+                "width": 429,
+                "height": 31
+              },
+              ".pv1-asset-filters": {
+                "left": 925,
+                "right": 1416,
+                "top": 334,
+                "bottom": 385,
+                "width": 491,
+                "height": 51
+              },
+              "[data-testid='pv1-requirements']": {
+                "left": 24,
+                "right": 1416,
+                "top": 401,
+                "bottom": 7047,
+                "width": 1392,
+                "height": 6646
+              },
+              ".pv1-asset-list": {
+                "left": 24,
+                "right": 364,
+                "top": 7063,
+                "bottom": 7306,
+                "width": 340,
+                "height": 243
+              },
+              ".pv1-asset-detail": {
+                "left": 382,
+                "right": 1416,
+                "top": 7063,
+                "bottom": 7549,
+                "width": 1034,
+                "height": 486
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "wp5-1440x900-multi-scene-readiness-aggregate: exact 1440x900 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1440,
+            "height": 900
+          }
+        },
+        {
+          "name": "wrong-format failure: declared demo metadata reason, not media sniffing, no candidate created, scene counts unchanged",
+          "pass": true,
+          "details": {
+            "countsScene3": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1",
+            "now": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1",
+            "text": " the accepted declared formats (png, jpg, webp) — declared local demo metadata, not media sniffing or decoding. No candidate was created.Proposed nameDot notes exportDeclared formattxt — declared demo metadata, not media sniffing or decodingReference associationDot — local planning recordExpected-view coverageCovers none of the expected views.Start overCancel importLocal candidate records for this requirement (0)None yet. Confirmation above admits only a session-local descriptive record here — never a file, and it changes no readiness or counts.Requirement req-s3-dot · Scene 3 · Berry Patch · Characters — this panel never retains candidates from another scene, category, or requirement scope."
+          }
+        },
+        {
+          "name": "wrong-format failure: programmatic alert focus keeps a visible >=2px indicator",
+          "pass": true,
+          "details": {
+            "focused": true,
+            "outlineWidth": "2px",
+            "outlineStyle": "solid"
+          }
+        },
+        {
+          "name": "wrong-format failure: no horizontal document overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1440,
+            "clientWidth": 1440,
+            "regions": {
+              "[data-testid='pv1-assets']": {
+                "left": 0,
+                "right": 1440,
+                "top": -1233,
+                "bottom": 1959,
+                "width": 1440,
+                "height": 3192
+              },
+              ".pv1-assets-header": {
+                "left": 24,
+                "right": 1416,
+                "top": -1215,
+                "bottom": -1169,
+                "width": 1392,
+                "height": 46
+              },
+              ".pv1-asset-categories": {
+                "left": 24,
+                "right": 453,
+                "top": -1016,
+                "bottom": -985,
+                "width": 429,
+                "height": 31
+              },
+              ".pv1-asset-filters": {
+                "left": 925,
+                "right": 1416,
+                "top": -1026,
+                "bottom": -975,
+                "width": 491,
+                "height": 51
+              },
+              "[data-testid='pv1-requirements']": {
+                "left": 24,
+                "right": 1416,
+                "top": -959,
+                "bottom": 1420,
+                "width": 1392,
+                "height": 2379
+              },
+              ".pv1-asset-list": {
+                "left": 24,
+                "right": 364,
+                "top": 1436,
+                "bottom": 1679,
+                "width": 340,
+                "height": 243
+              },
+              ".pv1-asset-detail": {
+                "left": 382,
+                "right": 1416,
+                "top": 1436,
+                "bottom": 1941,
+                "width": 1034,
+                "height": 505
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "wp5-1440x900-wrong-format-failure: exact 1440x900 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1440,
+            "height": 900
+          }
+        },
+        {
+          "name": "active request Escape: one key closes the panel and restores the exact invoker",
+          "pass": true,
+          "details": {
+            "panelOpen": false,
+            "focused": true
+          }
+        },
+        {
+          "name": "confirmed terminal state: programmatic status focus keeps a visible >=2px indicator and counts remain unchanged",
+          "pass": true,
+          "details": {
+            "focused": true,
+            "outlineWidth": "2px",
+            "outlineStyle": "solid",
+            "countsScene3": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1",
+            "now": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1"
+          }
+        },
+        {
+          "name": "wp5-1440x900-confirmed-terminal-focus: exact 1440x900 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1440,
+            "height": 900
+          }
+        },
+        {
+          "name": "needs correction: the exact readable contradiction is the blocker",
+          "pass": true,
+          "details": {
+            "text": "Layer & rig review · scene-scopedDotScene 3 · Berry Patch · Characters · Declared demo review fixtures — descriptive evidence only, no candidate file or derived artifact exists.CloseReview state: Needs correctionReview states describe only the declared local checklist of a labelled demo fixture — no file, image, layer, rig, or skeleton exists or was inspected.Contradictions to correctChecklist \"All required turnaround views declared\" is marked passing, but the declaration is incomplete: Side view is not declared.Turnaround views (required)Front viewDeclaredThree-quarter viewDeclaredSide viewMissingPart inventory (declared)Part IDPadded bounds (declared)Pivot (declared)Attachment intentbodyBodyx 0, y 0, 200 × 280, padding 12x 100, y 240Root part — Carries the whole characterfaceFacex 36, y 20, 128 × 104, padding 8x 100, y 72Attached to body — Tracks the body for turnsDeclared fixture meta"
+          }
+        },
+        {
+          "name": "wp5-1440x900-needs-correction-blocker: exact 1440x900 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1440,
+            "height": 900
+          }
+        },
+        {
+          "name": "layered-set review: background/midground/foreground planes in explicit order with declared descriptions",
+          "pass": true,
+          "details": {
+            "planeText": "Plane declarations (explicit order)1. backgroundplane-nook-back — Den wall, round window, and shelf backboards2. midgroundplane-nook-mid — Reading cushion, low table, and story stack3. foregroundplane-nook-front — Window vines and near-edge leavesbackgroundDeclaredmidgroundDeclaredforegroundDeclaredDeclared fixture metadata only — nothing here is measured, calculated, sliced, or rigged, and no image, skeleton, mask, or layer exists."
+          }
+        },
+        {
+          "name": "wp5-1440x900-layered-set-plane-order: exact 1440x900 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1440,
+            "height": 900
+          }
+        },
+        {
+          "name": "foreground occluder review: declared occluder and intended subject relationship",
+          "pass": true,
+          "details": {
+            "occluderText": "Foreground occluders (declared)occluder-nook-vinesOn plane plane-nook-front — intended subject relationship: Foreground vines frame Ollo reading on the cushion, passing in front of him at the frame edges."
+          }
+        },
+        {
+          "name": "wp5-1440x900-foreground-occluder-review: exact 1440x900 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1440,
+            "height": 900
+          }
+        },
+        {
+          "name": "scope-removal backstop: panel closes and focus moves to the stable surviving Scene filter, never body or removed content",
+          "pass": true,
+          "details": {
+            "panelOpen": false,
+            "activeLabel": "Scene filter",
+            "activeTag": "select"
+          }
+        },
+        {
+          "name": "episode counts unchanged at the end of the 1440x900 journey",
+          "pass": true,
+          "details": {
+            "countsAtStart": "Required 33 · Optional 4 · Reusable 34Ready 7 · Candidate 5 · Missing 3 · Needs preparation 15 · Needs review 7",
+            "now": "Required 33 · Optional 4 · Reusable 34Ready 7 · Candidate 5 · Missing 3 · Needs preparation 15 · Needs review 7"
+          }
+        },
+        {
+          "name": "truth boundaries: zero enabled forbidden claims at 1440x900",
+          "pass": true,
+          "details": {
+            "enabledForbidden": [],
+            "fileInputs": 0,
+            "passwordFields": 0,
+            "apiKey": false,
+            "approved": false,
+            "productionReady": false,
+            "generated": false,
+            "imported": false,
+            "uploaded": false,
+            "rendered": false,
+            "exported": false
+          }
+        }
+      ],
+      "consoleIssues": [],
+      "pageErrors": [],
+      "screenshots": [
+        {
+          "file": "screenshots/wp5-1440x900-multi-scene-readiness-aggregate.png",
+          "sha256": "c6d54e676aa3eb90082c7e8afb2572bf7d9edce57534d7f406c90ecf988211d8",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "file": "screenshots/wp5-1440x900-wrong-format-failure.png",
+          "sha256": "2a3afe3466efa8bad76bf6797d686b8668b8acfd55aa3aea861dfff2e9babfc0",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "file": "screenshots/wp5-1440x900-confirmed-terminal-focus.png",
+          "sha256": "4d2d0db178b54c6bf90fcc210cd345e555981fd6b2ea571a58c722cb338e2342",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "file": "screenshots/wp5-1440x900-needs-correction-blocker.png",
+          "sha256": "960b060a272c5a52f65272ee7f6c2edfd1c56ccb60621a4be992ba8318f41147",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "file": "screenshots/wp5-1440x900-layered-set-plane-order.png",
+          "sha256": "02c385d012dbffe31de095111e7c146611159da27535c182476438c788d82c7a",
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "file": "screenshots/wp5-1440x900-foreground-occluder-review.png",
+          "sha256": "35028f7db96df826d515a382d47dcb00fbd55afcd8b7586b0f11950b4e11b563",
+          "width": 1440,
+          "height": 900
+        }
+      ],
+      "reducedMotion": null
+    },
+    {
+      "viewport": "1024x800",
+      "url": "http://127.0.0.1:5196/",
+      "checks": [
+        {
+          "name": "complete Projects to Assets & Rigs journey is keyboard-only with exact focus identity at every transition",
+          "pass": true,
+          "details": [
+            {
+              "label": "Projects: New project",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "New project"
+            },
+            {
+              "label": "Create: Paste a script",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Paste a scriptBring your own words — StoryStage drafts a local screenplay proposal for your review."
+            },
+            {
+              "label": "Create: Script textbox",
+              "reached": true,
+              "tag": "textarea",
+              "accessibleName": "Script"
+            },
+            {
+              "label": "Create: Create proposal",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Create proposal"
+            },
+            {
+              "label": "Shared review: Enter Studio",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Enter Studio — local demo only"
+            },
+            {
+              "label": "Studio: Assets & Rigs",
+              "reached": true,
+              "tag": "button",
+              "accessibleName": "Assets & Rigs"
+            }
+          ]
+        },
+        {
+          "name": "stacked overview: intentional order header, categories, filters, requirements, asset list, selected detail",
+          "pass": true,
+          "details": {
+            "tops": [
+              145,
+              334,
+              381,
+              448,
+              1628,
+              1758
+            ],
+            "scrollWidth": 1024,
+            "clientWidth": 1024
+          }
+        },
+        {
+          "name": "wp5-1024x800-stacked-overview: exact 1024x800 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1024,
+            "height": 800
+          }
+        },
+        {
+          "name": "keyboard focus: category navigation is reachable with a visible >=2px focus indicator",
+          "pass": true,
+          "details": {
+            "active": true,
+            "outlineWidth": "2px",
+            "outlineStyle": "solid",
+            "text": "Characters"
+          }
+        },
+        {
+          "name": "wp5-1024x800-keyboard-focus-category: exact 1024x800 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1024,
+            "height": 800
+          }
+        },
+        {
+          "name": "request validation: readable alert, aria-invalid, and focus moves to the source field",
+          "pass": true,
+          "details": {
+            "alert": "Source is required before review — enter where this candidate came from in your own words. No candidate was created.",
+            "focused": true,
+            "invalid": "true"
+          }
+        },
+        {
+          "name": "request validation: no horizontal document overflow",
+          "pass": true,
+          "details": {
+            "scrollWidth": 1024,
+            "clientWidth": 1024,
+            "regions": {
+              "[data-testid='pv1-assets']": {
+                "left": 0,
+                "right": 1024,
+                "top": -1632,
+                "bottom": 2385,
+                "width": 1024,
+                "height": 4017
+              },
+              ".pv1-assets-header": {
+                "left": 24,
+                "right": 1000,
+                "top": -1614,
+                "bottom": -1568,
+                "width": 976,
+                "height": 46
+              },
+              ".pv1-asset-categories": {
+                "left": 24,
+                "right": 453,
+                "top": -1425,
+                "bottom": -1394,
+                "width": 429,
+                "height": 31
+              },
+              ".pv1-asset-filters": {
+                "left": 24,
+                "right": 515,
+                "top": -1378,
+                "bottom": -1327,
+                "width": 491,
+                "height": 51
+              },
+              "[data-testid='pv1-requirements']": {
+                "left": 24,
+                "right": 1000,
+                "top": -1311,
+                "bottom": 1585,
+                "width": 976,
+                "height": 2896
+              },
+              ".pv1-asset-list": {
+                "left": 24,
+                "right": 1000,
+                "top": 1601,
+                "bottom": 1844,
+                "width": 976,
+                "height": 243
+              },
+              ".pv1-asset-detail": {
+                "left": 24,
+                "right": 1000,
+                "top": 1862,
+                "bottom": 2367,
+                "width": 976,
+                "height": 505
+              }
+            },
+            "overflowElements": []
+          }
+        },
+        {
+          "name": "wp5-1024x800-request-validation-focus: exact 1024x800 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1024,
+            "height": 800
+          }
+        },
+        {
+          "name": "review table: Tab reaches the labelled contained scroller with visible focus; ArrowRight scrolls when overflow exists; the document never widens",
+          "pass": true,
+          "details": {
+            "scrollerJourney": {
+              "label": "Review: declared part inventory scroller",
+              "reached": true,
+              "tag": "div",
+              "accessibleName": "Declared part inventory table — horizontally scrollable when wider than the panel"
+            },
+            "scrollerBefore": {
+              "scrollLeft": 0,
+              "scrollWidth": 886,
+              "clientWidth": 886
+            },
+            "scroller": {
+              "focused": true,
+              "role": "region",
+              "tabIndex": "0",
+              "regionLabel": "Declared part inventory table — horizontally scrollable when wider than the panel",
+              "tableLabel": "Declared part inventory (demo metadata)",
+              "scrollLeft": 0,
+              "scrollWidth": 886,
+              "clientWidth": 886,
+              "outlineWidth": "2px",
+              "outlineStyle": "solid",
+              "documentScrollWidth": 1024,
+              "documentClientWidth": 1024
+            }
+          }
+        },
+        {
+          "name": "wp5-1024x800-review-table-scroller-focus: exact 1024x800 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1024,
+            "height": 800
+          }
+        },
+        {
+          "name": "review table Close: keyboard-reachable with visible focus and inside the document width",
+          "pass": true,
+          "details": {
+            "closeFocused": true,
+            "closeState": {
+              "outlineWidth": "2px",
+              "outlineStyle": "solid",
+              "left": 899,
+              "right": 955
+            }
+          }
+        },
+        {
+          "name": "wp5-1024x800-review-table-close-reachable: exact 1024x800 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1024,
+            "height": 800
+          }
+        },
+        {
+          "name": "counts unchanged through compact transient panels",
+          "pass": true,
+          "details": {
+            "countsAtStart": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1",
+            "now": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1"
+          }
+        },
+        {
+          "name": "escape recovery: panel closes and focus returns to the exact surviving invoker",
+          "pass": true,
+          "details": {
+            "panelOpen": false,
+            "activeLabel": "Review layers & rig for Ollo in Scene 1 · The Home Nook"
+          }
+        },
+        {
+          "name": "wp5-1024x800-escape-return-focus: exact 1024x800 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1024,
+            "height": 800
+          }
+        },
+        {
+          "name": "reduced motion: query matches, computed durations clamp to 0.01ms, scroll is auto, and focus still enters the panel heading immediately",
+          "pass": true,
+          "details": {
+            "matches": true,
+            "categoryTransitionDuration": "1e-05s",
+            "categoryAnimationDuration": "1e-05s",
+            "categoryAnimationIterationCount": "1",
+            "categoryAnimationName": "none",
+            "workspaceScrollBehavior": "auto",
+            "headingFocusedImmediately": true
+          }
+        },
+        {
+          "name": "wp5-1024x800-reduced-motion: exact 1024x800 screenshot dimensions",
+          "pass": true,
+          "details": {
+            "width": 1024,
+            "height": 800
+          }
+        },
+        {
+          "name": "reduced motion: Escape still restores focus to the exact surviving invoker immediately",
+          "pass": true,
+          "details": {
+            "panelOpen": false,
+            "activeLabel": "Review layers & rig for Ollo in Scene 1 · The Home Nook"
+          }
+        },
+        {
+          "name": "truth boundaries: zero enabled forbidden claims at 1024x800",
+          "pass": true,
+          "details": {
+            "enabledForbidden": [],
+            "fileInputs": 0,
+            "passwordFields": 0,
+            "apiKey": false,
+            "approved": false,
+            "productionReady": false,
+            "generated": false,
+            "imported": false,
+            "uploaded": false,
+            "rendered": false,
+            "exported": false
+          }
+        }
+      ],
+      "consoleIssues": [],
+      "pageErrors": [],
+      "screenshots": [
+        {
+          "file": "screenshots/wp5-1024x800-stacked-overview.png",
+          "sha256": "78431486a3405c09cb7c6ea41b1349f0b38672587fd632e040136a04ce20e559",
+          "width": 1024,
+          "height": 800
+        },
+        {
+          "file": "screenshots/wp5-1024x800-keyboard-focus-category.png",
+          "sha256": "770d9db37ac9bfc0249fd581e35acd3ae2f5e9f8c27300d09b9a2b1feaf489f9",
+          "width": 1024,
+          "height": 800
+        },
+        {
+          "file": "screenshots/wp5-1024x800-request-validation-focus.png",
+          "sha256": "fdd3ad590455182b0ed9106893907e60a949d6e9860d3d90db2b1fba0e2f1cac",
+          "width": 1024,
+          "height": 800
+        },
+        {
+          "file": "screenshots/wp5-1024x800-review-table-scroller-focus.png",
+          "sha256": "3229307c55f56e00b6c7f2bbe071a6d99d46a45f33016401280e987a13816af2",
+          "width": 1024,
+          "height": 800
+        },
+        {
+          "file": "screenshots/wp5-1024x800-review-table-close-reachable.png",
+          "sha256": "fd579e265de6fbce34616baf73073eafc7250dc5259b58fd626e3e96a7d0e453",
+          "width": 1024,
+          "height": 800
+        },
+        {
+          "file": "screenshots/wp5-1024x800-escape-return-focus.png",
+          "sha256": "68e741f81822345c4ff850fe7a5d1d634f7174ea8ca069b2a575bf1cc5e4be7a",
+          "width": 1024,
+          "height": 800
+        },
+        {
+          "file": "screenshots/wp5-1024x800-reduced-motion.png",
+          "sha256": "dce1d306cb07b4b4360955d6ebe052f384a46fe19325d7159626a1747878f5e4",
+          "width": 1024,
+          "height": 800
+        }
+      ],
+      "reducedMotion": {
+        "matches": true,
+        "categoryTransitionDuration": "1e-05s",
+        "categoryAnimationDuration": "1e-05s",
+        "categoryAnimationIterationCount": "1",
+        "categoryAnimationName": "none",
+        "workspaceScrollBehavior": "auto",
+        "headingFocusedImmediately": true
+      }
+    },
+    {
+      "viewport": "all",
+      "url": "http://127.0.0.1:5196/",
+      "checks": [
+        {
+          "name": "evidence integrity: every captured screenshot has a unique SHA-256",
+          "pass": true,
+          "details": {
+            "screenshots": 16,
+            "unique": 16
+          }
+        }
+      ],
+      "consoleIssues": [],
+      "pageErrors": [],
+      "screenshots": [],
+      "reducedMotion": null
+    }
+  ]
+}

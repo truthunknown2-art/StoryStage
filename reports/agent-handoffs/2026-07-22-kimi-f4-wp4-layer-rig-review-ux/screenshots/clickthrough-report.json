@@ -1,0 +1,210 @@
+{
+  "task": "F4-WP4-LAYER-RIG-REVIEW-UX",
+  "base": "http://127.0.0.1:5174/",
+  "capturedAt": "2026-07-22T15:29:03.648Z",
+  "viewport": "1440x900",
+  "checks": [
+    {
+      "name": "keyboard focus: review control is reachable with visible focus and unique identity",
+      "pass": true,
+      "details": {
+        "active": true,
+        "outlineWidth": "2px",
+        "outlineStyle": "solid",
+        "ariaLabel": "Review layers & rig for Ollo in Scene 1 · The Home Nook",
+        "ariaExpanded": "false"
+      }
+    },
+    {
+      "name": "character incomplete: focus enters the labelled heading; missing declarations and state disclaimer are visible",
+      "pass": true,
+      "details": {
+        "headingFocus": {
+          "focused": true,
+          "text": "Ollo"
+        },
+        "text": "Layer & rig review · scene-scopedOlloScene 1 · The Home Nook · Characters · Declared demo review fixtures — descriptive evidence only, no candidate file or derived artifact exists.CloseIncomplete exampleNeeds correction exampleReview-ready exampleReview state: IncompleteReview states describe only the declared local checklist of a labelled demo fixture — no file, image, layer, rig, or skeleton exists or was inspected.Before this declaration could be review-readyTurnaround views not declared: Three-quarter view, Side view.Required parts not declared: face, arm-left, arm-right.Required masks not declared: mask-face-alpha.Supported profile coverage not declared: Storybook Cutout.No expressions are declared.No visemes are declared.Turnaround views (required)Front viewDeclaredThree-quarter viewMissingSide viewMissingPart inventory (declared)Part IDPadded bounds (declared)Pivot (declared)Attac"
+      }
+    },
+    {
+      "name": "counts unchanged after opening review",
+      "pass": true,
+      "details": {
+        "countsAtStart": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1",
+        "now": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1"
+      }
+    },
+    {
+      "name": "character-incomplete: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "character review-ready: turnaround views, parts/pivots, masks, profiles, expressions/visemes, checklist pass, and the adjacent non-production truth",
+      "pass": true,
+      "details": {
+        "text": "Layer & rig review · scene-scopedOlloScene 1 · The Home Nook · Characters · Declared demo review fixtures — descriptive evidence only, no candidate file or derived artifact exists.CloseIncomplete exampleNeeds correction exampleReview-ready exampleReview state: Review-readyReview states describe only the declared local checklist of a labelled demo fixture — no file, image, layer, rig, or skeleton exists or was inspected.The declared local checklist is internally complete for review — no files were inspected, no layer or rig exists, and this is not approval, capability, or production readiness.Turnaround views (required)Front viewDeclaredThree-quarter viewDeclaredSide viewDeclaredPart inventory (declared)Part IDPadded bounds (declared)Pivot (declared)Attachment intentbodyBodyx 0, y 0, 240 × 320, padding 16x 120, y 280Root part — Carries the whole characterfaceFacex 40, y 24, 160 × 120, padding 8x 120, y 84Attached to body — Tracks the body for turns and expression changesarm-leftLeft armx 180, y 120, 80 × 140, padding 8x 200, y 140Attached to body — Reach performancesarm-rightRight armx -20, y 120, 80 × 140, padding 8x 0, y 140Attached to body — Reach performancesDeclared fixture metadata only — nothing here is measured, calculated, sliced, or rigged, and no image, skeleton, mask, or layer exists.Mask declarations (required)mask-face-alphaDeclaredmask-face-alphaalpha mask applyin"
+      }
+    },
+    {
+      "name": "rig review-ready: neutral poses, part inventory, declared pivots, viseme mask, and supported profiles",
+      "pass": true,
+      "details": {
+        "text": "Layer & rig review · scene-scopedOllo performance rigScene 1 · The Home Nook · Rigs · Declared demo review fixtures — descriptive evidence only, no candidate file or derived artifact exists.CloseIncomplete exampleNeeds correction exampleReview-ready exampleReview state: Review-readyReview states describe only the declared local checklist of a labelled demo fixture — no file, image, layer, rig, or skeleton exists or was inspected.The declared local checklist is internally complete for review — no files were inspected, no layer or rig exists, and this is not approval, capability, or production readiness.Turnaround views (required)Neutral front poseDeclaredNeutral side poseDeclaredPart inventory (declared)Part IDPadded bounds (declared)Pivot (declared)Attachment intentbodyBodyx 0, y 0, 240 × 320, padding 16x 120, y 280Root part — Bounce performances pivot hereheadHeadx 40, y 8, 160 × 140, padding 8x 120, y 140Attached to body — Turn performances nod and tilt from the neckarm-leftLeft armx 180, y 120, 80 × 140, padding 8x 200, y 140Attached to body — Reach performancesarm-rightRight armx -20, y 120, 80 × 140, padding 8x 0, y 140Attached to body — Reach performancesDeclared fixture meta"
+      }
+    },
+    {
+      "name": "expressions/visemes inventory and motion-readiness checklist with pass reasons",
+      "pass": true,
+      "details": {
+        "expressions": "Expressions and visemes (declared)ExpressionsneutraldeterminedVisemesrestaheeohoomm",
+        "checklist": "Motion-readiness checklist (declared)All required turnaround views declaredPassEvery required part is declared with bounds, pivot, and attachment intentPassEvery required mask is declaredPassEvery supported profile is coveredPassAn expression inventory is declaredPassA viseme inventory is declaredPass"
+      }
+    },
+    {
+      "name": "layered-set review: background/midground/foreground planes in explicit order with declared descriptions",
+      "pass": true,
+      "details": {
+        "planeText": "Plane declarations (explicit order)1. backgroundplane-nook-back — Den wall, round window, and shelf backboards2. midgroundplane-nook-mid — Reading cushion, low table, and story stack3. foregroundplane-nook-front — Window vines and near-edge leavesbackgroundDeclaredmidgroundDeclaredforegroundDeclaredDeclared fixture metadata only — nothing here is measured, calculated, sliced, or rigged, and no image, skeleton, mask, or layer exists."
+      }
+    },
+    {
+      "name": "foreground occluder review: declared occluder and intended subject relationship",
+      "pass": true,
+      "details": {
+        "occluderText": "Foreground occluders (declared)occluder-nook-vinesOn plane plane-nook-front — intended subject relationship: Foreground vines frame Ollo reading on the cushion, passing in front of him at the frame edges."
+      }
+    },
+    {
+      "name": "escape recovery: panel closes and focus returns to the exact surviving invoker",
+      "pass": true,
+      "details": {
+        "panelOpen": false,
+        "activeLabel": "Review set layers for The Home Nook set in Scene 1 · The Home Nook"
+      }
+    },
+    {
+      "name": "counts unchanged after switching examples and closing",
+      "pass": true,
+      "details": {
+        "countsAtStart": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1",
+        "now": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1"
+      }
+    },
+    {
+      "name": "character needs correction: the exact readable contradiction is the blocker",
+      "pass": true,
+      "details": {
+        "text": "Layer & rig review · scene-scopedDotScene 3 · Berry Patch · Characters · Declared demo review fixtures — descriptive evidence only, no candidate file or derived artifact exists.CloseReview state: Needs correctionReview states describe only the declared local checklist of a labelled demo fixture — no file, image, layer, rig, or skeleton exists or was inspected.Contradictions to correctChecklist \"All required turnaround views declared\" is marked passing, but the declaration is incomplete: Side view is not declared.Turnaround views (required)Front viewDeclaredThree-quarter viewDeclaredSide viewMissingPart inventory (declared)Part IDPadded bounds (declared)Pivot (declared)Attachment intentbodyBodyx 0, y 0, 200 × 280, padding 12x 100, y 240Root part — Carries the whole characterfaceFacex 36, y 20, 128 × 104, padding 8x 100, y 72Attached to body — Tracks the body for turnsDeclared fixture meta"
+      }
+    },
+    {
+      "name": "character-needs-correction: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "scope-change recovery: panel closes and never retains review state from another scope",
+      "pass": true,
+      "details": {
+        "panelOpen": false,
+        "scope": "Scene 7 · Sunflower Field"
+      }
+    },
+    {
+      "name": "unavailable fail-closed state: eligible requirement without a declared example is disabled with the exact reason",
+      "pass": true,
+      "details": {
+        "disabled": true,
+        "label": "Review layers & rig",
+        "reason": "Unavailable — this requirement has no declared demo review example in the bounded F4-WP4 fixture."
+      }
+    },
+    {
+      "name": "truth boundaries: zero enabled approval/promotion/production/file/provider/Godot/render/export claims; later-workflow controls disabled; no fake imagery",
+      "pass": true,
+      "details": {
+        "enabledForbidden": [],
+        "futureAllDisabled": true,
+        "panelMedia": 0,
+        "fileInputs": 0,
+        "passwordFields": 0,
+        "apiKey": false,
+        "approved": false,
+        "productionReady": false,
+        "generated": false,
+        "rendered": false,
+        "exported": false
+      }
+    },
+    {
+      "name": "counts unchanged at the end of the review journey",
+      "pass": true,
+      "details": {
+        "countsAtStart": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1",
+        "now": "Required 4 · Optional 1 · Reusable 4Ready 1 · Candidate 0 · Missing 1 · Needs preparation 2 · Needs review 1"
+      }
+    },
+    {
+      "name": "final state: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    }
+  ],
+  "consoleIssues": [],
+  "pageErrors": [],
+  "screenshots": [
+    {
+      "file": "screenshots/wp4-1440x900-review-button-focus.png",
+      "sha256": "31559a791f675f7ef11b1d38b868c10173f266ca9542568e3b21ff774d902b3e"
+    },
+    {
+      "file": "screenshots/wp4-1440x900-character-incomplete.png",
+      "sha256": "a6c540fbfae4f5d1be41e5e5410a338a0aec2f7081cc56f98bf664f6845ed256"
+    },
+    {
+      "file": "screenshots/wp4-1440x900-character-review-ready.png",
+      "sha256": "2f619069955a91360cacf8f2f8b26d5cd9aa4b0f65a8caece97d251149be16cf"
+    },
+    {
+      "file": "screenshots/wp4-1440x900-rig-turnaround-parts-pivots-masks-profiles.png",
+      "sha256": "aede0718d3ae2e2de5110e312361dd6a8f43929c3337e527904a0a647e8f0c30"
+    },
+    {
+      "file": "screenshots/wp4-1440x900-rig-expressions-visemes-motion-checklist.png",
+      "sha256": "0f92df1148e409889394105d2d1396df232c1f475cbb7612ae6a33290b8085c6"
+    },
+    {
+      "file": "screenshots/wp4-1440x900-layered-set-plane-order.png",
+      "sha256": "02c385d012dbffe31de095111e7c146611159da27535c182476438c788d82c7a"
+    },
+    {
+      "file": "screenshots/wp4-1440x900-foreground-occluder-review.png",
+      "sha256": "35028f7db96df826d515a382d47dcb00fbd55afcd8b7586b0f11950b4e11b563"
+    },
+    {
+      "file": "screenshots/wp4-1440x900-escape-focus-restored.png",
+      "sha256": "c531d1e335c719788f210480d906d7fce86c36291ca1fd3b11afeff09eda0660"
+    },
+    {
+      "file": "screenshots/wp4-1440x900-character-needs-correction-blocker.png",
+      "sha256": "2c722dd5902debe0039296fe29e2a7f9c810a7f3cd2aa4d608b0b01fd6b07338"
+    },
+    {
+      "file": "screenshots/wp4-1440x900-unavailable-fail-closed-disabled-reason.png",
+      "sha256": "6745810153d883b4dbcaf68f178339c6749f4f930e0de997520c86cce257ecfa"
+    }
+  ]
+}

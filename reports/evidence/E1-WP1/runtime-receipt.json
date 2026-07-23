@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "package": "E1-WP1",
+  "result": "pass",
+  "observedAt": "2026-07-21T03:17:49.216Z",
+  "runtime": {
+    "platform": "windows-x64",
+    "packageVersion": "0.144.1",
+    "cliVersion": "codex-cli 0.144.1",
+    "nativeExecutableSha256": "cbacbb9726262ef558b4af0438a1b2a5bba9076132401d947b5b4d2bf92ab0e4",
+    "protocolSha256": "c1ae051f1469ebbfd681208383edadee7d3ef29a7973988473f34e87d78f2f17"
+  },
+  "accountState": "authenticated",
+  "observations": {
+    "accountReadable": true,
+    "modelCatalogReadable": true,
+    "modelCount": 5,
+    "rateLimitsReadable": true,
+    "usageReadable": true,
+    "usageLimited": false,
+    "ephemeralThreadStarted": true,
+    "turnStarted": true,
+    "turnInterruptAccepted": true,
+    "turnCompletedInterrupted": true,
+    "cleanShutdown": true,
+    "isolatedWorkspaceUnchanged": true,
+    "stderrObserved": true
+  },
+  "officialAuthLifecycle": {
+    "owner": "Codex",
+    "supportedMode": "Sign in with ChatGPT",
+    "schemaMethodsObserved": [
+      "account/login/start",
+      "account/login/cancel",
+      "account/logout"
+    ],
+    "currentSessionMutation": "not-performed-existing-session-preserved"
+  },
+  "clientLifecycleTranscript": [
+    {
+      "method": "initialize",
+      "outcome": "ok"
+    },
+    {
+      "method": "initialized",
+      "outcome": "sent"
+    },
+    {
+      "method": "account/read",
+      "outcome": "ok"
+    },
+    {
+      "method": "model/list",
+      "outcome": "ok"
+    },
+    {
+      "method": "account/rateLimits/read",
+      "outcome": "ok"
+    },
+    {
+      "method": "account/usage/read",
+      "outcome": "ok"
+    },
+    {
+      "method": "thread/start",
+      "outcome": "ok"
+    },
+    {
+      "method": "turn/start",
+      "outcome": "ok"
+    },
+    {
+      "method": "turn/interrupt",
+      "outcome": "ok"
+    }
+  ],
+  "protocolTranscript": [
+    {
+      "direction": "client-request",
+      "method": "initialize",
+      "outcome": "ok"
+    },
+    {
+      "direction": "server-notification",
+      "method": "remoteControl/status/changed",
+      "outcome": "observed"
+    },
+    {
+      "direction": "client-notification",
+      "method": "initialized",
+      "outcome": "sent"
+    },
+    {
+      "direction": "client-request",
+      "method": "account/read",
+      "outcome": "ok"
+    },
+    {
+      "direction": "client-request",
+      "method": "model/list",
+      "outcome": "ok"
+    },
+    {
+      "direction": "client-request",
+      "method": "account/rateLimits/read",
+      "outcome": "ok"
+    },
+    {
+      "direction": "client-request",
+      "method": "account/usage/read",
+      "outcome": "ok"
+    },
+    {
+      "direction": "client-request",
+      "method": "thread/start",
+      "outcome": "ok"
+    },
+    {
+      "direction": "server-notification",
+      "method": "thread/started",
+      "outcome": "observed"
+    },
+    {
+      "direction": "server-notification",
+      "method": "mcpServer/startupStatus/updated",
+      "outcome": "observed"
+    },
+    {
+      "direction": "server-notification",
+      "method": "mcpServer/startupStatus/updated",
+      "outcome": "observed"
+    },
+    {
+      "direction": "server-notification",
+      "method": "mcpServer/startupStatus/updated",
+      "outcome": "observed"
+    },
+    {
+      "direction": "server-notification",
+      "method": "mcpServer/startupStatus/updated",
+      "outcome": "observed"
+    },
+    {
+      "direction": "client-request",
+      "method": "turn/start",
+      "outcome": "ok"
+    },
+    {
+      "direction": "server-notification",
+      "method": "thread/status/changed",
+      "outcome": "observed"
+    },
+    {
+      "direction": "server-notification",
+      "method": "turn/started",
+      "outcome": "observed"
+    },
+    {
+      "direction": "client-request",
+      "method": "turn/interrupt",
+      "outcome": "ok"
+    },
+    {
+      "direction": "server-notification",
+      "method": "thread/status/changed",
+      "outcome": "observed"
+    },
+    {
+      "direction": "server-notification",
+      "method": "turn/completed",
+      "outcome": "observed"
+    }
+  ],
+  "privacy": {
+    "rawPayloadsPersisted": false,
+    "promptsPersisted": false,
+    "accountIdentifiersPersisted": false,
+    "tokensPersisted": false,
+    "localCodexStatePersisted": false
+  },
+  "risks": [
+    {
+      "code": "APP_SERVER_COMMAND_EXPERIMENTAL",
+      "blocksProductionPackaging": true,
+      "summary": "Codex CLI 0.144.1 labels the app-server command experimental even when the generated protocol excludes experimental API methods. This blocks a production-packaging claim until the E1 milestone gate resolves the risk."
+    }
+  ],
+  "failure": null
+}

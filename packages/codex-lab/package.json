@@ -1,0 +1,28 @@
+{
+  "name": "@storystage/codex-lab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "evidence:e1-wp4": "tsx src/failure-gate-cli.ts --write",
+    "mcp:e1-scene-context": "tsx src/mcp-cli.ts",
+    "proposal:e1-live": "tsx src/proposal-cli.ts",
+    "preflight": "tsx src/cli.ts",
+    "test": "vitest run",
+    "verify:e1-wp4": "tsx src/failure-gate-cli.ts --check",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "tsx": "4.21.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  }
+}

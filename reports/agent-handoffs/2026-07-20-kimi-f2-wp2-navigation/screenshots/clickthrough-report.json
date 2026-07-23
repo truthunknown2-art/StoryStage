@@ -1,0 +1,51 @@
+{
+  "checks": [
+    {
+      "name": "rail beats visible under selected scene",
+      "ok": true
+    },
+    {
+      "name": "collapsed selected sequence keeps summary",
+      "ok": true
+    },
+    {
+      "name": "board still shows hidden selection",
+      "ok": true
+    },
+    {
+      "name": "reveal restores the selected scene",
+      "ok": true
+    },
+    {
+      "name": "playhead moved scene-relatively",
+      "ok": true
+    },
+    {
+      "name": "second-act selection synchronized",
+      "ok": true
+    },
+    {
+      "name": "playhead resets on scene change",
+      "ok": true
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp2-navigation\\screenshots\\wp2-expanded-selected-scene-1440x900.png",
+      "viewport": "1440x900",
+      "sha256": "add899d1e742d9ce6e53dd94c8dad9738fd241343d9a10cc22292bf468b3d05c"
+    },
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp2-navigation\\screenshots\\wp2-collapsed-selection-summary-1440x900.png",
+      "viewport": "1440x900",
+      "sha256": "311ad101e3209e5c6af5b69e6e9c7dee6a9a47918c07d339890afcc71d2934c0"
+    },
+    {
+      "file": "C:\\Users\\pbirc\\Documents\\kimi\\workspace\\storystage-review\\reports\\agent-handoffs\\2026-07-20-kimi-f2-wp2-navigation\\screenshots\\wp2-act2-scene-playhead-1440x900.png",
+      "viewport": "1440x900",
+      "sha256": "cbc37055a229926453958cd58ce550ddf63615118c76163ce6baec4b6e4c7312"
+    }
+  ],
+  "console": [],
+  "pageErrors": []
+}

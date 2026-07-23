@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "package": "E1-WP4",
+  "evidenceClass": "deterministic-process-cleanup-index",
+  "checks": [
+    {
+      "state": "clean-shutdown",
+      "test": "packages/codex-lab/src/app-server.test.ts :: closes stdin and requires a zero child exit for clean shutdown"
+    },
+    {
+      "state": "shutdown-timeout",
+      "test": "packages/codex-lab/src/app-server.test.ts :: waits for child termination after a shutdown timeout"
+    },
+    {
+      "state": "crash-restart",
+      "test": "packages/codex-lab/src/proposal-roundtrip.test.ts :: discards a crashed session before a clean new-client restart"
+    },
+    {
+      "state": "primary-and-cleanup-failure",
+      "test": "packages/codex-lab/src/proposal-roundtrip.test.ts :: preserves both the primary failure and a cleanup failure"
+    },
+    {
+      "state": "workspace-removal",
+      "test": "packages/codex-lab/src/proposal-roundtrip.test.ts :: removes the isolated workspace even when shutdown fails"
+    }
+  ],
+  "ownedProcessBoundary": "The lab proves App Server lifecycle closure and isolated workspace removal. Production-grade Windows job-object containment remains R2.",
+  "productionReady": false
+}

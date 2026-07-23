@@ -1,0 +1,180 @@
+{
+  "viewport": "1440x900",
+  "url": "http://127.0.0.1:5194/",
+  "checks": [
+    {
+      "name": "choice shows the single Ollo & Friends — Kids Story template",
+      "ok": true
+    },
+    {
+      "name": "choice shows the Paste a script path",
+      "ok": true
+    },
+    {
+      "name": "choice shows the What's your idea? path",
+      "ok": true
+    },
+    {
+      "name": "Weird History is never shown",
+      "ok": true
+    },
+    {
+      "name": "AI Director chip opens at Signed out",
+      "ok": true
+    },
+    {
+      "name": "signed-out idea entry opens the compact Connect AI Director surface",
+      "ok": true
+    },
+    {
+      "name": "connect surface carries the fixture label",
+      "ok": true
+    },
+    {
+      "name": "connect surface offers the Sign in with ChatGPT fixture action",
+      "ok": true
+    },
+    {
+      "name": "runtime check fixture is truthful (no runtime contacted)",
+      "ok": true
+    },
+    {
+      "name": "no credential or terminal material anywhere",
+      "ok": true
+    },
+    {
+      "name": "fixture sign-in only transitions the local chip",
+      "ok": true
+    },
+    {
+      "name": "idea path reaches the shared Review proposal",
+      "ok": true
+    },
+    {
+      "name": "idea review is labelled From your idea",
+      "ok": true
+    },
+    {
+      "name": "idea review carries the fixture label",
+      "ok": true
+    },
+    {
+      "name": "idea review shows hierarchy, direction, range, and asset impact",
+      "ok": true
+    },
+    {
+      "name": "idea review states local-demo-only entry plainly",
+      "ok": true
+    },
+    {
+      "name": "paste form cannot bypass review (no Enter Studio control)",
+      "ok": true
+    },
+    {
+      "name": "paste path converges on the same Review proposal model",
+      "ok": true
+    },
+    {
+      "name": "paste review is labelled From your script",
+      "ok": true
+    },
+    {
+      "name": "paste review lists the detected scene/beat hierarchy",
+      "ok": true
+    },
+    {
+      "name": "paste review carries the local-demo-only note",
+      "ok": true
+    },
+    {
+      "name": "Studio opens only after the review action",
+      "ok": true
+    },
+    {
+      "name": "Studio keeps the layout-demo disclosure",
+      "ok": true
+    },
+    {
+      "name": "AI Director panel is docked with the fixture label",
+      "ok": true
+    },
+    {
+      "name": "panel shows the authoritative selected scope",
+      "ok": true
+    },
+    {
+      "name": "streamed-progress states are visible while in flight",
+      "ok": true
+    },
+    {
+      "name": "a real Cancel is offered while streaming",
+      "ok": true
+    },
+    {
+      "name": "the turn completes deterministically",
+      "ok": true
+    },
+    {
+      "name": "proposal shows immutable captured scope chips",
+      "ok": true
+    },
+    {
+      "name": "proposal shows affected range, assets, markers, and E1 tool vocabulary",
+      "ok": true
+    },
+    {
+      "name": "Apply fails closed while the selection differs from the captured scope",
+      "ok": true
+    },
+    {
+      "name": "the one recovery action returns to the captured scope",
+      "ok": true
+    },
+    {
+      "name": "Apply commits the proposed performanceDirection",
+      "ok": true
+    },
+    {
+      "name": "manual direction on another beat stays independent",
+      "ok": true
+    },
+    {
+      "name": "Undo restores the exact prior snapshot",
+      "ok": true
+    },
+    {
+      "name": "settings surface offers all six connection fixtures",
+      "ok": true
+    },
+    {
+      "name": "the chip truthfully follows the Offline fixture",
+      "ok": true
+    },
+    {
+      "name": "Offline keeps an honest connect surface in the panel",
+      "ok": true
+    },
+    {
+      "name": "redacted diagnostics carry no credential material",
+      "ok": true
+    },
+    {
+      "name": "the reconnect fixture restores Connected",
+      "ok": true
+    },
+    {
+      "name": "zero console warnings",
+      "ok": true
+    },
+    {
+      "name": "zero console errors",
+      "ok": true
+    },
+    {
+      "name": "zero page errors",
+      "ok": true
+    }
+  ],
+  "consoleIssues": [],
+  "pageErrors": []
+}

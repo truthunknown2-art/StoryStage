@@ -1,0 +1,13 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+[agents]
+max_threads = 3
+max_depth = 1
+
+[agents.story_explorer]
+description = "Read-only, bounded StoryStage repository exploration: trace callers, inspect contracts, and summarize supplied GitHub-visible state. Return findings and exact file references; do not edit, commit, push, or perform GitHub mutations."
+config_file = "agents/story_explorer.toml"
+
+[agents.story_reviewer]
+description = "Read-only, bounded StoryStage implementation review: assess a supplied exact commit or PR against its ticket and acceptance criteria. Return structured findings only; do not edit, commit, push, or perform GitHub mutations."
+config_file = "agents/story_reviewer.toml"

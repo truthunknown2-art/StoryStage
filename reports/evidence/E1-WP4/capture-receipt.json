@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "package": "E1-WP4",
+  "evidenceClass": "actual-local-lab-capture",
+  "capturedAtUtc": "2026-07-21T17:09:11Z",
+  "sourceRevision": "3abfd354a5fb5c73ff54615ef538ae56365d01ff",
+  "captureMethod": "Playwright CLI against the local Vite E1 Director Lab",
+  "surface": "E1 Director Lab — Failure & recovery",
+  "selectedFixture": "prompt-injection-blocked",
+  "selectedCode": "UNAPPROVED_ACTIVITY",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "scrollWidth": 1440,
+    "scrollHeight": 900,
+    "scrollX": 0,
+    "scrollY": 0
+  },
+  "console": {
+    "errors": 0,
+    "warnings": 0,
+    "totalObservedMessages": 3
+  },
+  "authority": {
+    "automaticRetry": false,
+    "hiddenFallback": false,
+    "credentialAccess": false,
+    "projectMutation": false,
+    "applyEnabled": false
+  },
+  "truthLabels": {
+    "deterministicFixtures": true,
+    "productionServicesConnected": false,
+    "productionSecurityClaim": false
+  },
+  "artifacts": {
+    "screenshot": {
+      "path": "reports/evidence/E1-WP4/failure-gate-1440x900.png",
+      "sha256": "f7c52f1ecbf18050ef1ca286da075edbf410d63c66b4835623622cedf9d9e810",
+      "bytes": 370159
+    },
+    "failureMatrix": {
+      "path": "reports/evidence/E1-WP4/failure-matrix.json",
+      "sha256": "5ffda253d4c115d656f0576904d2dc68fdb7d73fe2e6cdd2b201f00e3da3e9dc",
+      "bytes": 14725
+    },
+    "noProjectMutation": {
+      "path": "reports/evidence/E1-WP4/no-project-mutation.json",
+      "sha256": "41645be72aa10fc6be2167bbcba5541f761acc356c8f9e0ee8b0fabcc8a6171f",
+      "bytes": 2507
+    },
+    "processCleanup": {
+      "path": "reports/evidence/E1-WP4/process-cleanup.json",
+      "sha256": "e30d178830e3f220ea8868e550f96f27c43d85152d42fa0047de2f7f60be083f",
+      "bytes": 1183
+    }
+  },
+  "knownLimitations": [
+    "The captured states are deterministic E1 fixtures, not live production failures.",
+    "Codex CLI 0.144.1 labels app-server experimental.",
+    "Distribution, packaging, installed-build process containment, and private-launch security remain R1/R2 work."
+  ]
+}

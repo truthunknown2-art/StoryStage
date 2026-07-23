@@ -1,0 +1,197 @@
+{
+  "task": "F4-WP3-IMAGE-REQUEST-IMPORT-UX",
+  "base": "http://127.0.0.1:5173/",
+  "capturedAt": "2026-07-22T13:31:46.247Z",
+  "viewport": "1440x900",
+  "checks": [
+    {
+      "name": "keyboard focus: Request-image-pack control is reachable with visible focus and unique identity",
+      "pass": true,
+      "details": {
+        "active": true,
+        "outlineWidth": "2px",
+        "outlineStyle": "solid",
+        "ariaLabel": "Request image pack for Dot in Scene 3 · Berry Patch",
+        "ariaExpanded": "false"
+      }
+    },
+    {
+      "name": "request-pack preview: scene/category/blocker context, readonly prompt, references, expected views/layers, and truth notes",
+      "pass": true,
+      "details": {
+        "text": "Request image pack · scene-scopedDotScene 3 · Berry Patch · Characters · Current blocker: Only a name is recorded — no candidate or reference record sufficient for the next local planning step exists.CloseRequest pack previewThis request pack is a planning document only — no image, file, reference attachment, or layer exists, and nothing here generates, downloads, copies, or imports one.Request prompt (select and copy it yourself)A quiet, hand-painted limited-animation character image of \"Dot\" for the scene \"Berry Patch\". Context: Dot, a supporting friend who spots the dropped berry trail. Show these views: Front view, Three-quarter view, Side view. Soft storybook light, calm composition, flat or transparent background as listed, no text or watermark.Reference attachmentsDot — local planning recordDot, a supporting friend who spots the dropped berry trail. (Named in the local Ollo demo plan — no design, image, or model file exists.)Scene 3 · Berry Patch — bounded demo sceneScene 3 of the bounded Ollo demo plan (140s, 2 beats). The image must serve this scene's moment, not a generic standalone picture.Shared record noteThe same local record is also referenced by Scene 7 · Sunflower "
+      }
+    },
+    {
+      "name": "request prompt is creator-selectable readonly text with no copy claim",
+      "pass": true,
+      "details": {
+        "readOnly": true,
+        "length": 327,
+        "containsName": true
+      }
+    },
+    {
+      "name": "request-pack preview: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "drop intent pending: honest no-byte statement and declared demo candidates",
+      "pass": true,
+      "details": {
+        "text": "op pendingDrop intent recorded — this demo cannot read dropped bytes, files, or data-transfer content. Choose a declared demo candidate below to exercise the same review flow.Dot front viewDeclared format: png · Covers: Front view. Not covered: Three-quarter view, Side view.Dot view sheetDeclared format: png · Covers every expected view: Front view, Three-quarter view, Side view.Dot notes exportDeclared format: txt · Covers none of the expected views.Cancel importLocal candidate records for this requirement (0)None yet. Confirmation above admits only a session-local descriptive record here — never a file, and it changes no readiness or counts.Requirement req-s3-dot · Scene 3 · Berry Patch · Characters — this panel never retains candidates from another scene, category, or requirement scope."
+      }
+    },
+    {
+      "name": "metadata review: proposed name, declared format, reference association, and expected-view coverage before confirmation",
+      "pass": true,
+      "details": {
+        "text": "tirely outside StoryStage, in tools you choose.Candidate import (demo records only)Import state: Reviewing candidate metadataProposed nameDot view sheetDeclared formatpng — declared demo metadata, not media sniffing or decodingReference associationDot — local planning recordExpected-view coverageCovers every expected view: Front view, Three-quarter view, Side view.Source (required)Creator-entered local UI text — it does not prove provenance, ownership, or that the source really provided this image.License / rights (required)Creator-entered local UI text — it does not prove permission, license validity, or legal sufficiency.Continue to confirmationCancel importLocal candidate records for this requirement (0)None yet. Confirmation above admits only a session-local descriptive record here — never a file, and it changes no readiness or counts.Requirement req-s3-dot · Scene 3 · Berry Patch · Characters — this panel never retains candidates from another scene, category, or requirement scope."
+      }
+    },
+    {
+      "name": "missing source validation: readable alert, aria-invalid, focus on the field, no candidate created",
+      "pass": true,
+      "details": {
+        "alert": "Source is required before review — enter where this candidate came from in your own words. No candidate was created.",
+        "focused": true,
+        "invalid": "true"
+      }
+    },
+    {
+      "name": "missing license validation: readable alert, aria-invalid, focus on the field",
+      "pass": true,
+      "details": {
+        "alert": "License or rights are required before review — enter the usage rights you believe you have in your own words. No candidate was created.",
+        "focused": true,
+        "invalid": "true"
+      }
+    },
+    {
+      "name": "confirmation review: explicit boundary with locked metadata and an enabled confirm only because truth is valid",
+      "pass": true,
+      "details": {
+        "disabled": false,
+        "sourceDisabled": true
+      }
+    },
+    {
+      "name": "confirmed: exact local-record disclaimer, review list grows, readiness and counts unchanged",
+      "pass": true,
+      "details": {
+        "countsBefore": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1",
+        "countsAfterConfirm": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1",
+        "text": "-local descriptive candidate record now exists. No file was imported, uploaded, generated, reviewed, approved, prepared, rigged, or made ready, and no production-usable artifact exists.Local candidate recordDot view sheetDeclared formatpngSource (your words)Painted in my own toolLicense / rights (your words)I own the resultClose panelLocal candidate records for this requirement (1)Dot view sheetDeclared format: png · Source: Painted in my own tool · License: I own the result · Covers every expected view: Front view, Three-quarter view, Side view.Only a session-local descriptive candidate record now exists. No file was imported, uploaded, generated, reviewed, approved, prepared, rigged, or made ready, and no production-usable artifact exists.Requirement req-s3-dot · Scene 3 · Berry Patch · Characters — this panel never retains candidates from another scene, category, or requirement scope."
+      }
+    },
+    {
+      "name": "duplicate: deterministic fixture identity collision, no second record",
+      "pass": true,
+      "details": {
+        "text": "local planning recordExpected-view coverageCovers every expected view: Front view, Three-quarter view, Side view.Start overCancel importLocal candidate records for this requirement (1)Dot view sheetDeclared format: png · Source: Painted in my own tool · License: I own the result · Covers every expected view: Front view, Three-quarter view, Side view.Only a session-local descriptive candidate record now exists. No file was imported, uploaded, generated, reviewed, approved, prepared, rigged, or made ready, and no production-usable artifact exists.Requirement req-s3-dot · Scene 3 · Berry Patch · Characters — this panel never retains candidates from another scene, category, or requirement scope."
+      }
+    },
+    {
+      "name": "wrong format: declared demo metadata reason, not media sniffing, no candidate created",
+      "pass": true,
+      "details": {
+        "text": " decodingReference associationDot — local planning recordExpected-view coverageCovers none of the expected views.Start overCancel importLocal candidate records for this requirement (1)Dot view sheetDeclared format: png · Source: Painted in my own tool · License: I own the result · Covers every expected view: Front view, Three-quarter view, Side view.Only a session-local descriptive candidate record now exists. No file was imported, uploaded, generated, reviewed, approved, prepared, rigged, or made ready, and no production-usable artifact exists.Requirement req-s3-dot · Scene 3 · Berry Patch · Characters — this panel never retains candidates from another scene, category, or requirement scope."
+      }
+    },
+    {
+      "name": "cancellation: explicit cancelled state, prior readiness and counts unchanged",
+      "pass": true,
+      "details": {
+        "countsBefore": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1",
+        "countsAfterCancel": "Required 5 · Optional 1 · Reusable 5Ready 1 · Candidate 2 · Missing 1 · Needs preparation 1 · Needs review 1",
+        "text": "ted view: Front view, Three-quarter view, Side view.Only a session-local descriptive candidate record now exists. No file was imported, uploaded, generated, reviewed, approved, prepared, rigged, or made ready, and no production-usable artifact exists.Requirement req-s3-dot · Scene 3 · Berry Patch · Characters — this panel never retains candidates from another scene, category, or requirement scope."
+      }
+    },
+    {
+      "name": "scope change: panel closes and never retains a candidate from another scope",
+      "pass": true,
+      "details": {
+        "panelOpen": false,
+        "scope": "Scene 7 · Sunflower Field"
+      }
+    },
+    {
+      "name": "truth boundaries: no credential fields and no real-file, generation, upload, approval, or production-success claims",
+      "pass": true,
+      "details": {
+        "passwordFields": 0,
+        "fileInputs": 0,
+        "apiKey": false,
+        "generated": false,
+        "imported": false,
+        "uploaded": false,
+        "approved": false,
+        "productionReady": false,
+        "clipboardClaim": false,
+        "openedSite": false
+      }
+    },
+    {
+      "name": "final state: no horizontal document overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "overflowElements": []
+      }
+    }
+  ],
+  "consoleIssues": [],
+  "pageErrors": [],
+  "screenshots": [
+    {
+      "file": "screenshots/wp3-1440x900-request-button-focus.png",
+      "sha256": "936be07202bdf5a78c6c96a35b9f5ac2ae3c86bd613d12eef13915a9d23ae532"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-request-pack-preview.png",
+      "sha256": "ac881319ac7db404da8f32a383f34f20c487329f5123f26f5c1d034b94f511e5"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-drop-intent-pending.png",
+      "sha256": "e21808bb3b2caf711303e4083fee116cd0f3bbd43d5016af12cc03f802b5d9b6"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-candidate-metadata-review.png",
+      "sha256": "1ee9d6b527d30100290ddcb8d1aa93cbfcc79b6a4bc6928cd45179098b07cad4"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-missing-source.png",
+      "sha256": "0d4ccd1de6b8232eb8e2b74b02ba1be5bc629a821b04291f7b8cba22153a0d41"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-missing-license.png",
+      "sha256": "1f58c925481db8aff7d8cfef020399eef0864862019a66fa532b94421933b6b1"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-confirmation-review.png",
+      "sha256": "ee8232e2fef9fa6ac1c74bfa29fb1d2aed4fea160e925ecdfb3363fdb533d81f"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-confirmed-local-record.png",
+      "sha256": "800d0de0293a147b4afdf4f470d74b341b1bb472231cbfce1e0ba94fa0a60ed8"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-duplicate.png",
+      "sha256": "9daef18e7c8008034cce317880b9a3617a3d0fddd3084fefbfae310e6cd77fd4"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-wrong-format.png",
+      "sha256": "8990edf1e74b0274e855eb012ded4401dfd6b85dfe8d9f6d02314d26a67d58ba"
+    },
+    {
+      "file": "screenshots/wp3-1440x900-cancelled-unchanged.png",
+      "sha256": "aa46455ea51ca2d60b90819bd746c28f8d16aeffc2af8bba9aa27cd112644dc7"
+    }
+  ]
+}

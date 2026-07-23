@@ -1,0 +1,74 @@
+{
+  "checks": [
+    {
+      "name": "scope header opens at episode/sequence/scene/beat Scene 1 · Beat 1",
+      "ok": true
+    },
+    {
+      "name": "beat card opens at Beat 1 of 2",
+      "ok": true
+    },
+    {
+      "name": "Direct tab selected initially",
+      "ok": true
+    },
+    {
+      "name": "Director panel mirrors Scene 1 · Beat 1 scope",
+      "ok": true
+    },
+    {
+      "name": "rail Beat 1 carries the shared selection",
+      "ok": true
+    },
+    {
+      "name": "screenshot 1 captured (Scene 1 · Beat 1 · Direct)",
+      "ok": true
+    },
+    {
+      "name": "rail Beat 2 selection drives scope header, board, and Director panel",
+      "ok": true
+    },
+    {
+      "name": "scene change selects first beat exactly once, no stale beat state",
+      "ok": true
+    },
+    {
+      "name": "Visual tab selects for real and keeps the shared scope",
+      "ok": true
+    },
+    {
+      "name": "second beat scope synchronizes rail, board, header, and Visual tab",
+      "ok": true
+    },
+    {
+      "name": "screenshot 2 captured (Scene 3 · Beat 2 · Visual)",
+      "ok": true
+    },
+    {
+      "name": "Preview and Export stay disabled with truthful reasons",
+      "ok": true
+    },
+    {
+      "name": "zero console errors/warnings",
+      "ok": true
+    },
+    {
+      "name": "zero page errors",
+      "ok": true
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "C:/Users/pbirc/AppData/Local/StoryStage/coordination/workspaces/v62/reports/agent-handoffs/2026-07-21-kimi-f3-wp1-scope-workspace/screenshots/wp1-scene1-beat1-direct-1440x900.png",
+      "viewport": "1440x900",
+      "sha256": "24dd768f0190c38c572ae1b32301c745983bc9c1b23f16202dafe49af65a7a7c"
+    },
+    {
+      "file": "C:/Users/pbirc/AppData/Local/StoryStage/coordination/workspaces/v62/reports/agent-handoffs/2026-07-21-kimi-f3-wp1-scope-workspace/screenshots/wp1-scene3-beat2-visual-1440x900.png",
+      "viewport": "1440x900",
+      "sha256": "7d0f39abfde839347ffd12cbb72a4a8be341a2457f480fdbdeff7c1e1a66fa9b"
+    }
+  ],
+  "console": [],
+  "pageErrors": []
+}

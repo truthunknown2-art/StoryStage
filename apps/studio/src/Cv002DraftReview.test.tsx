@@ -19,7 +19,7 @@ import {
   alphaCapabilityRegistry,
   compileDirectorProject,
 } from "@storystage/story-engine/director-alpha";
-import { App } from "./App";
+import { LegacyCreatorApp as App } from "./App";
 
 const playerHarness = vi.hoisted(() => {
   const listeners = new Map<
