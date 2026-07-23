@@ -1,0 +1,563 @@
+{
+  "task": "F5-WP2-NARRATION-TAKE-MANAGEMENT",
+  "base": "http://127.0.0.1:5195/",
+  "capturedAt": "2026-07-23T02:22:07.208Z",
+  "viewport": "1440x900",
+  "checks": [
+    {
+      "name": "audio arrival: no horizontal overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "regions": {
+          "[data-testid='pv1-audio']": {
+            "left": 0,
+            "right": 1440,
+            "top": 127,
+            "bottom": 1441,
+            "width": 1440,
+            "height": 1314
+          },
+          ".pv1-audio-controls": {
+            "left": 24,
+            "right": 1416,
+            "top": 316,
+            "bottom": 367,
+            "width": 1392,
+            "height": 51
+          },
+          "[data-testid='pv1-takes']": {
+            "left": 24,
+            "right": 1416,
+            "top": 1009,
+            "bottom": 1423,
+            "width": 1392,
+            "height": 414
+          },
+          ".pv1-takes-columns": {
+            "left": 24,
+            "right": 1416,
+            "top": 1114,
+            "bottom": 1423,
+            "width": 1392,
+            "height": 309
+          },
+          ".pv1-takes-recorder": {
+            "left": 24,
+            "right": 442,
+            "top": 1114,
+            "bottom": 1423,
+            "width": 418,
+            "height": 309
+          },
+          ".pv1-takes-list": {
+            "left": 458,
+            "right": 877,
+            "top": 1114,
+            "bottom": 1265,
+            "width": 418,
+            "height": 150
+          },
+          ".pv1-takes-review": {
+            "left": 893,
+            "right": 1416,
+            "top": 1114,
+            "bottom": 1205,
+            "width": 523,
+            "height": 91
+          }
+        },
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "audio arrival: F5-WP1 planning cards and inspector truth remain intact",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "audio arrival: take panel idle with persistent no-capture/no-file/no-playback truth",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.",
+        "reviewText": "Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "takeCards": 0,
+        "selectedCard": null
+      }
+    },
+    {
+      "name": "walkthrough: armed state is an honest local UI walkthrough",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "Armed — local UI walkthrough only",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughArmed — local UI walkthrough onlyThe walkthrough is armed. Arming never touches a microphone or a permission: there is no device to arm and no audio to capture.Start recording walkthroughSimulate permission deniedSimulate missing deviceDisarmImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.",
+        "reviewText": "Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughArmed — local UI walkthrough onlyThe walkthrough is armed. Arming never touches a microphone or a permission: there is no device to arm and no audio to capture.Start recording walkthroughSimulate permission deniedSimulate missing deviceDisarmImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "takeCards": 0,
+        "selectedCard": null
+      }
+    },
+    {
+      "name": "walkthrough: recording state says no audio is captured and no media exists",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "Recording walkthrough in progress — no audio is captured",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughRecording walkthrough in progress — no audio is capturedThis is only a UI-state walkthrough: there is no microphone, stream, capture timer, or audio buffer, and nothing is recorded.Stop walkthroughCancel walkthroughSimulate interruptionImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.",
+        "reviewText": "Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughRecording walkthrough in progress — no audio is capturedThis is only a UI-state walkthrough: there is no microphone, stream, capture timer, or audio buffer, and nothing is recorded.Stop walkthroughCancel walkthroughSimulate interruptionImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "takeCards": 0,
+        "selectedCard": null
+      }
+    },
+    {
+      "name": "walkthrough: no horizontal overflow while recording",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "regions": {
+          "[data-testid='pv1-audio']": {
+            "left": 0,
+            "right": 1440,
+            "top": -414,
+            "bottom": 952,
+            "width": 1440,
+            "height": 1366
+          },
+          ".pv1-audio-controls": {
+            "left": 24,
+            "right": 1416,
+            "top": -225,
+            "bottom": -174,
+            "width": 1392,
+            "height": 51
+          },
+          "[data-testid='pv1-takes']": {
+            "left": 24,
+            "right": 1416,
+            "top": 468,
+            "bottom": 934,
+            "width": 1392,
+            "height": 466
+          },
+          ".pv1-takes-columns": {
+            "left": 24,
+            "right": 1416,
+            "top": 573,
+            "bottom": 934,
+            "width": 1392,
+            "height": 361
+          },
+          ".pv1-takes-recorder": {
+            "left": 24,
+            "right": 442,
+            "top": 573,
+            "bottom": 934,
+            "width": 418,
+            "height": 361
+          },
+          ".pv1-takes-list": {
+            "left": 458,
+            "right": 877,
+            "top": 573,
+            "bottom": 724,
+            "width": 418,
+            "height": 150
+          },
+          ".pv1-takes-review": {
+            "left": 893,
+            "right": 1416,
+            "top": 573,
+            "bottom": 664,
+            "width": 523,
+            "height": 91
+          }
+        },
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "walkthrough: cancel ends in an explicit cancelled state with recovery",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "Recording walkthrough cancelled",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughRecording walkthrough cancelledThe walkthrough was cancelled before completion — no audio was captured and nothing was created.Arm againDismissImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.",
+        "reviewText": "Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughRecording walkthrough cancelledThe walkthrough was cancelled before completion — no audio was captured and nothing was created.Arm againDismissImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "takeCards": 0,
+        "selectedCard": null
+      }
+    },
+    {
+      "name": "permission denied: deterministic simulation with recovery, never a browser permission request",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "Microphone permission denied — simulated",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughMicrophone permission denied — simulatedA deterministic simulation for workflow review. The browser was never asked for device access and no permission prompt exists in this package.Arm againDismissImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.",
+        "reviewText": "Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughMicrophone permission denied — simulatedA deterministic simulation for workflow review. The browser was never asked for device access and no permission prompt exists in this package.Arm againDismissImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "takeCards": 0,
+        "selectedCard": null
+      }
+    },
+    {
+      "name": "missing device: deterministic simulation with recovery, never device enumeration",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No microphone found — simulated",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo microphone found — simulatedA deterministic simulation for workflow review. No device was enumerated, because device access does not exist in this package.Arm againDismissImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.",
+        "reviewText": "Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo microphone found — simulatedA deterministic simulation for workflow review. No device was enumerated, because device access does not exist in this package.Arm againDismissImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "takeCards": 0,
+        "selectedCard": null
+      }
+    },
+    {
+      "name": "walkthrough: stopped state is a completed UI walkthrough, never a recording success",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "Walkthrough stopped — review the prototype result",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughWalkthrough stopped — review the prototype resultA stopped walkthrough is a completed UI state change only: no audio was captured and no media exists. Keep stores session-only prototype metadata; it never saves audio.Keep as prototype takeRetake walkthroughDiscard walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.",
+        "reviewText": "Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughWalkthrough stopped — review the prototype resultA stopped walkthrough is a completed UI state change only: no audio was captured and no media exists. Keep stores session-only prototype metadata; it never saves audio.Keep as prototype takeRetake walkthroughDiscard walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "takeCards": 0,
+        "selectedCard": null
+      }
+    },
+    {
+      "name": "take review: kept walkthrough take is session-only prototype metadata in the exact scope",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughIn review — session-only prototype metadata, no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — no audio was captured or saved.",
+        "reviewText": "Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusIn review — session-only prototype metadata, no audio existsAuditionNot in audition review — auditioning only marks the take; it never plays audio.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.Audition — review only, no playbackKeep as session metadataRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughIn review — session-only prototype metadata, no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — no audio was captured or saved.Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusIn review — session-only prototype metadata, no audio existsAuditionNot in audition review — auditioning only marks the take; it never plays audio.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.Audition — review only, no playbackKeep as session metadataRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "takeCards": 1,
+        "selectedCard": "Prototype take 1 · recording walkthrough"
+      }
+    },
+    {
+      "name": "take decision: audition is a review mark with visible no-playback truth",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughIn review — session-only prototype metadata, no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough is in audition review — a comparison mark only; no audio plays, because no audio exists.",
+        "reviewText": "Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusIn review — session-only prototype metadata, no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewKeep as session metadataRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughIn review — session-only prototype metadata, no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough is in audition review — a comparison mark only; no audio plays, because no audio exists.Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusIn review — session-only prototype metadata, no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewKeep as session metadataRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "takeCards": 1,
+        "selectedCard": "Prototype take 1 · recording walkthrough"
+      }
+    },
+    {
+      "name": "take decision: keep stores session-only prototype metadata, still no audio",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — still no audio exists, and nothing was saved to a project, file, or device.",
+        "reviewText": "Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — still no audio exists, and nothing was saved to a project, file, or device.Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "takeCards": 1,
+        "selectedCard": "Prototype take 1 · recording walkthrough"
+      }
+    },
+    {
+      "name": "import: chooser lists declared fixture metadata with no-file truth",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "import: invalid-file result names the fixture and claims no import, open, or read",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserImport walkthrough result — “narration-notes.txt” is not an audio file StoryStage can plan with (Plain text (declared fixture metadata)). Nothing was imported, opened, or read.Dismiss result",
+        "listText": "Prototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — still no audio exists, and nothing was saved to a project, file, or device.",
+        "reviewText": "Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserImport walkthrough result — “narration-notes.txt” is not an audio file StoryStage can plan with (Plain text (declared fixture metadata)). Nothing was imported, opened, or read.Dismiss resultPrototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — still no audio exists, and nothing was saved to a project, file, or device.Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "takeCards": 1,
+        "selectedCard": "Prototype take 1 · recording walkthrough"
+      }
+    },
+    {
+      "name": "import: empty result claims nothing chosen, imported, opened, or read",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserImport walkthrough result — no file was chosen. Nothing was imported, opened, or read.Dismiss result",
+        "listText": "Prototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — still no audio exists, and nothing was saved to a project, file, or device.",
+        "reviewText": "Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserImport walkthrough result — no file was chosen. Nothing was imported, opened, or read.Dismiss resultPrototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — still no audio exists, and nothing was saved to a project, file, or device.Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "takeCards": 1,
+        "selectedCard": "Prototype take 1 · recording walkthrough"
+      }
+    },
+    {
+      "name": "import: cancelled result claims nothing chosen, imported, opened, or read",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserImport walkthrough cancelled — nothing was chosen, imported, opened, or read.Dismiss result",
+        "listText": "Prototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — still no audio exists, and nothing was saved to a project, file, or device.",
+        "reviewText": "Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserImport walkthrough cancelled — nothing was chosen, imported, opened, or read.Dismiss resultPrototype takes1 prototype take in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 1 · recording walkthrough kept as session-only prototype metadata — still no audio exists, and nothing was saved to a project, file, or device.Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "takeCards": 1,
+        "selectedCard": "Prototype take 1 · recording walkthrough"
+      }
+    },
+    {
+      "name": "import: picked fixture becomes session-only metadata with no file read",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserImport walkthrough result — “morning-welcome-read.wav” became session-only prototype take metadata. No file was opened, read, decoded, or stored; the name, format, and duration are declared fixture values.Dismiss result",
+        "listText": "Prototype takes2 prototype takes in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 2 · import fixture “morning-welcome-read.wav”In review — session-only prototype metadata, no audio existsDeclared 12s — no audio decoded · Created from declared fixture metadata only — no file was opened, read, decoded, or stored.Prototype take 2 · import fixture “morning-welcome-read.wav” added as session-only prototype metadata — no file was opened, read, or stored.",
+        "reviewText": "Selected take reviewTakePrototype take 2 · import fixture “morning-welcome-read.wav”ScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated from declared fixture metadata only — no file was opened, read, decoded, or stored.StatusIn review — session-only prototype metadata, no audio existsAuditionNot in audition review — auditioning only marks the take; it never plays audio.DurationDeclared 12s — Declared planning duration — no audio was decoded or measured.Audition — review only, no playbackKeep as session metadataRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–12s of a declared 12s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–11s; stays before trim end.Trim end: 12s−1s+1sBounds 1s–12s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–12s, gain 0 dB).",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserImport walkthrough result — “morning-welcome-read.wav” became session-only prototype take metadata. No file was opened, read, decoded, or stored; the name, format, and duration are declared fixture values.Dismiss resultPrototype takes2 prototype takes in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 2 · import fixture “morning-welcome-read.wav”In review — session-only prototype metadata, no audio existsDeclared 12s — no audio decoded · Created from declared fixture metadata only — no file was opened, read, decoded, or stored.Prototype take 2 · import fixture “morning-welcome-read.wav” added as session-only prototype metadata — no file was opened, read, or stored.Selected take reviewTakePrototype take 2 · import fixture “morning-welcome-read.wav”ScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated from declared fixture metadata only — no file was opened, read, decoded, or stored.StatusIn review — session-only prototype metadata, no audio existsAuditionNot in audition review — auditioning only marks the take; it never plays audio.DurationDeclared 12s — Declared planning duration — no audio was decoded or measured.Audition — review only, no playbackKeep as session metadataRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–12s of a declared 12s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–11s; stays before trim end.Trim end: 12s−1s+1sBounds 1s–12s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–12s, gain 0 dB).",
+        "takeCards": 2,
+        "selectedCard": "Prototype take 2 · import fixture “morning-welcome-read.wav”"
+      }
+    },
+    {
+      "name": "trim/gain: exact current values, bounds, and dirty state over prototype metadata only",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takes2 prototype takes in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 2 · import fixture “morning-welcome-read.wav”In review — session-only prototype metadata, no audio existsDeclared 12s — no audio decoded · Created from declared fixture metadata only — no file was opened, read, decoded, or stored.Prototype take 2 · import fixture “morning-welcome-read.wav” added as session-only prototype metadata — no file was opened, read, or stored.",
+        "reviewText": "Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 2s–70s of a declared 70s, gain +1 dB. Declared planning duration — no audio was decoded or measured.Trim start: 2s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 3s–70s (declared duration).Gain: +1 dB−1 dB+1 dBBounds -12 dB–+12 dB.Unsaved prototype edits — Keep draft edits stores this draft as session-only metadata; nothing is saved to a project or file.Keep draft editsRestore declared values",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takes2 prototype takes in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 2 · import fixture “morning-welcome-read.wav”In review — session-only prototype metadata, no audio existsDeclared 12s — no audio decoded · Created from declared fixture metadata only — no file was opened, read, decoded, or stored.Prototype take 2 · import fixture “morning-welcome-read.wav” added as session-only prototype metadata — no file was opened, read, or stored.Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 2s–70s of a declared 70s, gain +1 dB. Declared planning duration — no audio was decoded or measured.Trim start: 2s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 3s–70s (declared duration).Gain: +1 dB−1 dB+1 dBBounds -12 dB–+12 dB.Unsaved prototype edits — Keep draft edits stores this draft as session-only metadata; nothing is saved to a project or file.Keep draft editsRestore declared values",
+        "takeCards": 2,
+        "selectedCard": "Prototype take 1 · recording walkthrough"
+      }
+    },
+    {
+      "name": "unsaved change: leaving a dirty take requires an explicit stay/discard/keep decision",
+      "pass": true,
+      "details": {}
+    },
+    {
+      "name": "unsaved change: discard drops only the draft and selects the other take",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takes2 prototype takes in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 2 · import fixture “morning-welcome-read.wav”In review — session-only prototype metadata, no audio existsDeclared 12s — no audio decoded · Created from declared fixture metadata only — no file was opened, read, decoded, or stored.Prototype take 2 · import fixture “morning-welcome-read.wav” added as session-only prototype metadata — no file was opened, read, or stored.",
+        "reviewText": "Selected take reviewTakePrototype take 2 · import fixture “morning-welcome-read.wav”ScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated from declared fixture metadata only — no file was opened, read, decoded, or stored.StatusIn review — session-only prototype metadata, no audio existsAuditionNot in audition review — auditioning only marks the take; it never plays audio.DurationDeclared 12s — Declared planning duration — no audio was decoded or measured.Audition — review only, no playbackKeep as session metadataRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–12s of a declared 12s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–11s; stays before trim end.Trim end: 12s−1s+1sBounds 1s–12s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–12s, gain 0 dB).",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takes2 prototype takes in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 2 · import fixture “morning-welcome-read.wav”In review — session-only prototype metadata, no audio existsDeclared 12s — no audio decoded · Created from declared fixture metadata only — no file was opened, read, decoded, or stored.Prototype take 2 · import fixture “morning-welcome-read.wav” added as session-only prototype metadata — no file was opened, read, or stored.Selected take reviewTakePrototype take 2 · import fixture “morning-welcome-read.wav”ScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated from declared fixture metadata only — no file was opened, read, decoded, or stored.StatusIn review — session-only prototype metadata, no audio existsAuditionNot in audition review — auditioning only marks the take; it never plays audio.DurationDeclared 12s — Declared planning duration — no audio was decoded or measured.Audition — review only, no playbackKeep as session metadataRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–12s of a declared 12s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–11s; stays before trim end.Trim end: 12s−1s+1sBounds 1s–12s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–12s, gain 0 dB).",
+        "takeCards": 2,
+        "selectedCard": "Prototype take 2 · import fixture “morning-welcome-read.wav”"
+      }
+    },
+    {
+      "name": "scope change: no stale take leaks into the new beat scope",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 2 · A shelf of unfinished stories. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.",
+        "reviewText": "Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takesNo prototype takes in this scene/beat scopeNo prototype takes for Scene 1 · The Home Nook · Beat 2 · A shelf of unfinished stories. Arm a recording walkthrough or open the import chooser — either way only session-only prototype metadata is created, and no audio ever exists.Selected take reviewNo prototype take selected — this scope has no prototype takes. Nothing here is audio, and nothing can be reviewed.",
+        "takeCards": 0,
+        "selectedCard": null
+      }
+    },
+    {
+      "name": "scope change: returning restores exactly this scope's own takes",
+      "pass": true,
+      "details": {
+        "hidden": false,
+        "badge": "No recording walkthrough in progress",
+        "label": "Local prototype — no audio is captured, imported, or played",
+        "recorderText": "Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooser",
+        "listText": "Prototype takes2 prototype takes in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 2 · import fixture “morning-welcome-read.wav”In review — session-only prototype metadata, no audio existsDeclared 12s — no audio decoded · Created from declared fixture metadata only — no file was opened, read, decoded, or stored.",
+        "reviewText": "Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "rootText": "NarrationTake management — recording, import, and takesLocal prototype — no audio is captured, imported, or playedEvery recording, import, and take state in this panel is a deterministic local UI walkthrough over session-only prototype metadata: no microphone, permission prompt, device, file, audio bytes, playback, waveform, or persistence exists.Record a take — walkthroughNo recording walkthrough in progressArm starts a deterministic local UI walkthrough. No microphone, permission prompt, device, stream, or audio buffer exists.Arm take walkthroughImport a take — walkthroughThe chooser lists declared fixture metadata only. It never opens a file picker, reads a path or file, inspects bytes, or creates media.Open import chooserPrototype takes2 prototype takes in this scene/beat scope — none is audioPrototype take 1 · recording walkthroughKept as session-only prototype metadata — still no audio existsDeclared 70s — no audio decoded · Created by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.Prototype take 2 · import fixture “morning-welcome-read.wav”In review — session-only prototype metadata, no audio existsDeclared 12s — no audio decoded · Created from declared fixture metadata only — no file was opened, read, decoded, or stored.Selected take reviewTakePrototype take 1 · recording walkthroughScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowOriginCreated by a local UI recording walkthrough — no microphone, stream, or audio was used or captured.StatusKept as session-only prototype metadata — still no audio existsAuditionIn audition review — marked for comparison only; no audio plays, because no audio exists.DurationDeclared 70s — Declared planning duration — no audio was decoded or measured.End audition reviewRetake walkthroughDiscard takeTrim and gain — prototype metadata onlyCurrent draft: trim 0s–70s of a declared 70s, gain 0 dB. Declared planning duration — no audio was decoded or measured.Trim start: 0s−1s+1sBounds 0s–69s; stays before trim end.Trim end: 70s−1s+1sBounds 1s–70s (declared duration).Gain: 0 dB−1 dB+1 dBBounds -12 dB–+12 dB.Draft matches the kept session values.Draft already matches the declared values (trim 0s–70s, gain 0 dB).",
+        "takeCards": 2,
+        "selectedCard": "Prototype take 1 · recording walkthrough"
+      }
+    },
+    {
+      "name": "keyboard: take-management controls are reachable with a visible focus outline",
+      "pass": true,
+      "details": {
+        "cls": "pv1-primary",
+        "label": "Arm take walkthrough",
+        "outlineWidth": "2px",
+        "outlineStyle": "solid"
+      }
+    },
+    {
+      "name": "truth sweep: no device/file/playback/persistence success claim exists anywhere",
+      "pass": true,
+      "details": {
+        "disabledActions": true
+      }
+    },
+    {
+      "name": "final state: no horizontal overflow",
+      "pass": true,
+      "details": {
+        "scrollWidth": 1440,
+        "clientWidth": 1440,
+        "regions": {
+          "[data-testid='pv1-audio']": {
+            "left": 0,
+            "right": 1440,
+            "top": -684,
+            "bottom": 1053,
+            "width": 1440,
+            "height": 1737
+          },
+          ".pv1-audio-controls": {
+            "left": 24,
+            "right": 1416,
+            "top": -495,
+            "bottom": -444,
+            "width": 1392,
+            "height": 51
+          },
+          "[data-testid='pv1-takes']": {
+            "left": 24,
+            "right": 1416,
+            "top": 198,
+            "bottom": 1035,
+            "width": 1392,
+            "height": 837
+          },
+          ".pv1-takes-columns": {
+            "left": 24,
+            "right": 1416,
+            "top": 303,
+            "bottom": 1035,
+            "width": 1392,
+            "height": 731
+          },
+          ".pv1-takes-recorder": {
+            "left": 24,
+            "right": 442,
+            "top": 303,
+            "bottom": 612,
+            "width": 418,
+            "height": 309
+          },
+          ".pv1-takes-list": {
+            "left": 458,
+            "right": 877,
+            "top": 303,
+            "bottom": 586,
+            "width": 418,
+            "height": 282
+          },
+          ".pv1-takes-review": {
+            "left": 893,
+            "right": 1416,
+            "top": 303,
+            "bottom": 1035,
+            "width": 523,
+            "height": 731
+          }
+        },
+        "overflowElements": []
+      }
+    },
+    {
+      "name": "screenshots: exactly the ten expected captures, each 1440x900 with a unique SHA-256",
+      "pass": true,
+      "details": {
+        "count": 10,
+        "setFailures": []
+      }
+    }
+  ],
+  "consoleIssues": [],
+  "pageErrors": [],
+  "screenshots": [
+    {
+      "file": "screenshots/wp2-1440x900-projects.png",
+      "sha256": "16b8dc3f03862e5d18bfc3a18277e9fdcc9f5d7b8203af3a0ff3e7ea4917eebf"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-studio-board.png",
+      "sha256": "c2864e10ff5674dd2e636494b0ddd9511e6655ff7375dba3a2499620f3a4b7df"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-audio-narration-idle.png",
+      "sha256": "0d90d6727baf43ce9b04e45c1a879ffd50f4638a6bad413c9b7f53ba22a91221"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-recording-walkthrough.png",
+      "sha256": "3fed2efc448fc9aa1a4ac72af5277b660c2f038cee355ef814b853165d085943"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-permission-denied.png",
+      "sha256": "ce978dbdf12ccb5dff14d4bbf24173c41c5fb42eefdac81b57bf996a9283497a"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-missing-device.png",
+      "sha256": "67c6714b9dd84182f56437570f89e57ee4b894fa29f4ec393d638574d9819a4b"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-take-review-decision.png",
+      "sha256": "5ee55be457183a1df99f03aa2156e6a9c28875a130858481597629685136f375"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-import-invalid-result.png",
+      "sha256": "9b0752bb0e3584f3fb1230029928d2d789023dce3f69b3c253b9e566b29a5b31"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-trim-gain-dirty-unsaved.png",
+      "sha256": "a2fcb79a65718d264a62387cf570144505375879ab4978777f73d3648a844d7c"
+    },
+    {
+      "file": "screenshots/wp2-1440x900-scope-change-no-leak.png",
+      "sha256": "6d78a35ae689174109d12856029981f6b116e510bb338b3d137573d7e6fa51b2"
+    }
+  ]
+}

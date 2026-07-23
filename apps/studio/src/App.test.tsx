@@ -18,7 +18,9 @@ import "./product-v1/asset-request-import.test";
 import "./product-v1/asset-review.test";
 import "./product-v1/asset-accessibility.test";
 import "./product-v1/audio-workspace.test";
+import "./product-v1/narration-takes.test";
 import "./product-v1/f5-wp1-evidence-gate.test";
+import "./product-v1/f5-wp2-evidence-gate.test";
 import {
   AI_CONNECTION_LABELS,
   AI_CONNECTION_STATES,
