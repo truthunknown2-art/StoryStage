@@ -5,6 +5,8 @@ import {
   AUDIO_CARD_STATUS,
   AUDIO_EMPTY_STATE,
   AUDIO_FIXTURE_LABEL,
+  AUDIO_NO_CARD_BADGE,
+  AUDIO_NO_CARD_TIMING,
   AUDIO_TRACK_KIND_LABEL,
   AUDIO_TRACKS,
   AUDIO_TRUTH_NOTE,
@@ -13,6 +15,7 @@ import {
   audioCardsForScope,
   audioCountSummary,
   audioGuideTimingNote,
+  audioNoCardStatus,
   audioOrientationActions,
   audioScopeLabel,
   audioTrack,
@@ -31,7 +34,9 @@ import {
  * Every take and cue is a labelled local demo planning card: nothing here
  * records, imports, decodes, plays, mixes, persists, or sends media to an
  * engine. Guide timing is always paired with its provisional label; final
- * timing is always labelled unavailable.
+ * timing is always labelled unavailable. When the current scope has no
+ * planning card, the inspector states explicit no-card/no-status/no-timing
+ * truth and never describes a nonexistent card.
  */
 export function AudioWorkspace({
   onSelectBeat,
@@ -251,7 +256,7 @@ export function AudioWorkspace({
           <header>
             <h2>Track inspector</h2>
             <p className="pv1-audio-inspector-label" role="note">
-              {AUDIO_FIXTURE_LABEL}
+              {selectedCard ? AUDIO_FIXTURE_LABEL : AUDIO_NO_CARD_BADGE}
             </p>
           </header>
           <dl>
@@ -276,16 +281,22 @@ export function AudioWorkspace({
             <div>
               <dt>Status</dt>
               <dd>
-                {statusLabel} — {AUDIO_FIXTURE_LABEL}.
+                {selectedCard
+                  ? `${statusLabel} — ${AUDIO_FIXTURE_LABEL}.`
+                  : `${audioNoCardStatus(trackId)}.`}
               </dd>
             </div>
             <div>
               <dt>Timing basis</dt>
               <dd>
-                {selectedCard
-                  ? `${audioGuideTimingNote(selectedCard)}. `
-                  : ""}
-                {GUIDE_TIMING_LABEL}. {FINAL_TIMING_LABEL}.
+                {selectedCard ? (
+                  <>
+                    {`${audioGuideTimingNote(selectedCard)}. `}
+                    {GUIDE_TIMING_LABEL}. {FINAL_TIMING_LABEL}.
+                  </>
+                ) : (
+                  `${AUDIO_NO_CARD_TIMING}.`
+                )}
               </dd>
             </div>
             {selectedCard ? (

@@ -19,6 +19,10 @@ import { OLLO_DEMO_SCENES, type DemoScene } from "./demo-project";
 /** The one mandatory honesty label on every audio planning card. */
 export const AUDIO_FIXTURE_LABEL = "Local demo planning card — no audio exists";
 
+/** Explicit no-card badge for a scope with zero planning cards: the
+ * inspector must never describe a nonexistent planning card. */
+export const AUDIO_NO_CARD_BADGE = "No planning card selected — no audio exists";
+
 /** Workspace-level truth note, always visible without hover. */
 export const AUDIO_TRUTH_NOTE =
   "Every take and cue here is a local demo planning card grounded in the bounded Ollo demo plan — no audio exists for any card, and nothing here records, imports, decodes, plays, mixes, or saves media.";
@@ -30,12 +34,23 @@ export const AUDIO_CARD_STATUS = {
   cue: "Planned cue — no audio placed",
 } as const;
 
+/** Empty-scope status truth: no planned take/cue exists in the current
+ * scene/beat scope, stated plainly without any card fixture label. */
+export const audioNoCardStatus = (trackId: AudioTrackId): string =>
+  `No planned ${audioTrack(trackId).cardNoun} exists in the current scene/beat scope`;
+
 /** Exact timing truth language. Guide timing is provisional planning
  * information; final timing is unavailable until later accepted audio work. */
 export const GUIDE_TIMING_LABEL =
   "Guide timing — provisional planning only, not final timing";
 export const FINAL_TIMING_LABEL =
   "Final timing — unavailable until later accepted audio work";
+
+/** Empty-scope timing truth: no guide timing exists until a planning card
+ * exists in the scope, and final timing comes only from later accepted audio
+ * work. An empty scope must never show a generic timing basis. */
+export const AUDIO_NO_CARD_TIMING =
+  "No guide or final timing exists — guide timing appears only when a planning card exists in this scope, and final timing is supplied only by later accepted audio work";
 
 /* ------------------------------------------------------------------ */
 /* Track hierarchy                                                     */

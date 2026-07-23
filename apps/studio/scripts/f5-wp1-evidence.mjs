@@ -6,26 +6,23 @@
  * navigation. Captures the Narration selected-take state, the Dialogue
  * honest empty state, the SFX selected-cue state, the Music guide-versus-
  * final timing boundary, and a deterministic shared-scope change, and hashes
- * every screenshot and the machine-readable report with SHA-256. */
+ * every screenshot and the machine-readable report with SHA-256.
+ *
+ * The capture set is fail-closed: the report must contain exactly the nine
+ * expected capture names in EXPECTED_SCREENSHOT_NAMES, once each — a
+ * missing, duplicate, or extra capture fails the gate. The pure set check is
+ * exported so the deterministic negative regression
+ * (src/product-v1/f5-wp1-evidence-gate.test.ts) can prove the gate fails for
+ * an incomplete set without launching a browser; the browser journey runs
+ * only when this file is executed directly. */
 import crypto from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const loadPackage = createRequire(import.meta.url);
-const REPO_ROOT = path.resolve(import.meta.dirname, "../../..");
-const pnpmStore = path.join(REPO_ROOT, "node_modules", ".pnpm");
-const playwrightStores = fs
-  .readdirSync(pnpmStore)
-  .filter((entry) => entry.startsWith("playwright-core@"));
-if (playwrightStores.length !== 1) {
-  throw new Error(
-    `Expected exactly one installed playwright-core, found ${playwrightStores.length}`,
-  );
-}
-const pw = loadPackage(
-  path.join(pnpmStore, playwrightStores[0], "node_modules", "playwright-core"),
-);
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(SCRIPT_DIR, "..", "..", "..");
 
 const BASE = "http://127.0.0.1:5195/";
 const OUT = path.join(
@@ -43,19 +40,50 @@ const SAMPLE_SCRIPT = [
   "It leads her across a stream and into a hidden glade filled with fireflies.",
 ].join("\n\n");
 
+/** The exact nine captures this package requires, in journey order. The
+ * evidence gate fails closed unless the report contains exactly this set,
+ * once each — no missing, duplicate, or extra capture. */
+export const EXPECTED_SCREENSHOT_NAMES = Object.freeze([
+  "wp1-1440x900-projects",
+  "wp1-1440x900-proposal-review",
+  "wp1-1440x900-studio-board",
+  "wp1-1440x900-audio-narration-take",
+  "wp1-1440x900-audio-dialogue-empty",
+  "wp1-1440x900-audio-sfx-cue",
+  "wp1-1440x900-audio-music-timing",
+  "wp1-1440x900-audio-scope-change",
+  "wp1-1440x900-audio-track-tab-focus",
+]);
+
+/** Pure fail-closed set check over captured `screenshots/<name>.png`
+ * entries: returns one message per missing, duplicate, or extra capture. An
+ * empty result means the entries hold exactly the nine expected captures,
+ * once each, so an incomplete or empty report can never pass. */
+export function screenshotSetFailures(files) {
+  const names = files.map((file) =>
+    String(file)
+      .split(/[\\/]/)
+      .pop()
+      .replace(/\.png$/i, ""),
+  );
+  const counts = new Map();
+  for (const name of names) counts.set(name, (counts.get(name) ?? 0) + 1);
+  const failures = [];
+  for (const expected of EXPECTED_SCREENSHOT_NAMES) {
+    const seen = counts.get(expected) ?? 0;
+    if (seen === 0) failures.push(`missing expected capture: ${expected}`);
+    else if (seen > 1)
+      failures.push(`duplicate capture: ${expected} (x${seen})`);
+  }
+  for (const name of [...counts.keys()].sort()) {
+    if (!EXPECTED_SCREENSHOT_NAMES.includes(name))
+      failures.push(`extra capture: ${name}`);
+  }
+  return failures;
+}
+
 const sha256File = (file) =>
   crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
-
-const report = {
-  task: "F5-WP1-AUDIO-WORKSPACE-TRACK-HIERARCHY",
-  base: BASE,
-  capturedAt: new Date().toISOString(),
-  viewport: "1440x900",
-  checks: [],
-  consoleIssues: [],
-  pageErrors: [],
-  screenshots: [],
-};
 
 const AUDIO_REGIONS = [
   "[data-testid='pv1-audio']",
@@ -63,9 +91,6 @@ const AUDIO_REGIONS = [
   ".pv1-audio-list",
   ".pv1-audio-inspector",
 ];
-
-const rec = (name, pass, details) =>
-  report.checks.push({ name, pass, details });
 
 async function measureRegions(page, selectors) {
   return page.evaluate((sels) => {
@@ -111,12 +136,6 @@ async function measureRegions(page, selectors) {
   }, selectors);
 }
 
-async function shot(page, name) {
-  const file = path.join(OUT, `${name}.png`);
-  await page.screenshot({ path: file, fullPage: false });
-  return { file: `screenshots/${name}.png`, sha256: sha256File(file) };
-}
-
 const audioState = () => {
   const root = document.querySelector("[data-testid='pv1-audio']");
   const panel = root?.querySelector(".pv1-audio-list:not([hidden])");
@@ -136,7 +155,41 @@ const audioState = () => {
   };
 };
 
-(async () => {
+async function main() {
+  const loadPackage = createRequire(import.meta.url);
+  const pnpmStore = path.join(REPO_ROOT, "node_modules", ".pnpm");
+  const playwrightStores = fs
+    .readdirSync(pnpmStore)
+    .filter((entry) => entry.startsWith("playwright-core@"));
+  if (playwrightStores.length !== 1) {
+    throw new Error(
+      `Expected exactly one installed playwright-core, found ${playwrightStores.length}`,
+    );
+  }
+  const pw = loadPackage(
+    path.join(pnpmStore, playwrightStores[0], "node_modules", "playwright-core"),
+  );
+
+  const report = {
+    task: "F5-WP1-AUDIO-WORKSPACE-TRACK-HIERARCHY",
+    base: BASE,
+    capturedAt: new Date().toISOString(),
+    viewport: "1440x900",
+    checks: [],
+    consoleIssues: [],
+    pageErrors: [],
+    screenshots: [],
+  };
+
+  const rec = (name, pass, details) =>
+    report.checks.push({ name, pass, details });
+
+  const shot = async (page, name) => {
+    const file = path.join(OUT, `${name}.png`);
+    await page.screenshot({ path: file, fullPage: false });
+    return { file: `screenshots/${name}.png`, sha256: sha256File(file) };
+  };
+
   fs.mkdirSync(OUT, { recursive: true });
   const browser = await pw.chromium.launch({ headless: true });
   const context = await browser.newContext({
@@ -267,11 +320,14 @@ const audioState = () => {
   );
   report.screenshots.push(await shot(page, "wp1-1440x900-audio-narration-take"));
 
-  /* Dialogue: the default scope honestly has no dialogue planning takes. */
+  /* Dialogue: the default scope honestly has no dialogue planning takes, and
+   * the empty inspector must state no-card/no-status/no-timing truth — it may
+   * never claim a local demo planning card, a planned status, a guide
+   * placement, or any available timing for a nonexistent card. */
   await page.getByRole("tab", { name: "Dialogue" }).click();
   state = await page.evaluate(audioState);
   rec(
-    "dialogue: exact empty state, zero cards, no fake success action",
+    "dialogue: exact empty state, zero cards, no fake success action, and an inspector with no manufactured card/status/timing truth",
     (await page
       .getByRole("tab", { name: "Dialogue" })
       .getAttribute("aria-selected")) === "true" &&
@@ -285,6 +341,23 @@ const audioState = () => {
       ) &&
       state.inspectorText.includes(
         "No take selected — this scope has no dialogue planning takes.",
+      ) &&
+      state.inspectorText.includes(
+        "No planning card selected — no audio exists",
+      ) &&
+      state.inspectorText.includes(
+        "No planned take exists in the current scene/beat scope",
+      ) &&
+      state.inspectorText.includes("No guide or final timing exists") &&
+      !state.inspectorText.includes("Local demo planning card") &&
+      !state.inspectorText.includes("Planned take — nothing recorded") &&
+      !state.inspectorText.includes("Planned cue — no audio placed") &&
+      !state.inspectorText.includes("Guide plan places") &&
+      !state.inspectorText.includes(
+        "Guide timing — provisional planning only, not final timing",
+      ) &&
+      !state.inspectorText.includes(
+        "Final timing — unavailable until later accepted audio work",
       ),
     state,
   );
@@ -447,10 +520,17 @@ const audioState = () => {
   await context.close();
   await browser.close();
 
+  /* Fail closed on the capture set itself: exactly the nine expected
+   * captures, once each — a missing, duplicate, or extra name fails before
+   * dimensions and hashes are even considered. */
+  const setFailures = screenshotSetFailures(
+    report.screenshots.map((entry) => entry.file),
+  );
   const hashes = report.screenshots.map((entry) => entry.sha256);
   rec(
-    "screenshots: every capture is 1440x900 with a unique SHA-256",
-    new Set(hashes).size === hashes.length &&
+    "screenshots: exactly the nine expected captures, each 1440x900 with a unique SHA-256",
+    setFailures.length === 0 &&
+      new Set(hashes).size === hashes.length &&
       report.screenshots.every((entry) => {
         const png = fs.readFileSync(
           path.join(OUT, path.basename(entry.file)),
@@ -461,7 +541,7 @@ const audioState = () => {
           png.readUInt32BE(20) === 900
         );
       }),
-    { count: hashes.length },
+    { count: hashes.length, setFailures },
   );
 
   const reportFile = path.join(OUT, "clickthrough-report.json");
@@ -481,7 +561,18 @@ const audioState = () => {
   console.log(
     `ALL ${report.checks.length} CHECKS PASSED, zero console warnings/errors, zero page errors`,
   );
-})().catch((e) => {
-  console.error("EVIDENCE FAILED", e);
-  process.exit(1);
-});
+}
+
+/* The browser journey runs only when this file is executed directly;
+ * importing the pure set gate (for the deterministic negative regression)
+ * never launches a browser. */
+const isDirectRun =
+  typeof process.argv[1] === "string" &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectRun) {
+  main().catch((e) => {
+    console.error("EVIDENCE FAILED", e);
+    process.exit(1);
+  });
+}

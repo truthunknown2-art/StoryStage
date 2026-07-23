@@ -9,6 +9,8 @@ import {
   AUDIO_EMPTY_STATE,
   AUDIO_FIXTURES,
   AUDIO_FIXTURE_LABEL,
+  AUDIO_NO_CARD_BADGE,
+  AUDIO_NO_CARD_TIMING,
   AUDIO_TRACKS,
   FINAL_TIMING_LABEL,
   GUIDE_TIMING_LABEL,
@@ -16,6 +18,7 @@ import {
   audioCardScopeLabel,
   audioCountSummary,
   audioGuideTimingNote,
+  audioNoCardStatus,
   audioOrientationActions,
   audioScopeLabel,
   resolveAudioCardSelection,
@@ -173,6 +176,31 @@ describe("F5-WP1 — audio scope model (pure)", () => {
       }
     }
   });
+
+  it("states exact empty-scope truth vocabulary with no card fixture label", () => {
+    expect(AUDIO_NO_CARD_BADGE).toBe(
+      "No planning card selected — no audio exists",
+    );
+    expect(AUDIO_NO_CARD_BADGE).not.toContain(AUDIO_FIXTURE_LABEL);
+    expect(audioNoCardStatus("narration")).toBe(
+      "No planned take exists in the current scene/beat scope",
+    );
+    expect(audioNoCardStatus("dialogue")).toBe(
+      "No planned take exists in the current scene/beat scope",
+    );
+    expect(audioNoCardStatus("sfx")).toBe(
+      "No planned cue exists in the current scene/beat scope",
+    );
+    expect(audioNoCardStatus("music")).toBe(
+      "No planned cue exists in the current scene/beat scope",
+    );
+    // The empty timing basis states the absence of both timing kinds without
+    // reusing either non-empty label or a card fixture label.
+    expect(AUDIO_NO_CARD_TIMING).toContain("No guide or final timing exists");
+    expect(AUDIO_NO_CARD_TIMING).not.toContain(GUIDE_TIMING_LABEL);
+    expect(AUDIO_NO_CARD_TIMING).not.toContain(FINAL_TIMING_LABEL);
+    expect(AUDIO_NO_CARD_TIMING).not.toContain(AUDIO_FIXTURE_LABEL);
+  });
 });
 
 describe("F5-WP1 — audio workspace views", () => {
@@ -311,12 +339,87 @@ describe("F5-WP1 — audio workspace views", () => {
     expect(panel.textContent).toContain(
       "No planned takes in this scene/beat scope",
     );
+    // Every inspector row agrees with the empty list and count: no card
+    // badge, no planned status, and no timing basis may be manufactured for
+    // a nonexistent planning card.
     const detail = within(inspector());
+    expect(detail.getByText(AUDIO_NO_CARD_BADGE)).toBeTruthy();
+    expect(detail.getByText(/^Dialogue — Voice track/)).toBeTruthy();
+    expect(
+      detail.getByText(
+        "Scene 1 · The Home Nook · Beat 1 · Morning light through the round window",
+      ),
+    ).toBeTruthy();
     expect(
       detail.getByText(
         "No take selected — this scope has no dialogue planning takes.",
       ),
     ).toBeTruthy();
+    expect(
+      detail.getByText("No planned take exists in the current scene/beat scope."),
+    ).toBeTruthy();
+    expect(detail.getByText(`${AUDIO_NO_CARD_TIMING}.`)).toBeTruthy();
+    const inspectorText = inspector().textContent ?? "";
+    expect(inspectorText).not.toContain(AUDIO_FIXTURE_LABEL);
+    expect(inspectorText).not.toContain(AUDIO_CARD_STATUS.take);
+    expect(inspectorText).not.toContain(AUDIO_CARD_STATUS.cue);
+    expect(inspectorText).not.toContain("Guide plan places");
+    expect(inspectorText).not.toContain(GUIDE_TIMING_LABEL);
+    expect(inspectorText).not.toContain(FINAL_TIMING_LABEL);
+    // No intent row exists without a card; the disabled orientation actions
+    // and their reasons remain truthful.
+    expect(inspectorText).not.toContain("Intent");
+    const actions = within(inspector())
+      .getAllByRole("button")
+      .map((button) => button as HTMLButtonElement);
+    expect(actions.length).toBeGreaterThan(0);
+    for (const action of actions) expect(action.disabled).toBe(true);
+    expect(inspectorText).toMatch(/Unavailable —/);
+  });
+
+  it("states no-card/no-status/no-timing truth in every inspector row of an empty cue scope", async () => {
+    const user = userEvent.setup();
+    render(<AudioHarness />);
+    // Scene 3 · Beat 1 has no planning cards on any track.
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Audio scene scope" }),
+      "scene-3",
+    );
+    await user.click(trackTab("SFX"));
+    const panel = activePanel();
+    expect(panel.textContent).toContain(
+      "No planned cues in this scene/beat scope",
+    );
+    expect(cardButtons()).toHaveLength(0);
+    const detail = within(inspector());
+    expect(detail.getByText(AUDIO_NO_CARD_BADGE)).toBeTruthy();
+    expect(detail.getByText(/^SFX — Cue track/)).toBeTruthy();
+    expect(
+      detail.getByText(
+        "Scene 3 · Berry Patch · Beat 1 · Dot finds a trail of dropped berries",
+      ),
+    ).toBeTruthy();
+    expect(
+      detail.getByText("No cue selected — this scope has no sfx planning cues."),
+    ).toBeTruthy();
+    expect(
+      detail.getByText("No planned cue exists in the current scene/beat scope."),
+    ).toBeTruthy();
+    expect(detail.getByText(`${AUDIO_NO_CARD_TIMING}.`)).toBeTruthy();
+    const inspectorText = inspector().textContent ?? "";
+    expect(inspectorText).not.toContain(AUDIO_FIXTURE_LABEL);
+    expect(inspectorText).not.toContain(AUDIO_CARD_STATUS.take);
+    expect(inspectorText).not.toContain(AUDIO_CARD_STATUS.cue);
+    expect(inspectorText).not.toContain("Guide plan places");
+    expect(inspectorText).not.toContain(GUIDE_TIMING_LABEL);
+    expect(inspectorText).not.toContain(FINAL_TIMING_LABEL);
+    expect(inspectorText).not.toContain("Intent");
+    const actions = within(inspector())
+      .getAllByRole("button")
+      .map((button) => button as HTMLButtonElement);
+    expect(actions.length).toBeGreaterThan(0);
+    for (const action of actions) expect(action.disabled).toBe(true);
+    expect(inspectorText).toMatch(/Unavailable —/);
   });
 
   it("keeps empty states honest on every track of an empty scope", async () => {

@@ -1,7 +1,7 @@
 {
   "task": "F5-WP1-AUDIO-WORKSPACE-TRACK-HIERARCHY",
   "base": "http://127.0.0.1:5195/",
-  "capturedAt": "2026-07-22T22:41:04.140Z",
+  "capturedAt": "2026-07-23T00:06:35.962Z",
   "viewport": "1440x900",
   "checks": [
     {
@@ -93,7 +93,7 @@
       }
     },
     {
-      "name": "dialogue: exact empty state, zero cards, no fake success action",
+      "name": "dialogue: exact empty state, zero cards, no fake success action, and an inspector with no manufactured card/status/timing truth",
       "pass": true,
       "details": {
         "heading": "Dialogue",
@@ -102,9 +102,9 @@
         "selectedCard": null,
         "selectedCardCurrent": null,
         "panelHidden": false,
-        "inspectorText": "Track inspectorLocal demo planning card — no audio existsTrackDialogue — Voice track — planning takes onlyScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowSelected takeNo take selected — this scope has no dialogue planning takes.StatusPlanned take — nothing recorded — Local demo planning card — no audio exists.Timing basisGuide timing — provisional planning only, not final timing. Final timing — unavailable until later accepted audio work.Record takeUnavailable — microphone and device access do not exist in this demo. Later accepted work (F5-WP2) adds recording states.Audition takeUnavailable — no audio exists to play; playback, waveforms, and mixing are outside this package.Import audioUnavailable — file access and import do not exist in this demo.",
+        "inspectorText": "Track inspectorNo planning card selected — no audio existsTrackDialogue — Voice track — planning takes onlyScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowSelected takeNo take selected — this scope has no dialogue planning takes.StatusNo planned take exists in the current scene/beat scope.Timing basisNo guide or final timing exists — guide timing appears only when a planning card exists in this scope, and final timing is supplied only by later accepted audio work.Record takeUnavailable — microphone and device access do not exist in this demo. Later accepted work (F5-WP2) adds recording states.Audition takeUnavailable — no audio exists to play; playback, waveforms, and mixing are outside this package.Import audioUnavailable — file access and import do not exist in this demo.",
         "panelText": "Scene 1 · The Home Nook · Beat 1 · Morning light through the round windowNo planned takes in this scene/beat scopeNo dialogue planning takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Nothing is hidden — this scope honestly has no planning takes yet. Later accepted work adds dialogue recording states. Nothing can be recorded, imported, or played in this package.",
-        "rootText": "Audio workspaceDialoguePlanning cards — no audio existsEvery take and cue here is a local demo planning card grounded in the bounded Ollo demo plan — no audio exists for any card, and nothing here records, imports, decodes, plays, mixes, or saves media.Layout demo — these planning cards describe the bounded Ollo demo plan, not audio from your script. Script-specific narration, sound effects, and music have not been planned, recorded, or imported.NarrationDialogueSFXMusicSceneScene 1 · The Home NookScene 2 · Forest PathScene 3 · Berry PatchScene 4 · Little StreamScene 5 · Lantern BridgeScene 6 · Folded HillsScene 7 · Sunflower FieldScene 8 · Back HomeBeatBeat 1 · Morning light through the round windowBeat 2 · A shelf of unfinished storiesShared scope — this is the same selected scene and beat as the Scene board and the scope header; changing it here changes it everywhere.Scene 1 · The Home Nook · Beat 1 · Morning light through the round window2 planned takes in this scene/beat scopeTake A · Morning welcome narrationPlanned take — nothing recorded · Local demo planning card — no audio existsGuide plan places this take 0s into the beat for about 12s — Guide timing — provisional planning only, not final timingTake B · Morning welcome, slower readPlanned take — nothing recorded · Local demo planning card — no audio existsGuide plan places this take 0s into the beat for about 15s — Guide timing — provisional planning only, not final timingScene 1 · The Home Nook · Beat 1 · Morning light through the round windowNo planned takes in this scene/beat scopeNo dialogue planning takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Nothing is hidden — this scope honestly has no planning takes yet. Later accepted work adds dialogue recording states. Nothing can be recorded, imported, or played in this package.Scene 1 · The Home Nook · Beat 1 · Morning light through the round window1 planned cue in this scene/beat scopeSoft window-light chimePlanned cue — no audio placed · Local demo planning card — no audio existsGuide plan places this cue 4s into the beat for about 3s — Guide timing — provisional planning only, not final timingScene 1 · The Home Nook · Beat 1 · Morning light through the round window1 planned cue in this scene/beat scopeMorning theme — guide placementPlanned cue — no audio placed · Local demo planning card — no audio existsGuide plan places this cue 0s into the beat for about 30s — Guide timing — provisional planning only, not final timingTrack inspectorLocal demo planning card — no audio existsTrackDialogue — Voice track — planning takes onlyScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowSelected takeNo take selected — this scope has no dialogue planning takes.StatusPlanned take — nothing recorded — Local demo planning card — no audio exists.Timing basisGuide timing — provisional planning only, not final timing. Final timing — unavailable until later accepted audio work.Record takeUnavailable — microphone and device access do not exist in this demo. Later accepted work (F5-WP2) adds recording states.Audition takeUnavailable — no audio exists to play; playback, waveforms, and mixing are outside this package.Import audioUnavailable — file access and import do not exist in this demo."
+        "rootText": "Audio workspaceDialoguePlanning cards — no audio existsEvery take and cue here is a local demo planning card grounded in the bounded Ollo demo plan — no audio exists for any card, and nothing here records, imports, decodes, plays, mixes, or saves media.Layout demo — these planning cards describe the bounded Ollo demo plan, not audio from your script. Script-specific narration, sound effects, and music have not been planned, recorded, or imported.NarrationDialogueSFXMusicSceneScene 1 · The Home NookScene 2 · Forest PathScene 3 · Berry PatchScene 4 · Little StreamScene 5 · Lantern BridgeScene 6 · Folded HillsScene 7 · Sunflower FieldScene 8 · Back HomeBeatBeat 1 · Morning light through the round windowBeat 2 · A shelf of unfinished storiesShared scope — this is the same selected scene and beat as the Scene board and the scope header; changing it here changes it everywhere.Scene 1 · The Home Nook · Beat 1 · Morning light through the round window2 planned takes in this scene/beat scopeTake A · Morning welcome narrationPlanned take — nothing recorded · Local demo planning card — no audio existsGuide plan places this take 0s into the beat for about 12s — Guide timing — provisional planning only, not final timingTake B · Morning welcome, slower readPlanned take — nothing recorded · Local demo planning card — no audio existsGuide plan places this take 0s into the beat for about 15s — Guide timing — provisional planning only, not final timingScene 1 · The Home Nook · Beat 1 · Morning light through the round windowNo planned takes in this scene/beat scopeNo dialogue planning takes for Scene 1 · The Home Nook · Beat 1 · Morning light through the round window. Nothing is hidden — this scope honestly has no planning takes yet. Later accepted work adds dialogue recording states. Nothing can be recorded, imported, or played in this package.Scene 1 · The Home Nook · Beat 1 · Morning light through the round window1 planned cue in this scene/beat scopeSoft window-light chimePlanned cue — no audio placed · Local demo planning card — no audio existsGuide plan places this cue 4s into the beat for about 3s — Guide timing — provisional planning only, not final timingScene 1 · The Home Nook · Beat 1 · Morning light through the round window1 planned cue in this scene/beat scopeMorning theme — guide placementPlanned cue — no audio placed · Local demo planning card — no audio existsGuide plan places this cue 0s into the beat for about 30s — Guide timing — provisional planning only, not final timingTrack inspectorNo planning card selected — no audio existsTrackDialogue — Voice track — planning takes onlyScopeScene 1 · The Home Nook · Beat 1 · Morning light through the round windowSelected takeNo take selected — this scope has no dialogue planning takes.StatusNo planned take exists in the current scene/beat scope.Timing basisNo guide or final timing exists — guide timing appears only when a planning card exists in this scope, and final timing is supplied only by later accepted audio work.Record takeUnavailable — microphone and device access do not exist in this demo. Later accepted work (F5-WP2) adds recording states.Audition takeUnavailable — no audio exists to play; playback, waveforms, and mixing are outside this package.Import audioUnavailable — file access and import do not exist in this demo."
       }
     },
     {
@@ -225,10 +225,11 @@
       }
     },
     {
-      "name": "screenshots: every capture is 1440x900 with a unique SHA-256",
+      "name": "screenshots: exactly the nine expected captures, each 1440x900 with a unique SHA-256",
       "pass": true,
       "details": {
-        "count": 9
+        "count": 9,
+        "setFailures": []
       }
     }
   ],
@@ -249,11 +250,11 @@
     },
     {
       "file": "screenshots/wp1-1440x900-audio-narration-take.png",
-      "sha256": "9c684525fe986a549d55c0d3ccb9f21ca27ab5489bde5c497b7e0b22b68cb132"
+      "sha256": "b487d7783a7a1691c9497fe24e0fa71ef62fa7c71bde13370aee15fd37484e19"
     },
     {
       "file": "screenshots/wp1-1440x900-audio-dialogue-empty.png",
-      "sha256": "6e5b4fdfc7e7788ab23ae0ac8e1f877562aad841a3170cc07f5dc51317cc773d"
+      "sha256": "b4467af6fecdf986fa8520b63fbd86d344b084a72842fe63767ba4899b283ab6"
     },
     {
       "file": "screenshots/wp1-1440x900-audio-sfx-cue.png",
@@ -265,11 +266,11 @@
     },
     {
       "file": "screenshots/wp1-1440x900-audio-scope-change.png",
-      "sha256": "8231c50aa8b603e72986664312457cd830bb2c59db9197633de36e0c6c0773ed"
+      "sha256": "248ff546ec363fa44285a1683dec5b10a93dedfe33aa9c1164c293c5fe5536fd"
     },
     {
       "file": "screenshots/wp1-1440x900-audio-track-tab-focus.png",
-      "sha256": "9b7568d5bae35c6a9d752f498a04f12db9e23ec98a355013fe4543a11a621a5f"
+      "sha256": "e8d76bc23e751a07c2abe3a1fc7279dd5fa15e9d6de88ac6b59f22cbe7d99b3a"
     }
   ]
 }
