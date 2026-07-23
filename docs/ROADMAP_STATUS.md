@@ -13,18 +13,18 @@ completedMilestones:
   F3: fd0bd16c531e1742c14b21fc79cf8c47eb82d200
   F4: 5c7107f3b201780865c30f11a59716e4a82d16d4
 authorization:
-  state: ACCEPTED_WAIT
+  state: START_NOW
   milestone: F5
-  package: F5-WP1
-  owner: Codex
-  exactBase: 11f6f049d306efb9808559a24e2bd532be4cdc87
-  branch: agent/kimi-f5-wp1-audio-workspace-track-hierarchy-v2
-  issue: 124
-  pr: 127
-  candidateContentHead: 22daef36d080fbbbab03f981cae19f11c1ea2828
+  package: F5-WP2
+  owner: Kimi
+  exactBase: 2aea29220b278d1dc043c03d0d32ee4857bc32a7
+  branch: agent/kimi-f5-wp2-narration-take-management
+  issue: 129
+  pr: null
+  candidateContentHead: 2aea29220b278d1dc043c03d0d32ee4857bc32a7
   candidateRef: product/v1
 checks:
-  local: studio-focused-23+studio-252+typecheck+build+touched-lint+diff-check+browser-15+9-screenshot-hashes+three-independent-audits+root-verify
+  local: roadmap-consistency+format-check
   hostedSource: github-pr-checks
   hostedTarget: live-pr-head
 verdicts:
@@ -32,12 +32,12 @@ verdicts:
   pro: accept-complete-f4-exact-44f521860c89eb883da4b56495cc1dad67d1c73a-no-blockers
   preston: pass-f3-and-standing-dependency-ordered-phase-continuation-2026-07-21
 blockers:
-  - F5-WP2 requires a separate bounded START_NOW ticket and higher Kimi inbox version
-  - F5-WP3 through F5-WP5 remain blocked by dependency order
+  - F5-WP3 remains blocked until F5-WP2 passes exact-head review and is accepted
+  - F5-WP4 through F5-WP5 remain blocked by dependency order
   - backend product work remains blocked until Preston accepts the complete F6 Frontend Gate
 nextAuthorizedAction:
-  type: WAIT_FOR_F5_WP2_TICKET
-  text: F5-WP1 is accepted and integrated. Do not begin F5-WP2 until a separate bounded ticket, exact-base status transition, and higher Kimi inbox version are published.
+  type: IMPLEMENT_F5_WP2_ONLY
+  text: Implement only issue #129 from exact base 2aea29220b278d1dc043c03d0d32ee4857bc32a7 on agent/kimi-f5-wp2-narration-take-management, publish the exact handback, and stop before F5-WP3.
 superseded:
   - pr: 47
     reason: superseded by the full implementation-to-private-launch roadmap
@@ -238,6 +238,17 @@ verification from the live PR checks.
   access, recording, real takes, files/import, playback, waveforms, trim/gain,
   lip sync, mixing, persistence, backend, Godot, Remotion, rendering, export,
   packaging, F5-WP2, or later work.
+- Under Preston's standing dependency-ordered continuation authority, issue
+  #129 and this `START_NOW` transition authorize only F5-WP2 from exact base
+  `product/v1@2aea29220b278d1dc043c03d0d32ee4857bc32a7` on required branch
+  `agent/kimi-f5-wp2-narration-take-management`. The package adds only a
+  deterministic, session-local Narration recording/import/take-management UX
+  state model: arm/record/stop/cancel, audition/keep/discard/retake,
+  trim/gain/restore, required failure/cancel/unsaved states, and scope
+  preservation. Every state must remain explicit that no device, file, audio
+  bytes, playback, persistence, or backend exists. It does not authorize real
+  media, SFX/music placement, lip sync, Godot, Remotion, rendering, export,
+  packaging, F5-WP3, or later work.
 - E1-WP1 is accepted and integrated at exact `product/v1@ed457ea...`. ChatGPT
   Pro accepted exact PR #55 head `8b74d64...`, hosted Verify StoryStage run
   `29798603209` passed, and the immutable runtime/evidence content is
