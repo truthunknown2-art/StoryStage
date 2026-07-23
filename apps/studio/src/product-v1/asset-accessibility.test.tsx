@@ -110,8 +110,13 @@ describe("F4-WP5 — keyboard entry into and exit from Assets & Rigs", () => {
     expect(document.activeElement).toBe(assetsTab);
     expect(assetsTab).toHaveAttribute("aria-current", "true");
 
-    /* The next Tab stop is the first asset category; the episode and scene
-     * filters follow within a short logical order. */
+    /* F5-WP1 added the Audio workspace tab after Assets & Rigs, so the next
+     * Tab stop is that surviving switch control — proving the new workspace
+     * is keyboard reachable in the same logical order — and the stop after
+     * it is the first asset category; the episode and scene filters follow
+     * within a short logical order. */
+    await user.tab();
+    expect(document.activeElement).toBe(workspaceTab("Audio"));
     await user.tab();
     expect(
       document.activeElement ===
