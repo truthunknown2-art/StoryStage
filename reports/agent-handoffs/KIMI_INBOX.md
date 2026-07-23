@@ -1,16 +1,40 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `93`
+Inbox-Version: `94`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F5-WP1-TRUTH-EVIDENCE-CORRECTION-V2`
-Status: `START-NOW`
+Current-Task: `F5-WP1-ACCEPTED-WAIT`
+Status: `WAIT`
 Issued-By: `Codex`
-Accepted-Root-Base: `11f6f049d306efb9808559a24e2bd532be4cdc87`
-Required-Work-Branch: `agent/kimi-f5-wp1-audio-workspace-track-hierarchy-v2`
-Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f5-wp1-truth-evidence-correction-v93.md`
+Accepted-Root-Base: `a4325a99c707e819dffff514e16875cc0db33f28`
+Required-Work-Branch: `none`
+Full-Brief: `none`
 Issue: `#124`
 
 ## Current instruction
+
+Version 94 records F5-WP1 acceptance and integration. Independent review
+rejected predecessor PR #126 exact head `311c115...`; corrected PR #127 exact
+head `22daef36d080fbbbab03f981cae19f11c1ea2828` passed focused 23/23, Studio
+252/252, typecheck, production build, touched lint, diff check, 15/15 browser
+checks, nine unique 1440x900 screenshots, zero console/page errors, complete
+root verification, and three independent exact-head audits. Hosted Verify run
+`29969068237` passed on attempt 3 after two different unchanged timing-sensitive
+tests failed separately and then passed independently. PR #127 merged into
+`product/v1` at `a4325a99c707e819dffff514e16875cc0db33f28`, and postmerge Verify
+run `29970325457` passed. Kimi is now `WAIT`.
+
+F5-WP2 requires a separate exact-base issue, full brief, product status
+transition, and strictly higher validated inbox version. Do not start F5-WP2,
+F5-WP3+, recording, files/devices, persistence, providers, workers, backend,
+Godot, Remotion, rendering, export, packaging, QA, or private launch from this
+inbox.
+
+Version 94 supersedes Version 93. Version 93 remains below as accepted
+historical traceability and must not relaunch.
+
+---
+
+Previous Version 93 instruction:
 
 Version 93 rejects exact F5-WP1 handback
 `311c115487db63814d9ea1bde62f3ea047ba05eb` and starts only the bounded
