@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
 import { OLLO_DEMO_SCENES, type DemoScene } from "./demo-project";
+import { NarrationTakePanel, useNarrationTakes } from "./NarrationTakePanel";
 import {
   AUDIO_CARD_STATUS,
   AUDIO_EMPTY_STATE,
@@ -54,6 +55,24 @@ export function AudioWorkspace({
   const [trackId, setTrackId] = useState<AudioTrackId>("narration");
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
+  /* F5-WP2: the deterministic session-local Narration recording/import/take
+   * state model. Scope selects and track tabs route through its
+   * unsaved-change guard so a dirty trim/gain draft is never silently
+   * dropped; with a clean draft every call passes straight through, exactly
+   * as before. */
+  const selectTrack = (nextTrackId: AudioTrackId, moveFocus: boolean) => {
+    setTrackId(nextTrackId);
+    if (moveFocus)
+      document.getElementById(`pv1-audio-tab-${nextTrackId}`)?.focus();
+  };
+  const narration = useNarrationTakes({
+    scene: selectedScene,
+    beatIndex: selectedBeatIndex,
+    onSelectScene,
+    onSelectBeat,
+    onSelectTrack: selectTrack,
+  });
+
   const track = audioTrack(trackId);
   const visibleCards = audioCardsForScope(
     trackId,
@@ -93,8 +112,7 @@ export function AudioWorkspace({
     if (target === null) return;
     event.preventDefault();
     const nextId = ids[target]!;
-    setTrackId(nextId);
-    document.getElementById(`pv1-audio-tab-${nextId}`)?.focus();
+    narration.guardedSelectTrack(nextId, true);
   };
 
   return (
@@ -136,7 +154,7 @@ export function AudioWorkspace({
               data-audio-track={entry.id}
               id={`pv1-audio-tab-${entry.id}`}
               key={entry.id}
-              onClick={() => setTrackId(entry.id)}
+              onClick={() => narration.guardedSelectTrack(entry.id, false)}
               onKeyDown={onTrackTabKeyDown}
               role="tab"
               tabIndex={trackId === entry.id ? 0 : -1}
@@ -151,7 +169,9 @@ export function AudioWorkspace({
             <span>Scene</span>
             <select
               aria-label="Audio scene scope"
-              onChange={(event) => onSelectScene(event.target.value)}
+              onChange={(event) =>
+                narration.guardedSelectScene(event.target.value)
+              }
               value={selectedScene.id}
             >
               {OLLO_DEMO_SCENES.map((scene) => {
@@ -168,7 +188,9 @@ export function AudioWorkspace({
             <span>Beat</span>
             <select
               aria-label="Audio beat scope"
-              onChange={(event) => onSelectBeat(Number(event.target.value))}
+              onChange={(event) =>
+                narration.guardedSelectBeat(Number(event.target.value))
+              }
               value={selectedBeatIndex}
             >
               {selectedScene.beats.map((beat, index) => (
@@ -318,6 +340,18 @@ export function AudioWorkspace({
           </div>
         </section>
       </div>
+
+      {/* F5-WP2: the Narration recording/import/take-management prototype.
+       * Always mounted (hidden on other tracks) so session-local take state
+       * survives track switches exactly; only the Narration track exposes it —
+       * Dialogue, SFX, and Music never acquire recording or placement
+       * behavior in this package. */}
+      <NarrationTakePanel
+        beatIndex={selectedBeatIndex}
+        narration={narration}
+        scene={selectedScene}
+        trackId={trackId}
+      />
     </section>
   );
 }

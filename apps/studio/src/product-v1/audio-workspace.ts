@@ -359,11 +359,11 @@ export const audioCountSummary = (
 /* Empty states and unavailable orientation actions                    */
 /* ------------------------------------------------------------------ */
 
-/** Per-track empty-state copy. Each explains what later accepted work will
- * enable without offering a fake success action. */
+/** Per-track empty-state copy. Each explains what this package or later
+ * accepted work offers without offering a fake success action. */
 export const AUDIO_EMPTY_STATE: Record<AudioTrackId, string> = {
   narration:
-    "Later accepted work (F5-WP2) adds narration recording and take-management states. Nothing can be recorded, imported, or played in this package.",
+    "The take-management panel below offers this package's deterministic local-prototype recording and import walkthroughs. Every state is local UI prototype state — nothing can be recorded, imported, or played.",
   dialogue:
     "Later accepted work adds dialogue recording states. Nothing can be recorded, imported, or played in this package.",
   sfx: "Later accepted work (F5-WP3) adds SFX placement states. No audio exists to place or play in this package.",
@@ -385,18 +385,28 @@ const IMPORT_ACTION: AudioOrientationAction = {
 const PLAYBACK_REASON =
   "Unavailable — no audio exists to play; playback, waveforms, and mixing are outside this package.";
 
-/** The small set of visibly disabled orientation actions per track kind.
- * They exist only so the creator can see what later packages will enable;
- * each carries its specific reason and can never succeed. */
+/** The small set of visibly disabled orientation actions per track. They
+ * exist only so the creator can see what later packages will enable; each
+ * carries its specific reason and can never succeed. Narration's recording,
+ * audition, and import states now exist as the F5-WP2 local-prototype
+ * take-management panel, so only playback remains orientation-only there. */
 export const audioOrientationActions = (
   trackId: AudioTrackId,
-): readonly AudioOrientationAction[] =>
-  audioTrack(trackId).kind === "voice"
+): readonly AudioOrientationAction[] => {
+  if (trackId === "narration")
+    return [
+      {
+        action: "Play take audio",
+        unavailableReason:
+          "Unavailable — no audio exists to play; playback, waveforms, and mixing are outside this package. The take-management panel offers this package's local-prototype recording, import, and take states.",
+      },
+    ];
+  return audioTrack(trackId).kind === "voice"
     ? [
         {
           action: "Record take",
           unavailableReason:
-            "Unavailable — microphone and device access do not exist in this demo. Later accepted work (F5-WP2) adds recording states.",
+            "Unavailable — microphone and device access do not exist in this demo. Later accepted work adds dialogue recording states.",
         },
         {
           action: `Audition ${audioTrack(trackId).cardNoun}`,
@@ -411,3 +421,4 @@ export const audioOrientationActions = (
           unavailableReason: PLAYBACK_REASON,
         },
       ];
+};
