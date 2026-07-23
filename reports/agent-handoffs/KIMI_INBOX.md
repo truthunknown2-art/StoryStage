@@ -1,30 +1,46 @@
 # Kimi inbox — StoryStage
 
-Inbox-Version: `95`
+Inbox-Version: `96`
 Inbox-Branch: `agent/kimi-frontend`
-Current-Task: `F5-WP2-NARRATION-TAKE-MANAGEMENT`
+Current-Task: `F5-WP2-NARRATION-TAKE-MANAGEMENT-CORRECTION`
 Status: `START-NOW`
 Issued-By: `Codex`
-Accepted-Root-Base: `2aea29220b278d1dc043c03d0d32ee4857bc32a7`
-Required-Work-Branch: `agent/kimi-f5-wp2-narration-take-management`
-Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f5-wp2-narration-take-management-v95.md`
+Accepted-Root-Base: `cc7f45117afd76b52444fc30735d0b2b4bf9bb8f`
+Required-Work-Branch: `agent/kimi-f5-wp2-narration-take-management-v2`
+Full-Brief: `reports/agent-handoffs/2026-07-22-codex-kimi-f5-wp2-navigation-state-corrections-v96.md`
 Issue: `#129`
 
 ## Current instruction
 
-Version 95 starts only F5-WP2 through issue #129 from exact verified base
-`2aea29220b278d1dc043c03d0d32ee4857bc32a7` on required branch
-`agent/kimi-f5-wp2-narration-take-management`. Build only the deterministic,
-session-local Narration recording/import/take-management UX state model in the
-full brief: explicit arm/record/stop/cancel, audition/keep/discard/retake,
-prototype import/trim/gain/restore, required failure/cancel/unsaved states, and
-scope preservation. Every state must state that no device, file, audio bytes,
-playback, or persistence exists. Publish one immutable handback and exit. Do
-not begin F5-WP3 or any real media, backend, Godot, Remotion, rendering, export,
-packaging, QA, private-launch, or later-package work.
+Version 96 rejects exact F5-WP2 handback
+`f79cc248585f5e21ecfa0d4b205b83f1acff1f4b` and starts only the bounded
+navigation-state, track-operation, confirmation-focus, and discard-outcome
+correction in the full brief. Start a fresh v2 branch from live accepted
+product base `cc7f45117afd76b52444fc30735d0b2b4bf9bb8f`, retain the original
+F5-WP2 root identity `2aea29220b278d1dc043c03d0d32ee4857bc32a7`, incorporate the two
+exact rejected commits without modifying PR #131, preserve all accepted
+F5-WP2 work, recapture the corrected evidence, publish one immutable successor
+handback, and exit. Do not begin F5-WP3 or broaden into real media,
+persistence, backend, Godot, Remotion, rendering, export, packaging, QA, or
+private launch.
 
-Version 95 supersedes Version 94. Version 94 remains below as accepted
+Version 96 supersedes Version 95. Version 95 remains below as rejected
 historical traceability and must not relaunch.
+
+---
+
+Previous Version 95 instruction:
+
+Version 95 started only F5-WP2 through issue #129 from exact verified base
+`2aea29220b278d1dc043c03d0d32ee4857bc32a7` on required branch
+`agent/kimi-f5-wp2-narration-take-management`. It assigned the deterministic,
+session-local Narration recording/import/take-management UX state model:
+explicit arm/record/stop/cancel, audition/keep/discard/retake, prototype
+import/trim/gain/restore, required failure/cancel/unsaved states, and scope
+preservation. Exact handback `f79cc248585f5e21ecfa0d4b205b83f1acff1f4b`
+and hosted run `29976538250` passed automated and visual evidence gates, but
+independent code/accessibility review found the four material defects corrected
+by Version 96. PR #131 remains rejected and unchanged for traceability.
 
 ---
 
